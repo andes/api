@@ -6,6 +6,9 @@ import * as moment from 'moment';
 import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { Logger } from '../../../../utils/logService';
 import { userScheduler } from '../../../../config.private';
+import { log } from '@andes/log';
+import { sendMail } from '../../../../utils/roboSender/sendEmail';
+import { emailListString } from '../../../../config.private';
 
 
 let poolPrestaciones;
@@ -17,7 +20,27 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
+let logRequest = {
+    user: {
+        usuario: { nombre: 'pecasFueraDeAgenda', apellido: 'pecasFueraDeAgenda' },
+        app: 'jobPecas',
+        organizacion: 'Subsecretaría de salud'
+    },
+    ip: 'localhost',
+    connection: {
+        localAddress: ''
+    }
+};
 
+let mailOptions = {
+    from: 'info@andes.gob.ar',
+    to: emailListString,
+    subject: 'Error pecas fuera de agenda',
+    text: '',
+    html: '',
+    attachments: null
+
+};
 /**
  * Actualiza la tabla fuera_de_agenda de la BD Andes
  *
@@ -77,7 +100,6 @@ export async function fueraAgendaPecas(start, end, done) {
 
 async function auxiliar(pres: any) {
     let prestacion: any = {};
-
     let efector: any = {};
     try {
         let org: any = await getEfector(pres.createdBy.organizacion._id);
@@ -284,7 +306,7 @@ async function auxiliar(pres: any) {
         prestacion.telefono = pres.paciente && pres.paciente.telefono ? pres.paciente.telefono : '';
         let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.fueraAgenda +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
-            'FechaConsulta, Periodo, estadoAuditoria, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
+            'FechaConsulta, Periodo, Tipodeconsulta, estadoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
             'HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
             'idBarrio, Barrio, idLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, Calle, Altura,' +
             'Piso, Depto, Manzana, Longitud, Latitud, Peso, Talla, TAS, TAD, IMC, RCVG, Diag1CodigoOriginal, Desc1DiagOriginal,' +
@@ -316,9 +338,9 @@ async function auxiliar(pres: any) {
             '\',' + prestacion.CodigoServicio + ',\'' + prestacion.Servicio + '\',\'' + prestacion.codifica + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\',\'' + pres.idPrestacion + '\')';
 
         return executeQuery(queryInsert);
-        // console.log('pres ', prestacion);
 
     } catch (error) {
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', error, null);
         return (error);
     }
 }
@@ -333,7 +355,7 @@ function organizacionesExcluidas() {
 async function eliminaPrestacion(idPrestacion: string) {
     const result = new sql.Request(poolPrestaciones);
     let query = `DELETE FROM ${configPrivate.conSqlPecas.table.fueraAgenda} WHERE idPrestacion='${idPrestacion}'`;
-    return await result.query(query);
+    return executeQuery(query);
 }
 
 const orgCache = {};
@@ -407,7 +429,10 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        Logger.log(userScheduler, 'scheduler', 'insert', query);
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
+        let options = mailOptions;
+        options.text = `'error al insertar en sql fuera Agenda: ${query}'`;
+        sendMail(mailOptions);
         return err;
     }
 }
