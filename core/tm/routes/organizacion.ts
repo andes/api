@@ -23,7 +23,7 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
                 // let pais = organizacion.direccion.ubicacion.pais;
                 let pathGoogleApi = '';
                 let jsonGoogle = '';
-                pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+AR&key=' + configPrivate.geoKey;
+                pathGoogleApi = `/maps/api/geocode/json?address=${dir}${localidad}${provincia}AR&key=${configPrivate.geoKey}`;
 
                 pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
                 pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
