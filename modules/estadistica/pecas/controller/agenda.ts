@@ -62,15 +62,15 @@ export async function consultaPecas(done, start, end) {
         let pecasData: any = await Pecas.find({}).exec();
         let insertsArray = [];
         let cantidadRegistros = pecasData.length;
+        let idsAgendas = [...new Set(pecasData.map(data => data.idAgenda))];
+        await eliminaAgenda(idsAgendas);
         // Realizamos le proceso de insertado a pecas SQL
         if (cantidadRegistros > 0) {
             for (let i = 0; i < cantidadRegistros; i++) {
                 let doc = pecasData[i];
-                await eliminaTurno(doc.idTurno, doc.idAgenda);
                 let org = await getEfector(doc.idEfector);
                 let idEfectorSips = org.codigo && org.codigo.sips ? org.codigo.sips : null;
                 insertsArray.push(insertCompleto(doc, idEfectorSips));
-                // }
             }
             await Promise.all(insertsArray);
             return (done());
@@ -227,30 +227,22 @@ async function insertCompleto(turno: any, idEfectorSips) {
  * @param type parameter type
  * @param {Array<string>} values an array of values
  */
-// function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, values) {
-//     let parameterNames = [];
-//     for (let i = 0; i < values.length; i++) {
-//         let parameterName = parameterNamePrefix + i;
-//         request.input(parameterName, type, values[i]);
-//         parameterNames.push(`@${parameterName}`);
-//     }
-//     return `${columnName} IN (${parameterNames.join(',')})`;
-// }
+function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, values) {
+    let parameterNames = [];
+    for (let i = 0; i < values.length; i++) {
+        let parameterName = parameterNamePrefix + i;
+        request.input(parameterName, type, values[i]);
+        parameterNames.push(`@${parameterName}`);
+    }
+    return `${columnName} IN (${parameterNames.join(',')})`;
+}
 
-// async function eliminaTurnoPecas(turnos: any[]) {
-async function eliminaAgenda(id_agenda: string) {
+async function eliminaAgenda(idsAgendas: any[]) {
     const result = new sql.Request(poolTurnos);
-    // let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idTurno', 'idTurno', sql.NVarChar, turnos);
-    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda='${id_agenda}'`;
+    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
     return await result.query(query);
 }
 
-async function eliminaTurno(id_turno: string, id_agenda: string) {
-    const result = new sql.Request(poolTurnos);
-    // let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idTurno', 'idTurno', sql.NVarChar, turnos);
-    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda='${id_agenda}' and idTurno='${id_turno}'`;
-    return await result.query(query);
-}
 
 const orgCache = {};
 async function getEfector(idOrganizacion: any) {
