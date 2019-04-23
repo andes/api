@@ -5,7 +5,7 @@ export async function validarOrganizacionSisa(orgCodSisa: Number) {
         usuario: sisa.username,
         clave: sisa.password
     };
-    const url = 'https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/' + orgCodSisa;
+    const url = sisa.urlEstablecimiento + orgCodSisa;
     const options = {
         url,
         method: 'POST',
@@ -37,7 +37,7 @@ export async function obtenerOfertaPrestacional(orgCodSisa: Number) {
         usuario: sisa.username,
         clave: sisa.password
     };
-    const url = 'https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/prestaciones/' + orgCodSisa;
+    const url = sisa.urlPrestacionesPorEfector + orgCodSisa;
     const options = {
         url,
         method: 'POST',
