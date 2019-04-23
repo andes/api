@@ -32,6 +32,9 @@ router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
 
         // Búsqueda por múltiples IDs
         if (req.query.id) {
+            if (typeof req.query.id === 'string') {
+                req.query.id = [req.query.id];
+            }
             let objectIds = req.query.id.map(x => { return ObjectId(x); });
             query.where('_id').in(objectIds);
         }
