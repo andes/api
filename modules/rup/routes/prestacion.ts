@@ -360,7 +360,6 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 });
 
 router.get('/prestaciones/:id*?', async (req, res, next) => {
-
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {
@@ -466,6 +465,10 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
 
         if (req.query.limit) {
             query.limit(parseInt(req.query.limit, 10));
+        }
+
+        if (req.query.id) {
+            query.where('_id').equals(req.query.id);
         }
 
         query.exec((err, data) => {

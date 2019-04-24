@@ -26,7 +26,7 @@ router.get('/configFacturacionAutomatica/', (req, res, next) => {
     }
 });
 
-router.post('/facturaArancelamiento/', async (req, res, next) => {
+router.post('/facturaArancelamiento', async (req, res, next) => {
     let prestacion = req.body;
 
     if (prestacion) {
