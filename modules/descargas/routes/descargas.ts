@@ -2,6 +2,7 @@ import * as express from 'express';
 import { Documento } from './../controller/descargas';
 import { Auth } from '../../../auth/auth.class';
 import { DocumentoCenso } from './../controller/descargaCenso';
+import { DocumentoCensoMensual } from './../controller/descargaCensoMensual';
 
 const router = express.Router();
 
@@ -12,6 +13,21 @@ const router = express.Router();
  */
 router.post('/censo', (req: any, res, next) => {
     let docCenso = new DocumentoCenso();
+    docCenso.descargar(req, res, next).then(archivo => {
+        res.download((archivo as string), (err) => {
+            if (err) {
+                next(err);
+            } else {
+                next();
+            }
+        });
+    }).catch(e => {
+        return next(e);
+    });
+});
+
+router.post('/censoMensual', (req: any, res, next) => {
+    let docCenso = new DocumentoCensoMensual();
     docCenso.descargar(req, res, next).then(archivo => {
         res.download((archivo as string), (err) => {
             if (err) {

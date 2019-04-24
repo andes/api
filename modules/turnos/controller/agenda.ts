@@ -13,6 +13,9 @@ import {
 import {
     Logger
 } from '../../../utils/logService';
+import { log } from '@andes/log';
+import { logKeys } from '../../../config';
+
 import {
     model as Prestacion
 } from '../../rup/schemas/prestacion';
@@ -26,6 +29,7 @@ import {
 } from '@andes/event-bus';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
+import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -112,6 +116,9 @@ export function liberarTurno(req, data, turno) {
                 break;
             case ('programado'):
                 data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                if (data.bloques[position.indexBloque].restantesMobile) {
+                    data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
+                }
                 break;
             case ('profesional'):
                 data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
@@ -472,6 +479,8 @@ export function actualizarEstado(req, data) {
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
 
+                    NotificationService.notificarSuspension(turno);
+
                 });
             });
             data.sobreturnos.forEach(sobreturno => {
@@ -831,7 +840,7 @@ async function actualizarAux(agenda: any) {
 /**
  * Llegado el día de ejecucion de la agenda, los turnos restantesProgramados pasan a restantesDelDia
  *
- * @export actualizarTiposDeTurno()
+ * @export actualizarTurnosDelDia()
  * @returns resultado
  */
 export function actualizarTurnosDelDia() {
@@ -873,6 +882,51 @@ export function actualizarTurnosDelDia() {
 }
 
 /**
+ * El dia anterior a la ejecución de la agenda (a las 12 del mediodía), los turnos restantes mobile se setean a 0
+ *
+ * @export actualizarTurnosMobile()
+ * @returns resultado
+ */
+export function actualizarTurnosMobile() {
+    const fechaActualizar = moment().add(1, 'day');
+
+    const condicion = {
+        $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
+        horaInicio: {
+            $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+        },
+        'bloques.restantesMobile': { $gt: 0 }
+    };
+    const cursor = agendaModel.find(condicion).cursor();
+    let logRequest = {
+        user: {
+            usuario: { nombre: 'actualizarTurnosMobileJob', apellido: 'actualizarTurnosMobileJob' },
+            app: 'citas',
+            organizacion: userScheduler.user.organizacion.nombre
+        },
+        ip: 'localhost',
+        connection: {
+            localAddress: ''
+        }
+    };
+    return cursor.eachAsync(async doc => {
+        const agenda: any = doc;
+        try {
+            for (let j = 0; j < agenda.bloques.length; j++) {
+                if (agenda.bloques[j].restantesMobile > 0) {
+                    agenda.bloques[j].restantesMobile = 0;
+                }
+            }
+            Auth.audit(agenda, (userScheduler as any));
+            await saveAgenda(agenda);
+        } catch (err) {
+            await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, err, { idAgenda: agenda._id });
+        }
+    });
+}
+
+/**
  * Realiza el save de una agenda.
  * El log del cambio debe guardarse luego de ejecutarse esta promise
  *
@@ -896,23 +950,23 @@ export function saveAgenda(nuevaAgenda) {
 
 // Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
 EventCore.on('mpi:patient:update', async (pacienteModified) => {
-    let req = {
-        query: {
-            estado: 'asignado',
-            pacienteId: pacienteModified.id,
-            horaInicio: moment(new Date()).startOf('day').toDate() as any
-        }
-    };
-    let turnos: any = await turnosController.getTurno(req);
-    if (turnos.length > 0) {
-        turnos.forEach(element => {
-            try {
-                agendaController.updatePaciente(pacienteModified, element);
-            } catch (error) {
-                return error;
-            }
-        });
-    }
+    // let req = {
+    //     query: {
+    //         estado: 'asignado',
+    //         pacienteId: pacienteModified.id,
+    //         horaInicio: moment(new Date()).startOf('day').toDate() as any
+    //     }
+    // };
+    // let turnos: any = await turnosController.getTurno(req);
+    // if (turnos.length > 0) {
+    //     turnos.forEach(element => {
+    //         try {
+    //             agendaController.updatePaciente(pacienteModified, element);
+    //         } catch (error) {
+    //             return error;
+    //         }
+    //     });
+    // }
 });
 
 /**

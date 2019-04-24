@@ -1,7 +1,12 @@
 import * as mongoose from 'mongoose';
 
 const schema = new mongoose.Schema({
-    nombre: String,
+    codigo: {
+        type: String
+    },
+    nombre: {
+        type: String
+    }
 });
 // export let ocupacionSchema = schema;
-export let ocupacion = mongoose.model('ocupaciones', schema, 'ocupaciones');
+export let model = mongoose.model('ocupaciones', schema, 'ocupaciones');

@@ -348,11 +348,8 @@ export async function estadisticas(filtros) {
         pipeline = pipelineAgendas;
     }
 
-    const p1 = toArray(AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec());
-    const p2 = filtroPorCiudad(filtros);
-    const [datos, localidades] = await Promise.all([p1, p2]);
+    const datos = await AgendarModel.aggregate(pipeline);
     filtrosFaltantes(filtros, datos[0]);
-    datos[0]['localidades'] = localidades;
     return datos[0];
 }
 
@@ -361,7 +358,7 @@ export async function estadisticas(filtros) {
  * y la ubicacion de los pacientes
  * @param filtros Recibe a los filtros iniciales.
  */
-async function filtroPorCiudad(filtros) {
+export async function filtroPorCiudad(filtros) {
     const pipelineAsignados = [
         { $match: makePrimaryMatch(filtros) },
         { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
@@ -377,16 +374,15 @@ async function filtroPorCiudad(filtros) {
             },
         },
         { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
-        { $match: makeSecondaryMatch(filtros) },
+        { $match: makeSecondaryMatch(filtros) }
     ];
-    const turnosAsignados = await toArray(AgendarModel.aggregate(pipelineAsignados).cursor({ batchSize: 1000 }).exec());
+    const turnosAsignados = await AgendarModel.aggregate(pipelineAsignados);
     let idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
 
     const pipelineUbicacionPacientes = [
         {
             $match: {
-                _id:
-                    { $in: idPacientes },
+                _id: { $in: idPacientes.map(id => new ObjectId(id)) },
             }
         },
         {
@@ -396,13 +392,13 @@ async function filtroPorCiudad(filtros) {
             }
         }
     ];
-    const p1 = await toArray(Paciente.aggregate(pipelineUbicacionPacientes).cursor({ batchSize: 1000 }).exec());
-    const p2 = await toArray(PacienteMpi.aggregate(pipelineUbicacionPacientes).cursor({ batchSize: 1000 }).exec());
+    const p1 = Paciente.aggregate(pipelineUbicacionPacientes);
+    const p2 = PacienteMpi.aggregate(pipelineUbicacionPacientes);
     const [andes, mpi] = await Promise.all([p1, p2]);
 
     const ubicacionesPaciente = {};
-    andes.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
-    mpi.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
+    andes.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion ? paciente.direccion[0] : null; });
+    mpi.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion ? paciente.direccion[0] : null; });
 
     const respuesta = {};
 

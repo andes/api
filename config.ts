@@ -172,6 +172,12 @@ export const modules = {
         route: '/modules/top',
         middleware: appMiddleware
     },
+    turnos_prestaciones: {
+        active: true,
+        path: './modules/estadistica/routes',
+        route: '/modules/estadistica',
+        middleware: appMiddleware
+    },
     version: {
         active: true,
         path: './modules/version/routes',
@@ -312,5 +318,9 @@ export const logKeys = {
     elasticFix2: {
         key: 'elasticFix:update',
         operacion: 'Documentos referidos al paciente modificados'
+    },
+    turnosMobileUpdate: {
+        key: 'citas:bloques:modificar',
+        operacion: 'setea a 0 turnos disponibles para app mobile'
     }
 };
