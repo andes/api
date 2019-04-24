@@ -1,12 +1,14 @@
 import * as Agenda from '../../../../modules/turnos/schemas/agenda';
+import * as mongoose from 'mongoose';
 import { toArray } from '../../../../utils/utils';
-import { Pecas } from '../schemas/pecas';
-import { Types } from 'mongoose';
 
 export async function pecasExport(start, end) {
+    let orgExcluidas = organizacionesExcluidas();
+
     const pipeline = [
         {
             $match: {
+                $or: orgExcluidas,
                 updatedAt: {
                     $lt: new Date(end),
                     $gte: new Date(start)
@@ -1261,3 +1263,10 @@ export async function pecasExport(start, end) {
     return;
 }
 
+
+function organizacionesExcluidas() {
+    let organizaciones = [];
+    const medicoIntegral = '5a5e3f7e0bd5677324737244';
+    organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
+    return organizaciones;
+}
