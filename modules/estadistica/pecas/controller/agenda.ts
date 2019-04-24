@@ -59,10 +59,11 @@ export async function consultaPecas(done, start, end) {
         await Pecas.remove({});
         // Exportamos los registros directamente desde mongodb
         await pecasExport(start, end);
-        let pecasData: any = await Pecas.find({}).exec();
+        let pecasData: any = await Pecas.find({});
         let insertsArray = [];
         let cantidadRegistros = pecasData.length;
-        let idsAgendas = [...new Set(pecasData.map(data => data.idAgenda))];
+        let conjunto = pecasData.map(data => data.idAgenda);
+        let idsAgendas = [...new Set(conjunto)];
         await eliminaAgenda(idsAgendas);
         // Realizamos le proceso de insertado a pecas SQL
         if (cantidadRegistros > 0) {
@@ -241,7 +242,7 @@ function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, 
 async function eliminaAgenda(idsAgendas: any[]) {
     const result = new sql.Request(poolTurnos);
     let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
-    return await result.query(query);
+    return executeQuery(query);
 }
 
 
@@ -307,12 +308,7 @@ function calcularEdad(fechaNacimiento) {
     }
     return edad;
 }
-function organizacionesExcluidas() {
-    let organizaciones = [];
-    const medicoIntegral = '5a5e3f7e0bd5677324737244';
-    organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
-    return organizaciones;
-}
+
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
@@ -321,9 +317,9 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        let options = mailOptions;
-        options.text = `'error al insertar en sql: ${query}'`;
-        sendMail(mailOptions);
+        // let options = mailOptions;
+        // options.text = `'error al insertar en sql: ${query}'`;
+        // sendMail(mailOptions);
         await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
         return err;
     }
