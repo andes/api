@@ -78,6 +78,7 @@ export async function consultaPecas(done, start, end) {
             return (done(null));
         }
     } catch (error) {
+        await log(logRequest, 'andes:pecas:bi', null, 'delete', error, null);
         return (done(error));
     }
 }
