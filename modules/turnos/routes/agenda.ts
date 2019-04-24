@@ -634,21 +634,21 @@ router.get('/prestacionesDisponibles', async (req: any, res, next) => {
     pipelinePrestaciones.push({
         $group: {
             _id: {
-                _id: '$prestaciones._id',
                 conceptId: '$prestaciones.conceptId',
-                fsn: '$prestaciones.fsn',
-                semanticTag: '$prestaciones.semanticTag',
-                term: '$prestaciones.term'
-            }
+            },
+            resultado: { $push: '$$ROOT' }
         }
     });
+    pipelinePrestaciones.push({ $project: { resultado: { $arrayElemAt: ['$resultado', 0] }, _id: 0 } });
+    pipelinePrestaciones.push({ $unwind: '$resultado' });
+
     pipelinePrestaciones.push({
         $project: {
-            _id: '$_id._id',
-            conceptId: '$_id.conceptId',
-            fsn: '$_id.fsn',
-            semanticTag: '$_id.semanticTag',
-            term: '$_id.term'
+            _id: '$resultado.prestaciones._id',
+            conceptId: '$resultado.prestaciones.conceptId',
+            fsn: '$resultado.prestaciones.fsn',
+            semanticTag: '$resultado.prestaciones.semanticTag',
+            term: '$resultado.prestaciones.term'
         }
     });
 
