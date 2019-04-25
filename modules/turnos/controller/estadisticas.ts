@@ -119,32 +119,37 @@ const facets = {
                 }
             }
         },
-        { $sortByCount: '$real-state' }
+        { $group: {
+            _id: '$real-state',
+            count: { $sum: 1 },
+            nombre: { $first: '$real-state' }
+        }}
     ],
 
     tipoTurno: [
-        {
-            $match: {
-                'turno.estado': 'asignado',
-                estado: { $ne: 'suspendida' },
-                'turno.tipoTurno': { $ne: null }
-            }
-        },
-        {
-            $group: {
-                _id: '$turno.tipoTurno',
-                count: { $sum: 1 },
-                nombre: {$first: '$turno.tipoTurno'}
-            }
-        }
+        { $match: {
+            'turno.estado': 'asignado',
+            estado: { $ne: 'suspendida' },
+            'turno.tipoTurno': { $ne: null }
+        }},
+        { $group: {
+            _id: '$turno.tipoTurno',
+            count: { $sum: 1 },
+            nombre: { $first: '$turno.tipoTurno' }
+        }}
     ]
 };
 
-function makePrimaryMatch(filtros) {
+function makePrimaryMatch(filtros, permisos) {
     const match: any = {};
 
     if (filtros.tipoDeFiltro === 'turnos') {
         match.estado = { $nin: ['planificacion', 'pausada', 'borrada'] };
+    } else {
+        // match.estado = { $ne: 'borrada'}; definir en reunion
+        if (permisos.tipoPrestacion) {
+            match['tipoPrestaciones._id'] = { $in: permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)) };
+        }
     }
 
     if (filtros.fechaDesde) {
@@ -162,10 +167,20 @@ function makePrimaryMatch(filtros) {
     return match;
 }
 
-function makeSecondaryMatch(filtros) {
+function makeSecondaryMatch(filtros, permisos) {
     const match: any = {};
 
+    if (filtros.profesional) {
+        match['profesionales._id'] = {
+            $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr.id))
+        };
+    }
+
     if (filtros.tipoDeFiltro === 'turnos') {
+        if (permisos.tipoPrestacion) {
+            match['turno.tipoPrestacion._id'] = { $in: permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)) };
+        }
+
         if (filtros.edad) {
             const ages = filtros.edad.split('-');
             match['turno.paciente.edad'] = {
@@ -178,12 +193,6 @@ function makeSecondaryMatch(filtros) {
 
         if (filtros.sexo) {
             match['turno.paciente.sexo'] = filtros.sexo;
-        }
-
-        if (filtros.profesional) {
-            match['profesionales._id'] = {
-                $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr.id))
-            };
         }
 
         if (filtros.administrativo) {
@@ -208,12 +217,6 @@ function makeSecondaryMatch(filtros) {
             };
         }
     } else {
-        if (filtros.profesional) {
-            match['profesionales._id'] = {
-                $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr.id))
-            };
-        }
-
         if (filtros.prestacion) {
             match['tipoPrestaciones.conceptId'] = {
                 $in: filtros.prestacion.map(pres => pres.id)
@@ -244,7 +247,6 @@ function makeFacet(filtros) {
         facet['prestacion'] = facets['prestacionAgendas'];
         facet['estado_agenda'] = facets['estadoAgenda'];
     }
-
 
     return facet;
 }
@@ -297,48 +299,52 @@ function filtrosFaltantes(filtros, data) {
     }
 }
 
-export async function estadisticas(filtros) {
+export async function estadisticas(filtros, permisos) {
     let pipeline;
     const pipelineAgendas = [
-        { $match: makePrimaryMatch(filtros) },
-        { $match: makeSecondaryMatch(filtros) },
+        { $match: makePrimaryMatch(filtros, permisos) },
+        { $match: makeSecondaryMatch(filtros, permisos) },
         { $facet: makeFacet(filtros) }
     ];
     const pipelineTurno = [
         /* Filtros iniciales */
-        { $match: makePrimaryMatch(filtros) },
+        { $match: makePrimaryMatch(filtros, permisos) },
         { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
         { $addFields: { _sobreturnos: [{ turnos: '$sobreturnos' }] } },
         { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] } } },
         { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
-        {
-            $project: {
-                turno: '$_bloques.turnos',
-                profesionales: 1,
-                prestaciones: '$_bloques.tipoPrestaciones',
-                estado: '$estado'
-            },
-        },
-        {
-            $addFields: {
-                'turno.paciente.edad': {
-                    $divide: [{
-                        $subtract: [
-                            '$turno.horaInicio',
-                            {
-                                $cond: {
-                                    if: { $eq: [{ $type: '$turno.paciente.fechaNacimiento' }, 'string'] },
-                                    then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
-                                    else: '$turno.paciente.fechaNacimiento'
-                                }
-                            }
-                        ]
-                    }, (365 * 24 * 60 * 60 * 1000)]
-                }
+        { $project: {
+            turno: '$_bloques.turnos',
+            profesionales: 1,
+            prestaciones: '$_bloques.tipoPrestaciones',
+            estado: '$estado'
+        }},
+        { $addFields: { 'turno.tipoTurno': {
+            $switch: {
+                branches: [
+                    { case: { $eq: ['$turno.emitidoPor', 'appMobile'] }, then: 'appMobile' },
+                ],
+                default: '$turno.tipoTurno'
             }
-        },
-        { $match: makeSecondaryMatch(filtros) },
+        }}},
+        { $addFields: {
+            'turno.paciente.edad': {
+                $divide: [{
+                    $subtract: [
+                        '$turno.horaInicio',
+                        {
+                            $cond: {
+                                if: { $eq: [{ $type: '$turno.paciente.fechaNacimiento' }, 'string'] },
+                                then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
+                                else: '$turno.paciente.fechaNacimiento'
+                            }
+                        }
+                    ]
+                }, (365 * 24 * 60 * 60 * 1000)]
+            }
+        }},
+        { $match: makeSecondaryMatch(filtros, permisos) },
         { $facet: makeFacet(filtros) }
     ];
 
@@ -358,39 +364,41 @@ export async function estadisticas(filtros) {
  * y la ubicacion de los pacientes
  * @param filtros Recibe a los filtros iniciales.
  */
-export async function filtroPorCiudad(filtros) {
+export async function filtroPorCiudad(filtros, permisos) {
     const pipelineAsignados = [
-        { $match: makePrimaryMatch(filtros) },
+        { $match: makePrimaryMatch(filtros, permisos) },
         { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
         { $addFields: { _sobreturnos: [{ turnos: '$sobreturnos' }] } },
         { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] } } },
         { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
-        {
-            $project: {
-                turno: '$_bloques.turnos',
-                idPaciente: '$_bloques.turnos.paciente.id',
-                _id: 0
-            },
-        },
+        { $project: {
+            turno: '$_bloques.turnos',
+            idPaciente: '$_bloques.turnos.paciente.id',
+            _id: 0
+        }},
         { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
-        { $match: makeSecondaryMatch(filtros) }
+        { $addFields: { 'turno.tipoTurno': {
+            $switch: {
+                branches: [
+                    { case: { $eq: ['$turno.emitidoPor', 'appMobile'] }, then: 'appMobile' },
+                ],
+                default: '$turno.tipoTurno'
+            }
+        }}},
+        { $match: makeSecondaryMatch(filtros, permisos) }
     ];
     const turnosAsignados = await AgendarModel.aggregate(pipelineAsignados);
     let idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
 
     const pipelineUbicacionPacientes = [
-        {
-            $match: {
-                _id: { $in: idPacientes.map(id => new ObjectId(id)) },
-            }
-        },
-        {
-            $project: {
-                direccion: 1,
-                _id: 1
-            }
-        }
+        { $match: {
+            _id: { $in: idPacientes.map(id => new ObjectId(id)) },
+        }},
+        { $project: {
+            direccion: 1,
+            _id: 1
+        }}
     ];
     const p1 = Paciente.aggregate(pipelineUbicacionPacientes);
     const p2 = PacienteMpi.aggregate(pipelineUbicacionPacientes);
@@ -410,7 +418,7 @@ export async function filtroPorCiudad(filtros) {
                 nombreLocalidad = ubicacionesPaciente[data.idPaciente].ubicacion.localidad.nombre;
             }
             if (!respuesta[nombreLocalidad]) {
-                respuesta[nombreLocalidad] = { delDia: 0, programado: 0, gestion: 0, profesional: 0, sobreturno: 0 };
+                respuesta[nombreLocalidad] = { delDia: 0, programado: 0, gestion: 0, profesional: 0, sobreturno: 0, appMobile: 0 };
             }
             respuesta[nombreLocalidad][data.turno.tipoTurno]++;
         }

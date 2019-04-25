@@ -670,8 +670,14 @@ router.get('/integracionCitasHPN', async (req, res, next) => {
 });
 
 router.post('/dashboard', async (req, res, next) => {
+    const permisos: any = {};
+    let tipoPrestacion = Auth.getPermissions(req, 'dashboard:citas:tipoPrestacion:?');
+    if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
+        permisos.tipoPrestacion = tipoPrestacion;
+    }
+
     try {
-        const stats = await AgendasEstadisticas.estadisticas(req.body);
+        const stats = await AgendasEstadisticas.estadisticas(req.body, permisos);
         return res.json(stats);
     } catch (err) {
         return next(err);
@@ -679,8 +685,14 @@ router.post('/dashboard', async (req, res, next) => {
 });
 
 router.post('/dashboard/localidades', async (req, res, next) => {
+    const permisos: any = {};
+    let tipoPrestacion = Auth.getPermissions(req, 'dashboard:citas:tipoPrestacion:?');
+    if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
+        permisos.tipoPrestacion = tipoPrestacion;
+    }
+
     try {
-        const stats = await AgendasEstadisticas.filtroPorCiudad(req.body);
+        const stats = await AgendasEstadisticas.filtroPorCiudad(req.body, permisos);
         return res.json(stats);
     } catch (err) {
         return next(err);
