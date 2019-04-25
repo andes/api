@@ -5,7 +5,7 @@ import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
-import { validarOrganizacionSisa, obtenerOfertaPrestacional } from '../controller/organizacion';
+import { validarOrganizacionSisa, obtenerOfertaPrestacional, parseTelefono } from '../controller/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
@@ -221,5 +221,61 @@ router.delete('/organizaciones/:id', Auth.authenticate(), async (req, res, next)
     }
 });
 
-
+/*
+* Función que carga en DB las ofertas prestacionales traidos de SISA de los efectores que se muestran en el mapa de salud de la app mobile.
+* Ejecutarlas con postman, no se utiliza en ningún lado
+*/
+router.get('/cargarOfertaPrestacional', async (req, res, next) => {
+    try {
+        let organizaciones: any[] = await Organizacion.find({ showMapa: true, ofertaPrestacional: { $exists: false } });
+        for (let i = 0; i < organizaciones.length; i++) {
+            let ofertaPrestacional = await obtenerOfertaPrestacional(organizaciones[i].codigo.sisa);
+            if (ofertaPrestacional && ofertaPrestacional[0] === 200 && ofertaPrestacional[1].prestaciones) {
+                let prestaciones = [];
+                ofertaPrestacional[1].prestaciones.forEach((prest: { id: Number, disponible: String, nombre: String }) => {
+                    if (prest.disponible === 'SI') {
+                        prestaciones.push({ idSisa: prest.id, nombre: prest.nombre });
+                    }
+                });
+                organizaciones[i]['ofertaPrestacional'] = prestaciones;
+                await Organizacion.findByIdAndUpdate(organizaciones[i].id, organizaciones[i]);
+            }
+        }
+        return res.json('organizaciones');
+    } catch (err) {
+        return next(err);
+    }
+});
+/*
+* Función que carga en DB los teléfonos traidos de SISA de los efectores que se muestran en el mapa de salud de la app mobile.
+* Ejecutarlas con postman, no se utiliza en ningún lado
+*/
+router.get('/cargarTelefono', async (req, res, next) => {
+    try {
+        let organizaciones: any[] = await Organizacion.find({ showMapa: true }); // , 'contacto.0': { $exists: false } });
+        for (let i = 0; i < organizaciones.length; i++) {
+            let organizacionSisa = await validarOrganizacionSisa(organizaciones[i].codigo.sisa);
+            if (organizacionSisa && organizacionSisa[0] === 200) {
+                let contactos = [];
+                if (organizacionSisa[1].telefono1 && organizacionSisa[1].telefono1.numero !== 'null') {
+                    contactos.push({ tipo: 'fijo', valor: parseTelefono(organizacionSisa[1].telefono1.numero), ranking: 0, ultimaActualizacion: new Date(), activo: true });
+                }
+                if (organizacionSisa[1].telefono2 && organizacionSisa[1].telefono2.numero !== 'null') {
+                    contactos.push({ tipo: 'fijo', valor: parseTelefono(organizacionSisa[1].telefono2.numero), ranking: 0, ultimaActualizacion: new Date(), activo: true });
+                }
+                if (organizacionSisa[1].telefono3 && organizacionSisa[1].telefono3.numero !== 'null') {
+                    contactos.push({ tipo: 'fijo', valor: parseTelefono(organizacionSisa[1].telefono3.numero), ranking: 0, ultimaActualizacion: new Date(), activo: true });
+                }
+                if (organizacionSisa[1].telefono4 && organizacionSisa[1].telefono4.numero !== 'null') {
+                    contactos.push({ tipo: 'fijo', valor: parseTelefono(organizacionSisa[1].telefono4.numero), ranking: 0, ultimaActualizacion: new Date(), activo: true });
+                }
+                organizaciones[i]['contacto'] = contactos;
+                await Organizacion.findByIdAndUpdate(organizaciones[i].id, organizaciones[i]);
+            }
+        }
+        return res.json('Terminó actualización');
+    } catch (err) {
+        return next(err);
+    }
+});
 export = router;

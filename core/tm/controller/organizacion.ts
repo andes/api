@@ -46,3 +46,16 @@ export async function obtenerOfertaPrestacional(orgCodSisa: Number) {
     };
     return await handleHttpRequest(options);
 }
+
+export function parseTelefono(telefono: string): string {
+    let res = telefono;
+    while (res[0] === '0') {
+        res = res.slice(1);
+    }
+    res = res.replace(/\s/g, '').replace(/-/g, '');
+    let indice = res.indexOf('/');
+    if (indice > -1) {
+        res = res.slice(0, indice);
+    }
+    return res;
+}
