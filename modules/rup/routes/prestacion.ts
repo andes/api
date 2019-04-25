@@ -1,3 +1,4 @@
+import { log } from './../../../core/log/schemas/log';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
@@ -568,7 +569,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             if (req.body.estado && req.body.estado.tipo === 'validada') {
 
                 /* Este evento habilita la facturación automática desde RUP */
-                // EventCore.emitAsync('facturacion:factura:create', data);
+                EventCore.emitAsync('facturacion:factura:create', data);
 
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
@@ -646,6 +647,18 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             */
         });
     });
+});
+
+router.patch('/prestaciones/estadoFacturacion/:id', (req, res, next) => {
+    Prestacion.findOneAndUpdate(
+        { _id: req.params.id },
+        { $set: { estadoFacturacion: req.body.estadoFacturacion } },
+        (err, data: any) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
 });
 
 export = router;

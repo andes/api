@@ -17,6 +17,11 @@ export async function procesar(parametros: any) {
         ],
         'createdBy.organizacion._id': String(parametros.organizacion)
     };
+
+    if (parametros.estadoFacturacion) {
+        match['$and'].push({ 'prestacion.estadoFacturacion.estado': parametros.estadoFacturacion });
+    }
+
     let match2 = {};
 
     if (parametros.prestacion) {
