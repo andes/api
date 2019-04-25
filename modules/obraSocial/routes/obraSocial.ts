@@ -4,7 +4,6 @@ import { ObraSocial } from '../schemas/obraSocial';
 import * as pucoController from '../controller/puco';
 import * as sumarController from '../controller/sumar';
 import * as prepagaController from '../controller/prepagas';
-
 const router = express.Router();
 
 /**
@@ -128,6 +127,24 @@ router.get('/puco/padrones', async (req, res, next) => {
         res.json(resp);
     } catch (error) {
         return next(error);
+    }
+});
+
+router.get('/os', async (req, res, next) => {
+    if (req.query.dni && req.query.sexo) {
+        let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
+        if (arrayOSPuco.length > 0) {
+            res.json(arrayOSPuco);
+        } else {
+            let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+            if (arrayOSSumar.length > 0) {
+                res.json(arrayOSSumar);
+            } else {
+                res.json([]);
+            }
+        }
+    } else {
+        res.json({ msg: 'Parámetros incorrectos' });
     }
 });
 
