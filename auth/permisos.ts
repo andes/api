@@ -245,7 +245,7 @@ export default [
                 title: 'supervisor',
                 child: [
                     { key: 'aprobar', title: 'aprobar', type: 'boolean' },
-
+                ]
             }
         ]
     },
