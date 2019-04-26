@@ -88,6 +88,7 @@ export async function procesar(parametros: any) {
         },
         { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
+        // TODO volver a filtrar por estadoPrstacion. agregar filtro a matchTurno
         { $match: matchTurno },
         {
             $project: {

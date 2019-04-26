@@ -461,8 +461,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
 });
 
 router.patch('/estadoFacturacion/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
+    // OPTIMIZAR
     try {
-        let agendaObject: any = await agenda.findOne( { _id: Types.ObjectId(req.params.idAgenda) } );
+        let agendaObject: any = await agenda.findOne({ _id: Types.ObjectId(req.params.idAgenda) });
         let _bloque;
         if (agendaObject) {
             let found = false;
@@ -486,7 +487,7 @@ router.patch('/estadoFacturacion/turno/:idTurno/bloque/:idBloque/agenda/:idAgend
                             _id: Types.ObjectId(req.params.idAgenda),
                             'bloques._id': _bloque._id
                         },
-                        { $set: { 'bloques.$.turnos' : _bloque.turnos } },
+                        { $set: { 'bloques.$.turnos': _bloque.turnos } },
                         (err, data: any) => {
                             if (err) {
                                 throw err;
@@ -498,7 +499,7 @@ router.patch('/estadoFacturacion/turno/:idTurno/bloque/:idBloque/agenda/:idAgend
             }
         }
     } catch (e) {
-        res.json(e)
+        res.json(e);
     }
 });
 
