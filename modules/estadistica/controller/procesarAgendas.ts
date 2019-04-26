@@ -11,7 +11,6 @@ import { toArray } from '../../../utils/utils';
 
 
 export async function procesar(parametros: any) {
-
     let match = {
         estado: { $nin: ['planificacion', 'borrada', 'suspendida', 'pausada'] },
         'organizacion._id': parametros.organizacion,
@@ -24,6 +23,10 @@ export async function procesar(parametros: any) {
         $or: [{ 'bloques.turnos.estado': 'asignado' }, { 'sobreturnos.estado': 'asignado' }]
     };
     let matchTurno = {};
+
+    if (parametros.estadoFacturacion) {
+        match['bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
+    }
 
     if (parametros.fechaDesde) {
         match['horaInicio'] = { $gte: new Date(parametros.fechaDesde) };
@@ -169,7 +172,8 @@ export async function procesar(parametros: any) {
                     }
                 },
                 turno: '$turno',
-                idPrestacion: '$prestacion0._id'
+                idPrestacion: '$prestacion0._id',
+                estadoFacturacion: '$turno.estadoFacturacion',
             }
         },
         {

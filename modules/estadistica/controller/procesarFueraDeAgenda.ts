@@ -18,6 +18,10 @@ export async function procesar(parametros: any) {
         'createdBy.organizacion._id': String(parametros.organizacion)
     };
 
+    if (parametros.estadoFacturacion) {
+        match['estadoFacturacion.estado'] = parametros.estadoFacturacion;
+    }
+
     let match2 = {};
 
     if (parametros.prestacion) {
@@ -26,6 +30,7 @@ export async function procesar(parametros: any) {
     if (parametros.profesional) {
         match2 = { 'prestacion.solicitud.profesional.id': new mongoose.Types.ObjectId(parametros.profesional) };
     }
+
     pipeline2 = [
         {
             $match: match
