@@ -1,5 +1,5 @@
 import * as express from 'express';
-import {Types} from 'mongoose';
+import { Types } from 'mongoose';
 import * as codificacion from '../schemas/codificacion';
 import * as prestacion from '../schemas/prestacion';
 import * as codificacionController from '../controllers/codificacionController';
@@ -44,7 +44,7 @@ router.patch('/codificacion/:id', async (req, res, next) => {
 });
 
 router.patch('/codificacion/estadoFacturacion/:id', (req, res, next) => {
-    codificacion.updateOne(
+    codificacion.findOneAndUpdate(
         { _id: Types.ObjectId(req.params.id) },
         { $set: { estadoFacturacion: req.body.estadoFacturacion }},
         (err, data: any) => {
