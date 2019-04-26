@@ -544,7 +544,22 @@ export async function pecasExport(start, end) {
                         else: 'NO'
                     }
                 },
-                tipoPrestacion: '$prestacion.term',
+                tipoPrestacion: {
+                    $cond: {
+                        if: {
+                            $ne: [{
+                                $in: [{
+                                    $type: '$_bloques.turnos.tipoPrestacion'
+                                },
+                                ['missing', 'null', 'undefined']
+                                ]
+                            }, true]
+                        },
+
+                        then: '$_bloques.turnos.tipoPrestacion.term',
+                        else: null
+                    }
+                },
                 DNI: {
                     $cond: {
                         if: {
@@ -807,14 +822,14 @@ export async function pecasExport(start, end) {
                         if: {
                             $ne: [{
                                 $in: [{
-                                    $type: '$codificacion0.codificacionProfesional.cie10.nombre'
+                                    $type: '$codificacion0.codificacionProfesional.cie10.sinonimo'
                                 },
                                 ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
 
-                        then: '$codificacion0.codificacionProfesional.cie10.nombre',
+                        then: '$codificacion0.codificacionProfesional.cie10.sinonimo',
                         else: null
                     }
                 },
@@ -839,14 +854,14 @@ export async function pecasExport(start, end) {
                         if: {
                             $ne: [{
                                 $in: [{
-                                    $type: '$codificacion0.codificacionAuditoria.nombre'
+                                    $type: '$codificacion0.codificacionAuditoria.sinonimo'
                                 },
                                 ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
 
-                        then: '$codificacion0.codificacionAuditoria.nombre',
+                        then: '$codificacion0.codificacionAuditoria.sinonimo',
                         else: null
                     }
                 },
@@ -944,14 +959,14 @@ export async function pecasExport(start, end) {
                         if: {
                             $ne: [{
                                 $in: [{
-                                    $type: '$codificacion1.codificacionProfesional.cie10.nombre'
+                                    $type: '$codificacion1.codificacionProfesional.cie10.sinonimo'
                                 },
                                 ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
 
-                        then: '$codificacion1.codificacionProfesional.cie10.nombre',
+                        then: '$codificacion1.codificacionProfesional.cie10.sinonimo',
                         else: null
                     }
                 },
@@ -976,14 +991,14 @@ export async function pecasExport(start, end) {
                         if: {
                             $ne: [{
                                 $in: [{
-                                    $type: '$codificacion1.codificacionAuditoria.nombre'
+                                    $type: '$codificacion1.codificacionAuditoria.sinonimo'
                                 },
                                 ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
 
-                        then: '$codificacion1.codificacionAuditoria.nombre',
+                        then: '$codificacion1.codificacionAuditoria.sinonimo',
                         else: null
                     }
                 },
@@ -1081,14 +1096,14 @@ export async function pecasExport(start, end) {
                         if: {
                             $ne: [{
                                 $in: [{
-                                    $type: '$codificacion2.codificacionProfesional.cie10.nombre'
+                                    $type: '$codificacion2.codificacionProfesional.cie10.sinonimo'
                                 },
                                 ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
 
-                        then: '$codificacion2.codificacionProfesional.cie10.nombre',
+                        then: '$codificacion2.codificacionProfesional.cie10.sinonimo',
                         else: null
                     }
                 },
@@ -1113,14 +1128,14 @@ export async function pecasExport(start, end) {
                         if: {
                             $ne: [{
                                 $in: [{
-                                    $type: '$codificacion2.codificacionAuditoria.nombre'
+                                    $type: '$codificacion2.codificacionAuditoria.sinonimo'
                                 },
                                 ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
 
-                        then: '$codificacion2.codificacionAuditoria.nombre',
+                        then: '$codificacion2.codificacionAuditoria.sinonimo',
                         else: null
                     }
                 },
