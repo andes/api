@@ -6,7 +6,7 @@ import { Auth } from '../../../auth/auth.class';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 import { matchSisa } from '../../../utils/servicioSisa';
 import { log } from '@andes/log';
-import { logKeys } from 'config';
+import { logKeys } from './../../../config';
 /**
  * Busca pacientes validados en MPI con errores de charset en nombre y apellido,
  *  intenta corregir los errores con SISA y si no puede los deja como temporales en la bd de temporales.
