@@ -241,12 +241,14 @@ function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, 
 }
 
 async function eliminaAgenda(idsAgendas: any[]) {
+    const result = new sql.Request(poolTurnos);
+    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
     try {
-        const result = new sql.Request(poolTurnos);
-        let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
         return result.query(query);
-
     } catch (err) {
+        let options = mailOptions;
+        options.text = `'error en el delete: ${query}'`;
+        sendMail(mailOptions);
         await log(logRequest, 'andes:pecas:bi', null, 'delete', err, null);
     }
 }
