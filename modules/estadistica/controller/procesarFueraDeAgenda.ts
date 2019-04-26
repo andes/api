@@ -18,6 +18,10 @@ export async function procesar(parametros: any) {
         'createdBy.organizacion._id': String(parametros.organizacion)
     };
 
+    if (parametros.estadoFacturacion) {
+        match['estadoFacturacion.estado'] = parametros.estadoFacturacion;
+    }
+
     let match2 = {};
 
     if (parametros.prestacion) {
@@ -25,10 +29,6 @@ export async function procesar(parametros: any) {
     }
     if (parametros.profesional) {
         match2 = { 'prestacion.solicitud.profesional.id': new mongoose.Types.ObjectId(parametros.profesional) };
-    }
-
-    if (parametros.estadoFacturacion) {
-        match2['prestacion.estadoFacturacion.estado'] = parametros.estadoFacturacion;
     }
 
     pipeline2 = [
@@ -89,8 +89,7 @@ export async function procesar(parametros: any) {
                 return error;
             }
         });
-        return pipeline2;
-        // return resultado;
+        return resultado;
     } catch (error) {
         return (error);
     }

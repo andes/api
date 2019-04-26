@@ -460,9 +460,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
     }
 });
 
-router.patch('/turno/estadoFacturacion/', async (req, res, next) => {
+router.patch('/estadoFacturacion/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     try {
-        let agendaObject: any = await agenda.findOne( { _id: Types.ObjectId(req.body.idAgenda) } );
+        let agendaObject: any = await agenda.findOne( { _id: Types.ObjectId(req.params.idAgenda) } );
         let _bloque;
         if (agendaObject) {
             let found = false;
@@ -473,7 +473,7 @@ router.patch('/turno/estadoFacturacion/', async (req, res, next) => {
                 }
 
                 for (let turno of bloque.turnos) {
-                    if (turno.id === req.body.idTurno) {
+                    if (turno.id === req.params.idTurno) {
                         turno.estadoFacturacion = req.body.estadoFacturacion;
                         found = true;
                         break;
@@ -483,7 +483,7 @@ router.patch('/turno/estadoFacturacion/', async (req, res, next) => {
                 if (found) {
                     agenda.updateOne(
                         {
-                            _id: Types.ObjectId(req.body.idAgenda),
+                            _id: Types.ObjectId(req.params.idAgenda),
                             'bloques._id': _bloque._id
                         },
                         { $set: { 'bloques.$.turnos' : _bloque.turnos } },
