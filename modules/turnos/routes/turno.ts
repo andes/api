@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
@@ -456,6 +457,48 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
             });
     } else {
         return next('Los datos del paciente son inválidos');
+    }
+});
+
+router.patch('/turno/estadoFacturacion/', async (req, res, next) => {
+    try {
+        let agendaObject: any = await agenda.findOne( { _id: Types.ObjectId(req.body.idAgenda) } );
+        let _bloque;
+        if (agendaObject) {
+            let found = false;
+            for (let bloque of agendaObject.bloques) {
+                _bloque = bloque;
+                if (found) {
+                    break;
+                }
+
+                for (let turno of bloque.turnos) {
+                    if (turno.id === req.body.idTurno) {
+                        turno.estadoFacturacion = req.body.estadoFacturacion;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found) {
+                    agenda.updateOne(
+                        {
+                            _id: Types.ObjectId(req.body.idAgenda),
+                            'bloques._id': _bloque._id
+                        },
+                        { $set: { 'bloques.$.turnos' : _bloque.turnos } },
+                        (err, data: any) => {
+                            if (err) {
+                                throw err;
+                            }
+                            res.json(data);
+                        }
+                    );
+                }
+            }
+        }
+    } catch (e) {
+        res.json(e)
     }
 });
 

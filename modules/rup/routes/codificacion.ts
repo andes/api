@@ -1,6 +1,5 @@
-
 import * as express from 'express';
-import * as mongoose from 'mongoose';
+import {Types} from 'mongoose';
 import * as codificacion from '../schemas/codificacion';
 import * as prestacion from '../schemas/prestacion';
 import * as codificacionController from '../controllers/codificacionController';
@@ -44,9 +43,21 @@ router.patch('/codificacion/:id', async (req, res, next) => {
     });
 });
 
+router.patch('/codificacion/estadoFacturacion/:id', (req, res, next) => {
+    codificacion.updateOne(
+        { _id: Types.ObjectId(req.params.id) },
+        { $set: { estadoFacturacion: req.body.estadoFacturacion }},
+        (err, data: any) => {
+            if (err) {
+                res.json(err);
+            }
+            res.json(data);
+        }
+    );
+});
 
 router.get('/codificacion/:id?', async (req: any, res, next) => {
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (Types.ObjectId.isValid(req.params.id)) {
         const unaCodificacion = await codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {

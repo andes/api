@@ -93,6 +93,17 @@ const turnoSchema = new mongoose.Schema({
             primeraVez: Boolean,
         }]
     },
+    estadoFacturacion: {
+        tipo: {
+            type: String,
+            enum: ['sumar', 'recupero']
+        },
+        estado: {
+            type: String,
+            enum: ['sin comprobante', 'comprobante sin prestación', 'comprobante con prestación']
+        },
+        numeroComprobante: String
+    },
     confirmedAt: Date, /* Confirmación del turno por el  paciente */
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed
