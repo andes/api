@@ -26,7 +26,6 @@ export async function procesar(parametros: any) {
     let matchTurno = {};
 
     if (parametros.estadoFacturacion) {
-        console.log('estadoFacturacion', parametros.estadoFacturacion)
         match['bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
     }
 
@@ -174,7 +173,8 @@ export async function procesar(parametros: any) {
                     }
                 },
                 turno: '$turno',
-                idPrestacion: '$prestacion0._id'
+                idPrestacion: '$prestacion0._id',
+                estadoFacturacion: '$turno.estadoFacturacion',
             }
         },
         {
