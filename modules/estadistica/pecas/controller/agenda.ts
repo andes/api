@@ -65,6 +65,7 @@ export async function consultaPecas(done, start, end) {
         let conjunto = pecasData.map(data => data.idAgenda);
         let idsAgendas = [...new Set(conjunto)];
         await eliminaAgenda(idsAgendas);
+
         // Realizamos le proceso de insertado a pecas SQL
         if (cantidadRegistros > 0) {
             for (let i = 0; i < cantidadRegistros; i++) {
@@ -240,9 +241,14 @@ function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, 
 }
 
 async function eliminaAgenda(idsAgendas: any[]) {
-    const result = new sql.Request(poolTurnos);
-    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
-    return executeQuery(query);
+    try {
+        const result = new sql.Request(poolTurnos);
+        let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
+        return result.query(query);
+
+    } catch (err) {
+        await log(logRequest, 'andes:pecas:bi', null, 'delete', err, null);
+    }
 }
 
 
@@ -317,9 +323,9 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        // let options = mailOptions;
-        // options.text = `'error al insertar en sql: ${query}'`;
-        // sendMail(mailOptions);
+        let options = mailOptions;
+        options.text = `'error al insertar en sql: ${query}'`;
+        sendMail(mailOptions);
         await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
         return err;
     }
