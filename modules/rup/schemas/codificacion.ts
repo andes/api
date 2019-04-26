@@ -39,7 +39,12 @@ const codificacionSchema = new mongoose.Schema({
             primeraVez: Boolean,
         }]
     },
-    estadoFacturacion: IEstadoFacturacion
+    // estadoFacturacion: IEstadoFacturacion,
+    estadoFacturacion: {
+        tipo: String,
+        estado: String,
+        numeroComprobante: String
+    },
 });
 codificacionSchema.plugin(AuditPlugin);
 let codificacion = mongoose.model('codificacion', codificacionSchema, 'codificacion');

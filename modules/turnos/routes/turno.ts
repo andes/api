@@ -466,6 +466,12 @@ router.patch('/estadoFacturacion/turno/:idTurno/bloque/:idBloque/agenda/:idAgend
         let _bloque;
         if (agendaObject) {
             let found = false;
+
+            // TODO: reemplaza loops por por arrow function. (no esta funcionando la comparación de ids)
+            // let _bloque = agendaObject.bloques.find(bloque => bloque._id === Types.ObjectId(req.params.idBloque));
+            // _bloque.turnos.find( turno => turno.id === req.params.idTurno ).estadoFacturacion = req.body.estadoFacturacion;
+
+
             for (let bloque of agendaObject.bloques) {
                 _bloque = bloque;
                 if (found) {

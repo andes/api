@@ -94,7 +94,12 @@ const turnoSchema = new mongoose.Schema({
             primeraVez: Boolean,
         }]
     },
-    estadoFacturacion: IEstadoFacturacion,
+    // estadoFacturacion: IEstadoFacturacion,
+    estadoFacturacion: {
+        tipo: String,
+        estado: String,
+        numeroComprobante: String
+    },
     confirmedAt: Date, /* Confirmación del turno por el  paciente */
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed
