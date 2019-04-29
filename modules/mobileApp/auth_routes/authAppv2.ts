@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
+import { mobileExpiredVersion } from '../../../config.private';
 
 const router = express.Router();
 // let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
@@ -162,9 +163,13 @@ router.post('/v2/registrar', (req, res, next) => {
  */
 
 router.post('/check-update', (req, res, next) => {
-    // let app_version = req.body.app_version;
-    // Por el momento devolvemos que todo esta bien
-    return res.json({ status: 'ok' });
+    let app_version = req.body.app_version;
+
+    if (app_version > mobileExpiredVersion) {
+        return res.json({ status: 'ok' });
+    } else {
+        return res.json({ status: 'update-require' });
+    }
 
     // new-version advierte al usuario que hay una nueva versión
     // return res.json({status: 'new-version'});
