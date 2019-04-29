@@ -561,7 +561,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 return next(500);
         }
         Auth.audit(data, req);
-        data.save(async (error, prestacion) => {
+        data.save(async (error, prestacion: any) => {
             if (error) {
                 return next(error);
             }
@@ -569,7 +569,8 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             if (req.body.estado && req.body.estado.tipo === 'validada') {
 
                 /* Este evento habilita la facturación automática desde RUP */
-                EventCore.emitAsync('facturacion:factura:create', data);
+                const origen = 'rup_rf';
+                EventCore.emitAsync('facturacion:factura:create', (<any>Object).assign({ origen, data }));
 
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
