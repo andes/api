@@ -4,6 +4,7 @@ import { SnomedConcept } from './snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
+import * as IEstadoFacturacion from '../../facturacionAutomatica/schemas/estadoFacturacion';
 
 const pacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
@@ -37,7 +38,13 @@ const codificacionSchema = new mongoose.Schema({
             codificacionAuditoria: cie10.schema,
             primeraVez: Boolean,
         }]
-    }
+    },
+    // estadoFacturacion: IEstadoFacturacion,
+    estadoFacturacion: {
+        tipo: String,
+        estado: String,
+        numeroComprobante: String
+    },
 });
 codificacionSchema.plugin(AuditPlugin);
 let codificacion = mongoose.model('codificacion', codificacionSchema, 'codificacion');

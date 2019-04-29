@@ -650,16 +650,4 @@ router.patch('/prestaciones/:id', (req, res, next) => {
     });
 });
 
-router.patch('/prestaciones/estadoFacturacion/:id', (req, res, next) => {
-    Prestacion.findOneAndUpdate(
-        { _id: req.params.id },
-        { $set: { estadoFacturacion: req.body.estadoFacturacion } },
-        (err, data: any) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-});
-
 export = router;
