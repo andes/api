@@ -255,10 +255,10 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
                         // anio: { $year: '$fecha' },
                         // mes: { $month: '$fecha' },
                         // dia: { $dayOfMonth: '$fecha' },
-                        fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
+                            fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
                         // hora: { $hour: '$fecha' },
                         // minutos: { $minute: '$fecha'}
-                    },
+                        },
                         count: { $sum: 1 }
                     }
                 }]);
