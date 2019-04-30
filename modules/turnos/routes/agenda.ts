@@ -687,7 +687,7 @@ router.get('/prestacionesDisponibles', async (req: any, res, next) => {
     });
 
     try {
-        let prestaciones = await toArray(agenda.aggregate(pipelinePrestaciones).cursor({}).exec());
+        let prestaciones = await agenda.aggregate(pipelinePrestaciones);
         res.json(prestaciones);
     } catch (err) {
         return next(err);
