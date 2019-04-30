@@ -1273,8 +1273,7 @@ export async function pecasExport(start, end) {
         { $out: 'pecas' }
     ];
 
-    const aggr = await Agenda.aggregate(pipeline);
-    return aggr;
+    return await Agenda.aggregate(pipeline);
 }
 
 
