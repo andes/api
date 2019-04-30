@@ -43,10 +43,10 @@ router.patch('/codificacion/:id', async (req, res, next) => {
     });
 });
 
-router.patch('/codificacion/estadoFacturacion/:id', (req, res, next) => {
+router.patch('/codificacion/estadoFacturacion/:idPrestacion', (req, res, next) => {
     codificacion.findOneAndUpdate(
-        { _id: Types.ObjectId(req.params.id) },
-        { $set: { estadoFacturacion: req.body.estadoFacturacion }},
+        { idPrestacion: Types.ObjectId(req.params.idPrestacion) },
+        { $set: { estadoFacturacion: req.body.estadoFacturacion } },
         (err, data: any) => {
             if (err) {
                 res.json(err);

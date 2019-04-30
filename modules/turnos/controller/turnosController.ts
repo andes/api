@@ -128,6 +128,7 @@ export function getTurno(req) {
                     turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
                     turnos.push(turno);
                 });
+                console.log("Resuelve turnos: ", JSON.stringify(turnos));
                 resolve(turnos);
             }
         } catch (error) {
