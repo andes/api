@@ -316,7 +316,6 @@ function calcularEdad(fechaNacimiento) {
     }
     return edad;
 }
-
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
