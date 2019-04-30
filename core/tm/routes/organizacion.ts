@@ -108,14 +108,16 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
 router.get('/organizaciones/sisa/:id', async (req, res, next) => {
     try {
         let [orgSisa, ofertaPrestacional] = await Promise.all([validarOrganizacionSisa(req.params.id), obtenerOfertaPrestacional(req.params.id)]);
-        if (orgSisa && orgSisa[0] === 200) {
-            if (ofertaPrestacional && ofertaPrestacional[0] === 200) {
+        if (orgSisa && orgSisa.length > 1 && orgSisa[0] === 200) {
+            if (ofertaPrestacional && ofertaPrestacional.length > 1 && ofertaPrestacional[0] === 200) {
                 let prestaciones = [];
-                ofertaPrestacional[1].prestaciones.forEach((prest: { id: Number, disponible: String, nombre: String }) => {
-                    if (prest.disponible === 'SI') {
-                        prestaciones.push({ idSisa: prest.id, nombre: prest.nombre });
-                    }
-                });
+                if (ofertaPrestacional[1] && ofertaPrestacional[1].prestaciones && ofertaPrestacional[1].prestaciones.length) { // valido mucho porque viene de SISA, podría cambiar la estructura y no queremos que pinche
+                    ofertaPrestacional[1].prestaciones.forEach((prest: { id: Number, disponible: String, nombre: String }) => {
+                        if (prest.disponible === 'SI') {
+                            prestaciones.push({ idSisa: prest.id, nombre: prest.nombre });
+                        }
+                    });
+                }
                 orgSisa[1]['ofertaPrestacional'] = prestaciones;
             }
             res.json(orgSisa[1]);
