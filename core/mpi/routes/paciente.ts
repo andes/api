@@ -376,7 +376,7 @@ router.post('/pacientes', async (req, res, next) => {
                     let pacienteObj = await controller.createPaciente(req.body, req);
                     let patient = req.body;
                     // se carga geo referencia desde api de google
-                    if (req.body.estado === 'validado' && patient.direccion && patient.direccion.length > 0) {
+                    if (req.body.estado === 'validado' && patient && patient.direccion && patient.direccion.length > 0) {
                         await controller.actualizarGeoReferencia(patient);
                     }
                     return res.json(pacienteObj);
@@ -443,7 +443,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
             let patientFound: any = await paciente.findById(query).exec();
             if (patientFound) {
                 const data = req.body;
-                if (patientFound.estado === 'validado' && !patientFound.isScan) {
+                if (patientFound && patientFound.estado === 'validado' && !patientFound.isScan) {
                     delete data.documento;
                     delete data.estado;
                     delete data.sexo;
