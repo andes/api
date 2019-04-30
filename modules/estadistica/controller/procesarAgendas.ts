@@ -98,8 +98,25 @@ export async function procesar(parametros: any) {
         {
             $lookup: {
                 from: 'prestaciones',
-                localField: 'turno._id',
-                foreignField: 'solicitud.turno',
+                let: { idTurno: '$turno._id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ['$solicitud.turno', '$$idTurno'] }
+                        }
+                    },
+                    {
+                        $addFields: {
+                            lastState: { $arrayElemAt: ['$estados', -1] },
+                        },
+                    },
+                    {
+                        $match: {
+                            $expr: { $and: [{ $eq: ['$solicitud.turno', '$$idTurno'] }, { $eq: ['$lastState.tipo', 'validada'] }] }
+                        }
+                    },
+
+                ],
                 as: 'prestacionDelTurno'
             }
         },
@@ -124,7 +141,12 @@ export async function procesar(parametros: any) {
                 profesionales0: 1,
                 estado: {
                     $cond: {
-                        if: { $and: [{ $eq: ['$isAnyTrue', true] }, { $ne: ['$codificacion0.codificacionProfesional.snomed.refsetIds', []] }] },
+                        if: {
+                            $and: [
+                                { $eq: ['$isAnyTrue', true] },
+                                { $ne: [{ $in: [{ $type: '$codificacion0.codificacionProfesional.snomed.conceptId' }, ['missing', 'null', 'undefined']] }, true] }
+                            ]
+                        },
                         then: 'Presente con registro del profesional',
                         else: {
                             $switch: {

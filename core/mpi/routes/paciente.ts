@@ -10,9 +10,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-import { userScheduler } from '../../../config.private';
-
-
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 const logD = debug('paciente-controller');
 const router = express.Router();
 
@@ -191,7 +189,7 @@ router.get('/pacientes', (req, res, next) => {
 
 
 // Simple mongodb query by ObjectId --> better performance
-router.get('/pacientes/:id', (req, res, next) => {
+router.get('/pacientes/:id', async (req, res, next) => {
     // busca en pacienteAndes y en pacienteMpi
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
@@ -199,16 +197,24 @@ router.get('/pacientes/:id', (req, res, next) => {
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
-    controller.buscarPaciente(req.params.id).then((resultado: any) => {
-        if (resultado) {
-            EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
-            res.json(resultado.paciente);
+    try {
+        const idPaciente = req.params.id;
+        const { paciente: pacienteBuscado } = await controller.buscarPaciente(idPaciente);
+        if (pacienteBuscado && pacienteBuscado.documento) {
+            let pacienteConOS = pacienteBuscado.toObject();
+            pacienteConOS.id = pacienteConOS._id;
+            try {
+                pacienteConOS.financiador = await getObraSocial(pacienteConOS);
+                res.json(pacienteConOS);
+            } catch (error) {
+                return res.json(pacienteBuscado);
+            }
         } else {
-            return next(500);
+            return res.json(pacienteBuscado);
         }
-    }).catch((err) => {
-        return next(err);
-    });
+    } catch (err) {
+        return next('Paciente no encontrado');
+    }
 
 });
 
