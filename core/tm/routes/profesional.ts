@@ -503,9 +503,9 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
                 }
             };
             try {
-                await log(logRequest, 'profesional:put', null, 'profesional:put', newProfesional, null);
+                await log(logRequest, 'profesional:post', null, 'profesional:post', newProfesional, null);
             } catch (err) {
-                await log(logRequest, 'profesional:put', null, 'profesional:put', err, newProfesional);
+                await log(logRequest, 'profesional:post', null, 'profesional:post', err, newProfesional);
             }
 
             if (err2) {
@@ -620,7 +620,6 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
                 return next(err);
             }
         });
-        console.log(JSON.stringify(resultado));
         EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
         res.json(resultado);
 
@@ -693,7 +692,6 @@ router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
     let profesionalOriginal;
     profesional.findById(req.params.id, (err, resultado: any) => {
         profesionalOriginal = resultado.toObject();
-        console.log(profesionalOriginal.notas);
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
@@ -773,7 +771,6 @@ router.get('/resumen', (req, res, next) => {
         opciones['documento'] = req.query.documento;
     }
     opciones['profesionalMatriculado'] = true;
-    console.log(opciones);
     query = profesional.find(opciones);
     query.exec((err, data) => {
         if (err) {
