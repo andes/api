@@ -354,7 +354,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
 
 router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     let agendaRes;
-    console.log("LLegamossssss: ", req.params);
+
     try {
         agendaRes = await getAgenda(req.params.idAgenda);
     } catch (err) {
@@ -367,7 +367,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         return (t.id === req.params.idTurno);
         // return (console.log('Primero: ', t.id) === console.log('Segundo: ', req.params.idTurno));
     });
-    console.log("Id turno apui: ", indexTurno);
+
     const update = {};
     if (req.body.avisoSuspension) {
         const etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
@@ -385,7 +385,6 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     if (req.body.estadoFacturacion) {
         const etiquetaEstadoFacturacion: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.estadoFacturacion';
         update[etiquetaEstadoFacturacion] = req.body.estadoFacturacion;
-        console.log("Entra a estado factura: ", update);
     }
 
     const query = {
