@@ -704,7 +704,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     pipelineAgendas.push({ $match: { 'resultado.bloques.tipoPrestaciones.conceptId': req.query.prestacion } });
 
     try {
-        let prestaciones = await toArray(agenda.aggregate(pipelineAgendas).cursor({}).exec());
+        let prestaciones = await agenda.aggregate(pipelineAgendas);
         res.json(prestaciones.map(elem => { return elem.resultado; }));
     } catch (err) {
         return next(err);
