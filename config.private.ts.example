@@ -297,3 +297,5 @@ export const logDatabase = {
         }
     }
 };
+// un string con un valor de expiración
+export const mobileExpiredVersion = '100';
