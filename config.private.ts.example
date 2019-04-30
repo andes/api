@@ -85,7 +85,9 @@ export const sisa = {
     password: getEnv('SISA_PASSWORD', ''),
     host: getEnv('SISA_HOST', 'sisa.msal.gov.ar'),
     port: getEnv('SISA_PORT', 443, 'n'),
-    url: getEnv('SISA_URL', 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?')
+    url: getEnv('SISA_URL', 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?'),
+    urlEstablecimiento: getEnv('SISA_URL_ESTABLECIMIENTO', 'https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/'),
+    urlPrestacionesPorEfector: getEnv('SISA_URL_PRESTACIONES', 'https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/prestaciones/'),
 };
 // Configuración servicio ANSES
 export const anses = {
@@ -281,6 +283,9 @@ export const Drive = {
     adapter: 'file',
     options: {}
 };
+
+// Lista separada por comas de emails (string)
+export const emailListString = '';
 
 export const logDatabase = {
     log: {

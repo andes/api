@@ -12,6 +12,7 @@ import { SnomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
+import { dashboardSolicitudes } from '../controllers/estadisticas';
 
 const router = express.Router();
 import async = require('async');
@@ -276,6 +277,11 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
             return next(404);
         }
     });
+});
+
+router.post('/solicitudes/dashboard', async (req, res, next) => {
+    const solicitudes = await dashboardSolicitudes(req.body, (req as any).user);
+    return res.json(solicitudes);
 });
 
 router.get('/prestaciones/solicitudes', (req, res, next) => {
