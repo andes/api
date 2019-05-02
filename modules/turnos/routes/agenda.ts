@@ -593,14 +593,22 @@ router.get('/integracionCitasHPN', async (req, res, next) => {
     }
 });
 
-router.get('/estadistica', async (req, res, next) => {
-    const stats = await AgendasEstadisticas.estadisticas(req.query);
-    return res.json(stats);
+router.post('/dashboard', async (req, res, next) => {
+    try {
+        const stats = await AgendasEstadisticas.estadisticas(req.body);
+        return res.json(stats);
+    } catch (err) {
+        return next(err);
+    }
 });
 
-router.post('/estadistica', async (req, res, next) => {
-    const stats = await AgendasEstadisticas.estadisticas(req.body);
-    return res.json(stats);
+router.post('/dashboard/localidades', async (req, res, next) => {
+    try {
+        const stats = await AgendasEstadisticas.filtroPorCiudad(req.body);
+        return res.json(stats);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 export = router;
