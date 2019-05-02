@@ -612,7 +612,6 @@ router.post('/dashboard/localidades', async (req, res, next) => {
 });
 
 router.get('/agenda/turno/:idTurno', async (req, res, next) => {
-    console.log("Llega al controller turno: ", req.params.idTurno);
     try {
         const datosTurno = await agendaCtrl.getDatosTurnos(req.params.idTurno);
         return res.json(datosTurno);

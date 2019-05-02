@@ -1122,7 +1122,6 @@ export async function getDatosTurnos(idTurno) {
     ];
 
     let data = await agendaModel.aggregate(pipeline);
-    console.log("Data de turnooo: ", data);
     return data;
 
 }
