@@ -1,14 +1,13 @@
 import { Organizacion } from '../core/tm/schemas/organizacion';
 import { validarOrganizacionSisa, obtenerOfertaPrestacional } from '../core/tm/controller/organizacion';
-import debug = require('debug');
-
-const deb = debug('nacimientosJob');
+import { parseTelefono } from '../utils/utils';
 
 /*
 * Función que carga en DB las ofertas prestacionales traidos de SISA de los efectores que se muestran en el mapa de salud de la app mobile.
 * Ejecutarlas con postman, no se utiliza en ningún lado
 */
 export async function actualizarOfertasPrestacionales() {
+    let updatePromises = [];
     try {
         let organizaciones: any[] = await Organizacion.find({ showMapa: true, ofertaPrestacional: { $exists: false } });
         for (let i = 0; i < organizaciones.length; i++) {
@@ -21,9 +20,10 @@ export async function actualizarOfertasPrestacionales() {
                     }
                 });
                 organizaciones[i]['ofertaPrestacional'] = prestaciones;
-                await Organizacion.findOneAndUpdate({ _id: organizaciones[i].id }, organizaciones[i]);
+                updatePromises.push(Organizacion.findOneAndUpdate({ _id: organizaciones[i].id }, organizaciones[i]));
             }
         }
+        await Promise.all(updatePromises);
     } catch (err) {
         return null;
     }
@@ -34,6 +34,7 @@ export async function actualizarOfertasPrestacionales() {
 * Función que carga en DB los teléfonos traidos de SISA de los efectores que se muestran (showMapa = true) en el mapa de salud de la app mobile.
 */
 export async function actualizarContacto() {
+    let updatePromises = [];
     try {
         let organizaciones: any[] = await Organizacion.find({ showMapa: true }); // , 'contacto.0': { $exists: false } });
         for (let i = 0; i < organizaciones.length; i++) {
@@ -63,23 +64,12 @@ export async function actualizarContacto() {
                     }
                 }
                 organizaciones[i]['contacto'] = contactos;
-                await Organizacion.findOneAndUpdate({ _id: organizaciones[i].id }, organizaciones[i]);
+                updatePromises.push(Organizacion.findOneAndUpdate({ _id: organizaciones[i].id }, organizaciones[i]));
             }
         }
+        await Promise.all(updatePromises);
     } catch (err) {
         return null;
     }
 }
 
-function parseTelefono(telefono: string): string {
-    let res = telefono;
-    while (res[0] === '0') {
-        res = res.slice(1);
-    }
-    res = res.replace(/\s/g, '').replace(/-/g, '');
-    let notANumber = res.match(/[^0-9]/);   // Busca el primer caracter no numérico.
-    if (notANumber.index > -1) {
-        res = res.slice(0, notANumber.index);
-    }
-    return res;
-}

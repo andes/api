@@ -7,7 +7,7 @@
  * @param {boolean} options.startWith La palabra debe comenzar con la expression dada
  * @returns {RegExp}
  */
-export function makePattern(search_string: string, options?: any ): RegExp {
+export function makePattern(search_string: string, options?: any): RegExp {
     const accented = {
         A: '[Aa\xaa\xc0-\xc5\xe0-\xe5\u0100-\u0105\u01cd\u01ce\u0200-\u0203\u0226\u0227\u1d2c\u1d43\u1e00\u1e01\u1e9a\u1ea0-\u1ea3\u2090\u2100\u2101\u213b\u249c\u24b6\u24d0\u3371-\u3374\u3380-\u3384\u3388\u3389\u33a9-\u33af\u33c2\u33ca\u33df\u33ff\uff21\uff41]',
         B: '[Bb\u1d2e\u1d47\u1e02-\u1e07\u212c\u249d\u24b7\u24d1\u3374\u3385-\u3387\u33c3\u33c8\u33d4\u33dd\uff22\uff42]',
@@ -217,4 +217,17 @@ export function xmlToJson(xmlString) {
     const DOMParser = require('xmldom').DOMParser;
     const parser = new DOMParser();
     return _xmlToJson(parser.parseFromString(xmlString, 'application/xml'));
+}
+
+export function parseTelefono(telefono: string): string {
+    let res = telefono;
+    while (res[0] === '0') {
+        res = res.slice(1);
+    }
+    res = res.replace(/\s/g, '').replace(/-/g, '');
+    let notANumber = res.match(/[^0-9]/);   // Busca el primer caracter no numérico.
+    if (notANumber.index > -1) {
+        res = res.slice(0, notANumber.index);
+    }
+    return res;
 }
