@@ -557,7 +557,7 @@ export async function pecasExport(start, end) {
                         },
 
                         then: '$_bloques.turnos.tipoPrestacion.term',
-                        else: null
+                        else: { $arrayElemAt: ['$_bloques.tipoPrestaciones.term', 0] }
                     }
                 },
                 DNI: {
