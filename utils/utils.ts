@@ -220,14 +220,13 @@ export function xmlToJson(xmlString) {
 }
 
 export function parseTelefono(telefono: string): string {
-    let res = telefono;
-    while (res[0] === '0') {
-        res = res.slice(1);
+    while (telefono[0] === '0') {
+        telefono = telefono.slice(1);
     }
-    res = res.replace(/\s/g, '').replace(/-/g, '');
-    let notANumber = res.match(/[^0-9]/);   // Busca el primer caracter no numérico.
-    if (notANumber.index > -1) {
-        res = res.slice(0, notANumber.index);
+    telefono = telefono.replace(/\s/g, '').replace(/-/g, '');
+    let notANumber = telefono.match(/[^0-9]/);   // Busca el primer caracter no numérico.
+    if (notANumber && notANumber.index > -1) {
+        telefono = telefono.slice(0, notANumber.index);
     }
-    return res;
+    return telefono;
 }
