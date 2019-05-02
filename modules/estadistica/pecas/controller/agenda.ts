@@ -64,7 +64,9 @@ export async function consultaPecas(done, start, end) {
         let cantidadRegistros = pecasData.length;
         let conjunto = pecasData.map(data => data.idAgenda);
         let idsAgendas = [...new Set(conjunto)];
-        await eliminaAgenda(idsAgendas);
+        await Promise.all(
+            idsAgendas.map(eliminaAgenda)
+        );
 
         // Realizamos le proceso de insertado a pecas SQL
         if (cantidadRegistros > 0) {
@@ -82,32 +84,6 @@ export async function consultaPecas(done, start, end) {
     } catch (error) {
         await log(logRequest, 'andes:pecas:bi', null, 'delete', error, null);
         return (done(error));
-    }
-}
-
-// Esto lo dejamos por si necesitan agendas sin turno
-async function soloAgenda(row: any, idEfectorSips) {
-    let ag: any = {};
-    try {
-        ag.idEfector = idEfectorSips;
-        ag.Organizacion = row.Efector;
-        ag.idAgenda = row.idAgenda;
-        ag.tipoPrestacion = row.tipoPrestacion;
-        ag.FechaAgenda = row.FechaAgenda;
-        ag.HoraAgenda = row.HoraAgenda;
-        ag.estadoAgenda = row.estadoAgenda;
-        ag.numeroBloque = 0;
-        ag.idTurno = row.bloques[0]._id;
-        ag.DescTipoEfector = row.DescTipoEfector;
-        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
-            '(idEfector, Efector, TipoEfector, DescTipoEfector, idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque,  idTurno, tipoPrestacion,  updated) ' +
-            'VALUES  ( ' + ag.idEfector + ',\'' + ag.Organizacion + '\',\'' + ag.TipoEfector + '\',\'' + ag.DescTipoEfector +
-            '\',\'' + ag.idAgenda + '\',\'' + ag.FechaAgenda + '\',\'' + ag.HoraAgenda + '\',\'' + ag.estadoAgenda +
-            '\',' + ag.numeroBloque + ',\'' + ag.idTurno + '\',\'' + ag.tipoPrestacion + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-        await executeQuery(queryInsert);
-
-    } catch (error) {
-        return (error);
     }
 }
 
@@ -240,11 +216,25 @@ function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, 
     return `${columnName} IN (${parameterNames.join(',')})`;
 }
 
-async function eliminaAgenda(idsAgendas: any[]) {
+async function eliminaAgendas(idsAgendas: any[]) {
     const result = new sql.Request(poolTurnos);
     let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
     try {
         return result.query(query);
+    } catch (err) {
+        let options = mailOptions;
+        options.text = `'error en el delete: ${query}'`;
+        sendMail(mailOptions);
+        await log(logRequest, 'andes:pecas:bi', null, 'delete', err, null);
+    }
+}
+
+async function eliminaAgenda(idAgenda) {
+    // const result = new sql.Request(poolTurnos);
+    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda ='${idAgenda}'`;
+    try {
+        return executeQuery(query);
+        // return result.query(query);
     } catch (err) {
         let options = mailOptions;
         options.text = `'error en el delete: ${query}'`;
@@ -319,14 +309,10 @@ function calcularEdad(fechaNacimiento) {
 
 async function executeQuery(query: any) {
     try {
-        query += ' select SCOPE_IDENTITY() as id';
-        const result = await new sql.Request(poolTurnos).query(query);
-        if (result && result.recordset) {
-            return result.recordset[0].id;
-        }
+        await new sql.Request(poolTurnos).query(query);
     } catch (err) {
         let options = mailOptions;
-        options.text = `'error al insertar en sql: ${query}'`;
+        options.text = `'error en consulta sql: ${query}'`;
         sendMail(mailOptions);
         await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
         return err;
