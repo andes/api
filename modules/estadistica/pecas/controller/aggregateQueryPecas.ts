@@ -1273,9 +1273,7 @@ export async function pecasExport(start, end) {
         { $out: 'pecas' }
     ];
 
-    const aggr = Agenda.aggregate(pipeline);
-    const data = await toArray(aggr.cursor({}).exec());
-    return;
+    return await Agenda.aggregate(pipeline);
 }
 
 
