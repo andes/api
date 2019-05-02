@@ -8,7 +8,7 @@
     "@andes/drive": "file:packages/drive",
     "@andes/event-bus": "file:packages/event-bus",
     "@andes/fhir": "file:packages/fhir",
-    "@andes/log": "^1.1.2",
+    "@andes/log": "^1.1.5",
     "@andes/match": "^1.1.12",
     "@andes/mongoose-plugin-audit": "file:packages/mongoose-plugin-audit",
     "@types/async": "^2.0.49",

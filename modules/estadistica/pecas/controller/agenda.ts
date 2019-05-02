@@ -306,7 +306,6 @@ function calcularEdad(fechaNacimiento) {
     }
     return edad;
 }
-
 async function executeQuery(query: any) {
     try {
         await new sql.Request(poolTurnos).query(query);
