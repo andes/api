@@ -1,10 +1,9 @@
-import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { Pecas } from '../schemas/pecas';
 import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
 import { Organizacion } from '../../../../core/tm/schemas/organizacion';
-import { pecasExport } from '../controller/aggregateQueryPecas';
+import { pecasExport, exportDinamicasSinTurnos } from '../controller/aggregateQueryPecas';
 import { log } from '@andes/log';
 import { sendMail } from '../../../../utils/roboSender/sendEmail';
 import { emailListString } from '../../../../config.private';
@@ -59,6 +58,8 @@ export async function consultaPecas(done, start, end) {
         await Pecas.remove({});
         // Exportamos los registros directamente desde mongodb
         await pecasExport(start, end);
+        exportDinamicasSinTurnos(start, end);
+
         let pecasData: any = await Pecas.find({});
         let insertsArray = [];
         let cantidadRegistros = pecasData.length;
@@ -91,6 +92,10 @@ export async function consultaPecas(done, start, end) {
 async function insertCompleto(turno: any, idEfectorSips) {
     // Chequeos necesarios
     let fechaNac = (turno.FechaNacimiento && moment(turno.FechaNacimiento).year()) > 1900 ? `'${turno.FechaNacimiento}'` : null;
+    let FechaConsulta = turno.FechaConsulta ? `'${turno.FechaConsulta}'` : null;
+    let reasignado = turno.reasignado ? `'${turno.reasignado}'` : null;
+    let periodo = turno.periodo ? `'${turno.periodo}'` : null;
+
     let dni = turno.DNI !== '' ? turno.DNI : null;
     let profesional = turno.Profesional ? turno.Profesional.replace('\'', '\'\'') : null;
     let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
@@ -102,6 +107,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
     let turnosProfesional = turno.turnosProfesional ? turno.turnosProfesional : null;
     let turnosProgramados = turno.turnosProgramados ? turno.turnosProgramados : null;
     let numeroBloque = turno.sobreturno === 'SI' ? -1 : turno.numeroBloque;
+
 
     let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
         '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
@@ -120,7 +126,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
         '\',' + turno.IdZona + ',' + turno.Zona + ',' + turno.SubZona + ',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
         '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
         '\',' + numeroBloque + ',' + turnosProgramados + ',' + turnosProfesional + ',' + turnosLlaves + ',' + turnosDelDia +
-        ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',\'' + turno.Periodo + '\',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
+        ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',' + FechaConsulta + ',\'' + turno.HoraTurno + '\',' + periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
         '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
         // DATOS PACIENTE
         '\',' + dni + ',\'' + pacienteApellido + '\',\'' + pacienteNombres + '\',\'' + turno.HC + '\',\'' + turno.CodSexo +
@@ -132,8 +138,8 @@ async function insertCompleto(turno: any, idEfectorSips) {
         '\',\'' + turno.Depto + '\',\'' + turno.Manzana + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
         '\',' + turno.Peso + ',' + turno.Talla + ',\'' + turno.TAS + '\',\'' + turno.TAD + '\',\'' + turno.IMC + '\',\'' + turno.RCVG +
         // DATOS CONSULTA
-        '\',\'' + turno.asistencia + '\',\'' + turno.reasignado +
-        '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
+        '\',\'' + turno.asistencia + '\',' + reasignado +
+        ',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
         '\',\'' + turno.SemanticTag1 + '\',\'' + turno.SnomedConcept1 + '\',\'' + turno.SnomedTerm1 + '\',' + turno.primeraVez1 +
         ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
         '\',\'' + turno.SemanticTag2 + '\',\'' + turno.SnomedConcept2 + '\',\'' + turno.SnomedTerm2 + '\',' + turno.primeraVez2 +
