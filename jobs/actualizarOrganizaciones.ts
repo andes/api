@@ -37,27 +37,28 @@ export async function actualizarContacto() {
     let updatePromises = [];
     try {
         let organizaciones: any[] = await Organizacion.find({ showMapa: true }); // , 'contacto.0': { $exists: false } });
+        let contactoNulo: String = 'null';  // Para control de response de sisa (Si el contacto esta vacío devuelve el string 'null')
         for (let i = 0; i < organizaciones.length; i++) {
             let organizacionSisa = await validarOrganizacionSisa(organizaciones[i].codigo.sisa);
             if (organizacionSisa && organizacionSisa[0] === 200) {
                 let contactos = [];
                 let contactoAux;
-                if (organizacionSisa[1].telefono1 && organizacionSisa[1].telefono1.numero !== 'null') {
+                if (organizacionSisa[1].telefono1 && organizacionSisa[1].telefono1.numero !== contactoNulo) {
                     contactos.push({ tipo: 'fijo', valor: parseTelefono(organizacionSisa[1].telefono1.numero), ranking: 0, ultimaActualizacion: new Date(), activo: true });
                 }
-                if (organizacionSisa[1].telefono2 && organizacionSisa[1].telefono2.numero !== 'null') {
+                if (organizacionSisa[1].telefono2 && organizacionSisa[1].telefono2.numero !== contactoNulo) {
                     contactoAux = parseTelefono(organizacionSisa[1].telefono2.numero);
                     if (!contactos.find(c => c.valor === contactoAux)) {
                         contactos.push({ tipo: 'fijo', valor: contactoAux, ranking: 0, ultimaActualizacion: new Date(), activo: true });
                     }
                 }
-                if (organizacionSisa[1].telefono3 && organizacionSisa[1].telefono3.numero !== 'null') {
+                if (organizacionSisa[1].telefono3 && organizacionSisa[1].telefono3.numero !== contactoNulo) {
                     contactoAux = parseTelefono(organizacionSisa[1].telefono3.numero);
                     if (!contactos.find(c => c.valor === contactoAux)) {
                         contactos.push({ tipo: 'fijo', valor: contactoAux, ranking: 0, ultimaActualizacion: new Date(), activo: true });
                     }
                 }
-                if (organizacionSisa[1].telefono4 && organizacionSisa[1].telefono4.numero !== 'null') {
+                if (organizacionSisa[1].telefono4 && organizacionSisa[1].telefono4.numero !== contactoNulo) {
                     contactoAux = parseTelefono(organizacionSisa[1].telefono4.numero);
                     if (!contactos.find(c => c.valor === contactoAux)) {
                         contactos.push({ tipo: 'fijo', valor: contactoAux, ranking: 0, ultimaActualizacion: new Date(), activo: true });
