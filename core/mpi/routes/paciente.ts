@@ -13,6 +13,7 @@ import { EventCore } from '@andes/event-bus';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
 
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 const logD = debug('paciente-controller');
 const router = express.Router();
 
@@ -267,92 +268,6 @@ router.get('/pacientes/search', (req, res, next) => {
 });
 
 
-// Simple mongodb query by ObjectId --> better performance
-router.get('/pacientes/:id', (req, res, next) => {
-    // busca en pacienteAndes y en pacienteMpi
-    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
-        return next(403);
-    }
-    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
-        return next(404);
-    }
-    controller.buscarPaciente(req.params.id).then((resultado: any) => {
-        if (resultado) {
-            EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
-            res.json(resultado.paciente);
-        } else {
-            return next(500);
-        }
-    }).catch((err) => {
-        return next(err);
-    });
-
-});
-
-
-/**
- * @swagger
- * /pacientes:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un arreglo de objetos Paciente
- *     summary: Buscar pacientes usando ElasticSearch
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: type
- *         description: tipo de búsqueda
- *         in: body
- *         required: true
- *         type: string
- *         enum:
- *              - simplequery
- *              - multimatch
- *              - suggest
- *       - name: cadenaInput
- *         description: pámetro requerido para multimatch
- *         in: body
- *         type: string
- *       - name: claveBlocking
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: string
- *       - name: percentage
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: boolean
- *       - name: documento
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: nombre
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: apellido
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: sexo
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: fechaNacimiento
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: Date
- *       - name: escaneado
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: boolean
- *     responses:
- *       200:
- *         description: un arreglo de objetos paciente
- *       400:
- *         description: Error- Agregar parámetro de búsqueda
- *
- */
 // Search using elastic search
 router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
@@ -364,6 +279,37 @@ router.get('/pacientes', (req, res, next) => {
     }).catch(error => {
         return next(error);
     });
+});
+
+
+// Simple mongodb query by ObjectId --> better performance
+router.get('/pacientes/:id', async (req, res, next) => {
+    // busca en pacienteAndes y en pacienteMpi
+    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
+        return next(403);
+    }
+    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
+        return next(404);
+    }
+    try {
+        const idPaciente = req.params.id;
+        const { paciente: pacienteBuscado } = await controller.buscarPaciente(idPaciente);
+        if (pacienteBuscado && pacienteBuscado.documento) {
+            let pacienteConOS = pacienteBuscado.toObject();
+            pacienteConOS.id = pacienteConOS._id;
+            try {
+                pacienteConOS.financiador = await getObraSocial(pacienteConOS);
+                res.json(pacienteConOS);
+            } catch (error) {
+                return res.json(pacienteBuscado);
+            }
+        } else {
+            return res.json(pacienteBuscado);
+        }
+    } catch (err) {
+        return next('Paciente no encontrado');
+    }
+
 });
 
 router.put('/pacientes/mpi/:id', (req, res, next) => {
@@ -581,7 +527,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
             if (patientFound) {
                 const direccionOld = patientFound.direccion[0];
                 const data = req.body;
-                if (patientFound.estado === 'validado' && !patientFound.isScan) {
+                if (patientFound && patientFound.estado === 'validado' && !patientFound.isScan) {
                     delete data.documento;
                     delete data.estado;
                     delete data.sexo;

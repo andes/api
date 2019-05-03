@@ -6,6 +6,9 @@ import * as moment from 'moment';
 import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { Logger } from '../../../../utils/logService';
 import { userScheduler } from '../../../../config.private';
+import { log } from '@andes/log';
+import { sendMail } from '../../../../utils/roboSender/sendEmail';
+import { emailListString } from '../../../../config.private';
 
 
 let poolPrestaciones;
@@ -17,7 +20,27 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
+let logRequest = {
+    user: {
+        usuario: { nombre: 'pecasFueraDeAgenda', apellido: 'pecasFueraDeAgenda' },
+        app: 'jobPecas',
+        organizacion: 'Subsecretaría de salud'
+    },
+    ip: 'localhost',
+    connection: {
+        localAddress: ''
+    }
+};
 
+let mailOptions = {
+    from: 'info@andes.gob.ar',
+    to: emailListString,
+    subject: 'Error pecas fuera de agenda',
+    text: '',
+    html: '',
+    attachments: null
+
+};
 /**
  * Actualiza la tabla fuera_de_agenda de la BD Andes
  *
@@ -39,11 +62,22 @@ export async function fueraAgendaPecas(start, end, done) {
     pipeline2 = [
         {
             $match: {
-                $and: [
-                    { $or: orgExcluidas },
-                    { createdAt: { $gte: new Date(start) } },
-                    { createdAt: { $lte: new Date(end) } }
-                ],
+                $or: [
+                    {
+                        $and: [
+                            { $or: orgExcluidas },
+                            { createdAt: { $gte: new Date(start) } },
+                            { createdAt: { $lte: new Date(end) } }
+                        ]
+                    },
+                    {
+                        $and: [
+                            { $or: orgExcluidas },
+                            { updatedAt: { $gte: new Date(start) } },
+                            { updatedAt: { $lte: new Date(end) } }
+                        ]
+                    }
+                ]
             }
         },
         {
@@ -77,7 +111,6 @@ export async function fueraAgendaPecas(start, end, done) {
 
 async function auxiliar(pres: any) {
     let prestacion: any = {};
-
     let efector: any = {};
     try {
         let org: any = await getEfector(pres.createdBy.organizacion._id);
@@ -155,7 +188,7 @@ async function auxiliar(pres: any) {
             prestacion.codifica = 'PROFESIONAL';
             if (pres.diagnostico.codificaciones[0].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag1CodigoOriginal = pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo;
-                prestacion.Desc1DiagOriginal = pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.nombre;
+                prestacion.Desc1DiagOriginal = pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.sinonimo;
             }
             if (pres.diagnostico.codificaciones[0].codificacionProfesional.snomed && pres.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId) {
                 prestacion.conceptId1 = pres.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId;
@@ -168,7 +201,7 @@ async function auxiliar(pres: any) {
         // Diagnóstico 1 AUDITADO
         if (pres.diagnostico.codificaciones.length > 0 && pres.diagnostico.codificaciones[0].codificacionAuditoria && pres.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
             prestacion.Diag1CodigoAuditado = pres.diagnostico.codificaciones[0].codificacionAuditoria.codigo;
-            prestacion.Desc1DiagAuditado = pres.diagnostico.codificaciones[0].codificacionAuditoria.nombre;
+            prestacion.Desc1DiagAuditado = pres.diagnostico.codificaciones[0].codificacionAuditoria.sinonimo;
             prestacion.ConsC2 = pres.diagnostico.codificaciones[0].codificacionAuditoria.c2 && pres.diagnostico.codificaciones[0].primeraVez ? 'SI' : 'NO';
             prestacion.Tipodeconsulta = pres.diagnostico.codificaciones[0].primeraVez ? 'Primera vez' : 'Ulterior';
             prestacion.Principal = 1;
@@ -190,7 +223,7 @@ async function auxiliar(pres: any) {
         if (pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1].codificacionProfesional) {
             if (pres.diagnostico.codificaciones[1].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag2CodigoOriginal = pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo;
-                prestacion.Desc2DiagOriginal = pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.nombre;
+                prestacion.Desc2DiagOriginal = pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.sinonimo;
             }
             if (pres.diagnostico.codificaciones[1].codificacionProfesional.snomed && pres.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId) {
                 prestacion.conceptId2 = pres.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId;
@@ -201,7 +234,7 @@ async function auxiliar(pres: any) {
         // Diagnóstico 2 AUDITADO
         if (pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1].codificacionAuditoria && pres.diagnostico.codificaciones[1].codificacionAuditoria.codigo) {
             prestacion.Diag2CodigoAuditado = pres.diagnostico.codificaciones[1].codificacionAuditoria.codigo;
-            prestacion.Desc2DiagAuditado = pres.diagnostico.codificaciones[1].codificacionAuditoria.nombre;
+            prestacion.Desc2DiagAuditado = pres.diagnostico.codificaciones[1].codificacionAuditoria.sinonimo;
         }
 
         // Diagnóstico 3 ORIGINAL
@@ -221,7 +254,7 @@ async function auxiliar(pres: any) {
         if (pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2].codificacionProfesional) {
             if (pres.diagnostico.codificaciones[2].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag3CodigoOriginal = pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo;
-                prestacion.Desc3DiagOriginal = pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.nombre;
+                prestacion.Desc3DiagOriginal = pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.sinonimo;
             }
             if (pres.diagnostico.codificaciones[2].codificacionProfesional.snomed && pres.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId) {
                 prestacion.conceptId3 = pres.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId;
@@ -232,7 +265,7 @@ async function auxiliar(pres: any) {
         // Diagnóstico 3 AUDITADO
         if (pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2].codificacionAuditoria && pres.diagnostico.codificaciones[2].codificacionAuditoria.codigo) {
             prestacion.Diag3CodigoAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.codigo;
-            prestacion.Desc3DiagAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.nombre;
+            prestacion.Desc3DiagAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.sinonimo;
         }
 
         prestacion.Profesional = pres.createdBy.nombreCompleto.replace('\'', '\'\'');
@@ -284,7 +317,7 @@ async function auxiliar(pres: any) {
         prestacion.telefono = pres.paciente && pres.paciente.telefono ? pres.paciente.telefono : '';
         let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.fueraAgenda +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
-            'FechaConsulta, Periodo, estadoAuditoria, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
+            'FechaConsulta, Periodo, Tipodeconsulta, estadoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
             'HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
             'idBarrio, Barrio, idLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, Calle, Altura,' +
             'Piso, Depto, Manzana, Longitud, Latitud, Peso, Talla, TAS, TAD, IMC, RCVG, Diag1CodigoOriginal, Desc1DiagOriginal,' +
@@ -316,9 +349,9 @@ async function auxiliar(pres: any) {
             '\',' + prestacion.CodigoServicio + ',\'' + prestacion.Servicio + '\',\'' + prestacion.codifica + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\',\'' + pres.idPrestacion + '\')';
 
         return executeQuery(queryInsert);
-        // console.log('pres ', prestacion);
 
     } catch (error) {
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', error, null);
         return (error);
     }
 }
@@ -333,7 +366,7 @@ function organizacionesExcluidas() {
 async function eliminaPrestacion(idPrestacion: string) {
     const result = new sql.Request(poolPrestaciones);
     let query = `DELETE FROM ${configPrivate.conSqlPecas.table.fueraAgenda} WHERE idPrestacion='${idPrestacion}'`;
-    return await result.query(query);
+    return executeQuery(query);
 }
 
 const orgCache = {};
@@ -407,7 +440,10 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        Logger.log(userScheduler, 'scheduler', 'insert', query);
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
+        let options = mailOptions;
+        options.text = `'error al insertar en sql fuera Agenda: ${query}'`;
+        sendMail(mailOptions);
         return err;
     }
 }

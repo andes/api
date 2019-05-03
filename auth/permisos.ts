@@ -356,5 +356,38 @@ export default [
             },
         ]
     },
+    {
+        key: 'campania',
+        title: 'Campañas de salud',
+        avoidAll: true,
+        child: [
+            {
+                key: 'crear',
+                title: 'Crear y modificar',
+                comment: 'Permite crear y modificar campañas de salud',
+                type: 'boolean'
+            },
+            {
+                key: 'ver',
+                title: 'Visualizar',
+                comment: 'Habilita la visualización de campañas de salud',
+                type: 'boolean'
+            }
+        ]
+    },
+    {
+        key: 'dashboard',
+        title: 'Panel de datos estadísticos en gráficos y tablas',
+        child: [
+            { key: 'citas', title: 'Dashboard Citas', child: [
+                { key: 'ver', title: 'Ver Dashboard Citas', type: 'boolean'},
+                { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean'},
+                { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion'},
+            ]},
+            { key: 'top', title: 'Dashboard TOP', child: [
+                { key: 'ver', title: 'Ver Dashboard Top', type: 'boolean'}
+            ]}
+        ]
+    }
 
 ];
