@@ -229,7 +229,7 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
     }
 
     if (!request.query.dia) {
-        let aggregate = turno.aggregate(
+        let aggregate = await turno.aggregate(
             [{
                 $match: {
                     anulado: { $exists: false }
@@ -263,11 +263,10 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
                     }
                 }]);
 
-        let datos = await toArray(aggregate.cursor({}).exec());
-        response.status(201).json(datos);
+        response.status(201).json(aggregate);
 
     } else {
-        let aggregate = turno.aggregate(
+        let aggregate = await turno.aggregate(
             [{
                 $match: {
                     anulado: { $exists: false }
@@ -301,8 +300,7 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
                     }
                 }]);
 
-        let datos = await toArray(aggregate.cursor({}).exec());
-        response.status(201).json(datos);
+        response.status(201).json(aggregate);
     }
 });
 

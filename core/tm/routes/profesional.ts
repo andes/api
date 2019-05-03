@@ -13,7 +13,6 @@ import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMat
 import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
-import { Logger } from '../../../utils/logService';
 import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
 
@@ -479,33 +478,16 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
 
     }
     if (req.body.profesional) {
-        // console.log(req.body.profesional);
-        // profesional.findOne({
-        //     'documento': req.body.profesional.documento
-        // }, (err, person) => {
-        //     if (person) {
-        //         res.json(null);
-        //     } else {
+
         const newProfesional = new profesional(req.body.profesional);
         Auth.audit(newProfesional, req);
         newProfesional.save(async (err2) => {
 
 
-            let logRequest = {
-                user: {
-                    usuario: { nombre: req.user.nombre, apellido: req.user.apellido },
-                    app: 'matriculaciones',
-                    organizacion: req.user.organizacion.nombre
-                },
-                ip: 'localhost',
-                connection: {
-                    localAddress: ''
-                }
-            };
             try {
-                await log(logRequest, 'profesional:post', null, 'profesional:post', newProfesional, null);
+                await log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
             } catch (err) {
-                await log(logRequest, 'profesional:post', null, 'profesional:post', err, newProfesional);
+                next(err);
             }
 
             if (err2) {
@@ -514,8 +496,7 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
             EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
             res.json(newProfesional);
         });
-        //     // }
-        // });
+
     }
 
 });
@@ -589,65 +570,28 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
     if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
         return next(403);
     }
-    profesional.findById(req.body.id, async (err, resultado: any) => {
-
-        const profesionalOriginal = resultado.toObject();
-        for (const key in req.body) {
-            resultado[key] = req.body[key];
-        }
-        Auth.audit(resultado, req);
-        resultado.save(async (err2) => {
+    let resultado: any = await profesional.findById(req.body.id);
 
 
-            let logRequest = {
-                user: {
-                    usuario: { nombre: req.user.nombre, apellido: req.user.apellido },
-                    app: 'matriculaciones',
-                    organizacion: req.user.organizacion.nombre
-                },
-                ip: 'localhost',
-                connection: {
-                    localAddress: ''
-                }
-            };
-            try {
-                await log(logRequest, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
-            } catch (err) {
-                await log(logRequest, 'profesional:put', null, 'profesional:put', err, profesionalOriginal);
-            }
+    const profesionalOriginal = resultado.toObject();
+    for (const key in req.body) {
+        resultado[key] = req.body[key];
+    }
+    Auth.audit(resultado, req);
+    await resultado.save();
 
-            if (err) {
-                return next(err);
-            }
-        });
-        EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
-        res.json(resultado);
 
-    });
+    try {
+        await log(req, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
+    } catch (err) {
+        next(err);
+    }
+
+
+    EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
+    res.json(resultado);
+
 });
-
-// router.put('/profesionales/actualizar', Auth.authenticate(), (req, res, next) => {
-//     if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
-//         return next(403);
-//     }
-//     profesional.findByIdAndUpdate(req.body.id, req.body, {
-//         new: true
-//     }, (err, data) => {
-
-
-//         Logger.log(req, 'profesional', 'updateProfesional', {
-//             accion: 'Actualizar profesional',
-//             ruta: req.url,
-//             method: req.method,
-//             data,
-//             err: err || false
-//         });
-//         if (err) {
-//             return next(err);
-//         }
-//         res.json(data);
-//     });
-// });
 
 
 // El delete está correcto, tomar como modelo para la documentación
@@ -688,72 +632,54 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     });
 });
 
-router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
+router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
     let profesionalOriginal;
-    profesional.findById(req.params.id, (err, resultado: any) => {
-        profesionalOriginal = resultado.toObject();
-        if (resultado) {
-            switch (req.body.op) {
-                case 'updateNotas':
-                    resultado.notas = req.body.data;
-                    break;
-                case 'updateSancion':
-                    resultado.sansiones.push(req.body.data);
-                    break;
-                case 'updatePosGrado':
-                    resultado.formacionPosgrado.push(req.body.data);
-                    break;
-                case 'updateGrado':
-                    resultado.formacionGrado.push(req.body.data);
-                    break;
-                case 'updateOtrosDatos':
-                    resultado.OtrosDatos = req.body.data;
-                    break;
-                case 'updateEstadoGrado':
-                    resultado.formacionGrado = req.body.data;
-                    break;
-                case 'updateEstadoPosGrado':
-                    resultado.formacionPosgrado = req.body.data;
-                    break;
-                case 'updateHabilitado':
-                    resultado.habilitado = req.body.data;
-                    break;
-            }
-            if (req.body.agente) {
-                resultado.agenteMatriculador = req.body.agente;
-
-            }
+    let resultado: any = await profesional.findById(req.params.id);
+    profesionalOriginal = resultado.toObject();
+    if (resultado) {
+        switch (req.body.op) {
+            case 'updateNotas':
+                resultado.notas = req.body.data;
+                break;
+            case 'updateSancion':
+                resultado.sansiones.push(req.body.data);
+                break;
+            case 'updatePosGrado':
+                resultado.formacionPosgrado.push(req.body.data);
+                break;
+            case 'updateGrado':
+                resultado.formacionGrado.push(req.body.data);
+                break;
+            case 'updateOtrosDatos':
+                resultado.OtrosDatos = req.body.data;
+                break;
+            case 'updateEstadoGrado':
+                resultado.formacionGrado = req.body.data;
+                break;
+            case 'updateEstadoPosGrado':
+                resultado.formacionPosgrado = req.body.data;
+                break;
+            case 'updateHabilitado':
+                resultado.habilitado = req.body.data;
+                break;
         }
+        if (req.body.agente) {
+            resultado.agenteMatriculador = req.body.agente;
 
-        Auth.audit(resultado, req);
-        resultado.save(async (err2) => {
+        }
+    }
 
-
-            let logRequest = {
-                user: {
-                    usuario: { nombre: req.user.nombre, apellido: req.user.apellido },
-                    app: 'matriculaciones',
-                    organizacion: req.user.organizacion.nombre
-                },
-                ip: 'localhost',
-                connection: {
-                    localAddress: ''
-                }
-            };
-            try {
-                await log(logRequest, 'profesional:patch', null, 'profesional:patch', resultado, profesionalOriginal);
-            } catch (err) {
-                await log(logRequest, 'profesional:patch', null, 'profesional:patch', err, profesionalOriginal);
-            }
-
-            if (err2) {
-                next(err2);
-            }
-            res.json(resultado);
-        });
+    Auth.audit(resultado, req);
+    await resultado.save();
+    try {
+        await log(req, 'profesional:patch', null, 'profesional:patch', resultado, profesionalOriginal);
+    } catch (err) {
+        next(err);
+    }
 
 
-    });
+    res.json(resultado);
+
 });
 
 router.get('/resumen', (req, res, next) => {
