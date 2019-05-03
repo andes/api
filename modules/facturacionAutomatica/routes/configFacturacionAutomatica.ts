@@ -31,6 +31,9 @@ router.post('/facturaArancelamiento', async (req, res, next) => {
 
     if (turno) {
         EventCore.emitAsync('facturacion:factura:create', turno);
+        res.json({ message: 'Enviado a facturación' });
+    } else {
+        return next('Arancelamiento sin turno');
     }
 });
 
