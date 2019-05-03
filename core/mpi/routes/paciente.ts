@@ -124,9 +124,7 @@ router.post('/pacientes/validar/', async (req, res, next) => {
                 resultado.existente = false;
             }
             res.json(resultado);
-            andesLog(req, logKeys.validacionPaciente.key, null, logKeys.validacionPaciente.operacion, resultado);
         } catch (err) {
-            andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, err);
             return next(err);
         }
     } else {
@@ -180,8 +178,7 @@ router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
     };
 
     try {
-        andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, req.body, null);
-
+        // Se busca el paciente en ANDES
         let patientFound: any = await paciente.findById(query).exec();
 
         if (patientFound) {
@@ -193,12 +190,13 @@ router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
                 delete data.fechaNacimiento;
             }
             let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
+            andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, pacienteUpdated, null);
             res.json(pacienteUpdated);
         } else {
             req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
 
-            // verifico si el paciente ya está en MPI
+            // Se busca el paciente en MPI
             let patientFountMpi: any = await pacienteMpi.findById(query).exec();
 
             if (patientFountMpi) {
@@ -209,17 +207,15 @@ router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
             const connElastic = new ElasticSync();
             let updated = await connElastic.sync(newPatient);
             if (updated) {
-                Logger.log(req, 'mpi', 'update', {
-                    original: nuevoPac,
-                    nuevo: newPatient
-                });
+                andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
             } else {
-                Logger.log(req, 'mpi', 'insert', newPatient);
+                andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
             }
             EventCore.emitAsync('mpi:patient:update', nuevoPac);
             res.json(nuevoPac);
         }
     } catch (error) {
+        andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, null, 'Error activando/desactivando paciente');
         return next(error);
     }
 });
@@ -595,8 +591,8 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 res.json(pacienteUpdated);
                 // si el paciente esta validado y hay cambios en direccion o localidad..
                 if (patientFound.estado === 'validado' && (direccionOld.valor !== data.direccion[0].valor ||
-                    direccionOld.georreferencia[0] !== data.direccion[0].georreferencia[0] ||
-                    direccionOld.georreferencia[1] !== data.direccion[0].georreferencia[1])) {
+                    direccionOld.geoReferencia[0] !== data.direccion[0].geoReferencia[0] ||
+                    direccionOld.geoReferencia[1] !== data.direccion[0].geoReferencia[1])) {
                     await controller.actualizarGeoReferencia(pacienteUpdated, req);
                 }
             } else {
@@ -615,26 +611,24 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 const connElastic = new ElasticSync();
                 let updated = await connElastic.sync(newPatient);
                 if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
-                        original: nuevoPac,
-                        nuevo: newPatient
-                    });
+                    andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
                 } else {
-                    Logger.log(req, 'mpi', 'insert', newPatient);
+                    andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
                 }
                 EventCore.emitAsync('mpi:patient:update', nuevoPac);
                 res.json(nuevoPac);
                 // se carga geo referencia desde api de google
                 if (direccionOld.valor !== req.body.direccion[0].valor ||
-                    direccionOld.georreferencia[0] !== req.body.direccion[0].georreferencia[0] ||
-                    direccionOld.georreferencia[1] !== req.body.direccion[0].georreferencia[1]) {
+                    direccionOld.geoReferencia[0] !== req.body.direccion[0].geoReferencia[0] ||
+                    direccionOld.geoReferencia[1] !== req.body.direccion[0].geoReferencia[1]) {
                     await controller.actualizarGeoReferencia(newPatient, req);
                 }
             }
         } else {
-            return res.json(resultado);
+            res.json(resultado);
         }
     } catch (error) {
+        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
         return next(error);
     }
 });
