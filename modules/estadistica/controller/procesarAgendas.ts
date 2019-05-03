@@ -23,9 +23,12 @@ export async function procesar(parametros: any) {
         $or: [{ 'bloques.turnos.estado': 'asignado' }, { 'sobreturnos.estado': 'asignado' }]
     };
     let matchTurno = {};
-
+    let matchEstado = {};
+   
+    console.log('ESTADO', parametros.estadoFacturacion);
     if (parametros.estadoFacturacion) {
         match['bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
+        matchTurno['_bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
     }
 
     if (parametros.fechaDesde) {
@@ -47,7 +50,7 @@ export async function procesar(parametros: any) {
         match['profesionales._id'] = mongoose.Types.ObjectId(parametros.profesional);
     }
 
-    let matchEstado = {};
+    
     if (parametros.estado) {
         matchEstado['$expr'] = { $and: [{ $eq: ['$estado', parametros.estado] }] };
     }
@@ -184,6 +187,7 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
+
     const turnosAsignados = await agenda.aggregate(pipelineBuscador);
     return turnosAsignados;
 }
