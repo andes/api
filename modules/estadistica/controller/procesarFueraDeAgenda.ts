@@ -74,12 +74,13 @@ export async function procesar(parametros: any) {
                 turno: null,
                 idPrestacion: prestacion.idPrestacion,
             };
-            
+
             if (prestacion.paciente && prestacion.paciente.obraSocial === os || os === 'todos') {
                 dtoPrestacion['financiador'] = prestacion.paciente.obraSocial;
                 filtroOS = true;
             } else {
-                if (prestacion.paciente && prestacion.paciente.obraSocial && prestacion.paciente.obraSocial.financiador === os && os === 'SUMAR'){
+
+                if (prestacion.paciente && prestacion.paciente.obraSocial && prestacion.paciente.obraSocial.financiador === os && os === 'SUMAR') {
                     dtoPrestacion['financiador'] = prestacion.paciente.obraSocial.financiador;
                     filtroOS = true;
                 } else {
@@ -100,7 +101,6 @@ export async function procesar(parametros: any) {
         });
         return resultado;
     } catch (error) {
-        console.log(error);
         return (error);
     }
 }

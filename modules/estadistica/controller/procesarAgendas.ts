@@ -24,8 +24,6 @@ export async function procesar(parametros: any) {
     };
     let matchTurno = {};
     let matchEstado = {};
-   
-    console.log('ESTADO', parametros.estadoFacturacion);
     if (parametros.estadoFacturacion) {
         match['bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
         matchTurno['_bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
@@ -50,7 +48,6 @@ export async function procesar(parametros: any) {
         match['profesionales._id'] = mongoose.Types.ObjectId(parametros.profesional);
     }
 
-    
     if (parametros.estado) {
         matchEstado['$expr'] = { $and: [{ $eq: ['$estado', parametros.estado] }] };
     }
