@@ -1,5 +1,4 @@
 import * as AgendarModel from '../schemas/agenda';
-import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { paciente as Paciente, pacienteMpi as PacienteMpi } from '../../../core/mpi/schemas/paciente';
