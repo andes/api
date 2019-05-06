@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
@@ -21,6 +22,7 @@ const router = express.Router();
 const dbgTurno = debug('dbgTurno');
 
 router.get('/turno/:id*?', async (req, res, next) => {
+
     try {
         const resultado = await turnosController.getTurno(req);
         res.json(resultado);
@@ -350,9 +352,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
     }
 });
 
-
 router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     let agendaRes;
+
     try {
         agendaRes = await getAgenda(req.params.idAgenda);
     } catch (err) {
@@ -363,7 +365,9 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     });
     const indexTurno = (agendaRes as any).bloques[indexBloque].turnos.findIndex(t => {
         return (t.id === req.params.idTurno);
+        // return (console.log('Primero: ', t.id) === console.log('Segundo: ', req.params.idTurno));
     });
+
     const update = {};
     if (req.body.avisoSuspension) {
         const etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
@@ -374,6 +378,15 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
 
     }
+    if (req.body.actualizaObraSocial) {
+        const etiquetaPaciente: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.paciente.obraSocial';
+        update[etiquetaPaciente] = req.body.actualizaObraSocial;
+    }
+    if (req.body.estadoFacturacion) {
+        const etiquetaEstadoFacturacion: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.estadoFacturacion';
+        update[etiquetaEstadoFacturacion] = req.body.estadoFacturacion;
+    }
+
     const query = {
         _id: req.params.idAgenda,
     };

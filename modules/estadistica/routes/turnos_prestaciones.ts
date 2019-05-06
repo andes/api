@@ -20,7 +20,8 @@ router.get('/turnos_prestaciones', async (req, res, next) => {
         prestacion: req.query.prestacion,
         estado: req.query.estado,
         profesional: req.query.idProfesional,
-        financiador: req.query.financiador
+        financiador: req.query.financiador,
+        estadoFacturacion: req.query.estadoFacturacion
     };
     try {
         // Procesa los turnos aplicando los filtros

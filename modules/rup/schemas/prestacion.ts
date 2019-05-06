@@ -25,6 +25,11 @@ export let schema = new mongoose.Schema({
         required: true,
         default: false
     },
+    estadoFacturacion: {
+        tipo: String,
+        numero: Number,
+        estado: String
+    },
     // Datos de la Solicitud
     solicitud: {
 
