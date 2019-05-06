@@ -40,7 +40,6 @@ const facets = {
     ],
 
     profesionales: [
-        turnoAsignadoMatch,
         { $unwind: '$profesionales' },
         {
             $group: {
@@ -48,7 +47,8 @@ const facets = {
                 count: { $sum: 1 },
                 nombre: {$addToSet: { $concat: ['$profesionales.nombre', ' ', '$profesionales.apellido'] }}
             }
-        }
+        },
+        { $sort: { count: -1 }}
     ],
 
     profesionalesAgendas: [
@@ -59,11 +59,11 @@ const facets = {
                 count: { $sum: 1 },
                 nombre: {$addToSet: { $concat: ['$profesionales.nombre', ' ', '$profesionales.apellido'] }}
             }
-        }
+        },
+        { $sort: { count: -1 }}
     ],
 
     administrativo: [
-        turnoAsignadoMatch,
         {
             $group: {
                 _id: '$turno.updatedBy.username',
@@ -74,18 +74,18 @@ const facets = {
         }
     ],
 
-    prestacion: [
-        turnoAsignadoMatch,
+    prestacionTurno: [
         {
             $group: {
-                _id: '$turno.tipoPrestacion.conceptId',
+                _id: '$prestacionesTurnos.conceptId',
                 count: { $sum: 1 },
-                nombre: { $first: '$turno.tipoPrestacion.term' }
+                nombre: { $first: '$prestacionesTurnos.term' }
             }
-        }
+        },
+        { $sort: { count: -1 }}
     ],
 
-    prestacionAgendas: [
+    prestacionAgenda: [
         { $unwind: '$tipoPrestaciones' },
         {
             $group: {
@@ -93,7 +93,8 @@ const facets = {
                 count: { $sum: 1 },
                 nombre: { $first: '$tipoPrestaciones.term' }
             }
-        }
+        },
+        { $sort: { count: -1 }}
     ],
 
     estadoAgenda: [
@@ -103,7 +104,8 @@ const facets = {
                 nombre: { $first: '$estado' },
                 count: { $sum: 1 }
             }
-        }
+        },
+        { $sort: { count: -1 }}
     ],
 
     estadoTurno: [
@@ -123,7 +125,8 @@ const facets = {
             _id: '$real-state',
             count: { $sum: 1 },
             nombre: { $first: '$real-state' }
-        }}
+        }},
+        { $sort: { count: -1 }}
     ],
 
     tipoTurno: [
@@ -136,7 +139,8 @@ const facets = {
             _id: '$turno.tipoTurno',
             count: { $sum: 1 },
             nombre: { $first: '$turno.tipoTurno' }
-        }}
+        }},
+        { $sort: { count: -1 }}
     ]
 };
 
@@ -146,10 +150,10 @@ function makePrimaryMatch(filtros, permisos) {
     if (filtros.tipoDeFiltro === 'turnos') {
         match.estado = { $nin: ['planificacion', 'pausada', 'borrada'] };
     } else {
-        // match.estado = { $ne: 'borrada'}; definir en reunion
-        if (permisos.tipoPrestacion) {
-            match['tipoPrestaciones._id'] = { $in: permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)) };
-        }
+        // if (permisos.tipoPrestacion) {
+        //     console.log('permisos.tipoPrestacion.map ', permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)))
+        //     match['tipoPrestaciones._id'] = { $in: permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)) };
+        // }
     }
 
     if (filtros.fechaDesde) {
@@ -177,9 +181,9 @@ function makeSecondaryMatch(filtros, permisos) {
     }
 
     if (filtros.tipoDeFiltro === 'turnos') {
-        if (permisos.tipoPrestacion) {
-            match['turno.tipoPrestacion._id'] = { $in: permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)) };
-        }
+        // if (permisos.tipoPrestacion) {
+        //     match['turno.tipoPrestacion._id'] = { $in: permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)) };
+        // }
 
         if (filtros.edad) {
             const ages = filtros.edad.split('-');
@@ -200,7 +204,7 @@ function makeSecondaryMatch(filtros, permisos) {
         }
 
         if (filtros.prestacion) {
-            match['turno.tipoPrestacion.conceptId'] = {
+            match['prestacionesTurnos.conceptId'] = {
                 $in: filtros.prestacion.map(pres => pres.id)
             };
         }
@@ -218,7 +222,7 @@ function makeSecondaryMatch(filtros, permisos) {
         }
     } else {
         if (filtros.prestacion) {
-            match['tipoPrestaciones.conceptId'] = {
+            match['prestacionesAgendas.conceptId'] = {
                 $in: filtros.prestacion.map(pres => pres.id)
             };
         }
@@ -236,7 +240,7 @@ function makeFacet(filtros) {
     const facet: any = {};
 
     if (filtros.tipoDeFiltro === 'turnos') {
-        facet['prestacion'] = facets['prestacion'];
+        facet['prestacion'] = facets['prestacionTurno'];
         if (!filtros.profesionales) {
             facet['profesionales'] = facets['profesionales'];
         }
@@ -244,7 +248,7 @@ function makeFacet(filtros) {
         facet['tipoTurno'] = facets.tipoTurno;
     } else {
         facet['profesionales'] = facets['profesionalesAgendas'];
-        facet['prestacion'] = facets['prestacionAgendas'];
+        facet['prestacion'] = facets['prestacionAgenda'];
         facet['estado_agenda'] = facets['estadoAgenda'];
     }
 
@@ -317,7 +321,18 @@ export async function estadisticas(filtros, permisos) {
         { $project: {
             turno: '$_bloques.turnos',
             profesionales: 1,
-            prestaciones: '$_bloques.tipoPrestaciones',
+            prestacionesTurnos: {
+                $cond: {
+                    if: {
+                        $ne: [{
+                            $in: [{ $type: '$_bloques.turnos.tipoPrestacion' }, ['missing', 'null', 'undefined']]
+                        }, true]
+                    },
+
+                    then: '$_bloques.turnos.tipoPrestacion',
+                    else: { $arrayElemAt: ['$_bloques.tipoPrestaciones', 0] }
+                }
+            },
             estado: '$estado'
         }},
         { $addFields: { 'turno.tipoTurno': {
