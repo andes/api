@@ -2,7 +2,6 @@ import * as mongoose from 'mongoose';
 import { schema as cie10Schema } from '../../../core/term/schemas/cie10';
 import { SnomedConcept } from './snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 
 const pacienteSchema = new mongoose.Schema({
@@ -15,7 +14,7 @@ const pacienteSchema = new mongoose.Schema({
     telefono: String,
     sexo: String,
     carpetaEfectores: [{
-        organizacion: nombreSchema,
+        organizacion: String,
         nroCarpeta: String
     }],
     obraSocial: { type: ObraSocialSchema }
