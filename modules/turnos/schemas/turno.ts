@@ -94,10 +94,9 @@ const turnoSchema = new mongoose.Schema({
             primeraVez: Boolean,
         }]
     },
-    // estadoFacturacion: IEstadoFacturacion,
     estadoFacturacion: {
         tipo: String,
-        estado: String,
+        estado: { type: String, default: 'Sin comprobante' },
         numeroComprobante: String
     },
     confirmedAt: Date, /* Confirmación del turno por el  paciente */
