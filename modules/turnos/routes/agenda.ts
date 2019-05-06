@@ -640,7 +640,7 @@ router.post('/dashboard/localidades', async (req, res, next) => {
 router.get('/agenda/turno/:idTurno', async (req, res, next) => {
     try {
         const datosTurno = await agendaCtrl.getDatosTurnos(req.params.idTurno);
-        return res.json(datosTurno);
+        res.json(datosTurno);
     } catch (err) {
         return next(err);
     }
