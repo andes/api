@@ -19,7 +19,12 @@ export async function procesar(parametros: any) {
     };
 
     if (parametros.estadoFacturacion) {
-        match['estadoFacturacion.estado'] = parametros.estadoFacturacion;
+        if (parametros.estadoFacturacion === 'Sin comprobante') {
+            match['estadoFacturacion'] = { $exists: false };
+        } else {
+            match['estadoFacturacion.estado'] = parametros.estadoFacturacion;
+        }
+
     }
     let match2 = {};
 
@@ -30,8 +35,16 @@ export async function procesar(parametros: any) {
         match2 = { 'prestacion.solicitud.profesional.id': new mongoose.Types.ObjectId(parametros.profesional) };
     }
 
+    // if (parametros.estadoFacturacion) {
+    //     match2['estadoFacturacion.estado'] = parametros.estadoFacturacion;
+    // }
     if (parametros.estadoFacturacion) {
-        match2['estadoFacturacion.estado'] = parametros.estadoFacturacion;
+        if (parametros.estadoFacturacion === 'Sin comprobante') {
+            match2['estadoFacturacion'] = { $exists: false };
+        } else {
+            match2['estadoFacturacion.estado'] = parametros.estadoFacturacion;
+        }
+
     }
 
     pipeline2 = [
