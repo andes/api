@@ -450,23 +450,25 @@ router.post('/pacientes', async (req, res, next) => {
         return next(403);
     }
     try {
-        if (req.body.documento) {
+        let pacienteNuevo = req.body.paciente;
+        let ignorarSugerencias = req.body.ignoreCheck;
+        if (pacienteNuevo.documento) {
             // Todo loguear posible duplicado si ignora el check
-            let resultado = await controller.checkRepetido(req.body);
-            if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
-                req.body.activo = true;
-                let pacienteObj = await controller.createPaciente(req.body, req);
+            let resultado = await controller.checkRepetido(pacienteNuevo);
+            if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
+                pacienteNuevo.activo = true;
+                let pacienteObj = await controller.createPaciente(pacienteNuevo, req);
                 // se carga geo referencia desde api de google
                 res.json(pacienteObj);
-                if (req.body.estado === 'validado') {
+                if (pacienteNuevo.estado === 'validado') {
                     await controller.actualizarGeoReferencia(pacienteObj, req);
                 }
             } else {
                 return res.json(resultado);
             }
         } else {
-            req.body.activo = true;
-            let pacienteObjSinDocumento = await controller.createPaciente(req.body, req);
+            pacienteNuevo.activo = true;
+            let pacienteObjSinDocumento = await controller.createPaciente(pacienteNuevo, req);
             return res.json(pacienteObjSinDocumento);
         }
     } catch (error) {
@@ -519,14 +521,16 @@ router.put('/pacientes/:id', async (req, res, next) => {
     };
     try {
         // Todo loguear posible duplicado si ignora el check
-        let resultado = await controller.checkRepetido(req.body);
+        let pacienteModificado = req.body.paciente;
+        let ignorarSugerencias = req.body.ignoreCheck;
+        let resultado = await controller.checkRepetido(pacienteModificado);
 
-        if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
+        if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
             let patientFound: any = await paciente.findById(query).exec();
 
             if (patientFound) {
                 const direccionOld = patientFound.direccion[0];
-                const data = req.body;
+                const data = pacienteModificado;
                 if (patientFound && patientFound.estado === 'validado' && !patientFound.isScan) {
                     delete data.documento;
                     delete data.estado;
@@ -542,8 +546,8 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     await controller.actualizarGeoReferencia(pacienteUpdated, req);
                 }
             } else {
-                req.body._id = req.body.id;
-                let newPatient = new paciente(req.body);
+                pacienteModificado._id = pacienteModificado.id;
+                let newPatient = new paciente(pacienteModificado);
 
                 // verifico si el paciente ya está en MPI
                 let patientFountMpi: any = await pacienteMpi.findById(query).exec();
@@ -557,16 +561,16 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 const connElastic = new ElasticSync();
                 let updated = await connElastic.sync(newPatient);
                 if (updated) {
-                    andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
+                    andesLog(req, logKeys.mpiUpdate.key, pacienteModificado._id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
                 } else {
-                    andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
+                    andesLog(req, logKeys.mpiInsert.key, pacienteModificado._id, logKeys.mpiInsert.operacion, newPatient, null);
                 }
                 EventCore.emitAsync('mpi:patient:update', nuevoPac);
                 res.json(nuevoPac);
                 // se carga geo referencia desde api de google
-                if (direccionOld.valor !== req.body.direccion[0].valor ||
-                    direccionOld.geoReferencia[0] !== req.body.direccion[0].geoReferencia[0] ||
-                    direccionOld.geoReferencia[1] !== req.body.direccion[0].geoReferencia[1]) {
+                if (direccionOld.valor !== pacienteModificado.direccion[0].valor ||
+                    direccionOld.geoReferencia[0] !== pacienteModificado.direccion[0].geoReferencia[0] ||
+                    direccionOld.geoReferencia[1] !== pacienteModificado.direccion[0].geoReferencia[1]) {
                     await controller.actualizarGeoReferencia(newPatient, req);
                 }
             }
