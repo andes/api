@@ -14,6 +14,7 @@ export class ElasticSync {
         });
     }
 
+    // [Deprecated]
     public sync(paciente) {
         const nuevoPac = JSON.parse(JSON.stringify(paciente));
         delete nuevoPac._id;
@@ -22,7 +23,7 @@ export class ElasticSync {
         return this._sync(paciente._id.toString(), nuevoPac);
     }
 
-    private _sync(id, data) {
+    public _sync(id, data) {
         return new Promise((resolve, reject) => {
             this.search({
                 q: '_id:' + id

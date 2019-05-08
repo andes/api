@@ -1,6 +1,9 @@
 import * as mongoose from 'mongoose';
 import * as ubicacionSchema from '../../tm/schemas/ubicacion';
 
+
+// [Deprecated] Esquema no utilizado
+
 const matchingSchema = new mongoose.Schema({
     pacienteOriginal: {
         idPaciente: Number,

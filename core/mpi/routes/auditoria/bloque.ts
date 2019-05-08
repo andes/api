@@ -5,6 +5,7 @@ import { Auth } from '../../../../auth/auth.class';
 
 const router = express.Router();
 
+// [Deprecated] Rutas no utilizadas
 
 /* Obtengo los pacientes que tienen la misma clave de blocking */
 router.get('/bloques/pacientes/:idTipoBloque/:idBloque', (req, res, next) => {

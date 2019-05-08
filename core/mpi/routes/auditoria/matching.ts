@@ -5,6 +5,8 @@ import { Auth } from '../../../../auth/auth.class';
 
 const router = express.Router();
 
+// [Deprecated] : Rutas no utlilizadas
+
 router.get('/matching/:id*?', (req, res, next) => {
     if (!Auth.check(req, 'mpi:matching:get')) {
         return next(403);

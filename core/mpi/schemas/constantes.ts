@@ -1,3 +1,5 @@
+
+// [Deprecated]
 const constantes = {
     SEXO: {
         type: String,

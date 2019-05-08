@@ -4,6 +4,9 @@ import * as mongoose from 'mongoose';
 import * as constantes from './constantes';
 import { Connections } from './../../../connections';
 
+
+// [Deprecated] Esquema no utilizado
+
 export let pacienteRejectedSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     documento: {
