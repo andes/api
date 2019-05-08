@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutomatica';
-import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
 import { EventCore } from '@andes/event-bus';
 
 let router = express.Router();
@@ -27,12 +26,15 @@ router.get('/configFacturacionAutomatica/', (req, res, next) => {
     }
 });
 
-router.post('/facturaArancelamiento/', async (req, res, next) => {
-    let prestacion = req.body;
-    /* TODO: armar la factura en el microservicio */
-    let factura = await facturacionAutomatica(prestacion);
+router.post('/facturaArancelamiento', async (req, res, next) => {
+    let turno = req.body;
 
-    EventCore.emitAsync('facturacion:factura:create', factura);
+    if (turno) {
+        EventCore.emitAsync('facturacion:factura:create', turno);
+        res.json({ message: 'Enviado a facturación' });
+    } else {
+        return next('Arancelamiento sin turno');
+    }
 });
 
 export = router;

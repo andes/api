@@ -1,3 +1,4 @@
+import { log } from './../../../core/log/schemas/log';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
@@ -13,10 +14,9 @@ import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
-
-const router = express.Router();
 import async = require('async');
 
+const router = express.Router();
 
 /**
  * Trae todas las prestaciones con ambitoOrigen = internacion, tambien solo las prestaciones
@@ -361,7 +361,6 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 });
 
 router.get('/prestaciones/:id*?', async (req, res, next) => {
-
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {
@@ -469,6 +468,10 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
             query.limit(parseInt(req.query.limit, 10));
         }
 
+        if (req.query.id) {
+            query.where('_id').equals(req.query.id);
+        }
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);
@@ -558,17 +561,16 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 return next(500);
         }
         Auth.audit(data, req);
-        data.save(async (error, prestacion) => {
+        data.save(async (error, prestacion: any) => {
             if (error) {
                 return next(error);
             }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
 
-                /* Sacar esto y armar todo desde el microservicio pasando solo la prestación */
-                // let factura = await facturacionAutomatica(prestacion);
-
-                // EventCore.emitAsync('facturacion:factura:create', factura);
+                /* Este evento habilita la facturación automática desde RUP */
+                // const origen = 'rup_rf';
+                // EventCore.emitAsync('facturacion:factura:create', (<any>Object).assign({ origen, data }));
 
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
