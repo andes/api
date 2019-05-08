@@ -221,7 +221,7 @@ function makeSecondaryMatch(filtros, permisos) {
         }
     } else {
         if (filtros.prestacion) {
-            match['prestacionesAgendas.conceptId'] = {
+            match['tipoPrestaciones.conceptId'] = {
                 $in: filtros.prestacion.map(pres => pres.id)
             };
         }
