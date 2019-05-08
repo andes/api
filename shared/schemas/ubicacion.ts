@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import {NombreSchema } from './nombre';
+import { NombreSchema } from './nombre';
 
 // [TODO] Poner localidad, provincia como required
 
