@@ -34,28 +34,37 @@ export class Connections {
             mongoose.set('debug', (collection, method, query, arg1, arg2, arg3) => queryLogger('%s.%s(%o) %s %s', collection, method, query, (arg2 || ''), (arg3 || '')));
         }
 
-        // Conecta y configura conexiones
-        // 1. PRINCIPAL
-        mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options);
-        this.main = mongoose.connection;
+        if (process.env.NODE_ENV === 'TEST') {
+            this.mpi = mongoose.createConnection();
+            this.snomed = mongoose.createConnection();
+            this.puco = mongoose.createConnection();
 
-        // 2. MPI
-        this.mpi = mongoose.createConnection(configPrivate.hosts.mongoDB_mpi.host, configPrivate.hosts.mongoDB_mpi.options);
+        } else {
+            // Conecta y configura conexiones
+            // 1. PRINCIPAL
+            mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options);
+            this.main = mongoose.connection;
 
-        // 3. SNOMED
-        this.snomed = mongoose.createConnection(configPrivate.hosts.mongoDB_snomed.host, configPrivate.hosts.mongoDB_snomed.options);
+            // 2. MPI
+            this.mpi = mongoose.createConnection(configPrivate.hosts.mongoDB_mpi.host, configPrivate.hosts.mongoDB_mpi.options);
 
-        // 4. PUCO
-        this.puco = mongoose.createConnection(configPrivate.hosts.mongoDB_puco.host, configPrivate.hosts.mongoDB_puco.options);
+            // 3. SNOMED
+            this.snomed = mongoose.createConnection(configPrivate.hosts.mongoDB_snomed.host, configPrivate.hosts.mongoDB_snomed.options);
 
-        // 5. LOGGER
-        loggerConnections.initialize(configPrivate.logDatabase.log.host, configPrivate.logDatabase.log.options);
+            // 4. PUCO
+            this.puco = mongoose.createConnection(configPrivate.hosts.mongoDB_puco.host, configPrivate.hosts.mongoDB_puco.options);
 
-        // Configura eventos
-        this.configEvents('main', this.main);
-        this.configEvents('mpi', this.mpi);
-        this.configEvents('snomed', this.snomed);
-        this.configEvents('puco', this.puco);
+            // 5. LOGGER
+            loggerConnections.initialize(configPrivate.logDatabase.log.host, configPrivate.logDatabase.log.options);
+
+            // Configura eventos
+            this.configEvents('main', this.main);
+            this.configEvents('mpi', this.mpi);
+            this.configEvents('snomed', this.snomed);
+            this.configEvents('puco', this.puco);
+        }
+
+
     }
 
     private static configEvents(name: string, connection: mongoose.Connection) {
