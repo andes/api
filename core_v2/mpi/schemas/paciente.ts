@@ -2,28 +2,28 @@ import * as mongoose from 'mongoose';
 import { Connections } from './../../../connections';
 import * as moment from 'moment';
 import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION, CONTACTO } from '../../../shared/schemas/constantes';
-import { NombreSchema } from '../../../shared/schemas/nombre';
-import { DireccionSchema } from '../../../shared/schemas/direccion';
-import { ContactoSchema } from '../../../shared/schemas/contacto';
+import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';
 import { FinanciadorSchema } from './financiador';
 import { ParentescoSchema } from './parentesco';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { IPacienteDoc, IPaciente } from '../interfaces/Paciente.interface';
 
 const ObjectId = mongoose.Types.ObjectId;
-/*
-interface IUserModel extends mongoose.Document {
-    nombre: String;
-    apellido: String;
-    claveBlocking: string[];
-}
-*/
 
 export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
-    /*
-    * Información de los IDs de los pacientes en otros sistemas y también la información
-    * de los pacientes vinculados. La vinculación es unilateral.
-    */
+    nombre: {
+        type: String,
+        required: true
+    },
+    apellido: {
+        type: String,
+        required: true
+    },
+    fechaNacimiento: {
+        type: Date,
+        required: true
+    },
     identificadores: [{
         _id: false,
         entidad: String,
@@ -34,14 +34,11 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     cuil: String,
     activo: Boolean,
     estado: ESTADO,
-    nombre: String,
-    apellido: String,
     alias: String,
     contacto: [ContactoSchema],
     direccion: [DireccionSchema],
     sexo: SEXO,
     genero: SEXO,
-    fechaNacimiento: Date,
     fechaFallecimiento: Date,
     estadoCivil: ESTADOCIVIL,
     foto: String,
@@ -195,7 +192,7 @@ PacienteSchema.methods.basicos = function () {
     };
 };
 
-PacienteSchema.methods.sincroniza = function (fields: string[]) {
+PacienteSchema.methods.sincroniza = (fields: string[]) => {
     return fields.some(f => (elasticFields.indexOf(f) >= 0));
 };
 
@@ -230,5 +227,5 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
 });
 
 export const elasticFields = ['id', 'documento', 'nombre', 'apellido', 'fechaNacimiento', 'alias', 'sexo', 'foto', 'claveBlocking'];
-export const Paciente = mongoose.model('paciente_2', PacienteSchema, 'paciente');
-export const PacienteMpi = Connections.mpi.model('paciente_2', PacienteSchema, 'paciente');
+export const Paciente = mongoose.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
+export const PacienteMpi = Connections.mpi.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
