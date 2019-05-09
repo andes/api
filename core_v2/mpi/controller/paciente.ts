@@ -7,8 +7,15 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
 import { EventCore } from '@andes/event-bus';
+import { IPaciente, IPacienteDoc } from '../interfaces/Paciente.interface';
 
-export async function createPaciente(body, req: express.Request) {
+
+/**
+ * Crea un paciente
+ * @param {string} body
+ */
+
+export async function createPaciente(body: IPaciente, req: express.Request) {
     const session = await Connections.main.startSession();
     session.startTransaction();
     try {
@@ -29,7 +36,7 @@ export async function createPaciente(body, req: express.Request) {
     }
 }
 
-export async function updatePaciente(paciente, req: express.Request) {
+export async function updatePaciente(paciente: IPacienteDoc, req: express.Request) {
     const session = await Connections.main.startSession();
     session.startTransaction();
     try {
@@ -50,11 +57,13 @@ export async function updatePaciente(paciente, req: express.Request) {
         session.abortTransaction();
         throw error;
     }
-
 }
 
-export async function findById(id: string | String | mongoose.Types.ObjectId) {
-    let base = 'andes';
+type DatabaseType = 'andes' | 'mpi';
+type IFindById = Promise<{ db: DatabaseType, paciente: IPacienteDoc }>;
+
+export async function findById(id: string | String | mongoose.Types.ObjectId): IFindById {
+    let base: DatabaseType = 'andes';
     let paciente = await Paciente.findById(id);
     if (!paciente) {
         base = 'mpi';
