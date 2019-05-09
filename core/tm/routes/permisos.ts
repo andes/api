@@ -1,5 +1,6 @@
 import * as express from 'express';
 import permisos from '../../../auth/permisos';
+import { actualizarPermisosUsuario } from '../controller/permiso';
 import { Auth } from '../../../auth/auth.class';
 import * as config from '../../../config.private';
 
@@ -7,6 +8,19 @@ const router = express.Router();
 
 router.get('/permisos', Auth.authenticate(), (req, res, next) => {
     res.send(permisos);
+});
+
+router.patch('/permisos/usuario/:idUsuario/organizacion/:idOrganizacion/modulo/:modulo', Auth.authenticate(), (req, res, next) => {
+    try {
+        res.json(actualizarPermisosUsuario(
+            req.params.idUsuario,
+            req.params.idOrganizacion,
+            req.params.modulo,
+            req.body.permisos
+        ));
+    } catch(e) {
+        res.json(e);
+    }
 });
 
 function makeString(item, parent) {
