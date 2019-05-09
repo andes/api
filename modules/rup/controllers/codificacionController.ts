@@ -14,6 +14,18 @@ export function codificarPrestacion(unaPrestacion: any) {
             const registros = unaPrestacion.ejecucion.registros.filter(f => {
                 return f.concepto.semanticTag !== 'elemento de registro';
             });
+            if (['73761001', '2341000013106'].indexOf(unaPrestacion.solicitud.tipoPrestacion.conceptId) >= 0) {
+                let regs = [];
+                unaPrestacion.ejecucion.registros[0].registros.forEach(r => {
+                    // Excluimos Pautas de Alarmas. Porque son hallazgos de alarmas y no presentes.
+                    if (r.concepto.conceptId !== '900000000000003001') {
+                        if (r.registros.length > 0) {
+
+                            registros.push(r.registros[0]);
+                        }
+                    }
+                });
+            }
             registros.forEach(registro => {
                 const parametros = {
                     conceptId: registro.concepto.conceptId,
