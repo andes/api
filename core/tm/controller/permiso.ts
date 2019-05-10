@@ -16,10 +16,10 @@ export async function actualizarPermisosUsuario(idUsuario, idOrganizacion, modul
     let organizacionPermisos = usuario.organizaciones.find( o => o._id.toString() === idOrganizacion );
 
     if (!organizacionPermisos) {
-        usuario.organizaciones.push( { _id: idOrganizacion, permisos: nuevosPermisos });
+        usuario.organizaciones.push({ _id: idOrganizacion, permisos: nuevosPermisos }); // TODO: agregar ', activo: true' cuando se mergee el nuevo gestor de usuarios
     } else {
         organizacionPermisos.permisos = organizacionPermisos.permisos ?
-            organizacionPermisos.permisos.filter( p => p.indexOf(modulo) !== 0).concat(nuevosPermisos) : nuevosPermisos;
+            organizacionPermisos.permisos.filter(p => p.indexOf(modulo) !== 0).concat(nuevosPermisos) : nuevosPermisos;
     }
 
     return await usuario.save();

@@ -212,6 +212,12 @@ export const modules = {
         path: './modules/geonode/routes',
         route: '/modules/geonode',
         middleware: appMiddleware
+    },
+    permisos: {
+        active: true,
+        path: './core/tm/routes',
+        route: '/tm/permisos',
+        middleware: appMiddleware
     }
 };
 
