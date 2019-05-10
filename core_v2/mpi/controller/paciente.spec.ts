@@ -4,13 +4,20 @@ import {findById, createPaciente, updatePaciente} from './paciente';
 import * as log from '@andes/log';
 import * as ElasticSync from '../../../utils/elasticSync';
 import { ImportMock } from 'ts-mock-imports';
+import { IPaciente } from '../interfaces/Paciente.interface';
 
 const sinon = require('sinon');
 require('sinon-mongoose');
 
+let PacienteMock;
+let PacienteMockMpi;
+
 describe('Paciente controller', () => {
-    const PacienteMock = sinon.mock(PacienteModule.Paciente);
-    const PacienteMockMpi = sinon.mock(PacienteModule.PacienteMpi);
+    beforeEach(() => {
+        PacienteMock = sinon.mock(PacienteModule.Paciente);
+        PacienteMockMpi = sinon.mock(PacienteModule.PacienteMpi);
+
+    });
     describe('FindById ', () => {
         it('paciente encontrado en Andes', async () => {
             let paciente = { id: '1', nombre: 'prueba'};
@@ -56,9 +63,14 @@ describe('Paciente controller', () => {
             .resolves(null);
 
             let pacienteEncontrado = await findById(paciente.id);
-            assert.equal(pacienteEncontrado.paciente, null);
+            assert.equal(pacienteEncontrado, null);
 
         });
+
+    });
+    afterEach(() => {
+        PacienteMock.restore();
+        PacienteMockMpi.restore();
     });
 });
 
@@ -108,7 +120,7 @@ describe('Paciente Controller', () => {
             mockPaciente.set('nombre', paciente.nombre);
 
             const createStub = mockElasticPaciente.mock('create', true);
-            sinon.stub(log, 'log').callsFake(null);
+            const logstub = sinon.stub(log, 'log').callsFake(null);
 
             const patientCreated = await createPaciente(paciente, req);
             sinon.assert.calledOnce(log.log);
@@ -119,6 +131,7 @@ describe('Paciente Controller', () => {
             sinon.assert.calledWith(setStub, paciente);
             sinon.assert.calledWith(createStub, '12345567780');
             assert.equal(patientCreated.nombre, paciente.nombre);
+            logstub.restore();
         });
 
         // it('throws si save de paciente no se realiza', async () => {
@@ -138,7 +151,11 @@ describe('Paciente Controller', () => {
         //     sinon.assert.calledWith(setStub, paciente);
         //     sinon.assert.calledWith(createStub, '12345567780');
         // });
-
+        afterEach(() => {
+            mockPaciente.restore();
+            mockPacienteStatic.restore();
+            mockElasticPaciente.restore();
+        });
 
     });
 
