@@ -1,3 +1,5 @@
+
+
 import {Paciente, PacienteMpi} from '../schemas/paciente';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
@@ -9,10 +11,11 @@ import { logKeys } from '../../../config';
 import { EventCore } from '@andes/event-bus';
 import { IPaciente, IPacienteDoc } from '../interfaces/Paciente.interface';
 
-
 /**
- * Crea un paciente
- * @param {string} body
+ * Persiste un nuevo paciente en la base de datos ANDES y los sincroniza con ElasticSearch.
+ *
+ * @param {IPaciente} body Datos del paciente
+ * @param {express.Request} req Request de Express para obtener los datos del usuario
  */
 
 export async function createPaciente(body: IPaciente, req: express.Request) {
@@ -35,6 +38,14 @@ export async function createPaciente(body: IPaciente, req: express.Request) {
         throw error;
     }
 }
+
+/**
+ * Actualiza un paciente existente. Si esta en MPI, lo crea en ANDES. Sino lo actualiza.
+ * Sincroniza con ElasticSearch si es necesario.
+ *
+ * @param {IPaciente} body Datos del paciente
+ * @param {express.Request} req Request de Express para obtener los datos del usuario
+ */
 
 export async function updatePaciente(paciente: IPacienteDoc, req: express.Request) {
     const session = await Connections.main.startSession();
@@ -60,7 +71,22 @@ export async function updatePaciente(paciente: IPacienteDoc, req: express.Reques
 }
 
 type DatabaseType = 'andes' | 'mpi';
-type IFindById = Promise<{ db: DatabaseType, paciente: IPacienteDoc }>;
+
+/**
+ * @typedef {Promise} IFindById
+ * @prop {String} db - Base de datos donde pertenece el paciente
+ * @prop {String} paciente - Objecto paciente
+ */
+
+type IFindById = Promise<{
+    db: DatabaseType,
+    paciente: IPacienteDoc
+}>;
+
+/**
+ * Busca un paciente por ID. Tanto en ANDES y MPI.
+ * @returns {IFindById}
+ */
 
 export async function findById(id: string | String | mongoose.Types.ObjectId): IFindById {
     let base: DatabaseType = 'andes';
