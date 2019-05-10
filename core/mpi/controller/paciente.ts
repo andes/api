@@ -479,27 +479,19 @@ export function matching(data): Promise<any[]> {
  * @param objectId ---> Id del paciente a eliminar
  */
 
-export function deletePacienteAndes(objectId) {
-    return new Promise((resolve, reject) => {
-        const query = {
-            _id: objectId
-        };
-        paciente.findById(query, (err, patientFound) => {
-            if (err) {
-                return reject(err);
-            }
-            patientFound.remove();
-            EventCore.emitAsync('mpi:patient:delete', patientFound);
-            return resolve(patientFound);
-        });
-    });
+export async function deletePacienteAndes(objectId) {
+    const query = { _id: objectId };
+    let patientFound = await paciente.findById(query).exec();
+    await patientFound.remove();
+    let connElastic = new ElasticSync();
+    await connElastic.delete(patientFound._id.toString());
+    EventCore.emitAsync('mpi:patient:delete', patientFound);
+    return patientFound;
 }
 
 // Borramos un paciente en la BD MPI - es necesario handlear posibles errores en la fn llamadora.
 export async function deletePacienteMpi(objectId) {
-    let query = {
-        _id: objectId
-    };
+    let query = { _id: objectId };
     let pacremove = await pacienteMpi.findById(query).exec();
     await pacremove.remove();
 }
