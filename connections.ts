@@ -35,6 +35,7 @@ export class Connections {
         }
 
         if (process.env.NODE_ENV === 'TEST') {
+            this.main = mongoose.createConnection();
             this.mpi = mongoose.createConnection();
             this.snomed = mongoose.createConnection();
             this.puco = mongoose.createConnection();
