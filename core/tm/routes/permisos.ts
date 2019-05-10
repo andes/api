@@ -10,9 +10,9 @@ router.get('/permisos', Auth.authenticate(), (req, res, next) => {
     res.send(permisos);
 });
 
-router.patch('/permisos/usuario/:idUsuario/organizacion/:idOrganizacion/modulo/:modulo', Auth.authenticate(), (req, res, next) => {
+router.patch('/module/usuarios/usuario/:idUsuario/organizacion/:idOrganizacion/modulo/:modulo/permisos', Auth.authenticate(), async (req, res, next) => {
     try {
-        res.json(actualizarPermisosUsuario(
+        res.json(await actualizarPermisosUsuario(
             req.params.idUsuario,
             req.params.idOrganizacion,
             req.params.modulo,
