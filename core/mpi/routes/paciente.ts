@@ -607,23 +607,19 @@ router.put('/pacientes/:id', async (req, res, next) => {
  *         schema:
  *           $ref: '#/definitions/paciente'
  */
-router.delete('/pacientes/:id', (req, res, next) => {
+router.delete('/pacientes/:id', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
     }
-    const ObjectId = mongoose.Types.ObjectId;
-    const objectId = new ObjectId(req.params.id);
-    controller.deletePacienteAndes(objectId).then((patientFound: any) => {
-        let connElastic = new ElasticSync();
-        connElastic.delete(patientFound._id.toString()).then(() => {
-            res.json(patientFound);
-        }).catch(error => {
-            return next(error);
-        });
-        Auth.audit(patientFound, req);
-    }).catch((error) => {
+    const objectId = new mongoose.Types.ObjectId(req.params.id);
+    try {
+        let patientFound: any = await controller.deletePacienteAndes(objectId);
+        res.json(patientFound);
+    } catch (error) {
         return next(error);
-    });
+    }
+
+
 });
 
 
