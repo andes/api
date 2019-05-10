@@ -7,7 +7,7 @@ import { FinanciadorSchema } from './financiador';
 import { ParentescoSchema } from './parentesco';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { IPacienteDoc, IPaciente } from '../interfaces/Paciente.interface';
+import { IPacienteDoc } from '../interfaces/Paciente.interface';
 
 const ObjectId = mongoose.Types.ObjectId;
 
