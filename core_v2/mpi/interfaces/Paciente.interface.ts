@@ -68,7 +68,6 @@ export interface IPacienteDoc extends Document, IPaciente {
 
     /**
      * Chequea que algún elemento en fields sea un campo indexable en ElasticSearch
-     * @param {Array} fields Array de elementos a verificar
      */
-    sincroniza(fields: string[]): Boolean;
+    sincroniza(): Boolean;
 }

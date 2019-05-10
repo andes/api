@@ -19,7 +19,7 @@ import { IPaciente, IPacienteDoc } from '../interfaces/Paciente.interface';
  */
 
 
-export async function createPaciente(body, req) {
+export async function createPaciente(body: IPaciente, req) {
     const session = await Paciente.db.startSession();
     try {
         session.startTransaction();
@@ -40,7 +40,15 @@ export async function createPaciente(body, req) {
     }
 }
 
-export async function updatePaciente(paciente, req: express.Request) {
+/**
+ * Actualiza un paciente existente. Si esta en MPI, lo crea en ANDES. Sino lo actualiza.
+ * Sincroniza con ElasticSearch si es necesario.
+ *
+ * @param {IPaciente} body Datos del paciente
+ * @param {express.Request} req Request de Express para obtener los datos del usuario
+ */
+
+export async function updatePaciente(paciente: IPacienteDoc, req: express.Request) {
     const session = await Paciente.db.startSession();
     session.startTransaction();
     try {
@@ -90,7 +98,7 @@ export async function findById(id: string | String | mongoose.Types.ObjectId): I
         base = 'mpi';
         paciente = await PacienteMpi.findById(id);
         if (!paciente) {
-            base = '';
+            return null;
         }
     }
 
