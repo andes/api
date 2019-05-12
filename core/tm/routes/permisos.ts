@@ -11,7 +11,7 @@ router.get('/permisos', Auth.authenticate(), (req, res, next) => {
 });
 
 
-router.post('/permisos/usuario/:idUsuario/organizacion/:idOrganizacion/modulo/:modulo', Auth.authenticate(), async (req, res, next) => {
+router.patch('/permisos/usuario/:idUsuario/organizacion/:idOrganizacion/modulo/:modulo', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'usuarios:test:superusuario')) {
         return next(codes.status.unauthorized);
     } else {
