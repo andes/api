@@ -216,29 +216,27 @@ export default [
                 title: 'Gestor de profesionales',
                 child: [
                     { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
-                    { key: 'getProfesionalFoto', title: 'Ver foto profesional', type: 'boolean' },
-                    { key: 'postProfesional', title: 'crea profesional', type: 'boolean' },
-                    { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' },
-                    { key: 'deleteProfesional', title: 'borrar profesional', type: 'boolean' }
+                    { key: 'getProfesionalFoto', title: 'Ver foto de profesional', type: 'boolean' },
+                    { key: 'postProfesional', title: 'Crear profesional', type: 'boolean' },
+                    { key: 'putProfesional', title: 'Actualizar profesional', type: 'boolean' },
+                    { key: 'deleteProfesional', title: 'Borrar profesional', type: 'boolean' }
                 ]
             },
             {
                 key: 'turnos',
                 title: 'Gestor de turnos',
                 child: [
-                    { key: 'postTurno', title: 'insert turno', type: 'boolean' },
-                    { key: 'postTurnoTipo', title: '', type: 'boolean' },
-                    { key: 'getTurnosProximos', title: 'trae proximos turnos', type: 'boolean' },
-                    { key: 'getTurnoTipo', title: '', type: 'boolean' },
-                    { key: 'getTurno', title: 'traeTurno', type: 'boolean' }
+                    { key: 'postTurno', title: 'Crear nuevo turno', type: 'boolean' },
+                    { key: 'getTurnosProximos', title: 'Consultar próximos turnos', type: 'boolean' },
+                    { key: 'getTurno', title: 'Ver turno', type: 'boolean' }
                 ]
             },
             {
                 key: 'agenda',
                 title: 'Agenda',
                 child: [
-                    { key: 'postAgenda', title: 'insert agenda', type: 'boolean' },
-                    { key: 'putAgenda', title: 'actualizar agenda', type: 'boolean' }
+                    { key: 'postAgenda', title: 'Crear nueva agenda', type: 'boolean' },
+                    { key: 'putAgenda', title: 'Actualizar agenda', type: 'boolean' }
                 ]
             }
         ]
@@ -367,14 +365,18 @@ export default [
         key: 'dashboard',
         title: 'Panel de datos estadísticos en gráficos y tablas',
         child: [
-            { key: 'citas', title: 'Dashboard Citas', child: [
-                { key: 'ver', title: 'Ver Dashboard Citas', type: 'boolean'},
-                { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean'},
-                { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion'},
-            ]},
-            { key: 'top', title: 'Dashboard TOP', child: [
-                { key: 'ver', title: 'Ver Dashboard Top', type: 'boolean'}
-            ]}
+            {
+                key: 'citas', title: 'Dashboard Citas', child: [
+                    { key: 'ver', title: 'Ver Dashboard Citas', type: 'boolean' },
+                    { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean' },
+                    { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' },
+                ]
+            },
+            {
+                key: 'top', title: 'Dashboard TOP', child: [
+                    { key: 'ver', title: 'Ver Dashboard Top', type: 'boolean' }
+                ]
+            }
         ]
     }
 
