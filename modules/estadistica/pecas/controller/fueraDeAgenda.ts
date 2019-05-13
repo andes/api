@@ -187,7 +187,7 @@ async function auxiliar(pres: any) {
             prestacion.codifica = 'PROFESIONAL';
             if (pres.diagnostico.codificaciones[0].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag1CodigoOriginal = pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo;
-                prestacion.Desc1DiagOriginal = pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.sinonimo;
+                prestacion.Desc1DiagOriginal = pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.nombre;
             }
             if (pres.diagnostico.codificaciones[0].codificacionProfesional.snomed && pres.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId) {
                 prestacion.conceptId1 = pres.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId;
@@ -200,7 +200,7 @@ async function auxiliar(pres: any) {
         // Diagnóstico 1 AUDITADO
         if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 0 && pres.diagnostico.codificaciones[0].codificacionAuditoria && pres.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
             prestacion.Diag1CodigoAuditado = pres.diagnostico.codificaciones[0].codificacionAuditoria.codigo;
-            prestacion.Desc1DiagAuditado = pres.diagnostico.codificaciones[0].codificacionAuditoria.sinonimo;
+            prestacion.Desc1DiagAuditado = pres.diagnostico.codificaciones[0].codificacionAuditoria.nombre;
             prestacion.ConsC2 = pres.diagnostico.codificaciones[0].codificacionAuditoria.c2 && pres.diagnostico.codificaciones[0].primeraVez ? 'SI' : 'NO';
             prestacion.Tipodeconsulta = pres.diagnostico.codificaciones[0].primeraVez ? 'Primera vez' : 'Ulterior';
             prestacion.Principal = 1;
@@ -222,7 +222,7 @@ async function auxiliar(pres: any) {
         if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1].codificacionProfesional) {
             if (pres.diagnostico.codificaciones[1].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag2CodigoOriginal = pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo;
-                prestacion.Desc2DiagOriginal = pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.sinonimo;
+                prestacion.Desc2DiagOriginal = pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.nombre;
             }
             if (pres.diagnostico.codificaciones[1].codificacionProfesional.snomed && pres.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId) {
                 prestacion.conceptId2 = pres.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId;
@@ -233,7 +233,7 @@ async function auxiliar(pres: any) {
         // Diagnóstico 2 AUDITADO
         if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1].codificacionAuditoria && pres.diagnostico.codificaciones[1].codificacionAuditoria.codigo) {
             prestacion.Diag2CodigoAuditado = pres.diagnostico.codificaciones[1].codificacionAuditoria.codigo;
-            prestacion.Desc2DiagAuditado = pres.diagnostico.codificaciones[1].codificacionAuditoria.sinonimo;
+            prestacion.Desc2DiagAuditado = pres.diagnostico.codificaciones[1].codificacionAuditoria.nombre;
         }
 
         // Diagnóstico 3 ORIGINAL
@@ -253,7 +253,7 @@ async function auxiliar(pres: any) {
         if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2].codificacionProfesional) {
             if (pres.diagnostico.codificaciones[2].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag3CodigoOriginal = pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo;
-                prestacion.Desc3DiagOriginal = pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.sinonimo;
+                prestacion.Desc3DiagOriginal = pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.nombre;
             }
             if (pres.diagnostico.codificaciones[2].codificacionProfesional.snomed && pres.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId) {
                 prestacion.conceptId3 = pres.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId;
@@ -264,7 +264,7 @@ async function auxiliar(pres: any) {
         // Diagnóstico 3 AUDITADO
         if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2].codificacionAuditoria && pres.diagnostico.codificaciones[2].codificacionAuditoria.codigo) {
             prestacion.Diag3CodigoAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.codigo;
-            prestacion.Desc3DiagAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.sinonimo;
+            prestacion.Desc3DiagAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.nombre;
         }
 
         prestacion.Profesional = pres.createdBy.nombreCompleto.replace('\'', '\'\'');
