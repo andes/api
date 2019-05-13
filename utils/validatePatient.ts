@@ -1,3 +1,5 @@
+// [Deprecated] Clase no utilizada
+
 export class ValidatePatient {
 
     public static checkPatient(patient: any): any {
