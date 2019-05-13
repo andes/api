@@ -11,7 +11,6 @@ import { toArray } from '../../../utils/utils';
 
 
 export async function procesar(parametros: any) {
-
     let match = {
         estado: { $nin: ['planificacion', 'borrada', 'suspendida', 'pausada'] },
         'organizacion._id': parametros.organizacion,
@@ -24,6 +23,11 @@ export async function procesar(parametros: any) {
         $or: [{ 'bloques.turnos.estado': 'asignado' }, { 'sobreturnos.estado': 'asignado' }]
     };
     let matchTurno = {};
+    let matchEstado = {};
+    if (parametros.estadoFacturacion) {
+        match['bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
+        matchTurno['_bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
+    }
 
     if (parametros.fechaDesde) {
         match['horaInicio'] = { $gte: new Date(parametros.fechaDesde) };
@@ -44,7 +48,6 @@ export async function procesar(parametros: any) {
         match['profesionales._id'] = mongoose.Types.ObjectId(parametros.profesional);
     }
 
-    let matchEstado = {};
     if (parametros.estado) {
         matchEstado['$expr'] = { $and: [{ $eq: ['$estado', parametros.estado] }] };
     }
@@ -85,6 +88,7 @@ export async function procesar(parametros: any) {
         },
         { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
+        // TODO volver a filtrar por estadoPrstacion. agregar filtro a matchTurno
         { $match: matchTurno },
         {
             $project: {
@@ -169,7 +173,8 @@ export async function procesar(parametros: any) {
                     }
                 },
                 turno: '$turno',
-                idPrestacion: '$prestacion0._id'
+                idPrestacion: '$prestacion0._id',
+                estadoFacturacion: '$turno.estadoFacturacion',
             }
         },
         {
@@ -179,6 +184,7 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
+
     const turnosAsignados = await agenda.aggregate(pipelineBuscador);
     return turnosAsignados;
 }

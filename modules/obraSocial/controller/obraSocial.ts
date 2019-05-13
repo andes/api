@@ -1,25 +1,18 @@
-import { pacienteSumar as getPacienteSumar } from './sumar';
-import { getPaciente as getPacientePrepagas } from './prepagas';
-import { pacientePuco as getPacientePuco } from './puco';
-
+import { pacientePuco } from '../controller/puco';
+import { pacienteSumar } from '../controller/sumar';
+/*Lo cambiamos porque las prepagas no se consultan de la tabla */
 export async function getObraSocial(paciente) {
     if (!paciente.documento) { return []; }
 
-    let financiador;
-    let prepaga = await getPacientePrepagas(paciente.documento, paciente.sexo);
-    if (prepaga) {
-        return [prepaga];
+    let arrayOSPuco: any = await pacientePuco(paciente.documento);
+    if (arrayOSPuco.length > 0) {
+        return arrayOSPuco;
     } else {
-        let arrayOSPuco: any = await getPacienteSumar(paciente.documento);
-        if (arrayOSPuco.length > 0) {
-            return arrayOSPuco;
+        let arrayOSSumar = await pacienteSumar(paciente.documento);
+        if (arrayOSSumar.length > 0) {
+            return arrayOSSumar;
         } else {
-            let arrayOSSumar = await getPacientePuco(paciente.documento);
-            if (arrayOSSumar.length > 0) {
-                return arrayOSSumar;
-            } else {
-                return [];
-            }
+            return [];
         }
     }
 }

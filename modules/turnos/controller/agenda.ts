@@ -1108,6 +1108,23 @@ export function getConsultaDiagnostico(params) {
     });
 }
 
+/* Devuelve el idAgenda y idBloque de un turno dado */
+export async function getDatosTurnos(idTurno) {
+    let pipeline = [];
+    pipeline = [
+        {
+            $match: {
+                'bloques.turnos._id': mongoose.Types.ObjectId(idTurno)
+            }
+        },
+        { $unwind: '$bloques' },
+        { $project: { _id: 0, idAgenda: '$_id', idBloque: '$bloques._id' } }
+    ];
+
+    let data = await agendaModel.aggregate(pipeline);
+    return data;
+
+}
 
 export function getCantidadConsultaXPrestacion(params) {
 

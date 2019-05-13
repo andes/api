@@ -637,6 +637,15 @@ router.post('/dashboard/localidades', async (req, res, next) => {
     }
 });
 
+router.get('/agenda/turno/:idTurno', async (req, res, next) => {
+    try {
+        const datosTurno = await agendaCtrl.getDatosTurnos(req.params.idTurno);
+        res.json(datosTurno);
+    } catch (err) {
+        return next(err);
+    }
+
+});
 /**
  * Get prestaciones que corresponden a agendas disponibles para el totem
  * osea, que tienen turnos de acceso directo disponibles
