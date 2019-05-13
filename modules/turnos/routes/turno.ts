@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
@@ -21,6 +22,7 @@ const router = express.Router();
 const dbgTurno = debug('dbgTurno');
 
 router.get('/turno/:id*?', async (req, res, next) => {
+
     try {
         const resultado = await turnosController.getTurno(req);
         res.json(resultado);
@@ -271,6 +273,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
         const etiquetaEmitidoPor: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.emitidoPor';
         const etiquetaMotivoConsulta: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.motivoConsulta';
+        const estadoFacturacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estadoFacturacion';
 
         const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
         const etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
@@ -285,6 +288,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaNota] = req.body.nota;
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+        update[estadoFacturacion] = req.body.estadoFacturacion;
+
         if (req.body.reasignado) {
             update[etiquetaReasignado] = req.body.reasignado;
         }
@@ -350,9 +355,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
     }
 });
 
-
 router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     let agendaRes;
+
     try {
         agendaRes = await getAgenda(req.params.idAgenda);
     } catch (err) {
@@ -363,7 +368,9 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     });
     const indexTurno = (agendaRes as any).bloques[indexBloque].turnos.findIndex(t => {
         return (t.id === req.params.idTurno);
+        // return (console.log('Primero: ', t.id) === console.log('Segundo: ', req.params.idTurno));
     });
+
     const update = {};
     if (req.body.avisoSuspension) {
         const etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
@@ -374,6 +381,15 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
 
     }
+    if (req.body.actualizaObraSocial) {
+        const etiquetaPaciente: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.paciente.obraSocial';
+        update[etiquetaPaciente] = req.body.actualizaObraSocial;
+    }
+    if (req.body.estadoFacturacion) {
+        const etiquetaEstadoFacturacion: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.estadoFacturacion';
+        update[etiquetaEstadoFacturacion] = req.body.estadoFacturacion;
+    }
+
     const query = {
         _id: req.params.idAgenda,
     };

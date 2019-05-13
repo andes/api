@@ -4,6 +4,7 @@ import * as cie10 from '../../../core/term/schemas/cie10';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
+import * as IEstadoFacturacion from '../../facturacionAutomatica/schemas/estadoFacturacion';
 
 const pacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
@@ -92,6 +93,11 @@ const turnoSchema = new mongoose.Schema({
             codificacionAuditoria: cie10.schema,
             primeraVez: Boolean,
         }]
+    },
+    estadoFacturacion: {
+        tipo: String,
+        estado: { type: String, default: 'Sin comprobante' },
+        numeroComprobante: String
     },
     confirmedAt: Date, /* Confirmación del turno por el  paciente */
     updatedAt: Date,
