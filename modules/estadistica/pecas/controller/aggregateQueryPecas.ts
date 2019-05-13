@@ -692,13 +692,23 @@ export async function pecasExport(start, end) {
                 IdObraSocial: {
                     $cond: {
                         if: {
-                            $ne: [{
-                                $in: [{
-                                    $type: '$_bloques.turnos.paciente.obraSocial.codigoFinanciador'
-                                },
-                                ['missing', 'null', 'undefined']
-                                ]
-                            }, true]
+                            $and: [{
+                                $ne: [{
+                                    $in: [{
+                                        $type: '$_bloques.turnos.paciente.obraSocial'
+                                    },
+                                    ['array']
+                                    ]
+                                }, true]
+                            }, {
+                                $ne: [{
+                                    $in: [{
+                                        $type: '$_bloques.turnos.paciente.obraSocial.codigoFinanciador'
+                                    },
+                                    ['missing', 'null', 'undefined']
+                                    ]
+                                }, true]
+                            }]
                         },
 
                         then: '$_bloques.turnos.paciente.obraSocial.codigoFinanciador',
