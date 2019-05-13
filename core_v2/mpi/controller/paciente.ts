@@ -1,11 +1,10 @@
 
 
-import {Paciente, PacienteMpi} from '../schemas/paciente';
+import { Paciente, PacienteMpi } from '../schemas/paciente';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
-import {Connections} from '../../../connections';
 import { Auth } from '../../../auth/auth.class';
-import { ElasticSync } from '../../../utils/elasticSync';
+import { PacienteTx } from './pacienteTx';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
 import { EventCore } from '@andes/event-bus';
@@ -27,8 +26,7 @@ export async function createPaciente(body: IPaciente, req) {
         paciente.set(body);
         Auth.audit(paciente, req);
         await paciente.save({ session});
-        const connElastic = new ElasticSync();
-        await connElastic.create(String(paciente._id), (paciente as any).toElastic());
+        await PacienteTx.create(paciente);
         log(req, logKeys.mpiInsert.key, paciente._id, logKeys.mpiInsert.operacion, paciente, null);
         await session.commitTransaction();
         EventCore.emitAsync('mpi:patient:create', paciente);
@@ -52,14 +50,12 @@ export async function updatePaciente(paciente: IPacienteDoc, req: express.Reques
     const session = await Paciente.db.startSession();
     session.startTransaction();
     try {
-
         const pacienteOriginal = paciente.toObject();
         const pacienteFields = paciente.modifiedPaths();
         Auth.audit(paciente, req);
-        await paciente.save({ session});
+        await paciente.save({ session });
         if (paciente.sincroniza()) {
-            const connElastic = new ElasticSync();
-            await connElastic._sync(paciente.id, paciente);
+            await PacienteTx.sync(paciente);
         }
         EventCore.emitAsync('mpi:patient:update', paciente, pacienteFields);
         log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, paciente, pacienteOriginal);

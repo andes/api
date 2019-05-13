@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import * as PacienteModule from '../schemas/paciente';
 import {findById, createPaciente, updatePaciente} from './paciente';
 import * as log from '@andes/log';
-import * as ElasticSync from '../../../utils/elasticSync';
+import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
 import { IPaciente } from '../interfaces/Paciente.interface';
 
@@ -112,7 +112,7 @@ describe('Paciente Controller', () => {
                     }
                 },
             };
-            mockElasticPaciente = ImportMock.mockClass(ElasticSync, 'ElasticSync');
+            mockElasticPaciente = ImportMock.mockStaticClass(PacienteTxModule, 'PacienteTx');
         });
         it('paciente creado con datos básicos', async () => {
             let paciente = { nombre: 'test', apellido: 'testMpi', documento: '1', sexo: 'masculino', genero: 'masculino' , estado: 'temporal'};
@@ -122,35 +122,19 @@ describe('Paciente Controller', () => {
             const createStub = mockElasticPaciente.mock('create', true);
             const logstub = sinon.stub(log, 'log').callsFake(null);
 
-            const patientCreated = await createPaciente(paciente, req);
+            const patientCreated = await createPaciente(paciente as any, req);
             sinon.assert.calledOnce(log.log);
             sinon.assert.calledOnce(saveStub);
             sinon.assert.calledOnce(startTransactionStub);
             sinon.assert.calledOnce(commitTransactionStub);
             sinon.assert.notCalled(abortTransactionStub);
             sinon.assert.calledWith(setStub, paciente);
-            sinon.assert.calledWith(createStub, '12345567780');
+            sinon.assert.calledOnce(createStub);
             assert.equal(patientCreated.nombre, paciente.nombre);
             logstub.restore();
+            createStub.reset();
         });
 
-        // it('throws si save de paciente no se realiza', async () => {
-        //     let paciente = { nombre: 'test', apellido: 'testMpi', documento: '1', sexo: 'masculino', genero: 'masculino' , estado: 'temporal'};
-        //     mockPaciente.set('_id', '12345567780');
-        //     mockPaciente.set('nombre', paciente.nombre);
-
-        //     const createStub = mockElasticPaciente.mock('create', true);
-        //     sinon.stub(log, 'log').callsFake(null);
-
-        //     const patientCreated = await createPaciente(paciente, req);
-        //     sinon.assert.calledOnce(log.log);
-        //     sinon.assert.calledOnce(saveStub);
-        //     sinon.assert.calledOnce(startTransactionStub);
-        //     sinon.assert.calledOnce(abortTransactionStub);
-        //     sinon.assert.notCalled(commitTransactionStub);
-        //     sinon.assert.calledWith(setStub, paciente);
-        //     sinon.assert.calledWith(createStub, '12345567780');
-        // });
         afterEach(() => {
             mockPaciente.restore();
             mockPacienteStatic.restore();
@@ -199,7 +183,12 @@ describe('Paciente Controller', () => {
                     }
                 },
             };
-            mockElasticPaciente = ImportMock.mockClass(ElasticSync, 'ElasticSync');
+            mockElasticPaciente = ImportMock.mockStaticClass(PacienteTxModule, 'PacienteTx');
+        });
+
+        afterEach(() => {
+            mockElasticPaciente.restore();
+            mockPacienteStatic.restore();
         });
 
         it('paciente actualizado', async () => {
@@ -212,11 +201,10 @@ describe('Paciente Controller', () => {
             mockPaciente.expects('sincroniza')
             .resolves(true).once();
 
-            const syncStub = mockElasticPaciente.mock('_sync', true);
+            const syncStub = mockElasticPaciente.mock('sync', true);
             sinon.stub(log, 'log').callsFake(null);
 
             const patientUpdated = await updatePaciente(mockPaciente.object, req);
-            // console.log(patientUpdated);
             sinon.assert.calledOnce(log.log);
             sinon.assert.calledOnce(syncStub);
             sinon.assert.calledOnce(startTransactionStub);
@@ -227,6 +215,3 @@ describe('Paciente Controller', () => {
     });
 
 });
-
-
-// });
