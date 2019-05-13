@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import * as PacienteModule from '../schemas/paciente';
-import {findById, createPaciente, updatePaciente} from './paciente';
+import {findById, createPaciente, updatePaciente, search} from './paciente';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
@@ -147,12 +147,12 @@ describe('Paciente Controller', () => {
 });
 
 describe('Paciente Controller', () => {
+    let mockElasticPaciente;
     describe('Update', () => {
         let mockPaciente;
         let saveStub;
         let mockPacienteStatic;
         let req;
-        let mockElasticPaciente;
         let startTransactionStub, commitTransactionStub, abortTransactionStub;
         beforeEach(() => {
             startTransactionStub = sinon.stub();
@@ -213,5 +213,36 @@ describe('Paciente Controller', () => {
 
         });
     });
+    describe('search', () => {
+        beforeEach(() => {
+            mockElasticPaciente = ImportMock.mockStaticClass(PacienteTxModule, 'PacienteTx');
+        });
 
+        afterEach(() => {
+            mockElasticPaciente.restore();
+        });
+
+        it('simplequery search', async () => {
+            const syncStub = mockElasticPaciente.mock('search', []);
+            const founds = await search('simplequery', { documento: '34934522' });
+            sinon.assert.calledWith(syncStub, sinon.match({ query: { simple_query_string: {} } }));
+            // sinon.assert.calledOnce(syncStub);
+            assert.equal(founds.length, 0);
+        });
+
+        it('multimatch search', async () => {
+            const syncStub = mockElasticPaciente.mock('search', []);
+            const founds = await search('multimatch', { documento: '34934522' });
+            sinon.assert.calledWith(syncStub, sinon.match({ query: { bool: { must: { multi_match: {} } } } }));
+            assert.equal(founds.length, 0);
+        });
+
+        it('multimatch search', async () => {
+            const syncStub = mockElasticPaciente.mock('search', []);
+            const founds = await search('suggest', { documento: '34934522' });
+            sinon.assert.calledWith(syncStub, sinon.match({ query: { bool: { must: { match: {} } } } }));
+            assert.equal(founds.length, 0);
+        });
+
+    });
 });

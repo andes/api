@@ -105,3 +105,64 @@ export async function findById(id: string | String | mongoose.Types.ObjectId): I
     return resultado;
 }
 
+/**
+ * Search de paciente en ElasticSearch
+ *
+ * @param {String} type Tipo de busqueda. Enum: 'simplequery', 'multimatch', 'suggest'
+ * @param {Object} query Condiciones a buscar
+ */
+export async function search(type: 'simplequery' | 'multimatch' | 'suggest', query: any) {
+    let body;
+    switch (type) {
+        case 'simplequery':
+            body = {
+                simple_query_string: {
+                    query: `"${query.documento}" +"${query.apellido}" +"${query.nombre}" +"${query.sexo}"`,
+                    fields: ['documento', 'apellido', 'nombre', 'sexo'],
+                    default_operator: 'and'
+                }
+            };
+
+            break;
+        case 'multimatch':
+            body = {
+                bool: {
+                    must: {
+                        multi_match: {
+                            query: query.cadenaInput,
+                            type: 'cross_fields',
+                            fields: ['documento', 'apellido^5', 'nombre^4'],
+                            operator: 'and'
+                        }
+                    },
+                    filter: {
+                        term: { activo: 'true' }
+                    }
+                }
+            };
+
+            break;
+        case 'suggest':
+            body = {
+                bool: {
+                    must: {
+                        match: {
+                            documento: {
+                                query: query.documento,
+                                minimum_should_match: 3,
+                                fuzziness: 2
+                            }
+                        }
+                    },
+                    filter: {
+                        term: { activo: 'true' }
+                    }
+                }
+            };
+            break;
+    }
+    const pacientes = await PacienteTx.search({ query: body });
+    return pacientes;
+
+}
+

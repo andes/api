@@ -256,6 +256,10 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 });
 
 // Search using elastic search
+/**
+ * Esta funcionalidad se va a reemplazar por un find directo a mongo
+ * @deprecated
+ */
 router.get('/pacientes/search', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
