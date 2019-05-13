@@ -9,6 +9,8 @@ export class ElasticSync {
     private TYPE = 'paciente';
 
     constructor() {
+        // tslint:disable-next-line:no-console
+        console.warn('Deprecation warning: ElasticSync is deprecated. Use PacienteTx');
         this.connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
         });
