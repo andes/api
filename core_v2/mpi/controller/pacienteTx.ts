@@ -101,8 +101,8 @@ export class PacienteTx {
     }
 
     /**
-     * Sincroniza un paciente en ElasticSearch
-     * @param {Object} query Query de elastic Search a buscar.
+     * Busqueda de pacientes en elasticsearch
+     * @param {Object} query Query de elasticsearch a realizar
      */
 
     public static async search(query: any) {

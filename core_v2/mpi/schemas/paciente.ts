@@ -208,7 +208,9 @@ PacienteSchema.methods.toElastic = function () {
         fechaNacimiento: this.fechaNacimiento,
         alias: this.alias,
         foto: this.foto,
-        claveBlocking: this.claveBlocking
+        claveBlocking: this.claveBlocking,
+        estado: this.estado,
+        activo: this.activo
     };
 };
 
@@ -228,6 +230,6 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
 
 });
 
-export const elasticFields = ['id', 'documento', 'nombre', 'apellido', 'fechaNacimiento', 'alias', 'sexo', 'foto', 'claveBlocking'];
+export const elasticFields = ['id', 'documento', 'nombre', 'apellido', 'fechaNacimiento', 'alias', 'sexo', 'foto', 'claveBlocking', 'estado', 'activo'];
 export const Paciente = mongoose.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
 export const PacienteMpi = Connections.mpi.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
