@@ -279,29 +279,40 @@ describe('Paciente Controller', () => {
             mockElasticPaciente.restore();
         });
 
-        it('simplequery search', async () => {
-            const syncStub = mockElasticPaciente.mock('search', []);
-            const founds = await search('simplequery', { documento: '34934522' });
-            sinon.assert.calledWith(syncStub, sinon.match({ query: { simple_query_string: {} } }));
-            // sinon.assert.calledOnce(syncStub);
-            assert.equal(founds.length, 0);
-        });
-
         it('multimatch search', async () => {
             const syncStub = mockElasticPaciente.mock('search', []);
-            const founds = await search('multimatch', { documento: '34934522' });
+            const founds = await search('34934522');
             sinon.assert.calledWith(syncStub, sinon.match({ query: { bool: { must: { multi_match: {} } } } }));
             assert.equal(founds.length, 0);
         });
 
-        it('multimatch search', async () => {
+        // it('multimatch search', async () => {
+        //     const syncStub = mockElasticPaciente.mock('search', []);
+        //     const founds = await search('suggest', { documento: '34934522' });
+        //     sinon.assert.calledWith(syncStub, sinon.match({ query: { bool: { must: { match: {} } } } }));
+        //     assert.equal(founds.length, 0);
+        // });
+
+    });
+
+    describe('suggest', () => {
+        beforeEach(() => {
+            mockElasticPaciente = ImportMock.mockStaticClass(PacienteTxModule, 'PacienteTx');
+        });
+
+        afterEach(() => {
+            mockElasticPaciente.restore();
+        });
+
+        it('return creo matching', async () => {
             const syncStub = mockElasticPaciente.mock('search', []);
-            const founds = await search('suggest', { documento: '34934522' });
+            const founds = await suggest({ documento: '34934522' });
             sinon.assert.calledWith(syncStub, sinon.match({ query: { bool: { must: { match: {} } } } }));
             assert.equal(founds.length, 0);
         });
 
     });
+
 });
 describe('Paciente Controller', () => {
     describe('Matching', () => {

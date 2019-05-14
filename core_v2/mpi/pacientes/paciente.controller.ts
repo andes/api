@@ -47,7 +47,7 @@ export async function createPaciente(body: IPaciente, req) {
  * Actualiza un paciente existente. Si esta en MPI, lo crea en ANDES. Sino lo actualiza.
  * Sincroniza con ElasticSearch si es necesario.
  *
- * @param {IPaciente} body Datos del paciente
+ * @param {IPacienteDoc} body Datos del paciente
  * @param {express.Request} req Request de Express para obtener los datos del usuario
  */
 
@@ -144,64 +144,61 @@ export async function findById(id: string | String | mongoose.Types.ObjectId, op
 }
 
 /**
- * Search de paciente en ElasticSearch
+ * Busca paciente a partir de una cadena de texto
  *
- * @param {String} type Tipo de busqueda. Enum: 'simplequery', 'multimatch', 'suggest'
- * @param {Object} query Condiciones a buscar
+ * @param {string} query Condiciones a buscar
  */
-export async function search(type: 'simplequery' | 'multimatch' | 'suggest', query: any) {
-    let body;
-    switch (type) {
-        case 'simplequery':
-            body = {
-                simple_query_string: {
-                    query: `"${query.documento}" +"${query.apellido}" +"${query.nombre}" +"${query.sexo}"`,
-                    fields: ['documento', 'apellido', 'nombre', 'sexo'],
-                    default_operator: 'and'
+export async function search(searchText: string) {
+    let body = {
+        bool: {
+            must: {
+                multi_match: {
+                    query: searchText,
+                    type: 'cross_fields',
+                    fields: ['documento', 'apellido^5', 'nombre^4'],
+                    operator: 'and'
                 }
-            };
-
-            break;
-        case 'multimatch':
-            body = {
-                bool: {
-                    must: {
-                        multi_match: {
-                            query: query.cadenaInput,
-                            type: 'cross_fields',
-                            fields: ['documento', 'apellido^5', 'nombre^4'],
-                            operator: 'and'
-                        }
-                    },
-                    filter: {
-                        term: { activo: 'true' }
-                    }
-                }
-            };
-
-            break;
-        case 'suggest':
-            body = {
-                bool: {
-                    must: {
-                        match: {
-                            documento: {
-                                query: query.documento,
-                                minimum_should_match: 3,
-                                fuzziness: 2
-                            }
-                        }
-                    },
-                    filter: {
-                        term: { activo: 'true' }
-                    }
-                }
-            };
-            break;
-    }
+            },
+            filter: {
+                term: { activo: 'true' }
+            }
+        }
+    };
     const pacientes = await PacienteTx.search({ query: body });
     return pacientes;
+}
 
+/**
+ * Busca paciente similares
+ *
+ * @param {string} query Condiciones a buscar
+ * [TODO] Definir el tipado de esta funcion
+ */
+
+export async function suggest(query: any) {
+    const body = {
+        bool: {
+            must: {
+                match: {
+                    documento: {
+                        query: query.documento,
+                        minimum_should_match: 3,
+                        fuzziness: 2
+                    }
+                }
+            },
+            filter: {
+                term: { activo: 'true' }
+            }
+        }
+    };
+
+    const pacientes = await PacienteTx.search({ query: body });
+    pacientes.forEach((paciente) => {
+        const value = matching(paciente, query);
+        paciente._score = value;
+    });
+    return pacientes;
 }
 
 /**
@@ -215,7 +212,7 @@ export async function search(type: 'simplequery' | 'multimatch' | 'suggest', que
  */
 
 export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPaciente, weightsDefault?: any) {
-    let personaA = {
+    const personaA = {
         documento: pacienteA.documento ? pacienteA.documento.toString() : '',
         nombre: pacienteA.nombre ? pacienteA.nombre : '',
         apellido: pacienteA.apellido ? pacienteA.apellido : '',
@@ -223,7 +220,7 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
         sexo: pacienteA.sexo ? pacienteA.sexo : ''
     };
 
-    let personaB = {
+    const personaB = {
         documento: pacienteB.documento ? pacienteB.documento.toString() : '',
         nombre: pacienteB.nombre ? pacienteB.nombre : '',
         apellido: pacienteB.apellido ? pacienteB.apellido : '',
@@ -231,18 +228,18 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
         sexo: pacienteB.sexo ? pacienteB.sexo : ''
     };
 
-    let match = new Matching();
+    const match = new Matching();
 
-    let valorMatching = match.matchPersonas(personaA, personaB, weightsDefault ? weightsDefault : config.mpi.weightsDefault , config.algoritmo);
+    const valorMatching = match.matchPersonas(personaA, personaB, weightsDefault ? weightsDefault : config.mpi.weightsDefault , config.algoritmo);
     return valorMatching;
 
 }
 
 /**
  * Realiza una búsqueda de pacientes dada una condición
- *@param condicion
- *@param fields Setea los campos de los documentos a devolver
- *@returns
+ * @param condicion
+ * @param fields Setea los campos de los documentos a devolver
+ * @returns Devuelve listado de paciente encontrados
  */
 export async function findPaciente(condicion, fields?: string) {
 
@@ -265,8 +262,7 @@ export async function findPaciente(condicion, fields?: string) {
                 conds.push(filtro);
 
             });
-            opciones['identificadores'] = {$elemMatch: conds
-            };
+            opciones['identificadores'] = { $elemMatch: conds };
         }
 
         if (condicion.documento) {
@@ -305,16 +301,16 @@ export async function findPaciente(condicion, fields?: string) {
 
         let contactos = [];
         if (condicion.email) {
-            contactos.push({tipo: 'email', valor: parseStr(condicion.email)});
+            contactos.push({ tipo: 'email', valor: parseStr(condicion.email) });
         }
         if (condicion.celular) {
-            contactos.push({tipo: 'celular', valor: parseStr(condicion.celular)});
+            contactos.push({ tipo: 'celular', valor: parseStr(condicion.celular) });
         }
         if (condicion.fijo) {
-            contactos.push({tipo: 'fijo', valor: parseStr(condicion.fijo)});
+            contactos.push({ tipo: 'fijo', valor: parseStr(condicion.fijo) });
         }
         if (contactos.length) {
-            opciones['contactos'] = {$elemMatch: contactos};
+            opciones['contactos'] = { $elemMatch: contactos };
         }
 
         let pacientesAndes = await Paciente.find(opciones).select(fields);
