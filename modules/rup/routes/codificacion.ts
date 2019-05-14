@@ -1,9 +1,8 @@
-
 import * as express from 'express';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import * as codificacion from '../schemas/codificacion';
-import * as prestacion from '../schemas/prestacion';
-import * as codificacionController from '../controllers/codificacionController';
+import { model as modelPrestacion } from '../schemas/prestacion';
+import { codificarPrestacion } from '../controllers/codificacionController';
 import { Auth } from './../../../auth/auth.class';
 import { toArray } from '../../../utils/utils';
 
@@ -12,8 +11,8 @@ const router = express.Router();
 
 router.post('/codificacion', async (req, res, next) => {
     const idPrestacion = req.body.idPrestacion;
-    const unaPrestacion = await prestacion.model.findById(idPrestacion);
-    const codificaciones = await codificacionController.codificarPrestacion(unaPrestacion);
+    const unaPrestacion = await modelPrestacion.findById(idPrestacion);
+    const codificaciones = await codificarPrestacion(unaPrestacion);
     let data = new codificacion({
         idPrestacion,
         paciente: (unaPrestacion as any).paciente,
@@ -44,9 +43,20 @@ router.patch('/codificacion/:id', async (req, res, next) => {
     });
 });
 
+router.patch('/codificacion/estadoFacturacion/:idPrestacion', async (req, res, next) => {
+    try {
+        const data = await codificacion.findOneAndUpdate(
+            { idPrestacion: Types.ObjectId(req.params.idPrestacion) },
+            { $set: { estadoFacturacion: req.body.estadoFacturacion } });
+
+        res.json(data);
+    } catch (err) {
+        return next(err);
+    }
+});
 
 router.get('/codificacion/:id?', async (req: any, res, next) => {
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (Types.ObjectId.isValid(req.params.id)) {
         const unaCodificacion = await codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {
