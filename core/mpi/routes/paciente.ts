@@ -461,7 +461,7 @@ router.post('/pacientes', async (req, res, next) => {
                 // se carga geo referencia desde api de google
                 res.json(pacienteObj);
                 if (pacienteNuevo.estado === 'validado') {
-                    await controller.actualizarGeoReferencia(pacienteObj, req);
+                    controller.actualizarGeoReferencia(pacienteObj, req);
                 }
             } else {
                 return res.json(resultado);
@@ -543,7 +543,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 if (patientFound.estado === 'validado' && (direccionOld.valor !== data.direccion[0].valor ||
                     direccionOld.geoReferencia[0] !== data.direccion[0].geoReferencia[0] ||
                     direccionOld.geoReferencia[1] !== data.direccion[0].geoReferencia[1])) {
-                    await controller.actualizarGeoReferencia(pacienteUpdated, req);
+                    controller.actualizarGeoReferencia(pacienteUpdated, req);
                 }
             } else {
                 pacienteModificado._id = pacienteModificado.id;
@@ -571,7 +571,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 if (direccionOld.valor !== pacienteModificado.direccion[0].valor ||
                     direccionOld.geoReferencia[0] !== pacienteModificado.direccion[0].geoReferencia[0] ||
                     direccionOld.geoReferencia[1] !== pacienteModificado.direccion[0].geoReferencia[1]) {
-                    await controller.actualizarGeoReferencia(newPatient, req);
+                    controller.actualizarGeoReferencia(newPatient, req);
                 }
             }
         } else {
