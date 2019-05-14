@@ -53,7 +53,7 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
         }
 
         if (req.query.edificio) {
-            query.where('edificio._id').equals(req.query.edificio);
+            query.where('edificio.descripcion').equals(RegExp('^.*' + req.query.edificio + '.*$', 'i'));
         }
 
         if (req.query.servicio) {
