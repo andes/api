@@ -69,15 +69,10 @@ export interface IPacienteDoc extends Document, IPaciente {
     /**
      * Chequea que algún elemento en fields sea un campo indexable en ElasticSearch
      */
-    sincroniza(fields?: string []): Boolean;
+    sincroniza(): Boolean;
 
     /**
      * Devuelve los campos obligatorios que se sincronizan en elasticsearch
      */
     toElastic(): Object;
-
-    /**
-     * Devuelve los campos originales antes de haber sufrido alguna modificacion.
-     */
-    original(): Object;
 }

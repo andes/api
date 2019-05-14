@@ -1,11 +1,12 @@
 import * as mongoose from 'mongoose';
+import { Connections } from './../../../connections';
 import * as moment from 'moment';
-import { Matching } from '@andes/match';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from '../../../shared/schemas/constantes';
 import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';
 import { FinanciadorSchema } from '../financiador/financiador.schema';
 import { ParentescoSchema } from '../parentesco';
+import { Matching } from '@andes/match';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { IPacienteDoc } from './paciente.interface';
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -192,9 +193,8 @@ PacienteSchema.methods.basicos = function () {
 };
 
 PacienteSchema.methods.sincroniza = function () {
-    const campos = this.modifiedPaths();
-    if (campos) {
-        return campos.some(f => (elasticFields.indexOf(f) >= 0));
+    if (this.modifiedPaths()) {
+        return this.modifiedPaths().some(f => (elasticFields.indexOf(f) >= 0));
     }
 };
 
@@ -232,3 +232,4 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
 
 export const elasticFields = ['id', 'documento', 'nombre', 'apellido', 'fechaNacimiento', 'alias', 'sexo', 'foto', 'claveBlocking', 'estado', 'activo'];
 export const Paciente = mongoose.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
+export const PacienteMpi = Connections.mpi.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');

@@ -108,7 +108,7 @@ export class PacienteTx {
         const es = this.getClient();
         const searchBody = {
             index: this.INDEX,
-            size: 5,
+            size: 50,
             body: query
         };
         const { body } = await es.search(searchBody);
