@@ -19,6 +19,7 @@ describe('Paciente controller', () => {
 
     });
     describe('FindById ', () => {
+
         it('paciente encontrado en Andes', async () => {
             let paciente = { id: '1', nombre: 'prueba'};
             PacienteMock
@@ -33,6 +34,7 @@ describe('Paciente controller', () => {
             assert.equal(pacienteEncontrado.db, 'andes');
             assert.equal(pacienteEncontrado.paciente.id, paciente.id);
         });
+
         it('paciente encontrado en MPI', async () => {
             let pacienteMpi = { id: '2', nombre: 'pruebaMpi'};
             PacienteMock
@@ -48,8 +50,26 @@ describe('Paciente controller', () => {
             let pacienteEncontradoMpi = await findById(pacienteMpi.id);
             assert.equal(pacienteEncontradoMpi.db, 'mpi');
             assert.equal(pacienteEncontradoMpi.paciente.id, pacienteMpi.id);
-
         });
+
+        it('paciente encontrado en MPI con projeccion de campos', async () => {
+            const pacienteMpi = { id: '2', nombre: 'pruebaMpi'};
+
+            const mock = PacienteMock.expects('findById').withArgs(pacienteMpi.id);
+            const selectMockPaciente = mock.chain('select').withArgs('nombre apellido');
+            mock.chain('exec').resolves(null);
+
+            const mock2 = PacienteMockMpi.expects('findById').withArgs(pacienteMpi.id);
+            const selectMockPacienteMpi = mock2.chain('select').withArgs('nombre apellido');
+            mock2.chain('exec').resolves(pacienteMpi);
+
+            const pacienteEncontradoMpi = await findById(pacienteMpi.id, { fields: 'nombre apellido' });
+            assert.equal(pacienteEncontradoMpi.db, 'mpi');
+            assert.equal(pacienteEncontradoMpi.paciente.id, pacienteMpi.id);
+            sinon.assert.calledOnce(selectMockPaciente);
+            sinon.assert.calledOnce(selectMockPacienteMpi);
+        });
+
         it('paciente no encontrado', async () => {
             let paciente = {id: '3', nombre: 'prueba'};
             PacienteMock
@@ -64,7 +84,6 @@ describe('Paciente controller', () => {
 
             let pacienteEncontrado = await findById(paciente.id);
             assert.equal(pacienteEncontrado, null);
-
         });
 
     });
