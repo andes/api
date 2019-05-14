@@ -1,6 +1,6 @@
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import * as PacienteModule from './paciente.schema';
-import { findById, createPaciente, savePaciente, search, matching } from './paciente.controller';
+import { findById, createPaciente, savePaciente, search, matching, updatePaciente, suggest } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
@@ -228,6 +228,48 @@ describe('Paciente Controller', () => {
 
         });
     });
+
+    describe('updatePaciente', () => {
+        it('paciente temporal puede cambiar todo', () => {
+            let pacTemp = {
+                nombre: 'carlos',
+                apellido: 'gabriel',
+                documento: '33333333',
+                sexo: 'masculino',
+                genero: 'masculino',
+                estado: 'temporal',
+                fechaNacimiento: new Date()
+            };
+            const paciente = new PacienteModule.Paciente(pacTemp);
+
+            updatePaciente(paciente, { estado: 'validado', fechaNacimiento: null });
+
+            assert.equal(paciente.estado, 'validado');
+            assert.equal(paciente.documento, '33333333');
+            assert.equal(paciente.fechaNacimiento, null);
+        });
+
+        it('paciente validado no puede cambiar documento', () => {
+            let pacTemp = {
+                nombre: 'carlos',
+                apellido: 'gabriel',
+                documento: '33333333',
+                sexo: 'masculino',
+                genero: 'masculino',
+                estado: 'validado',
+                fechaNacimiento: new Date()
+            };
+            const paciente = new PacienteModule.Paciente(pacTemp);
+
+            updatePaciente(paciente, { estado: 'validado', documento: '1234567', fechaNacimiento: null });
+
+            assert.equal(paciente.estado, 'validado');
+            assert.equal(paciente.documento, '33333333');
+            expect(paciente.fechaNacimiento).to.not.equal(null);
+        });
+
+    });
+
     describe('search', () => {
         beforeEach(() => {
             mockElasticPaciente = ImportMock.mockStaticClass(PacienteTxModule, 'PacienteTx');
