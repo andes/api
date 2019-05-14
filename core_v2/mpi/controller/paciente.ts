@@ -84,25 +84,38 @@ type IFindById = Promise<{
 
 /**
  * Busca un paciente por ID. Tanto en ANDES y MPI.
+ * @param {string} id ID del paciente a buscar.
+ * @param {object} options
+ * @param {string} options.fields Listado de campos para projectar
  * @returns {IFindById}
  */
 
-export async function findById(id: string | String | mongoose.Types.ObjectId): IFindById {
-    let base: DatabaseType = 'andes';
-    let paciente = await Paciente.findById(id);
-    if (!paciente) {
-        base = 'mpi';
-        paciente = await PacienteMpi.findById(id);
-        if (!paciente) {
-            return null;
+export async function findById(id: string | String | mongoose.Types.ObjectId, options = null): IFindById {
+    function makeFindById(Schema, select) {
+        const queryFind = Schema.findById(id);
+        if (select) {
+            queryFind.select(select);
+        }
+        return queryFind;
+    }
+    options = options || {};
+    const { fields } = options;
+    let paciente = await makeFindById(Paciente, fields);
+    if (paciente) {
+        return {
+            db: 'andes',
+            paciente
+        };
+    } else {
+        paciente = await makeFindById(PacienteMpi, fields);
+        if (paciente) {
+            return {
+                db: 'mpi',
+                paciente
+            };
         }
     }
-
-    const resultado = {
-        db: base,
-        paciente
-    };
-    return resultado;
+    return null;
 }
 
 /**
