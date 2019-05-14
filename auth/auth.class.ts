@@ -148,8 +148,13 @@ export class Auth {
         return async (req, res, next) => {
             if (req.user.type === 'app-token') {
                 let app: any = await authApps.findOne({ _id: req.user.app.id });
-                let token: string = req.headers.authorization.substring(4);
-                if (app.token && app.token === token) {
+                let token;
+                if (req.headers && req.headers.authorization) {
+                    token = req.headers.authorization.substring(4);
+                } else if (req.query.token) {
+                    token = req.query.token;
+                }
+                if (app && app.token && app.token === token) {
                     next();
                 } else {
                     next(403);
