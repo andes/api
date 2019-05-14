@@ -51,7 +51,7 @@ export async function createPaciente(body: IPaciente, req) {
  * @param {express.Request} req Request de Express para obtener los datos del usuario
  */
 
-export async function updatePaciente(paciente: IPacienteDoc, req: express.Request) {
+export async function savePaciente(paciente: IPacienteDoc, req: express.Request) {
     const session = await Paciente.db.startSession();
     session.startTransaction();
     try {

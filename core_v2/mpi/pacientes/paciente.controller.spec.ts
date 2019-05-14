@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import * as PacienteModule from './paciente.schema';
-import { findById, createPaciente, updatePaciente, search, matching } from './paciente.controller';
+import { findById, createPaciente, savePaciente, search, matching } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
@@ -166,7 +166,7 @@ describe('Paciente Controller', () => {
 
 describe('Paciente Controller', () => {
     let mockElasticPaciente;
-    describe('Update', () => {
+    describe('savePaciente', () => {
         let mockPaciente;
         let mockPacienteStatic;
         let req;
@@ -219,7 +219,7 @@ describe('Paciente Controller', () => {
             const syncStub = mockElasticPaciente.mock('sync', true);
             sinon.stub(log, 'log').callsFake(null);
 
-            const patientUpdated = await updatePaciente(mockPaciente.object, req);
+            const patientUpdated = await savePaciente(mockPaciente.object, req);
             sinon.assert.calledOnce(log.log);
             sinon.assert.calledOnce(syncStub);
             sinon.assert.calledOnce(startTransactionStub);
