@@ -1,13 +1,13 @@
 import * as mongoose from 'mongoose';
 import { Connections } from './../../../connections';
 import * as moment from 'moment';
-import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION, CONTACTO } from '../../../shared/schemas/constantes';
+import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from '../../../shared/schemas/constantes';
 import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';
-import { FinanciadorSchema } from './financiador';
-import { ParentescoSchema } from './parentesco';
+import { FinanciadorSchema } from '../financiador/financiador.schema';
+import { ParentescoSchema } from '../parentesco';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { IPacienteDoc } from '../interfaces/Paciente.interface';
+import { IPacienteDoc } from './paciente.interface';
 
 const ObjectId = mongoose.Types.ObjectId;
 

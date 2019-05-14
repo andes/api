@@ -1,11 +1,9 @@
 import { assert } from 'chai';
-import * as PacienteModule from '../schemas/paciente';
-import {findById, createPaciente, updatePaciente, search, matching} from './paciente';
+import * as PacienteModule from './paciente.schema';
+import { findById, createPaciente, updatePaciente, search, matching } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
-import { IPaciente } from '../interfaces/Paciente.interface';
-import { find } from 'async';
 
 const sinon = require('sinon');
 require('sinon-mongoose');

@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import { Schema, Document, Types } from 'mongoose';
-import { IFinanciador } from './Financiador.interface';
-import { IParentesco } from './Parentesco.interface';
+import { IFinanciador } from '../financiador';
+import { IParentesco } from '../parentesco';
 import { IContacto, IContactoDoc, IDireccion, IDireccionDoc } from '../../../shared/interface';
 
 export interface ICarpetaEfector {

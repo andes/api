@@ -17,7 +17,10 @@ import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial
 const logD = debug('paciente-controller');
 const router = express.Router();
 
-/* Consultas de estado de pacientes para el panel de información */
+/**
+ * [DEPRECATED] Consultas de estado de pacientes para el panel de información
+ **/
+
 router.get('/pacientes/counts/', (req, res, next) => {
     /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
     let filtro;
@@ -58,6 +61,9 @@ router.get('/pacientes/counts/', (req, res, next) => {
     });
 });
 
+/**
+ * [DEPRECATED]
+ */
 router.get('/pacientes/dashboard/', async (req, res, next) => {
     /**
      * Se requiere autorización para acceder al dashboard de MPI
@@ -107,6 +113,9 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
     res.json(result);
 });
 
+/**
+ * Valida un paciente en fuentes autenticas
+ */
 router.post('/pacientes/validar/', async (req, res, next) => {
     // TODO modificar permiso renaper -> validar/validacion o algo asi
     if (!Auth.check(req, 'fa:get:renaper')) {
@@ -133,6 +142,9 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     }
 });
 
+/**
+ * [DEPRECATED] No se esta usando
+ */
 router.get('/pacientes/auditoria/', (req, res, next) => {
     let filtro;
     switch (req.query.estado) {
@@ -166,6 +178,9 @@ router.get('/pacientes/auditoria/', (req, res, next) => {
 
 });
 
+/**
+ * [DEPRECATED]
+ */
 router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
     // if (!Auth.check(req, 'mpi:paciente:putAndes')) {
     //     return next(403);
@@ -221,6 +236,10 @@ router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
     }
 });
 
+/**
+ * [DEPRECATED]
+ * Usa el find de MPI 3.0
+ */
 router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
     let filtro = {
         'identificadores.0': { $exists: true },
@@ -238,6 +257,12 @@ router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
     }
 
 });
+
+/**
+ * [DEPRECATED]
+ * Usa el find de MPI 3.0
+ */
+
 router.get('/pacientes/inactivos/', async (req, res, next) => {
     let filtro = {
         activo: false
@@ -259,6 +284,7 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 /**
  * Esta funcionalidad se va a reemplazar por un find directo a mongo
  * @deprecated
+ *
  */
 router.get('/pacientes/search', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {

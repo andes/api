@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { IParentescoDoc } from '../interfaces/Parentesco.interface';
+import { IParentescoDoc } from './parentesco.interface';
 
 export const ParentescoSchema = new mongoose.Schema({
     nombre: String,

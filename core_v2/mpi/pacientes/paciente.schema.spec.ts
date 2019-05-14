@@ -1,5 +1,5 @@
 const sinon = require('sinon');
-import {Paciente} from './paciente';
+import {Paciente} from './paciente.schema';
 import { assert } from 'chai';
 
 describe('Paciente Schema', () => {

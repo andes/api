@@ -1,6 +1,6 @@
 
 
-import { Paciente, PacienteMpi } from '../schemas/paciente';
+import { Paciente, PacienteMpi } from './paciente.schema';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
@@ -9,7 +9,7 @@ import { PacienteTx } from './pacienteTx';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
 import { EventCore } from '@andes/event-bus';
-import { IPaciente, IPacienteDoc } from '../interfaces/Paciente.interface';
+import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
 import {parseStr, rangoFechas} from './../../../shared/queryBuilder';

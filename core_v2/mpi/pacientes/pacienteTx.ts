@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import * as configPrivate from '../../../config.private';
-import { IPacienteDoc } from '../interfaces/Paciente.interface';
+import { IPacienteDoc } from './paciente.interface';
 
 /**
  * Sincroniza un paciente con ElasticSearch para su adecuado indice y posterior busqueda.
@@ -14,8 +14,7 @@ export class PacienteTx {
 
     public static getClient() {
         return new Client({
-            // node: configPrivate.hosts.elastic_main
-            node: 'http://localhost:9200'
+            node: configPrivate.hosts.elastic_main
         });
     }
 
@@ -141,10 +140,3 @@ export class PacienteTx {
      */
 
 }
-
-
-// async function main() {
-//     const a = await PacienteTx.delete({ _id: '123123123123' } as any );
-//     console.log(a);
-// }
-// main();
