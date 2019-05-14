@@ -1,10 +1,9 @@
-import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { Pecas } from '../schemas/pecas';
 import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
 import { Organizacion } from '../../../../core/tm/schemas/organizacion';
-import { pecasExport } from '../controller/aggregateQueryPecas';
+import { pecasExport, exportDinamicasSinTurnos } from '../controller/aggregateQueryPecas';
 import { log } from '@andes/log';
 import { sendMail } from '../../../../utils/roboSender/sendEmail';
 import { emailListString } from '../../../../config.private';
@@ -59,11 +58,17 @@ export async function consultaPecas(done, start, end) {
         await Pecas.remove({});
         // Exportamos los registros directamente desde mongodb
         await pecasExport(start, end);
-        let pecasData: any = await Pecas.find({}).exec();
+        exportDinamicasSinTurnos(start, end);
+
+        let pecasData: any = await Pecas.find({});
         let insertsArray = [];
         let cantidadRegistros = pecasData.length;
-        let idsAgendas = [...new Set(pecasData.map(data => data.idAgenda))];
-        await eliminaAgenda(idsAgendas);
+        let conjunto = pecasData.map(data => data.idAgenda);
+        let idsAgendas = [...new Set(conjunto)];
+        await Promise.all(
+            idsAgendas.map(eliminaAgenda)
+        );
+
         // Realizamos le proceso de insertado a pecas SQL
         if (cantidadRegistros > 0) {
             for (let i = 0; i < cantidadRegistros; i++) {
@@ -78,33 +83,8 @@ export async function consultaPecas(done, start, end) {
             return (done(null));
         }
     } catch (error) {
+        await log(logRequest, 'andes:pecas:bi', null, 'delete', error, null);
         return (done(error));
-    }
-}
-
-// Esto lo dejamos por si necesitan agendas sin turno
-async function soloAgenda(row: any, idEfectorSips) {
-    let ag: any = {};
-    try {
-        ag.idEfector = idEfectorSips;
-        ag.Organizacion = row.Efector;
-        ag.idAgenda = row.idAgenda;
-        ag.tipoPrestacion = row.tipoPrestacion;
-        ag.FechaAgenda = row.FechaAgenda;
-        ag.HoraAgenda = row.HoraAgenda;
-        ag.estadoAgenda = row.estadoAgenda;
-        ag.numeroBloque = 0;
-        ag.idTurno = row.bloques[0]._id;
-        ag.DescTipoEfector = row.DescTipoEfector;
-        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
-            '(idEfector, Efector, TipoEfector, DescTipoEfector, idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque,  idTurno, tipoPrestacion,  updated) ' +
-            'VALUES  ( ' + ag.idEfector + ',\'' + ag.Organizacion + '\',\'' + ag.TipoEfector + '\',\'' + ag.DescTipoEfector +
-            '\',\'' + ag.idAgenda + '\',\'' + ag.FechaAgenda + '\',\'' + ag.HoraAgenda + '\',\'' + ag.estadoAgenda +
-            '\',' + ag.numeroBloque + ',\'' + ag.idTurno + '\',\'' + ag.tipoPrestacion + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-        await executeQuery(queryInsert);
-
-    } catch (error) {
-        return (error);
     }
 }
 
@@ -112,6 +92,10 @@ async function soloAgenda(row: any, idEfectorSips) {
 async function insertCompleto(turno: any, idEfectorSips) {
     // Chequeos necesarios
     let fechaNac = (turno.FechaNacimiento && moment(turno.FechaNacimiento).year()) > 1900 ? `'${turno.FechaNacimiento}'` : null;
+    let FechaConsulta = turno.FechaConsulta ? `'${turno.FechaConsulta}'` : null;
+    let reasignado = turno.reasignado ? `'${turno.reasignado}'` : null;
+    let periodo = turno.periodo ? `'${turno.periodo}'` : null;
+
     let dni = turno.DNI !== '' ? turno.DNI : null;
     let profesional = turno.Profesional ? turno.Profesional.replace('\'', '\'\'') : null;
     let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
@@ -123,6 +107,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
     let turnosProfesional = turno.turnosProfesional ? turno.turnosProfesional : null;
     let turnosProgramados = turno.turnosProgramados ? turno.turnosProgramados : null;
     let numeroBloque = turno.sobreturno === 'SI' ? -1 : turno.numeroBloque;
+
 
     let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
         '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
@@ -141,7 +126,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
         '\',' + turno.IdZona + ',' + turno.Zona + ',' + turno.SubZona + ',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
         '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
         '\',' + numeroBloque + ',' + turnosProgramados + ',' + turnosProfesional + ',' + turnosLlaves + ',' + turnosDelDia +
-        ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',\'' + turno.Periodo + '\',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
+        ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',' + FechaConsulta + ',\'' + turno.HoraTurno + '\',' + periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
         '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
         // DATOS PACIENTE
         '\',' + dni + ',\'' + pacienteApellido + '\',\'' + pacienteNombres + '\',\'' + turno.HC + '\',\'' + turno.CodSexo +
@@ -153,8 +138,8 @@ async function insertCompleto(turno: any, idEfectorSips) {
         '\',\'' + turno.Depto + '\',\'' + turno.Manzana + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
         '\',' + turno.Peso + ',' + turno.Talla + ',\'' + turno.TAS + '\',\'' + turno.TAD + '\',\'' + turno.IMC + '\',\'' + turno.RCVG +
         // DATOS CONSULTA
-        '\',\'' + turno.asistencia + '\',\'' + turno.reasignado +
-        '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
+        '\',\'' + turno.asistencia + '\',' + reasignado +
+        ',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
         '\',\'' + turno.SemanticTag1 + '\',\'' + turno.SnomedConcept1 + '\',\'' + turno.SnomedTerm1 + '\',' + turno.primeraVez1 +
         ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
         '\',\'' + turno.SemanticTag2 + '\',\'' + turno.SnomedConcept2 + '\',\'' + turno.SnomedTerm2 + '\',' + turno.primeraVez2 +
@@ -237,10 +222,31 @@ function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, 
     return `${columnName} IN (${parameterNames.join(',')})`;
 }
 
-async function eliminaAgenda(idsAgendas: any[]) {
+async function eliminaAgendas(idsAgendas: any[]) {
     const result = new sql.Request(poolTurnos);
     let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
-    return await result.query(query);
+    try {
+        return result.query(query);
+    } catch (err) {
+        let options = mailOptions;
+        options.text = `'error en el delete: ${query}'`;
+        sendMail(mailOptions);
+        await log(logRequest, 'andes:pecas:bi', null, 'delete', err, null);
+    }
+}
+
+async function eliminaAgenda(idAgenda) {
+    // const result = new sql.Request(poolTurnos);
+    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda ='${idAgenda}'`;
+    try {
+        return executeQuery(query);
+        // return result.query(query);
+    } catch (err) {
+        let options = mailOptions;
+        options.text = `'error en el delete: ${query}'`;
+        sendMail(mailOptions);
+        await log(logRequest, 'andes:pecas:bi', null, 'delete', err, null);
+    }
 }
 
 
@@ -306,22 +312,12 @@ function calcularEdad(fechaNacimiento) {
     }
     return edad;
 }
-function organizacionesExcluidas() {
-    let organizaciones = [];
-    const medicoIntegral = '5a5e3f7e0bd5677324737244';
-    organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
-    return organizaciones;
-}
 async function executeQuery(query: any) {
     try {
-        query += ' select SCOPE_IDENTITY() as id';
-        const result = await new sql.Request(poolTurnos).query(query);
-        if (result && result.recordset) {
-            return result.recordset[0].id;
-        }
+        await new sql.Request(poolTurnos).query(query);
     } catch (err) {
         let options = mailOptions;
-        options.text = `'error al insertar en sql: ${query}'`;
+        options.text = `'error en consulta sql: ${query}'`;
         sendMail(mailOptions);
         await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
         return err;

@@ -1,12 +1,14 @@
 import * as Agenda from '../../../../modules/turnos/schemas/agenda';
-import { toArray } from '../../../../utils/utils';
+import * as mongoose from 'mongoose';
 import { Pecas } from '../schemas/pecas';
-import { Types } from 'mongoose';
 
 export async function pecasExport(start, end) {
+    let orgExcluidas = organizacionesExcluidas();
+
     const pipeline = [
         {
             $match: {
+                $or: orgExcluidas,
                 updatedAt: {
                     $lt: new Date(end),
                     $gte: new Date(start)
@@ -542,7 +544,22 @@ export async function pecasExport(start, end) {
                         else: 'NO'
                     }
                 },
-                tipoPrestacion: '$prestacion.term',
+                tipoPrestacion: {
+                    $cond: {
+                        if: {
+                            $ne: [{
+                                $in: [{
+                                    $type: '$_bloques.turnos.tipoPrestacion'
+                                },
+                                ['missing', 'null', 'undefined']
+                                ]
+                            }, true]
+                        },
+
+                        then: '$_bloques.turnos.tipoPrestacion.term',
+                        else: { $arrayElemAt: ['$_bloques.tipoPrestaciones.term', 0] }
+                    }
+                },
                 DNI: {
                     $cond: {
                         if: {
@@ -1256,8 +1273,213 @@ export async function pecasExport(start, end) {
         { $out: 'pecas' }
     ];
 
-    const aggr = Agenda.aggregate(pipeline);
-    const data = await toArray(aggr.cursor({}).exec());
-    return;
+    return Agenda.aggregate(pipeline);
 }
 
+export async function exportDinamicasSinTurnos(start, end) {
+    let orgExcluidas = organizacionesExcluidas();
+    const pipeline = [
+        {
+            $match: {
+                $or: orgExcluidas,
+                updatedAt: {
+                    $lt: new Date(end),
+                    $gte: new Date(start)
+                },
+                dinamica: true,
+                bloques: {
+                    $ne: null
+                },
+                'bloques.turnos': {
+                    $size: 0
+                },
+                sobreturnos: {
+                    $size: 0
+                }
+            }
+        },
+        {
+            $lookup: {
+                from: 'organizacion',
+                localField: 'organizacion._id',
+                foreignField: '_id',
+                as: 'organizacion'
+            }
+        },
+        {
+            $unwind: '$organizacion'
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $project: {
+                _id: 0,
+                idEfector: '$organizacion._id',
+                Efector: '$organizacion.nombre',
+                TipoEfector: {
+                    $switch: {
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$organizacion.tipoEstablecimiento.nombre', 'Centro de Salud']
+                                },
+                                then: '1'
+                            },
+                            {
+                                case: {
+                                    $eq: ['$organizacion.tipoEstablecimiento.nombre', 'Hospital']
+                                },
+                                then: '2'
+                            },
+                            {
+                                case: {
+                                    $eq: ['$organizacion.tipoEstablecimiento.nombre', 'Puesto Sanitario']
+                                },
+                                then: '3'
+                            },
+                            {
+                                case: {
+                                    $eq: ['$organizacion.tipoEstablecimiento.nombre', 'ONG']
+                                },
+                                then: '6'
+                            }
+                        ],
+                        default: ''
+                    }
+                },
+                DescTipoEfector: '$organizacion.tipoEstablecimiento.nombre',
+                IdZona: null,
+                Zona: null,
+                SubZona: null,
+                idEfectorSuperior: null,
+                EfectorSuperior: null,
+                AreaPrograma: null,
+
+                idAgenda: '$_id',
+                FechaAgenda: {
+                    $dateToString: {
+                        format: '%Y%m%d',
+                        date: '$horaInicio'
+                    }
+                },
+                HoraAgenda: {
+                    $dateToString: {
+                        format: '%H:%M',
+                        date: '$horaInicio'
+                    }
+                },
+                estadoAgenda: '$estado',
+                numeroBloque: '0',
+                turnosProgramados: null,
+                turnosProfesional: null,
+                turnosLlaves: null,
+                turnosDelDia: null,
+                idTurno: '$bloques._id',
+                estadoTurno: null,
+                tipoTurno: null,
+                sobreturno: null,
+                FechaConsulta: null,
+                HoraTurno: null,
+                Periodo: null,
+                estadoTurnoAuditoria: null,
+                Tipodeconsulta: null,
+                Principal: null,
+                ConsC2: null,
+                ConsObst: null,
+                tipoPrestacion: { $arrayElemAt: ['$bloques.tipoPrestaciones.term', 0] },
+                DNI: null,
+                Apellido: null,
+                Nombres: null,
+                HC: null,
+                CodSexo: null,
+                Sexo: null,
+                FechaNacimiento: null,
+                Edad: null,
+                UniEdad: null,
+                CodRangoEdad: null,
+                RangoEdad: null,
+                IdObraSocial: null,
+                ObraSocial: null,
+                IdPaciente: null,
+                Telefono: null,
+                IdBarrio: null,
+                Barrio: null,
+                IdLocalidad: null,
+                Localidad: null,
+                IdDpto: null,
+                Departamento: null,
+                IdPcia: null,
+                Provincia: null,
+                IdNacionalidad: null,
+                Nacionalidad: null,
+                Calle: null,
+                Altura: null,
+                Piso: null,
+                Depto: null,
+                Manzana: null,
+                Longitud: null,
+                Latitud: null,
+                Peso: null,
+                Talla: null,
+                TAS: null,
+                TAD: null,
+                IMC: null,
+                RCVG: null,
+                asistencia: null,
+                reasignado: null,
+                Diag1CodigoOriginal: null,
+                Desc1DiagOriginal: null,
+                Diag1CodigoAuditado: null,
+                Desc1DiagAuditado: null,
+                SemanticTag1: null,
+                SnomedConcept1: null,
+                SnomedTerm1: null,
+                primeraVez1: null,
+                Diag2CodigoOriginal: null,
+                Desc2DiagOriginal: null,
+                Diag2CodigoAuditado: null,
+                Desc2DiagAuditado: null,
+                SemanticTag2: null,
+                SnomedConcept2: null,
+                SnomedTerm2: null,
+                primeraVez2: null,
+                Diag3CodigoOriginal: null,
+                Desc3DiagOriginal: null,
+                Diag3CodigoAuditado: null,
+                Desc3DiagAuditado: null,
+                SemanticTag3: null,
+                SnomedConcept3: null,
+                SnomedTerm3: null,
+                primeraVez3: null,
+                Profesional: null,
+                TipoProfesional: null,
+                CodigoEspecialidad: null,
+                Especialidad: null,
+                CodigoServicio: null,
+                Servicio: null,
+                codifica: null,
+                turnosMobile: null,
+                updated: {
+                    $dateToString: {
+                        format: '%Y%m%d %H:%M',
+                        date: new Date()
+                    }
+                }
+            }
+        }
+    ];
+
+    let documentos = await Agenda.aggregate(pipeline);
+    await Promise.all(documentos.map(documento => {
+        let nuevoItem = new Pecas(documento);
+        return nuevoItem.save();
+    }));
+}
+
+function organizacionesExcluidas() {
+    let organizaciones = [];
+    const medicoIntegral = '5a5e3f7e0bd5677324737244';
+    organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
+    return organizaciones;
+}

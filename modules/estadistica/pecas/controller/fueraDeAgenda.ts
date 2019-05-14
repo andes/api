@@ -62,11 +62,22 @@ export async function fueraAgendaPecas(start, end, done) {
     pipeline2 = [
         {
             $match: {
-                $and: [
-                    { $or: orgExcluidas },
-                    { createdAt: { $gte: new Date(start) } },
-                    { createdAt: { $lte: new Date(end) } }
-                ],
+                $or: [
+                    {
+                        $and: [
+                            { $or: orgExcluidas },
+                            { createdAt: { $gte: new Date(start) } },
+                            { createdAt: { $lte: new Date(end) } }
+                        ]
+                    },
+                    {
+                        $and: [
+                            { $or: orgExcluidas },
+                            { updatedAt: { $gte: new Date(start) } },
+                            { updatedAt: { $lte: new Date(end) } }
+                        ]
+                    }
+                ]
             }
         },
         {
