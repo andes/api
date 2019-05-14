@@ -3,12 +3,17 @@
 import { Paciente, PacienteMpi } from '../schemas/paciente';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
+import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { PacienteTx } from './pacienteTx';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
 import { EventCore } from '@andes/event-bus';
 import { IPaciente, IPacienteDoc } from '../interfaces/Paciente.interface';
+import { Matching } from '@andes/match';
+import * as config from '../../../config';
+import {parseStr, rangoFechas} from './../../../shared/queryBuilder';
+
 
 /**
  * Persiste un nuevo paciente en la base de datos ANDES y los sincroniza con ElasticSearch.
@@ -179,3 +184,132 @@ export async function search(type: 'simplequery' | 'multimatch' | 'suggest', que
 
 }
 
+/**
+ * Realiza un matching entre dos pacientes.
+ * Devuelve un valor con el porcentaje de matcheo entre 0 y 1
+ *
+ * @param {IPaciente} pacienteA Datos del paciente
+ * @param {IPaciente} pacienteB Datos del paciente
+ * @returns Devuelve un número que indica el porcentaje de matcheo entre los dos pacientes
+ *
+ */
+
+export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPaciente, weightsDefault?: any) {
+    let personaA = {
+        documento: pacienteA.documento ? pacienteA.documento.toString() : '',
+        nombre: pacienteA.nombre ? pacienteA.nombre : '',
+        apellido: pacienteA.apellido ? pacienteA.apellido : '',
+        fechaNacimiento: pacienteA.fechaNacimiento ? moment(pacienteA.fechaNacimiento).format('YYYY-MM-DD') : '',
+        sexo: pacienteA.sexo ? pacienteA.sexo : ''
+    };
+
+    let personaB = {
+        documento: pacienteB.documento ? pacienteB.documento.toString() : '',
+        nombre: pacienteB.nombre ? pacienteB.nombre : '',
+        apellido: pacienteB.apellido ? pacienteB.apellido : '',
+        fechaNacimiento: pacienteB.fechaNacimiento ? moment(pacienteB.fechaNacimiento).format('YYYY-MM-DD') : '',
+        sexo: pacienteB.sexo ? pacienteB.sexo : ''
+    };
+
+    let match = new Matching();
+
+    let valorMatching = match.matchPersonas(personaA, personaB, weightsDefault ? weightsDefault : config.mpi.weightsDefault , config.algoritmo);
+    return valorMatching;
+
+}
+
+/**
+ * Realiza una búsqueda de pacientes dada una condición
+ *@param condicion
+ *@param fields Setea los campos de los documentos a devolver
+ *@returns
+ */
+export async function findPaciente(condicion, fields?: string) {
+
+    try {
+
+        const opciones = {};
+        // identificadores [{'Entidad1'| valor}... {'EntidadN'| valorN} ]
+        if (condicion.indentificadores) {
+            let conds = [];
+           // verifica los identificadores
+            condicion.indentificadores.forEach(identificador => {
+                let ids = identificador.split('|');
+                let filtro;
+                if (ids[0]) {
+                    filtro['identificadores.entidad'] = ids[0];
+                }
+                if (ids[1]) {
+                    filtro['identificadores.valor'] = ids[1];
+                }
+                conds.push(filtro);
+
+            });
+            opciones['identificadores'] = {$elemMatch: conds
+            };
+        }
+
+        if (condicion.documento) {
+            opciones['documento'] =  parseStr(condicion.documento);
+        }
+        if (condicion.nombre) {
+            opciones['nombre'] =  parseStr(condicion.nombre);
+        }
+        if (condicion.apellido) {
+            opciones['apellido'] = parseStr(condicion.apellido);
+        }
+        if (condicion.fechaNacimiento) {
+            opciones['fechaNacimiento'] = rangoFechas(condicion.fechaNacimiento);
+        }
+        if (condicion.estado) {
+            opciones['estado'] = condicion.estado;
+        }
+        if (condicion.activo) {
+            opciones['activo'] = condicion.activo;
+        }
+        if (condicion.localidad) {
+            opciones['direccion.ubicacion.localidad.nombre'] = parseStr(condicion.localidad);
+        }
+        if (condicion.barrio) {
+            opciones['direccion.ubicacion.barrio.nombre'] =  parseStr(condicion.barrio);
+        }
+        if (condicion.provincia) {
+            opciones['direccion.ubicacion.provincia.nombre'] = parseStr(condicion.provincia);
+        }
+        if (condicion.pais) {
+            opciones['direccion.ubicacion.pais.nombre'] = parseStr(condicion.pais);
+        }
+        if (condicion.nacionalidad) {
+            opciones['nacionalidad'] = parseStr(condicion.nacionalidad);
+        }
+
+        let contactos = [];
+        if (condicion.email) {
+            contactos.push({tipo: 'email', valor: parseStr(condicion.email)});
+        }
+        if (condicion.celular) {
+            contactos.push({tipo: 'celular', valor: parseStr(condicion.celular)});
+        }
+        if (condicion.fijo) {
+            contactos.push({tipo: 'fijo', valor: parseStr(condicion.fijo)});
+        }
+        if (contactos.length) {
+            opciones['contactos'] = {$elemMatch: contactos};
+        }
+
+        let pacientesAndes = await Paciente.find(opciones).select(fields);
+        let pacientesMPI = await PacienteMpi.find(opciones).select(fields);
+        let pacientes = [];
+        pacientesAndes.forEach(p => {
+            if ((pacientesMPI.findIndex(pMpi => pMpi.id === p.id)) === -1) {
+                pacientes.push(p);
+            }
+        });
+        pacientes.concat(pacientesMPI);
+
+        return pacientes;
+    } catch (error) {
+        throw error;
+    }
+
+}
