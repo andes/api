@@ -74,6 +74,26 @@ export async function savePaciente(paciente: IPacienteDoc, req: express.Request)
     }
 }
 
+/**
+ * Modifica los campos de un paciente.
+ * @param {IPacienteDoc} paciente paciente a modifciar
+ * @param {object} body Datos a modificar del paciente
+ */
+
+export function updatePaciente(paciente: IPacienteDoc, body: any) {
+    if (paciente.estado === 'validado') {
+        delete body['documento'];
+        delete body['apellido'];
+        delete body['nombre'];
+        delete body['sexo'];
+        delete body['fechaNacimiento'];
+        delete body['estado'];
+    }
+    paciente.set(body);
+    return paciente;
+}
+
+
 type DatabaseType = 'andes' | 'mpi';
 
 /**
