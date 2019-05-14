@@ -772,7 +772,7 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                     break;
 
                 case 'updateRelacion':
-                    controller.updateRelacion(req, resultado.paciente);
+                    controller.updateRelacion(req.body.dto, resultado.paciente);
                     break;
                 case 'deleteRelacion':
                     controller.deleteRelacion(req, resultado.paciente);

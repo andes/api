@@ -550,25 +550,25 @@ export function updateActivo(req, data) {
     data.activo = req.body.activo;
 }
 
-export function updateRelacion(req, data) {
+export function updateRelacion(nuevaRelacion, data) {
     if (data) {
         // verifico si el paciente tiene relaciones
         if (data.relaciones) {
             const objRel = data.relaciones.find(elem => {
-                if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
+                if (elem && nuevaRelacion && elem.referencia && nuevaRelacion.referencia) {
                     // checkeamos si ya existe la relacion que queremos insertar..
-                    if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
+                    if (elem.referencia.toString() === nuevaRelacion.referencia.toString()) {
                         return elem;
                     }
                 }
             });
             if (!objRel) {
                 data.markModified('relaciones');
-                data.relaciones.push(req.body.dto);
+                data.relaciones.push(nuevaRelacion);
             }
         } else {
             data.markModified('relaciones');
-            data.relaciones = [req.body.dto];
+            data.relaciones = [nuevaRelacion];
         }
     }
 }
@@ -789,7 +789,6 @@ export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching:
 
     let candidatos = await matching(matchingInputData);  // Handlear error en funcion llamadora
     // Filtramos al propio paciente y a los resultados por debajo de la cota minima
-
     candidatos = candidatos.filter(elem => {
         return (elem.paciente.id !== nuevoPaciente.id) && (elem.match > config.mpi.cotaMatchMin);
     });
@@ -814,7 +813,8 @@ export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching:
     let arrayAuxiliar = await Promise.all(promiseArray);
     let resultadoMatching = [];
     for (let index = 0; index < arrayAuxiliar.length; index++) {
-        resultadoMatching.push({ paciente: arrayAuxiliar[index].paciente });
+        let pacienteCandidato = arrayAuxiliar[index].paciente;
+        resultadoMatching.push({ paciente: pacienteCandidato });
         resultadoMatching[index].match = candidatos[index].match;
     }
     return { resultadoMatching, dniRepetido, macheoAlto };
