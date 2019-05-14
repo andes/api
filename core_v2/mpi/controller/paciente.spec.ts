@@ -1,10 +1,11 @@
 import { assert } from 'chai';
 import * as PacienteModule from '../schemas/paciente';
-import {findById, createPaciente, updatePaciente, search} from './paciente';
+import {findById, createPaciente, updatePaciente, search, matching} from './paciente';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
 import { IPaciente } from '../interfaces/Paciente.interface';
+import { find } from 'async';
 
 const sinon = require('sinon');
 require('sinon-mongoose');
@@ -169,7 +170,6 @@ describe('Paciente Controller', () => {
     let mockElasticPaciente;
     describe('Update', () => {
         let mockPaciente;
-        let saveStub;
         let mockPacienteStatic;
         let req;
         let startTransactionStub, commitTransactionStub, abortTransactionStub;
@@ -177,9 +177,7 @@ describe('Paciente Controller', () => {
             startTransactionStub = sinon.stub();
             commitTransactionStub = sinon.stub();
             abortTransactionStub = sinon.stub();
-            // mockPaciente = ImportMock.mockClass(PacienteModule, 'Paciente');
 
-            // saveStub = mockPaciente.mock('save', true );
             mockPacienteStatic = ImportMock.mockOther(PacienteModule.Paciente, 'db');
             mockPacienteStatic.set( {
                 startSession ()  {
@@ -265,3 +263,36 @@ describe('Paciente Controller', () => {
 
     });
 });
+describe('Paciente Controller', () => {
+    describe('Matching', () => {
+        beforeEach(() => {
+
+        });
+        it('Debería matchear al 0.55', () => {
+            let pacienteA = {
+                documento: '302569851',
+                nombre: 'Gozalobbb',
+                apellido: 'Carranza',
+                fechaNacimiento: new Date('01-01-1980'),
+                sexo: 'masculino',
+                genero: 'masculino',
+                estado: 'temporal'
+            };
+
+            let pacienteB = {
+                documento: '35',
+                nombre: 'Gonzalo',
+                apellido: 'Carranza',
+                fechaNacimiento: new Date('01-01-1980'),
+                sexo: 'masculino',
+                genero: 'masculino',
+                estado: 'temporal'
+            };
+
+            const valor = matching(pacienteA, pacienteB);
+            assert.equal(valor, 0.55);
+
+        });
+    });
+});
+
