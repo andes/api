@@ -23,7 +23,7 @@ router.patch('/permisos/usuario/:idUsuario/organizacion/:idOrganizacion/modulo/:
                 req.body.permisos
             ));
         } catch (e) {
-            res.json(e);
+            return next(e);
         }
     }
 });
