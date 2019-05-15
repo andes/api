@@ -72,7 +72,7 @@ export const postPacientes = async (req: Request, res: Response, next) => {
     if (isMatchingAlto(sugeridos)) {
         return next(422);
     }
-    body.activo = true;
+    body.activo = true; // Todo paciente esta activo por defecto
     const pacienteCreado = await createPaciente(body, req);
     res.json(pacienteCreado);
 };
@@ -152,12 +152,12 @@ export const deletePacientes = async (req: Request, res: Response, next) => {
 };
 
 router.use(Auth.authenticate());
-router.get('/pacientes', Auth.middlewarePermisos('mpi:paciente:elasticSearch'), asyncHandler(getPacientes));
-router.post('/pacientes', Auth.middlewarePermisos('mpi:paciente:postAndes'), asyncHandler(postPacientes));
-router.post('/pacientes/match', Auth.middlewarePermisos('mpi:paciente:elasticSearch'), asyncHandler(postMatch));
-router.get('/pacientes/:id', Auth.middlewarePermisos('mpi:paciente:getbyId'), asyncHandler(findPacientes));
-router.put('/pacientes/:id', Auth.middlewarePermisos('mpi:paciente:putAndes'), asyncHandler(putPacientes));
-router.patch('/pacientes/:id', Auth.middlewarePermisos('mpi:paciente:patchAndes'), asyncHandler(patchPacientes));
-router.delete('/pacientes/:id', Auth.middlewarePermisos('mpi:paciente:deleteAndes'), asyncHandler(deletePacientes));
+router.get('/pacientes', Auth.authorize('mpi:paciente:elasticSearch'), asyncHandler(getPacientes));
+router.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(postPacientes));
+router.post('/pacientes/match', Auth.authorize('mpi:paciente:elasticSearch'), asyncHandler(postMatch));
+router.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(findPacientes));
+router.put('/pacientes/:id', Auth.authorize('mpi:paciente:putAndes'), asyncHandler(putPacientes));
+router.patch('/pacientes/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(patchPacientes));
+router.delete('/pacientes/:id', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(deletePacientes));
 
 export const Routing = router;
