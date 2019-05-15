@@ -69,7 +69,7 @@ paths:
             $ref: '#/definitions/PacienteSchema'
         '401':
           description: No Autorizado
-  /api/core_v2/mpi/pacientes/{path}:
+  /api/core_v2/mpi/pacientes/{id}:
     get:
       tags:
         - "mpi"

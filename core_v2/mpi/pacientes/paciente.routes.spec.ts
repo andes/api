@@ -46,11 +46,13 @@ describe('MPI - Routes', () => {
     describe ('GET /pacientes/:id', () => {
 
         it('must call findById', async () => {
+            const next = sinon.stub();
             req.params.id = '123456';
-            const searchStub = sinon.stub(PacienteCtr, 'findById');
-            await findPacientes(req, res);
+            const searchStub = sinon.stub(PacienteCtr, 'findById').returns({});
+            await findPacientes(req, res, next);
             sinon.assert.calledOnce(res.json);
             sinon.assert.calledWith(searchStub, '123456');
+            sinon.assert.notCalled(next);
             searchStub.restore();
         });
 
@@ -197,7 +199,6 @@ describe('MPI - Routes', () => {
             sinon.assert.calledWith(searchStub, '123456');
             sinon.assert.calledWith(deleteStub, findResult.paciente, req);
             sinon.assert.notCalled(next);
-            searchStub.restore();
             searchStub.restore();
             deleteStub.restore();
 
