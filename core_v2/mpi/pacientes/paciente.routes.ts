@@ -16,13 +16,16 @@ const router = Router();
  * @apiSuccess {IPaciente} Datos del paciente encontrado.
  */
 
-export const findPacientes = async (req: Request, res: Response) => {
+export const findPacientes = async (req: Request, res: Response, next) => {
     const id = req.params.id;
     const options = {
         fields: req.query.fields
     };
-    const paciente = await findById(id, options);
-    res.json(paciente);
+    const result = await findById(id, options);
+    if (result) {
+        return res.json(result.paciente);
+    }
+    return next(400);
 };
 
 /**
