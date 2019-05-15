@@ -61,6 +61,8 @@ export function initAPI(app: Express) {
 
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').UsuariosRouter);
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').PerfilesRouter);
+    const MPI = require('./core_v2/mpi/pacientes');
+    app.use('/api/core_v2/mpi', MPI.Routing);
 
     /**
      * Inicializa las rutas para adjuntar archivos

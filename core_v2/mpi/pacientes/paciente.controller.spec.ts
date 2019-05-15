@@ -12,12 +12,14 @@ let PacienteMock;
 let PacienteMockMpi;
 
 describe('MPI - Paciente controller', () => {
-    beforeEach(() => {
-        PacienteMock = sinon.mock(PacienteModule.Paciente);
-        PacienteMockMpi = sinon.mock(PacienteModule.PacienteMpi);
 
-    });
-    describe('findById ', () => {
+    describe('FindById ', () => {
+
+        beforeEach(() => {
+            PacienteMock = sinon.mock(PacienteModule.Paciente);
+            PacienteMockMpi = sinon.mock(PacienteModule.PacienteMpi);
+
+        });
 
         it('paciente encontrado en Andes', async () => {
             let paciente = { id: '1', nombre: 'prueba'};
@@ -85,15 +87,13 @@ describe('MPI - Paciente controller', () => {
             assert.equal(pacienteEncontrado, null);
         });
 
+        afterEach(() => {
+            PacienteMock.restore();
+            PacienteMockMpi.restore();
+        });
     });
-    afterEach(() => {
-        PacienteMock.restore();
-        PacienteMockMpi.restore();
-    });
-});
 
-describe('MPI - Paciente Controller', () => {
-    describe('create', () => {
+    describe('Create', () => {
         let mockPaciente;
         let saveStub;
         let setStub;
@@ -230,6 +230,7 @@ describe('MPI - Paciente Controller', () => {
     });
 
     describe('updatePaciente', () => {
+
         it('paciente temporal puede cambiar todo', () => {
             let pacTemp = {
                 nombre: 'carlos',
@@ -271,6 +272,7 @@ describe('MPI - Paciente Controller', () => {
     });
 
     describe('search', () => {
+
         beforeEach(() => {
             mockElasticPaciente = ImportMock.mockStaticClass(PacienteTxModule, 'PacienteTx');
         });
@@ -285,13 +287,6 @@ describe('MPI - Paciente Controller', () => {
             sinon.assert.calledWith(syncStub, sinon.match({ query: { bool: { must: { multi_match: {} } } } }));
             assert.equal(founds.length, 0);
         });
-
-        // it('multimatch search', async () => {
-        //     const syncStub = mockElasticPaciente.mock('search', []);
-        //     const founds = await search('suggest', { documento: '34934522' });
-        //     sinon.assert.calledWith(syncStub, sinon.match({ query: { bool: { must: { match: {} } } } }));
-        //     assert.equal(founds.length, 0);
-        // });
 
     });
 
@@ -313,12 +308,7 @@ describe('MPI - Paciente Controller', () => {
 
     });
 
-});
-describe('MPI - Paciente Controller', () => {
-    describe('matching', () => {
-        beforeEach(() => {
-
-        });
+    describe('Matching', () => {
         it('Debería matchear al 0.55', () => {
             let pacienteA = {
                 documento: '302569851',

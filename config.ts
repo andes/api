@@ -283,6 +283,10 @@ export const logKeys = {
         key: 'mpi:paciente:update',
         operacion: 'Update paciente MPI'
     },
+    mpiDelete: {
+        key: 'mpi:paciente:delete',
+        operacion: 'Borra un paciente de MPI'
+    },
     mpiUpdateContact: {
         key: 'mpi:paciente:updateContacto',
         operacion: 'Update contacto paciente'
