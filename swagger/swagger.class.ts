@@ -37,14 +37,11 @@ export class Swagger {
                     }
                 },
             },
-            // path to the API docs
             apis: [
-                // TODO: verificar la documento de las APIs existentes
                 path.join(__dirname, './definitions.yml'),
-                // path.join(__dirname, '../core/term/routes/**/*.ts'),
+                path.join(__dirname, '../connect/fhir/api-doc.yml'),
                 path.join(__dirname, '../modules/cda/api-doc.yml'),
-                path.join(__dirname, '../fhir/api-doc.yml')
-                // path.join(__dirname, '../core/mpi/api-doc.yml')
+                path.join(__dirname, '../core_v2/mpi/api-doc.yml')
             ],
         });
 

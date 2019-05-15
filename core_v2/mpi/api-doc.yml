@@ -1,0 +1,184 @@
+definitions:
+  PacienteSchema:
+    type: object
+    properties:
+      id: string
+      nombre: string
+      apellido: string  
+      documento: string
+      sexo: string
+      genero: string
+      fechaNacimiento: date
+paths:
+  /api/core_v2/mpi/pacientes:
+    get:
+      tags:
+        - "mpi"
+      description: Busqueda de pacientes  
+      summary: Busqueda de pacientes
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: nombre
+          in: query
+          description: Nombre del paciente.
+          type: string
+        - name: apellido
+          in: query
+          description: Apellido del paciente
+          type: string
+        - name: documento
+          in: query
+          description: Documento del paciente
+          type: string
+        - name: search
+          in: query
+          description: cadena de texto a buscar
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los datos de los pacientes que encontro coincidencias
+        '401':
+          description: No Autorizado
+    post:
+      tags:
+        - "mpi"
+      description: Crea un paciente
+      summary: Crea un paciente
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: request
+          in: body
+          description: request
+          required: true
+          schema:
+            $ref: '#/definitions/PacienteSchema'
+      responses:
+        '200':
+          description: Paciente creado
+          schema:
+            $ref: '#/definitions/PacienteSchema'
+        '401':
+          description: No Autorizado
+  /api/core_v2/mpi/pacientes/{path}:
+    get:
+      tags:
+        - "mpi"
+      description: Obtiene un paciente en particular 
+      summary: Obtiene un paciente en particular
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: ID del paciente
+          type: string
+          require: true
+      responses:
+        '200':
+          description: objeto paciente
+          schema:
+            $ref: '#/definitions/PacienteSchema'
+        '401':
+          description: No Autorizado
+    patch:
+      tags:
+        - "mpi"
+      description: Modifica un paciente 
+      summary: Modifica un paciente
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: ID del paciente
+          type: string
+          require: true
+        - name: request
+          in: body
+          description: request
+          required: true
+          schema:
+            $ref: '#/definitions/PacienteSchema'
+      responses:
+        '200':
+          description: paciente modificado
+          schema:
+            $ref: '#/definitions/PacienteSchema'
+        '401':
+          description: No Autorizado
+    delete:
+      tags:
+        - "mpi"
+      description: Borra un paciente 
+      summary: Borra un paciente
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: ID del paciente
+          type: string
+          require: true
+      responses:
+        '200':
+          description: paciente borrado
+        '401':
+          description: No Autorizado
+  /api/core_v2/mpi/pacientes/match:
+    post:
+      tags:
+        - "mpi"
+      description: Busca pacientes duplicados 
+      summary: Busca pacientes duplicados
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: nombre
+          in: query
+          type: string
+          require: true
+        - name: apellido
+          in: query
+          type: string
+          require: true
+        - name: documento
+          in: query
+          type: string
+          require: true
+        - name: sexo
+          in: query
+          type: string
+          require: true
+      responses:
+        '200':
+          description: Listado de pacientes
+          schema:
+            $ref: '#/definitions/PacienteSchema'
+        '401':
+          description: No Autorizado
