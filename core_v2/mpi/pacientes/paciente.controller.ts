@@ -30,7 +30,7 @@ export async function createPaciente(body: IPaciente, req) {
         const paciente = new Paciente();
         paciente.set(body);
         Auth.audit(paciente, req);
-        await paciente.save({ session});
+        await paciente.save({ session });
         await PacienteTx.create(paciente);
         log(req, logKeys.mpiInsert.key, paciente._id, logKeys.mpiInsert.operacion, paciente, null);
         await session.commitTransaction();
@@ -144,6 +144,26 @@ export async function findById(id: string | String | mongoose.Types.ObjectId, op
 }
 
 /**
+ *
+ */
+export async function deletePaciente(paciente: IPacienteDoc, req: express.Request) {
+    const session = await Paciente.db.startSession();
+    session.startTransaction();
+    try {
+        paciente.$session(session);
+        await paciente.remove();
+        await PacienteTx.delete(paciente);
+        session.commitTransaction();
+        log(req, logKeys.mpiDelete.key, paciente._id, logKeys.mpiDelete.operacion, paciente, null);
+        EventCore.emitAsync('mpi:patient:create', paciente);
+        return;
+    } catch (err) {
+        session.abortTransaction();
+        throw err;
+    }
+}
+
+/**
  * Busca paciente a partir de una cadena de texto
  *
  * @param {string} query Condiciones a buscar
@@ -169,36 +189,40 @@ export async function search(searchText: string) {
 }
 
 /**
- * Busca paciente similares
+ * Busca paciente similares a partir de su documento
  *
  * @param {string} query Condiciones a buscar
  * [TODO] Definir el tipado de esta funcion
  */
 
 export async function suggest(query: any) {
-    const body = {
-        bool: {
-            must: {
-                match: {
-                    documento: {
-                        query: query.documento,
-                        minimum_should_match: 3,
-                        fuzziness: 2
+    if (query && query.documento) {
+        const body = {
+            bool: {
+                must: {
+                    match: {
+                        documento: {
+                            query: query.documento,
+                            minimum_should_match: 3,
+                            fuzziness: 2
+                        }
                     }
+                },
+                filter: {
+                    term: { activo: 'true' }
                 }
-            },
-            filter: {
-                term: { activo: 'true' }
             }
-        }
-    };
+        };
 
-    const pacientes = await PacienteTx.search({ query: body });
-    pacientes.forEach((paciente) => {
-        const value = matching(paciente, query);
-        paciente._score = value;
-    });
-    return pacientes;
+        const pacientes = await PacienteTx.search({ query: body });
+        pacientes.forEach((paciente) => {
+            const value = matching(paciente, query);
+            paciente._score = value;
+        });
+        return pacientes;
+    } else {
+        return [];
+    }
 }
 
 /**
