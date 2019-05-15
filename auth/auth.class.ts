@@ -228,7 +228,7 @@ export class Auth {
      * @memberOf Auth
      */
 
-    static middlewarePermisos = (permiso: string) => {
+    static authorize = (permiso: string) => {
         return (req: express.Request, res: express.Response, next) => {
             if (!Auth.check(req, permiso)) {
                 return next(403);
