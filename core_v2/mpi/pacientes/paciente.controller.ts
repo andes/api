@@ -244,25 +244,25 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
 export async function findPaciente(condicion, fields?: string) {
 
     try {
-
         const opciones = {};
-        // identificadores [{'Entidad1'| valor}... {'EntidadN'| valorN} ]
-        if (condicion.indentificadores) {
+        // identificadores ['Entidad1 | valor'... 'EntidadN | valorN'} ]
+        if (condicion.identificadores) {
             let conds = [];
            // verifica los identificadores
-            condicion.indentificadores.forEach(identificador => {
+            condicion.identificadores.forEach(identificador => {
                 let ids = identificador.split('|');
-                let filtro;
+                let filtro = {};
                 if (ids[0]) {
-                    filtro['identificadores.entidad'] = ids[0];
+                    filtro['entidad'] = ids[0];
                 }
                 if (ids[1]) {
-                    filtro['identificadores.valor'] = ids[1];
+                    filtro['valor'] = ids[1];
                 }
                 conds.push(filtro);
 
             });
-            opciones['identificadores'] = { $elemMatch: conds };
+            opciones['identificadores'] = {$elemMatch: {$and: conds}
+            };
         }
 
         if (condicion.documento) {
@@ -301,31 +301,36 @@ export async function findPaciente(condicion, fields?: string) {
 
         let contactos = [];
         if (condicion.email) {
-            contactos.push({ tipo: 'email', valor: parseStr(condicion.email) });
+            contactos.push({tipo: 'email', valor: parseStr(condicion.email)});
         }
         if (condicion.celular) {
-            contactos.push({ tipo: 'celular', valor: parseStr(condicion.celular) });
+            contactos.push({tipo: 'celular', valor: parseStr(condicion.celular)});
         }
         if (condicion.fijo) {
-            contactos.push({ tipo: 'fijo', valor: parseStr(condicion.fijo) });
+            contactos.push({tipo: 'fijo', valor: parseStr(condicion.fijo)});
         }
         if (contactos.length) {
-            opciones['contactos'] = { $elemMatch: contactos };
+            opciones['contactos'] = {$elemMatch: contactos};
         }
 
         let pacientesAndes = await Paciente.find(opciones).select(fields);
         let pacientesMPI = await PacienteMpi.find(opciones).select(fields);
         let pacientes = [];
-        pacientesAndes.forEach(p => {
-            if ((pacientesMPI.findIndex(pMpi => pMpi.id === p.id)) === -1) {
-                pacientes.push(p);
-            }
-        });
-        pacientes.concat(pacientesMPI);
+        if (pacientesAndes) {
+            pacientesAndes.forEach(p => {
+                if ((pacientesMPI.findIndex(pMpi => pMpi.id === p.id)) === -1) {
+                    pacientes.push(p);
+                }
+            });
+        }
+        if (pacientesMPI) {
+            pacientes.concat(pacientesMPI);
+        }
 
         return pacientes;
     } catch (error) {
         throw error;
     }
+
 
 }

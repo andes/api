@@ -1,6 +1,6 @@
 import { assert, expect } from 'chai';
 import * as PacienteModule from './paciente.schema';
-import { findById, createPaciente, savePaciente, search, matching, updatePaciente, suggest } from './paciente.controller';
+import { findById, createPaciente, savePaciente, search, matching, updatePaciente, suggest, findPaciente } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
@@ -11,13 +11,13 @@ require('sinon-mongoose');
 let PacienteMock;
 let PacienteMockMpi;
 
-describe('Paciente controller', () => {
+describe('MPI - Paciente controller', () => {
     beforeEach(() => {
         PacienteMock = sinon.mock(PacienteModule.Paciente);
         PacienteMockMpi = sinon.mock(PacienteModule.PacienteMpi);
 
     });
-    describe('FindById ', () => {
+    describe('findById ', () => {
 
         it('paciente encontrado en Andes', async () => {
             let paciente = { id: '1', nombre: 'prueba'};
@@ -92,8 +92,8 @@ describe('Paciente controller', () => {
     });
 });
 
-describe('Paciente Controller', () => {
-    describe('Create', () => {
+describe('MPI - Paciente Controller', () => {
+    describe('create', () => {
         let mockPaciente;
         let saveStub;
         let setStub;
@@ -164,7 +164,7 @@ describe('Paciente Controller', () => {
 
 });
 
-describe('Paciente Controller', () => {
+describe('MPI - Paciente Controller', () => {
     let mockElasticPaciente;
     describe('savePaciente', () => {
         let mockPaciente;
@@ -314,8 +314,8 @@ describe('Paciente Controller', () => {
     });
 
 });
-describe('Paciente Controller', () => {
-    describe('Matching', () => {
+describe('MPI - Paciente Controller', () => {
+    describe('matching', () => {
         beforeEach(() => {
 
         });
@@ -345,5 +345,74 @@ describe('Paciente Controller', () => {
 
         });
     });
+});
+
+describe('MPI - Paciente controller', () => {
+    beforeEach(() => {
+        PacienteMock = sinon.mock(PacienteModule.Paciente);
+        PacienteMockMpi = sinon.mock(PacienteModule.PacienteMpi);
+    });
+    afterEach(() => {
+        PacienteMock.restore();
+        PacienteMockMpi.restore();
+    });
+    describe('find ', () => {
+        it('Búsqueda por documento', async () => {
+            let condicion = { documento: '11111111'};
+
+            const mock = PacienteMock.expects('find').withArgs(condicion);
+            const selectMockPaciente = mock.chain('select').withArgs('nombre apellido');
+            mock.chain('exec').resolves([]);
+
+            const mock2 = PacienteMockMpi.expects('find').withArgs(condicion);
+            const selectMockPacienteMpi = mock2.chain('select').withArgs('nombre apellido');
+            mock2.chain('exec').resolves([]);
+
+            let pacientesEncontrado = await findPaciente(condicion, 'nombre apellido');
+            expect(pacientesEncontrado).to.eql([]);
+
+        });
+
+        it('Búsqueda parcial por apellido', async () => {
+            let condicion = {
+                apellido: {$regex: /[GgĜ-ģǦǧǴǵᴳᵍḠḡℊ⒢Ⓖⓖ㋌㋍㎇㎍-㎏㎓㎬㏆㏉㏒㏿Ｇｇ][OoºÒ-Öò-öŌ-őƠơǑǒǪǫȌ-ȏȮȯᴼᵒỌ-ỏₒ℅№ℴ⒪Ⓞⓞ㍵㏇㏒㏖Ｏｏ][NnÑñŃ-ŉǊ-ǌǸǹᴺṄ-ṋⁿℕ№⒩Ⓝⓝ㎁㎋㎚㎱㎵㎻㏌㏑Ｎｎ][ZzŹ-žǱ-ǳᶻẐ-ẕℤℨ⒵Ⓩⓩ㎐-㎔Ｚｚ]/g
+                }};
+
+
+            const mock = PacienteMock.expects('find').withArgs(condicion);
+            const selectMockPaciente = mock.chain('select').withArgs('nombre apellido');
+            mock.chain('exec').resolves([]);
+
+            const mock2 = PacienteMockMpi.expects('find').withArgs(condicion);
+            const selectMockPacienteMpi = mock2.chain('select').withArgs('nombre apellido');
+            mock2.chain('exec').resolves([]);
+
+            let pacientesEncontrado = await findPaciente({apellido: '^GONZ'}, 'nombre apellido');
+            expect(pacientesEncontrado).to.eql([]);
+
+        });
+
+        // it('Búsqueda por identificadores', async () => {
+        //     let condicion = {
+        //         identificadores: ['ANDES | 125785']
+        //     };
+
+        //     let elem = { identificadores: {$elemMatch: {$and: [{entidad: 'ANDES', valor: '125785'}]}}};
+
+        //     const mock = PacienteMock.expects('find').withArgs(elem);
+        //     const selectMockPaciente = mock.chain('select').withArgs('documento nombre apellido');
+        //     mock.chain('exec').resolves([]);
+
+        //     const mock2 = PacienteMockMpi.expects('find').withArgs(elem);
+        //     const selectMockPacienteMpi = mock2.chain('select').withArgs('documento nombre apellido');
+        //     mock2.chain('exec').resolves([]);
+
+        //     let pacientesEncontrado = await findPaciente(condicion, 'documento nombre apellido');
+        //     expect(pacientesEncontrado).to.eql([]);
+
+        // });
+
+    });
+
 });
 
