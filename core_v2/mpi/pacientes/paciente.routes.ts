@@ -70,7 +70,7 @@ export const postPacientes = async (req: Request, res: Response, next) => {
     const body = req.body;
     const sugeridos = await suggest(body);
     if (isMatchingAlto(sugeridos)) {
-        return next(422);
+        return next(400);
     }
     body.activo = true; // Todo paciente esta activo por defecto
     const pacienteCreado = await createPaciente(body, req);
@@ -121,14 +121,14 @@ export const patchPacientes = async (req: Request, res: Response, next) => {
         if (body.estado === 'validado') {
             const sugeridos = await suggest(body);
             if (isMatchingAlto(sugeridos)) {
-                return next(422);
+                return next(400);
             }
         }
         paciente = updatePaciente(paciente, body);
         const updated = await savePaciente(paciente, req);
         return res.json(updated);
     }
-    return next(422);
+    return next(400);
 };
 
 /**
@@ -148,7 +148,7 @@ export const deletePacientes = async (req: Request, res: Response, next) => {
         const result = await deletePaciente(paciente, req);
         return res.json(result);
     }
-    return next(422);
+    return next(400);
 };
 
 router.use(Auth.authenticate());

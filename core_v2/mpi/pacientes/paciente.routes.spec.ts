@@ -78,7 +78,7 @@ describe('MPI - Routes', () => {
             req.body.documento = '123456';
             const searchStub = sinon.stub(PacienteCtr, 'suggest').returns([{ _score: 1 }]);
             await postPacientes(req, res, next);
-            sinon.assert.calledWith(next, 422);
+            sinon.assert.calledWith(next, 400);
             sinon.assert.calledWith(searchStub, req.body);
             searchStub.restore();
         });
@@ -147,7 +147,7 @@ describe('MPI - Routes', () => {
             sinon.assert.notCalled(saveStub);
             sinon.assert.calledWith(findStub, '123456');
             sinon.assert.calledWith(searchStub, req.body);
-            sinon.assert.calledWith(next, 422);
+            sinon.assert.calledWith(next, 400);
 
             searchStub.restore();
             findStub.restore();
@@ -173,7 +173,7 @@ describe('MPI - Routes', () => {
             sinon.assert.notCalled(saveStub);
             sinon.assert.calledWith(findStub, '123456');
             sinon.assert.notCalled(searchStub);
-            sinon.assert.calledWith(next, 422);
+            sinon.assert.calledWith(next, 400);
 
             searchStub.restore();
             findStub.restore();
@@ -215,8 +215,7 @@ describe('MPI - Routes', () => {
             sinon.assert.notCalled(res.json);
             sinon.assert.calledWith(searchStub, '123456');
             sinon.assert.notCalled(deleteStub);
-            sinon.assert.calledWith(next, 422);
-            searchStub.restore();
+            sinon.assert.calledWith(next, 400);
             searchStub.restore();
             deleteStub.restore();
 
