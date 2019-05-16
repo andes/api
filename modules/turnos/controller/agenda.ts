@@ -30,6 +30,7 @@ import {
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
+import * as codificacionModel from '../../rup/schemas/codificacion';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -1026,6 +1027,13 @@ export function updatePaciente(pacienteModified, turno) {
 }
 
 
+/**
+ * Consulta diagnosticos
+ *
+ * @export
+ * @param {*} params
+ * @returns
+ */
 export function getConsultaDiagnostico(params) {
 
     return new Promise(async (resolve, reject) => {
@@ -1066,11 +1074,9 @@ export function getConsultaDiagnostico(params) {
                 estado: 'asignado'
             }
         },
-
         {
             $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
         },
-
         {
             $project: {
                 estado: '$estado',
@@ -1089,11 +1095,60 @@ export function getConsultaDiagnostico(params) {
         },
         ];
 
-        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        const pipeline2 = [
+            {
+                $match: {
+                    'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+                }
+            },
+            {
+                $lookup: {
+                    from: 'prestaciones',
+                    localField: 'idPrestacion',
+                    foreignField: '_id',
+                    as: 'prestacion'
+                }
+            },
+            { $unwind: '$diagnostico.codificaciones' },
+            { $unwind: '$prestacion' },
+            {
+                $match: {
+                    'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+                    'prestacion.solicitud.organizacion.id': { $eq: mongoose.Types.ObjectId(params.organizacion) },
+                    $and: [
+                        { 'prestacion.solicitud.fecha': { $lte: new Date(params.horaFin) } },
+                        { 'prestacion.solicitud.fecha': { $gte: new Date(params.horaInicio) } }
+                    ]
+                }
+            },
+            {
+                $project: {
+                    estado: '$estado',
+                    nombrePaciente: '$paciente.nombre',
+                    apellidoPaciente: '$paciente.apellido',
+                    documentoPaciente: '$paciente.documento',
+                    tipoPrestacion: '$prestacion.solicitud.tipoPrestacion.conceptId',
+                    descripcionPrestacion: '$prestacion.solicitud.tipoPrestacion.term',
+                    auditoriaCodigo: '$diagnostico.codificaciones.codificacionAuditoria.codigo',
+                    auditoriaNombre: '$diagnostico.codificaciones.codificacionAuditoria.nombre',
+                    codProfesionalCie10Codigo: '$diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
+                    codrofesionalCie10Nombre: '$diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
+                    codProfesionalSnomedCodigo: '$diagnostico.codificaciones.codificacionProfesional.snomed.conceptId',
+                    codProfesionalSnomedNombre: '$diagnostico.codificaciones.codificacionProfesional.snomed.term',
+                }
+            }
+        ];
 
-        function removeDuplicates(arr) {
+        const p1 = toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        const p2 = toArray(codificacionModel.aggregate(pipeline2).cursor({}).exec());
+
+        let [diagnosticosTurnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2]);
+
+        let data = diagnosticosTurnos.concat(diagnosticosFueraAgenda);
+
+        const removeDuplicates = (arr) => {
             const unique_array = [];
-            const arrMap = arr.map(m => { return m._id; });
+            const arrMap = arr.map(m => m._id );
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
@@ -1103,8 +1158,6 @@ export function getConsultaDiagnostico(params) {
         }
         data = removeDuplicates(data);
         resolve(data);
-
-
     });
 }
 
@@ -1186,7 +1239,6 @@ export function getCantidadConsultaXPrestacion(params) {
         }
 
         ];
-
 
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
