@@ -1155,7 +1155,8 @@ export function getConsultaDiagnostico(params) {
                 }
             }
             return unique_array;
-        }
+        };
+
         data = removeDuplicates(data);
         resolve(data);
     });
