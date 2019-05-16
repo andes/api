@@ -156,91 +156,10 @@ async function insertCompleto(turno: any, idEfectorSips) {
     }
 }
 
-
-// async function insertar_agenda(a: any, num_bloque: any) {
-//     let ag: any = {};
-//     let efector: any = {};
-//     try {
-//         let org: any = await getEfector(a.organizacion._id);
-//         efector = {
-//             tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
-//             codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
-//         };
-//         let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
-//         let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
-//         ag.idEfector = idEfector;
-//         ag.Organizacion = a.organizacion.nombre;
-//         ag.idAgenda = a._id;
-//         ag.tipoPrestacion = a.tipoPrestaciones && a.tipoPrestaciones.length && a.tipoPrestaciones[0] ? a.tipoPrestaciones[0].term : null;
-//         ag.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
-//         ag.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
-//         ag.estadoAgenda = a.estado;
-//         ag.numeroBloque = num_bloque;
-//         ag.idTurno = a.bloques && a.bloques.length ? a.bloques[0]._id : null;
-
-
-//         if (tipoEfector && tipoEfector === 'Centro de Salud') {
-//             ag.TipoEfector = '1';
-//         }
-//         if (tipoEfector && tipoEfector === 'Hospital') {
-//             ag.TipoEfector = '2';
-//         }
-//         if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
-//             ag.TipoEfector = '3';
-//         }
-//         if (tipoEfector && tipoEfector === 'ONG') {
-//             ag.TipoEfector = '6';
-//         }
-//         ag.DescTipoEfector = tipoEfector;
-
-//         let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
-//             '(idEfector, Efector, TipoEfector, DescTipoEfector, idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque,  idTurno, tipoPrestacion,  updated) ' +
-//             'VALUES  ( ' + ag.idEfector + ',\'' + ag.Organizacion + '\',\'' + ag.TipoEfector + '\',\'' + ag.DescTipoEfector +
-//             '\',\'' + ag.idAgenda + '\',\'' + ag.FechaAgenda + '\',\'' + ag.HoraAgenda + '\',\'' + ag.estadoAgenda +
-//             '\',' + ag.numeroBloque + ',\'' + ag.idTurno + '\',\'' + ag.tipoPrestacion + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-//         await executeQuery(queryInsert);
-
-//     } catch (error) {
-//         return (error);
-//     }
-// }
-
-/**
- * @param request sql request object
- * @param {string} columnName sql table column name
- * @param {string} paramNamePrefix prefix for parameter name
- * @param type parameter type
- * @param {Array<string>} values an array of values
- */
-function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, values) {
-    let parameterNames = [];
-    for (let i = 0; i < values.length; i++) {
-        let parameterName = parameterNamePrefix + i;
-        request.input(parameterName, type, values[i]);
-        parameterNames.push(`@${parameterName}`);
-    }
-    return `${columnName} IN (${parameterNames.join(',')})`;
-}
-
-async function eliminaAgendas(idsAgendas: any[]) {
-    const result = new sql.Request(poolTurnos);
-    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idAgenda', 'idAgenda', sql.NVarChar, idsAgendas);
-    try {
-        return result.query(query);
-    } catch (err) {
-        let options = mailOptions;
-        options.text = `'error en el delete: ${query}'`;
-        sendMail(mailOptions);
-        await log(logRequest, 'andes:pecas:bi', null, 'delete', err, null);
-    }
-}
-
 async function eliminaAgenda(idAgenda) {
-    // const result = new sql.Request(poolTurnos);
     let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda ='${idAgenda}'`;
     try {
         return executeQuery(query);
-        // return result.query(query);
     } catch (err) {
         let options = mailOptions;
         options.text = `'error en el delete: ${query}'`;
@@ -263,55 +182,7 @@ async function getEfector(idOrganizacion: any) {
         return null;
     }
 }
-function calcularEdad(fechaNacimiento) {
-    let edad: any;
-    const fechaActual: Date = new Date();
-    const fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
-    const difDias = fechaAct.diff(fechaNacimiento, 'd'); // Diferencia en días
-    const difAnios = Math.floor(difDias / 365.25);
-    const difMeses = Math.floor(difDias / 30.4375);
 
-    if (difAnios !== 0) {
-        edad = {
-            valor: difAnios,
-            unidad: 'A'
-        };
-        if (difAnios <= 4) {
-            edad['CodRangoEdad'] = '2';
-            edad['RangoEdad'] = '[1 a 4]';
-        } else if (difAnios >= 5 && difAnios <= 14) {
-            edad['CodRangoEdad'] = '3';
-            edad['RangoEdad'] = '[5 a 14]';
-        } else if (difAnios >= 15 && difAnios <= 19) {
-            edad['CodRangoEdad'] = '4';
-            edad['RangoEdad'] = '[15 a 19]';
-        } else if (difAnios >= 20 && difAnios <= 39) {
-            edad['CodRangoEdad'] = '5';
-            edad['RangoEdad'] = '[20 a 39]';
-        } else if (difAnios >= 40 && difAnios <= 69) {
-            edad['CodRangoEdad'] = '6';
-            edad['RangoEdad'] = '[40 a 69]';
-        } else if (difAnios >= 70) {
-            edad['CodRangoEdad'] = '7';
-            edad['RangoEdad'] = '[70 y +]';
-        }
-    } else if (difMeses !== 0) {
-        edad = {
-            valor: difMeses,
-            unidad: 'M',
-            CodRangoEdad: '1',
-            RangoEdad: '[1]'
-        };
-    } else if (difDias !== 0) {
-        edad = {
-            valor: difDias,
-            unidad: 'D',
-            CodRangoEdad: '1',
-            RangoEdad: '[1]'
-        };
-    }
-    return edad;
-}
 async function executeQuery(query: any) {
     try {
         await new sql.Request(poolTurnos).query(query);
@@ -319,7 +190,7 @@ async function executeQuery(query: any) {
         let options = mailOptions;
         options.text = `'error en consulta sql: ${query}'`;
         sendMail(mailOptions);
-        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, err);
         return err;
     }
 }
