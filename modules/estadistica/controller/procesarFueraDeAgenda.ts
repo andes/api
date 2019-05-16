@@ -77,8 +77,7 @@ export async function procesar(parametros: any) {
             let dtoPrestacion = {
                 fecha: prestacion.createdAt,
                 paciente: prestacion.paciente,
-                // financiador: prestacion.paciente && prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial : null,
-                financiador: null,
+                financiador: prestacion.paciente && prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial : null,
                 prestacion: prestacion.prestacion.solicitud.tipoPrestacion,
                 profesionales: [prestacion.prestacion.solicitud.profesional],
                 estado: 'Presente con registro del profesional',
@@ -86,6 +85,7 @@ export async function procesar(parametros: any) {
                 idBloque: null,
                 turno: null,
                 idPrestacion: prestacion.idPrestacion,
+                estadoFacturacion: prestacion.estadoFacturacion
             };
 
             if (prestacion.paciente && prestacion.paciente.obraSocial === os || os === 'todos') {
