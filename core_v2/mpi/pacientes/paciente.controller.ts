@@ -57,18 +57,21 @@ export async function savePaciente(paciente: IPacienteDoc, req: express.Request)
     try {
         const pacienteOriginal = paciente.toObject();
         const pacienteFields = paciente.modifiedPaths();
-        Auth.audit(paciente, req);
-        await paciente.save({ session });
-        if (paciente.sincroniza()) {
-            await PacienteTx.sync(paciente);
+
+        const pacienteUpdated = new Paciente(paciente);
+
+        Auth.audit(pacienteUpdated, req);
+        await pacienteUpdated.save({ session });
+        if (pacienteUpdated.sincroniza(pacienteFields)) {
+            await PacienteTx.sync(pacienteUpdated);
         }
-        EventCore.emitAsync('mpi:patient:update', paciente, pacienteFields);
-        log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, paciente, pacienteOriginal);
+        EventCore.emitAsync('mpi:patient:update', pacienteUpdated, pacienteFields);
+        log(req, logKeys.mpiUpdate.key, pacienteUpdated._id, logKeys.mpiUpdate.operacion, pacienteUpdated, pacienteOriginal);
         await session.commitTransaction();
         return paciente;
 
     } catch (error) {
-        log(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
+        log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
         session.abortTransaction();
         throw error;
     }
@@ -191,7 +194,8 @@ export async function search(searchText: string) {
 /**
  * Busca paciente similares a partir de su documento
  *
- * @param {string} query Condiciones a buscar
+ * @param {object} query Condiciones a buscar
+ *
  * [TODO] Definir el tipado de esta funcion
  */
 
