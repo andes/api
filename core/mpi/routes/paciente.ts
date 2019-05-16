@@ -540,9 +540,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
                 res.json(pacienteUpdated);
                 // si el paciente esta validado y hay cambios en direccion o localidad..
-                if (patientFound.estado === 'validado' && (direccionOld.valor !== data.direccion[0].valor ||
-                    direccionOld.geoReferencia[0] !== data.direccion[0].geoReferencia[0] ||
-                    direccionOld.geoReferencia[1] !== data.direccion[0].geoReferencia[1])) {
+                if (patientFound.estado === 'validado' && direccionOld.valor !== data.direccion[0].valor) {
                     controller.actualizarGeoReferencia(pacienteUpdated, req);
                 }
             } else {
@@ -568,9 +566,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 EventCore.emitAsync('mpi:patient:update', nuevoPac);
                 res.json(nuevoPac);
                 // se carga geo referencia desde api de google
-                if (direccionOld.valor !== pacienteModificado.direccion[0].valor ||
-                    direccionOld.geoReferencia[0] !== pacienteModificado.direccion[0].geoReferencia[0] ||
-                    direccionOld.geoReferencia[1] !== pacienteModificado.direccion[0].geoReferencia[1]) {
+                if (direccionOld.valor !== pacienteModificado.direccion[0].valor) {
                     controller.actualizarGeoReferencia(newPatient, req);
                 }
             }
