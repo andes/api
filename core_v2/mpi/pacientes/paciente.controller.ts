@@ -193,6 +193,7 @@ export async function search(searchText: string) {
 
 /**
  * Busca paciente similares a partir de su documento
+ * Devuelve una lista de pacientes ordenada por score de forma descendente
  *
  * @param {object} query Condiciones a buscar
  *
@@ -217,13 +218,19 @@ export async function suggest(query: any) {
                 }
             }
         };
-
-        const pacientes = await PacienteTx.search({ query: body });
+        const sortScore = (a, b) => {
+            return b._score - a._score;
+        };
+        let pacientes = await PacienteTx.search({ query: body });
+        if (query.id) {
+            pacientes.filter(p => (p.id !== query.id));
+        }
         pacientes.forEach((paciente) => {
             const value = matching(paciente, query);
             paciente._score = value;
         });
-        return pacientes;
+
+        return pacientes.sort(sortScore);
     } else {
         return [];
     }
