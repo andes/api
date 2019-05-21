@@ -75,4 +75,9 @@ export interface IPacienteDoc extends Document, IPaciente {
      * Devuelve los campos obligatorios que se sincronizan en elasticsearch
      */
     toElastic(): Object;
+
+    /**
+     * Devuelve los campos originales antes de haber sufrido alguna modificacion.
+     */
+    original(): Object;
 }

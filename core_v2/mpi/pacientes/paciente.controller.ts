@@ -1,6 +1,6 @@
 
 
-import { Paciente, PacienteMpi } from './paciente.schema';
+import { Paciente } from './paciente.schema';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
@@ -14,65 +14,55 @@ import { Matching } from '@andes/match';
 import * as config from '../../../config';
 import {parseStr, rangoFechas} from './../../../shared/queryBuilder';
 
-
 /**
- * Persiste un nuevo paciente en la base de datos ANDES y los sincroniza con ElasticSearch.
- *
- * @param {IPaciente} body Datos del paciente
- * @param {express.Request} req Request de Express para obtener los datos del usuario
+ * Crea un objeto paciente
  */
 
-
-export async function createPaciente(body: IPaciente, req) {
-    const session = await Paciente.db.startSession();
-    try {
-        session.startTransaction();
-        const paciente = new Paciente();
-        paciente.set(body);
-        Auth.audit(paciente, req);
-        await paciente.save({ session });
-        await PacienteTx.create(paciente);
-        log(req, logKeys.mpiInsert.key, paciente._id, logKeys.mpiInsert.operacion, paciente, null);
-        await session.commitTransaction();
-        EventCore.emitAsync('mpi:patient:create', paciente);
-        return paciente;
-    } catch (error) {
-        log(req, logKeys.mpiInsert.key, null, logKeys.mpiInsert.operacion, body, 'Error insertando paciente');
-        session.abortTransaction();
-        throw error;
-    }
+export function newPaciente(body: IPaciente) {
+    const paciente = new Paciente();
+    paciente.set(body);
+    return paciente;
 }
 
+
 /**
- * Actualiza un paciente existente. Si esta en MPI, lo crea en ANDES. Sino lo actualiza.
+ * Guarda un objecto paciente en mongo y elastic.
  * Sincroniza con ElasticSearch si es necesario.
  *
  * @param {IPacienteDoc} body Datos del paciente
  * @param {express.Request} req Request de Express para obtener los datos del usuario
  */
 
-export async function savePaciente(paciente: IPacienteDoc, req: express.Request) {
+export async function storePaciente(paciente: IPacienteDoc, req: express.Request) {
     const session = await Paciente.db.startSession();
     session.startTransaction();
+    const isNew = paciente.isNew;
     try {
-        const pacienteOriginal = paciente.toObject();
+        const pacienteOriginal = paciente.original();
         const pacienteFields = paciente.modifiedPaths();
 
-        const pacienteUpdated = new Paciente(paciente);
-
-        Auth.audit(pacienteUpdated, req);
-        await pacienteUpdated.save({ session });
-        if (pacienteUpdated.sincroniza(pacienteFields)) {
-            await PacienteTx.sync(pacienteUpdated);
+        Auth.audit(paciente, req);
+        await paciente.save({ session });
+        if (isNew || paciente.sincroniza()) {
+            await PacienteTx.sync(paciente);
         }
-        EventCore.emitAsync('mpi:patient:update', pacienteUpdated, pacienteFields);
-        log(req, logKeys.mpiUpdate.key, pacienteUpdated._id, logKeys.mpiUpdate.operacion, pacienteUpdated, pacienteOriginal);
-        await session.commitTransaction();
+        if (isNew) {
+            log(req, logKeys.mpiInsert.key, paciente._id, logKeys.mpiInsert.operacion, paciente, null);
+            await session.commitTransaction();
+            EventCore.emitAsync('mpi:patient:create', paciente);
+        } else {
+            log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, paciente, pacienteOriginal);
+            await session.commitTransaction();
+            EventCore.emitAsync('mpi:patient:update', paciente, pacienteFields);
+        }
         return paciente;
-
     } catch (error) {
-        log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
-        session.abortTransaction();
+        if (isNew) {
+            log(req, logKeys.mpiInsert.key, null, logKeys.mpiInsert.operacion, paciente, 'Error insertando paciente');
+        } else {
+            log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
+        }
+        await session.abortTransaction();
         throw error;
     }
 }
@@ -96,54 +86,23 @@ export function updatePaciente(paciente: IPacienteDoc, body: any) {
     return paciente;
 }
 
-
-type DatabaseType = 'andes' | 'mpi';
-
-/**
- * @typedef {Promise} IFindById
- * @prop {String} db - Base de datos donde pertenece el paciente
- * @prop {String} paciente - Objecto paciente
- */
-
-type IFindById = Promise<{
-    db: DatabaseType,
-    paciente: IPacienteDoc
-}>;
-
 /**
  * Busca un paciente por ID. Tanto en ANDES y MPI.
  * @param {string} id ID del paciente a buscar.
  * @param {object} options
  * @param {string} options.fields Listado de campos para projectar
- * @returns {IFindById}
+ * @returns {IPacienteDoc}
  */
 
-export async function findById(id: string | String | mongoose.Types.ObjectId, options = null): IFindById {
-    function makeFindById(Schema, select) {
-        const queryFind = Schema.findById(id);
-        if (select) {
-            queryFind.select(select);
-        }
-        return queryFind;
-    }
+export async function findById(id: string | String | mongoose.Types.ObjectId, options = null): Promise<IPacienteDoc> {
     options = options || {};
     const { fields } = options;
-    let paciente = await makeFindById(Paciente, fields);
-    if (paciente) {
-        return {
-            db: 'andes',
-            paciente
-        };
-    } else {
-        paciente = await makeFindById(PacienteMpi, fields);
-        if (paciente) {
-            return {
-                db: 'mpi',
-                paciente
-            };
-        }
+
+    const queryFind = Paciente.findById(id);
+    if (fields) {
+        queryFind.select(fields);
     }
-    return null;
+    return await queryFind;
 }
 
 /**
@@ -156,12 +115,12 @@ export async function deletePaciente(paciente: IPacienteDoc, req: express.Reques
         paciente.$session(session);
         await paciente.remove();
         await PacienteTx.delete(paciente);
-        session.commitTransaction();
+        await session.commitTransaction();
         log(req, logKeys.mpiDelete.key, paciente._id, logKeys.mpiDelete.operacion, paciente, null);
         EventCore.emitAsync('mpi:patient:create', paciente);
         return;
     } catch (err) {
-        session.abortTransaction();
+        await session.abortTransaction();
         throw err;
     }
 }
@@ -276,96 +235,93 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
  * @param fields Setea los campos de los documentos a devolver
  * @returns Devuelve listado de paciente encontrados
  */
-export async function findPaciente(condicion, fields?: string) {
+export async function findPaciente(condicion, options?: any) {
+    options = options || {};
+    const { fields, skip, limit } = options;
 
-    try {
-        const opciones = {};
-        // identificadores ['Entidad1 | valor'... 'EntidadN | valorN'} ]
-        if (condicion.identificadores) {
-            let conds = [];
-           // verifica los identificadores
-            condicion.identificadores.forEach(identificador => {
-                let ids = identificador.split('|');
-                let filtro = {};
-                if (ids[0]) {
-                    filtro['entidad'] = ids[0];
-                }
-                if (ids[1]) {
-                    filtro['valor'] = ids[1];
-                }
-                conds.push(filtro);
+    const opciones = {};
+    // identificadores ['Entidad1 | valor'... 'EntidadN | valorN'} ]
+    if (condicion.identificadores) {
+        let conds = [];
+        // verifica los identificadores
+        condicion.identificadores.forEach(identificador => {
+            let ids = identificador.split('|');
+            let filtro = {};
+            if (ids[0]) {
+                filtro['entidad'] = ids[0];
+            }
+            if (ids[1]) {
+                filtro['valor'] = ids[1];
+            }
+            conds.push(filtro);
 
-            });
-            opciones['identificadores'] = {$elemMatch: {$and: conds}
-            };
-        }
-
-        if (condicion.documento) {
-            opciones['documento'] =  parseStr(condicion.documento);
-        }
-        if (condicion.nombre) {
-            opciones['nombre'] =  parseStr(condicion.nombre);
-        }
-        if (condicion.apellido) {
-            opciones['apellido'] = parseStr(condicion.apellido);
-        }
-        if (condicion.fechaNacimiento) {
-            opciones['fechaNacimiento'] = rangoFechas(condicion.fechaNacimiento);
-        }
-        if (condicion.estado) {
-            opciones['estado'] = condicion.estado;
-        }
-        if (condicion.activo) {
-            opciones['activo'] = condicion.activo;
-        }
-        if (condicion.localidad) {
-            opciones['direccion.ubicacion.localidad.nombre'] = parseStr(condicion.localidad);
-        }
-        if (condicion.barrio) {
-            opciones['direccion.ubicacion.barrio.nombre'] =  parseStr(condicion.barrio);
-        }
-        if (condicion.provincia) {
-            opciones['direccion.ubicacion.provincia.nombre'] = parseStr(condicion.provincia);
-        }
-        if (condicion.pais) {
-            opciones['direccion.ubicacion.pais.nombre'] = parseStr(condicion.pais);
-        }
-        if (condicion.nacionalidad) {
-            opciones['nacionalidad'] = parseStr(condicion.nacionalidad);
-        }
-
-        let contactos = [];
-        if (condicion.email) {
-            contactos.push({tipo: 'email', valor: parseStr(condicion.email)});
-        }
-        if (condicion.celular) {
-            contactos.push({tipo: 'celular', valor: parseStr(condicion.celular)});
-        }
-        if (condicion.fijo) {
-            contactos.push({tipo: 'fijo', valor: parseStr(condicion.fijo)});
-        }
-        if (contactos.length) {
-            opciones['contactos'] = {$elemMatch: contactos};
-        }
-
-        let pacientesAndes = await Paciente.find(opciones).select(fields);
-        let pacientesMPI = await PacienteMpi.find(opciones).select(fields);
-        let pacientes = [];
-        if (pacientesAndes) {
-            pacientesAndes.forEach(p => {
-                if ((pacientesMPI.findIndex(pMpi => pMpi.id === p.id)) === -1) {
-                    pacientes.push(p);
-                }
-            });
-        }
-        if (pacientesMPI) {
-            pacientes.concat(pacientesMPI);
-        }
-
-        return pacientes;
-    } catch (error) {
-        throw error;
+        });
+        opciones['identificadores'] = {$elemMatch: {$and: conds}
+        };
     }
 
+    if (condicion.documento) {
+        opciones['documento'] =  parseStr(condicion.documento);
+    }
+    if (condicion.nombre) {
+        opciones['nombre'] =  parseStr(condicion.nombre);
+    }
+    if (condicion.apellido) {
+        opciones['apellido'] = parseStr(condicion.apellido);
+    }
+    if (condicion.fechaNacimiento) {
+        opciones['fechaNacimiento'] = rangoFechas(condicion.fechaNacimiento);
+    }
+    if (condicion.estado) {
+        opciones['estado'] = condicion.estado;
+    }
+    if (condicion.activo) {
+        opciones['activo'] = condicion.activo;
+    }
+    if (condicion.localidad) {
+        opciones['direccion.ubicacion.localidad.nombre'] = parseStr(condicion.localidad);
+    }
+    if (condicion.barrio) {
+        opciones['direccion.ubicacion.barrio.nombre'] =  parseStr(condicion.barrio);
+    }
+    if (condicion.provincia) {
+        opciones['direccion.ubicacion.provincia.nombre'] = parseStr(condicion.provincia);
+    }
+    if (condicion.pais) {
+        opciones['direccion.ubicacion.pais.nombre'] = parseStr(condicion.pais);
+    }
+    if (condicion.nacionalidad) {
+        opciones['nacionalidad'] = parseStr(condicion.nacionalidad);
+    }
+
+    let contactos = [];
+    if (condicion.email) {
+        contactos.push({
+            tipo: 'email',
+            valor: parseStr(condicion.email)
+        });
+    }
+    if (condicion.celular) {
+        contactos.push({tipo: 'celular', valor: parseStr(condicion.celular)});
+    }
+    if (condicion.fijo) {
+        contactos.push({tipo: 'fijo', valor: parseStr(condicion.fijo)});
+    }
+    if (contactos.length) {
+        opciones['contactos'] = {$elemMatch: contactos};
+    }
+
+    let pacientesQuery = Paciente.find(opciones);
+    if (fields) {
+        pacientesQuery.select(fields);
+    }
+    if (limit) {
+        pacientesQuery.limit(limit);
+    }
+    if (skip) {
+        pacientesQuery.limit(skip);
+    }
+
+    return await pacientesQuery;
 
 }

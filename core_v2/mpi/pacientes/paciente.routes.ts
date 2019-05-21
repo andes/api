@@ -10,7 +10,6 @@ import { DireccionRoutes } from './direcciones/direccion.routes';
 import { relacionController } from './relaciones/relaciones.controller';
 import { RelacionRoutes } from './relaciones/relaciones.routes';
 
-
 /**
  * @api {get} /pacientes/:id Requiere datos de un paciente
  * @apiName findPaciente
