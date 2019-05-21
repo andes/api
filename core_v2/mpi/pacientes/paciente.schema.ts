@@ -192,8 +192,8 @@ PacienteSchema.methods.basicos = function () {
     };
 };
 
-PacienteSchema.methods.sincroniza = function (fields = null) {
-    const campos = fields || this.modifiedPaths();
+PacienteSchema.methods.sincroniza = function () {
+    const campos = this.modifiedPaths();
     if (campos) {
         return campos.some(f => (elasticFields.indexOf(f) >= 0));
     }
@@ -233,4 +233,3 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
 
 export const elasticFields = ['id', 'documento', 'nombre', 'apellido', 'fechaNacimiento', 'alias', 'sexo', 'foto', 'claveBlocking', 'estado', 'activo'];
 export const Paciente = mongoose.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
-export const PacienteMpi = Connections.mpi.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');

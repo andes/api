@@ -1,6 +1,6 @@
 import { assert, expect } from 'chai';
 import * as PacienteModule from './paciente.schema';
-import { findById, createPaciente, savePaciente, search, matching, updatePaciente, suggest, findPaciente } from './paciente.controller';
+import { findById, newPaciente, storePaciente, search, matching, updatePaciente, suggest, findPaciente } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
@@ -9,7 +9,6 @@ const sinon = require('sinon');
 require('sinon-mongoose');
 
 let PacienteMock;
-let PacienteMockMpi;
 
 describe('MPI - Paciente controller', () => {
 
@@ -17,7 +16,6 @@ describe('MPI - Paciente controller', () => {
 
         beforeEach(() => {
             PacienteMock = sinon.mock(PacienteModule.Paciente);
-            PacienteMockMpi = sinon.mock(PacienteModule.PacienteMpi);
 
         });
 
@@ -28,57 +26,13 @@ describe('MPI - Paciente controller', () => {
             .chain('exec')
             .resolves(paciente);
 
-            PacienteMockMpi
-            .expects('findById').never();
-
             let pacienteEncontrado = await findById(paciente.id);
-            assert.equal(pacienteEncontrado.db, 'andes');
-            assert.equal(pacienteEncontrado.paciente.id, paciente.id);
-        });
-
-        it('paciente encontrado en MPI', async () => {
-            let pacienteMpi = { id: '2', nombre: 'pruebaMpi'};
-            PacienteMock
-            .expects('findById').withArgs(pacienteMpi.id)
-            .chain('exec')
-            .resolves(null);
-
-            PacienteMockMpi
-            .expects('findById').withArgs(pacienteMpi.id)
-            .chain('exec')
-            .resolves(pacienteMpi);
-
-            let pacienteEncontradoMpi = await findById(pacienteMpi.id);
-            assert.equal(pacienteEncontradoMpi.db, 'mpi');
-            assert.equal(pacienteEncontradoMpi.paciente.id, pacienteMpi.id);
-        });
-
-        it('paciente encontrado en MPI con projeccion de campos', async () => {
-            const pacienteMpi = { id: '2', nombre: 'pruebaMpi'};
-
-            const mock = PacienteMock.expects('findById').withArgs(pacienteMpi.id);
-            const selectMockPaciente = mock.chain('select').withArgs('nombre apellido');
-            mock.chain('exec').resolves(null);
-
-            const mock2 = PacienteMockMpi.expects('findById').withArgs(pacienteMpi.id);
-            const selectMockPacienteMpi = mock2.chain('select').withArgs('nombre apellido');
-            mock2.chain('exec').resolves(pacienteMpi);
-
-            const pacienteEncontradoMpi = await findById(pacienteMpi.id, { fields: 'nombre apellido' });
-            assert.equal(pacienteEncontradoMpi.db, 'mpi');
-            assert.equal(pacienteEncontradoMpi.paciente.id, pacienteMpi.id);
-            sinon.assert.calledOnce(selectMockPaciente);
-            sinon.assert.calledOnce(selectMockPacienteMpi);
+            assert.equal(pacienteEncontrado.id, paciente.id);
         });
 
         it('paciente no encontrado', async () => {
             let paciente = {id: '3', nombre: 'prueba'};
             PacienteMock
-            .expects('findById').withArgs(paciente.id)
-            .chain('exec')
-            .resolves(null);
-
-            PacienteMockMpi
             .expects('findById').withArgs(paciente.id)
             .chain('exec')
             .resolves(null);
@@ -89,25 +43,23 @@ describe('MPI - Paciente controller', () => {
 
         afterEach(() => {
             PacienteMock.restore();
-            PacienteMockMpi.restore();
         });
     });
 
-    describe('createPaciente', () => {
+    describe('storePaciente', () => {
         let mockPaciente;
-        let saveStub;
-        let setStub;
         let mockPacienteStatic;
         let req;
         let mockElasticPaciente;
         let startTransactionStub, commitTransactionStub, abortTransactionStub;
+        let paciente;
+
         beforeEach(() => {
             startTransactionStub = sinon.stub();
             commitTransactionStub = sinon.stub();
             abortTransactionStub = sinon.stub();
-            mockPaciente = ImportMock.mockClass(PacienteModule, 'Paciente');
-            saveStub = mockPaciente.mock('save', true );
-            setStub = mockPaciente.mock('set', true);
+            paciente = { nombre: 'test', apellido: 'testMpi', documento: '1', sexo: 'masculino', genero: 'masculino' , estado: 'temporal'};
+            mockPaciente = sinon.mock(new PacienteModule.Paciente(paciente));
             mockPacienteStatic = ImportMock.mockOther(PacienteModule.Paciente, 'db');
             mockPacienteStatic.set( {
                 startSession ()  {
@@ -132,22 +84,19 @@ describe('MPI - Paciente controller', () => {
             };
             mockElasticPaciente = ImportMock.mockStaticClass(PacienteTxModule, 'PacienteTx');
         });
-        it('paciente creado con datos básicos', async () => {
-            let paciente = { nombre: 'test', apellido: 'testMpi', documento: '1', sexo: 'masculino', genero: 'masculino' , estado: 'temporal'};
-            mockPaciente.set('_id', '12345567780');
-            mockPaciente.set('nombre', paciente.nombre);
 
+        it('paciente creado con datos básicos', async () => {
             const createStub = mockElasticPaciente.mock('create', true);
             const logstub = sinon.stub(log, 'log').callsFake(null);
 
-            const patientCreated = await createPaciente(paciente as any, req);
+            mockPaciente.expects('save').chain('exec').resolves('RESULT');
+
+            const patientCreated = await storePaciente(mockPaciente.object as any, req);
             sinon.assert.calledOnce(log.log);
-            sinon.assert.calledOnce(saveStub);
             sinon.assert.calledOnce(startTransactionStub);
             sinon.assert.calledOnce(commitTransactionStub);
             sinon.assert.notCalled(abortTransactionStub);
-            sinon.assert.calledWith(setStub, paciente);
-            sinon.assert.calledOnce(createStub);
+
             assert.equal(patientCreated.nombre, paciente.nombre);
             logstub.restore();
             createStub.reset();
@@ -160,83 +109,6 @@ describe('MPI - Paciente controller', () => {
         });
 
     });
-
-
-    // describe('savePaciente', () => {
-    //     let mockElasticPaciente;
-    //     let mockPaciente;
-    //     let mockPacienteStatic;
-    //     let req;
-    //     let startTransactionStub, commitTransactionStub, abortTransactionStub;
-    //     let saveStub;
-    //     let setStub;
-
-    //     beforeEach(() => {
-    //         startTransactionStub = sinon.stub();
-    //         commitTransactionStub = sinon.stub();
-    //         abortTransactionStub = sinon.stub();
-
-
-    //         mockPacienteStatic = ImportMock.mockOther(PacienteModule.Paciente, 'db');
-    //         mockPacienteStatic.set( {
-    //             startSession ()  {
-    //                 return {
-    //                     startTransaction: startTransactionStub,
-    //                     commitTransaction: commitTransactionStub,
-    //                     abortTransaction: abortTransactionStub
-    //                 };
-    //             }
-    //         } as any);
-
-    //         req = {
-    //             user: {
-    //                 usuario: {
-    //                     nombre: 'Test',
-    //                     apellido: 'Test Andes'
-    //                 },
-    //                 organizacion: {
-    //                     nombre: 'Andes'
-    //                 }
-    //             },
-    //         };
-    //         mockElasticPaciente = ImportMock.mockStaticClass(PacienteTxModule, 'PacienteTx');
-    //     });
-
-    //     afterEach(() => {
-    //         mockElasticPaciente.restore();
-    //         mockPacienteStatic.restore();
-    //         mockPaciente.restore();
-    //     });
-
-    //     it('paciente actualizado', async () => {
-    //         let paciente = { _id: 1,  nombre: 'test', apellido: 'update', documento: '1', sexo: 'masculino', genero: 'masculino' , estado: 'temporal'};
-    //         const update = sinon.mock(new PacienteModule.Paciente(paciente));
-
-    //         mockPaciente = ImportMock.mockClass(PacienteModule, 'Paciente');
-    //         saveStub = mockPaciente.mock('save', true );
-    //         setStub = mockPaciente.mock('set', true);
-
-
-    //         // update.set('_id', '12345567780');
-    //         // update.set('nombre', paciente.nombre);
-
-    //         update.expects('toObject').once();
-    //         update.expects('save').once();
-    //         update.expects('modifiedPaths').once();
-    //         update.expects('sincroniza').resolves(true).once();
-
-    //         const syncStub = mockElasticPaciente.mock('sync', true);
-    //         sinon.stub(log, 'log').callsFake(null);
-
-    //         const patientUpdated = await savePaciente(update.object, req);
-    //         sinon.assert.calledOnce(log.log);
-    //         sinon.assert.calledOnce(syncStub);
-    //         sinon.assert.calledOnce(startTransactionStub);
-    //         sinon.assert.calledOnce(commitTransactionStub);
-    //         sinon.assert.notCalled(abortTransactionStub);
-
-    //     });
-    // });
 
     describe('updatePaciente', () => {
 
@@ -349,11 +221,9 @@ describe('MPI - Paciente controller', () => {
     describe('find ', () => {
         beforeEach(() => {
             PacienteMock = sinon.mock(PacienteModule.Paciente);
-            PacienteMockMpi = sinon.mock(PacienteModule.PacienteMpi);
         });
         afterEach(() => {
             PacienteMock.restore();
-            PacienteMockMpi.restore();
         });
         it('Búsqueda por documento', async () => {
             let condicion = { documento: '11111111'};
@@ -361,10 +231,6 @@ describe('MPI - Paciente controller', () => {
             const mock = PacienteMock.expects('find').withArgs(condicion);
             const selectMockPaciente = mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
-
-            const mock2 = PacienteMockMpi.expects('find').withArgs(condicion);
-            const selectMockPacienteMpi = mock2.chain('select').withArgs('nombre apellido');
-            mock2.chain('exec').resolves([]);
 
             let pacientesEncontrado = await findPaciente(condicion, 'nombre apellido');
             expect(pacientesEncontrado).to.eql([]);
@@ -382,10 +248,6 @@ describe('MPI - Paciente controller', () => {
             const mock = PacienteMock.expects('find').withArgs(condicion);
             const selectMockPaciente = mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
-
-            const mock2 = PacienteMockMpi.expects('find').withArgs(condicion);
-            const selectMockPacienteMpi = mock2.chain('select').withArgs('nombre apellido');
-            mock2.chain('exec').resolves([]);
 
             let pacientesEncontrado = await findPaciente({apellido: '^GONZ'}, 'nombre apellido');
             expect(pacientesEncontrado).to.eql([]);

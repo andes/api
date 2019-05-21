@@ -1,10 +1,8 @@
 import { Router , Request, Response} from 'express';
-import { findById, findPaciente, search, suggest, createPaciente, updatePaciente, savePaciente, deletePaciente } from './paciente.controller';
+import { findById, findPaciente, search, suggest, newPaciente, updatePaciente, storePaciente, deletePaciente } from './paciente.controller';
 import { mpi } from '../../../config';
 import { Auth } from '../../../auth/auth.class';
 import * as asyncHandler from 'express-async-handler';
-
-const router = Router();
 
 /**
  * @api {get} /pacientes/:id Requiere datos de un paciente
@@ -21,9 +19,9 @@ export const findPacientes = async (req: Request, res: Response, next) => {
     const options = {
         fields: req.query.fields
     };
-    const result = await findById(id, options);
-    if (result) {
-        return res.json(result.paciente);
+    const paciente = await findById(id, options);
+    if (paciente) {
+        return res.json(paciente);
     }
     return next(400);
 };
@@ -38,14 +36,16 @@ export const findPacientes = async (req: Request, res: Response, next) => {
 
 export const getPacientes = async (req: Request, res: Response) => {
     const options = {
-        fields: req.query.fields
+        fields: req.query.fields,
+        skip: req.query.skip,
+        limit: req.query.limit
     };
     if (req.query.search) {
         const pacientes = await search(req.query.search);
         res.json(pacientes);
     } else {
         const conditions = req.query;
-        const pacientes = await findPaciente(conditions, options.fields);
+        const pacientes = await findPaciente(conditions, options);
         res.json(pacientes);
     }
 };
@@ -72,8 +72,10 @@ export const postPacientes = async (req: Request, res: Response, next) => {
     if (isMatchingAlto(sugeridos)) {
         return next(400);
     }
+
     body.activo = true; // Todo paciente esta activo por defecto
-    const pacienteCreado = await createPaciente(body, req);
+    const paciente = newPaciente(body);
+    const pacienteCreado = await storePaciente(paciente, req);
     res.json(pacienteCreado);
 };
 
@@ -115,9 +117,8 @@ export const putPacientes = (req, res, next) => {
 export const patchPacientes = async (req: Request, res: Response, next) => {
     const id = req.params.id;
     const body = req.body;
-    const queryResult = await findById(id);
-    if (queryResult) {
-        let { paciente } = queryResult;
+    let paciente = await findById(id);
+    if (paciente) {
         if (body.estado === 'validado') {
             const sugeridos = await suggest(body);
             if (isMatchingAlto(sugeridos)) {
@@ -125,7 +126,7 @@ export const patchPacientes = async (req: Request, res: Response, next) => {
             }
         }
         paciente = updatePaciente(paciente, body);
-        const updated = await savePaciente(paciente, req);
+        const updated = await storePaciente(paciente, req);
         return res.json(updated);
     }
     return next(400);
@@ -142,15 +143,15 @@ export const patchPacientes = async (req: Request, res: Response, next) => {
 
 export const deletePacientes = async (req: Request, res: Response, next) => {
     const id = req.params.id;
-    const queryResult = await findById(id);
-    if (queryResult) {
-        let { paciente } = queryResult;
+    const paciente = await findById(id);
+    if (paciente) {
         const result = await deletePaciente(paciente, req);
         return res.json(result);
     }
     return next(400);
 };
 
+const router = Router();
 router.use(Auth.authenticate());
 router.get('/pacientes', Auth.authorize('mpi:paciente:elasticSearch'), asyncHandler(getPacientes));
 router.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(postPacientes));
