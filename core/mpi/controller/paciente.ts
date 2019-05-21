@@ -855,7 +855,9 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             pacienteAndes.cuil = pacienteRenaper.cuil;
             pacienteAndes.estado = 'validado';
             pacienteAndes.foto = pacienteRenaper.foto;
-            pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
+            if (pacienteAndes.direccion.length) {
+                pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
+            }
             return { paciente: pacienteAndes, validado: true };
         } else {
             return await validarSisa(pacienteAndes, req, pacienteRenaper.foto);
