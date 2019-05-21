@@ -478,7 +478,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
         }
         // return next('ObjectID Inválido');
     } else {
-        agenda.findById(req.params.id, (err, data) => {
+        agenda.findById(req.params.id, async (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -557,10 +557,17 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'pendienteAuditoria':
                     case 'pendienteAsistencia':
                     case 'auditada':
-                    case 'suspendida':
                     case 'borrada':
                         agendaCtrl.actualizarEstado(req, data);
                         event = { object: 'agenda', accion: 'estado', data };
+                        break;
+                    case 'suspendida':
+                        if (! await agendaCtrl.poseeAsistencia(data)) {
+                            agendaCtrl.actualizarEstado(req, data);
+                            event = { object: 'agenda', accion: 'estado', data };
+                        } else {
+                            return next('La agenda que intenta suspender posee asistencia registrada.');
+                        }
                         break;
                     case 'avisos':
                         agendaCtrl.agregarAviso(req, data);

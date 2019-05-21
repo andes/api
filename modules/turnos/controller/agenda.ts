@@ -1205,3 +1205,19 @@ export function getCantidadConsultaXPrestacion(params) {
 
     });
 }
+
+/**
+ * Verifica si la agenda posee asistencia registrada
+ *
+ * @export
+ * @param {*} agendaId
+ * @returns
+ */
+export async function poseeAsistencia(agendaId) {
+    const ag: any = await agendaModel.findById(agendaId);
+    return ag.dinamica ?
+        ag.bloques.some((b: any) => b.turnos.some((t: any) => t.asistencia)) :
+        ag.bloques.some((b: any) => b.turnos.some((t: any) => t.asistencia ||
+            (t.diagnostico && t.diagnostico.codificaciones && t.diagnostico.codificaciones.length > 0)));
+}
+
