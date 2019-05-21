@@ -140,7 +140,15 @@ export async function search(searchText: string) {
                 multi_match: {
                     query: searchText,
                     type: 'cross_fields',
-                    fields: ['documento', 'apellido^5', 'nombre^4'],
+                    fields: [
+                        'apellido^5',
+                        'nombre^5',
+                        'alias^5',
+                        'documento^5',
+                        'apellido.ngram',
+                        'nombre.ngram',
+                        'documento.ngram',
+                        'alias.ngram'],
                     operator: 'and'
                 }
             },

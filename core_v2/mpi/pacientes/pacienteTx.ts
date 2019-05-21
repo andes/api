@@ -9,7 +9,7 @@ import { IPacienteDoc } from './paciente.interface';
  */
 
 export class PacienteTx {
-    private static INDEX = 'andes';
+    private static INDEX = 'andes2';
     private static TYPE = 'paciente';
 
     public static getClient() {
@@ -108,7 +108,7 @@ export class PacienteTx {
         const es = this.getClient();
         const searchBody = {
             index: this.INDEX,
-            size: 50,
+            size: 5,
             body: query
         };
         const { body } = await es.search(searchBody);
