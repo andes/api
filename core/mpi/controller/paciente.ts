@@ -837,9 +837,9 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
 
     try {
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, resRenaper);
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resRenaper);
     } catch (error) {
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
@@ -855,6 +855,9 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             pacienteAndes.cuil = pacienteRenaper.cuil;
             pacienteAndes.estado = 'validado';
             pacienteAndes.foto = pacienteRenaper.foto;
+            if (pacienteAndes.direccion.length) {
+                pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
+            }
             return { paciente: pacienteAndes, validado: true };
         } else {
             return await validarSisa(pacienteAndes, req, pacienteRenaper.foto);
@@ -871,7 +874,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
 
         pacienteAndes.sexo = sexoPaciente;
         let resSisa: any = await matchSisa(pacienteAndes);
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, resSisa);
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resSisa);
 
         pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
         pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
@@ -882,7 +885,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         }
         return { paciente: pacienteAndes, validado: true };
     } catch (error) {
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por SISA');
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por SISA');
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }
