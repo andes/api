@@ -531,13 +531,7 @@ export class Documento {
 
                     let organizacionNombreSolicitud = prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>');
                     let orgacionacionDireccionSolicitud = organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre;
-                    let fechaSolicitud = moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs';
 
-                    // HEADER
-                    let fechaEjecucion: any = new Date(prestacion.estados.find(x => x.tipo === 'ejecucion').createdAt);
-                    fechaEjecucion = moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs';
-                    let fechaValidacion: any = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
-                    fechaValidacion = moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs';
 
                     let usuario = Auth.getUserName(req);
 
@@ -562,6 +556,7 @@ export class Documento {
                     logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/images/logo-pdp-h.png')).toString('base64') || '';
                     logoEfector = logoEfector || prestacion.solicitud.organizacion.nombre;
 
+                    let fechaSolicitud = moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs';
 
                     // REGISTROS
                     let registrosHTML = (contenidoInforme && contenidoInforme.length)
@@ -576,12 +571,10 @@ export class Documento {
                         carpeta,
                         organizacionNombreSolicitud,
                         orgacionacionDireccionSolicitud,
-                        fechaSolicitud,
                         profesionalSolicitud,
+                        fechaSolicitud,
                         tipoPrestacion,
                         tituloFechaEjecucion,
-                        fechaEjecucion,
-                        fechaValidacion,
                         tituloInforme,
                         registrosHTML,
                         motivoPrincipalDeConsulta,
@@ -594,16 +587,26 @@ export class Documento {
                         logoPDP2,
                     };
 
+                    let fechaEjecucion: any = '';
+                    let fechaValidacion: any = '';
+
                     // Es una Epicrisis?
                     if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
-                        let fechaIngreso = moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY');
-                        let fechaEgreso = moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY');
-                        datos = {
-                            ...datos,
-                            fechaIngreso,
-                            fechaEgreso
-                        };
+                        fechaEjecucion = '<b>Fecha de Ingreso:</b> <br>' + moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY');
+                        fechaValidacion = '<b>Fecha de Egreso:</b> <br>' + moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY');
+                    } else {
+
+                        // HEADER
+                        fechaEjecucion = new Date(prestacion.estados.find(x => x.tipo === 'ejecucion').createdAt);
+                        fechaEjecucion = moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs';
+                        fechaValidacion = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
+                        fechaValidacion = moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs';
                     }
+                    datos = {
+                        ...datos,
+                        fechaEjecucion,
+                        fechaValidacion,
+                    };
 
                     // Limpio el informe
                     this.informeRegistros = [];
@@ -728,7 +731,6 @@ export class Documento {
 
                     await this.generarHTML(req).then(async htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();
-                        // fs.writeFileSync('/tmp/test.html', htmlPDF);
                         await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
 
                             if (err2) {
