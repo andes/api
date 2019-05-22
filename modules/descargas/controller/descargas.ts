@@ -336,6 +336,7 @@ export class Documento {
 
                 // Títulos default
                 let tituloFechaEjecucion = 'Fecha Ejecución';
+                let tituloFechaValidacion = 'Fecha Validación';
 
                 // Configuraciones de informe propios de la prestación
                 let config: any = await this.getPrestacionInformeParams(prestacion.solicitud.tipoPrestacion.conceptId);
@@ -358,7 +359,16 @@ export class Documento {
 
                     if (config.informe) {
                         // Override título "Fecha Ejecución"?
-                        tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : 'Fecha Ejecución';
+                        tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : tituloFechaEjecucion;
+                        // Override título "Fecha Validación"?
+                        tituloFechaValidacion = config.informe.fechaValidacionOverride ? config.informe.fechaValidacionOverride : tituloFechaValidacion;
+                    }
+
+                    if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
+                        // Override título "Fecha Ejecución"?
+                        tituloFechaEjecucion = 'Fecha Ingreso';
+                        // Override título "Fecha Validación"?
+                        tituloFechaValidacion = 'Fecha Egreso';
                     }
 
                     // Vemos si el tipo de prestación tiene registros que son hijos directos (TP: Ecografía; Hijo: Ecografía obstétrica)
@@ -455,6 +465,7 @@ export class Documento {
                         .replace('<!--tipoPrestacion-->', tipoPrestacion)
                         .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
+                        .replace('<!--tituloFechaValidacion-->', tituloFechaValidacion)
                         .replace('<!--fechaEjecucion-->', moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
