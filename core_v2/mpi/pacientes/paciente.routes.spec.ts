@@ -48,7 +48,6 @@ describe('MPI - Routes', () => {
     describe('GET /pacientes/:id', () => {
 
         it('must call findById', async () => {
-            const next = sinon.stub();
             req.params.id = '123456';
             const searchStub = sinon.stub(PacienteCtr, 'findById').returns({});
             try {
@@ -58,7 +57,6 @@ describe('MPI - Routes', () => {
             }
             sinon.assert.calledOnce(res.json);
             sinon.assert.calledWith(searchStub, '123456');
-            sinon.assert.notCalled(next);
             searchStub.restore();
         });
 
