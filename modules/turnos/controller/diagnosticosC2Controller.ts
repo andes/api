@@ -101,13 +101,7 @@ function sumarCodigos(codigos) {
     };
     return respuesta;
 }
-/**
- * Consulta C2
- *
- * @export
- * @param {*} params
- * @returns
- */
+
 export function getDiagnosticos(params) {
     let resultados = [];
     const promises = [];

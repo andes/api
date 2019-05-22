@@ -1026,16 +1026,7 @@ export function updatePaciente(pacienteModified, turno) {
     });
 }
 
-
-/**
- * Consulta diagnosticos
- *
- * @export
- * @param {*} params
- * @returns
- */
 export function getConsultaDiagnostico(params) {
-
     return new Promise(async (resolve, reject) => {
         let pipeline = [];
         pipeline = [{
