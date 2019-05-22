@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import { Connections } from './../../../connections';
 import * as moment from 'moment';
 import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from '../../../shared/schemas/constantes';
 import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';

@@ -1,9 +1,10 @@
 import { assert, expect } from 'chai';
 import * as PacienteModule from './paciente.schema';
-import { findById, newPaciente, storePaciente, search, matching, updatePaciente, suggest, findPaciente } from './paciente.controller';
+import { findById,  storePaciente, search, matching, updatePaciente, suggest, findPaciente } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
+import * as queryBuilder from '../../../shared/queryBuilder';
 
 const sinon = require('sinon');
 require('sinon-mongoose');
@@ -227,52 +228,49 @@ describe('MPI - Paciente controller', () => {
         });
         it('Búsqueda por documento', async () => {
             let condicion = { documento: '11111111'};
-
             const mock = PacienteMock.expects('find').withArgs(condicion);
-            const selectMockPaciente = mock.chain('select').withArgs('nombre apellido');
+            mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
-
             let pacientesEncontrado = await findPaciente(condicion, 'nombre apellido');
             expect(pacientesEncontrado).to.eql([]);
 
         });
 
         it('Búsqueda parcial por apellido', async () => {
-            let condicion = {
-                apellido: {
-                    $regex: /[GgĜ-ģǦǧǴǵᴳᵍḠḡℊ⒢Ⓖⓖ㋌㋍㎇㎍-㎏㎓㎬㏆㏉㏒㏿Ｇｇ][OoºÒ-Öò-öŌ-őƠơǑǒǪǫȌ-ȏȮȯᴼᵒỌ-ỏₒ℅№ℴ⒪Ⓞⓞ㍵㏇㏒㏖Ｏｏ][NnÑñŃ-ŉǊ-ǌǸǹᴺṄ-ṋⁿℕ№⒩Ⓝⓝ㎁㎋㎚㎱㎵㎻㏌㏑Ｎｎ][ZzŹ-žǱ-ǳᶻẐ-ẕℤℨ⒵Ⓩⓩ㎐-㎔Ｚｚ]/g
-                }
-            };
-
-
-            const mock = PacienteMock.expects('find').withArgs(condicion);
-            const selectMockPaciente = mock.chain('select').withArgs('nombre apellido');
+            const mockStr = sinon.stub(queryBuilder, 'parseStr').returns({});
+            const mock = PacienteMock.expects('find');
+            mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
 
             let pacientesEncontrado = await findPaciente({apellido: '^GONZ'}, 'nombre apellido');
+            sinon.assert.calledWith(mockStr, '^GONZ');
+            mock.withArgs(sinon.match.has('nombre', {}));
             expect(pacientesEncontrado).to.eql([]);
-
+            mockStr.restore();
         });
 
-        // it('Búsqueda por identificadores', async () => {
-        //     let condicion = {
-        //         identificadores: ['ANDES | 125785']
-        //     };
-
-        //     let elem = { identificadores: {$elemMatch: {$and: [{entidad: 'ANDES', valor: '125785'}]}}};
-
-        //     const mock = PacienteMock.expects('find').withArgs(elem);
-        //     const selectMockPaciente = mock.chain('select').withArgs('documento nombre apellido');
-        //     mock.chain('exec').resolves([]);
-
-        //     const mock2 = PacienteMockMpi.expects('find').withArgs(elem);
-        //     const selectMockPacienteMpi = mock2.chain('select').withArgs('documento nombre apellido');
-        //     mock2.chain('exec').resolves([]);
-
-        //     let pacientesEncontrado = await findPaciente(condicion, 'documento nombre apellido');
-        //     expect(pacientesEncontrado).to.eql([]);
-
-        // });
+        it('Búsqueda por identificadores', async () => {
+            let condicion = {
+                identificadores: ['ANDES|125785']
+            };
+            let elem = {
+                $and: [{
+                    $and: [{
+                        identificadores: {
+                            $elemMatch: {
+                                entidad: 'ANDES',
+                                valor: '125785'
+                            }
+                        }
+                    }]
+                }]
+            };
+            const mock = PacienteMock.expects('find').withArgs(elem);
+            mock.chain('select').withArgs('documento nombre apellido');
+            mock.chain('exec').resolves([]);
+            let pacientesEncontrado = await findPaciente(condicion, 'documento nombre apellido');
+            expect(pacientesEncontrado).to.eql([]);
+        });
 
     });
 
