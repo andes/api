@@ -63,6 +63,9 @@ export async function storePaciente(paciente: IPacienteDoc, req: express.Request
             log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
         }
         await session.abortTransaction();
+        if (error.name === 'ValidationError') {
+            error.status = 400;
+        }
         throw error;
     }
 }

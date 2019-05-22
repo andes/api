@@ -3,6 +3,7 @@ import { findById, findPaciente, search, suggest, newPaciente, updatePaciente, s
 import { mpi } from '../../../config';
 import { Auth } from '../../../auth/auth.class';
 import * as asyncHandler from 'express-async-handler';
+import { PatientNotFound, PatientDuplicate } from './paciente.error';
 
 /**
  * @api {get} /pacientes/:id Requiere datos de un paciente
@@ -14,7 +15,7 @@ import * as asyncHandler from 'express-async-handler';
  * @apiSuccess {IPaciente} Datos del paciente encontrado.
  */
 
-export const findPacientes = async (req: Request, res: Response, next) => {
+export const findPacientes = async (req: Request, res: Response) => {
     const id = req.params.id;
     const options = {
         fields: req.query.fields
@@ -23,7 +24,7 @@ export const findPacientes = async (req: Request, res: Response, next) => {
     if (paciente) {
         return res.json(paciente);
     }
-    return next(400);
+    throw new PatientNotFound();
 };
 
 /**
@@ -66,11 +67,11 @@ function isMatchingAlto(sugeridos: any[]) {
  * @apiSuccess {IPaciente} Paciente creado.
  */
 
-export const postPacientes = async (req: Request, res: Response, next) => {
+export const postPacientes = async (req: Request, res: Response) => {
     const body = req.body;
     const sugeridos = await suggest(body);
     if (isMatchingAlto(sugeridos)) {
-        return next(400);
+        throw new PatientDuplicate();
     }
 
     body.activo = true; // Todo paciente esta activo por defecto
@@ -114,7 +115,7 @@ export const putPacientes = (req, res, next) => {
  * @apiParam {Number} ID de identificaion del paciente.
  * @apiSuccess {IPaciente} Paciente modificado.
  */
-export const patchPacientes = async (req: Request, res: Response, next) => {
+export const patchPacientes = async (req: Request, res: Response) => {
     const id = req.params.id;
     const body = req.body;
     let paciente = await findById(id);
@@ -122,14 +123,14 @@ export const patchPacientes = async (req: Request, res: Response, next) => {
         if (body.estado === 'validado') {
             const sugeridos = await suggest(body);
             if (isMatchingAlto(sugeridos)) {
-                return next(400);
+                throw new PatientDuplicate();
             }
         }
         paciente = updatePaciente(paciente, body);
         const updated = await storePaciente(paciente, req);
         return res.json(updated);
     }
-    return next(400);
+    throw new PatientNotFound();
 };
 
 /**
@@ -141,14 +142,14 @@ export const patchPacientes = async (req: Request, res: Response, next) => {
  * @apiSuccess {boolean} true.
  */
 
-export const deletePacientes = async (req: Request, res: Response, next) => {
+export const deletePacientes = async (req: Request, res: Response) => {
     const id = req.params.id;
     const paciente = await findById(id);
     if (paciente) {
         const result = await deletePaciente(paciente, req);
         return res.json(result);
     }
-    return next(400);
+    throw new PatientNotFound();
 };
 
 const router = Router();
