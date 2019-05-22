@@ -12,7 +12,7 @@ import { EventCore } from '@andes/event-bus';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
-import {parseStr, rangoFechas} from './../../../shared/queryBuilder';
+import {parseStr, rangoFechas, queryArray, queryMatch} from './../../../shared/queryBuilder';
 
 /**
  * Crea un objeto paciente
@@ -126,7 +126,7 @@ export async function deletePaciente(paciente: IPacienteDoc, req: express.Reques
 }
 
 /**
- * Busca paciente a partir de una cadena de texto
+ * Busca pacientes dada de una cadena de texto por documento, apellido o nombre
  *
  * @param {string} query Condiciones a buscar
  */
@@ -232,7 +232,7 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
 /**
  * Realiza una búsqueda de pacientes dada una condición
  * @param condicion
- * @param fields Setea los campos de los documentos a devolver
+ * @param fields Selecciona los campos de los documentos a devolver
  * @returns Devuelve listado de paciente encontrados
  */
 export async function findPaciente(condicion, options?: any) {
@@ -240,26 +240,17 @@ export async function findPaciente(condicion, options?: any) {
     const { fields, skip, limit } = options;
 
     const opciones = {};
+    const filtros = [];
+    let identificadores = [];
     // identificadores ['Entidad1 | valor'... 'EntidadN | valorN'} ]
     if (condicion.identificadores) {
-        let conds = [];
-        // verifica los identificadores
-        condicion.identificadores.forEach(identificador => {
-            let ids = identificador.split('|');
-            let filtro = {};
-            if (ids[0]) {
-                filtro['entidad'] = ids[0];
-            }
-            if (ids[1]) {
-                filtro['valor'] = ids[1];
-            }
-            conds.push(filtro);
-
-        });
-        opciones['identificadores'] = {$elemMatch: {$and: conds}
-        };
+        if (Array.isArray(condicion.identificadores)) {
+            identificadores = condicion.identificadores;
+        } else {
+            identificadores = [condicion.identificadores];
+        }
+        filtros.push(queryArray('identificadores', identificadores, 'entidad', 'valor', '$and'));
     }
-
     if (condicion.documento) {
         opciones['documento'] =  parseStr(condicion.documento);
     }
@@ -278,11 +269,11 @@ export async function findPaciente(condicion, options?: any) {
     if (condicion.activo) {
         opciones['activo'] = condicion.activo;
     }
-    if (condicion.localidad) {
-        opciones['direccion.ubicacion.localidad.nombre'] = parseStr(condicion.localidad);
-    }
     if (condicion.barrio) {
         opciones['direccion.ubicacion.barrio.nombre'] =  parseStr(condicion.barrio);
+    }
+    if (condicion.localidad) {
+        opciones['direccion.ubicacion.localidad.nombre'] = parseStr(condicion.localidad);
     }
     if (condicion.provincia) {
         opciones['direccion.ubicacion.provincia.nombre'] = parseStr(condicion.provincia);
@@ -296,22 +287,33 @@ export async function findPaciente(condicion, options?: any) {
 
     let contactos = [];
     if (condicion.email) {
-        contactos.push({
-            tipo: 'email',
-            valor: parseStr(condicion.email)
-        });
+        contactos.push('email |' + condicion.email);
     }
     if (condicion.celular) {
-        contactos.push({tipo: 'celular', valor: parseStr(condicion.celular)});
+        contactos.push('celular |' + condicion.celular);
     }
     if (condicion.fijo) {
-        contactos.push({tipo: 'fijo', valor: parseStr(condicion.fijo)});
+        contactos.push('fijo |' + condicion.fijo);
     }
-    if (contactos.length) {
-        opciones['contactos'] = {$elemMatch: contactos};
+    if (contactos.length > 0) {
+        filtros.push( queryArray('contactos', contactos, 'tipo', 'valor'));
+    }
+    if (condicion.relaciones) {
+        let relaciones = [];
+        if (Array.isArray(condicion.relaciones)) {
+            relaciones = condicion.relaciones;
+        } else {
+            relaciones = [condicion.relaciones];
+        }
+        filtros.push(queryArray('relaciones', relaciones, 'relacion.nombre', 'referencia', '$and'));
+    }
+
+    if (filtros.length > 0) {
+        opciones['$and'] = filtros;
     }
 
     let pacientesQuery = Paciente.find(opciones);
+
     if (fields) {
         pacientesQuery.select(fields);
     }
@@ -319,7 +321,7 @@ export async function findPaciente(condicion, options?: any) {
         pacientesQuery.limit(limit);
     }
     if (skip) {
-        pacientesQuery.limit(skip);
+        pacientesQuery.skip(skip);
     }
 
     return await pacientesQuery;
