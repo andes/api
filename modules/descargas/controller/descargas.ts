@@ -15,7 +15,6 @@ import { env } from 'process';
 import * as rupStore from '../../../modules/rup/controllers/rupStore';
 
 let phantomjs = require('phantomjs-prebuilt-that-works');
-const binPath = phantomjs.path;
 
 moment.locale('es');
 
@@ -32,7 +31,7 @@ export class Documento {
      */
     private static options: pdf.CreateOptions = {
         // Nos aseguramos que usa el paquete que queremos
-        phantomPath: binPath
+        phantomPath: phantomjs.path
     };
 
     /**
