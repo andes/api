@@ -369,13 +369,6 @@ export class Documento {
                         tituloFechaValidacion = config.informe.fechaValidacionOverride ? config.informe.fechaValidacionOverride : tituloFechaValidacion;
                     }
 
-                    if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
-                        // Override título "Fecha Ejecución"?
-                        tituloFechaEjecucion = 'Fecha Ingreso';
-                        // Override título "Fecha Validación"?
-                        tituloFechaValidacion = 'Fecha Egreso';
-                    }
-
                     // Vemos si el tipo de prestación tiene registros que son hijos directos (TP: Ecografía; Hijo: Ecografía obstétrica)
                     let hijos = await snomed.getChildren(prestacion.solicitud.tipoPrestacion.conceptId, { all: true });
                     let motivoPrincipalDeConsulta;
@@ -464,10 +457,26 @@ export class Documento {
                     let fechaValidacion = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
 
                     // BODY
-                    html = html
-                        .replace('<!--fechaIngreso-->', (prestacion.ejecucion.registros[0].valor && prestacion.ejecucion.registros[0].valor.fechaDesde) ? '<b>Fecha de ingreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY') : '')
-                        .replace('<!--fechaEgreso-->', (prestacion.ejecucion.registros[0].valor && prestacion.ejecucion.registros[0].valor.fechaHasta) ? '<b>Fecha de egreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY') : '')
-                        .replace('<!--tipoPrestacion-->', tipoPrestacion)
+
+                    if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
+                        const valor = prestacion.ejecucion.registros[0].valor;
+                        const fechaIngreso = valor && valor.fechaDesde ? moment(valor.fechaDesde).format('DD/MM/YYYY') : null;
+                        const fechaEgreso = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') : null;
+                        const unidadOrganizativa = valor && valor.unidadOrganizativa ? valor.unidadOrganizativa.term : null;
+                        if (fechaIngreso) {
+                            html = html.replace('<!--fechaIngreso-->', '<b> Ingreso: </b>' + fechaIngreso + '&nbsp;&nbsp;&nbsp;');
+                        }
+                        if (fechaEgreso) {
+                            html = html.replace('<!--fechaEgreso-->', '<b> Egreso: </b>' + fechaEgreso + '&nbsp;&nbsp;&nbsp;');
+                        }
+                        if (unidadOrganizativa) {
+                            html = html.replace('<!--unidadOrganizativa-->', '<b> Servicio: </b>' + unidadOrganizativa + '&nbsp;&nbsp;&nbsp;');
+                        }
+
+                    }
+
+
+                    html = html.replace('<!--tipoPrestacion-->', tipoPrestacion)
                         .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
                         .replace('<!--tituloFechaValidacion-->', tituloFechaValidacion)
