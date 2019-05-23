@@ -14,6 +14,9 @@ import * as path from 'path';
 import { env } from 'process';
 import * as rupStore from '../../../modules/rup/controllers/rupStore';
 
+let phantomjs = require('phantomjs-prebuilt-that-works');
+const binPath = phantomjs.path;
+
 moment.locale('es');
 
 // Muestra mensaje y línea de un error dentro de una promise ;-)
@@ -27,7 +30,10 @@ export class Documento {
     /**
      * Opciones default de PDF rendering
      */
-    private static options: pdf.CreateOptions = {};
+    private static options: pdf.CreateOptions = {
+        // Nos aseguramos que usa el paquete que queremos
+        phantomPath: binPath
+    };
 
     /**
      *
