@@ -2,16 +2,6 @@ import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-/**
- * Por ahora un schema sensillo para marcar un concepto como privado
- */
-let PrivacySchema = new mongoose.Schema({
-    scope: {
-        type: String,
-        enum: ['private', 'public'],
-        default: 'public'
-    }
-}, { _id: false });
 
 // Cada registro contiene la información usuario que lo creó (plugin audit)
 // y los valores generados por los elementos RUP correspondientes.
@@ -45,8 +35,20 @@ schema.add({
         type: Boolean,
         default: false
     },
+    /**
+     * Por ahora un schema sensillo para marcar un concepto como privado
+     *
+     * public: Visible para todos
+     * private: Visible para uno mismo solamente
+     * termOnly: Solo se puede ver el term del concepto, y no su contenido
+     *
+     */
     privacy: {
-        type: PrivacySchema
+        scope: {
+            type: String,
+            enum: ['private', 'public', 'termOnly'],
+            default: 'public'
+        }
     },
     esPrimeraVez: Boolean,
     // Almacena el valor del átomo, molécula o fórmula.

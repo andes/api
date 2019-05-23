@@ -483,15 +483,28 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
                 return next(404);
             }
             if (data) {
-                const profesionalId = Auth.getProfesional(req).id.toString();
+                const profesional = Auth.getProfesional(req);
+                const profesionalId = profesional && profesional.id && profesional.id.toString();
                 for (let i = 0; i < data.length; i++) {
-                    if (data[i].ejecucion.registros) {
-                        for (let j = 0; j < data[i].ejecucion.registros.length; j++) {
-                            const privacy = data[i].ejecucion.registros[j].privacy;
-                            const profId = data[i].solicitud.profesional.id.toString();
-                            if (privacy && privacy.scope === 'private' &&  profesionalId !== profId) {
-                                data[i].ejecucion.registros.splice(j, 1);
-                                j--;
+                    let profId = false;
+                    if (data[i].solicitud.profesional && data[i].solicitud.profesional.id) {
+                        profId = data[i].solicitud.profesional.id.toString();
+                    }
+                    const registros = data[i].ejecucion.registros;
+                    if (registros) {
+                        for (let j = 0; j < registros.length; j++) {
+                            const privacy = registros[j].privacy || { scope: 'public' };
+                            if (privacy.scope !== 'public' && profesionalId !== profId) {
+                                switch (privacy.scope) {
+                                    case 'private':
+                                        registros.splice(j, 1);
+                                        j--;
+                                        break;
+                                    case 'termOnly':
+                                        registros[j].valor = 'REGISTRO PRIVADO';
+                                        registros[j].registros = [];
+                                        break;
+                                }
                             }
                         }
                     }
