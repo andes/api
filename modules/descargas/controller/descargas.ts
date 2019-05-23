@@ -8,7 +8,7 @@ import * as Paciente from '../../../core/mpi/controller/paciente';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as snomed from '../../../core/term/controller/snomedCtr';
 import * as rup from '../../../modules/rup/schemas/elementoRUP';
-import { ISnomedConcept } from 'modules/rup/schemas/snomed-concept';
+import { ISnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
 import { env } from 'process';
