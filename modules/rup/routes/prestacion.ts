@@ -339,11 +339,14 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     }
 
     // Ordenar por fecha de solicitud
-    if (req.query.ordenFecha) {
+    if (req.query.ordenFecha || req.query.ordenFechaAsc) {
         query.sort({ 'solicitud.fecha': -1 });
+    } else if (req.query.ordenFechaDesc) {
+        query.sort({ 'solicitud.fecha': 1 });
     } else if (req.query.ordenFechaEjecucion) {
         query.sort({ 'ejecucion.fecha': -1 });
     }
+
 
     if (req.query.limit) {
         query.limit(parseInt(req.query.limit, 10));
