@@ -193,7 +193,7 @@ export async function suggest(query: any) {
         };
         let pacientes = await PacienteTx.search({ query: body });
         if (query.id) {
-            pacientes.filter(p => (p.id !== query.id));
+            pacientes = pacientes.filter(p => (p.id !== query.id));
         }
         pacientes.forEach((paciente) => {
             const value = matching(paciente, query);

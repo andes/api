@@ -158,8 +158,8 @@ router.get('/pacientes', Auth.authorize('mpi:paciente:elasticSearch'), asyncHand
 router.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(postPacientes));
 router.post('/pacientes/match', Auth.authorize('mpi:paciente:elasticSearch'), asyncHandler(postMatch));
 router.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(findPacientes));
-router.put('/pacientes/:id', Auth.authorize('mpi:paciente:putAndes'), asyncHandler(putPacientes));
 router.patch('/pacientes/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(patchPacientes));
+router.put('/pacientes/:id', Auth.authorize('mpi:paciente:putAndes'), asyncHandler(putPacientes));
 router.delete('/pacientes/:id', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(deletePacientes));
 
 export const Routing = router;
