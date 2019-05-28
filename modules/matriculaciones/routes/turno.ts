@@ -263,7 +263,7 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
                     }
                 }]);
 
-        response.status(201).json(aggregate);
+        response.json(aggregate);
 
     } else {
         let aggregate = await turno.aggregate(
@@ -300,7 +300,7 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
                     }
                 }]);
 
-        response.status(201).json(aggregate);
+        response.json(aggregate);
     }
 });
 

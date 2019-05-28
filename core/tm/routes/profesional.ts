@@ -478,24 +478,21 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
 
     }
     if (req.body.profesional) {
+        try {
+            const newProfesional = new profesional(req.body.profesional);
+            Auth.audit(newProfesional, req);
+            newProfesional.save(async (err2) => {
 
-        const newProfesional = new profesional(req.body.profesional);
-        Auth.audit(newProfesional, req);
-        newProfesional.save(async (err2) => {
-
-
-            try {
-                await log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
-            } catch (err) {
-                next(err);
-            }
-
-            if (err2) {
-                next(err2);
-            }
-            EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
-            res.json(newProfesional);
-        });
+                if (err2) {
+                    next(err2);
+                }
+                EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
+                log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
+                res.json(newProfesional);
+            });
+        } catch (err) {
+            next(err);
+        }
 
     }
 
@@ -570,26 +567,27 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
     if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
         return next(403);
     }
-    let resultado: any = await profesional.findById(req.body.id);
-
-
-    const profesionalOriginal = resultado.toObject();
-    for (const key in req.body) {
-        resultado[key] = req.body[key];
-    }
-    Auth.audit(resultado, req);
-    await resultado.save();
-
-
     try {
-        await log(req, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
+        let resultado: any = await profesional.findById(req.body.id);
+
+
+        const profesionalOriginal = resultado.toObject();
+        for (const key in req.body) {
+            resultado[key] = req.body[key];
+        }
+        Auth.audit(resultado, req);
+        await resultado.save();
+
+
+        EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
+        log(req, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
+
+        res.json(resultado);
+
     } catch (err) {
         next(err);
     }
 
-
-    EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
-    res.json(resultado);
 
 });
 
@@ -633,52 +631,51 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
 });
 
 router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
-    let profesionalOriginal;
-    let resultado: any = await profesional.findById(req.params.id);
-    profesionalOriginal = resultado.toObject();
-    if (resultado) {
-        switch (req.body.op) {
-            case 'updateNotas':
-                resultado.notas = req.body.data;
-                break;
-            case 'updateSancion':
-                resultado.sansiones.push(req.body.data);
-                break;
-            case 'updatePosGrado':
-                resultado.formacionPosgrado.push(req.body.data);
-                break;
-            case 'updateGrado':
-                resultado.formacionGrado.push(req.body.data);
-                break;
-            case 'updateOtrosDatos':
-                resultado.OtrosDatos = req.body.data;
-                break;
-            case 'updateEstadoGrado':
-                resultado.formacionGrado = req.body.data;
-                break;
-            case 'updateEstadoPosGrado':
-                resultado.formacionPosgrado = req.body.data;
-                break;
-            case 'updateHabilitado':
-                resultado.habilitado = req.body.data;
-                break;
-        }
-        if (req.body.agente) {
-            resultado.agenteMatriculador = req.body.agente;
-
-        }
-    }
-
-    Auth.audit(resultado, req);
-    await resultado.save();
     try {
-        await log(req, 'profesional:patch', null, 'profesional:patch', resultado, profesionalOriginal);
+        let profesionalOriginal;
+        let resultado: any = await profesional.findById(req.params.id);
+        profesionalOriginal = resultado.toObject();
+        if (resultado) {
+            switch (req.body.op) {
+                case 'updateNotas':
+                    resultado.notas = req.body.data;
+                    break;
+                case 'updateSancion':
+                    resultado.sansiones.push(req.body.data);
+                    break;
+                case 'updatePosGrado':
+                    resultado.formacionPosgrado.push(req.body.data);
+                    break;
+                case 'updateGrado':
+                    resultado.formacionGrado.push(req.body.data);
+                    break;
+                case 'updateOtrosDatos':
+                    resultado.OtrosDatos = req.body.data;
+                    break;
+                case 'updateEstadoGrado':
+                    resultado.formacionGrado = req.body.data;
+                    break;
+                case 'updateEstadoPosGrado':
+                    resultado.formacionPosgrado = req.body.data;
+                    break;
+                case 'updateHabilitado':
+                    resultado.habilitado = req.body.data;
+                    break;
+            }
+            if (req.body.agente) {
+                resultado.agenteMatriculador = req.body.agente;
+
+            }
+        }
+
+        Auth.audit(resultado, req);
+        await resultado.save();
+        log(req, 'profesional:patch', null, 'profesional:patch', resultado, profesionalOriginal);
+        res.json(resultado);
     } catch (err) {
         next(err);
     }
 
-
-    res.json(resultado);
 
 });
 
