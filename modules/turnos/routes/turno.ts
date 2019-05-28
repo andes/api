@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
@@ -15,11 +16,13 @@ import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 import * as controller from '../../../core/mpi/controller/paciente';
+import * as prepagasController from '../../obraSocial/controller/prepagas';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
 
 router.get('/turno/:id*?', async (req, res, next) => {
+
     try {
         const resultado = await turnosController.getTurno(req);
         res.json(resultado);
@@ -187,38 +190,32 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         let countBloques;
         let esHoy = false;
 
-        // Los siguientes 2 for ubican el indice del bloque y del turno
-        for (let x = 0; x < (agendaRes as any).bloques.length; x++) {
-            if ((agendaRes as any).bloques[x]._id.equals(req.body.idBloque)) {
-                posBloque = x;
+        posBloque = (agendaRes as any).bloques.findIndex(item => item._id.toString() === req.body.idBloque.toString());
 
-                // Ver si el día de la agenda coincide con el día de hoy
-                if ((agendaRes as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (agendaRes as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
-                    esHoy = true;
-                }
+        // Ver si el día de la agenda coincide con el día de hoy
+        if ((agendaRes as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (agendaRes as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
+            esHoy = true;
+        }
 
-                // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
-                countBloques = {
-                    delDia: esHoy ? (
-                        ((agendaRes as any).bloques[x].restantesDelDia as number) +
-                        ((agendaRes as any).bloques[x].restantesProgramados as number)
-                    ) : (agendaRes as any).bloques[x].restantesDelDia,
-                    programado: esHoy ? 0 : (agendaRes as any).bloques[x].restantesProgramados,
-                    gestion: esHoy ? 0 : (agendaRes as any).bloques[x].restantesGestion,
-                    profesional: esHoy ? 0 : (agendaRes as any).bloques[x].restantesProfesional
-                };
+        // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
+        countBloques = {
+            delDia: esHoy ? (
+                ((agendaRes as any).bloques[posBloque].restantesDelDia as number) +
+                ((agendaRes as any).bloques[posBloque].restantesProgramados as number)
+            ) : (agendaRes as any).bloques[posBloque].restantesDelDia,
+            programado: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProgramados,
+            gestion: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesGestion,
+            profesional: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProfesional,
+            mobile: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesMobile,
+        };
 
-                for (let y = 0; y < (agendaRes as any).bloques[posBloque].turnos.length; y++) {
-                    if ((agendaRes as any).bloques[posBloque].turnos[y]._id.equals(req.body.idTurno)) {
-                        const turnoSeleccionado = (agendaRes as any).bloques[posBloque].turnos[y];
-                        if (turnoSeleccionado.estado === 'disponible') {
-                            posTurno = y;
-                        } else {
-                            return next('noDisponible');
-                        }
-                    }
-                }
-            }
+        posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(item => item._id.toString() === req.body.idTurno.toString());
+
+        const turnoSeleccionado = (agendaRes as any).bloques[posBloque].turnos[posTurno];
+        if (turnoSeleccionado.estado === 'disponible') {
+            posTurno = posTurno;
+        } else {
+            return next('noDisponible');
         }
 
         let tipoTurno = req.body.tipoTurno ? req.body.tipoTurno : (esHoy && req.query.reasignacion ? 'delDia' : 'programado');
@@ -254,6 +251,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 break;
             case ('programado'):
                 update['bloques.' + posBloque + '.restantesProgramados'] = countBloques.programado - 1;
+                if (req.body.emitidoPor && req.body.emitidoPor === 'appMobile') {
+                    update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
+                }
                 break;
             case ('profesional'):
                 update['bloques.' + posBloque + '.restantesProfesional'] = countBloques.profesional - 1;
@@ -273,6 +273,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
         const etiquetaEmitidoPor: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.emitidoPor';
         const etiquetaMotivoConsulta: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.motivoConsulta';
+        const estadoFacturacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estadoFacturacion';
 
         const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
         const etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
@@ -287,6 +288,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaNota] = req.body.nota;
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+        update[estadoFacturacion] = req.body.estadoFacturacion;
+
         if (req.body.reasignado) {
             update[etiquetaReasignado] = req.body.reasignado;
         }
@@ -322,7 +325,15 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 };
 
                 // Se actualiza el campo financiador del paciente
-                pacienteController.actualizarFinanciador(req, next);
+                // pacienteController.actualizarFinanciador(req, next);
+
+                // Actualizar padron de prepagas
+                if (req.body.paciente && req.body.paciente.obraSocial && req.body.paciente.obraSocial.prepaga) {
+                    const documento = req.body.paciente.documento;
+                    const sexo = req.body.paciente.sexo;
+                    const obraSocial = req.body.paciente.obraSocial;
+                    await prepagasController.actualizarPadronPrepagas(documento, sexo, obraSocial);
+                }
 
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
                 let turno = doc2.bloques.id(req.body.idBloque).turnos.id(req.body.idTurno);
@@ -344,9 +355,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
     }
 });
 
-
 router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     let agendaRes;
+
     try {
         agendaRes = await getAgenda(req.params.idAgenda);
     } catch (err) {
@@ -357,7 +368,9 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     });
     const indexTurno = (agendaRes as any).bloques[indexBloque].turnos.findIndex(t => {
         return (t.id === req.params.idTurno);
+        // return (console.log('Primero: ', t.id) === console.log('Segundo: ', req.params.idTurno));
     });
+
     const update = {};
     if (req.body.avisoSuspension) {
         const etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
@@ -368,6 +381,15 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
 
     }
+    if (req.body.actualizaObraSocial) {
+        const etiquetaPaciente: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.paciente.obraSocial';
+        update[etiquetaPaciente] = req.body.actualizaObraSocial;
+    }
+    if (req.body.estadoFacturacion) {
+        const etiquetaEstadoFacturacion: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.estadoFacturacion';
+        update[etiquetaEstadoFacturacion] = req.body.estadoFacturacion;
+    }
+
     const query = {
         _id: req.params.idAgenda,
     };
@@ -382,7 +404,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
 });
 
 /**
- * se marca como reasginado un turno suspendido
+ * se marca como reasignado un turno suspendido
  */
 router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion

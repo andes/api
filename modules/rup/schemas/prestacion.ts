@@ -4,8 +4,8 @@ import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
-import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { financiadorSchema } from '../../../core/mpi/schemas/financiador';
 
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
@@ -17,12 +17,18 @@ export let schema = new mongoose.Schema({
         documento: String,
         telefono: String,
         sexo: String,
-        fechaNacimiento: Date
+        fechaNacimiento: Date,
+        obraSocial: financiadorSchema
     },
     noNominalizada: {
         type: Boolean,
         required: true,
         default: false
+    },
+    estadoFacturacion: {
+        tipo: String,
+        numero: Number,
+        estado: String
     },
     // Datos de la Solicitud
     solicitud: {
@@ -181,5 +187,6 @@ schema.pre('save', function (next) {
 
 // Habilitar plugin de auditoría
 schema.plugin(AuditPlugin);
+schema.index({ 'solicitud.turno': 1 });
 
 export let model = mongoose.model('prestacion', schema, 'prestaciones');

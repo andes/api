@@ -34,6 +34,10 @@ const bloqueSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    cupoMobile: {
+        type: Number,
+        default: 0
+    },
     restantesDelDia: {
         type: Number,
         default: 0
@@ -50,12 +54,20 @@ const bloqueSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    restantesMobile: {
+        type: Number,
+        default: 0
+    },
     pacienteSimultaneos: {
         type: Boolean,
         default: false
     },
     cantidadSimultaneos: Number,
     citarPorBloque: {
+        type: Boolean,
+        default: false
+    },
+    turnosMobile: {
         type: Boolean,
         default: false
     },

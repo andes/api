@@ -5,7 +5,7 @@ import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
-
+import { validarOrganizacionSisa, obtenerOfertaPrestacional } from '../controller/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
@@ -23,7 +23,7 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
                 // let pais = organizacion.direccion.ubicacion.pais;
                 let pathGoogleApi = '';
                 let jsonGoogle = '';
-                pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+AR&key=' + configPrivate.geoKey;
+                pathGoogleApi = `/maps/api/geocode/json?address=${dir}${localidad}${provincia}AR&key=${configPrivate.geoKey}`;
 
                 pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
                 pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
@@ -102,8 +102,32 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
         res.json(geoJsonData);
     }
 });
-
-
+/*
+* Dado el código sisa de un efector, devuelve sus datos en sisa, incluido su ofertaPrestacional
+*/
+router.get('/organizaciones/sisa/:id', async (req, res, next) => {
+    try {
+        const [requestSisa, requestOfertaPrestacional] = await Promise.all([validarOrganizacionSisa(req.params.id), obtenerOfertaPrestacional(req.params.id)]);
+        const { statusSisa, bodySisa } = requestSisa;
+        const { statusOferta, bodyOferta } = requestOfertaPrestacional;
+        if (statusSisa === 200) {
+            if (statusOferta === 200) {
+                let prestaciones = [];
+                if (bodyOferta && bodyOferta.prestaciones && bodyOferta.prestaciones.length) { // valido mucho porque viene de SISA, podría cambiar la estructura y no queremos que pinche
+                    bodyOferta.prestaciones.forEach((prest: { id: Number, disponible: String, nombre: String }) => {
+                        if (prest.disponible === 'SI') {
+                            prestaciones.push({ idSisa: prest.id, nombre: prest.nombre });
+                        }
+                    });
+                }
+                bodySisa['ofertaPrestacional'] = prestaciones;
+            }
+            res.json(bodySisa);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
 router.get('/organizaciones/:id', async (req, res, next) => {
     try {
         let org = await Organizacion.findById(req.params.id);
@@ -114,11 +138,7 @@ router.get('/organizaciones/:id', async (req, res, next) => {
 });
 
 router.get('/organizaciones', async (req, res, next) => {
-    const act: Boolean = true;
-    const filtros = {
-        activo: act
-    };
-
+    const filtros = {};
     if (req.query.nombre) {
         filtros['nombre'] = {
             $regex: utils.makePattern(req.query.nombre)
@@ -132,9 +152,7 @@ router.get('/organizaciones', async (req, res, next) => {
     if (req.query.sisa) {
         filtros['codigo.sisa'] = req.query.sisa;
     }
-    if (req.query.activo) {
-        filtros['activo'] = req.query.activo;
-    }
+    filtros['activo'] = req.query.activo !== null && req.query.activo !== undefined ? req.query.activo : true;
     if (req.query.tipoEstablecimiento) {
         filtros['tipoEstablecimiento.nombre'] = {
             $regex: utils.makePattern(req.query.tipoEstablecimiento)
@@ -165,7 +183,7 @@ router.get('/organizaciones/:id/configuracion', async (req, res, next) => {
         const org: any = await Organizacion.findById(id, { configuraciones: 1 });
         return res.json(org.configuraciones);
     } catch (error) {
-        return next (error);
+        return next(error);
     }
 });
 

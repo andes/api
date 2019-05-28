@@ -1,8 +1,9 @@
 import * as express from 'express';
 import { Puco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
-import * as utils from '../../../utils/utils';
-
+import * as pucoController from '../controller/puco';
+import * as sumarController from '../controller/sumar';
+import * as prepagaController from '../controller/prepagas';
 const router = express.Router();
 
 /**
@@ -10,21 +11,45 @@ const router = express.Router();
  * @returns array de obras sociales
  */
 router.get('/', async (req, res, next) => {
-    let query = {};
+    let query;
+    query = ObraSocial.find({});
     if (req.query.nombre) {
-        query = { nombre: { $regex: utils.makePattern(req.query.nombre) } };
+        query.where('nombre').equals(RegExp(`^.*${req.query.nombre}.*$`, 'i'));
     }
-    ObraSocial.find(query).exec((err, obrasSociales) => {
-        if (err) {
-            return next(err);
-        }
+    if (req.query.prepaga === true) {
+        query.where('prepaga').equals(true);
+    }
+    try {
+        let obrasSociales = await query.exec();
         obrasSociales = obrasSociales.map(os => {
             os.financiador = os.nombre;
             os.id = os._id;
             return os;
         });
         res.json(obrasSociales);
-    });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.get('/prepagas', async (req, res, next) => {
+    try {
+        let prepagas = await ObraSocial.find({ prepaga: true }).exec();
+        res.json(prepagas);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+/* TODO: validar con recupero si es necesario mirar SUMAR */
+router.get('/sumar', async (req, res, next) => {
+    try {
+        let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+
+        res.json(arrayOSSumar);
+    } catch (error) {
+        return next(error);
+    }
 });
 
 /**
@@ -43,7 +68,7 @@ router.get('/puco', async (req, res, next) => {
         if (req.query.periodo) {
             padron = req.query.periodo;
         } else {
-            padron = await obtenerVersiones();   // trae las distintas versiones de los padrones
+            padron = await pucoController.obtenerVersiones();   // trae las distintas versiones de los padrones
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
         // realiza la busqueda por dni y el padron seteado anteriormente
@@ -66,35 +91,62 @@ router.get('/puco', async (req, res, next) => {
     }
 });
 
+/**
+ * Obtiene los datos de las obras sociales asociada a un paciente
+ * verifica en padronPrepagas, luego en PUCO y por último en sumar
+ * @param {dni, sexo}
+ * @returns array de datos obra sociales
+ */
+
+router.get('/paciente', async (req, res, next) => {
+    if (req.query.dni && req.query.sexo) {
+        let prepaga = await prepagaController.getPaciente(req.query.dni, req.query.sexo);
+        if (prepaga) {
+            res.json([prepaga]);
+        } else {
+            let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
+            if (arrayOSPuco.length > 0) {
+                res.json(arrayOSPuco);
+            } else {
+                let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+                if (arrayOSSumar.length > 0) {
+                    res.json(arrayOSSumar);
+                } else {
+                    res.json([]);
+                }
+            }
+        }
+    } else {
+        res.json({ msg: 'Parámetros incorrectos' });
+    }
+});
+
 router.get('/puco/padrones', async (req, res, next) => {
     try {
-        let resp = await obtenerVersiones();
+        let resp = await pucoController.obtenerVersiones();
         res.json(resp);
     } catch (error) {
         return next(error);
     }
 });
 
+router.get('/os', async (req, res, next) => {
+    if (req.query.dni && req.query.sexo) {
+        let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
+        if (arrayOSPuco.length > 0) {
+            res.json(arrayOSPuco);
+        } else {
+            let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+            if (arrayOSSumar.length > 0) {
+                res.json(arrayOSSumar);
+            } else {
+                res.json([]);
+            }
+        }
+    } else {
+        res.json({ msg: 'Parámetros incorrectos' });
+    }
+});
 
-// obtiene las versiones de todos los padrones cargados
-async function obtenerVersiones() {
-    let versiones = await Puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
-    for (let i = 0; i < versiones.length; i++) {
-        versiones[i] = { version: versiones[i] };
-    }
-    versiones.sort((a, b) => compare(a.version, b.version));
-    return versiones;
-}
-
-// Compara fechas. Junto con el sort ordena los elementos de mayor a menor.
-function compare(a, b) {
-    if (new Date(a) > new Date(b)) {
-        return -1;
-    }
-    if (new Date(a) < new Date(b)) {
-        return 1;
-    }
-    return 0;
-}
 
 module.exports = router;

@@ -174,12 +174,10 @@ router.get('/turnos/ubicacion/organizacion/:id', async (req, res, next) => {
     const org: any = await Organizacion.findById(idOrganizacion);
     let efector = (Object as any).assign({}, org);
     if (org.codigo && org.codigo.sisa) {
-        const orgCache: any = await organizacionCache.findOne({ codigo: org.codigo.sisa });
-        efector['coordenadasDeMapa'] = orgCache.coordenadasDeMapa;
-        efector['domicilio'] = orgCache.domicilio;
+        efector['coordenadasDeMapa'] = { latitud: org.direccion.geoReferencia[0], longitud: org.direccion.geoReferencia[1] };
+        efector['domicilio'] = org.direccion.valor;
         res.json(efector);
     } else {
-        // console.log('efector: ', efector);
         res.json(org);
     }
 });

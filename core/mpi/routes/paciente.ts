@@ -10,8 +10,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-
-
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 const logD = debug('paciente-controller');
 const router = express.Router();
 
@@ -175,28 +174,6 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 });
 
 
-// Simple mongodb query by ObjectId --> better performance
-router.get('/pacientes/:id', (req, res, next) => {
-    // busca en pacienteAndes y en pacienteMpi
-    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
-        return next(403);
-    }
-    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
-        return next(404);
-    }
-    controller.buscarPaciente(req.params.id).then((resultado: any) => {
-        if (resultado) {
-            EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
-            res.json(resultado.paciente);
-        } else {
-            return next(500);
-        }
-    }).catch((err) => {
-        return next(err);
-    });
-
-});
-
 // Search using elastic search
 router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
@@ -210,6 +187,36 @@ router.get('/pacientes', (req, res, next) => {
     });
 });
 
+
+// Simple mongodb query by ObjectId --> better performance
+router.get('/pacientes/:id', async (req, res, next) => {
+    // busca en pacienteAndes y en pacienteMpi
+    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
+        return next(403);
+    }
+    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
+        return next(404);
+    }
+    try {
+        const idPaciente = req.params.id;
+        const { paciente: pacienteBuscado } = await controller.buscarPaciente(idPaciente);
+        if (pacienteBuscado && pacienteBuscado.documento) {
+            let pacienteConOS = pacienteBuscado.toObject({ virtuals: true });
+            pacienteConOS.id = pacienteConOS._id;
+            try {
+                pacienteConOS.financiador = await getObraSocial(pacienteConOS);
+                res.json(pacienteConOS);
+            } catch (error) {
+                return res.json(pacienteBuscado);
+            }
+        } else {
+            return res.json(pacienteBuscado);
+        }
+    } catch (err) {
+        return next('Paciente no encontrado');
+    }
+
+});
 
 router.put('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
@@ -369,7 +376,7 @@ router.post('/pacientes', async (req, res, next) => {
                     let pacienteObj = await controller.createPaciente(req.body, req);
                     let patient = req.body;
                     // se carga geo referencia desde api de google
-                    if (req.body.estado === 'validado' && patient.direccion.length > 0) {
+                    if (req.body.estado === 'validado' && patient && patient.direccion && patient.direccion.length > 0) {
                         await controller.actualizarGeoReferencia(patient);
                     }
                     return res.json(pacienteObj);
@@ -436,13 +443,13 @@ router.put('/pacientes/:id', async (req, res, next) => {
             let patientFound: any = await paciente.findById(query).exec();
             if (patientFound) {
                 const data = req.body;
-                if (patientFound.estado === 'validado' && !patientFound.isScan) {
+                if (patientFound && patientFound.estado === 'validado' && !patientFound.isScan) {
                     delete data.documento;
                     delete data.estado;
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
-                if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
+                if (patientFound.estado === 'validado' && patientFound.direccion && patientFound.direccion.length && patientFound.direccion[0].valor !== data.direccion[0].valor) {
                     await controller.actualizarGeoReferencia(data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);

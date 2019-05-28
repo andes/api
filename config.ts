@@ -62,6 +62,7 @@ export const modules = {
         active: true,
         path: './core/mpi/routes',
         route: '/core/mpi',
+        // TODO activar middleware de autenticación
         middleware: appMiddleware
     },
     auditoria: {
@@ -170,6 +171,12 @@ export const modules = {
         active: true,
         path: './modules/top/routes',
         route: '/modules/top',
+        middleware: appMiddleware
+    },
+    turnos_prestaciones: {
+        active: true,
+        path: './modules/estadistica/routes',
+        route: '/modules/estadistica',
         middleware: appMiddleware
     },
     version: {
@@ -312,5 +319,13 @@ export const logKeys = {
     elasticFix2: {
         key: 'elasticFix:update',
         operacion: 'Documentos referidos al paciente modificados'
+    },
+    turnosMobileUpdate: {
+        key: 'citas:bloques:modificar',
+        operacion: 'setea a 0 turnos disponibles para app mobile'
+    },
+    regexChecker: {
+        key: 'mpi:regexChecker',
+        operacion: 'JOB: intenta corregir errores en nombre y apellido de pacientes'
     }
 };

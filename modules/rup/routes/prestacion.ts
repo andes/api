@@ -1,3 +1,4 @@
+import { log } from './../../../core/log/schemas/log';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
@@ -8,15 +9,14 @@ import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
-import { snomedModel } from '../../../core/term/schemas/snomed';
+import { SnomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
-import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
-
-const router = express.Router();
+import { dashboardSolicitudes } from '../controllers/estadisticas';
 import async = require('async');
 
+const router = express.Router();
 
 /**
  * Trae todas las prestaciones con ambitoOrigen = internacion, tambien solo las prestaciones
@@ -134,7 +134,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
         if (req.query.expresion) {
             const querySnomed = makeMongoQuery(req.query.expresion);
-            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+            SnomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
 
                 conceptos = docs.map((item) => {
                     const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
@@ -199,7 +199,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
 
                 // si el concepto buscado es una expresion snomed ..
                 if (!/^([0-9])+$/.test(concepto.conceptId)) {
-                    let docs = await snomedModel.find(makeMongoQuery(concepto.conceptId), { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+                    let docs = await SnomedModel.find(makeMongoQuery(concepto.conceptId), { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
                     // Set de conceptos relacionados ..
                     let conceptosArray = docs.map((item: any) => {
@@ -222,7 +222,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
 
             /* Los 'conceptosBuscados' que se quieren encontrar, son sólo los que pertenecen a la consulta 'consultaPrincipal',
                 para esto se realiza el siguiente filtro mediante una consulta snomed */
-            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docsCP: any[]) => {
+            SnomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docsCP: any[]) => {
                 // Set de consultas relacionadas con 'consultaPrincipal'
                 filtroPrestaciones = docsCP.map((item) => {
                     let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
@@ -277,6 +277,11 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
             return next(404);
         }
     });
+});
+
+router.post('/solicitudes/dashboard', async (req, res, next) => {
+    const solicitudes = await dashboardSolicitudes(req.body, (req as any).user);
+    return res.json(solicitudes);
 });
 
 router.get('/prestaciones/solicitudes', (req, res, next) => {
@@ -356,7 +361,6 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 });
 
 router.get('/prestaciones/:id*?', async (req, res, next) => {
-
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {
@@ -464,6 +468,10 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
             query.limit(parseInt(req.query.limit, 10));
         }
 
+        if (req.query.id) {
+            query.where('_id').equals(req.query.id);
+        }
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);
@@ -527,8 +535,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                         return next('Solo puede romper la validación el usuario que haya creado.');
                     }
                 }
-
-
                 data.estados.push(req.body.estado);
                 break;
             case 'registros':
@@ -555,17 +561,16 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 return next(500);
         }
         Auth.audit(data, req);
-        data.save((error, prestacion) => {
+        data.save(async (error, prestacion: any) => {
             if (error) {
                 return next(error);
             }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
 
-                /* Sacar esto y armar todo desde el microservicio pasando solo la prestación */
-                // let factura = await facturacionAutomatica(prestacion);
-
-                // EventCore.emitAsync('facturacion:factura:create', factura);
+                /* Este evento habilita la facturación automática desde RUP */
+                // const origen = 'rup_rf';
+                // EventCore.emitAsync('facturacion:factura:create', (<any>Object).assign({ origen, data }));
 
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
@@ -591,6 +596,11 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     return next(errFrec);
                 });
 
+            }
+
+            if (req.body.op === 'romperValidacion') {
+                const _prestacion = data;
+                EventCore.emitAsync('rup:prestacion:romperValidacion', _prestacion);
             }
 
             if (req.body.planes) {
