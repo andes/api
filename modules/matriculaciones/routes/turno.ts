@@ -64,7 +64,7 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
 
     if (req.query.documento) {
         if (req.query.tipoTurno === 'matriculacion') {
-            turno.find({ fecha: { $gte: new Date() } }).populate({
+            turno.find({ fecha: { $gte: new Date() }, anulado: { $exists: false } }).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento, sexo: req.query.sexo }
             }).exec((error, data) => {
@@ -81,7 +81,7 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                 }
             });
         } else {
-            turno.find({ fecha: { $gte: new Date() } }).populate({
+            turno.find({ fecha: { $gte: new Date() }, anulado: { $exists: false } }).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento }
             }).exec(async (error, data: any) => {
@@ -130,7 +130,7 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
         fecha: { $gte: fechaConsulta }
 
     };
-
+    busquedaTurno['anulado'] = { $exists: false };
     if (request.query.nombre || request.query.apellido || request.query.documento) {
 
         const busquedaProfesional = {};
@@ -215,7 +215,7 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
         // comentado para diferenciar los diferentes tipo de turnos y filtrar por lo mismo
         // tipo: request.params.tipo
     };
-
+    // matchObj['anulado'] = { $exists: false };
     if (request.query.anio) {
         matchObj['anio'] = parseInt(request.query.anio, 0);
     }
@@ -228,73 +228,79 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
         matchObj['dia'] = parseInt(request.query.dia, 0);
     }
 
-
     if (!request.query.dia) {
-        let aggregate = turno.aggregate(
+        let aggregate = await turno.aggregate(
             [{
-                $project: {
-                    tipo: true,
-                    fecha: true,
-                    anio: { $year: '$fecha' },
-                    mes: { $month: '$fecha' },
-                    dia: { $dayOfMonth: '$fecha' }
+                $match: {
+                    anulado: { $exists: false }
+                }
+            },
+                {
+                    $project: {
+                        tipo: true,
+                        fecha: true,
+                        anio: { $year: '$fecha' },
+                        mes: { $month: '$fecha' },
+                        dia: { $dayOfMonth: '$fecha' }
                     // hora: { $hour: '$fecha' },
                     // minutos: { $minute: '$fecha'}
-                }
-            }, {
-                $match: matchObj
-            }, {
-                $group: {
-                    _id: {
+                    }
+                }, {
+                    $match: matchObj
+                }, {
+                    $group: {
+                        _id: {
                         // tipo: '$tipo',
                         // fecha: '$fecha',
                         // anio: { $year: '$fecha' },
                         // mes: { $month: '$fecha' },
                         // dia: { $dayOfMonth: '$fecha' },
-                        fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
+                            fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
                         // hora: { $hour: '$fecha' },
                         // minutos: { $minute: '$fecha'}
-                    },
-                    count: { $sum: 1 }
-                }
-            }]);
+                        },
+                        count: { $sum: 1 }
+                    }
+                }]);
 
-        let datos = await toArray(aggregate.cursor({}).exec());
-        response.status(201).json(datos);
+        response.json(aggregate);
 
     } else {
-
-        let aggregate = turno.aggregate(
+        let aggregate = await turno.aggregate(
             [{
-                $project: {
-                    tipo: true,
-                    fecha: true,
-                    anio: { $year: '$fecha' },
-                    mes: { $month: '$fecha' },
-                    dia: { $dayOfMonth: '$fecha' },
-                    horaTimeOffset: { $subtract: ['$fecha', 3 * 60 * 60 * 1000] },
-                    minutos: { $minute: '$fecha' }
+                $match: {
+                    anulado: { $exists: false }
                 }
-            }, {
-                $match: matchObj
-            }, {
-                $group: {
-                    _id: {
+            },
+                {
+                    $project: {
+                        tipo: true,
+                        fecha: true,
+                        anio: { $year: '$fecha' },
+                        mes: { $month: '$fecha' },
+                        dia: { $dayOfMonth: '$fecha' },
+                        horaTimeOffset: { $subtract: ['$fecha', 3 * 60 * 60 * 1000] },
+                        minutos: { $minute: '$fecha' }
+                    }
+                }, {
+                    $match: matchObj
+                }, {
+                    $group: {
+                        _id: {
                         // tipo: '$tipo',
                         // fecha: '$fecha',
-                        mes: { $month: '$fecha' },
-                        anio: { $year: '$fecha' },
-                        dia: { $dayOfMonth: '$fecha' },
-                        hora: { $hour: '$horaTimeOffset' },
-                        minutos: { $minute: '$fecha' }
+                            mes: { $month: '$fecha' },
+                            anio: { $year: '$fecha' },
+                            dia: { $dayOfMonth: '$fecha' },
+                            hora: { $hour: '$horaTimeOffset' },
+                            minutos: { $minute: '$fecha' }
                         // dateDifference: { $hour: '$dateDifference'}
-                    },
-                    count: { $sum: 1 }
-                }
-            }]);
+                        },
+                        count: { $sum: 1 }
+                    }
+                }]);
 
-        let datos = await toArray(aggregate.cursor({}).exec());
-        response.status(201).json(datos);
+        response.json(aggregate);
     }
 });
 
