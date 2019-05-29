@@ -2,7 +2,7 @@ import { handleHttpRequest } from './requestHandler';
 import * as configPrivate from '../config.private';
 
 /**
- *
+ * @deprecated
  * @param texto para autocompletar
  * @returns opciones
  */
@@ -25,7 +25,7 @@ export async function autocompletar(texto) {
 
 
 /**
- *
+ * @deprecated
  * @param direccion: String. Dirección del paciente con formato << domicilio, localidad, provincia >>.
  * @returns coordenadas: { latitud, longitud } en caso de éxito. De lo contrario null.
  */
@@ -56,6 +56,9 @@ export async function getGeoreferencia(direccion) {
     }
 }
 
+/**
+ * @deprecated
+ */
 export function formatear(cadena) {
     cadena = cadena.replace(/ /g, '+');
     cadena = cadena.replace(/á/gi, 'a');

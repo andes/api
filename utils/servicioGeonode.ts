@@ -1,6 +1,11 @@
 import { geoNode } from '../config.private';
 import { handleHttpRequest } from './requestHandler';
 
+/**
+ * [DEPRECATED]
+ * @deprecated
+ */
+
 export async function getServicioGeonode(point) {
     if (point) {
         let geoRef = [Number(point[1]), Number(point[0])];

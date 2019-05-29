@@ -8,6 +8,9 @@ import {
     Client
 } from 'elasticsearch';
 
+/**
+ * @deprecated
+ */
 export function exists(patient: any) {
 
     return new Promise((resolve, reject) => {
@@ -62,10 +65,10 @@ export function exists(patient: any) {
                 pacienteElastic['id'] = hit._id;
 
                 if (valorMatching >= porcentajeMatchMax) {
-                        // Existe con un % de matcheo alto
+                    // Existe con un % de matcheo alto
                     resolve(pacienteElastic['id']);
                 } else {
-                        // No existe el paciente y devolvemos '0' para indicar que hay que hacer insert
+                    // No existe el paciente y devolvemos '0' para indicar que hay que hacer insert
                     resolve(0);
                 }
             });

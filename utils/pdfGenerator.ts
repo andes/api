@@ -1,6 +1,9 @@
 const pdfkit = require('pdfkit');
 const moment = require('moment');
 
+/**
+ * @deprecated No se usa por ningún lado
+ */
 export function informeLaboratorio(paciente, organizacion, protocolo, detalles): any {
     return new Promise((resolve, reject) => {
         try {
@@ -22,29 +25,29 @@ export function informeLaboratorio(paciente, organizacion, protocolo, detalles):
             // doc.pipe(fs.createWriteStream(path + ' Informe ' + data.paciente.apellido + ' ' + data.paciente.nombre + '.pdf'));
             // Header
             doc.fontSize(16)
-            .text('Laboratorio: ' + organizacion.nombre);
+                .text('Laboratorio: ' + organizacion.nombre);
             doc.moveDown();
 
             const posFinHeader = doc.y;
 
             doc.moveDown();
             doc.fontSize(10)
-            .text('       Paciente: ' + paciente.apellido + ', ' + paciente.nombre)
-            .text('       Sexo: ' + sexo)
-            .text('       Fecha de Nacimiento: ' + moment(paciente.fechaNacimiento).format('DD/MM/YYYY'));
+                .text('       Paciente: ' + paciente.apellido + ', ' + paciente.nombre)
+                .text('       Sexo: ' + sexo)
+                .text('       Fecha de Nacimiento: ' + moment(paciente.fechaNacimiento).format('DD/MM/YYYY'));
             doc.moveDown();
 
             // Recuadro datos paciente
-            doc.rect(doc.x, posFinHeader, ancho , doc.y - posFinHeader)
-            .dash(1, 5)
-            .stroke();
+            doc.rect(doc.x, posFinHeader, ancho, doc.y - posFinHeader)
+                .dash(1, 5)
+                .stroke();
             doc.moveDown();
 
             // Informe de resultados
             doc.fontSize(8)
-            .text('Resultados')
-            .text('Fecha: ' + protocolo.fecha)
-            .text('Médico Solicitante: ' + protocolo.solicitante);
+                .text('Resultados')
+                .text('Fecha: ' + protocolo.fecha)
+                .text('Médico Solicitante: ' + protocolo.solicitante);
             doc.moveDown().moveDown();
             doc.fontSize(7);
             const yTitle = doc.y;

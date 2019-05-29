@@ -1,4 +1,8 @@
 // Aplica applyHaversine para calcular distancia entre dos puntos
+/**
+ * @deprecated
+ **/
+
 export function getDistanceBetweenPoints(start, end, units) {
     let earthRadius = {
         miles: 3958.8,

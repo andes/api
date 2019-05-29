@@ -3,6 +3,10 @@ import {
 } from 'elasticsearch';
 import * as configPrivate from '../config.private';
 
+
+/**
+ * @deprecated
+ */
 export class ElasticSync {
     private connElastic;
     private INDEX = 'andes';
