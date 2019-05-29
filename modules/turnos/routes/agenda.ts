@@ -566,7 +566,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             agendaCtrl.actualizarEstado(req, data);
                             event = { object: 'agenda', accion: 'estado', data };
                         } else {
-                            return next('La agenda que intenta suspender posee asistencia registrada.');
+                            return res.json({ data, mensaje: 'No se puede suspender la agenda ya que posee asistencia registrada' });
                         }
                         break;
                     case 'avisos':
