@@ -568,22 +568,26 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
         return next(403);
     }
     try {
-        let resultado: any = await profesional.findById(req.body.id);
+        if (req.body.id) {
+            let resultado: any = await profesional.findById(req.body.id);
 
 
-        const profesionalOriginal = resultado.toObject();
-        for (const key in req.body) {
-            resultado[key] = req.body[key];
+            const profesionalOriginal = resultado.toObject();
+            for (const key in req.body) {
+                resultado[key] = req.body[key];
+            }
+            Auth.audit(resultado, req);
+            await resultado.save();
+
+
+            EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
+            log(req, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
+
+            res.json(resultado);
+        } else {
+            res.json();
+
         }
-        Auth.audit(resultado, req);
-        await resultado.save();
-
-
-        EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
-        log(req, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
-
-        res.json(resultado);
-
     } catch (err) {
         next(err);
     }

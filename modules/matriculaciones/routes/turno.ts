@@ -81,19 +81,16 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                 }
             });
         } else {
-            turno.find({ fecha: { $gte: new Date() }, anulado: { $exists: false } }).populate({
+            let data = await turno.find({ fecha: { $gte: new Date() }, anulado: { $exists: false } }).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento }
-            }).exec(async (error, data: any) => {
-                if (error) {
-                    return errorHandler(error);
-                }
-                let data2 = data.filter((x: any) => x.profesional !== null);
-
-                let match = data2.length > 0 ? data2[0] : null;
-
-                res.send(match);
             });
+            let data2 = data.filter((x: any) => x.profesional !== null);
+
+            let match = data2.length > 0 ? data2[0] : null;
+
+            res.send(match);
+
         }
     }
 });
