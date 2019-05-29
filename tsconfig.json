@@ -15,11 +15,17 @@
             "@andes/event-bus/*": [
                 "./packages/event-bus/*"
             ],
+            "@andes/mongoose-plugin-audit/*": [
+                "./packages/mongoose-plugin-audit/*"
+            ],
             "@andes/fhir/*": [
                 "./packages/fhir/*"
             ],
             "@andes/drive/*": [
                 "./packages/drive/*"
+            ],
+            "@andes/georef/*": [
+                "./packages/georef/*"
             ]
         },
         "typeRoots": [

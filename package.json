@@ -10,6 +10,7 @@
     "@andes/drive": "file:packages/drive",
     "@andes/event-bus": "file:packages/event-bus",
     "@andes/fhir": "^1.0.3",
+    "@andes/georef": "file:packages/georef",
     "@andes/log": "^1.1.5",
     "@andes/match": "^1.1.12",
     "@andes/mongoose-plugin-audit": "^1.0.0",
