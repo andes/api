@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { UbicacionSchema } from './ubicacion';
+import { IDireccionDoc } from '../interface/Direccion.interface';
 
 export const DireccionSchema = new mongoose.Schema({
     tipo: {
@@ -23,3 +24,23 @@ export const DireccionSchema = new mongoose.Schema({
     },
     ultimaActualizacion: Date,
 });
+
+DireccionSchema.methods.isCompleted = function () {
+    return !!this.valor && this.valor.length > 0 && !!this.ubicacion.localidad && !!this.ubicacion.provincia;
+};
+
+DireccionSchema.methods.format = function () {
+    let address = '';
+    if (this.valor && this.valor.length > 0) {
+        address += this.valor;
+    }
+    if (this.ubicacion.localidad) {
+        address += `, ${this.ubicacion.localidad.nombre}`;
+    }
+    if (this.ubicacion.provincia) {
+        address += `, ${this.ubicacion.provincia.nombre}`;
+    }
+    return address;
+};
+
+export const Direccion = mongoose.model<IDireccionDoc>('Direccion', DireccionSchema);

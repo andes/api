@@ -13,4 +13,14 @@ export interface IDireccion {
     ultimaActualizacion: Date | Moment;
 }
 
-export interface IDireccionDoc extends Document, IDireccion { }
+export interface IDireccionDoc extends Document, IDireccion {
+    /**
+     * Determina si todos los campos de la dirección están cargados
+     */
+    isCompleted(): Boolean;
+
+    /**
+     * Devuelve la dirección formateada (calle, localidad, provincia)
+     */
+    format(): String;
+}
