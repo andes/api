@@ -42,7 +42,7 @@
         },
         "typeRoots": [
             "node_modules/@types",
-            "./packages/*",
+            "./packages/*"
         ]
     }
 }
