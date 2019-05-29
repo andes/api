@@ -5,6 +5,10 @@ const url = configPrivate.renaper.url;
 const serv = configPrivate.renaper.serv;
 const login = configPrivate.renaper;
 
+/**
+ * @deprecated
+ */
+
 export function getServicioRenaper(paciente, userInfo?) {
     let resultado: any;
     return new Promise((resolve, reject) => {

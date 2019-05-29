@@ -4,6 +4,9 @@ import * as configPrivate from '../config.private';
 const to_json = require('xmljson').to_json;
 import * as requestHandler from '../utils/requestHandler';
 
+/**
+ * @deprecated
+ */
 async function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
     /**
      * Capítulo 5.2.2 - Ficha del ciudadano
@@ -27,6 +30,10 @@ async function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
     return parsedResponse;
 }
 
+
+/**
+ * @deprecated
+ */
 export function formatearDatosSisa(datosSisa) {
     let ciudadano;
     let fecha;

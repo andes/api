@@ -9,6 +9,10 @@ const serv2 = configPrivate.anses.serv2;
 let datosAnses = [];
 const login = configPrivate.anses;
 
+/**
+ * @deprecated
+ */
+
 export function getServicioAnses(paciente) {
     const match = new Matching();
     const weights = config.mpi.weightsFaAnses;

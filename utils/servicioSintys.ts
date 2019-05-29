@@ -5,6 +5,11 @@ import * as https from 'https';
 
 const to_json = require('xmljson').to_json;
 
+/**
+ * @deprecated
+ * Revisar si se sigue usando SINTYS
+ */
+
 export function getPersonaSintys(nroDocumento: string) {
     let xml = '';
     const pathSintys = configPrivate.sintys.path + 'dni=' + nroDocumento;

@@ -26,6 +26,9 @@
             ],
             "@andes/georef/*": [
                 "./packages/georef/*"
+            ],
+            "@andes/fuentes-autenticas/*": [
+                "./packages/fuentes-autenticas/*"
             ]
         },
         "typeRoots": [
