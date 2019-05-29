@@ -1,0 +1,20 @@
+{
+    "name": "@andes/fuentes-autenticas",
+    "version": "0.1.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "request": "^2.83.0",
+        "soap": "^0.24.0",
+        "xmljson": "^0.2.0"
+    },
+    "devDependencies": {
+        "chai": "^4.2.0",
+        "sinon": "^7.3.2"
+    }
+}
