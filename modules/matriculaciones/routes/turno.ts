@@ -81,19 +81,16 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                 }
             });
         } else {
-            turno.find({ fecha: { $gte: new Date() }, anulado: { $exists: false } }).populate({
+            let data = await turno.find({ fecha: { $gte: new Date() }, anulado: { $exists: false } }).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento }
-            }).exec(async (error, data: any) => {
-                if (error) {
-                    return errorHandler(error);
-                }
-                let data2 = data.filter((x: any) => x.profesional !== null);
-
-                let match = data2.length > 0 ? data2[0] : null;
-
-                res.send(match);
             });
+            let data2 = data.filter((x: any) => x.profesional !== null);
+
+            let match = data2.length > 0 ? data2[0] : null;
+
+            res.send(match);
+
         }
     }
 });
@@ -237,31 +234,31 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
             },
                 {
                     $project: {
-                        tipo: true,
-                        fecha: true,
-                        anio: { $year: '$fecha' },
-                        mes: { $month: '$fecha' },
-                        dia: { $dayOfMonth: '$fecha' }
+                    tipo: true,
+                    fecha: true,
+                    anio: { $year: '$fecha' },
+                    mes: { $month: '$fecha' },
+                    dia: { $dayOfMonth: '$fecha' }
                     // hora: { $hour: '$fecha' },
                     // minutos: { $minute: '$fecha'}
-                    }
+                }
                 }, {
-                    $match: matchObj
-                }, {
-                    $group: {
-                        _id: {
+                $match: matchObj
+            }, {
+                $group: {
+                    _id: {
                         // tipo: '$tipo',
                         // fecha: '$fecha',
                         // anio: { $year: '$fecha' },
                         // mes: { $month: '$fecha' },
                         // dia: { $dayOfMonth: '$fecha' },
-                            fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
+                        fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
                         // hora: { $hour: '$fecha' },
                         // minutos: { $minute: '$fecha'}
-                        },
-                        count: { $sum: 1 }
-                    }
-                }]);
+                    },
+                    count: { $sum: 1 }
+                }
+            }]);
 
         response.json(aggregate);
 
@@ -274,31 +271,31 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
             },
                 {
                     $project: {
-                        tipo: true,
-                        fecha: true,
-                        anio: { $year: '$fecha' },
-                        mes: { $month: '$fecha' },
-                        dia: { $dayOfMonth: '$fecha' },
-                        horaTimeOffset: { $subtract: ['$fecha', 3 * 60 * 60 * 1000] },
-                        minutos: { $minute: '$fecha' }
-                    }
+                    tipo: true,
+                    fecha: true,
+                    anio: { $year: '$fecha' },
+                    mes: { $month: '$fecha' },
+                    dia: { $dayOfMonth: '$fecha' },
+                    horaTimeOffset: { $subtract: ['$fecha', 3 * 60 * 60 * 1000] },
+                    minutos: { $minute: '$fecha' }
+                }
                 }, {
-                    $match: matchObj
-                }, {
-                    $group: {
-                        _id: {
+                $match: matchObj
+            }, {
+                $group: {
+                    _id: {
                         // tipo: '$tipo',
                         // fecha: '$fecha',
-                            mes: { $month: '$fecha' },
-                            anio: { $year: '$fecha' },
-                            dia: { $dayOfMonth: '$fecha' },
-                            hora: { $hour: '$horaTimeOffset' },
-                            minutos: { $minute: '$fecha' }
+                        mes: { $month: '$fecha' },
+                        anio: { $year: '$fecha' },
+                        dia: { $dayOfMonth: '$fecha' },
+                        hora: { $hour: '$horaTimeOffset' },
+                        minutos: { $minute: '$fecha' }
                         // dateDifference: { $hour: '$dateDifference'}
-                        },
-                        count: { $sum: 1 }
-                    }
-                }]);
+                    },
+                    count: { $sum: 1 }
+                }
+            }]);
 
         response.json(aggregate);
     }
