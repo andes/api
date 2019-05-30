@@ -137,5 +137,9 @@ export function renaperToAndes(ciudadano) {
         }
     }
     paciente.foto = ciudadano.foto;
+    paciente.identificadores = [{
+        entidad: 'RENAPER',
+        valor: ciudadano.idciudadano
+    }];
     return paciente;
 }

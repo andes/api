@@ -14,6 +14,9 @@ async function xmlToJson(xml) {
     });
 }
 
+/**
+ * Busca en SISA un ciudadano según Documento y sexo
+ */
 export async function sisa(persona: any, formatter = null) {
     const sexo = persona.sexo === 'masculino' ? 'M' : 'F';
     const documento = persona.documento;
@@ -37,6 +40,10 @@ export async function sisa(persona: any, formatter = null) {
     }
     return null;
 }
+
+/**
+ * Formatea un Ciudadano SISA al schema de ANDES.
+ */
 
 export function sisaToAndes(ciudadano) {
     let paciente;
@@ -104,5 +111,58 @@ export function sisaToAndes(ciudadano) {
             paciente.fechaFallecimiento = new Date(fecha[2].substr(0, 4), fecha[1], fecha[0]);
         }
     }
+    paciente.identificadores = [{
+        entidad: 'SISA',
+        valor: ciudadano.codigoSISA
+    }];
     return paciente;
+}
+
+/**
+ * Devuelve la orferta prestacional de sisa
+ */
+export async function sisaPrestaciones(orgCodSisa: string) {
+    const url = `${SisaConfig.host}/sisa/services/rest/establecimiento/prestaciones/${orgCodSisa}`;
+    const options = {
+        url,
+        method: 'POST',
+        json: true,
+        body: {
+            usuario: SisaConfig.username,
+            clave: SisaConfig.password
+        }
+    };
+    const [status, body] = await requestHttp(options);
+    if (status >= 200 && status < 400) {
+        const { resultado, prestaciones } = body;
+        if (resultado === 'OK') {
+            return prestaciones;
+        }
+    }
+    return [];
+}
+
+
+/**
+ * Devuelve los datos de una organización de SISA
+ */
+export async function sisaOrganizacion(orgCodSisa: string) {
+    const url = `${SisaConfig.host}/sisa/services/rest/establecimiento/${orgCodSisa}`;
+    const options = {
+        url,
+        method: 'POST',
+        json: true,
+        body: {
+            usuario: SisaConfig.username,
+            clave: SisaConfig.password
+        }
+    };
+    const [status, body] = await requestHttp(options);
+    if (status >= 200 && status < 400) {
+        const { resultado } = body;
+        if (resultado === 'OK') {
+            return body;
+        }
+    }
+    return null;
 }
