@@ -373,6 +373,10 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             query = profesional.find(opciones).skip(skip).limit(limit);
         }
 
+        if (req.query.fields) {
+            query.select(req.query.fields);
+        }
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);
