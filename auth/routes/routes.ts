@@ -1,14 +1,12 @@
 import * as express from 'express';
-import * as ldapjs from 'ldapjs';
-import * as configPrivate from '../../config.private';
 import { Auth } from './../auth.class';
 import { authUsers } from '../schemas/permisos';
 import { Organizacion } from './../../core/tm/schemas/organizacion';
-import { profesional } from './../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
-import * as authMobile from '../../modules/mobileApp/controller/AuthController';
 
-const isReachable = require('is-reachable');
+import { checkPassword } from '../ldap.controller';
+import { findUser, updateUser, checkMobile } from '../auth.controller';
+
 const sha1Hash = require('sha1');
 const shiroTrie = require('shiro-trie');
 const router = express.Router();
@@ -93,28 +91,6 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     });
 });
 
-// Función interna que chequea si la cuenta mobile existe
-const checkMobile = (profesionalId) => {
-    return new Promise((resolve, reject) => {
-        authMobile.getAccountByProfesional(profesionalId).then((account) => {
-            if (!account) {
-                profesional.findById(profesionalId).then(prof => {
-                    if (!prof) {
-                        return reject();
-                    }
-                    authMobile.createUserFromProfesional(prof).then((account2) => {
-                        resolve(account2);
-                    }).catch(reject);
-                });
-                return;
-            }
-            resolve(account);
-        }).catch(() => {
-            reject();
-        });
-    });
-};
-
 /**
  * Refresca el token y los permisos dado una organizacion}
  * @param {string} username nombre de usuario (DNI)
@@ -122,164 +98,61 @@ const checkMobile = (profesionalId) => {
  * @post /api/auth/login
  */
 
-router.post('/login', (req, res, next) => {
+router.post('/login', async (req, res, next) => {
     // Función interna que genera token
-    const login = (nombre: string, apellido: string) => {
-        Promise.all(
-            [
-                // organizacion.model.findById(req.body.organizacion, {
-                //     nombre: true
-                // }),
-                authUsers.findOne({
-                    usuario: req.body.usuario
-                    // organizacion: req.body.organizacion
-                }),
-                profesional.findOne({
-                    documento: req.body.usuario
-                },
-                    {
-                        matriculas: true,
-                        especialidad: true
-                    }),
-                authUsers.findOneAndUpdate(
-                    { usuario: req.body.usuario },
-                    { password: sha1Hash(req.body.password), nombre, apellido },
-                )
-            ]).then((data: any[]) => {
-                // Verifica que el usuario sea valido y que tenga permisos asignados
-                const user = data[0];
-                const prof = data[1];
-                if (!user || user.length === 0) {
-                    return next(403);
-                }
-                if (req.body.mobile) {
-                    if (prof && prof._id) {
-                        checkMobile(prof._id).then((account: any) => {
-                            // Crea el token con los datos de sesión
-                            return res.json({
-                                token: Auth.generateUserToken(user, null, [], prof, account._id),
-                                user: account
-                            });
-                        }).catch((e) => {
-                            return next(403);
-                        });
-                    } else {
-                        return next(403);
-                    }
-                } else {
-                    // Crea el token con los datos de sesión
-                    res.json({
-                        token: Auth.generateUserToken(data[0], null, [], data[1])
+    const login = async (user, prof) => {
+        await updateUser(user.usuario, user.nombre, user.apellido, user.password);
+
+        if (req.body.mobile) {
+            if (prof && prof._id) {
+                checkMobile(prof._id).then((account: any) => {
+                    return res.json({
+                        token: Auth.generateUserToken(user, null, [], prof, account._id),
+                        user: account
                     });
-
-                }
-            });
-    };
-
-    const loginCache = (password: string) => {
-        Promise.all([
-            authUsers.findOne(
-                {
-                    usuario: req.body.usuario,
-                    password
-                }),
-            profesional.findOne({
-                documento: req.body.usuario
-            },
-                {
-                    matriculas: true,
-                    especialidad: true
-                }),
-        ]).then((data: any[]) => {
-            const user = data[0];
-            const prof = data[1];
-            // Verifica que el usuario sea valido y que tenga permisos asignados
-            if (!user || user.length === 0) {
+                }).catch((e) => {
+                    return next(403);
+                });
+            } else {
                 return next(403);
             }
-            // Crea el token con los datos de sesión
-            if (req.body.mobile) {
-                if (prof && prof._id) {
-                    checkMobile(prof._id).then((account: any) => {
-                        // Crea el token con los datos de sesión
-                        return res.json({
-                            token: Auth.generateUserToken(user, null, [], prof, account._id),
-                            user: account
-                        });
-                    }).catch(() => {
-                        return next(403);
-                    });
-                } else {
-                    return next(403);
-                }
-            } else {
-                // Crea el token con los datos de sesión
-                res.json({
-                    token: Auth.generateUserToken(data[0], null, [], prof)
-                });
-            }
-        });
+        } else {
+            res.json({
+                token: Auth.generateUserToken(user, null, [], prof)
+            });
+        }
     };
-    // Valida datos
+
     if (!req.body.usuario || !req.body.password) {
         return next(403);
     }
-    // Usar LDAP?
-    if (!configPrivate.auth.useLdap) {
-        // Access de prueba
-        login(req.body.usuario, req.body.usuario);
-    } else {
-        const server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
-        /* Verifico que el servicio de ldap esté activo */
-        const passwordSha1 = sha1Hash(req.body.password);
-        isReachable(server).then(reachable => {
-            if (!reachable) {
-                /* Login by cache */
-                loginCache(passwordSha1);
-            } else {
-                // Conecta a LDAP
-                const dn = 'uid=' + req.body.usuario + ',' + configPrivate.auth.ldapOU;
-                const ldap = ldapjs.createClient({
-                    url: `ldap://${configPrivate.hosts.ldap}`,
-                    timeout: 4000,
-                    connectTimeout: 4000,
-                });
-                ldap.on('connectError', (err) => {
-                    loginCache(passwordSha1);
-                });
-                ldap.on('error', (err) => {
-                    loginCache(passwordSha1);
-                });
-                ldap.on('connect', () => {
-                    ldap.bind(dn, req.body.password, (err) => {
-                        if (err) {
-                            if (err.name === 'InvalidCredentialsError') {
-                                return next(403);
-                            } else {
-                                return;
-                            }
-                        }
-                        // Busca el usuario con el UID correcto.
-                        ldap.search(dn, {
-                            scope: 'sub',
-                            filter: '(uid=' + req.body.usuario + ')',
-                            paged: false,
-                            sizeLimit: 1
-                        }, (err2, searchResult) => {
-                            if (err2) {
-                                return next(err2);
-                            }
-                            searchResult.on('searchEntry', (entry) => {
-                                login(entry.object.givenName, entry.object.sn);
-                            });
-                            searchResult.on('error', (err3) => {
-                                return next(err3);
-                            });
-                        });
-                    });
-                });
+
+    try {
+        const userResponse = await findUser(req.body.usuario);
+        if (userResponse) {
+            const { user, profesional }: any = userResponse;
+            switch (user.authMethod || 'ldap') {
+                case 'ldap':
+                    const ldapUser = await checkPassword(user, req.body.password);
+                    if (ldapUser) {
+                        user.nombre = ldapUser.nombre;
+                        user.apellido = ldapUser.apellido;
+                        user.password = sha1Hash(req.body.password);
+                        return login(user, profesional);
+                    } else {
+                        return next(403);
+                    }
+                case 'password':
+                    const passwordSha1 = sha1Hash(req.body.password);
+                    if (passwordSha1 === user.password) {
+                        return login(user, profesional);
+                    }
+                    break;
             }
-        });
+        }
+        return next(403);
+    } catch (error) {
+        return next(403);
     }
 });
 
