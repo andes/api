@@ -12,7 +12,7 @@ import { EventCore } from '@andes/event-bus';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
-import {parseStr, rangoFechas, queryArray, queryMatch} from './../../../shared/queryBuilder';
+import { parseStr, rangoFechas, queryArray } from '../../../shared/queryBuilderMongo';
 
 /**
  * Crea un objeto paciente
@@ -235,7 +235,7 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
 
     const match = new Matching();
 
-    const valorMatching = match.matchPersonas(personaA, personaB, weightsDefault ? weightsDefault : config.mpi.weightsDefault , config.algoritmo);
+    const valorMatching = match.matchPersonas(personaA, personaB, weightsDefault ? weightsDefault : config.mpi.weightsDefault, config.algoritmo);
     return valorMatching;
 
 }
@@ -263,10 +263,10 @@ export async function findPaciente(condicion, options?: any) {
         filtros.push(queryArray('identificadores', identificadores, 'entidad', 'valor', '$and'));
     }
     if (condicion.documento) {
-        opciones['documento'] =  parseStr(condicion.documento);
+        opciones['documento'] = parseStr(condicion.documento);
     }
     if (condicion.nombre) {
-        opciones['nombre'] =  parseStr(condicion.nombre);
+        opciones['nombre'] = parseStr(condicion.nombre);
     }
     if (condicion.apellido) {
         opciones['apellido'] = parseStr(condicion.apellido);
@@ -281,7 +281,7 @@ export async function findPaciente(condicion, options?: any) {
         opciones['activo'] = condicion.activo;
     }
     if (condicion.barrio) {
-        opciones['direccion.ubicacion.barrio.nombre'] =  parseStr(condicion.barrio);
+        opciones['direccion.ubicacion.barrio.nombre'] = parseStr(condicion.barrio);
     }
     if (condicion.localidad) {
         opciones['direccion.ubicacion.localidad.nombre'] = parseStr(condicion.localidad);
@@ -307,7 +307,7 @@ export async function findPaciente(condicion, options?: any) {
         contactos.push('fijo |' + condicion.fijo);
     }
     if (contactos.length > 0) {
-        filtros.push( queryArray('contactos', contactos, 'tipo', 'valor'));
+        filtros.push(queryArray('contactos', contactos, 'tipo', 'valor'));
     }
     if (condicion.relaciones) {
         let relaciones = [];
