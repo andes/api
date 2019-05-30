@@ -13,6 +13,8 @@ import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMat
 import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
+import { log } from '@andes/log';
+import { EventCore } from '@andes/event-bus';
 
 
 let router = express.Router();
@@ -96,6 +98,7 @@ router.get('/profesionales/matching', async (req, res, next) => {
     }
 
     if (Object.keys(opciones).length !== 0) {
+        opciones['profesionalMatriculado'] = true;
         let profEncontrados: any = await profesional.find(opciones);
         let arrayProf = [];
         let resultado;
@@ -479,23 +482,22 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
 
     }
     if (req.body.profesional) {
-        // console.log(req.body.profesional);
-        // profesional.findOne({
-        //     'documento': req.body.profesional.documento
-        // }, (err, person) => {
-        //     if (person) {
-        //         res.json(null);
-        //     } else {
-        const newProfesional = new profesional(req.body.profesional);
-        Auth.audit(newProfesional, req);
-        newProfesional.save((err2) => {
-            if (err2) {
-                next(err2);
-            }
-            res.json(newProfesional);
-        });
-        //     // }
-        // });
+        try {
+            const newProfesional = new profesional(req.body.profesional);
+            Auth.audit(newProfesional, req);
+            newProfesional.save(async (err2) => {
+
+                if (err2) {
+                    next(err2);
+                }
+                EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
+                log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
+                res.json(newProfesional);
+            });
+        } catch (err) {
+            next(err);
+        }
+
     }
 
 });
@@ -564,18 +566,37 @@ router.post('/profesionales/sendMail', (req, res, next) => {
 
 });
 
-router.put('/profesionales/actualizar', Auth.authenticate(), (req, res, next) => {
+
+router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
         return next(403);
     }
-    profesional.findByIdAndUpdate(req.body.id, req.body, {
-        new: true
-    }, (err, data) => {
-        if (err) {
-            return next(err);
+    try {
+        if (req.body.id) {
+            let resultado: any = await profesional.findById(req.body.id);
+
+
+            const profesionalOriginal = resultado.toObject();
+            for (const key in req.body) {
+                resultado[key] = req.body[key];
+            }
+            Auth.audit(resultado, req);
+            await resultado.save();
+
+
+            EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
+            log(req, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
+
+            res.json(resultado);
+        } else {
+            res.json();
+
         }
-        res.json(data);
-    });
+    } catch (err) {
+        next(err);
+    }
+
+
 });
 
 
@@ -617,8 +638,11 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     });
 });
 
-router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
-    profesional.findById(req.params.id, (err, resultado: any) => {
+router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
+    try {
+        let profesionalOriginal;
+        let resultado: any = await profesional.findById(req.params.id);
+        profesionalOriginal = resultado.toObject();
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
@@ -651,16 +675,16 @@ router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
 
             }
         }
+
         Auth.audit(resultado, req);
-        resultado.save((err2) => {
-            if (err2) {
-                next(err2);
-            }
-            res.json(resultado);
-        });
+        await resultado.save();
+        log(req, 'profesional:patch', null, 'profesional:patch', resultado, profesionalOriginal);
+        res.json(resultado);
+    } catch (err) {
+        next(err);
+    }
 
 
-    });
 });
 
 router.get('/resumen', (req, res, next) => {
@@ -677,6 +701,7 @@ router.get('/resumen', (req, res, next) => {
     if (req.query.documento !== '') {
         opciones['documento'] = req.query.documento;
     }
+    opciones['profesionalMatriculado'] = true;
     query = profesional.find(opciones);
     query.exec((err, data) => {
         if (err) {
