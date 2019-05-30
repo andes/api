@@ -1,10 +1,10 @@
 import { assert, expect } from 'chai';
 import * as PacienteModule from './paciente.schema';
-import { findById,  storePaciente, search, matching, updatePaciente, suggest, findPaciente } from './paciente.controller';
+import { findById, storePaciente, search, matching, updatePaciente, suggest, findPaciente } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
-import * as queryBuilder from '../../../shared/queryBuilder';
+import * as queryBuilder from '../../../shared/queryBuilderMongo';
 
 const sinon = require('sinon');
 require('sinon-mongoose');
@@ -21,22 +21,22 @@ describe('MPI - Paciente controller', () => {
         });
 
         it('paciente encontrado en Andes', async () => {
-            let paciente = { id: '1', nombre: 'prueba'};
+            let paciente = { id: '1', nombre: 'prueba' };
             PacienteMock
-            .expects('findById').withArgs(paciente.id)
-            .chain('exec')
-            .resolves(paciente);
+                .expects('findById').withArgs(paciente.id)
+                .chain('exec')
+                .resolves(paciente);
 
             let pacienteEncontrado = await findById(paciente.id);
             assert.equal(pacienteEncontrado.id, paciente.id);
         });
 
         it('paciente no encontrado', async () => {
-            let paciente = {id: '3', nombre: 'prueba'};
+            let paciente = { id: '3', nombre: 'prueba' };
             PacienteMock
-            .expects('findById').withArgs(paciente.id)
-            .chain('exec')
-            .resolves(null);
+                .expects('findById').withArgs(paciente.id)
+                .chain('exec')
+                .resolves(null);
 
             let pacienteEncontrado = await findById(paciente.id);
             assert.equal(pacienteEncontrado, null);
@@ -59,11 +59,11 @@ describe('MPI - Paciente controller', () => {
             startTransactionStub = sinon.stub();
             commitTransactionStub = sinon.stub();
             abortTransactionStub = sinon.stub();
-            paciente = { nombre: 'test', apellido: 'testMpi', documento: '1', sexo: 'masculino', genero: 'masculino' , estado: 'temporal'};
+            paciente = { nombre: 'test', apellido: 'testMpi', documento: '1', sexo: 'masculino', genero: 'masculino', estado: 'temporal' };
             mockPaciente = sinon.mock(new PacienteModule.Paciente(paciente));
             mockPacienteStatic = ImportMock.mockOther(PacienteModule.Paciente, 'db');
-            mockPacienteStatic.set( {
-                startSession ()  {
+            mockPacienteStatic.set({
+                startSession() {
                     return {
                         startTransaction: startTransactionStub,
                         commitTransaction: commitTransactionStub,
@@ -227,7 +227,7 @@ describe('MPI - Paciente controller', () => {
             PacienteMock.restore();
         });
         it('Búsqueda por documento', async () => {
-            let condicion = { documento: '11111111'};
+            let condicion = { documento: '11111111' };
             const mock = PacienteMock.expects('find').withArgs(condicion);
             mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
@@ -242,7 +242,7 @@ describe('MPI - Paciente controller', () => {
             mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
 
-            let pacientesEncontrado = await findPaciente({apellido: '^GONZ'}, 'nombre apellido');
+            let pacientesEncontrado = await findPaciente({ apellido: '^GONZ' }, 'nombre apellido');
             sinon.assert.calledWith(mockStr, '^GONZ');
             mock.withArgs(sinon.match.has('nombre', {}));
             expect(pacientesEncontrado).to.eql([]);
