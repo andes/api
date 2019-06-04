@@ -12,6 +12,7 @@ import { apiOptionsMiddleware, apiOptions } from '@andes/api-tool';
 
 const requireDir = require('require-dir');
 
+
 export function initAPI(app: Express) {
     // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
