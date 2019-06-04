@@ -1,4 +1,4 @@
-import { Router , Request, Response} from 'express';
+import { Router, Request, Response } from 'express';
 import { findById, findPaciente, search, suggest, newPaciente, updatePaciente, storePaciente, deletePaciente } from './paciente.controller';
 import { mpi } from '../../../config';
 import { Auth } from '../../../auth/auth.class';
