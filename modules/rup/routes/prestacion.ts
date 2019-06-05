@@ -601,9 +601,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             if (req.body.op === 'romperValidacion') {
                 const _prestacion = data;
                 EventCore.emitAsync('rup:prestacion:romperValidacion', _prestacion);
-
-                const origen = 'romperValidacion';
-                EventCore.emitAsync('facturacion:factura:create', (<any>Object).assign({ origen, data }));
             }
 
             if (req.body.planes) {
