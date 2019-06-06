@@ -1,6 +1,6 @@
 import { assert, expect } from 'chai';
 import * as PacienteModule from './paciente.schema';
-import { findById, storePaciente, search, matching, updatePaciente, suggest, findPaciente } from './paciente.controller';
+import { findById, store, search, matching, set, suggest, find } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
@@ -47,7 +47,7 @@ describe('MPI - Paciente controller', () => {
         });
     });
 
-    describe('storePaciente', () => {
+    describe('store', () => {
         let mockPaciente;
         let mockPacienteStatic;
         let req;
@@ -92,7 +92,7 @@ describe('MPI - Paciente controller', () => {
 
             mockPaciente.expects('save').chain('exec').resolves('RESULT');
 
-            const patientCreated = await storePaciente(mockPaciente.object as any, req);
+            const patientCreated = await store(mockPaciente.object as any, req);
             sinon.assert.calledOnce(log.log);
             sinon.assert.calledOnce(startTransactionStub);
             sinon.assert.calledOnce(commitTransactionStub);
@@ -111,7 +111,7 @@ describe('MPI - Paciente controller', () => {
 
     });
 
-    describe('updatePaciente', () => {
+    describe('set', () => {
 
         it('paciente temporal puede cambiar todo', () => {
             let pacTemp = {
@@ -125,7 +125,7 @@ describe('MPI - Paciente controller', () => {
             };
             const paciente = new PacienteModule.Paciente(pacTemp);
 
-            updatePaciente(paciente, { estado: 'validado', fechaNacimiento: null });
+            set(paciente, { estado: 'validado', fechaNacimiento: null });
 
             assert.equal(paciente.estado, 'validado');
             assert.equal(paciente.documento, '33333333');
@@ -144,7 +144,7 @@ describe('MPI - Paciente controller', () => {
             };
             const paciente = new PacienteModule.Paciente(pacTemp);
 
-            updatePaciente(paciente, { estado: 'validado', documento: '1234567', fechaNacimiento: null });
+            set(paciente, { estado: 'validado', documento: '1234567', fechaNacimiento: null });
 
             assert.equal(paciente.estado, 'validado');
             assert.equal(paciente.documento, '33333333');
@@ -231,7 +231,7 @@ describe('MPI - Paciente controller', () => {
             const mock = PacienteMock.expects('find').withArgs(condicion);
             mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
-            let pacientesEncontrado = await findPaciente(condicion, 'nombre apellido');
+            let pacientesEncontrado = await find(condicion, 'nombre apellido');
             expect(pacientesEncontrado).to.eql([]);
 
         });
@@ -242,7 +242,7 @@ describe('MPI - Paciente controller', () => {
             mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
 
-            let pacientesEncontrado = await findPaciente({ apellido: '^GONZ' }, 'nombre apellido');
+            let pacientesEncontrado = await find({ apellido: '^GONZ' }, 'nombre apellido');
             sinon.assert.calledWith(mockStr, '^GONZ');
             mock.withArgs(sinon.match.has('nombre', {}));
             expect(pacientesEncontrado).to.eql([]);
@@ -268,7 +268,7 @@ describe('MPI - Paciente controller', () => {
             const mock = PacienteMock.expects('find').withArgs(elem);
             mock.chain('select').withArgs('documento nombre apellido');
             mock.chain('exec').resolves([]);
-            let pacientesEncontrado = await findPaciente(condicion, 'documento nombre apellido');
+            let pacientesEncontrado = await find(condicion, 'documento nombre apellido');
             expect(pacientesEncontrado).to.eql([]);
         });
 

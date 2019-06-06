@@ -18,7 +18,7 @@ import { parseStr, rangoFechas, queryArray } from '../../../shared/queryBuilderM
  * Crea un objeto paciente
  */
 
-export function newPaciente(body: IPaciente) {
+export function make(body: IPaciente) {
     const paciente = new Paciente();
     paciente.set(body);
     return paciente;
@@ -33,7 +33,7 @@ export function newPaciente(body: IPaciente) {
  * @param {express.Request} req Request de Express para obtener los datos del usuario
  */
 
-export async function storePaciente(paciente: IPacienteDoc, req: express.Request) {
+export async function store(paciente: IPacienteDoc, req: express.Request) {
     const session = await Paciente.db.startSession();
     session.startTransaction();
     const isNew = paciente.isNew;
@@ -76,7 +76,7 @@ export async function storePaciente(paciente: IPacienteDoc, req: express.Request
  * @param {object} body Datos a modificar del paciente
  */
 
-export function updatePaciente(paciente: IPacienteDoc, body: any) {
+export function set(paciente: IPacienteDoc, body: any) {
     if (paciente.estado === 'validado') {
         delete body['documento'];
         delete body['apellido'];
@@ -111,7 +111,7 @@ export async function findById(id: string | String | mongoose.Types.ObjectId, op
 /**
  *
  */
-export async function deletePaciente(paciente: IPacienteDoc, req: express.Request) {
+export async function remove(paciente: IPacienteDoc, req: express.Request) {
     const session = await Paciente.db.startSession();
     session.startTransaction();
     try {
@@ -246,7 +246,7 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
  * @param fields Selecciona los campos de los documentos a devolver
  * @returns Devuelve listado de paciente encontrados
  */
-export async function findPaciente(condicion, options?: any) {
+export async function find(condicion, options?: any) {
     options = options || {};
     const { fields, skip, limit } = options;
 
@@ -338,3 +338,15 @@ export async function findPaciente(condicion, options?: any) {
     return await pacientesQuery;
 
 }
+
+export const PacienteCtr = {
+    make,
+    store,
+    set,
+    remove,
+    search,
+    matching,
+    suggest,
+    find,
+    findById
+};
