@@ -10,13 +10,10 @@ export function matchDate(date: Date) {
 }
 
 export function partialString(value: string) {
-    if (value && value.length > 0) {
-        const [_, searchPattern] = value.split('^');
-        if (searchPattern) {
-            return { $regex: makePattern(searchPattern) };
-        }
+    if (value && value.charAt(0) === '^') {
+        const searchPattern = value.substring(1);
+        return { $regex: makePattern(searchPattern) };
     }
-
     return value;
 }
 
@@ -45,7 +42,7 @@ export function queryMatch(value: string, keyName: string, valueName: string) {
             filtro[valueName] = partialString(ids[1]);
         }
     }
-    return ({ $elemMatch: filtro });
+    return { $elemMatch: filtro };
 }
 
 /**
@@ -60,17 +57,47 @@ export function queryMatch(value: string, keyName: string, valueName: string) {
  */
 
 
-export function queryArray(fieldName: string, values: any[], keyName: string, valueName: string, op = '$and') {
-    let conds = [];
+export function queryArray(fieldName: string, values: any[], keyName: string, valueName: string, op = 'and') {
+    values = Array.isArray(values) ? values : [values];
+    const conds = [];
     values.forEach(valor => {
-        let filtro = {};
+        const filtro = {};
         filtro[fieldName] = queryMatch(valor, keyName, valueName);
         conds.push(filtro);
     });
     if (op === 'or') {
-        return ({ $or: conds });
+        return { $or: conds };
     }
-    return ({ $and: conds });
+    return { $and: conds };
+}
+
+
+export function buildQuery(query, searchSpecification) {
+    const mongoQuery = {};
+    const arrayFilter = [];
+    Object.keys(query).forEach((fieldName) => {
+
+        const queryParam = searchSpecification[fieldName];
+        const filterValue = query[fieldName];
+
+        const isFunction = typeof queryParam === 'function';
+
+        const callback = isFunction ? queryParam : queryParam.fn;
+        const field = isFunction ? fieldName : queryParam.field;
+
+        if (callback) {
+            const mongoFind = callback(filterValue, query);
+            if (!mongoFind['$and'] && !mongoFind['$or']) {
+                mongoQuery[field] = mongoFind;
+            } else {
+                arrayFilter.push(mongoFind);
+            }
+        }
+    });
+    if (arrayFilter.length > 0) {
+        mongoQuery['$and'] = arrayFilter;
+    }
+    return mongoQuery;
 }
 
 export const MongoQuery = {
@@ -78,5 +105,6 @@ export const MongoQuery = {
     partialString,
     matchString,
     queryMatch,
-    queryArray
+    queryArray,
+    buildQuery
 };
