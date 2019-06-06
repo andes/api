@@ -43,8 +43,8 @@ export const find = async (req: Request, res: Response) => {
 export const get = async (req: Request, res: Response) => {
     const options = {
         fields: req.query.fields,
-        skip: req.query.skip,
-        limit: req.query.limit
+        skip: parseInt(req.query.skip, 2),
+        limit: parseInt(req.query.limit, 2)
     };
     if (req.query.search) {
         const pacientes = await PacienteCtr.search(req.query.search);
