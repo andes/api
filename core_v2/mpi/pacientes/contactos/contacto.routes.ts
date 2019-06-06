@@ -1,5 +1,5 @@
 import { SubresourceRoutes } from '../../../../shared/subresource.routes';
-import { findById, storePaciente } from '../paciente.controller';
+import { findById, store } from '../paciente.controller';
 import { PatientNotFound } from '../paciente.error';
 import { Router, Response } from 'express';
 import { Auth } from '../../../../auth/auth.class';
@@ -18,7 +18,7 @@ export class ContactoRoutes extends SubresourceRoutes {
     }
 
     async save(resource, req) {
-        await storePaciente(resource, req);
+        await store(resource, req);
     }
 
     getRoutes() {

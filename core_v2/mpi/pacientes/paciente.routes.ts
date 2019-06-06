@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { findById, findPaciente, search, suggest, newPaciente, updatePaciente, storePaciente, deletePaciente } from './paciente.controller';
+import { PacienteCtr } from './paciente.controller';
 import { mpi } from '../../../config';
 import { Auth } from '../../../auth/auth.class';
 import * as asyncHandler from 'express-async-handler';
@@ -20,12 +20,12 @@ import { DireccionRoutes } from './direcciones/direccion.routes';
  * @apiSuccess {IPaciente} Datos del paciente encontrado.
  */
 
-export const findPacientes = async (req: Request, res: Response) => {
+export const find = async (req: Request, res: Response) => {
     const id = req.params.id;
     const options = {
         fields: req.query.fields
     };
-    const paciente = await findById(id, options);
+    const paciente = await PacienteCtr.findById(id, options);
     if (paciente) {
         return res.json(paciente);
     }
@@ -40,18 +40,18 @@ export const findPacientes = async (req: Request, res: Response) => {
  * @apiSuccess {Array} Listado de pacientes.
  */
 
-export const getPacientes = async (req: Request, res: Response) => {
+export const get = async (req: Request, res: Response) => {
     const options = {
         fields: req.query.fields,
         skip: req.query.skip,
         limit: req.query.limit
     };
     if (req.query.search) {
-        const pacientes = await search(req.query.search);
+        const pacientes = await PacienteCtr.search(req.query.search);
         res.json(pacientes);
     } else {
         const conditions = req.query;
-        const pacientes = await findPaciente(conditions, options);
+        const pacientes = await PacienteCtr.find(conditions, options);
         res.json(pacientes);
     }
 };
@@ -72,16 +72,16 @@ function isMatchingAlto(sugeridos: any[]) {
  * @apiSuccess {IPaciente} Paciente creado.
  */
 
-export const postPacientes = async (req: Request, res: Response) => {
+export const post = async (req: Request, res: Response) => {
     const body = req.body;
-    const sugeridos = await suggest(body);
+    const sugeridos = await PacienteCtr.suggest(body);
     if (isMatchingAlto(sugeridos)) {
         throw new PatientDuplicate();
     }
 
     body.activo = true; // Todo paciente esta activo por defecto
-    const paciente = newPaciente(body);
-    const pacienteCreado = await storePaciente(paciente, req);
+    const paciente = PacienteCtr.make(body);
+    const pacienteCreado = await PacienteCtr.store(paciente, req);
     res.json(pacienteCreado);
 };
 
@@ -93,9 +93,9 @@ export const postPacientes = async (req: Request, res: Response) => {
  * @apiSuccess {Array} Listado de pacientes similares.
  */
 
-export const postMatch = async (req: Request, res: Response) => {
+export const match = async (req: Request, res: Response) => {
     const body = req.body;
-    const sugeridos = await suggest(body);
+    const sugeridos = await PacienteCtr.suggest(body);
     res.json(sugeridos);
 };
 
@@ -108,7 +108,7 @@ export const postMatch = async (req: Request, res: Response) => {
  * @apiSuccess {IPaciente} Listado de pacientes similares.
  */
 
-export const putPacientes = (req, res, next) => {
+export const put = (req, res, next) => {
     return next(500);
 };
 
@@ -120,19 +120,19 @@ export const putPacientes = (req, res, next) => {
  * @apiParam {Number} ID de identificación del paciente.
  * @apiSuccess {IPaciente} Paciente modificado.
  */
-export const patchPacientes = async (req: Request, res: Response) => {
+export const patch = async (req: Request, res: Response) => {
     const id = req.params.id;
     const body = req.body;
-    let paciente = await findById(id);
+    let paciente = await PacienteCtr.findById(id);
     if (paciente) {
         if (body.estado === 'validado') {
-            const sugeridos = await suggest(body);
+            const sugeridos = await PacienteCtr.suggest(body);
             if (isMatchingAlto(sugeridos)) {
                 throw new PatientDuplicate();
             }
         }
-        paciente = updatePaciente(paciente, body);
-        const updated = await storePaciente(paciente, req);
+        paciente = PacienteCtr.set(paciente, body);
+        const updated = await PacienteCtr.store(paciente, req);
         return res.json(updated);
     }
     throw new PatientNotFound();
@@ -147,11 +147,11 @@ export const patchPacientes = async (req: Request, res: Response) => {
  * @apiSuccess {boolean} true.
  */
 
-export const deletePacientes = async (req: Request, res: Response) => {
+export const remove = async (req: Request, res: Response) => {
     const id = req.params.id;
-    const paciente = await findById(id);
+    const paciente = await PacienteCtr.findById(id);
     if (paciente) {
-        const result = await deletePaciente(paciente, req);
+        const result = await PacienteCtr.remove(paciente, req);
         return res.json(result);
     }
     throw new PatientNotFound();
@@ -159,13 +159,13 @@ export const deletePacientes = async (req: Request, res: Response) => {
 
 const router = Router();
 router.use(Auth.authenticate());
-router.get('/pacientes', Auth.authorize('mpi:paciente:elasticSearch'), asyncHandler(getPacientes));
-router.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(postPacientes));
-router.post('/pacientes/match', Auth.authorize('mpi:paciente:elasticSearch'), asyncHandler(postMatch));
-router.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(findPacientes));
-router.patch('/pacientes/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(patchPacientes));
-router.put('/pacientes/:id', Auth.authorize('mpi:paciente:putAndes'), asyncHandler(putPacientes));
-router.delete('/pacientes/:id', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(deletePacientes));
+router.get('/pacientes', Auth.authorize('mpi:paciente:elasticSearch'), asyncHandler(get));
+router.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(post));
+router.post('/pacientes/match', Auth.authorize('mpi:paciente:elasticSearch'), asyncHandler(match));
+router.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(find));
+router.patch('/pacientes/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(patch));
+router.put('/pacientes/:id', Auth.authorize('mpi:paciente:putAndes'), asyncHandler(put));
+router.delete('/pacientes/:id', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(remove));
 
 
 let contactoRouting = new ContactoRoutes(contactoController);

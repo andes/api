@@ -1,6 +1,6 @@
-import * as PacienteCtr from './paciente.controller';
-import {expect} from 'chai';
-import { getPacientes, findPacientes, postMatch, postPacientes, patchPacientes, deletePacientes } from './paciente.routes';
+import { PacienteCtr } from './paciente.controller';
+import { expect } from 'chai';
+import { get, find, post, match, patch, remove } from './paciente.routes';
 const sinon = require('sinon');
 
 let req;
@@ -22,12 +22,12 @@ describe('MPI - Routes', () => {
 
     });
 
-    describe ('GET /pacientes', () => {
+    describe('GET /pacientes', () => {
 
         it('with search query must call search', async () => {
             req.query.search = 'perez';
             const searchStub = sinon.stub(PacienteCtr, 'search');
-            await getPacientes(req, res);
+            await get(req, res);
             sinon.assert.calledOnce(res.json);
             sinon.assert.calledWith(searchStub, 'perez');
             searchStub.restore();
@@ -35,8 +35,8 @@ describe('MPI - Routes', () => {
 
         it('with other params must call findPaciente', async () => {
             req.query.nombre = 'perez';
-            const searchStub = sinon.stub(PacienteCtr, 'findPaciente');
-            await getPacientes(req, res);
+            const searchStub = sinon.stub(PacienteCtr, 'find');
+            await get(req, res);
             sinon.assert.calledOnce(res.json);
             sinon.assert.calledWith(searchStub, req.query);
             searchStub.restore();
@@ -44,13 +44,13 @@ describe('MPI - Routes', () => {
 
     });
 
-    describe ('GET /pacientes/:id', () => {
+    describe('GET /pacientes/:id', () => {
 
         it('must call findById', async () => {
             req.params.id = '123456';
             const searchStub = sinon.stub(PacienteCtr, 'findById').returns({});
             try {
-                await findPacientes(req, res);
+                await find(req, res);
             } catch (err) {
                 expect(true).to.be.equal(false);
             }
@@ -61,12 +61,12 @@ describe('MPI - Routes', () => {
 
     });
 
-    describe ('POST /pacientes/match', () => {
+    describe('POST /pacientes/match', () => {
 
         it('must call suggest', async () => {
             req.body.documento = '123456';
             const searchStub = sinon.stub(PacienteCtr, 'suggest').returns('RESULT');
-            await postMatch(req, res);
+            await match(req, res);
             sinon.assert.calledWith(res.json, 'RESULT');
             sinon.assert.calledWith(searchStub, req.body);
             searchStub.restore();
@@ -74,13 +74,13 @@ describe('MPI - Routes', () => {
 
     });
 
-    describe ('POST /pacientes', () => {
+    describe('POST /pacientes', () => {
 
         it('paciente repetido must call suggest and abort', async () => {
             req.body.documento = '123456';
             const searchStub = sinon.stub(PacienteCtr, 'suggest').returns([{ _score: 1 }]);
             try {
-                await postPacientes(req, res);
+                await post(req, res);
             } catch (err) {
                 expect(true).to.be.equal(true);
             }
@@ -88,14 +88,14 @@ describe('MPI - Routes', () => {
             searchStub.restore();
         });
 
-        it('paciente no repetido must call newPaciente and storePaciente', async () => {
+        it('paciente no repetido must call newPaciente and store', async () => {
             req.body.documento = '123456';
 
-            const newStub = sinon.stub(PacienteCtr, 'newPaciente').returns('RESULT');
-            const storeStub = sinon.stub(PacienteCtr, 'storePaciente').returns('RESULT');
+            const newStub = sinon.stub(PacienteCtr, 'make').returns('RESULT');
+            const storeStub = sinon.stub(PacienteCtr, 'store').returns('RESULT');
             const searchStub = sinon.stub(PacienteCtr, 'suggest').returns([]);
             try {
-                await postPacientes(req, res);
+                await post(req, res);
             } catch (err) {
                 expect(true).to.be.equal(false);
             }
@@ -111,7 +111,7 @@ describe('MPI - Routes', () => {
 
     });
 
-    describe ('PATCH /pacientes/:id', () => {
+    describe('PATCH /pacientes/:id', () => {
 
         it('find succes and not suggest', async () => {
             req.params.id = '123456';
@@ -122,10 +122,10 @@ describe('MPI - Routes', () => {
 
             const findStub = sinon.stub(PacienteCtr, 'findById').returns(findResult);
             const searchStub = sinon.stub(PacienteCtr, 'suggest').returns([]);
-            const updateStub = sinon.stub(PacienteCtr, 'updatePaciente').returns('RESULT');
-            const saveStub = sinon.stub(PacienteCtr, 'storePaciente').returns('OK');
+            const updateStub = sinon.stub(PacienteCtr, 'set').returns('RESULT');
+            const saveStub = sinon.stub(PacienteCtr, 'store').returns('OK');
             try {
-                await patchPacientes(req, res);
+                await patch(req, res);
             } catch (err) {
                 expect(true).to.be.equal(false);
             }
@@ -150,10 +150,10 @@ describe('MPI - Routes', () => {
 
             const findStub = sinon.stub(PacienteCtr, 'findById').returns(findResult);
             const searchStub = sinon.stub(PacienteCtr, 'suggest').returns([{ _score: 1 }]);
-            const updateStub = sinon.stub(PacienteCtr, 'updatePaciente').returns('RESULT');
-            const saveStub = sinon.stub(PacienteCtr, 'storePaciente').returns('OK');
+            const updateStub = sinon.stub(PacienteCtr, 'set').returns('RESULT');
+            const saveStub = sinon.stub(PacienteCtr, 'store').returns('OK');
             try {
-                await patchPacientes(req, res);
+                await patch(req, res);
             } catch (err) {
                 expect(err.message).to.be.equal('paciente duplicado');
                 expect(true).to.be.equal(true);
@@ -177,11 +177,11 @@ describe('MPI - Routes', () => {
 
             const findStub = sinon.stub(PacienteCtr, 'findById').throws();
             const searchStub = sinon.stub(PacienteCtr, 'suggest').returns([{ _score: 1 }]);
-            const updateStub = sinon.stub(PacienteCtr, 'updatePaciente').returns('RESULT');
-            const saveStub = sinon.stub(PacienteCtr, 'storePaciente').returns('OK');
+            const updateStub = sinon.stub(PacienteCtr, 'set').returns('RESULT');
+            const saveStub = sinon.stub(PacienteCtr, 'store').returns('OK');
 
             try {
-                await patchPacientes(req, res);
+                await patch(req, res);
             } catch (err) {
                 expect(true).to.be.equal(true);
             }
@@ -200,16 +200,16 @@ describe('MPI - Routes', () => {
 
     });
 
-    describe ('DELETE /pacientes/:id', () => {
+    describe('DELETE /pacientes/:id', () => {
 
         it('must call deletePaciente', async () => {
-            const findResult = {  nombre: 'juan' };
+            const findResult = { nombre: 'juan' };
             req.params.id = '123456';
             const searchStub = sinon.stub(PacienteCtr, 'findById').returns(findResult);
-            const deleteStub = sinon.stub(PacienteCtr, 'deletePaciente').returns('RESULT');
+            const deleteStub = sinon.stub(PacienteCtr, 'remove').returns('RESULT');
 
             try {
-                await deletePacientes(req, res);
+                await remove(req, res);
             } catch (err) {
                 expect(true).to.be.equal(false);
             }
@@ -225,10 +225,10 @@ describe('MPI - Routes', () => {
         it('find fail', async () => {
             req.params.id = '123456';
             const searchStub = sinon.stub(PacienteCtr, 'findById').throws();
-            const deleteStub = sinon.stub(PacienteCtr, 'deletePaciente').returns('RESULT');
+            const deleteStub = sinon.stub(PacienteCtr, 'remove').returns('RESULT');
 
             try {
-                await deletePacientes(req, res);
+                await remove(req, res);
             } catch (err) {
                 expect(true).to.be.equal(true);
             }

@@ -1,5 +1,5 @@
 
-import { findPaciente } from '../pacientes';
+import { PacienteCtr } from '../pacientes';
 import { renaper, sisa, renaperToAndes, sisaToAndes } from '@andes/fuentes-autenticas';
 
 
@@ -20,7 +20,7 @@ function identidadSinAcentos(ciudadano) {
  */
 
 export async function validar(documento: string, sexo: string) {
-    const pacientes = await findPaciente({ documento, sexo });
+    const pacientes = await PacienteCtr.find({ documento, sexo });
     if (pacientes && pacientes.length > 0) {
         const paciente = pacientes[0];
         return paciente;
