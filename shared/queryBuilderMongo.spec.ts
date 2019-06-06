@@ -1,9 +1,9 @@
 
-import { parseStr } from './queryBuilder';
+import { parseStr } from './queryBuilderMongo';
 import { assert, expect } from 'chai';
 
 
-describe('Query Builder',  () => {
+describe('Query Builder', () => {
     it('parseStr: debe retornar un string', () => {
         const str = parseStr('Carlos');
         assert.equal(str, 'Carlos');

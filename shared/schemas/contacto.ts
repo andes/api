@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { CONTACTO } from './constantes';
+import { IContactoDoc } from '../../shared/interface';
 
 export const ContactoSchema = new mongoose.Schema({
     tipo: CONTACTO,
@@ -12,3 +13,5 @@ export const ContactoSchema = new mongoose.Schema({
         default: true
     },
 });
+
+export const Contacto = mongoose.model<IContactoDoc>('contacto', ContactoSchema, 'contacto');

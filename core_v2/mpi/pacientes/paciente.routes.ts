@@ -4,13 +4,18 @@ import { mpi } from '../../../config';
 import { Auth } from '../../../auth/auth.class';
 import * as asyncHandler from 'express-async-handler';
 import { PatientNotFound, PatientDuplicate } from './paciente.error';
+import { ContactoRoutes } from './contactos/contacto.routes';
+import { contactoController } from './contactos/contacto.controller';
+import { direccionController } from './direcciones/direccion.controller';
+import { DireccionRoutes } from './direcciones/direccion.routes';
+
 
 /**
  * @api {get} /pacientes/:id Requiere datos de un paciente
  * @apiName findPaciente
  * @apiGroup MPI
  *
- * @apiParam {Number} ID de identificaion del paciente.
+ * @apiParam {Number} ID de identificación del paciente.
  *
  * @apiSuccess {IPaciente} Datos del paciente encontrado.
  */
@@ -28,7 +33,7 @@ export const findPacientes = async (req: Request, res: Response) => {
 };
 
 /**
- * @api {get} /pacientes Busqueda de pacientes
+ * @api {get} /pacientes Búsqueda de pacientes
  * @apiName getPacientes
  * @apiGroup MPI
  *
@@ -52,7 +57,7 @@ export const getPacientes = async (req: Request, res: Response) => {
 };
 
 /**
- * Chequea si hay algun paciente con maching superior a la cota maxima de aceptacion.
+ * Chequea si hay algún paciente con matching superior a la cota máxima de aceptación.
  */
 
 function isMatchingAlto(sugeridos: any[]) {
@@ -99,7 +104,7 @@ export const postMatch = async (req: Request, res: Response) => {
  * @apiName putPacientes
  * @apiGroup MPI
  *
- * @apiParam {Number} ID de identificaion del paciente.
+ * @apiParam {Number} ID de identificación del paciente.
  * @apiSuccess {IPaciente} Listado de pacientes similares.
  */
 
@@ -112,7 +117,7 @@ export const putPacientes = (req, res, next) => {
  * @apiName patchPacientes
  * @apiGroup MPI
  *
- * @apiParam {Number} ID de identificaion del paciente.
+ * @apiParam {Number} ID de identificación del paciente.
  * @apiSuccess {IPaciente} Paciente modificado.
  */
 export const patchPacientes = async (req: Request, res: Response) => {
@@ -138,7 +143,7 @@ export const patchPacientes = async (req: Request, res: Response) => {
  * @apiName deletePacientes
  * @apiGroup MPI
  *
- * @apiParam {Number} ID de identificaion del paciente.
+ * @apiParam {Number} ID de identificación del paciente.
  * @apiSuccess {boolean} true.
  */
 
@@ -161,5 +166,12 @@ router.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandle
 router.patch('/pacientes/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(patchPacientes));
 router.put('/pacientes/:id', Auth.authorize('mpi:paciente:putAndes'), asyncHandler(putPacientes));
 router.delete('/pacientes/:id', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(deletePacientes));
+
+
+let contactoRouting = new ContactoRoutes(contactoController);
+router.use('/pacientes', contactoRouting.getRoutes());
+
+let direccionRouting = new DireccionRoutes(direccionController);
+router.use('/pacientes', direccionRouting.getRoutes());
 
 export const Routing = router;
