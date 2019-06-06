@@ -11,14 +11,15 @@ export class SubresourceController {
         this.model = modelo;
     }
 
-    getSubresource(resource: Document) {
+    private getSubresource(resource: Document) {
         return resource[this.key];
     }
+
 
     /**
      * Crea un objeto
      */
-    public newSubresource(body) {
+    public make(body) {
         const subresource = new (this.model as any)();
         subresource.set(body);
         return subresource;
@@ -30,15 +31,20 @@ export class SubresourceController {
 
     public store(resource: Document, element) {
         let subresource = this.getSubresource(resource);
-        const subs = subresource.push(element);
-        return subs[subs.length - 1];
+        let index = subresource.findIndex(item => item.id === element.id);
+        if (index > 0) {
+            subresource.splice(index, 1, element);
+        } else {
+            subresource.push(element);
+        }
+        return element;
     }
 
     /**
     * Modifica un elemento
     */
 
-    public update(element: Document, body) {
+    public set(element: Document, body) {
         element.set(body);
         return element;
     }
@@ -76,9 +82,11 @@ export class SubresourceController {
      * Elimina un subrecurso
      */
 
-    public delete(resource: Document, element) {
+    public delete(resource: Document, id: string | Types.ObjectId) {
         let subresource = this.getSubresource(resource);
-        return subresource.filter(c => (c.id !== element.id));
+        subresource = subresource.filter(c => (c.id !== id));
+        resource[this.key] = subresource;
+        return subresource;
     }
 
 

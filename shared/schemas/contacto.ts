@@ -14,4 +14,4 @@ export const ContactoSchema = new mongoose.Schema({
     },
 });
 
-export const Contacto = mongoose.model<IContactoDoc>('contacto', ContactoSchema, 'contacto');
+export const Contacto = mongoose.model<IContactoDoc>('contacto', ContactoSchema);

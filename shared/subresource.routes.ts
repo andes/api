@@ -3,6 +3,7 @@ import { Router, Response } from 'express';
 export class SubresourceRoutes {
     resourceName: string;
     subresourceName: string;
+    subresourceId: string;
     controllerSubresource;
     router = Router();
 
@@ -11,7 +12,8 @@ export class SubresourceRoutes {
         this.getRoutes();
     }
 
-    get = async (req, res: Response, next) => {
+    getResource(req) {
+        return req[this.resourceName];
     }
 
     async save(resource, req) {
@@ -25,8 +27,8 @@ export class SubresourceRoutes {
     * @apiSuccess {Array} Listado
     */
 
-    findSubresources = (req, res: Response) => {
-        let resource = req[this.resourceName];
+    find = (req, res: Response) => {
+        const resource = this.getResource(req);
         let lista = this.controllerSubresource.find(resource, req.query);
         return res.json(lista);
     }
@@ -39,9 +41,9 @@ export class SubresourceRoutes {
     * @apiSuccess {ISubresource} Subresource.
     */
 
-    getSubresources = async (req, res: Response) => {
-        let resource = req[this.resourceName];
-        const lista = this.controllerSubresource.find(resource, req.query);
+    get = async (req, res: Response) => {
+        const resource = this.getResource(req);
+        const lista = this.controllerSubresource.findById(resource, req.params[this.subresourceId]);
         return res.json(lista);
     }
 
@@ -53,17 +55,11 @@ export class SubresourceRoutes {
     */
 
     post = async (req, res: Response) => {
-        let resource = req[this.resourceName];
-        const elemento = this.controllerSubresource.store(resource, req.body);
-        const resource_up = resource[this.subresourceName].push(elemento);
-        const resource_update = await this.save(resource_up, req);
-        let subresources = [];
-        subresources = resource_update[this.resourceName];
-        if (resource_update) {
-            return res.json(subresources[subresources.length - 1]);
-        } else {
-            return 400;
-        }
+        const resource = this.getResource(req);
+        let newElement = this.controllerSubresource.make(req.body);
+        this.controllerSubresource.store(resource, newElement);
+        await this.save(resource, req);
+        return res.json(newElement);
     }
 
     /**
@@ -74,15 +70,12 @@ export class SubresourceRoutes {
     */
 
     public patch = async (req, res: Response) => {
-        let resource = req[this.resourceName];
-        let subresource = this.controllerSubresource.findById(resource, req.params.id);
+        const resource = this.getResource(req);
+        let subresource = this.controllerSubresource.findById(resource, req.params[this.subresourceId]);
         if (subresource) {
-            subresource = this.controllerSubresource.update(resource, subresource, req.body);
-            let subresources = resource[this.subresourceName].filter(c => { return c.id !== req.params.id; });
-            subresources = subresources.push(subresource);
-            let resource_update = req[this.resourceName];
-            resource_update[this.subresourceName] = subresources;
-            await this.save(resource_update, req);
+            let subresource_update = subresource.set(req.body);
+            this.controllerSubresource.store(resource, subresource_update);
+            await this.save(resource, req);
         }
         res.json(subresource);
     }
@@ -96,13 +89,9 @@ export class SubresourceRoutes {
     */
 
     public delete = async (req, res: Response) => {
-        let resource = req[this.resourceName];
-        const subresource = this.controllerSubresource.findById(resource, req.params.id);
-        if (subresource) {
-            const subresource_update = this.controllerSubresource.deleteContacto(resource, subresource);
-            resource[this.subresourceName] = subresource_update;
-            await this.save(resource, req);
-        }
+        const resource = this.getResource(req);
+        let subresource = this.controllerSubresource.delete(resource, req.params[this.subresourceId]);
+        await this.save(resource, req);
         res.json(subresource);
     }
 

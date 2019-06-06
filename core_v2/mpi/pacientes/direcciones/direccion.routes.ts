@@ -27,8 +27,8 @@ export class DireccionRoutes extends SubresourceRoutes {
         const router = Router();
         let id = 'idPaciente';
         router.param(id, asyncHandler(this.getPaciente));
-        router.get('/:idPaciente/direcciones', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.findSubresources));
-        router.get('/:idPaciente/direcciones/:idDireccion', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.getSubresources));
+        router.get('/:idPaciente/direcciones', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.find));
+        router.get('/:idPaciente/direcciones/:idDireccion', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.get));
         router.post('/:idPaciente/direcciones', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(this.post));
         router.patch('/:idPaciente/direcciones/:idDireccion', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(this.patch));
         router.delete('/:idPaciente/direcciones/:idDireccion', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(this.delete));

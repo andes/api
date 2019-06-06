@@ -43,4 +43,4 @@ DireccionSchema.methods.format = function () {
     return address;
 };
 
-export const Direccion = mongoose.model<IDireccionDoc>('Direccion', DireccionSchema);
+export const Direccion = mongoose.model<IDireccionDoc>('direccion', DireccionSchema);

@@ -24,11 +24,12 @@ export class ContactoRoutes extends SubresourceRoutes {
     getRoutes() {
         this.resourceName = 'paciente';
         this.subresourceName = 'contacto';
+        this.subresourceId = 'idContacto';
         const router = Router();
         let id = 'idPaciente';
         router.param(id, asyncHandler(this.getPaciente));
-        router.get('/:idPaciente/contactos', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.findSubresources));
-        router.get('/:idPaciente/contactos/:idContacto', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.getSubresources));
+        router.get('/:idPaciente/contactos', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.find));
+        router.get('/:idPaciente/contactos/:idContacto', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.get));
         router.post('/:idPaciente/contactos', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(this.post));
         router.patch('/:idPaciente/contactos/:idContacto', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(this.patch));
         router.delete('/:idPaciente/contactos/:idContacto', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(this.delete));
