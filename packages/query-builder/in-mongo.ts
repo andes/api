@@ -1,23 +1,26 @@
 import * as moment from 'moment';
-import * as utils from '../utils/utils';
-import * as mongoose from 'mongoose';
+import { makePattern } from './utils';
+import { Types } from 'mongoose';
 
-export function rangoFechas(date: Date) {
+export function matchDate(date: Date) {
     return {
-        $lte: moment(date).endOf('day').toDate(),
-        $gte: moment(date).startOf('day').toDate()
+        $gte: moment(date).startOf('day').toDate(),
+        $lte: moment(date).endOf('day').toDate()
     };
 }
 
-export function parseStr(value: string) {
+export function partialString(value: string) {
     if (value && value.length > 0) {
         const [_, searchPattern] = value.split('^');
         if (searchPattern) {
-            // Se realiza una búsqueda parcial
-            return { $regex: utils.makePattern(searchPattern) };
+            return { $regex: makePattern(searchPattern) };
         }
     }
 
+    return value;
+}
+
+export function matchString(value) {
     return value;
 }
 
@@ -36,10 +39,10 @@ export function queryMatch(value: string, keyName: string, valueName: string) {
         filtro[keyName] = ids[0];
     }
     if (ids[1]) {
-        if (mongoose.Types.ObjectId.isValid(ids[1])) {
-            filtro[valueName] = mongoose.Types.ObjectId(ids[1]);
+        if (Types.ObjectId.isValid(ids[1])) {
+            filtro[valueName] = Types.ObjectId(ids[1]);
         } else {
-            filtro[valueName] = parseStr(ids[1]);
+            filtro[valueName] = partialString(ids[1]);
         }
     }
     return ({ $elemMatch: filtro });
@@ -70,3 +73,10 @@ export function queryArray(fieldName: string, values: any[], keyName: string, va
     return ({ $and: conds });
 }
 
+export const MongoQuery = {
+    matchDate,
+    partialString,
+    matchString,
+    queryMatch,
+    queryArray
+};

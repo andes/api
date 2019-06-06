@@ -12,7 +12,7 @@ import { EventCore } from '@andes/event-bus';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
-import { parseStr, rangoFechas, queryArray } from '../../../shared/queryBuilderMongo';
+import { MongoQuery } from '@andes/query-builder';
 
 /**
  * Crea un objeto paciente
@@ -260,19 +260,19 @@ export async function find(condicion, options?: any) {
         } else {
             identificadores = [condicion.identificadores];
         }
-        filtros.push(queryArray('identificadores', identificadores, 'entidad', 'valor', '$and'));
+        filtros.push(MongoQuery.queryArray('identificadores', identificadores, 'entidad', 'valor', '$and'));
     }
     if (condicion.documento) {
-        opciones['documento'] = parseStr(condicion.documento);
+        opciones['documento'] = MongoQuery.partialString(condicion.documento);
     }
     if (condicion.nombre) {
-        opciones['nombre'] = parseStr(condicion.nombre);
+        opciones['nombre'] = MongoQuery.partialString(condicion.nombre);
     }
     if (condicion.apellido) {
-        opciones['apellido'] = parseStr(condicion.apellido);
+        opciones['apellido'] = MongoQuery.partialString(condicion.apellido);
     }
     if (condicion.fechaNacimiento) {
-        opciones['fechaNacimiento'] = rangoFechas(condicion.fechaNacimiento);
+        opciones['fechaNacimiento'] = MongoQuery.matchDate(condicion.fechaNacimiento);
     }
     if (condicion.estado) {
         opciones['estado'] = condicion.estado;
@@ -281,19 +281,19 @@ export async function find(condicion, options?: any) {
         opciones['activo'] = condicion.activo;
     }
     if (condicion.barrio) {
-        opciones['direccion.ubicacion.barrio.nombre'] = parseStr(condicion.barrio);
+        opciones['direccion.ubicacion.barrio.nombre'] = MongoQuery.partialString(condicion.barrio);
     }
     if (condicion.localidad) {
-        opciones['direccion.ubicacion.localidad.nombre'] = parseStr(condicion.localidad);
+        opciones['direccion.ubicacion.localidad.nombre'] = MongoQuery.partialString(condicion.localidad);
     }
     if (condicion.provincia) {
-        opciones['direccion.ubicacion.provincia.nombre'] = parseStr(condicion.provincia);
+        opciones['direccion.ubicacion.provincia.nombre'] = MongoQuery.partialString(condicion.provincia);
     }
     if (condicion.pais) {
-        opciones['direccion.ubicacion.pais.nombre'] = parseStr(condicion.pais);
+        opciones['direccion.ubicacion.pais.nombre'] = MongoQuery.partialString(condicion.pais);
     }
     if (condicion.nacionalidad) {
-        opciones['nacionalidad'] = parseStr(condicion.nacionalidad);
+        opciones['nacionalidad'] = MongoQuery.partialString(condicion.nacionalidad);
     }
 
     let contactos = [];
@@ -307,7 +307,7 @@ export async function find(condicion, options?: any) {
         contactos.push('fijo |' + condicion.fijo);
     }
     if (contactos.length > 0) {
-        filtros.push(queryArray('contactos', contactos, 'tipo', 'valor'));
+        filtros.push(MongoQuery.queryArray('contactos', contactos, 'tipo', 'valor'));
     }
     if (condicion.relaciones) {
         let relaciones = [];
@@ -316,7 +316,7 @@ export async function find(condicion, options?: any) {
         } else {
             relaciones = [condicion.relaciones];
         }
-        filtros.push(queryArray('relaciones', relaciones, 'relacion.nombre', 'referencia', '$and'));
+        filtros.push(MongoQuery.queryArray('relaciones', relaciones, 'relacion.nombre', 'referencia', '$and'));
     }
 
     if (filtros.length > 0) {

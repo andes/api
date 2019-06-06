@@ -4,7 +4,7 @@ import { findById, store, search, matching, set, suggest, find } from './pacient
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
-import * as queryBuilder from '../../../shared/queryBuilderMongo';
+import { MongoQuery } from '@andes/query-builder';
 
 const sinon = require('sinon');
 require('sinon-mongoose');
@@ -237,7 +237,7 @@ describe('MPI - Paciente controller', () => {
         });
 
         it('Búsqueda parcial por apellido', async () => {
-            const mockStr = sinon.stub(queryBuilder, 'parseStr').returns({});
+            const mockStr = sinon.stub(MongoQuery, 'partialString').returns({});
             const mock = PacienteMock.expects('find');
             mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);

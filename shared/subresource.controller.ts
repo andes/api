@@ -1,5 +1,5 @@
 import { Types, Document } from 'mongoose';
-import { matchQuery } from '../packages/query-parser/queryBuilder';
+import { MemoryQuery } from '@andes/query-builder';
 
 export class SubresourceController {
 
@@ -70,7 +70,7 @@ export class SubresourceController {
         let subresource = this.getSubresource(resource);
         if (query) {
             const contactos = subresource.filter(contacto => {
-                return matchQuery(query, contacto, this.filter);
+                return MemoryQuery.matchQuery(query, contacto, this.filter);
             });
             return contactos;
         } else {

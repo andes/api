@@ -1,13 +1,13 @@
 import { SubresourceController } from '../../../../shared/subresource.controller';
-import { partialMatch, equalMatch } from '../../../../packages/query-parser/queryBuilder';
+import { MemoryQuery } from '@andes/query-builder';
 import { Direccion } from '../../../../shared/schemas/direccion';
 
 export class DireccionController extends SubresourceController {
 
     filter = {
-        id: equalMatch,
-        valor: partialMatch,
-        codigoPostal: equalMatch
+        id: MemoryQuery.matchString,
+        valor: MemoryQuery.partialString,
+        codigoPostal: MemoryQuery.matchString
     };
 
     key = 'direccion';

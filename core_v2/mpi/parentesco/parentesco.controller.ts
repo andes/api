@@ -1,7 +1,7 @@
 
 import { Types } from 'mongoose';
 import { Parentesco } from './parentesco.schema';
-import { parseStr } from '../../../shared/queryBuilderMongo';
+import { MongoQuery } from '@andes/query-builder';
 
 /**
  * Busca un parentezco por ID
@@ -28,10 +28,10 @@ export async function find(condicion, options?: any) {
     const opciones = {};
 
     if (condicion.nombre) {
-        opciones['nombre'] = parseStr(condicion.nombre);
+        opciones['nombre'] = MongoQuery.partialString(condicion.nombre);
     }
     if (condicion.opuesto) {
-        opciones['opuesto'] = parseStr(condicion.opuesto);
+        opciones['opuesto'] = MongoQuery.partialString(condicion.opuesto);
     }
 
     let query = Parentesco.find(opciones);

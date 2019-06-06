@@ -1,0 +1,26 @@
+{
+    "name": "@andes/query-builder",
+    "version": "0.1.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "mongoose": "^5.0.14",
+        "moment": "^2.19.3"
+    },
+    "devDependencies": {
+        "sinon": "^7.3.2",
+        "sinon-mongoose": "^2.3.0",
+        "@types/request": "^2.48.1",
+        "before": "0.0.1",
+        "chai": "^4.2.0",
+        "nodemon": "^1.17.4",
+        "ts-mock-imports": "^1.2.3",
+        "tslint": "^5.11.0",
+        "tslint-eslint-rules": "^5.3.1"
+    }
+}

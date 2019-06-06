@@ -1,13 +1,13 @@
 import { SubresourceController } from '../../../../shared/subresource.controller';
-import { partialMatch, equalMatch } from '../../../../packages/query-parser/queryBuilder';
+import { MemoryQuery } from '@andes/query-builder';
 import { Contacto } from '../../../../shared/schemas/contacto';
 
 export class ContactoController extends SubresourceController {
 
     filter = {
-        id: equalMatch,
-        valor: partialMatch,
-        tipo: equalMatch
+        id: MemoryQuery.matchString,
+        valor: MemoryQuery.partialString,
+        tipo: MemoryQuery.matchString
 
     };
 

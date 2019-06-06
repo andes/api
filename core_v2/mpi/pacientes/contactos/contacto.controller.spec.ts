@@ -1,7 +1,6 @@
 import { assert } from 'chai';
 import * as ContactoModule from './../../../../shared/schemas/contacto';
 import { contactoController } from '../contactos/contacto.controller';
-import { expect } from 'chai';
 
 const sinon = require('sinon');
 require('sinon-mongoose');

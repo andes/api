@@ -1,7 +1,10 @@
 import { makePattern } from './utils';
 
+export function matchDate(date: Date) {
 
-export function partialMatch(value: string | String, compareValue: string | String) {
+}
+
+export function partialString(value: string | String, compareValue: string | String) {
     if (value && value.length > 0 && value.split('^')) {
         const [_, expression] = value.split('^');
         let reg = makePattern(expression);
@@ -11,7 +14,7 @@ export function partialMatch(value: string | String, compareValue: string | Stri
     }
 }
 
-export function equalMatch(value, compareValue) {
+export function matchString(value, compareValue) {
     return (value === compareValue);
 }
 
@@ -23,3 +26,10 @@ export function matchQuery(query, value, filtros) {
         return false;
     }, true);
 }
+
+export const MemoryQuery = {
+    matchDate,
+    partialString,
+    matchString,
+    matchQuery
+};

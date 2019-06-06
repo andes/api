@@ -30,6 +30,9 @@
             "@andes/fuentes-autenticas/*": [
                 "./packages/fuentes-autenticas/*"
             ],
+            "@andes/query-builder/*": [
+                "./packages/query-builder/*"
+            ],
             "@andes/mpi/*": [
                 "./core_v2/mpi/*"
             ]
