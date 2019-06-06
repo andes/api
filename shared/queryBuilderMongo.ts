@@ -1,7 +1,6 @@
 import * as moment from 'moment';
-import * as utils from './../utils/utils';
+import * as utils from '../utils/utils';
 import * as mongoose from 'mongoose';
-import { ObjectID, ObjectId } from 'bson';
 
 export function rangoFechas(date: Date) {
     return {
@@ -12,10 +11,10 @@ export function rangoFechas(date: Date) {
 
 export function parseStr(value: string) {
     if (value && value.length > 0) {
-        const [_ , searchPattern] = value.split('^');
+        const [_, searchPattern] = value.split('^');
         if (searchPattern) {
             // Se realiza una búsqueda parcial
-            return {$regex: utils.makePattern(searchPattern)};
+            return { $regex: utils.makePattern(searchPattern) };
         }
     }
 
@@ -43,7 +42,7 @@ export function queryMatch(value: string, keyName: string, valueName: string) {
             filtro[valueName] = parseStr(ids[1]);
         }
     }
-    return ({$elemMatch: filtro});
+    return ({ $elemMatch: filtro });
 }
 
 /**
@@ -66,8 +65,8 @@ export function queryArray(fieldName: string, values: any[], keyName: string, va
         conds.push(filtro);
     });
     if (op === 'or') {
-        return ({$or : conds });
+        return ({ $or: conds });
     }
-    return ({$and : conds });
+    return ({ $and: conds });
 }
 
