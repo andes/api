@@ -212,6 +212,12 @@ export const modules = {
         path: './modules/geonode/routes',
         route: '/modules/geonode',
         middleware: appMiddleware
+    },
+    georeferencia: {
+        active: true,
+        path: './modules/georeferencia/routes',
+        route: '/modules/georeferencia',
+        middleware: appMiddleware
     }
 };
 
@@ -299,6 +305,14 @@ export const logKeys = {
     mpiUpdaterFinish: {
         key: 'mpi:mpiUpdater:finish',
         operacion: 'MPI updater finish'
+    },
+    mpiAuditoriaSetActivo: {
+        key: 'mpi:auditoria:setActivo',
+        operacion: 'Activar/desactivar paciente'
+    },
+    validacionPaciente: {
+        key: 'mpi:validacion',
+        operacion: 'Validar paciente'
     },
     elasticCheck1: {
         key: 'elastic:notFound:andes',
