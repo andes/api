@@ -101,6 +101,7 @@ function sumarCodigos(codigos) {
     };
     return respuesta;
 }
+
 export function getDiagnosticos(params) {
     let resultados = [];
     const promises = [];

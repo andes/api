@@ -49,11 +49,6 @@ let mailOptions = {
 export async function consultaPecas(done, start, end) {
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
-    } catch (ex) {
-        return (ex);
-    }
-
-    try {
         // Eliminamos los registros temporales de PECAS
         await Pecas.remove({});
         // Exportamos los registros directamente desde mongodb
