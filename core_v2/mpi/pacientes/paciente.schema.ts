@@ -1,11 +1,11 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
+import { Matching } from '@andes/match';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from '../../../shared/schemas/constantes';
 import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';
 import { FinanciadorSchema } from '../financiador/financiador.schema';
 import { ParentescoSchema } from '../parentesco';
-import { Matching } from '@andes/match';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { IPacienteDoc } from './paciente.interface';
 
 const ObjectId = mongoose.Types.ObjectId;

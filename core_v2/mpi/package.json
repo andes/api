@@ -1,0 +1,34 @@
+{
+  "name": "@andes/mpi",
+  "version": "2.0.0",
+  "description": "",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3",
+    "express-async-handler": "^1.1.4",
+    "@andes/event-bus": "^0.1.0",
+    "@andes/log": "^1.1.5",
+    "@andes/match": "^1.1.12",
+    "@andes/mongoose-plugin-audit": "^0.1.0",
+    "@elastic/elasticsearch": "^5.6.17",
+    "moment": "^2.19.3",
+    "mongoose": "^5.5.6"
+  },
+  "devDependencies": {
+    "sinon": "^7.3.2",
+    "sinon-mongoose": "^2.3.0",
+    "@types/request": "^2.48.1",
+    "before": "0.0.1",
+    "chai": "^4.2.0",
+    "nodemon": "^1.17.4",
+    "ts-mock-imports": "^1.2.3",
+    "tslint": "^5.11.0",
+    "tslint-eslint-rules": "^5.3.1"
+  }
+}

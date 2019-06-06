@@ -10,9 +10,7 @@ import { Express, Router } from 'express';
 import { AndesDrive } from '@andes/drive';
 import { apiOptionsMiddleware } from '@andes/api-tool';
 
-
 const requireDir = require('require-dir');
-
 
 export function initAPI(app: Express) {
     // Inicializa la autenticación con Passport/JWT
@@ -63,6 +61,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').UsuariosRouter);
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').PerfilesRouter);
     const MPI = require('./core_v2/mpi');
+    // const MPI = require('@andes/mpi');
     app.use('/api/core_v2/mpi', MPI.Routing);
 
     /**

@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
+import * as asyncHandler from 'express-async-handler';
 import { PacienteCtr } from './paciente.controller';
 import { mpi } from '../../../config';
 import { Auth } from '../../../auth/auth.class';
-import * as asyncHandler from 'express-async-handler';
 import { PatientNotFound, PatientDuplicate } from './paciente.error';
 import { ContactoRoutes } from './contactos/contacto.routes';
 import { contactoController } from './contactos/contacto.controller';

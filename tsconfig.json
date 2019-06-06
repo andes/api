@@ -29,6 +29,9 @@
             ],
             "@andes/fuentes-autenticas/*": [
                 "./packages/fuentes-autenticas/*"
+            ],
+            "@andes/mpi/*": [
+                "./core_v2/mpi/*"
             ]
         },
         "typeRoots": [
