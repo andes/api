@@ -1,5 +1,8 @@
 import * as mongoose from 'mongoose';
 
+/**
+ * @deprecated
+ */
 const osPacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     tipoDoc: String,

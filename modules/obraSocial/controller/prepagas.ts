@@ -1,6 +1,9 @@
 import { padronPrepagas } from '../schemas/padronPrepagas';
 import { dirname } from 'path';
 
+/**
+ * @deprecated
+ */
 export async function pacientePrepaga(documento, sexo) {
     let rta: any = await padronPrepagas.findOne({ dni: documento, sexo }).exec();
     const resultOS = [];

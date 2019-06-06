@@ -8,6 +8,7 @@ const router = express.Router();
  *
  * @param {any} id
  * @returns
+ * @deprecated
  */
 router.get('/periodoPadronesPuco/:id*?', (req, res, next) => {
     if (req.params.id) {
