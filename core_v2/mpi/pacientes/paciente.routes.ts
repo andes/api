@@ -171,11 +171,4 @@ router.use('/pacientes', direccionRouting.getRoutes());
 const relacionRouting = new RelacionRoutes(PacienteCtr, relacionController);
 router.use('/pacientes', relacionRouting.getRoutes());
 
-
-let contactoRouting = new ContactoRoutes(contactoController);
-router.use('/pacientes', contactoRouting.getRoutes());
-
-let direccionRouting = new DireccionRoutes(direccionController);
-router.use('/pacientes', direccionRouting.getRoutes());
-
 export const Routing = router;
