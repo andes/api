@@ -1139,7 +1139,7 @@ export function getConsultaDiagnostico(params) {
 
         const removeDuplicates = (arr) => {
             const unique_array = [];
-            const arrMap = arr.map(m => m._id );
+            const arrMap = arr.map(m => m._id);
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
@@ -1249,3 +1249,19 @@ export function getCantidadConsultaXPrestacion(params) {
 
     });
 }
+
+/**
+ * Verifica si la agenda posee asistencia registrada
+ *
+ * @export
+ * @param {*} agendaId
+ * @returns
+ */
+export async function poseeAsistencia(agendaId) {
+    const ag: any = await agendaModel.findById(agendaId);
+    return ag.dinamica ?
+        ag.bloques.some((bloque: any) => bloque.turnos.some((turno: any) => turno.asistencia)) :
+        ag.bloques.some((bloque: any) => bloque.turnos.some((turno: any) => turno.asistencia ||
+            (turno.diagnostico && turno.diagnostico.codificaciones && turno.diagnostico.codificaciones.length > 0)));
+}
+
