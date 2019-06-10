@@ -83,7 +83,7 @@ export const geocodingPaths = {
     autocompletePart2: '+street&types=address&components=country:ar&language=es&key=',
     addressesPart1: 'https://maps.googleapis.com/maps/api/geocode/json?address=',
     addressesPart2: ',+AR&key='
-}
+};
 
 // Configuración servicio SISA
 export const sisa = {
