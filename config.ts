@@ -314,6 +314,10 @@ export const logKeys = {
         key: 'mpi:validacion',
         operacion: 'Validar paciente'
     },
+    elasticInsert: {
+        key: 'elastic:paciente:insert',
+        operacion: 'Insert paciente ElasticSearch'
+    },
     elasticCheck1: {
         key: 'elastic:notFound:andes',
         operacion: 'Paciente en Andes no encontrado en elastic'

@@ -125,8 +125,8 @@ export async function matchSisa(paciente) {
     const match = new Matching();
     paciente['matchSisa'] = 0;
     // Se buscan los datos en sisa y se obtiene el paciente
-    const band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sisa') < 0) : true;
-    if (paciente.documento && band && (paciente.documento.toString()).length >= 7) {
+    const noIdentificadoSisa = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sisa') < 0) : true;
+    if (paciente.documento && noIdentificadoSisa && (paciente.documento.toString()).length >= 7) {
         let sexo = null;
         if (paciente.sexo) {
             sexo = ((paciente.sexo) === 'femenino') ? 'F' : 'M';

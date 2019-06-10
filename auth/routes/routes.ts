@@ -247,10 +247,17 @@ router.post('/login', (req, res, next) => {
                 ldap.on('connectError', (err) => {
                     loginCache(passwordSha1);
                 });
+                ldap.on('error', (err) => {
+                    loginCache(passwordSha1);
+                });
                 ldap.on('connect', () => {
                     ldap.bind(dn, req.body.password, (err) => {
                         if (err) {
-                            return next(ldapjs.InvalidCredentialsError ? 403 : err);
+                            if (err.name === 'InvalidCredentialsError') {
+                                return next(403);
+                            } else {
+                                return;
+                            }
                         }
                         // Busca el usuario con el UID correcto.
                         ldap.search(dn, {

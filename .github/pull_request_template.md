@@ -16,7 +16,7 @@ _____________________________________________
 
 -->
 ### Requerimiento
-* URL de la User Story, referencia al issue (#1111) o breve descripcion del requerimiento
+<!-- URL de la User Story, referencia al issue (#1111) o breve descripcion del requerimiento -->
 
 ### Funcionalidad desarrollada 
 <!-- Describir que se desarrollo -->
@@ -32,6 +32,7 @@ _____________________________________________
 
 ### Requiere actualizaciones en la base de datos
 <!-- Marca con una X la casilla correcta-->
+<!-- Indique el cambio en caso afirmativo, agradecemos si es en forma de comando en mongo además de una explicación -->
 - [ ] Si
 - [ ] No
 

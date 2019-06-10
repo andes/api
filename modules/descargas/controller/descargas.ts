@@ -14,6 +14,8 @@ import * as path from 'path';
 import { env } from 'process';
 import * as rupStore from '../../../modules/rup/controllers/rupStore';
 
+let phantomjs = require('phantomjs-prebuilt-that-works');
+
 moment.locale('es');
 
 // Muestra mensaje y línea de un error dentro de una promise ;-)
@@ -27,7 +29,10 @@ export class Documento {
     /**
      * Opciones default de PDF rendering
      */
-    private static options: pdf.CreateOptions = {};
+    private static options: pdf.CreateOptions = {
+        // Nos aseguramos que usa el paquete que queremos
+        phantomPath: phantomjs.path
+    };
 
     /**
      *
@@ -336,6 +341,7 @@ export class Documento {
 
                 // Títulos default
                 let tituloFechaEjecucion = 'Fecha Ejecución';
+                let tituloFechaValidacion = 'Fecha Validación';
 
                 // Configuraciones de informe propios de la prestación
                 let config: any = await this.getPrestacionInformeParams(prestacion.solicitud.tipoPrestacion.conceptId);
@@ -358,7 +364,9 @@ export class Documento {
 
                     if (config.informe) {
                         // Override título "Fecha Ejecución"?
-                        tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : 'Fecha Ejecución';
+                        tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : tituloFechaEjecucion;
+                        // Override título "Fecha Validación"?
+                        tituloFechaValidacion = config.informe.fechaValidacionOverride ? config.informe.fechaValidacionOverride : tituloFechaValidacion;
                     }
 
                     // Vemos si el tipo de prestación tiene registros que son hijos directos (TP: Ecografía; Hijo: Ecografía obstétrica)
@@ -449,12 +457,29 @@ export class Documento {
                     let fechaValidacion = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
 
                     // BODY
-                    html = html
-                        .replace('<!--fechaIngreso-->', (prestacion.ejecucion.registros[0].valor && prestacion.ejecucion.registros[0].valor.fechaDesde) ? '<b>Fecha de ingreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY') : '')
-                        .replace('<!--fechaEgreso-->', (prestacion.ejecucion.registros[0].valor && prestacion.ejecucion.registros[0].valor.fechaHasta) ? '<b>Fecha de egreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY') : '')
-                        .replace('<!--tipoPrestacion-->', tipoPrestacion)
+
+                    if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
+                        const valor = prestacion.ejecucion.registros[0].valor;
+                        const fechaIngreso = valor && valor.fechaDesde ? moment(valor.fechaDesde).format('DD/MM/YYYY') : null;
+                        const fechaEgreso = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') : null;
+                        const unidadOrganizativa = valor && valor.unidadOrganizativa ? valor.unidadOrganizativa.term : null;
+                        if (fechaIngreso) {
+                            html = html.replace('<!--fechaIngreso-->', '<b> Ingreso: </b>' + fechaIngreso + '&nbsp;&nbsp;&nbsp;');
+                        }
+                        if (fechaEgreso) {
+                            html = html.replace('<!--fechaEgreso-->', '<b> Egreso: </b>' + fechaEgreso + '&nbsp;&nbsp;&nbsp;');
+                        }
+                        if (unidadOrganizativa) {
+                            html = html.replace('<!--unidadOrganizativa-->', '<b> Servicio: </b>' + unidadOrganizativa + '&nbsp;&nbsp;&nbsp;');
+                        }
+
+                    }
+
+
+                    html = html.replace('<!--tipoPrestacion-->', tipoPrestacion)
                         .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
+                        .replace('<!--tituloFechaValidacion-->', tituloFechaValidacion)
                         .replace('<!--fechaEjecucion-->', moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')

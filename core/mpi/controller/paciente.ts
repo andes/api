@@ -2,7 +2,6 @@ import * as config from '../../../config';
 import * as moment from 'moment';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
-import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
@@ -122,12 +121,9 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
             const connElastic = new ElasticSync();
             connElastic.sync(pacMpi).then(updated => {
                 if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
-                        original: pacOriginalMpi,
-                        nuevo: pacMpi
-                    });
+                    andesLog(req, logKeys.mpiUpdate.key, pacMpi, 'update', pacMpi, pacOriginalMpi);
                 } else {
-                    Logger.log(req, 'mpi', 'insert', pacMpi);
+                    andesLog(req, logKeys.mpiInsert.key, pacMpi, 'insert', pacMpi);
                 }
                 EventCore.emitAsync('mpi:patient:update', pacMpi);
                 resolve(pacMpi);
@@ -161,9 +157,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                 }
                 const connElastic = new ElasticSync();
                 connElastic.sync(newPatientMpi).then(() => {
-                    Logger.log(req, 'mpi', 'elasticInsert', {
-                        nuevo: newPatientMpi,
-                    });
+                    andesLog(req, logKeys.elasticInsert.key, newPatientMpi, 'elasticInsert', newPatientMpi);
                     EventCore.emitAsync('mpi:patient:create', newPatientMpi);
                     resolve(newPatientMpi);
                 }).catch((error) => {
@@ -500,12 +494,7 @@ export async function deletePacienteMpi(objectId) {
 
 export function updateContactos(req, data) {
     data.markModified('contacto');
-    Logger.log(req, 'mpi', 'update', {
-        accion: 'updateContacto',
-        ruta: req.url,
-        method: req.method,
-        data: data.contacto,
-    });
+    andesLog(req, logKeys.mpiUpdate.key, data, 'update contacto', data.contacto);
     data.contacto = req.body.contacto;
 }
 
