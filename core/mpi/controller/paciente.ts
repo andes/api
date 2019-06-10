@@ -494,12 +494,7 @@ export async function deletePacienteMpi(objectId) {
 
 export function updateContactos(req, data) {
     data.markModified('contacto');
-    Logger.log(req, 'mpi', 'update', {
-        accion: 'updateContacto',
-        ruta: req.url,
-        method: req.method,
-        data: data.contacto,
-    });
+    andesLog(req, logKeys.mpiUpdate.key, data, 'update contacto', data.contacto);
     data.contacto = req.body.contacto;
 }
 
