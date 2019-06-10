@@ -7,7 +7,7 @@ import * as configPrivate from '../config.private';
  * @returns opciones
  */
 export async function autocompletar(texto) {
-    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=' + texto + '+street&types=address&components=country:ar&language=es' + '&key=' + configPrivate.geoKey;
+    let pathGoogleApi = configPrivate.geocodingPaths.autocompletePart1 + texto + configPrivate.geocodingPaths.autocompletePart2 + configPrivate.geoKey;
     pathGoogleApi = formatear(pathGoogleApi);
 
     const [status, body] = await handleHttpRequest(pathGoogleApi);
@@ -32,7 +32,7 @@ export async function autocompletar(texto) {
 export async function getGeoreferencia(direccion) {
     const arrDireccion = direccion.split(', '); // Se separa lo que se encuentre entre comas
     let localidadBuscada = formatear(arrDireccion[1]);  // se obtiene la localidad y se formatea
-    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + direccion + ',+AR&key=' + configPrivate.geoKey;
+    let pathGoogleApi = configPrivate.geocodingPaths.addressesPart1 + direccion + configPrivate.geocodingPaths.addressesPart2 + configPrivate.geoKey;
     pathGoogleApi = formatear(pathGoogleApi);
     const [status, body] = await handleHttpRequest(pathGoogleApi);
     const salida = JSON.parse(body);
@@ -47,11 +47,10 @@ export async function getGeoreferencia(direccion) {
                 // se retorna el primer elemento que tenga coincidencia
                 if (localidad.toUpperCase() === localidadBuscada.toUpperCase()) {
                     respuesta = elto.geometry.location;
-                    break;
+                    return respuesta;
                 }
             }
         }
-        return respuesta;
     } else {
         return {};
     }
