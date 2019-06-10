@@ -87,7 +87,7 @@ router.get('/puco', async (req, res, next) => {
             res.json([]);
         }
     } else {
-        res.json({ msg: 'Parámetros incorrectos' });
+        return next('Parámetros incorrectos');
     }
 });
 
@@ -117,7 +117,7 @@ router.get('/paciente', async (req, res, next) => {
             }
         }
     } else {
-        res.json({ msg: 'Parámetros incorrectos' });
+        return next('Parámetros incorrectos');
     }
 });
 
@@ -144,7 +144,7 @@ router.get('/os', async (req, res, next) => {
             }
         }
     } else {
-        res.json({ msg: 'Parámetros incorrectos' });
+        return next('Parámetros incorrectos');
     }
 });
 
