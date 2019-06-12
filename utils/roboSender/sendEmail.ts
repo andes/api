@@ -21,18 +21,16 @@ export function sendMail(options: MailOptions) {
             secure: enviarMail.secure,
             auth: enviarMail.auth,
         });
-
         const mailOptions = {
             from: options.from,
             to: options.to,
             subject: options.subject,
             text: options.text,
             html: options.html,
-            attachments: [{   // data uri as an attachment
-                path: options.attachments,
-                cid: 'img-screenshot'
-            }]
+            attachments: options.attachments,
+
         };
+
 
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
