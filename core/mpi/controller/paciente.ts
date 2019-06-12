@@ -2,7 +2,6 @@ import * as config from '../../../config';
 import * as moment from 'moment';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
-import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
@@ -11,10 +10,14 @@ import * as turnosController from '../../../modules/turnos/controller/turnosCont
 import { matchSisa } from '../../../utils/servicioSisa';
 import { getServicioRenaper } from '../../../utils/servicioRenaper';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
-import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
-import { handleHttpRequest } from '../../../utils/requestHandler';
+import { getGeoreferencia } from '../../../utils/serviciosGeoreferencia';
+import * as Barrio from '../../tm/schemas/barrio';
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
+import * as mongoose from 'mongoose';
+import { nextTick } from 'async';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -22,32 +25,30 @@ import { handleHttpRequest } from '../../../utils/requestHandler';
  * @param data Datos del paciente
  * @param req  request de express para poder auditar
  */
-export function createPaciente(data, req) {
-    return new Promise((resolve, reject) => {
-        const newPatient = new paciente(data);
-        if (req) {
-            Auth.audit(newPatient, req);
-        }
-        newPatient.save((err) => {
-            if (err) {
-                return reject(err);
-            }
-            const nuevoPac = JSON.parse(JSON.stringify(newPatient));
-            delete nuevoPac._id;
-            delete nuevoPac.relaciones;
-            delete nuevoPac.direccion;
-            const connElastic = new ElasticSync();
-            connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
-                Logger.log(req, 'mpi', 'insert', newPatient);
-                // Código para emitir eventos
-                EventCore.emitAsync('mpi:patient:create', newPatient);
-                //
-                return resolve(newPatient);
-            }).catch(error => {
-                return reject(error);
-            });
-        });
-    });
+export async function createPaciente(data, req) {
+    const newPatient = new paciente(data);
+    if (req) {
+        Auth.audit(newPatient, req);
+    }
+    try {
+        await newPatient.save();
+        const nuevoPac = JSON.parse(JSON.stringify(newPatient));
+        delete nuevoPac._id;
+        delete nuevoPac.relaciones;
+        delete nuevoPac.direccion;
+
+        const connElastic = new ElasticSync();
+        await connElastic.create(newPatient._id.toString(), nuevoPac);
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
+
+        // Código para emitir eventos
+        EventCore.emitAsync('mpi:patient:create', newPatient);
+        return newPatient;
+    } catch (error) {
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, null, 'Error insertando paciente');
+        return error;
+    }
+
 }
 
 
@@ -62,24 +63,20 @@ export async function updatePaciente(pacienteObj, data, req) {
         Auth.audit(pacienteObj, req);
     }
     try {
-        // await pacienteObj.save();
         await pacienteObj.save();
         const connElastic = new ElasticSync();
         let updated = await connElastic.sync(pacienteObj);
         if (updated) {
-            Logger.log(req, 'mpi', 'update', {
-                original: pacienteOriginal,
-                nuevo: pacienteObj
-            });
+            andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
         } else {
-            Logger.log(req, 'mpi', 'insert', pacienteObj);
+            andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, pacienteObj, null);
         }
         EventCore.emitAsync('mpi:patient:update', pacienteObj);
         return pacienteObj;
     } catch (error) {
+        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
         return error;
     }
-
 }
 /**
  * Busca los turnos futuros asignados al paciente y actualiza los datos.
@@ -124,12 +121,9 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
             const connElastic = new ElasticSync();
             connElastic.sync(pacMpi).then(updated => {
                 if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
-                        original: pacOriginalMpi,
-                        nuevo: pacMpi
-                    });
+                    andesLog(req, logKeys.mpiUpdate.key, pacMpi, 'update', pacMpi, pacOriginalMpi);
                 } else {
-                    Logger.log(req, 'mpi', 'insert', pacMpi);
+                    andesLog(req, logKeys.mpiInsert.key, pacMpi, 'insert', pacMpi);
                 }
                 EventCore.emitAsync('mpi:patient:update', pacMpi);
                 resolve(pacMpi);
@@ -163,9 +157,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                 }
                 const connElastic = new ElasticSync();
                 connElastic.sync(newPatientMpi).then(() => {
-                    Logger.log(req, 'mpi', 'elasticInsert', {
-                        nuevo: newPatientMpi,
-                    });
+                    andesLog(req, logKeys.elasticInsert.key, newPatientMpi, 'elasticInsert', newPatientMpi);
                     EventCore.emitAsync('mpi:patient:create', newPatientMpi);
                     resolve(newPatientMpi);
                 }).catch((error) => {
@@ -356,6 +348,20 @@ export function matching(data): Promise<any[]> {
                 };
             }
             break;
+        case 'search':
+            {
+                query = {
+                    bool: {
+                        must: {
+                            match: data.filtros
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
+                    }
+                };
+            }
+            break;
     }
 
     if (data.incluirInactivos) {
@@ -467,27 +473,19 @@ export function matching(data): Promise<any[]> {
  * @param objectId ---> Id del paciente a eliminar
  */
 
-export function deletePacienteAndes(objectId) {
-    return new Promise((resolve, reject) => {
-        const query = {
-            _id: objectId
-        };
-        paciente.findById(query, (err, patientFound) => {
-            if (err) {
-                return reject(err);
-            }
-            patientFound.remove();
-            EventCore.emitAsync('mpi:patient:delete', patientFound);
-            return resolve(patientFound);
-        });
-    });
+export async function deletePacienteAndes(objectId) {
+    const query = { _id: objectId };
+    let patientFound = await paciente.findById(query).exec();
+    await patientFound.remove();
+    let connElastic = new ElasticSync();
+    await connElastic.delete(patientFound._id.toString());
+    EventCore.emitAsync('mpi:patient:delete', patientFound);
+    return patientFound;
 }
 
 // Borramos un paciente en la BD MPI - es necesario handlear posibles errores en la fn llamadora.
 export async function deletePacienteMpi(objectId) {
-    let query = {
-        _id: objectId
-    };
+    let query = { _id: objectId };
     let pacremove = await pacienteMpi.findById(query).exec();
     await pacremove.remove();
 }
@@ -496,12 +494,7 @@ export async function deletePacienteMpi(objectId) {
 
 export function updateContactos(req, data) {
     data.markModified('contacto');
-    Logger.log(req, 'mpi', 'update', {
-        accion: 'updateContacto',
-        ruta: req.url,
-        method: req.method,
-        data: data.contacto,
-    });
+    andesLog(req, logKeys.mpiUpdate.key, data, 'update contacto', data.contacto);
     data.contacto = req.body.contacto;
 }
 
@@ -514,7 +507,7 @@ export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
     try {
-        await actualizarGeoReferencia(data);
+        await actualizarGeoReferencia(data, req);
     } catch (err) {
         return err;
     }
@@ -546,19 +539,25 @@ export function updateActivo(req, data) {
     data.activo = req.body.activo;
 }
 
-export function updateRelacion(req, data) {
-    if (data && data.relaciones) {
-        const objRel = data.relaciones.find(elem => {
-            if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
-                if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
-                    return elem;
+export function updateRelacion(nuevaRelacion, data) {
+    if (data) {
+        // verifico si el paciente tiene relaciones
+        if (data.relaciones) {
+            const objRel = data.relaciones.find(elem => {
+                if (elem && nuevaRelacion && elem.referencia && nuevaRelacion.referencia) {
+                    // checkeamos si ya existe la relacion que queremos insertar..
+                    if (elem.referencia.toString() === nuevaRelacion.referencia.toString()) {
+                        return elem;
+                    }
                 }
+            });
+            if (!objRel) {
+                data.markModified('relaciones');
+                data.relaciones.push(nuevaRelacion);
             }
-        });
-
-        if (!objRel) {
+        } else {
             data.markModified('relaciones');
-            data.relaciones.push(req.body.dto);
+            data.relaciones = [nuevaRelacion];
         }
     }
 }
@@ -759,12 +758,13 @@ export async function matchPaciente(dataPaciente) {
 }
 
 /**
- *  Devuelve true si el paciente ya existe en ANDES
+ *  Devuelve un array de pacientes similares al ingresado por parámetro
+ *  Utiliza
  *
  * @param {*} nuevoPaciente
  * @returns Promise<boolean> || error
  */
-export async function checkRepetido(nuevoPaciente): Promise<boolean> {
+export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching: any[], dniRepetido: boolean, macheoAlto: boolean }> {
     let matchingInputData = {
         type: 'suggest',
         claveBlocking: 'documento',
@@ -776,39 +776,60 @@ export async function checkRepetido(nuevoPaciente): Promise<boolean> {
         fechaNacimiento: nuevoPaciente.fechaNacimiento
     };
 
-    let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
-    // Filtramos al mismo paciente
-    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente.id);
+    let candidatos = await matching(matchingInputData);  // Handlear error en funcion llamadora
+    // Filtramos al propio paciente y a los resultados por debajo de la cota minima
+    candidatos = candidatos.filter(elem => {
+        return (elem.paciente.id !== nuevoPaciente.id) && (elem.match > config.mpi.cotaMatchMin);
+    });
+
+    // Extraemos los validados de los resultados
+    let similaresValidados = candidatos.filter(elem => elem.paciente.estado === 'validado');
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
     if (nuevoPaciente.estado === 'validado') {
-        resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
+        candidatos = similaresValidados;
     }
-    // La condición verifica que el matching no de superior a la cota maxima y que el nuevo paciente no coincida en dni y sexo con alguno ya existente
-    let cond = false;
-    if (resultadoMatching && resultadoMatching.length > 0) {
-        cond = (resultadoMatching.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
-        cond = cond || resultadoMatching.filter(element =>
-            (element.paciente.sexo === matchingInputData.sexo && element.paciente.documento === matchingInputData.documento)
-        ).length > 0;
+
+    let macheoAlto = (candidatos.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
+    let dniRepetido = similaresValidados.filter(element =>
+        (element.paciente.sexo.toString() === matchingInputData.sexo.toString() && element.paciente.documento.toString() === matchingInputData.documento.toString())
+    ).length > 0;
+
+    let promiseArray = [];
+    for (let resultado of candidatos) {
+        let idPaciente = mongoose.Types.ObjectId(resultado.paciente.id);
+        promiseArray.push(buscarPaciente(idPaciente));
     }
-    return cond;
+    let arrayAuxiliar = await Promise.all(promiseArray);
+    let resultadoMatching = [];
+    for (let index = 0; index < arrayAuxiliar.length; index++) {
+        let pacienteCandidato = arrayAuxiliar[index].paciente;
+        resultadoMatching.push({ paciente: pacienteCandidato });
+        resultadoMatching[index].match = candidatos[index].match;
+    }
+    return { resultadoMatching, dniRepetido, macheoAlto };
 }
 
-/*
+/**
  * Intenta validar un paciente con fuentes auténticas.
- * Devuelve el paciente, validado o no
+ * Devuelve el paciente, y si fue validado o no (true/false)
  *
  * @param {*} pacienteAndes
  * @returns Object Paciente
  */
-export async function validarPaciente(pacienteAndes) {
-
-    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
+export async function validarPaciente(pacienteAndes, req: any = configPrivate.userScheduler) {
+    let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
+    if (sexoPaciente === 'otro') {
+        return { paciente: pacienteAndes, validado: false };
+    }
+    let sexoQuery = sexoPaciente === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
+
     try {
-        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resRenaper);
     } catch (error) {
-        return await validarSisa(pacienteAndes);
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
+        return await validarSisa(pacienteAndes, req);
     }
     let band = true;
     // Respuesta correcta de renaper?
@@ -823,68 +844,86 @@ export async function validarPaciente(pacienteAndes) {
             pacienteAndes.cuil = pacienteRenaper.cuil;
             pacienteAndes.estado = 'validado';
             pacienteAndes.foto = pacienteRenaper.foto;
+            if (pacienteAndes.direccion.length) {
+                pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
+            }
+            return { paciente: pacienteAndes, validado: true };
+        } else {
+            return await validarSisa(pacienteAndes, req, pacienteRenaper.foto);
+
         }
-        return pacienteAndes;
-    }
-    // Respuesta erronea de renaper o test regex fallido?
-    if (!resRenaper || (resRenaper && resRenaper.datos && resRenaper.datos.nroError !== 0) || band) {
-        return await validarSisa(pacienteAndes);
+    } else {
+        return await validarSisa(pacienteAndes, req);
     }
 }
 
-async function validarSisa(pacienteAndes: any) {
+async function validarSisa(pacienteAndes: any, req: any, foto = null) {
     try {
+        let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
+
+        pacienteAndes.sexo = sexoPaciente;
         let resSisa: any = await matchSisa(pacienteAndes);
-        let porcentajeMatcheo = resSisa.matcheos.matcheo;
-        if (porcentajeMatcheo > 95) {
-            pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
-            pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
-            pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
-            pacienteAndes.estado = 'validado';
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resSisa);
+
+        pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
+        pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
+        pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
+        pacienteAndes.estado = 'validado';
+        if (foto) {
+            pacienteAndes.foto = foto;
         }
-        return pacienteAndes;
+        return { paciente: pacienteAndes, validado: true };
     } catch (error) {
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por SISA');
         // no hacemos nada con el paciente
-        return pacienteAndes;
+        return { paciente: pacienteAndes, validado: false };
     }
 }
+
 /**
  * * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
- * @param dataPaciente debe contener direccion y localidad.
+ * @param data debe contener direccion y localidad.
  */
 
-export async function actualizarGeoReferencia(patient) {
-    if (patient.direccion[0].valor && patient.direccion[0].ubicacion.localidad && patient.direccion[0].ubicacion.localidad.nombre) {
-        try {
-            const geoRef: any = await geoRefPaciente(patient);
-            if (geoRef && geoRef.lat) {
-                patient.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                patient.direccion[0].ubicacion.barrio = await getServicioGeonode(patient.direccion[0].geoReferencia);
+export async function actualizarGeoReferencia(dataPaciente, req) {
+    try {
+        let pacienteOriginal = dataPaciente;
+        // (valores de direccion fueron modificados): están completos?
+        if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad && dataPaciente.direccion[0].ubicacion.provincia) {
+            // si el paciente no fue georeferenciado
+            if (!dataPaciente.direccion[0].georeferencia) {
+                let dir = dataPaciente.direccion[0].valor + ', ' + dataPaciente.direccion[0].ubicacion.localidad.nombre + ', ' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
+                const geoRef: any = await getGeoreferencia(dir);
+                // georeferencia exitosa?
+                if (geoRef && geoRef.lat) {
+                    dataPaciente.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                    let nombreBarrio = await getServicioGeonode(dataPaciente.direccion[0].geoReferencia);
+                    // consulta exitosa?
+                    if (nombreBarrio) {
+                        const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));
+                        if (barrioPaciente) {
+                            dataPaciente.direccion[0].ubicacion.barrio = barrioPaciente;
+                        }
+                    }
+                } else {
+                    dataPaciente.direccion[0].geoReferencia = null;
+                    dataPaciente.direccion[0].ubicacion.barrio = null;
+                }
             }
-        } catch (err) {
-            return (err);
+            if (req) {
+                // se guardan los datos
+                updatePaciente(pacienteOriginal, dataPaciente, req);
+            }
+        } else {
+            if (dataPaciente.direccion[0].georeferencia) {
+                if (req) {
+                    // se guardan los datos
+                    updatePaciente(pacienteOriginal, dataPaciente, req);
+                }
+            }
         }
+    } catch (err) {
+        return (err);
     }
 }
 
-export async function geoRefPaciente(dataPaciente) {
-    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
-    let pathGoogleApi = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}, AR&key=${configPrivate.geoKey}`;
-
-    pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-    pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-    pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-    pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-    pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-    pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-    pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-    pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
-
-    const [status, body] = await handleHttpRequest(pathGoogleApi);
-    const salida = JSON.parse(body);
-    if (salida.status === 'OK') {
-        return salida.results[0].geometry.location;
-    } else {
-        return {};
-    }
-}
