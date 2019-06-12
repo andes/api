@@ -188,7 +188,7 @@ router.post('/reestablecer-password', (req, res, next) => {
 
 router.post('/mailGenerico', async (req, res, next) => {
     if (!req.body.emails) {
-        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
+        return next('Se debe ingresar una dirección de e-Mail');
     }
     const body = req.body;
     const usuario: any = (req as any).user;
@@ -210,6 +210,7 @@ router.post('/mailGenerico', async (req, res, next) => {
     };
 
     let respuesta = await SendEmail.sendMail(data);
+    res.json(respuesta);
 });
 
 export = router;
