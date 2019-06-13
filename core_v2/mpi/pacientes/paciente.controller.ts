@@ -33,7 +33,7 @@ export function make(body: IPaciente) {
  * @param {express.Request} req Request de Express para obtener los datos del usuario
  */
 
-export async function store(paciente: IPacienteDoc, req: express.Request) {
+export async function store(paciente: IPacienteDoc, req: express.Request, events = true) {
     const session = await Paciente.db.startSession();
     session.startTransaction();
     const isNew = paciente.isNew;
@@ -49,11 +49,15 @@ export async function store(paciente: IPacienteDoc, req: express.Request) {
         if (isNew) {
             log(req, logKeys.mpiInsert.key, paciente._id, logKeys.mpiInsert.operacion, paciente, null);
             await session.commitTransaction();
-            EventCore.emitAsync('mpi:patient:create', paciente);
+            if (events) {
+                EventCore.emitAsync('mpi:patient:create', paciente);
+            }
         } else {
             log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, paciente, pacienteOriginal);
             await session.commitTransaction();
-            EventCore.emitAsync('mpi:patient:update', paciente, pacienteFields);
+            if (events) {
+                EventCore.emitAsync('mpi:patient:update', paciente, pacienteFields);
+            }
         }
         return paciente;
     } catch (error) {

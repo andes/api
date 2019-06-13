@@ -32,7 +32,7 @@ export class SubresourceController {
     public store(resource: Document, element) {
         let subresource = this.getSubresource(resource);
         let index = subresource.findIndex(item => item.id === element.id);
-        if (index > 0) {
+        if (index >= 0) {
             subresource.splice(index, 1, element);
         } else {
             subresource.push(element);

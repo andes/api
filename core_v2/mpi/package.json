@@ -16,6 +16,7 @@
     "@andes/event-bus": "^0.1.0",
     "@andes/log": "^1.1.5",
     "@andes/match": "^1.1.12",
+    "@andes/georef": "^0.1.0",
     "@andes/mongoose-plugin-audit": "^0.1.0",
     "@elastic/elasticsearch": "^5.6.17",
     "moment": "^2.19.3",
