@@ -62,21 +62,17 @@ export async function updatePaciente(pacienteObj, data, req) {
         // pacienteObj.markModified;
         Auth.audit(pacienteObj, req);
     }
-    try {
-        await pacienteObj.save();
-        const connElastic = new ElasticSync();
-        let updated = await connElastic.sync(pacienteObj);
-        if (updated) {
-            andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
-        } else {
-            andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, pacienteObj, null);
-        }
-        EventCore.emitAsync('mpi:patient:update', pacienteObj);
-        return pacienteObj;
-    } catch (error) {
-        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
-        return error;
+    await pacienteObj.save();
+    const connElastic = new ElasticSync();
+    let updated = await connElastic.sync(pacienteObj);
+    if (updated) {
+        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
+    } else {
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, pacienteObj, null);
     }
+    EventCore.emitAsync('mpi:patient:update', pacienteObj);
+    return pacienteObj;
+
 }
 /**
  * Busca los turnos futuros asignados al paciente y actualiza los datos.
