@@ -8,9 +8,9 @@ export class EventBus extends Emitter {
      * @param {any}  params listado de paramentros relacionados con el evento
      */
 
-    emitAsync (name: String, ...params: any[]);
+    emitAsync(name: String, ...params: any[]);
 
-    emitAsync () {
+    emitAsync() {
         process.nextTick(() => {
             this.emit.apply(this, arguments);
         });
@@ -19,5 +19,6 @@ export class EventBus extends Emitter {
 }
 
 export const EventCore = new EventBus();
+export const EventCoreV2 = new EventBus();
 
 export const EventSocket = new EventBus();

@@ -71,7 +71,7 @@ export const geonode = async (point: Coordenadas): Promise<any> => {
 
 export async function getBarrio(point: Coordenadas) {
     let response = await geonode(point);
-    if (response.features.length) {
+    if (response && response.features.length) {
         return response.features[0].properties.NOMBRE;
     }
     return null;
