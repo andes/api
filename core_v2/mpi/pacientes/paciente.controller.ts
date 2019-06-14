@@ -12,7 +12,8 @@ import { EventCore } from '@andes/event-bus';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
-import { MongoQuery } from '@andes/query-builder';
+import { MongoQuery, isSelected } from '@andes/query-builder';
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 
 /**
  * Crea un objeto paciente
@@ -109,7 +110,11 @@ export async function findById(id: string | String | mongoose.Types.ObjectId, op
     if (fields) {
         queryFind.select(fields);
     }
-    return await queryFind;
+    const paciente = await queryFind;
+    if (isSelected(fields, 'financiador')) {
+        paciente.financiador = await getObraSocial(paciente);
+    }
+    return paciente;
 }
 
 /**

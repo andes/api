@@ -1,11 +1,11 @@
-import * as mongoose from 'mongoose';
+import { Schema } from 'mongoose';
 
-export const FinanciadorSchema = new mongoose.Schema({
+export const FinanciadorSchema = new Schema({
     codigoPuco: Number,
     nombre: String,
     financiador: String,
-    id: mongoose.Schema.Types.ObjectId,
+    id: Schema.Types.ObjectId,
     numeroAfiliado: String,
     prepaga: Boolean,
     idObraSocial: Number
-});
+}, { _id: false });
