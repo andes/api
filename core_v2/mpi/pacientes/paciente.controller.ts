@@ -8,7 +8,7 @@ import { Auth } from '../../../auth/auth.class';
 import { PacienteTx } from './pacienteTx';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
-import { EventCore } from '@andes/event-bus';
+import { EventCoreV2 } from '@andes/event-bus';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
@@ -51,13 +51,13 @@ export async function store(paciente: IPacienteDoc, req: express.Request, events
             log(req, logKeys.mpiInsert.key, paciente._id, logKeys.mpiInsert.operacion, paciente, null);
             await session.commitTransaction();
             if (events) {
-                EventCore.emitAsync('mpi:patient:create', paciente);
+                EventCoreV2.emitAsync('mpi:patient:create', paciente);
             }
         } else {
             log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, paciente, pacienteOriginal);
             await session.commitTransaction();
             if (events) {
-                EventCore.emitAsync('mpi:patient:update', paciente, pacienteFields);
+                EventCoreV2.emitAsync('mpi:patient:update', paciente, pacienteFields);
             }
         }
         return paciente;
@@ -129,7 +129,7 @@ export async function remove(paciente: IPacienteDoc, req: express.Request) {
         await PacienteTx.delete(paciente);
         await session.commitTransaction();
         log(req, logKeys.mpiDelete.key, paciente._id, logKeys.mpiDelete.operacion, paciente, null);
-        EventCore.emitAsync('mpi:patient:create', paciente);
+        EventCoreV2.emitAsync('mpi:patient:create', paciente);
         return;
     } catch (err) {
         await session.abortTransaction();
