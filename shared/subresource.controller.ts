@@ -70,7 +70,7 @@ export class SubresourceController {
         let subresource = this.getSubresource(resource);
         if (query) {
             const contactos = subresource.filter(contacto => {
-                return MemoryQuery.matchQuery(query, contacto, this.filter);
+                return MemoryQuery.buildQuery(query, this.filter, contacto);
             });
             return contactos;
         } else {

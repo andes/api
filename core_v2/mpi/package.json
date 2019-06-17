@@ -13,6 +13,7 @@
     "express": "^4.16.3",
     "express-async-handler": "^1.1.4",
     "@andes/query-builder": "^0.1.0",
+    "@andes/fuentes-autenticas": "^0.1.0",
     "@andes/event-bus": "^0.1.0",
     "@andes/log": "^1.1.5",
     "@andes/match": "^1.1.12",

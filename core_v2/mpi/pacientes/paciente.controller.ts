@@ -252,6 +252,48 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
 
 }
 
+
+const searchSpecification = {
+    identificadores: (value, query) => {
+        return MongoQuery.queryArray('identificadores', value, 'entidad', 'valor');
+    },
+    relaciones: (value, query) => {
+        return MongoQuery.queryArray('relaciones', value, 'relacion.nombre', 'referencia');
+    },
+    documento: MongoQuery.partialString,
+    nombre: MongoQuery.partialString,
+    apellido: MongoQuery.partialString,
+    fechaNacimiento: MongoQuery.matchDate,
+    estado: MongoQuery.matchString,
+    activo: MongoQuery.matchString,
+    barrio: {
+        filed: 'direccion.ubicacion.barrio.nombre',
+        fn: MongoQuery.partialString
+    },
+    localidad: {
+        filed: 'direccion.ubicacion.localidad.nombre',
+        fn: MongoQuery.partialString
+    },
+    provincia: {
+        filed: 'direccion.ubicacion.provincia.nombre',
+        fn: MongoQuery.partialString
+    },
+    pais: {
+        filed: 'direccion.ubicacion.pais.nombre',
+        fn: MongoQuery.partialString
+    },
+    nacionalidad: MongoQuery.partialString,
+    email: (value) => {
+        return MongoQuery.queryArray('contacto', [`email|${value}`], 'tipo', 'valor');
+    },
+    celular: (value) => {
+        return MongoQuery.queryArray('contacto', [`celular|${value}`], 'tipo', 'valor');
+    },
+    fijo: (value) => {
+        return MongoQuery.queryArray('contacto', [`fijo|${value}`], 'tipo', 'valor');
+    }
+};
+
 /**
  * Realiza una búsqueda de pacientes dada una condición
  * @param condicion
@@ -262,79 +304,7 @@ export async function find(condicion, options?: any) {
     options = options || {};
     const { fields, skip, limit } = options;
 
-    const opciones = {};
-    const filtros = [];
-    let identificadores = [];
-    // identificadores ['Entidad1 | valor'... 'EntidadN | valorN'} ]
-    if (condicion.identificadores) {
-        if (Array.isArray(condicion.identificadores)) {
-            identificadores = condicion.identificadores;
-        } else {
-            identificadores = [condicion.identificadores];
-        }
-        filtros.push(MongoQuery.queryArray('identificadores', identificadores, 'entidad', 'valor', '$and'));
-    }
-    if (condicion.documento) {
-        opciones['documento'] = MongoQuery.partialString(condicion.documento);
-    }
-    if (condicion.nombre) {
-        opciones['nombre'] = MongoQuery.partialString(condicion.nombre);
-    }
-    if (condicion.apellido) {
-        opciones['apellido'] = MongoQuery.partialString(condicion.apellido);
-    }
-    if (condicion.fechaNacimiento) {
-        opciones['fechaNacimiento'] = MongoQuery.matchDate(condicion.fechaNacimiento);
-    }
-    if (condicion.estado) {
-        opciones['estado'] = condicion.estado;
-    }
-    if (condicion.activo) {
-        opciones['activo'] = condicion.activo;
-    }
-    if (condicion.barrio) {
-        opciones['direccion.ubicacion.barrio.nombre'] = MongoQuery.partialString(condicion.barrio);
-    }
-    if (condicion.localidad) {
-        opciones['direccion.ubicacion.localidad.nombre'] = MongoQuery.partialString(condicion.localidad);
-    }
-    if (condicion.provincia) {
-        opciones['direccion.ubicacion.provincia.nombre'] = MongoQuery.partialString(condicion.provincia);
-    }
-    if (condicion.pais) {
-        opciones['direccion.ubicacion.pais.nombre'] = MongoQuery.partialString(condicion.pais);
-    }
-    if (condicion.nacionalidad) {
-        opciones['nacionalidad'] = MongoQuery.partialString(condicion.nacionalidad);
-    }
-
-    let contactos = [];
-    if (condicion.email) {
-        contactos.push('email |' + condicion.email);
-    }
-    if (condicion.celular) {
-        contactos.push('celular |' + condicion.celular);
-    }
-    if (condicion.fijo) {
-        contactos.push('fijo |' + condicion.fijo);
-    }
-    if (contactos.length > 0) {
-        filtros.push(MongoQuery.queryArray('contactos', contactos, 'tipo', 'valor'));
-    }
-    if (condicion.relaciones) {
-        let relaciones = [];
-        if (Array.isArray(condicion.relaciones)) {
-            relaciones = condicion.relaciones;
-        } else {
-            relaciones = [condicion.relaciones];
-        }
-        filtros.push(MongoQuery.queryArray('relaciones', relaciones, 'relacion.nombre', 'referencia', '$and'));
-    }
-
-    if (filtros.length > 0) {
-        opciones['$and'] = filtros;
-    }
-
+    const opciones = MongoQuery.buildQuery(condicion, searchSpecification);
     let pacientesQuery = Paciente.find(opciones);
 
     if (fields) {
