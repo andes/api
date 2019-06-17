@@ -1,10 +1,11 @@
 import { assert, expect } from 'chai';
 import * as PacienteModule from './paciente.schema';
+import { MongoQuery } from '@andes/query-builder';
+
 import { findById, store, search, matching, set, suggest, find } from './paciente.controller';
 import * as log from '@andes/log';
 import * as PacienteTxModule from './pacienteTx';
 import { ImportMock } from 'ts-mock-imports';
-import { MongoQuery } from '@andes/query-builder';
 
 const sinon = require('sinon');
 require('sinon-mongoose');
@@ -231,22 +232,20 @@ describe('MPI - Paciente controller', () => {
             const mock = PacienteMock.expects('find').withArgs(condicion);
             mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
-            let pacientesEncontrado = await find(condicion, 'nombre apellido');
+            let pacientesEncontrado = await find(condicion, { fields: 'nombre apellido' });
             expect(pacientesEncontrado).to.eql([]);
 
         });
 
         it('Búsqueda parcial por apellido', async () => {
-            const mockStr = sinon.stub(MongoQuery, 'partialString').returns({});
             const mock = PacienteMock.expects('find');
             mock.chain('select').withArgs('nombre apellido');
             mock.chain('exec').resolves([]);
 
-            let pacientesEncontrado = await find({ apellido: '^GONZ' }, 'nombre apellido');
-            sinon.assert.calledWith(mockStr, '^GONZ');
-            mock.withArgs(sinon.match.has('nombre', {}));
+            let pacientesEncontrado = await find({ apellido: '^GONZ' }, { fields: 'nombre apellido' });
+            mock.withArgs(sinon.match.has('nombre', { $regexp: '' }));
             expect(pacientesEncontrado).to.eql([]);
-            mockStr.restore();
+
         });
 
         it('Búsqueda por identificadores', async () => {
@@ -268,7 +267,7 @@ describe('MPI - Paciente controller', () => {
             const mock = PacienteMock.expects('find').withArgs(elem);
             mock.chain('select').withArgs('documento nombre apellido');
             mock.chain('exec').resolves([]);
-            let pacientesEncontrado = await find(condicion, 'documento nombre apellido');
+            let pacientesEncontrado = await find(condicion);
             expect(pacientesEncontrado).to.eql([]);
         });
 

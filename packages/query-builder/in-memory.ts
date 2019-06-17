@@ -18,10 +18,10 @@ export function matchString(value, compareValue) {
     return (value === compareValue);
 }
 
-export function matchQuery(query, value, filtros) {
+export function buildQuery(query, searchSpecification, value) {
     return Object.keys(query).reduce((flag, key) => {
         if (query[key] && value[key]) {
-            return flag && (filtros[key](query[key], value[key]));
+            return flag && (searchSpecification[key](query[key], value[key]));
         }
         return false;
     }, true);
@@ -31,5 +31,5 @@ export const MemoryQuery = {
     matchDate,
     partialString,
     matchString,
-    matchQuery
+    buildQuery
 };
