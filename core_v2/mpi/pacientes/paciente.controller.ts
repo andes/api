@@ -111,10 +111,13 @@ export async function findById(id: string | String | mongoose.Types.ObjectId, op
         queryFind.select(fields);
     }
     const paciente = await queryFind;
-    if (isSelected(fields, 'financiador')) {
-        paciente.financiador = await getObraSocial(paciente);
+    if (paciente) {
+        if (isSelected(fields, 'financiador')) {
+            paciente.financiador = await getObraSocial(paciente);
+        }
+        return paciente;
     }
-    return paciente;
+    return null;
 }
 
 /**
