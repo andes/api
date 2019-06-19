@@ -18,6 +18,10 @@ const constantes = {
         required: true,
         es_indexed: true,
         enum: ['temporal', 'validado', 'recienNacido', 'extranjero']
+    },
+    IDENTIFICACION: {
+        type: String,
+        enum: ['documentoExtranjero', 'pasaporte']
     }
 };
 export = constantes;

@@ -10,6 +10,9 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
+
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 const logD = debug('paciente-controller');
 const router = express.Router();
@@ -102,9 +105,33 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
     result.pacienteMpi = await toArray(pacienteMpi.aggregate(estadoAggregate).cursor({ batchSize: 1000 }).exec());
     result.logs = await toArray(log.aggregate(logAggregate).cursor({ batchSize: 1000 }).exec());
     res.json(result);
-
 });
 
+router.post('/pacientes/validar/', async (req, res, next) => {
+    // TODO modificar permiso renaper -> validar/validacion o algo asi
+    if (!Auth.check(req, 'fa:get:renaper')) {
+        return next(403);
+    }
+    const pacienteAndes = req.body;
+    if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
+        try {
+            // chequeamos si el par dni-sexo ya existe en ANDES
+            const resultadoCheck = await controller.checkRepetido(pacienteAndes);
+            let resultado;
+            if (resultadoCheck.dniRepetido) {
+                resultado = { paciente: resultadoCheck.resultadoMatching[0].paciente, existente: true };
+            } else {
+                resultado = await controller.validarPaciente(pacienteAndes, req);
+                resultado.existente = false;
+            }
+            res.json(resultado);
+        } catch (err) {
+            return next(err);
+        }
+    } else {
+        return next(500);
+    }
+});
 
 router.get('/pacientes/auditoria/', (req, res, next) => {
     let filtro;
@@ -139,6 +166,61 @@ router.get('/pacientes/auditoria/', (req, res, next) => {
 
 });
 
+router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
+    // if (!Auth.check(req, 'mpi:paciente:putAndes')) {
+    //     return next(403);
+    // }
+    if (!(mongoose.Types.ObjectId.isValid(req.body.id))) {
+        return next(404);
+    }
+    const objectId = new mongoose.Types.ObjectId(req.body.id);
+    const query = {
+        _id: objectId
+    };
+
+    try {
+        // Se busca el paciente en ANDES
+        let patientFound: any = await paciente.findById(query).exec();
+
+        if (patientFound) {
+            const data = req.body;
+            if (patientFound.estado === 'validado' && !patientFound.isScan) {
+                delete data.documento;
+                delete data.estado;
+                delete data.sexo;
+                delete data.fechaNacimiento;
+            }
+            let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
+            andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, pacienteUpdated, null);
+            res.json(pacienteUpdated);
+        } else {
+            req.body._id = req.body.id;
+            let newPatient = new paciente(req.body);
+
+            // Se busca el paciente en MPI
+            let patientFountMpi: any = await pacienteMpi.findById(query).exec();
+
+            if (patientFountMpi) {
+                Auth.audit(newPatient, req);
+            }
+            await newPatient.save();
+            const nuevoPac = JSON.parse(JSON.stringify(newPatient));
+            const connElastic = new ElasticSync();
+            let updated = await connElastic.sync(newPatient);
+            if (updated) {
+                andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
+            } else {
+                andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
+            }
+            EventCore.emitAsync('mpi:patient:update', nuevoPac);
+            res.json(nuevoPac);
+        }
+    } catch (error) {
+        andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, null, 'Error activando/desactivando paciente');
+        return next(error);
+    }
+});
+
 router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
     let filtro = {
         'identificadores.0': { $exists: true },
@@ -171,6 +253,18 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
         return next(error);
     }
 
+});
+
+// Search using elastic search
+router.get('/pacientes/search', (req, res, next) => {
+    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+        return next(403);
+    }
+    controller.matching({ type: 'search', filtros: req.query }).then(result => {
+        res.send(result);
+    }).catch(error => {
+        return next(error);
+    });
 });
 
 
@@ -356,35 +450,25 @@ router.post('/pacientes', async (req, res, next) => {
         return next(403);
     }
     try {
-        if (req.body.documento) {
-            const condicion = {
-                documento: req.body.documento
-            };
-            let data = await controller.searchSimilar(req.body, 'andes', condicion);
-            logD('Encontrados', data.map(item => item.value));
-            if (data && data.length && data[0].value > 0.90) {
-                logD('hay un paciente muy parecido en la base de datos');
-                const connElastic = new ElasticSync();
-                await connElastic.sync(data[0].paciente);
-                return res.json(data[0].paciente);
-            } else {
-                let cond = await controller.checkRepetido(req.body);
-                if (cond) {
-                    return next('El paciente ya existe');
-                } else {
-                    req.body.activo = true;
-                    let pacienteObj = await controller.createPaciente(req.body, req);
-                    let patient = req.body;
-                    // se carga geo referencia desde api de google
-                    if (req.body.estado === 'validado' && patient && patient.direccion && patient.direccion.length > 0) {
-                        await controller.actualizarGeoReferencia(patient);
-                    }
-                    return res.json(pacienteObj);
+        let pacienteNuevo = req.body.paciente;
+        let ignorarSugerencias = req.body.ignoreCheck;
+        if (pacienteNuevo.documento) {
+            // Todo loguear posible duplicado si ignora el check
+            let resultado = await controller.checkRepetido(pacienteNuevo);
+            if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
+                pacienteNuevo.activo = true;
+                let pacienteObj = await controller.createPaciente(pacienteNuevo, req);
+                // se carga geo referencia desde api de google
+                res.json(pacienteObj);
+                if (pacienteNuevo.estado === 'validado') {
+                    controller.actualizarGeoReferencia(pacienteObj, req);
                 }
+            } else {
+                return res.json(resultado);
             }
         } else {
-            req.body.activo = true;
-            let pacienteObjSinDocumento = await controller.createPaciente(req.body, req);
+            pacienteNuevo.activo = true;
+            let pacienteObjSinDocumento = await controller.createPaciente(pacienteNuevo, req);
             return res.json(pacienteObjSinDocumento);
         }
     } catch (error) {
@@ -436,40 +520,36 @@ router.put('/pacientes/:id', async (req, res, next) => {
         _id: objectId
     };
     try {
-        let cond = await controller.checkRepetido(req.body);
-        if (cond) {
-            return next('El paciente ya existe');
-        } else {
+        // Todo loguear posible duplicado si ignora el check
+        let pacienteModificado = req.body.paciente;
+        let ignorarSugerencias = req.body.ignoreCheck;
+        let resultado = await controller.checkRepetido(pacienteModificado);
+
+        if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
             let patientFound: any = await paciente.findById(query).exec();
+
             if (patientFound) {
-                const data = req.body;
+                const direccionOld = patientFound.direccion[0];
+                const data = pacienteModificado;
                 if (patientFound && patientFound.estado === 'validado' && !patientFound.isScan) {
                     delete data.documento;
                     delete data.estado;
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
-                if (patientFound.estado === 'validado' && patientFound.direccion && patientFound.direccion.length && patientFound.direccion[0].valor !== data.direccion[0].valor) {
-                    await controller.actualizarGeoReferencia(data);
-                }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
-                // try {
-                //     controller.updateTurnosPaciente(pacienteUpdated);
-                // } catch (error) {
-                //     return next('Error actualizando turnos del paciente');
-                // }
                 res.json(pacienteUpdated);
-
-            } else {
-                req.body._id = req.body.id;
-                let newPatient = new paciente(req.body);
-
-                // se carga geo referencia desde api de google
-                if (req.body.estado === 'validado') {
-                    await controller.actualizarGeoReferencia(newPatient);
+                // si el paciente esta validado y hay cambios en direccion o localidad..
+                if (patientFound.estado === 'validado' && direccionOld.valor !== data.direccion[0].valor) {
+                    controller.actualizarGeoReferencia(pacienteUpdated, req);
                 }
+            } else {
+                pacienteModificado._id = pacienteModificado.id;
+                let newPatient = new paciente(pacienteModificado);
+
                 // verifico si el paciente ya está en MPI
-                let patientFountMpi = await pacienteMpi.findById(query).exec();
+                let patientFountMpi: any = await pacienteMpi.findById(query).exec();
+                const direccionOld = patientFountMpi.direccion[0];
 
                 if (patientFountMpi) {
                     Auth.audit(newPatient, req);
@@ -479,18 +559,22 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 const connElastic = new ElasticSync();
                 let updated = await connElastic.sync(newPatient);
                 if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
-                        original: nuevoPac,
-                        nuevo: newPatient
-                    });
+                    andesLog(req, logKeys.mpiUpdate.key, pacienteModificado._id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
                 } else {
-                    Logger.log(req, 'mpi', 'insert', newPatient);
+                    andesLog(req, logKeys.mpiInsert.key, pacienteModificado._id, logKeys.mpiInsert.operacion, newPatient, null);
                 }
                 EventCore.emitAsync('mpi:patient:update', nuevoPac);
                 res.json(nuevoPac);
+                // se carga geo referencia desde api de google
+                if (direccionOld.valor !== pacienteModificado.direccion[0].valor) {
+                    controller.actualizarGeoReferencia(newPatient, req);
+                }
             }
+        } else {
+            res.json(resultado);
         }
     } catch (error) {
+        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
         return next(error);
     }
 });
@@ -519,23 +603,19 @@ router.put('/pacientes/:id', async (req, res, next) => {
  *         schema:
  *           $ref: '#/definitions/paciente'
  */
-router.delete('/pacientes/:id', (req, res, next) => {
+router.delete('/pacientes/:id', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
     }
-    const ObjectId = mongoose.Types.ObjectId;
-    const objectId = new ObjectId(req.params.id);
-    controller.deletePacienteAndes(objectId).then((patientFound: any) => {
-        let connElastic = new ElasticSync();
-        connElastic.delete(patientFound._id.toString()).then(() => {
-            res.json(patientFound);
-        }).catch(error => {
-            return next(error);
-        });
-        Auth.audit(patientFound, req);
-    }).catch((error) => {
+    const objectId = new mongoose.Types.ObjectId(req.params.id);
+    try {
+        let patientFound: any = await controller.deletePacienteAndes(objectId);
+        res.json(patientFound);
+    } catch (error) {
         return next(error);
-    });
+    }
+
+
 });
 
 
@@ -685,15 +765,10 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                 case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
-                    // try {
-                    //     controller.updateTurnosPaciente(resultado.paciente);
-                    // } catch (error) {
-                    //     return next(error);
-                    // }
                     break;
 
                 case 'updateRelacion':
-                    controller.updateRelacion(req, resultado.paciente);
+                    controller.updateRelacion(req.body.dto, resultado.paciente);
                     break;
                 case 'deleteRelacion':
                     controller.deleteRelacion(req, resultado.paciente);
@@ -711,10 +786,6 @@ router.patch('/pacientes/:id', async (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-            // Quitamos esta sincronizacion con elastic para evitar la sincronización de campos no necesarios.
-            // let connElastic = new ElasticSync();
-            // await connElastic.sync(pacienteAndes);
-
             Auth.audit(pacienteAndes, req);
             let pacienteSaved = await pacienteAndes.save();
             res.json(pacienteSaved);
@@ -762,74 +833,5 @@ router.patch('/pacientes/mpi/:id', (req, res, next) => {
             return next(err);
         });
 });
-
-
-// Comentado hasta incorporar esta funcionalidad
-//
-// router.get('/pacientes/georef/:id', function (req, res, next) {
-//     /* Este método es público no requiere auth check */
-//     pacienteMpi.findById(req.params.id, function (err, data) {
-//         if (err) {
-//             console.log('ERROR GET GEOREF:  ', err);
-//             return next(err);
-//         }
-//         console.log('DATA:  ', data);
-//         let paciente;
-//         paciente = data;
-//         if (paciente && paciente.direccion[0].valor && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
-
-//             let dir = paciente.direccion[0].valor;
-//             let localidad = paciente.direccion[0].ubicacion.localidad.nombre;
-//             let provincia = paciente.direccion[0].ubicacion.provincia.nombre;
-//             // let pais = paciente.direccion[0].ubicacion.pais;
-//             let pathGoogleApi = '';
-//             let jsonGoogle = '';
-//             pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + configPrivate.geoKey;
-
-//             pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-//             pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-//             pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-//             pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-//             pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-//             pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-//             pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-//             pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
-
-//             console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
-
-//             let optionsgetmsg = {
-//                 host: 'maps.googleapis.com',
-//                 port: 443,
-//                 path: pathGoogleApi,
-//                 method: 'GET',
-//                 rejectUnauthorized: false
-//             };
-
-
-//             let reqGet = https.request(optionsgetmsg, function (res2) {
-//                 res2.on('data', function (d, error) {
-//                     jsonGoogle = jsonGoogle + d.toString();
-//                     console.log('RESPONSE: ', jsonGoogle);
-//                 });
-
-//                 res2.on('end', function () {
-//                     let salida = JSON.parse(jsonGoogle);
-//                     if (salida.status === 'OK') {
-//                         res.json(salida.results[0].geometry.location);
-//                     } else {
-//                         res.json('');
-//                     }
-//                 });
-//             });
-//             req.on('error', (e) => {
-//                 console.error(e);
-//                 return next(e);
-//             });
-//             reqGet.end();
-//         } else {
-//             return next('Datos incorrectos');
-//         }
-//     });
-// });
 
 export = router;
