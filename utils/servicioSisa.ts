@@ -1,7 +1,6 @@
 import { Matching } from '@andes/match';
 import * as config from '../config';
 import * as configPrivate from '../config.private';
-import * as request from 'request';
 const to_json = require('xmljson').to_json;
 import * as requestHandler from '../utils/requestHandler';
 
@@ -118,7 +117,7 @@ export async function getPacienteSisa(nroDocumento, sexo?: string) {
 }
 
 
-export function matchSisa(paciente) {
+export async function matchSisa(paciente) {
     // Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
     let matchPorcentaje = 0;
     let pacienteSisa = {};
@@ -126,51 +125,25 @@ export function matchSisa(paciente) {
     const match = new Matching();
     paciente['matchSisa'] = 0;
     // Se buscan los datos en sisa y se obtiene el paciente
-    return new Promise((resolve, reject) => {
-        const band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sisa') < 0) : true;
-        if (paciente.documento && band) {
-            if (paciente.documento.length >= 7) {
-                let sexo = null;
-                if (paciente.sexo) {
-                    sexo = (paciente.sexo === 'femenino') ? 'F' : 'M';
-                }
-                // OJO: Es sólo para pacientes con SEXO debido a que pueden existir distintos pacientes con el mismo DNI
-                getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
-                    .then((resultado) => {
-                        if (resultado) {
-                            // Verifico el resultado devuelto por el rest de Sisa
-                            switch (resultado.Ciudadano.resultado) {
-                                case 'OK':
-                                    if (resultado.Ciudadano.identificadoRenaper && resultado.Ciudadano.identificadoRenaper !== 'NULL') {
-                                        pacienteSisa = formatearDatosSisa(resultado.Ciudadano);
-                                        matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights, 'Levenshtein');
-                                        matchPorcentaje = (matchPorcentaje * 100);
-                                        // TODO
-                                        // Logger.log(req, 'auditoria', 'busqueda:sisa', {
-                                        //     resultado: resultado
-                                        // });
-                                        resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: matchPorcentaje, datosPaciente: pacienteSisa } });
-                                    } else {
-                                        resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
-                                    }
-                                    break;
-                                default:
-                                    resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
-                                    break;
-                            }
-                            //     }
-                        }
-                        resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
-                    })
-                    .catch((err) => {
-                        reject(err);
-                    });
-
-            } else {
-                resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
-            }
-        } else {
-            resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
+    const noIdentificadoSisa = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sisa') < 0) : true;
+    if (paciente.documento && noIdentificadoSisa && (paciente.documento.toString()).length >= 7) {
+        let sexo = null;
+        if (paciente.sexo) {
+            sexo = ((paciente.sexo) === 'femenino') ? 'F' : 'M';
         }
-    });
+        // OJO: Es sólo para pacientes con SEXO debido a que pueden existir distintos pacientes con el mismo DNI
+        let resultadoSisa = await getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo);
+        // Verifico el resultado devuelto por el rest de Sisa
+        if (resultadoSisa && resultadoSisa.Ciudadano && resultadoSisa.Ciudadano.identificadoRenaper && resultadoSisa.Ciudadano.identificadoRenaper !== 'NULL') {
+            pacienteSisa = formatearDatosSisa(resultadoSisa.Ciudadano);
+            matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights, 'Levenshtein');
+            matchPorcentaje = (matchPorcentaje * 100);
+            return ({ paciente, matcheos: { entidad: 'Sisa', matcheo: matchPorcentaje, datosPaciente: pacienteSisa } });
+        } else {
+            return ({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
+        }
+
+    } else {
+        return ({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
+    }
 }

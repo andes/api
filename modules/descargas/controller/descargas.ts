@@ -90,29 +90,67 @@ export class Documento {
         });
     }
 
+    private static semanticTags = {
+        //  Motivos Principales de Consulta (MPC) posibles
+        mpc: [
+            'entidad observable',
+            'regimen/tratamiento',
+            'procedimiento',
+            'hallazgo',
+            'trastorno'
+        ],
+
+        hallazgos: [
+            'hallazgo',
+            'situacion',
+            'trastorno',
+            'objeto físico',
+            'medicamento clínico',
+        ],
+
+        procedimientos: [
+            'procedimiento',
+            'entidad observable',
+            'régimen/tratamiento',
+            'elemento de registro',
+            'situación',
+        ],
+
+        solicitudes: [
+            'procedimiento',
+            'entidad observable',
+            'régimen/tratamiento',
+            'elemento de registro'
+        ],
+
+        insumos: [
+            'producto',
+        ]
+    };
+
     /**
+     * Tiene Motivo Principal de Consulta? (MPC)
      *
      * @param st string semanticTag
      */
     private static existeSemanticTagMPC(st) {
-        return st === 'entidad observable' || st === 'regimen/tratamiento' || st === 'procedimiento' || st === 'hallazgo' || st === 'trastorno';
+        return this.semanticTags.mpc.findIndex(x => x === st) > -1;
     }
 
     private static esHallazgo(st) {
-        return st === 'hallazgo' || st === 'situacion' || st === 'trastorno';
+        return this.semanticTags.hallazgos.findIndex(x => x === st) > -1;
     }
 
     private static esProcedimiento(st) {
-        return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro' || st === 'situación' || st === 'objeto físico');
-    }
-
-    private static esSolicitud(st, esSolicitud) {
-        return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro')
-            && esSolicitud;
+        return this.semanticTags.procedimientos.findIndex(x => x === st) > -1;
     }
 
     private static esInsumo(st) {
-        return (st === 'producto' || st === 'objeto físico' || st === 'medicamento clínico');
+        return this.semanticTags.insumos.findIndex(x => x === st) > -1;
+    }
+
+    private static esSolicitud(st, esSolicitud) {
+        return (this.semanticTags.solicitudes.findIndex(x => x === st) > -1) && esSolicitud;
     }
 
     private static esAdjunto(conceptId) {
@@ -120,9 +158,6 @@ export class Documento {
         return (conceptId === '1921000013108');
     }
 
-    // private static getRegistros(registro) {
-    //     return registro.valor === null ? registro.registros.filter()
-    // }
 
     // 'plan'
     static generarRegistroSolicitudHTML(plan: any, template: string): any {
@@ -177,12 +212,12 @@ export class Documento {
             .replace('<!--concepto-->', this.ucaseFirst(producto.concepto.term))
             .replace('<!--motivoPrincipalDeConsulta-->', producto.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '')
             .replace('<!--recetable-->', producto.valor.recetable ? '(recetable)' : '(no recetable)')
-            .replace('<!--estado-->', producto.valor.estado)
-            .replace('<!--cantidad-->', producto.valor.cantidad)
-            .replace('<!--unidad-->', producto.valor.unidad)
-            .replace('<!--cantidadDuracion-->', producto.valor.duracion.cantidad)
-            .replace('<!--unidadDuracion-->', producto.valor.duracion.unidad)
-            .replace('<!--indicacion-->', producto.valor.indicacion !== '' ? '<b>Indicación:</b>' + producto.valor.indicacion : '');
+            .replace('<!--estado-->', producto.valor.estado ? producto.valor.estado : '')
+            .replace('<!--cantidad-->', producto.valor.cantidad ? producto.valor.cantidad : '(sin valor)')
+            .replace('<!--unidad-->', producto.valor.unidad ? producto.valor.unidad : '(unidades sin especificar)')
+            .replace('<!--cantidadDuracion-->', (producto.valor.duracion && producto.valor.duracion.cantidad) ? producto.valor.duracion.cantidad : '(sin valor)')
+            .replace('<!--unidadDuracion-->', (producto.valor.duracion && producto.valor.duracion.unidad) ? producto.valor.duracion.unidad : '(sin valor)')
+            .replace('<!--indicacion-->', (producto.valor.indicacion && typeof producto.valor.indicacion !== 'undefined') ? `<b>Indicación:</b> ${producto.valor.indicacion}` : '');
     }
 
     // 'archivo adjunto'
@@ -260,6 +295,8 @@ export class Documento {
     static async generarInforme(registros) {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < registros.length; i++) {
+
+
                 if (registros[i]) {
                     // Es resumen de la internación?
                     if (registros[0].concepto.conceptId === '3571000013102') {
@@ -278,6 +315,7 @@ export class Documento {
                                 valor: `<div class="nivel-${this.nivelPadre}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3><p>${this.ucaseFirst(registros[i].valor.descripcion)}</p></div>`
                             })];
                         } else if (registros[i].valor !== null) {
+
                             if (this.esHallazgo(registros[i].concepto.semanticTag)) {
                                 this.informeRegistros = [...this.informeRegistros, ({
                                     concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag },
@@ -638,6 +676,7 @@ export class Documento {
 
                     await this.generarHTML(req).then(async htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();
+                        fs.writeFileSync('/tmp/test.html', htmlPDF);
                         await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
                             // async
                             // const pdf2 = await htmlPdf.create(htmlPDF, options);
