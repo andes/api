@@ -14,6 +14,7 @@ import * as path from 'path';
 import { env } from 'process';
 import * as rupStore from '../../../modules/rup/controllers/rupStore';
 
+import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
 let phantomjs = require('phantomjs-prebuilt-that-works');
 
 moment.locale('es');
@@ -22,6 +23,22 @@ moment.locale('es');
 if (env.NODE_ENV !== 'production') {
     // tslint:disable-next-line:no-console
     process.on('unhandledRejection', r => console.log(r));
+}
+
+function streamToBase64(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => {
+            chunks.push(chunk);
+        });
+        stream.on('end', () => {
+            let result = Buffer.concat(chunks);
+            return resolve(result.toString('base64'));
+        });
+        stream.on('error', (err) => {
+            return reject(err);
+        });
+    });
 }
 
 export class Documento {
@@ -370,6 +387,17 @@ export class Documento {
         });
     }
 
+    private static async getFirma(profesional) {
+        const FirmaSchema = makeFsFirma();
+        const file = await FirmaSchema.findOne({ 'metadata.idProfesional': String(profesional.id) }, {}, { sort: { _id: -1 } });
+        if (file) {
+            const stream = FirmaSchema.readById(file.id);
+            const base64 = await streamToBase64(stream);
+            return base64;
+        }
+        return null;
+    }
+
     private static async generarHTML(req) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -475,8 +503,12 @@ export class Documento {
 
                     let carpeta = paciente.carpetaEfectores.find(x => x.organizacion.id === idOrg);
 
+                    const firmaProfesional = await this.getFirma(prestacion.solicitud.profesional);
                     let profesionalSolicitud = prestacion.solicitud.profesional.apellido + ', ' + prestacion.solicitud.profesional.nombre;
-                    let profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
+                    const profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
+
+                    profesionalSolicitud += '<br>' + prestacion.solicitud.organizacion.nombre.substring(0, prestacion.solicitud.organizacion.nombre.indexOf('-'));
+
 
                     let orgacionacionDireccionSolicitud = organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre;
 
@@ -533,6 +565,10 @@ export class Documento {
                         .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
                         .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
                         .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'));
+
+                    if (firmaProfesional) {
+                        html = html.replace('<!--firma1-->', `<img src="data:image/png;base64,${firmaProfesional}">`);
+                    }
 
                     if (config.informe && motivoPrincipalDeConsulta) {
                         html = html
