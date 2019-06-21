@@ -1,6 +1,5 @@
 
-import { Router, Request, Response } from 'express';
-import * as asyncHandler from 'express-async-handler';
+import { asyncHandler, Router, Request, Response } from '@andes/api';
 import { ParentescoCtr } from './parentesco.controller';
 import { ParentescoNotFound } from './parentesco.error';
 import { Auth } from '../../../auth/auth.class';
@@ -17,9 +16,7 @@ import { Auth } from '../../../auth/auth.class';
 
 export const find = async (req: Request, res: Response) => {
     const id = req.params.id;
-    const options = {
-        fields: req.query.fields
-    };
+    const options = req.apiOptions();
     const paciente = await ParentescoCtr.findById(id, options);
     if (paciente) {
         return res.json(paciente);
@@ -36,12 +33,7 @@ export const find = async (req: Request, res: Response) => {
  */
 
 export const get = async (req: Request, res: Response) => {
-    const options = {
-        fields: req.query.fields,
-        skip: parseInt(req.query.skip, 2),
-        limit: parseInt(req.query.limit, 2)
-    };
-
+    const options = req.apiOptions();
     const conditions = req.query;
     const pacientes = await ParentescoCtr.find(conditions, options);
     res.json(pacientes);

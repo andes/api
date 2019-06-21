@@ -1,5 +1,4 @@
-import { Router, Request, Response } from 'express';
-import * as asyncHandler from 'express-async-handler';
+import { asyncHandler, Request, Response, Router } from '@andes/api';
 import { PacienteCtr } from './paciente.controller';
 import { mpi } from '../../../config';
 import { Auth } from '../../../auth/auth.class';
@@ -8,7 +7,6 @@ import { ContactoRoutes } from './contactos/contacto.routes';
 import { contactoController } from './contactos/contacto.controller';
 import { direccionController } from './direcciones/direccion.controller';
 import { DireccionRoutes } from './direcciones/direccion.routes';
-
 
 /**
  * @api {get} /pacientes/:id Requiere datos de un paciente
@@ -22,9 +20,7 @@ import { DireccionRoutes } from './direcciones/direccion.routes';
 
 export const find = async (req: Request, res: Response) => {
     const id = req.params.id;
-    const options = {
-        fields: req.query.fields
-    };
+    const options = req.apiOptions();
     const paciente = await PacienteCtr.findById(id, options);
     if (paciente) {
         return res.json(paciente);
@@ -41,11 +37,7 @@ export const find = async (req: Request, res: Response) => {
  */
 
 export const get = async (req: Request, res: Response) => {
-    const options = {
-        fields: req.query.fields,
-        skip: parseInt(req.query.skip, 2),
-        limit: parseInt(req.query.limit, 2)
-    };
+    const options = req.apiOptions();
     if (req.query.search) {
         const pacientes = await PacienteCtr.search(req.query.search);
         res.json(pacientes);
@@ -168,10 +160,10 @@ router.put('/pacientes/:id', Auth.authorize('mpi:paciente:putAndes'), asyncHandl
 router.delete('/pacientes/:id', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(remove));
 
 
-let contactoRouting = new ContactoRoutes(contactoController);
+const contactoRouting = new ContactoRoutes(contactoController);
 router.use('/pacientes', contactoRouting.getRoutes());
 
-let direccionRouting = new DireccionRoutes(direccionController);
+const direccionRouting = new DireccionRoutes(direccionController);
 router.use('/pacientes', direccionRouting.getRoutes());
 
 export const Routing = router;

@@ -35,6 +35,9 @@
             ],
             "@andes/mpi/*": [
                 "./core_v2/mpi/*"
+            ],
+            "@andes/api/*": [
+                "./packages/api/*"
             ]
         },
         "typeRoots": [

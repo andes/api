@@ -132,7 +132,7 @@ export async function remove(paciente: IPacienteDoc, req: express.Request) {
         await PacienteTx.delete(paciente);
         await session.commitTransaction();
         log(req, logKeys.mpiDelete.key, paciente._id, logKeys.mpiDelete.operacion, paciente, null);
-        EventCoreV2.emitAsync('mpi:patient:create', paciente);
+        EventCoreV2.emitAsync('mpi:patient:delete', paciente);
         return;
     } catch (err) {
         await session.abortTransaction();

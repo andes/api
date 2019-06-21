@@ -1,38 +1,35 @@
 import { SubresourceRoutes } from '../../../../shared/subresource.routes';
-import { findById, store } from '../paciente.controller';
+import { PacienteCtr } from '../paciente.controller';
 import { PatientNotFound } from '../paciente.error';
-import { Router, Response } from 'express';
 import { Auth } from '../../../../auth/auth.class';
-import * as asyncHandler from 'express-async-handler';
+import { asyncHandler, Request, Response, Router } from '@andes/api';
 
 export class ContactoRoutes extends SubresourceRoutes {
-
-    getPaciente = async (req, res: Response, next) => {
-        const paciente = await findById(req.params.idPaciente);
+    resourceName = 'paciente';
+    subresourceName = 'contacto';
+    getPaciente = async (req: Request, res: Response, next) => {
+        const paciente = await PacienteCtr.findById(req.params.idPaciente);
         if (paciente) {
-            req.paciente = paciente;
-            next();
+            req.resources = req.resources || {};
+            req.resources.paciente = paciente;
+            return next();
         } else {
-            next(new PatientNotFound());
+            return next(new PatientNotFound());
         }
     }
 
     async save(resource, req) {
-        await store(resource, req);
+        await PacienteCtr.store(resource, req);
     }
 
     getRoutes() {
-        this.resourceName = 'paciente';
-        this.subresourceName = 'contacto';
-        this.subresourceId = 'idContacto';
         const router = Router();
-        let id = 'idPaciente';
-        router.param(id, asyncHandler(this.getPaciente));
+        router.param('idPaciente', asyncHandler(this.getPaciente));
         router.get('/:idPaciente/contactos', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.find));
-        router.get('/:idPaciente/contactos/:idContacto', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.get));
+        router.get('/:idPaciente/contactos/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(this.get));
         router.post('/:idPaciente/contactos', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(this.post));
-        router.patch('/:idPaciente/contactos/:idContacto', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(this.patch));
-        router.delete('/:idPaciente/contactos/:idContacto', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(this.delete));
+        router.patch('/:idPaciente/contactos/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(this.patch));
+        router.delete('/:idPaciente/contactos/:id', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(this.delete));
         return router;
     }
 

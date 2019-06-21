@@ -1,9 +1,9 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from '@andes/api';
 
 export class SubresourceRoutes {
     resourceName: string;
     subresourceName: string;
-    subresourceId: string;
+    subresourceId = 'id';
     controllerSubresource;
     router = Router();
 
@@ -12,8 +12,8 @@ export class SubresourceRoutes {
         this.getRoutes();
     }
 
-    getResource(req) {
-        return req[this.resourceName];
+    getResource(req: Request) {
+        return req.resources[this.resourceName];
     }
 
     async save(resource, req) {
@@ -27,7 +27,7 @@ export class SubresourceRoutes {
     * @apiSuccess {Array} Listado
     */
 
-    find = (req, res: Response) => {
+    find = (req: Request, res: Response) => {
         const resource = this.getResource(req);
         let lista = this.controllerSubresource.find(resource, req.query);
         return res.json(lista);
@@ -41,7 +41,7 @@ export class SubresourceRoutes {
     * @apiSuccess {ISubresource} Subresource.
     */
 
-    get = async (req, res: Response) => {
+    get = async (req: Request, res: Response) => {
         const resource = this.getResource(req);
         const lista = this.controllerSubresource.findById(resource, req.params[this.subresourceId]);
         return res.json(lista);
@@ -54,7 +54,7 @@ export class SubresourceRoutes {
     *
     */
 
-    post = async (req, res: Response) => {
+    post = async (req: Request, res: Response) => {
         const resource = this.getResource(req);
         let newElement = this.controllerSubresource.make(req.body);
         this.controllerSubresource.store(resource, newElement);
@@ -69,7 +69,7 @@ export class SubresourceRoutes {
     *
     */
 
-    public patch = async (req, res: Response) => {
+    public patch = async (req: Request, res: Response) => {
         const resource = this.getResource(req);
         let subresource = this.controllerSubresource.findById(resource, req.params[this.subresourceId]);
         if (subresource) {
@@ -77,7 +77,7 @@ export class SubresourceRoutes {
             this.controllerSubresource.store(resource, subresource_update);
             await this.save(resource, req);
         }
-        res.json(subresource);
+        return res.json(subresource);
     }
 
     /**
@@ -88,11 +88,11 @@ export class SubresourceRoutes {
     * @apiSuccess
     */
 
-    public delete = async (req, res: Response) => {
+    public delete = async (req: Request, res: Response) => {
         const resource = this.getResource(req);
         let subresource = this.controllerSubresource.delete(resource, req.params[this.subresourceId]);
         await this.save(resource, req);
-        res.json(subresource);
+        return res.json(subresource);
     }
 
     getRoutes() {

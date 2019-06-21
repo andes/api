@@ -7,6 +7,7 @@
     "@agm/core": "^1.0.0-beta.5",
     "@andes/api-tool": "^1.0.0",
     "@andes/core": "^1.1.1",
+    "@andes/api": "file:packages/api",
     "@andes/drive": "file:packages/drive",
     "@andes/event-bus": "file:packages/event-bus",
     "@andes/fhir": "^1.0.3",
