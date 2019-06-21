@@ -104,7 +104,7 @@
     "tsc:w": "tsc -w",
     "tsc:next": "tsc --target es2018 --lib es2018",
     "jobs": "tsc && node jobs/scheduler.js",
-    "test": "npm run tsc && NODE_ENV=TEST npx ts-mocha -r mocha.config.ts core_v2/**/*.spec.ts",
+    "test": "NODE_ENV=TEST npx ts-mocha -r mocha.config.ts core_v2/**/*.spec.ts",
     "lint": "tslint --project .",
     "lint:fix": "tslint --project . --fix",
     "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js"
