@@ -11,7 +11,8 @@ describe('MPI - Routes', () => {
         req = {
             query: {},
             params: {},
-            body: {}
+            body: {},
+            apiOptions: sinon.stub()
         };
         res = {
             json: sinon.stub()

@@ -218,25 +218,6 @@ export class Auth {
         }
     }
 
-
-    /**
-     * Middleware Express de control de permisos
-     *
-     * @static
-     * @param {string} permisos Permiso a verificar
-     *
-     * @memberOf Auth
-     */
-
-    static authorize = (permiso: string) => {
-        return (req: express.Request, res: express.Response, next) => {
-            if (!Auth.check(req, permiso)) {
-                return next(403);
-            }
-            return next();
-        };
-    }
-
     /**
      * Middleware Express de control de permisos
      *

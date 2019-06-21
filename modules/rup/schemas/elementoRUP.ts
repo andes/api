@@ -63,8 +63,7 @@ export let schema = new mongoose.Schema({
                 } else {
                     return Object.isObject(value);
                 }
-            },
-            message: '{VALUE} is not a valid object'
+            }
         }
     },
     // Conceptos SNOMED relacionados que se muestran e implementan de la misma manera.
