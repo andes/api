@@ -160,10 +160,10 @@ router.put('/pacientes/:id', Auth.authorize('mpi:paciente:putAndes'), asyncHandl
 router.delete('/pacientes/:id', Auth.authorize('mpi:paciente:deleteAndes'), asyncHandler(remove));
 
 
-const contactoRouting = new ContactoRoutes(contactoController);
+const contactoRouting = new ContactoRoutes(PacienteCtr, contactoController);
 router.use('/pacientes', contactoRouting.getRoutes());
 
-const direccionRouting = new DireccionRoutes(direccionController);
+const direccionRouting = new DireccionRoutes(PacienteCtr, direccionController);
 router.use('/pacientes', direccionRouting.getRoutes());
 
 export const Routing = router;
