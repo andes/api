@@ -5,8 +5,7 @@ export interface ITipoPrestacion extends Document {
     conceptId: String;
     term: String;
     fsn: String;
-    semanticTag: 'procedimiento' | 'solicitud' | 'hallazgo' | 'trastorno' | 'antecedenteFamiliar'| 'régimen/tratamiento';
-
+    semanticTag: 'procedimiento' | 'solicitud' | 'hallazgo' | 'trastorno' | 'antecedenteFamiliar' | 'régimen/tratamiento';
 }
 
 
@@ -18,7 +17,12 @@ export let tipoPrestacionSchema = new Schema({
         type: String,
         enum: ['procedimiento', 'solicitud', 'hallazgo', 'trastorno', 'antecedenteFamiliar', 'régimen/tratamiento']
     },
-    noNominalizada: Boolean
+    noNominalizada: Boolean,
+    auditable: {
+        type: Boolean,
+        required: false,
+        default: true
+    }
 });
 
 /* Se definen los campos virtuals */
