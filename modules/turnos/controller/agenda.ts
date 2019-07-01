@@ -1254,14 +1254,13 @@ export function getCantidadConsultaXPrestacion(params) {
  * Verifica si la agenda posee asistencia registrada
  *
  * @export
- * @param {*} agendaId
+ * @param {*} agenda
  * @returns
  */
-export async function poseeAsistencia(agendaId) {
-    const ag: any = await agendaModel.findById(agendaId);
-    return ag.dinamica ?
-        ag.bloques.some((bloque: any) => bloque.turnos.some((turno: any) => turno.asistencia)) :
-        ag.bloques.some((bloque: any) => bloque.turnos.some((turno: any) => turno.asistencia ||
+export async function poseeAsistencia(agenda) {
+    return agenda.dinamica ?
+        agenda.bloques.some((bloque: any) => bloque.turnos.some((turno: any) => turno.asistencia)) :
+        agenda.bloques.some((bloque: any) => bloque.turnos.some((turno: any) => turno.asistencia ||
             (turno.diagnostico && turno.diagnostico.codificaciones && turno.diagnostico.codificaciones.length > 0)));
 }
 
