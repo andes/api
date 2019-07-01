@@ -10,13 +10,17 @@ export async function procesar(parametros: any) {
 
     let pipeline2 = [];
 
-    let match = {
+    let match: any = {
         $and: [
             { createdAt: { $gte: new Date(parametros.fechaDesde) } },
             { createdAt: { $lte: new Date(parametros.fechaHasta) } }
         ],
         'createdBy.organizacion._id': String(parametros.organizacion)
     };
+
+    if (parametros.dniPaciente) {
+        match.$and.push({ 'paciente.documento': parametros.dniPaciente });
+    }
 
     if (parametros.estadoFacturacion) {
         if (parametros.estadoFacturacion === 'Sin comprobante') {
