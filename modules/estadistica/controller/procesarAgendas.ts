@@ -56,7 +56,7 @@ export async function procesar(parametros: any) {
         if (!matchTurno['$expr']) {
             matchTurno['$expr'] = { $and: []};
         }
-        matchTurno['$expr'].$and.push({ $eq: [  '$_bloques.turnos.paciente.documento', parametros.dniPaciente] });
+        matchTurno['$expr'].$and.push({ $eq: ['$_bloques.turnos.paciente.documento', parametros.dniPaciente] });
     }
 
     let matchOS = {};
