@@ -52,6 +52,10 @@ export async function procesar(parametros: any) {
         matchEstado['$expr'] = { $and: [{ $eq: ['$estado', parametros.estado] }] };
     }
 
+    if (parametros.documento) {
+        matchTurno['_bloques.turnos.paciente.documento'] = parametros.documento;
+    }
+
     let matchOS = {};
 
     if (parametros.financiador) {
