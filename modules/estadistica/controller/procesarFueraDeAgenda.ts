@@ -19,7 +19,7 @@ export async function procesar(parametros: any) {
     };
 
     if (parametros.dniPaciente) {
-        match.$and.push({ 'paciente.documento': parametros.dniPaciente });
+        match['paciente.documento'] =  parametros.dniPaciente;
     }
 
     if (parametros.estadoFacturacion) {
