@@ -100,6 +100,7 @@ let _schema = new mongoose.Schema({
     Profesional: String,
     TipoProfesional: String,
     CodigoEspecialidad: Number,
+    Formacion: String,
     Especialidad: String,
     CodigoServicio: Number,
     Servicio: String,

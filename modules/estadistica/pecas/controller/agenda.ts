@@ -102,6 +102,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
     let turnosProfesional = turno.turnosProfesional ? turno.turnosProfesional : null;
     let turnosProgramados = turno.turnosProgramados ? turno.turnosProgramados : null;
     let numeroBloque = turno.sobreturno === 'SI' ? -1 : turno.numeroBloque;
+    let Especialidad = turno.Especialidad ? turno.Especialidad : turno.Formacion;
 
 
     let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
@@ -140,7 +141,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
         '\',\'' + turno.SemanticTag2 + '\',\'' + turno.SnomedConcept2 + '\',\'' + turno.SnomedTerm2 + '\',' + turno.primeraVez2 +
         ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
         '\',\'' + turno.SemanticTag3 + '\',\'' + turno.SnomedConcept3 + '\',\'' + turno.Snomedterm3 + '\',' + turno.primeraVez3 +
-        ',\'' + profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
+        ',\'' + profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + Especialidad +
         '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
     try {
         let resultado = await executeQuery(queryInsert);

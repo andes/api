@@ -271,6 +271,47 @@ export async function pecasExport(start, end) {
             }
         },
         {
+            $addFields: {
+                profesional0: {
+                    $arrayElemAt: [
+                        '$profesionales',
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            $lookup: {
+                from: 'profesional',
+                localField: 'profesional0._id',
+                foreignField: '_id',
+                as: 'profesional'
+            }
+        },
+        {
+            $unwind: '$profesional'
+        },
+        {
+            $addFields: {
+                grado0: {
+                    $arrayElemAt: [
+                        '$profesional.formacionGrado',
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            $addFields: {
+                posgrado0: {
+                    $arrayElemAt: [
+                        '$profesional.formacionPosgrado',
+                        0
+                    ]
+                }
+            }
+        },
+        {
             $project: {
                 _id: 0,
                 idEfector: '$organizacion._id',
@@ -1236,7 +1277,85 @@ export async function pecasExport(start, end) {
                 },
                 TipoProfesional: null,
                 CodigoEspecialidad: null,
-                Especialidad: null,
+                Formacion: {
+                    $cond: {
+                        if: {
+                            $ne: [
+                                {
+                                    $in: [
+                                        {
+                                            $type: '$grado0'
+                                        },
+                                        [
+                                            'missing',
+                                            'null',
+                                            'undefined'
+                                        ]
+                                    ]
+                                },
+                                true
+                            ]
+                        },
+                        then: '$grado0.titulo',
+                        else: null
+                    }
+                },
+                Especialidad: {
+                    $cond: {
+                        if: {
+                            $and: [
+                                {
+                                    $ne: [
+                                        {
+                                            $in: [
+                                                {
+                                                    $type: '$posgrado0'
+                                                },
+                                                [
+                                                    'missing',
+                                                    'null',
+                                                    'undefined'
+                                                ]
+                                            ]
+                                        },
+                                        true
+                                    ]
+                                },
+                                {
+                                    $ne: [
+                                        {
+                                            $in: [
+                                                {
+                                                    $type: '$grado0'
+                                                },
+                                                [
+                                                    'missing',
+                                                    'null',
+                                                    'undefined'
+                                                ]
+                                            ]
+                                        },
+                                        true
+                                    ]
+                                }
+                            ]
+                        },
+                        then: {
+                            $reduce: {
+                                input: '$profesional.formacionPosgrado',
+                                initialValue: '',
+                                in: {
+                                    $concat: [
+                                        '$$value',
+                                        '$$this.especialidad.nombre',
+                                        '; '
+                                    ]
+                                }
+                            }
+                        },
+                        else: null
+                    }
+                },
                 CodigoServicio: null,
                 Servicio: {
                     $cond: {
