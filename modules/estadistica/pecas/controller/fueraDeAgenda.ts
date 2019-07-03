@@ -88,6 +88,15 @@ export async function fueraAgendaPecas(start, end, done) {
         },
         {
             $unwind: '$prestacion',
+        },
+        { $addFields: { documentoProfesional: { $toString: '$createdBy.documento' } } },
+        {
+            $lookup: {
+                from: 'profesional',
+                localField: 'documentoProfesional',
+                foreignField: 'documento',
+                as: 'profesional'
+            }
         }
     ];
 
@@ -267,8 +276,9 @@ async function auxiliar(pres: any) {
             prestacion.Diag3CodigoAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.codigo;
             prestacion.Desc3DiagAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.nombre;
         }
+        let profesional = pres.profesional && pres.profesional.length > 0 ? (pres.profesional[0].apellido + ' ' + pres.profesional[0].nombre).replace('\'', '\'\'') : '';
+        prestacion.Profesional = profesional;
 
-        prestacion.Profesional = pres.createdBy.nombreCompleto.replace('\'', '\'\'');
         prestacion.TipoProfesional = null;
         prestacion.CodigoEspecialidad = null;
         prestacion.Especialidad = null;
