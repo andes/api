@@ -405,6 +405,8 @@ export class Documento {
                 // Prestación
                 let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
 
+                let registro: any = req.body.idRegistro ? prestacion.ejecucion.registros.find(y => y.id === req.body.idRegistro) : null;
+
                 // Títulos default
                 let tituloFechaEjecucion = 'Fecha Ejecución';
                 let tituloFechaValidacion = 'Fecha Validación';
@@ -474,10 +476,13 @@ export class Documento {
                         }
                     }
 
-
-                    let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
-                    // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
-                    await this.generarInforme(registros);
+                    if (!registro) {
+                        let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
+                        // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
+                        await this.generarInforme(registros);
+                    } else {
+                        await this.generarInforme([registro]);
+                    }
 
 
                     // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
