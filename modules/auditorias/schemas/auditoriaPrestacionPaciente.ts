@@ -12,7 +12,7 @@ export let auditoriaPrestacionPacienteSchema = new mongoose.Schema({
         type: nombreSchema,
         required: true
     },
-    auditor: { type: profesionalSchema},
+    auditor: { type: profesionalSchema },
     estado: {
         type: String,
         enum: ['pendiente', 'aprobada', 'desaprobada'],
@@ -22,5 +22,8 @@ export let auditoriaPrestacionPacienteSchema = new mongoose.Schema({
 });
 // Habilitar plugin de auditoría
 auditoriaPrestacionPacienteSchema.plugin(AuditPlugin);
+
+auditoriaPrestacionPacienteSchema.index({ 'auditor.documento': 1 });
+
 // Exportar Model
 export let auditoriaPrestacionPaciente = mongoose.model('auditoriaPrestacionPaciente', auditoriaPrestacionPacienteSchema, 'auditoriaPrestacionPaciente');

@@ -16,5 +16,5 @@ export let agendasCacheSchema = new mongoose.Schema({
     estadoIntegracion: String,
     sobreturnos: Object,
 });
-
+agendasCacheSchema.index({ id: 1 });
 export let agendasCache = mongoose.model('agendasCache', agendasCacheSchema, 'agendasCache');

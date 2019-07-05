@@ -39,5 +39,9 @@ export let logPacienteSchema = new mongoose.Schema({
     createdBy: mongoose.Schema.Types.Mixed
 
 });
-
+logPacienteSchema.index({
+    paciente: 1,
+    operacion: 1,
+    createdAt: -1
+});
 export let logPaciente = mongoose.model('logPaciente', logPacienteSchema, 'logPaciente');
