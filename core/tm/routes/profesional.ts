@@ -157,10 +157,10 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
     }
 
 });
-router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, next) => {
-    if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFirma')) {
-        return next(403);
-    }
+router.get('/profesionales/firma', Auth.authenticate(), (req: any, res, next) => {
+    // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFirma')) {
+    //     return next(403);
+    // }
     if (req.query.id) {
         const id = req.query.id;
         const fotoProf = makeFsFirma();
