@@ -4,6 +4,9 @@ import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
+import * as SendEmail from './../../../utils/roboSender/sendEmail';
+import * as configPrivate from '../../../config.private';
+import { asyncify } from 'async';
 
 const router = express.Router();
 
@@ -181,6 +184,38 @@ router.post('/reestablecer-password', (req, res, next) => {
 
         });
     });
+});
+
+
+/**
+ * envio de emails desde la app mobile
+ * @param {string} email  email del usuario
+ */
+router.post('/mailGenerico', async (req, res, next) => {
+    if (!req.body.emails) {
+        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
+    }
+    const body = req.body;
+    const usuario: any = (req as any).user;
+    // req.body['usuario'] = usuario.usuario.username ? usuario.usuario.username : '';
+    // req.body['organizacion'] = usuario.organizacion.nombre ? usuario.organizacion.nombre : '';
+    // renderizacion del email
+    let html = await SendEmail.renderHTML('emails/emailGenerico.html', body);
+
+    let adjuntos = body.adjuntos.map(x => {
+        x.content = x.content.split('base64,')[1];
+    });
+    const data = {
+        from: configPrivate.enviarMail.auth.user,
+        to: body.emails,
+        subject: body.asunto,
+        text: '',
+        html,
+        attachments: body.adjuntos
+    };
+
+    let respuesta = await SendEmail.sendMail(data);
+    return res.json(respuesta);
 });
 
 export = router;
