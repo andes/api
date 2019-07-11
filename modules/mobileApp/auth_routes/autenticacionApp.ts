@@ -68,11 +68,7 @@ router.post('/login', (req, res, next) => {
 
                 return;
             } else {
-                res.status(200).json({
-                    msj: 'ingreso correcto',
-                    statusCode: res.statusCode
-                });
-                //    return res.status(422).send({ error: 'e-mail o password incorrecto' });
+                return res.status(422).send({ error: 'e-mail o password incorrecto' });
             }
         });
     });
