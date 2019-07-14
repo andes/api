@@ -1,8 +1,6 @@
 import { model as Prestacion } from '../schemas/prestacion';
-import { handleHttpRequest } from '../../../utils/requestHandler';
-import { PacsServer } from '@andes/pacs-server';
 
-import { A04Message, sendMessage, O01Message } from '../controllers/pacs.controller';
+import { sendMessage, getPacsConfig, ADT04Message, ORM04Message, ORU01Message } from '../controllers/pacs.controller';
 
 
 import * as express from 'express';
@@ -17,20 +15,50 @@ const router = express.Router();
 
 router.post('/prestaciones/pacs/programar', async (req, res, next) => {
     try {
-        const prestacion: any = await Prestacion.findById(req.body.prestacionId);
-        prestacion.solicitud.organizacion.nombre = 'HOSPITAL NEUQUEN';
+        const prestacionId = req.body.prestacionId;
+        const conceptId = req.body.conceptId;
+        const term = req.body.term;
 
-        const a04 = await A04Message(prestacion.paciente, prestacion.solicitud.organizacion);
-        const resp = await sendMessage(a04);
+        const prestacion: any = await Prestacion.findById(prestacionId);
 
-        // console.log(a04.charAt(a04.length - 1));
-        const o01 = await O01Message(prestacion);
-        const resp1 = await sendMessage(o01);
+        const config = await getPacsConfig(prestacion.solicitud.organizacion, conceptId);
+
+        const a04 = await ADT04Message(config, prestacion.paciente, prestacion.solicitud.organizacion);
+        const resp = await sendMessage(config, a04);
+
+        const o01 = await ORM04Message(config, prestacion, { conceptId, term });
+        const resp1 = await sendMessage(config, o01);
+
+
+        // const r01 = await r01Message(prestacion);
+        // const resp2 = await sendMessage(config, r01);
+
         // console.log(a04);
-        // console.log('--------------');
-        // console.log(resp);
-        // console.log(resp1);
+        // console.log('------------');
+        // console.log(o01);
+
         return res.json(resp1);
+
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.post('/prestaciones/pacs/informar', async (req, res, next) => {
+    try {
+        const prestacionId = req.body.prestacionId;
+        const registroId = req.body.registroId;
+
+        const prestacion: any = await Prestacion.findById(prestacionId);
+        const registro = prestacion.ejecucion.registros.id(registroId);
+
+        const config = await getPacsConfig(prestacion.solicitud.organizacion, registro.concepto.conceptId);
+
+        const r01 = await ORU01Message(config, prestacion, registro);
+        // console.log(r01);
+        const resp = await sendMessage(config, r01);
+
+        return res.json(resp);
 
     } catch (err) {
         return next(err);

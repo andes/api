@@ -85,9 +85,9 @@ router.get('/puco', async (req, res, next) => {
                 unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
                 resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
             }
-            res.json(resultOS);
+            return res.json(resultOS);
         } else {
-            res.json([]);
+            return res.json([]);
         }
     } else {
         return next('Parámetros incorrectos');
