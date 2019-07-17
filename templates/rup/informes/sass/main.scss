@@ -174,6 +174,10 @@ hr {
 // Cuerpo
 main {
 
+    small {
+        font-weight: 400;
+    }
+
     // padding: 1rem 0;
     .contenedor-concepto {
         display: inline-block;
@@ -183,24 +187,18 @@ main {
     .contenedor-concepto-data {
         display: inline-block;
         width: 100%;
+        float: left;
 
         >h3 {
             // border-bottom: $borderBottom;
         }
 
-        p {
-            line-height: 3mm;
-        }
-
-        small {
-            font-size: 0.25cm;
-        }
-
         img {
             //    float: right;
             text-align: center;
-            max-width: 8cm;
-            max-height: 10cm;
+            max-width: 5cm;
+            max-height: 5cm;
+            margin: 0 .35cm;
         }
 
         page-break-before:always;
@@ -225,14 +223,25 @@ main {
 
     .registros {
         display: inline !important;
-        padding-top: 10px;
+     //   padding-top: 10px;
+
+        p {
+            line-height: 2mm;
+            font-weight: 900;
+            margin-top: 5px;
+        }
+
+        small {
+            font-size: 0.25cm;
+            font-weight: 400;
+        }
 
         .nivel-1 {
             margin-left: 0em;
-
+          
             &:not(:first-child) {
-                padding-top: 10px;
-                border-top: 1px solid $andes-gris;
+                // padding-top: 10px;
+                // border-top: 1px solid $andes-gris;
             }
         }
 
@@ -242,6 +251,7 @@ main {
 
             h3 {
                 font-size: 0.65em;
+                padding-bottom: 0.2cm;
             }
 
             span {
@@ -251,18 +261,18 @@ main {
             }
 
         }
-    }
-
-    .nivel-3 {
-        margin-left: 2em;
-    }
-
-    .adjunto {
-        padding: .5cm 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-
-        small {
-            font-size: 0.25cm;
+        
+        .nivel-3 {
+            margin-left: 2em;
+        }
+        
+        .adjunto {
+            padding: .2cm 0;
+            //      border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+            
+            small {
+                font-size: 0.25cm;
+            }
         }
     }
 }
@@ -275,6 +285,7 @@ footer {
 .contenedor-firmas {
     display: inline;
     float: right;
+    margin-top: 2cm;
     margin-bottom: 0.5cm;
     text-align: center;
 
