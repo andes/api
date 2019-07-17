@@ -1,34 +1,18 @@
-import {
-    SnomedCIE10Mapping
-} from './../../../core/term/controller/mapping';
+import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
-import {
-    Auth
-} from '../../../auth/auth.class';
-import {
-    userScheduler
-} from '../../../config.private';
-import {
-    Logger
-} from '../../../utils/logService';
+import { Auth } from '../../../auth/auth.class';
+import { userScheduler } from '../../../config.private';
+import { Logger } from '../../../utils/logService';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
-
-import {
-    model as Prestacion
-} from '../../rup/schemas/prestacion';
+import { model as Prestacion } from '../../rup/schemas/prestacion';
+import * as prestacionController from '../../rup/controllers/prestacion';
 import * as request from 'request';
 import * as mongoose from 'mongoose';
-import {
-    toArray
-} from '../../../utils/utils';
-import {
-    EventCore
-} from '@andes/event-bus';
-import * as turnosController from '../../../modules/turnos/controller/turnosController';
-import * as agendaController from '../../../modules/turnos/controller/agenda';
+import { toArray } from '../../../utils/utils';
+import { EventCore } from '@andes/event-bus';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 import * as codificacionModel from '../../rup/schemas/codificacion';
 
@@ -85,9 +69,15 @@ export function quitarTurnoDoble(req, data, tid = null) {
     }
 }
 
+
 // Turno
-export function liberarTurno(req, data, turno) {
+export async function liberarTurno(req, data, turno) {
     const position = getPosition(req, data, turno._id);
+    let enEjecucion = await prestacionController.enEjecucion(turno);
+    if (enEjecucion) {
+        return false;
+    }
+
     if (!data.dinamica) {
         turno.estado = 'disponible';
         turno.paciente = null;
@@ -139,6 +129,7 @@ export function liberarTurno(req, data, turno) {
         newTurnos.splice(position.indexTurno, 1);
         data.bloques[position.indexBloque].turnos = newTurnos;
     }
+    return true;
 }
 
 
