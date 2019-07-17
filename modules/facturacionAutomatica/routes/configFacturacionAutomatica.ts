@@ -12,11 +12,12 @@ let router = express.Router();
  */
 router.get('/configFacturacionAutomatica/', async (req, res, next) => {
     const query = {};
-    if ((req.query.idPrestacionEjecutada !== 'undefined') && (req.query.idPrestacionEjecutada !== 'null')) {
+
+    if ((req.query.idPrestacionEjecutada) && (req.query.idPrestacionEjecutada !== 'undefined') && (req.query.idPrestacionEjecutada !== 'null')) {
         query['prestacionSnomed.conceptId'] = req.query.idPrestacionEjecutada;
     }
 
-    if (req.query.idPrestacionTurneable) {
+    if ((req.query.idPrestacionTurneable) && (req.query.idPrestacionTurneable !== 'undefined') && (req.query.idPrestacionTurneable !== 'null')) {
         query['conceptosTurneables.conceptId'] = req.query.idPrestacionTurneable;
     }
 
