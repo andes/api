@@ -32,3 +32,8 @@ export function liberarRefTurno(tid, req) {
 
     });
 }
+
+export async function enEjecucion(turno) {
+    let prestacion: any = await Prestacion.findOne({ 'solicitud.turno': turno._id }).exec();
+    return (prestacion && prestacion.ejecucion && prestacion.ejecucion.fecha);
+}

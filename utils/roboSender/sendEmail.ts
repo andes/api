@@ -28,10 +28,7 @@ export function sendMail(options: MailOptions) {
             subject: options.subject,
             text: options.text,
             html: options.html,
-            attachments: [{   // data uri as an attachment
-                path: options.attachments,
-                cid: 'img-screenshot'
-            }]
+            attachments: options.attachments
         };
 
         transporter.sendMail(mailOptions, (error, info) => {

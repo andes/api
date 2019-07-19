@@ -216,29 +216,34 @@ export default [
                 title: 'Gestor de profesionales',
                 child: [
                     { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
-                    { key: 'getProfesionalFoto', title: 'Ver foto profesional', type: 'boolean' },
-                    { key: 'postProfesional', title: 'crea profesional', type: 'boolean' },
-                    { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' },
-                    { key: 'deleteProfesional', title: 'borrar profesional', type: 'boolean' }
+                    { key: 'getProfesionalFoto', title: 'Ver foto de profesional', type: 'boolean' },
+                    { key: 'postProfesional', title: 'Crear profesional', type: 'boolean' },
+                    { key: 'putProfesional', title: 'Actualizar profesional', type: 'boolean' },
+                    { key: 'deleteProfesional', title: 'Borrar profesional', type: 'boolean' }
                 ]
             },
             {
                 key: 'turnos',
                 title: 'Gestor de turnos',
                 child: [
-                    { key: 'postTurno', title: 'insert turno', type: 'boolean' },
-                    { key: 'postTurnoTipo', title: '', type: 'boolean' },
-                    { key: 'getTurnosProximos', title: 'trae proximos turnos', type: 'boolean' },
-                    { key: 'getTurnoTipo', title: '', type: 'boolean' },
-                    { key: 'getTurno', title: 'traeTurno', type: 'boolean' }
+                    { key: 'postTurno', title: 'Crear nuevo turno', type: 'boolean' },
+                    { key: 'getTurnosProximos', title: 'Consultar próximos turnos', type: 'boolean' },
+                    { key: 'getTurno', title: 'Ver turno', type: 'boolean' }
                 ]
             },
             {
                 key: 'agenda',
                 title: 'Agenda',
                 child: [
-                    { key: 'postAgenda', title: 'insert agenda', type: 'boolean' },
-                    { key: 'putAgenda', title: 'actualizar agenda', type: 'boolean' }
+                    { key: 'postAgenda', title: 'Crear nueva agenda', type: 'boolean' },
+                    { key: 'putAgenda', title: 'Actualizar agenda', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'supervisor',
+                title: 'supervisor',
+                child: [
+                    { key: 'aprobar', title: 'aprobar', type: 'boolean' },
                 ]
             }
         ]
@@ -326,7 +331,19 @@ export default [
         key: 'auditoriaPacientes',
         title: 'Auditoria Pacientes',
         comment: '',
-        child: []
+        child: [
+            {
+                key: 'vincular',
+                title: 'Vincular Pacientes, activar y desactivar sus vinculados',
+                type: 'boolean'
+            },
+            {
+                key: 'edicion',
+                title: 'Edición de Pacientes Validados',
+                type: 'boolean'
+            }
+
+        ]
     }, {
         key: 'espaciosFisicos',
         title: 'Edición de espacios físicos',
@@ -344,5 +361,42 @@ export default [
             },
         ]
     },
+    {
+        key: 'campania',
+        title: 'Campañas de salud',
+        avoidAll: true,
+        child: [
+            {
+                key: 'crear',
+                title: 'Crear y modificar',
+                comment: 'Permite crear y modificar campañas de salud',
+                type: 'boolean'
+            },
+            {
+                key: 'ver',
+                title: 'Visualizar',
+                comment: 'Habilita la visualización de campañas de salud',
+                type: 'boolean'
+            }
+        ]
+    },
+    {
+        key: 'dashboard',
+        title: 'Panel de datos estadísticos en gráficos y tablas',
+        child: [
+            {
+                key: 'citas', title: 'Dashboard Citas', child: [
+                    { key: 'ver', title: 'Ver Dashboard Citas', type: 'boolean' },
+                    { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean' },
+                    { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' },
+                ]
+            },
+            {
+                key: 'top', title: 'Dashboard TOP', child: [
+                    { key: 'ver', title: 'Ver Dashboard Top', type: 'boolean' }
+                ]
+            }
+        ]
+    }
 
 ];

@@ -4,8 +4,9 @@ import * as sql from 'mssql';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { Organizacion } from '../../../../core/tm/schemas/organizacion';
-import { Logger } from '../../../../utils/logService';
-import { userScheduler } from '../../../../config.private';
+import { log } from '@andes/log';
+import { sendMail } from '../../../../utils/roboSender/sendEmail';
+import { emailListString } from '../../../../config.private';
 
 
 let poolPrestaciones;
@@ -17,7 +18,27 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
+let logRequest = {
+    user: {
+        usuario: { nombre: 'pecasFueraDeAgenda', apellido: 'pecasFueraDeAgenda' },
+        app: 'jobPecas',
+        organizacion: 'Subsecretaría de salud'
+    },
+    ip: 'localhost',
+    connection: {
+        localAddress: ''
+    }
+};
 
+let mailOptions = {
+    from: 'info@andes.gob.ar',
+    to: emailListString,
+    subject: 'Error pecas fuera de agenda',
+    text: '',
+    html: '',
+    attachments: null
+
+};
 /**
  * Actualiza la tabla fuera_de_agenda de la BD Andes
  *
@@ -39,11 +60,22 @@ export async function fueraAgendaPecas(start, end, done) {
     pipeline2 = [
         {
             $match: {
-                $and: [
-                    { $or: orgExcluidas },
-                    { createdAt: { $gte: new Date(start) } },
-                    { createdAt: { $lte: new Date(end) } }
-                ],
+                $or: [
+                    {
+                        $and: [
+                            { $or: orgExcluidas },
+                            { createdAt: { $gte: new Date(start) } },
+                            { createdAt: { $lte: new Date(end) } }
+                        ]
+                    },
+                    {
+                        $and: [
+                            { $or: orgExcluidas },
+                            { updatedAt: { $gte: new Date(start) } },
+                            { updatedAt: { $lte: new Date(end) } }
+                        ]
+                    }
+                ]
             }
         },
         {
@@ -77,7 +109,6 @@ export async function fueraAgendaPecas(start, end, done) {
 
 async function auxiliar(pres: any) {
     let prestacion: any = {};
-
     let efector: any = {};
     try {
         let org: any = await getEfector(pres.createdBy.organizacion._id);
@@ -97,7 +128,7 @@ async function auxiliar(pres: any) {
         prestacion.DNI = pres.paciente ? Number(pres.paciente.documento) : null;
         prestacion.Apellido = pres.paciente ? pres.paciente.apellido : null;
         prestacion.Apellido = prestacion.Apellido ? prestacion.Apellido.toString().replace('\'', '\'\'') : null;
-        prestacion.Nombres = pres.paciente ? pres.paciente.nombre.toString().replace('\'', '\'\'') : null;
+        prestacion.Nombres = pres.paciente && pres.paciente.nombre ? pres.paciente.nombre.toString().replace('\'', '\'\'') : null;
         const carpetas = pres.paciente && pres.paciente.carpetaEfectores ? pres.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(pres.createdBy.organizacion._id)) : [];
         if (Array(carpetas).length > 0) {
             prestacion.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
@@ -106,12 +137,13 @@ async function auxiliar(pres: any) {
         }
         prestacion.codSexo = pres.paciente ? String(pres.paciente.sexo) === 'femenino' ? String(2) : String(1) : null;
         prestacion.Sexo = pres.paciente ? pres.paciente.sexo : null;
-        prestacion.FechaNacimiento = (pres.paciente && pres.paciente.fechaNacimiento && moment(pres.paciente.fechaNacimiento).year() > 1900) ? moment(pres.paciente.fechaNacimiento).format('YYYYMMDD') : '';
+
+        prestacion.FechaNacimiento = (pres.paciente && pres.paciente.fechaNacimiento && moment(pres.paciente.fechaNacimiento).year() > 1900) ? moment(pres.paciente.fechaNacimiento).format('YYYYMMDD') : null;
         const objectoEdad = (pres.paciente && prestacion.FechaNacimiento) ? calcularEdad(prestacion.FechaNacimiento) : null;
-        prestacion.Edad = pres.paciente && pres.paciente.fechaNacimiento ? objectoEdad.valor : null;
-        prestacion.uniEdad = pres.paciente && pres.paciente.fechaNacimiento ? objectoEdad.unidad : null;
-        prestacion.CodRangoEdad = pres.paciente && pres.paciente.fechaNacimiento ? objectoEdad.CodRangoEdad : null;
-        prestacion.RangoEdad = pres.paciente && pres.paciente.fechaNacimiento ? objectoEdad.RangoEdad : null;
+        prestacion.Edad = pres.paciente && pres.paciente.fechaNacimiento && objectoEdad ? objectoEdad.valor : null;
+        prestacion.uniEdad = pres.paciente && pres.paciente.fechaNacimiento && objectoEdad ? objectoEdad.unidad : null;
+        prestacion.CodRangoEdad = pres.paciente && pres.paciente.fechaNacimiento && objectoEdad ? objectoEdad.CodRangoEdad : null;
+        prestacion.RangoEdad = pres.paciente && pres.paciente.fechaNacimiento && objectoEdad ? objectoEdad.RangoEdad : null;
 
         prestacion.Peso = null;
         prestacion.Talla = null;
@@ -134,7 +166,7 @@ async function auxiliar(pres: any) {
 
         // Estado turno
         let estadoAuditoria = null;
-        if (pres.diagnostico.codificaciones.length > 0) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 0) {
             if (!(pres.diagnostico.codificaciones[0].codificacionAuditoria && pres.diagnostico.codificaciones[0].codificacionAuditoria.codigo) && (pres.diagnostico.codificaciones[0].codificacionProfesional)) {
                 estadoAuditoria = 'Registrado por Profesional';
             }
@@ -145,13 +177,13 @@ async function auxiliar(pres: any) {
 
 
         prestacion.estadoAuditoria = estadoAuditoria;
-        if (pres.diagnostico.codificaciones.length > 0 && pres.diagnostico.codificaciones[0] && pres.diagnostico.codificaciones[0].primeraVez !== undefined) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 0 && pres.diagnostico.codificaciones[0] && pres.diagnostico.codificaciones[0].primeraVez !== undefined) {
             prestacion.primeraVez1 = (pres.diagnostico.codificaciones[0].primeraVez === true) ? 1 : 0;
         } else {
             prestacion.primeraVez1 = null;
         }
 
-        if (pres.diagnostico.codificaciones.length > 0 && pres.diagnostico.codificaciones[0].codificacionProfesional) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 0 && pres.diagnostico.codificaciones[0].codificacionProfesional) {
             prestacion.codifica = 'PROFESIONAL';
             if (pres.diagnostico.codificaciones[0].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag1CodigoOriginal = pres.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo;
@@ -166,7 +198,7 @@ async function auxiliar(pres: any) {
             prestacion.codifica = 'NO PROFESIONAL';
         }
         // Diagnóstico 1 AUDITADO
-        if (pres.diagnostico.codificaciones.length > 0 && pres.diagnostico.codificaciones[0].codificacionAuditoria && pres.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 0 && pres.diagnostico.codificaciones[0].codificacionAuditoria && pres.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
             prestacion.Diag1CodigoAuditado = pres.diagnostico.codificaciones[0].codificacionAuditoria.codigo;
             prestacion.Desc1DiagAuditado = pres.diagnostico.codificaciones[0].codificacionAuditoria.nombre;
             prestacion.ConsC2 = pres.diagnostico.codificaciones[0].codificacionAuditoria.c2 && pres.diagnostico.codificaciones[0].primeraVez ? 'SI' : 'NO';
@@ -182,12 +214,12 @@ async function auxiliar(pres: any) {
         prestacion.conceptId2 = null;
         prestacion.term2 = null;
         prestacion.semanticTag2 = null;
-        if (pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1] && pres.diagnostico.codificaciones[1].primeraVez !== undefined) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1] && pres.diagnostico.codificaciones[1].primeraVez !== undefined) {
             prestacion.primeraVez2 = (pres.diagnostico.codificaciones[1].primeraVez === true) ? 1 : 0;
         } else {
             prestacion.primeraVez2 = null;
         }
-        if (pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1].codificacionProfesional) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1].codificacionProfesional) {
             if (pres.diagnostico.codificaciones[1].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag2CodigoOriginal = pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo;
                 prestacion.Desc2DiagOriginal = pres.diagnostico.codificaciones[1].codificacionProfesional.cie10.nombre;
@@ -199,7 +231,7 @@ async function auxiliar(pres: any) {
             }
         }
         // Diagnóstico 2 AUDITADO
-        if (pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1].codificacionAuditoria && pres.diagnostico.codificaciones[1].codificacionAuditoria.codigo) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 1 && pres.diagnostico.codificaciones[1].codificacionAuditoria && pres.diagnostico.codificaciones[1].codificacionAuditoria.codigo) {
             prestacion.Diag2CodigoAuditado = pres.diagnostico.codificaciones[1].codificacionAuditoria.codigo;
             prestacion.Desc2DiagAuditado = pres.diagnostico.codificaciones[1].codificacionAuditoria.nombre;
         }
@@ -213,12 +245,12 @@ async function auxiliar(pres: any) {
         prestacion.term3 = null;
         prestacion.semanticTag3 = null;
 
-        if (pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2] && pres.diagnostico.codificaciones[2].primeraVez !== undefined) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2] && pres.diagnostico.codificaciones[2].primeraVez !== undefined) {
             prestacion.primeraVez3 = (pres.diagnostico.codificaciones[2].primeraVez === true) ? 1 : 0;
         } else {
             prestacion.primeraVez3 = null;
         }
-        if (pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2].codificacionProfesional) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2].codificacionProfesional) {
             if (pres.diagnostico.codificaciones[2].codificacionProfesional.cie10 && pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo) {
                 prestacion.Diag3CodigoOriginal = pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo;
                 prestacion.Desc3DiagOriginal = pres.diagnostico.codificaciones[2].codificacionProfesional.cie10.nombre;
@@ -230,7 +262,7 @@ async function auxiliar(pres: any) {
             }
         }
         // Diagnóstico 3 AUDITADO
-        if (pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2].codificacionAuditoria && pres.diagnostico.codificaciones[2].codificacionAuditoria.codigo) {
+        if (pres.diagnostico && pres.diagnostico.codificaciones && pres.diagnostico.codificaciones.length > 2 && pres.diagnostico.codificaciones[2].codificacionAuditoria && pres.diagnostico.codificaciones[2].codificacionAuditoria.codigo) {
             prestacion.Diag3CodigoAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.codigo;
             prestacion.Desc3DiagAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.nombre;
         }
@@ -282,9 +314,11 @@ async function auxiliar(pres: any) {
         prestacion.Longitud = '';
         prestacion.Latitud = '';
         prestacion.telefono = pres.paciente && pres.paciente.telefono ? pres.paciente.telefono : '';
+        let fechaNac = (prestacion.FechaNacimiento && moment(prestacion.FechaNacimiento).year()) > 1900 ? `'${prestacion.FechaNacimiento}'` : null;
+
         let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.fueraAgenda +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
-            'FechaConsulta, Periodo, estadoAuditoria, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
+            'FechaConsulta, Periodo, Tipodeconsulta, estadoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
             'HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
             'idBarrio, Barrio, idLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, Calle, Altura,' +
             'Piso, Depto, Manzana, Longitud, Latitud, Peso, Talla, TAS, TAD, IMC, RCVG, Diag1CodigoOriginal, Desc1DiagOriginal,' +
@@ -298,7 +332,7 @@ async function auxiliar(pres: any) {
             '\',\'' + prestacion.ConsC2 + '\',\'' + prestacion.ConsObst + '\',\'' + prestacion.tipoPrestacion +
             // DATOS PACIENTE
             '\',\'' + prestacion.DNI + '\',\'' + prestacion.Apellido + '\',\'' + prestacion.Nombres + '\',\'' + prestacion.HC + '\',\'' + prestacion.codSexo +
-            '\',\'' + prestacion.Sexo + '\',\'' + prestacion.FechaNacimiento + '\',' + prestacion.Edad + ',\'' + prestacion.uniEdad + '\',\'' + prestacion.CodRangoEdad +
+            '\',\'' + prestacion.Sexo + '\',' + fechaNac + ',' + prestacion.Edad + ',\'' + prestacion.uniEdad + '\',\'' + prestacion.CodRangoEdad +
             '\',\'' + prestacion.RangoEdad + '\',' + prestacion.IdObraSocial + ',\'' + prestacion.ObraSocial + '\',\'' + prestacion.IdPaciente + '\',\'' + prestacion.telefono +
             '\',' + prestacion.IdBarrio + ',\'' + prestacion.Barrio + '\',' + prestacion.IdLocalidad +
             ',\'' + prestacion.Localidad + '\',' + prestacion.IdDpto + ',\'' + prestacion.Departamento + '\',' + prestacion.IdPcia + ',\'' + prestacion.Provincia +
@@ -316,9 +350,9 @@ async function auxiliar(pres: any) {
             '\',' + prestacion.CodigoServicio + ',\'' + prestacion.Servicio + '\',\'' + prestacion.codifica + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\',\'' + pres.idPrestacion + '\')';
 
         return executeQuery(queryInsert);
-        // console.log('pres ', prestacion);
 
     } catch (error) {
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', null, error);
         return (error);
     }
 }
@@ -333,7 +367,7 @@ function organizacionesExcluidas() {
 async function eliminaPrestacion(idPrestacion: string) {
     const result = new sql.Request(poolPrestaciones);
     let query = `DELETE FROM ${configPrivate.conSqlPecas.table.fueraAgenda} WHERE idPrestacion='${idPrestacion}'`;
-    return await result.query(query);
+    return executeQuery(query);
 }
 
 const orgCache = {};
@@ -401,13 +435,12 @@ function calcularEdad(fechaNacimiento) {
 
 async function executeQuery(query: any) {
     try {
-        query += ' select SCOPE_IDENTITY() as id';
-        const result = await new sql.Request(poolPrestaciones).query(query);
-        if (result && result.recordset) {
-            return result.recordset[0].id;
-        }
+        await new sql.Request(poolPrestaciones).query(query);
     } catch (err) {
-        Logger.log(userScheduler, 'scheduler', 'insert', query);
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, err);
+        let options = mailOptions;
+        options.text = `'error al insertar en sql fuera Agenda: ${query}'`;
+        sendMail(mailOptions);
         return err;
     }
 }

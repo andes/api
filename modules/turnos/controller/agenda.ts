@@ -1,35 +1,20 @@
-import {
-    SnomedCIE10Mapping
-} from './../../../core/term/controller/mapping';
+import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
-import {
-    Auth
-} from '../../../auth/auth.class';
-import {
-    userScheduler
-} from '../../../config.private';
-import {
-    Logger
-} from '../../../utils/logService';
+import { Auth } from '../../../auth/auth.class';
+import { userScheduler } from '../../../config.private';
+import { Logger } from '../../../utils/logService';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
-
-import {
-    model as Prestacion
-} from '../../rup/schemas/prestacion';
+import { model as Prestacion } from '../../rup/schemas/prestacion';
+import * as prestacionController from '../../rup/controllers/prestacion';
 import * as request from 'request';
 import * as mongoose from 'mongoose';
-import {
-    toArray
-} from '../../../utils/utils';
-import {
-    EventCore
-} from '@andes/event-bus';
-import * as turnosController from '../../../modules/turnos/controller/turnosController';
-import * as agendaController from '../../../modules/turnos/controller/agenda';
+import { toArray } from '../../../utils/utils';
+import { EventCore } from '@andes/event-bus';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
+import * as codificacionModel from '../../rup/schemas/codificacion';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -84,9 +69,15 @@ export function quitarTurnoDoble(req, data, tid = null) {
     }
 }
 
+
 // Turno
-export function liberarTurno(req, data, turno) {
+export async function liberarTurno(req, data, turno) {
     const position = getPosition(req, data, turno._id);
+    let enEjecucion = await prestacionController.enEjecucion(turno);
+    if (enEjecucion) {
+        return false;
+    }
+
     if (!data.dinamica) {
         turno.estado = 'disponible';
         turno.paciente = null;
@@ -138,6 +129,7 @@ export function liberarTurno(req, data, turno) {
         newTurnos.splice(position.indexTurno, 1);
         data.bloques[position.indexBloque].turnos = newTurnos;
     }
+    return true;
 }
 
 
@@ -1025,9 +1017,7 @@ export function updatePaciente(pacienteModified, turno) {
     });
 }
 
-
 export function getConsultaDiagnostico(params) {
-
     return new Promise(async (resolve, reject) => {
         let pipeline = [];
         pipeline = [{
@@ -1066,11 +1056,9 @@ export function getConsultaDiagnostico(params) {
                 estado: 'asignado'
             }
         },
-
         {
             $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
         },
-
         {
             $project: {
                 estado: '$estado',
@@ -1089,25 +1077,90 @@ export function getConsultaDiagnostico(params) {
         },
         ];
 
-        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        const pipeline2 = [
+            {
+                $match: {
+                    'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+                }
+            },
+            {
+                $lookup: {
+                    from: 'prestaciones',
+                    localField: 'idPrestacion',
+                    foreignField: '_id',
+                    as: 'prestacion'
+                }
+            },
+            { $unwind: '$diagnostico.codificaciones' },
+            { $unwind: '$prestacion' },
+            {
+                $match: {
+                    'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+                    'prestacion.solicitud.organizacion.id': { $eq: mongoose.Types.ObjectId(params.organizacion) },
+                    $and: [
+                        { 'prestacion.solicitud.fecha': { $lte: new Date(params.horaFin) } },
+                        { 'prestacion.solicitud.fecha': { $gte: new Date(params.horaInicio) } }
+                    ]
+                }
+            },
+            {
+                $project: {
+                    estado: '$estado',
+                    nombrePaciente: '$paciente.nombre',
+                    apellidoPaciente: '$paciente.apellido',
+                    documentoPaciente: '$paciente.documento',
+                    tipoPrestacion: '$prestacion.solicitud.tipoPrestacion.conceptId',
+                    descripcionPrestacion: '$prestacion.solicitud.tipoPrestacion.term',
+                    auditoriaCodigo: '$diagnostico.codificaciones.codificacionAuditoria.codigo',
+                    auditoriaNombre: '$diagnostico.codificaciones.codificacionAuditoria.nombre',
+                    codProfesionalCie10Codigo: '$diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
+                    codrofesionalCie10Nombre: '$diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
+                    codProfesionalSnomedCodigo: '$diagnostico.codificaciones.codificacionProfesional.snomed.conceptId',
+                    codProfesionalSnomedNombre: '$diagnostico.codificaciones.codificacionProfesional.snomed.term',
+                }
+            }
+        ];
 
-        function removeDuplicates(arr) {
+        const p1 = toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        const p2 = toArray(codificacionModel.aggregate(pipeline2).cursor({}).exec());
+
+        let [diagnosticosTurnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2]);
+
+        let data = diagnosticosTurnos.concat(diagnosticosFueraAgenda);
+
+        const removeDuplicates = (arr) => {
             const unique_array = [];
-            const arrMap = arr.map(m => { return m._id; });
+            const arrMap = arr.map(m => m._id);
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
                 }
             }
             return unique_array;
-        }
+        };
+
         data = removeDuplicates(data);
         resolve(data);
-
-
     });
 }
 
+/* Devuelve el idAgenda y idBloque de un turno dado */
+export async function getDatosTurnos(idTurno) {
+    let pipeline = [];
+    pipeline = [
+        {
+            $match: {
+                'bloques.turnos._id': mongoose.Types.ObjectId(idTurno)
+            }
+        },
+        { $unwind: '$bloques' },
+        { $project: { _id: 0, idAgenda: '$_id', idBloque: '$bloques._id' } }
+    ];
+
+    let data = await agendaModel.aggregate(pipeline);
+    return data;
+
+}
 
 export function getCantidadConsultaXPrestacion(params) {
 
@@ -1170,7 +1223,6 @@ export function getCantidadConsultaXPrestacion(params) {
 
         ];
 
-
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
         function removeDuplicates(arr) {
@@ -1188,3 +1240,18 @@ export function getCantidadConsultaXPrestacion(params) {
 
     });
 }
+
+/**
+ * Verifica si la agenda posee asistencia registrada
+ *
+ * @export
+ * @param {*} agenda
+ * @returns
+ */
+export async function poseeAsistencia(agenda) {
+    return agenda.dinamica ?
+        agenda.bloques.some((bloque: any) => bloque.turnos.some((turno: any) => turno.asistencia)) :
+        agenda.bloques.some((bloque: any) => bloque.turnos.some((turno: any) => turno.asistencia ||
+            (turno.diagnostico && turno.diagnostico.codificaciones && turno.diagnostico.codificaciones.length > 0)));
+}
+

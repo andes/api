@@ -4,7 +4,6 @@ import { ObraSocial } from '../schemas/obraSocial';
 import * as pucoController from '../controller/puco';
 import * as sumarController from '../controller/sumar';
 import * as prepagaController from '../controller/prepagas';
-
 const router = express.Router();
 
 /**
@@ -28,6 +27,26 @@ router.get('/', async (req, res, next) => {
             return os;
         });
         res.json(obrasSociales);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.get('/prepagas', async (req, res, next) => {
+    try {
+        let prepagas = await ObraSocial.find({ prepaga: true }).exec();
+        res.json(prepagas);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+/* TODO: validar con recupero si es necesario mirar SUMAR */
+router.get('/sumar', async (req, res, next) => {
+    try {
+        let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+
+        res.json(arrayOSSumar);
     } catch (error) {
         return next(error);
     }
@@ -108,6 +127,24 @@ router.get('/puco/padrones', async (req, res, next) => {
         res.json(resp);
     } catch (error) {
         return next(error);
+    }
+});
+
+router.get('/os', async (req, res, next) => {
+    if (req.query.dni && req.query.sexo) {
+        let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
+        if (arrayOSPuco.length > 0) {
+            res.json(arrayOSPuco);
+        } else {
+            let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+            if (arrayOSSumar.length > 0) {
+                res.json(arrayOSSumar);
+            } else {
+                res.json([]);
+            }
+        }
+    } else {
+        res.json({ msg: 'Parámetros incorrectos' });
     }
 });
 

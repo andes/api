@@ -14,6 +14,9 @@ import * as path from 'path';
 import { env } from 'process';
 import * as rupStore from '../../../modules/rup/controllers/rupStore';
 
+import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
+let phantomjs = require('phantomjs-prebuilt-that-works');
+
 moment.locale('es');
 
 // Muestra mensaje y línea de un error dentro de una promise ;-)
@@ -22,12 +25,31 @@ if (env.NODE_ENV !== 'production') {
     process.on('unhandledRejection', r => console.log(r));
 }
 
+function streamToBase64(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => {
+            chunks.push(chunk);
+        });
+        stream.on('end', () => {
+            let result = Buffer.concat(chunks);
+            return resolve(result.toString('base64'));
+        });
+        stream.on('error', (err) => {
+            return reject(err);
+        });
+    });
+}
+
 export class Documento {
 
     /**
      * Opciones default de PDF rendering
      */
-    private static options: pdf.CreateOptions = {};
+    private static options: pdf.CreateOptions = {
+        // Nos aseguramos que usa el paquete que queremos
+        phantomPath: phantomjs.path
+    };
 
     /**
      *
@@ -85,29 +107,67 @@ export class Documento {
         });
     }
 
+    private static semanticTags = {
+        //  Motivos Principales de Consulta (MPC) posibles
+        mpc: [
+            'entidad observable',
+            'regimen/tratamiento',
+            'procedimiento',
+            'hallazgo',
+            'trastorno'
+        ],
+
+        hallazgos: [
+            'hallazgo',
+            'situacion',
+            'trastorno',
+            'objeto físico',
+            'medicamento clínico',
+        ],
+
+        procedimientos: [
+            'procedimiento',
+            'entidad observable',
+            'régimen/tratamiento',
+            'elemento de registro',
+            'situación',
+        ],
+
+        solicitudes: [
+            'procedimiento',
+            'entidad observable',
+            'régimen/tratamiento',
+            'elemento de registro'
+        ],
+
+        insumos: [
+            'producto',
+        ]
+    };
+
     /**
+     * Tiene Motivo Principal de Consulta? (MPC)
      *
      * @param st string semanticTag
      */
     private static existeSemanticTagMPC(st) {
-        return st === 'entidad observable' || st === 'regimen/tratamiento' || st === 'procedimiento' || st === 'hallazgo' || st === 'trastorno';
+        return this.semanticTags.mpc.findIndex(x => x === st) > -1;
     }
 
     private static esHallazgo(st) {
-        return st === 'hallazgo' || st === 'situacion' || st === 'trastorno';
+        return this.semanticTags.hallazgos.findIndex(x => x === st) > -1;
     }
 
     private static esProcedimiento(st) {
-        return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro' || st === 'situación' || st === 'objeto físico');
-    }
-
-    private static esSolicitud(st, esSolicitud) {
-        return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro')
-            && esSolicitud;
+        return this.semanticTags.procedimientos.findIndex(x => x === st) > -1;
     }
 
     private static esInsumo(st) {
-        return (st === 'producto' || st === 'objeto físico' || st === 'medicamento clínico');
+        return this.semanticTags.insumos.findIndex(x => x === st) > -1;
+    }
+
+    private static esSolicitud(st, esSolicitud) {
+        return (this.semanticTags.solicitudes.findIndex(x => x === st) > -1) && esSolicitud;
     }
 
     private static esAdjunto(conceptId) {
@@ -115,9 +175,6 @@ export class Documento {
         return (conceptId === '1921000013108');
     }
 
-    // private static getRegistros(registro) {
-    //     return registro.valor === null ? registro.registros.filter()
-    // }
 
     // 'plan'
     static generarRegistroSolicitudHTML(plan: any, template: string): any {
@@ -172,12 +229,12 @@ export class Documento {
             .replace('<!--concepto-->', this.ucaseFirst(producto.concepto.term))
             .replace('<!--motivoPrincipalDeConsulta-->', producto.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '')
             .replace('<!--recetable-->', producto.valor.recetable ? '(recetable)' : '(no recetable)')
-            .replace('<!--estado-->', producto.valor.estado)
-            .replace('<!--cantidad-->', producto.valor.cantidad)
-            .replace('<!--unidad-->', producto.valor.unidad)
-            .replace('<!--cantidadDuracion-->', producto.valor.duracion.cantidad)
-            .replace('<!--unidadDuracion-->', producto.valor.duracion.unidad)
-            .replace('<!--indicacion-->', producto.valor.indicacion !== '' ? '<b>Indicación:</b>' + producto.valor.indicacion : '');
+            .replace('<!--estado-->', producto.valor.estado ? producto.valor.estado : '')
+            .replace('<!--cantidad-->', producto.valor.cantidad ? producto.valor.cantidad : '(sin valor)')
+            .replace('<!--unidad-->', producto.valor.unidad ? producto.valor.unidad : '(unidades sin especificar)')
+            .replace('<!--cantidadDuracion-->', (producto.valor.duracion && producto.valor.duracion.cantidad) ? producto.valor.duracion.cantidad : '(sin valor)')
+            .replace('<!--unidadDuracion-->', (producto.valor.duracion && producto.valor.duracion.unidad) ? producto.valor.duracion.unidad : '(sin valor)')
+            .replace('<!--indicacion-->', (producto.valor.indicacion && typeof producto.valor.indicacion !== 'undefined') ? `<b>Indicación:</b> ${producto.valor.indicacion}` : '');
     }
 
     // 'archivo adjunto'
@@ -255,6 +312,8 @@ export class Documento {
     static async generarInforme(registros) {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < registros.length; i++) {
+
+
                 if (registros[i]) {
                     // Es resumen de la internación?
                     if (registros[0].concepto.conceptId === '3571000013102') {
@@ -273,6 +332,7 @@ export class Documento {
                                 valor: `<div class="nivel-${this.nivelPadre}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3><p>${this.ucaseFirst(registros[i].valor.descripcion)}</p></div>`
                             })];
                         } else if (registros[i].valor !== null) {
+
                             if (this.esHallazgo(registros[i].concepto.semanticTag)) {
                                 this.informeRegistros = [...this.informeRegistros, ({
                                     concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag },
@@ -327,6 +387,17 @@ export class Documento {
         });
     }
 
+    private static async getFirma(profesional) {
+        const FirmaSchema = makeFsFirma();
+        const file = await FirmaSchema.findOne({ 'metadata.idProfesional': String(profesional.id) }, {}, { sort: { _id: -1 } });
+        if (file) {
+            const stream = FirmaSchema.readById(file.id);
+            const base64 = await streamToBase64(stream);
+            return base64;
+        }
+        return null;
+    }
+
     private static async generarHTML(req) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -336,6 +407,7 @@ export class Documento {
 
                 // Títulos default
                 let tituloFechaEjecucion = 'Fecha Ejecución';
+                let tituloFechaValidacion = 'Fecha Validación';
 
                 // Configuraciones de informe propios de la prestación
                 let config: any = await this.getPrestacionInformeParams(prestacion.solicitud.tipoPrestacion.conceptId);
@@ -358,7 +430,9 @@ export class Documento {
 
                     if (config.informe) {
                         // Override título "Fecha Ejecución"?
-                        tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : 'Fecha Ejecución';
+                        tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : tituloFechaEjecucion;
+                        // Override título "Fecha Validación"?
+                        tituloFechaValidacion = config.informe.fechaValidacionOverride ? config.informe.fechaValidacionOverride : tituloFechaValidacion;
                     }
 
                     // Vemos si el tipo de prestación tiene registros que son hijos directos (TP: Ecografía; Hijo: Ecografía obstétrica)
@@ -429,8 +503,12 @@ export class Documento {
 
                     let carpeta = paciente.carpetaEfectores.find(x => x.organizacion.id === idOrg);
 
+                    const firmaProfesional = await this.getFirma(prestacion.solicitud.profesional);
                     let profesionalSolicitud = prestacion.solicitud.profesional.apellido + ', ' + prestacion.solicitud.profesional.nombre;
-                    let profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
+                    const profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
+
+                    profesionalSolicitud += '<br>' + prestacion.solicitud.organizacion.nombre.substring(0, prestacion.solicitud.organizacion.nombre.indexOf('-'));
+
 
                     let orgacionacionDireccionSolicitud = organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre;
 
@@ -449,12 +527,29 @@ export class Documento {
                     let fechaValidacion = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
 
                     // BODY
-                    html = html
-                        .replace('<!--fechaIngreso-->', (prestacion.ejecucion.registros[0].valor && prestacion.ejecucion.registros[0].valor.fechaDesde) ? '<b>Fecha de ingreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY') : '')
-                        .replace('<!--fechaEgreso-->', (prestacion.ejecucion.registros[0].valor && prestacion.ejecucion.registros[0].valor.fechaHasta) ? '<b>Fecha de egreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY') : '')
-                        .replace('<!--tipoPrestacion-->', tipoPrestacion)
+
+                    if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
+                        const valor = prestacion.ejecucion.registros[0].valor;
+                        const fechaIngreso = valor && valor.fechaDesde ? moment(valor.fechaDesde).format('DD/MM/YYYY') : null;
+                        const fechaEgreso = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') : null;
+                        const unidadOrganizativa = valor && valor.unidadOrganizativa ? valor.unidadOrganizativa.term : null;
+                        if (fechaIngreso) {
+                            html = html.replace('<!--fechaIngreso-->', '<b> Ingreso: </b>' + fechaIngreso + '&nbsp;&nbsp;&nbsp;');
+                        }
+                        if (fechaEgreso) {
+                            html = html.replace('<!--fechaEgreso-->', '<b> Egreso: </b>' + fechaEgreso + '&nbsp;&nbsp;&nbsp;');
+                        }
+                        if (unidadOrganizativa) {
+                            html = html.replace('<!--unidadOrganizativa-->', '<b> Servicio: </b>' + unidadOrganizativa + '&nbsp;&nbsp;&nbsp;');
+                        }
+
+                    }
+
+
+                    html = html.replace('<!--tipoPrestacion-->', tipoPrestacion)
                         .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
+                        .replace('<!--tituloFechaValidacion-->', tituloFechaValidacion)
                         .replace('<!--fechaEjecucion-->', moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
@@ -470,6 +565,10 @@ export class Documento {
                         .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
                         .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
                         .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'));
+
+                    if (firmaProfesional) {
+                        html = html.replace('<!--firma1-->', `<img src="data:image/png;base64,${firmaProfesional}">`);
+                    }
 
                     if (config.informe && motivoPrincipalDeConsulta) {
                         html = html
@@ -613,6 +712,7 @@ export class Documento {
 
                     await this.generarHTML(req).then(async htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();
+                        fs.writeFileSync('/tmp/test.html', htmlPDF);
                         await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
                             // async
                             // const pdf2 = await htmlPdf.create(htmlPDF, options);

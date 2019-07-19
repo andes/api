@@ -1,8 +1,10 @@
 import * as utils from '../../../utils/utils';
 import * as express from 'express';
 import { tipoPrestacion } from '../schemas/tipoPrestacion';
+import * as mongoose from 'mongoose';
 
 const router = express.Router();
+const ObjectId = mongoose.Types.ObjectId;
 
 router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
     let query;
@@ -30,7 +32,11 @@ router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
 
         // Búsqueda por múltiples IDs
         if (req.query.id) {
-            query.where('_id').in(req.query.id);
+            if (typeof req.query.id === 'string') {
+                req.query.id = [req.query.id];
+            }
+            let objectIds = req.query.id.map(x => { return ObjectId(x); });
+            query.where('_id').in(objectIds);
         }
     }
 

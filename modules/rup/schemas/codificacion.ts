@@ -1,9 +1,8 @@
 import * as mongoose from 'mongoose';
-import * as cie10 from '../../../core/term/schemas/cie10';
+import { schema as cie10Schema } from '../../../core/term/schemas/cie10';
 import { SnomedConcept } from './snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import * as nombreSchema from '../../../core/tm/schemas/nombre';
-import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
+import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 
 const pacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
@@ -15,10 +14,10 @@ const pacienteSchema = new mongoose.Schema({
     telefono: String,
     sexo: String,
     carpetaEfectores: [{
-        organizacion: nombreSchema,
+        organizacion: String,
         nroCarpeta: String
     }],
-    obraSocial: { type: obraSocialSchema }
+    obraSocial: { type: ObraSocialSchema }
 });
 
 const codificacionSchema = new mongoose.Schema({
@@ -30,14 +29,20 @@ const codificacionSchema = new mongoose.Schema({
         codificaciones: [{
             // (ver schema) solamente obtenida de RUP o SIPS y definida por el profesional
             codificacionProfesional: {
-                cie10: cie10.schema,
+                cie10: cie10Schema,
                 snomed: SnomedConcept
             },
             // (ver schema) corresponde a la codificación establecida la instancia de revisión de agendas
-            codificacionAuditoria: cie10.schema,
+            codificacionAuditoria: cie10Schema,
             primeraVez: Boolean,
         }]
-    }
+    },
+    // estadoFacturacion: IEstadoFacturacion,
+    estadoFacturacion: {
+        tipo: String,
+        estado: String,
+        numeroComprobante: String
+    },
 });
 codificacionSchema.plugin(AuditPlugin);
 let codificacion = mongoose.model('codificacion', codificacionSchema, 'codificacion');

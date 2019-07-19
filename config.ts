@@ -62,6 +62,7 @@ export const modules = {
         active: true,
         path: './core/mpi/routes',
         route: '/core/mpi',
+        // TODO activar middleware de autenticación
         middleware: appMiddleware
     },
     auditoria: {
@@ -211,6 +212,12 @@ export const modules = {
         path: './modules/geonode/routes',
         route: '/modules/geonode',
         middleware: appMiddleware
+    },
+    georeferencia: {
+        active: true,
+        path: './modules/georeferencia/routes',
+        route: '/modules/georeferencia',
+        middleware: appMiddleware
     }
 };
 
@@ -299,6 +306,18 @@ export const logKeys = {
         key: 'mpi:mpiUpdater:finish',
         operacion: 'MPI updater finish'
     },
+    mpiAuditoriaSetActivo: {
+        key: 'mpi:auditoria:setActivo',
+        operacion: 'Activar/desactivar paciente'
+    },
+    validacionPaciente: {
+        key: 'mpi:validacion',
+        operacion: 'Validar paciente'
+    },
+    elasticInsert: {
+        key: 'elastic:paciente:insert',
+        operacion: 'Insert paciente ElasticSearch'
+    },
     elasticCheck1: {
         key: 'elastic:notFound:andes',
         operacion: 'Paciente en Andes no encontrado en elastic'
@@ -322,5 +341,9 @@ export const logKeys = {
     turnosMobileUpdate: {
         key: 'citas:bloques:modificar',
         operacion: 'setea a 0 turnos disponibles para app mobile'
+    },
+    regexChecker: {
+        key: 'mpi:regexChecker',
+        operacion: 'JOB: intenta corregir errores en nombre y apellido de pacientes'
     }
 };
