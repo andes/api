@@ -137,6 +137,9 @@ export let schema = new mongoose.Schema({
 
         // Registros de la ejecución
         registros: [registro.schema],
+
+        elementoRUP: mongoose.SchemaTypes.ObjectId
+
     },
     // Historia de estado de la prestación
     estados: [estado.schema]

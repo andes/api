@@ -117,7 +117,12 @@ export let schema = new mongoose.Schema({
         nombre: String,
         conceptIds: [String],
         query: String
-    }]
+    }],
+
+    inactiveAt: {
+        type: mongoose.SchemaTypes.Date,
+        required: false
+    }
 });
 
 // Autopopula todos los hijos
