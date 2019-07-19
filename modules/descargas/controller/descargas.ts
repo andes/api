@@ -244,7 +244,7 @@ export class Documento {
         let adjuntos = '';
 
         let templateAdjuntos = '';
-        filePromises = registro.valor.documentos.map(documento => {
+        filePromises = registro.valor.documentos.filter(doc => doc.ext !== 'pdf').map(documento => {
             return new Promise(async (resolve, reject) => {
                 rupStore.readFile(documento.id).then((archivo: any) => {
 
