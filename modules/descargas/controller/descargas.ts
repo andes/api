@@ -379,7 +379,7 @@ export class Documento {
                     }
                     if (registros[i] && registros[i].registros && registros[i].registros.length > 0) {
                         this.nivelPadre = 0;
-                        this.generarInforme(registros[i].registros);
+                        await this.generarInforme(registros[i].registros);
                     }
                 }
             }
