@@ -478,7 +478,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
         }
         // return next('ObjectID Inválido');
     } else {
-        agenda.findById(req.params.id, (err, data) => {
+        agenda.findById(req.params.id, async (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -510,7 +510,10 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         if (turno.paciente && turno.paciente.id) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data);
                         }
-                        agendaCtrl.liberarTurno(req, data, turno);
+                        let liberado = await agendaCtrl.liberarTurno(req, data, turno);
+                        if (!liberado) {
+                            return next('Turno en ejecución');
+                        }
                         prestacionCtrl.liberarRefTurno(turno._id, req);
                         event = { object: 'turno', accion: 'liberar', data: turno };
                         break;
@@ -557,10 +560,17 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'pendienteAuditoria':
                     case 'pendienteAsistencia':
                     case 'auditada':
-                    case 'suspendida':
                     case 'borrada':
                         agendaCtrl.actualizarEstado(req, data);
                         event = { object: 'agenda', accion: 'estado', data };
+                        break;
+                    case 'suspendida':
+                        if (! await agendaCtrl.poseeAsistencia(data)) {
+                            agendaCtrl.actualizarEstado(req, data);
+                            event = { object: 'agenda', accion: 'estado', data };
+                        } else {
+                            return res.json({ data, mensaje: 'No se puede suspender la agenda ya que posee asistencia registrada' });
+                        }
                         break;
                     case 'avisos':
                         agendaCtrl.agregarAviso(req, data);
