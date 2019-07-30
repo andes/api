@@ -8,7 +8,7 @@ import * as Paciente from '../../../core/mpi/controller/paciente';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as snomed from '../../../core/term/controller/snomedCtr';
 import * as rup from '../../../modules/rup/schemas/elementoRUP';
-import { ISnomedConcept } from 'modules/rup/schemas/snomed-concept';
+import { ISnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
 import { env } from 'process';
@@ -418,7 +418,10 @@ export class Documento {
     private async generarHTML(req) {
         return new Promise(async (resolve, reject) => {
             try {
-                let html, datos;
+                // Se leen header y footer (si se le pasa un encoding, devuelve un string)
+                let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
+                let datos;
+
                 // Prestación
                 let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
 
@@ -504,9 +507,6 @@ export class Documento {
                         contenidoInforme = this.informeRegistros;
                     }
 
-
-                    // Se leen header y footer (si se le pasa un encoding, devuelve un string)
-                    html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
 
                     let nombreCompleto = paciente.apellido + ', ' + paciente.nombre;
                     let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
@@ -728,10 +728,10 @@ export class Documento {
 
 
                     this.options = options || phantomPDFOptions;
-
                     await this.generarHTML(req).then(async htmlPDF => {
-                        htmlPDF = htmlPDF + this.generarCSS();
-                        await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
+                        console.log(htmlPDF);
+                        const htmlCssPDF = htmlPDF + this.generarCSS();
+                        await pdf.create(htmlCssPDF, this.options).toFile((err2, file): any => {
 
                             if (err2) {
                                 reject(err2);
