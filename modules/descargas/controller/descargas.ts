@@ -8,7 +8,7 @@ import * as Paciente from '../../../core/mpi/controller/paciente';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as snomed from '../../../core/term/controller/snomedCtr';
 import * as rup from '../../../modules/rup/schemas/elementoRUP';
-import { ISnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import { ISnomedConcept } from 'modules/rup/schemas/snomed-concept';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
 import { env } from 'process';
@@ -302,7 +302,7 @@ export class Documento {
     }
 
     informeRegistros: any[] = [];
-    html: string = '';
+    html = '';
     hallazgoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/hallazgo.html'), 'utf8');
     procedimientoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/procedimiento.html'), 'utf8');
     planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/solicitud.html'), 'utf8');
@@ -310,7 +310,7 @@ export class Documento {
     adjuntoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/adjunto.html'), 'utf8');
     nivelPadre = 0;
 
-    async generarInforme(registros) {
+    async generarInforme(registros, prestacionConceptId) {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < registros.length; i++) {
 
@@ -396,7 +396,7 @@ export class Documento {
 
                     if (registros[i] && registros[i].registros && registros[i].registros.length > 0) {
                         this.nivelPadre = 0;
-                        await this.generarInforme(registros[i].registros);
+                        await this.generarInforme(registros[i].registros, prestacionConceptId);
                     }
                 }
             }
