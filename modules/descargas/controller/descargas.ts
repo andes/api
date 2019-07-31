@@ -176,18 +176,32 @@ export class Documento {
     }
 
 
-    // 'plan'
-    generarRegistroSolicitudHTML(plan: any, template: string): any {
-        return template
-            .replace('<!--plan-->', this.ucaseFirst(plan.concepto.term))
-            .replace('<!--motivo-->', plan.valor.solicitudPrestacion.motivo)
-            .replace('<!--indicaciones-->', plan.valor.solicitudPrestacion.indicaciones)
-            .replace('<!--organizacionDestino-->', (plan.valor.solicitudPrestacion.organizacionDestino ? plan.valor.solicitudPrestacion.organizacionDestino.nombre : ''))
-            .replace('<!--profesionalesDestino-->', plan.valor.solicitudPrestacion.profesionalesDestino ? plan.valor.solicitudPrestacion.profesionalesDestino.map(y => y.nombreCompleto).join(' ') : '');
+    // 'solicitud'
+    generarRegistroSolicitudHTML(solicitud: any, htmlTemplate: string): any {
+
+        const plan = this.ucaseFirst(solicitud.concepto.term);
+        const motivo = solicitud.valor.solicitudPrestacion.motivo;
+        const indicaciones = solicitud.valor.solicitudPrestacion.indicaciones;
+        const organizacionDestino = (solicitud.valor.solicitudPrestacion.organizacionDestino ? solicitud.valor.solicitudPrestacion.organizacionDestino.nombre : '');
+        const profesionalesDestino = (solicitud.valor.solicitudPrestacion.profesionalesDestino ? solicitud.valor.solicitudPrestacion.profesionalesDestino.map(y => y.nombreCompleto).join(' ') : '');
+
+        const datos = {
+            plan,
+            motivo,
+            indicaciones,
+            organizacionDestino,
+            profesionalesDestino
+        };
+
+        const template = Handlebars.compile(htmlTemplate);
+        htmlTemplate = template(datos);
+
+        return htmlTemplate;
+
     }
 
     // 'procedimiento' || 'entidad observable' || 'régimen/tratamiento' || 'elemento de registro'
-    generarRegistroProcedimientoHTML(proc: any, template: string): any {
+    generarRegistroProcedimientoHTML(proc: any, htmlTemplate: string): any {
         let valor;
         if (proc.valor === 1) {
             valor = 'SI';
@@ -206,44 +220,80 @@ export class Documento {
             valor = proc.valor.toString();
         }
 
-        return template
-            .replace('<!--concepto-->', proc.concepto.conceptId !== '716141001' ? this.ucaseFirst(proc.nombre) : (proc.concepto.term[0].toLocaleUpperCase() + proc.concepto.term.slice(1)))
-            .replace('<!--valor-->', valor)
-            // .replace('<!--valor-->', (proc.valor || this.getRegistros(proc)))
-            .replace('<!--motivoPrincipalDeConsulta-->', proc.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
+        const concepto = proc.concepto.conceptId !== '716141001' ? this.ucaseFirst(proc.nombre) : (proc.concepto.term[0].toLocaleUpperCase() + proc.concepto.term.slice(1));
+        const motivoPrincipalDeConsulta = proc.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '';
+
+        const datos = {
+            concepto,
+            valor,
+            motivoPrincipalDeConsulta
+        };
+
+        const template = Handlebars.compile(htmlTemplate);
+        htmlTemplate = template(datos);
+
+        return htmlTemplate;
+
     }
 
     // 'procedimiento' || 'hallazgo' || 'trastorno'
-    generarRegistroHallazgoHTML(hallazgo: any, template: string): any {
-        return template
-            .replace('<!--concepto-->', hallazgo.nombre ? hallazgo.nombre : this.ucaseFirst(hallazgo.concepto.term))
-            .replace('<!--evolucion-->', (hallazgo.valor && hallazgo.valor.evolucion) ? `<p><b>Evolución</b>: ${hallazgo.valor.evolucion}` : ``)
-            .replace('<!--motivoPrincipalDeConsulta-->', hallazgo.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
+    generarRegistroHallazgoHTML(hallazgo: any, htmlTemplate: string): any {
+
+        const concepto = hallazgo.nombre ? hallazgo.nombre : this.ucaseFirst(hallazgo.concepto.term);
+        const evolucion = (hallazgo.valor && hallazgo.valor.evolucion) ? `<p><b>Evolución</b>: ${hallazgo.valor.evolucion}` : ``;
+        const motivoPrincipalDeConsulta = hallazgo.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '';
+
+        const datos = {
+            concepto,
+            evolucion,
+            motivoPrincipalDeConsulta
+        };
+
+        const template = Handlebars.compile(htmlTemplate);
+        htmlTemplate = template(datos);
+
+        return htmlTemplate;
     }
 
     // 'producto'
-    generarRegistroInsumoHTML(producto: any, template: string): any {
-        return template
-            .replace('<!--concepto-->', this.ucaseFirst(producto.concepto.term))
-            .replace('<!--motivoPrincipalDeConsulta-->', producto.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '')
-            .replace('<!--recetable-->', producto.valor.recetable ? '(recetable)' : '(no recetable)')
-            .replace('<!--estado-->', producto.valor.estado ? producto.valor.estado : '')
-            .replace('<!--cantidad-->', producto.valor.cantidad ? producto.valor.cantidad : '(sin valor)')
-            .replace('<!--unidad-->', producto.valor.unidad ? producto.valor.unidad : '(unidades sin especificar)')
-            .replace('<!--cantidadDuracion-->', (producto.valor.duracion && producto.valor.duracion.cantidad) ? producto.valor.duracion.cantidad : '(sin valor)')
-            .replace('<!--unidadDuracion-->', (producto.valor.duracion && producto.valor.duracion.unidad) ? producto.valor.duracion.unidad : '(sin valor)')
-            .replace('<!--indicacion-->', (producto.valor.indicacion && typeof producto.valor.indicacion !== 'undefined') ? `<b>Indicación:</b> ${producto.valor.indicacion}` : '');
+    generarRegistroInsumoHTML(producto: any, htmlTemplate: string): any {
+
+        const concepto = this.ucaseFirst(producto.concepto.term);
+        const motivoPrincipalDeConsulta = producto.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '';
+        const recetable = producto.valor.recetable ? '(recetable)' : '(no recetable)';
+        const estado = producto.valor.estado ? producto.valor.estado : '';
+        const cantidad = producto.valor.cantidad ? producto.valor.cantidad : '(sin valor)';
+        const unidad = producto.valor.unidad ? producto.valor.unidad : '(unidades sin especificar)';
+        const cantidadDuracion = (producto.valor.duracion && producto.valor.duracion.cantidad) ? producto.valor.duracion.cantidad : '(sin valor)';
+        const unidadDuracion = (producto.valor.duracion && producto.valor.duracion.unidad) ? producto.valor.duracion.unidad : '(sin valor)';
+        const indicacion = (producto.valor.indicacion && typeof producto.valor.indicacion !== 'undefined') ? `<b>Indicación:</b> ${producto.valor.indicacion}` : '';
+
+        const datos = {
+            concepto,
+            recetable,
+            estado,
+            cantidad,
+            unidad,
+            cantidadDuracion,
+            unidadDuracion,
+            indicacion,
+            motivoPrincipalDeConsulta
+        };
+
+        const template = Handlebars.compile(htmlTemplate);
+        htmlTemplate = template(datos);
+
+        return htmlTemplate;
+
     }
 
     // 'archivo adjunto'
-    generarArchivoAdjuntoHTML(registro: any, template: string): any {
+    generarArchivoAdjuntoHTML(registro: any, htmlTemplate: string): any {
 
         let filePromises = [];
         let adjuntos = '';
+        let templateParcial = '';
 
-        let templateAdjuntos = `
-            <div class="w-100">
-        `;
         filePromises = registro.valor.documentos.map((documento) => {
             return new Promise(async (resolve, reject) => {
                 rupStore.readFile(documento.id).then((archivo: any) => {
@@ -255,15 +305,15 @@ export class Documento {
 
                     archivo.stream.on('end', () => {
                         adjuntos = `<img class="adjunto" src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
-                        templateAdjuntos = template.replace(`<!--adjuntos-->`, adjuntos);
-                        resolve(templateAdjuntos);
+                        const template = Handlebars.compile(htmlTemplate);
+                        templateParcial = template({ adjuntos });
+                        resolve(templateParcial);
                     });
 
                 });
             });
 
         });
-        templateAdjuntos += '</div>';
         return Promise.all(filePromises);
 
     }
@@ -526,7 +576,7 @@ export class Documento {
                     let profesionalSolicitud = prestacion.solicitud.profesional.apellido + ', ' + prestacion.solicitud.profesional.nombre;
                     const profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
 
-                    profesionalSolicitud += '<br>' + prestacion.solicitud.organizacion.nombre.substring(0, prestacion.solicitud.organizacion.nombre.indexOf('-'));
+                    // profesionalSolicitud += '<br>' + prestacion.solicitud.organizacion.nombre.substring(0, prestacion.solicitud.organizacion.nombre.indexOf('-'));
 
 
                     let organizacionNombreSolicitud = prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>');
@@ -614,7 +664,6 @@ export class Documento {
 
                     const template = Handlebars.compile(html);
                     html = template(datos);
-
 
                     resolve(html);
 
@@ -729,7 +778,6 @@ export class Documento {
 
                     this.options = options || phantomPDFOptions;
                     await this.generarHTML(req).then(async htmlPDF => {
-                        console.log(htmlPDF);
                         const htmlCssPDF = htmlPDF + this.generarCSS();
                         await pdf.create(htmlCssPDF, this.options).toFile((err2, file): any => {
 
