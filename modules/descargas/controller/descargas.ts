@@ -427,22 +427,7 @@ export class Documento {
                             concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag },
                             valor: `<div class="nivel-${this.nivelPadre}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3><p>${registros[i].valor ? registros[i].valor : ''}</p></div>`
                         }];
-                    } else {
-                        // if (registros[i].concepto.semanticTag !== 'elemento de registro') {
-                        //     let valor = `<div class="nivel-${this.nivelPadre}"><span>${this.ucaseFirst(registros[i].nombre)}</span>`;
-                        //     if (registros[i].valor !== '') {
-                        //         valor += `<p>${registros[i].valor}</p></div>`;
-                        //     } else {
-                        //         valor += `<p>sin datos</p></div>`;
-                        //     }
-                        //     this.informeRegistros = [...this.informeRegistros, ({
-                        //         concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag },
-                        //         valor
-                        //     })];
-                        // }
                     }
-
-
 
                     if (registros[i] && registros[i].registros && registros[i].registros.length > 0) {
                         this.nivelPadre = 0;
