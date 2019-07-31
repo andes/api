@@ -810,8 +810,8 @@ export class Documento {
                     this.options = options || phantomPDFOptions;
 
                     this.generarConstanciaPuco(req).then(htmlPDF => {
-                        htmlPDF = htmlPDF + this.generarCssPuco();
-                        pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
+                        const htmlCassPDF = htmlPDF + this.generarCssPuco();
+                        pdf.create(htmlCassPDF, this.options).toFile((err2, file): any => {
                             if (err2) {
                                 reject(err2);
                             }
