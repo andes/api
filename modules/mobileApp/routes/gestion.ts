@@ -1,9 +1,10 @@
 import * as express from 'express';
+import { urlDatosGestion } from '../../../config.private';
 const request = require('request');
 
 const router = express.Router();
-const urlGestion = 'http://10.1.192.244:3005/mobile/migrar';
-// const urlGestion = 'http://192.168.0.121:3000/mobile/migrar';
+const urlGestion = urlDatosGestion;
+
 
 router.get('/datosGestion/', (req, res, next) => {
     let options = {

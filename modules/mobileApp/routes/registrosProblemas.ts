@@ -4,23 +4,13 @@ import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 
-router.post('/problemas/:idSql', async (req, res, next) => {
+router.post('/problemas', async (req, res, next) => {
     let id = Number(req.params.idSql);
     try {
-        let problema: any = await Problema.findOne({ idProblema: id });
-        if (problema) {
-            if (req.body.estado) {
-                problema.estado = req.body.estado;
-                Auth.audit(problema, req);
-                let respuesta = await problema.save();
-                res.json(respuesta);
-            }
-        } else {
-            const newProblema = new Problema(req.body);
-            Auth.audit(newProblema, req);
-            let respuesta = await newProblema.save();
-            res.json(respuesta);
-        }
+        const newProblema = new Problema(req.body);
+        Auth.audit(newProblema, req);
+        let respuesta = await newProblema.save();
+        res.json(respuesta);
     } catch (error) {
         return next(error);
     }
@@ -35,9 +25,9 @@ router.get('/problemas', async (req: any, res, next) => {
     }
 });
 
-router.patch('/problemas/:idSql', async (req, res, next) => {
+router.patch('/problemas/:id', async (req, res, next) => {
     try {
-        let problema: any = await Problema.findOne({ idSqlProblema: req.params.idSql });
+        let problema: any = await Problema.findById(req.params.id);
         if (req.body.estado) {
             problema.estado = req.body.estado;
             Auth.audit(problema, req);
