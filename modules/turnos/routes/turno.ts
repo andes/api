@@ -84,6 +84,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             nota: req.body.nota,
             motivoConsulta: req.body.motivoConsulta,
             paciente: req.body.paciente,
+            organizacion: (agendaRes as any).organizacion,
             tipoPrestacion: req.body.tipoPrestacion,
             updatedAt: fecha,
             updatedBy: usuario,
@@ -132,7 +133,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turnoLog, doc2.bloques[0].id, req.params.idAgenda);
                 res.json(doc2);
-
+                turno.organizacion = doc2.organizacion;
                 EventCore.emitAsync('citas:turno:asignar', turno);
 
             }
@@ -344,9 +345,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
 
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
                 let turno = doc2.bloques.id(req.body.idBloque).turnos.id(req.body.idTurno);
-
+                turno.paciente.id = req.body.paciente;
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.body.idBloque, req.body.idAgenda);
 
+                turno.organizacion = doc2.organizacion;
                 EventCore.emitAsync('citas:turno:asignar', turno);
                 EventCore.emitAsync('citas:agenda:update', doc2);
 

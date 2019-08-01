@@ -22,10 +22,7 @@ export class PushClient {
     }
 
     public send(deviceIds, notification: INotification) {
-
         return this.pushServer.send(deviceIds, this.notificationToObject(notification));
-        // .then((results) => console.log(JSON.stringify(results)))
-        // .catch((err) => console.log(JSON.stringify(err)));
     }
 
     private notificationToObject(notification: INotification) {

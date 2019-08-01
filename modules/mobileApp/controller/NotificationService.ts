@@ -2,6 +2,7 @@ import { PushClient } from './PushClient';
 import { pacienteApp } from '../schemas/pacienteApp';
 import * as agenda from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
+import { notificationLog } from '../schemas/notificationLog';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 
@@ -60,7 +61,6 @@ export class NotificationService {
             }
         };
         // let id = new mongoose.Schema.Types.ObjectId(profesionalId);
-        // console.log(id);
         this.sendByProfesional(profesionalId, notificacion);
     }
 
@@ -86,7 +86,7 @@ export class NotificationService {
         new PushClient().send(devices, notification);
     }
 
-    /**
+        /**
      * Envia la notificacion a todos los devices de un paciente
      * @param {objectId} pacienteId Id del paciente.
      * @param {INotificacion} notification  Notificacion a enviar.
@@ -98,6 +98,44 @@ export class NotificationService {
                 const devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
             });
+        });
+    }
+
+    /**
+     * Crea y pushea el mensaje de recordatorio de turno a un paciente dada la información contenida en el notificationLog recibido por parametro
+     * Realiza el envío de la notificación:
+     * Si resulta existoso, actualiza el estado del notificationLog a 'enviado'.
+     * Si falla, reintenta 2 veces más (3 intentos de envío).
+     *
+     * @private
+     * @static
+     * @param {*} nl
+     * @memberof NotificationService
+     */
+    private static sendNotificacionTurno(nl) {
+        const foo = async (ds, n, retry) => {
+            const abody = nl.paciente.apellido +
+                ', le recordamos su próximo turno ' +
+                moment(nl.fechaHoraTurno).format('DD') + '/' + moment(nl.fechaHoraTurno).format('MM') + ' ' +  moment(nl.fechaHoraTurno).format('HH:mm') + ' | ' +
+                nl.tipoPrestacion.term + ' | ' + nl.organizacion.nombre;
+
+            const notification = {
+                body: abody
+            };
+            const rs = await new PushClient().send(ds, notification);
+            rs.forEach( (r: any) => {
+                if (r.success > 0 && r.failure === 0) {
+                    n.estado = 'enviado';
+                    n.save();
+                } else if (retry < 3) {
+                    retry ++;
+                    foo([r.message[0].regId], nl, retry);
+                }
+            });
+        };
+
+        pacienteApp.find({ 'pacientes.id': nl.paciente.id }, (err, docs: any[]) => {
+            docs.forEach(user => foo(user.devices.map(item => item.device_id), nl, 0) );
         });
     }
 
@@ -116,4 +154,44 @@ export class NotificationService {
         });
     }
 
+    public static saveNotificationLog(turno) {
+        new notificationLog({
+            idTurno: turno._id,
+            fechaHoraTurno: turno.horaInicio    ,
+            paciente: {
+                id: turno.paciente.id,
+                nombre: turno.paciente.nombre,
+                apellido: turno.paciente.apellido,
+                telefono: turno.paciente.telefono,
+            },
+            profesionales: turno.profesionales ? turno.profesionales.map( (e: any) => { return  { nombre: e.nombre, apellido: e.apellido }; } ) : [],
+            tipoPrestacion: turno.tipoPrestacion,
+            organizacion: turno.organizacion,
+            estado: 'pendiente'})
+        .save();
+    }
+
+    /**
+     * Encola callbacks de push notifications dados los notificationLog de turnos de la fecha
+     *
+     * @static
+     * @memberof NotificationService
+     */
+    public static async enviarRecordatoriosTurnos() {
+        const todayStart = moment().startOf('day').toDate();
+        const todayEnd = moment().endOf('day').toDate();
+        const pendingNotifications = await notificationLog.find({
+            fechaHoraTurno: {
+                $gte: todayStart,
+                $lt: todayEnd
+            },
+            estado: 'pendiente'
+        });
+
+        pendingNotifications.forEach( (n: any) => {
+            // const timeOut = moment(n.fechaHoraTurno).diff(moment());
+            const timeOut = 0;
+            setTimeout( () => this.sendNotificacionTurno(n), timeOut);
+        });
+    }
 }

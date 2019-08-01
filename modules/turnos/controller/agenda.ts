@@ -1101,6 +1101,9 @@ export function saveAgenda(nuevaAgenda) {
     });
 }
 
+EventCore.on('citas:turno:asignar', async (turno) => {
+    NotificationService.saveNotificationLog(turno);
+});
 
 // Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
 EventCore.on('mpi:patient:update', async (pacienteModified) => {
