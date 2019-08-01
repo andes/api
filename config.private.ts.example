@@ -305,3 +305,6 @@ export const logDatabase = {
 };
 // un string con un valor de expiración
 export const mobileExpiredVersion = '100';
+
+// url de acceso a los datos para la app de gestion
+export const urlDatosGestion = '';
