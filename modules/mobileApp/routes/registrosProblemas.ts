@@ -5,7 +5,6 @@ import { Auth } from '../../../auth/auth.class';
 const router = express.Router();
 
 router.post('/problemas', async (req, res, next) => {
-    let id = Number(req.params.idSql);
     try {
         const newProblema = new Problema(req.body);
         Auth.audit(newProblema, req);
