@@ -2,7 +2,8 @@ import * as mongoose from 'mongoose';
 import * as express from 'express';
 import { EventCore } from '@andes/event-bus';
 import { WebHook, WebHookLog } from '../schemas/webhookSchema';
-import * as Fhir from '../../../packages/fhir/src/patient';
+import { Patient } from '@andes/fhir';
+
 const request = require('request');
 let router = express.Router();
 
@@ -49,7 +50,7 @@ function filterData(filters: any[], data) {
 }
 
 const trasform = {
-    fhir: Fhir.encode
+    fhir: Patient.encode
 };
 
 EventCore.on(/.*/, async function (body) {
@@ -73,7 +74,6 @@ EventCore.on(/.*/, async function (body) {
             data: bodyTransform,
             event
         };
-
         request({
             method: sub.method,
             uri: sub.url,
@@ -83,7 +83,7 @@ EventCore.on(/.*/, async function (body) {
             timeout: 10000,
         }, (error, response, _body) => {
 
-            const log = new WebHookLog({
+            let log = new WebHookLog({
                 event,
                 url: sub.url,
                 method: sub.method,
