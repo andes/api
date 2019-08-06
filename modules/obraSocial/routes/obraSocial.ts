@@ -130,13 +130,13 @@ router.get('/puco/padrones', async (req, res, next) => {
     }
 });
 
-router.get('/os', async (req, res, next) => {
-    if (req.query.dni && req.query.sexo) {
-        let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
+router.get('/:documento', async (req, res, next) => {
+    if (req.params.documento) {
+        let arrayOSPuco: any = await pucoController.pacientePuco(req.params.documento);
         if (arrayOSPuco.length > 0) {
             res.json(arrayOSPuco);
         } else {
-            let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+            let arrayOSSumar = await sumarController.pacienteSumar(req.params.documento);
             if (arrayOSSumar.length > 0) {
                 res.json(arrayOSSumar);
             } else {
@@ -147,6 +147,5 @@ router.get('/os', async (req, res, next) => {
         return next('Parámetros incorrectos');
     }
 });
-
 
 module.exports = router;
