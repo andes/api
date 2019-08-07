@@ -9,7 +9,7 @@ import { IPacienteDoc } from './paciente.interface';
  */
 
 export class PacienteTx {
-    private static INDEX = 'andes';
+    private static INDEX = 'andes2';
     private static TYPE = 'paciente';
 
     public static getClient() {
