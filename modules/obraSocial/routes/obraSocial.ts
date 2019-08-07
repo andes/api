@@ -130,7 +130,7 @@ router.get('/puco/padrones', async (req, res, next) => {
     }
 });
 
-router.get('/:documento', async (req, res, next) => {
+router.get('/puco/:documento', async (req, res, next) => {
     if (req.params.documento) {
         let arrayOSPuco: any = await pucoController.pacientePuco(req.params.documento);
         if (arrayOSPuco.length > 0) {
