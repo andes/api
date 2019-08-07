@@ -7,6 +7,9 @@ import { ContactoRoutes } from './contactos/contacto.routes';
 import { contactoController } from './contactos/contacto.controller';
 import { direccionController } from './direcciones/direccion.controller';
 import { DireccionRoutes } from './direcciones/direccion.routes';
+import { relacionController } from './relaciones/relaciones.controller';
+import { RelacionRoutes } from './relaciones/relaciones.routes';
+
 
 /**
  * @api {get} /pacientes/:id Requiere datos de un paciente
@@ -165,5 +168,8 @@ router.use('/pacientes', contactoRouting.getRoutes());
 
 const direccionRouting = new DireccionRoutes(PacienteCtr, direccionController);
 router.use('/pacientes', direccionRouting.getRoutes());
+
+const relacionRouting = new RelacionRoutes(PacienteCtr, relacionController);
+router.use('/pacientes', relacionRouting.getRoutes());
 
 export const Routing = router;
