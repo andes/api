@@ -7,6 +7,10 @@ const schema = new mongoose.Schema({
     apellido: String,
     password: String,
     foto: String,
+    authMethod: {
+        type: String,
+        required: false
+    },
     organizaciones: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId,
