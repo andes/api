@@ -324,6 +324,9 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
         query.where('solicitud.tipoPrestacion.id').equals(req.query.prestacionDestino);
     }
 
+    query.where('solicitud.registros.0.esSolicitud').equals(false);
+
+
     if (req.query.organizacionOrigen) {
         const arr: any[] = [];
         arr.push({ 'solicitud.organizacionOrigen': { $exists: true } });
