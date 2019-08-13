@@ -161,9 +161,12 @@ router.get('/organizaciones', async (req, res, next) => {
     if (req.query.ids) {
         filtros['_id'] = { $in: req.query.ids };
     }
-
+    const query = Organizacion.find(filtros);
+    if (req.query.fields) {
+        query.select(req.query.fields);
+    }
     try {
-        const organizaciones: any = await Organizacion.find(filtros);
+        const organizaciones: any = await query.exec();
         delete organizaciones.configuraciones;
         return res.json(organizaciones);
     } catch (err) {
