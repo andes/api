@@ -178,7 +178,6 @@ router.get('/agenda/:id?', (req, res, next) => {
         let query;
         query = agenda.find({});
 
-
         query.where('estado').ne('borrada'); // No devuelve agendas borradas
 
         if (req.query.fechaDesde) {
@@ -266,6 +265,14 @@ router.get('/agenda/:id?', (req, res, next) => {
         }
 
         query.sort({ horaInicio: 1 });
+
+        if (req.query.skip) {
+            query.skip(parseInt(req.query.skip || 0, 10));
+        }
+
+        if (req.query.limit) {
+            query.limit(parseInt(req.query.limit || 0, 10));
+        }
 
         query.exec((err, data) => {
             if (err) {
