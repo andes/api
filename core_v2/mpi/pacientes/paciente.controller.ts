@@ -264,6 +264,7 @@ const searchSpecification = {
     nombre: MongoQuery.partialString,
     apellido: MongoQuery.partialString,
     fechaNacimiento: MongoQuery.matchDate,
+    sexo: MongoQuery.matchString,
     estado: MongoQuery.matchString,
     activo: MongoQuery.matchString,
     barrio: {
@@ -305,6 +306,7 @@ export async function find(condicion, options?: any) {
     const { fields, skip, limit } = options;
 
     const opciones = MongoQuery.buildQuery(condicion, searchSpecification);
+
     let pacientesQuery = Paciente.find(opciones);
 
     if (fields) {
