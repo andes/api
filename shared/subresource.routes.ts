@@ -1,4 +1,4 @@
-import { asyncHandler, Request, Response, Router } from '@andes/api';
+import { asyncHandler, Request, Response, Router } from '@andes/api-tool';
 import { Auth } from '../auth/auth.class';
 
 export interface IPermisos {

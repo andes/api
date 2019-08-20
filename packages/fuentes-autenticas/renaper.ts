@@ -127,13 +127,13 @@ export function renaperToAndes(ciudadano) {
     }
     if (ciudadano.fechaNacimiento) {
         fecha = ciudadano.fechaNacimiento.split('-');
-        paciente.fechaNacimiento = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
+        paciente.fechaNacimiento = new Date(fecha[0].substr(0, 4), fecha[1] - 1, fecha[2]);
     }
 
     if (ciudadano.fallecido !== 'NO') {
         if (ciudadano.fechaFallecimiento) {
             fecha = ciudadano.fechaFallecimiento.split('-');
-            paciente.fechaFallecimiento = new Date(fecha[2].substr(0, 4), fecha[1], fecha[0]);
+            paciente.fechaFallecimiento = new Date(fecha[0].substr(0, 4), fecha[1], fecha[2]);
         }
     }
     paciente.foto = ciudadano.foto;

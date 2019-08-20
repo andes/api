@@ -1,5 +1,5 @@
 
-import { asyncHandler, Router, Request, Response } from '@andes/api';
+import { asyncHandler, Router, Request, Response } from '@andes/api-tool';
 import { ParentescoCtr } from './parentesco.controller';
 import { ParentescoNotFound } from './parentesco.error';
 import { Auth } from '../../../auth/auth.class';
