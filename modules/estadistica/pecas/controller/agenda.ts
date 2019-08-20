@@ -5,7 +5,6 @@ import * as configPrivate from '../../../../config.private';
 import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { pecasExport, exportDinamicasSinTurnos } from '../controller/aggregateQueryPecas';
 import { log } from '@andes/log';
-import { sendMail } from '../../../../utils/roboSender/sendEmail';
 import { emailListString } from '../../../../config.private';
 
 
@@ -53,7 +52,7 @@ export async function consultaPecas(done, start, end) {
         await Pecas.remove({});
         // Exportamos los registros directamente desde mongodb
         await pecasExport(start, end);
-        exportDinamicasSinTurnos(start, end);
+        await exportDinamicasSinTurnos(start, end);
 
         let pecasData: any = await Pecas.find({});
         let insertsArray = [];
@@ -156,9 +155,6 @@ async function eliminaAgenda(idAgenda) {
     try {
         return executeQuery(query);
     } catch (err) {
-        let options = mailOptions;
-        options.text = `'error en el delete: ${query}'`;
-        sendMail(mailOptions);
         await log(logRequest, 'andes:pecas:bi', null, 'delete', err, null);
     }
 }
@@ -182,9 +178,6 @@ async function executeQuery(query: any) {
     try {
         await new sql.Request(poolTurnos).query(query);
     } catch (err) {
-        let options = mailOptions;
-        options.text = `'error en consulta sql: ${query}'`;
-        sendMail(mailOptions);
         await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, err);
         return err;
     }
