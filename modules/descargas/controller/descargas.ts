@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
+import * as mime from 'mime-types';
 // import * as htmlPdf from 'html-pdf-chrome';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
@@ -65,18 +66,6 @@ export class Documento {
             });
         });
     }
-
-    // Probables tipos de archivo válidos para renderizar dentro de un PDF
-    static extensionesValidas = [
-        'png',
-        'jpg',
-        'jpeg',
-        'gif',
-        'webp',
-        'svg',
-        'raw',
-        'tif'
-    ];
 
     /**
      *
@@ -257,7 +246,7 @@ export class Documento {
 
         let templateAdjuntos = '';
         filePromises = registro.valor.documentos.map(documento => {
-            if (this.extensionesValidas.indexOf(documento.ext) > -1) {
+            if (mime.lookup(documento.ext).indexOf('image') > -1) {
                 return new Promise(async (resolve, reject) => {
                     rupStore.readFile(documento.id).then((archivo: any) => {
 
@@ -267,7 +256,7 @@ export class Documento {
                         });
 
                         archivo.stream.on('end', () => {
-                            adjunto = `<img src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
+                            adjunto = `<img class="w-25" src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
                             templateAdjuntos = template.replace('<!--descripcion-->', documento.descripcion.term).replace('<!--adjunto-->', adjunto);
                             resolve(templateAdjuntos);
                         });
@@ -275,13 +264,22 @@ export class Documento {
                     });
                 });
             } else {
-                return templateNoSoportado.replace('<!--descripcion-->', documento.descripcion.term).replace('<!--formato-->', documento.ext.toUpperCase());
+                const tipoArchivo = this.tipoDeArchivo(documento.ext);
+                return templateNoSoportado.replace('<!--descripcion-->', documento.descripcion.term).replace('<!--formato-->', `${tipoArchivo} (${documento.ext.toUpperCase()}, no se visualiza)`);
             }
 
         });
 
         return Promise.all(filePromises);
 
+    }
+    static tipoDeArchivo(ext: string) {
+        const tipo = mime.lookup(ext);
+        if (tipo.indexOf('application') > -1) {
+            return 'documento';
+        } else {
+            return tipo.slice(0, tipo.indexOf('/'));
+        }
     }
 
     static crearProcedimientos(proc, template) {
