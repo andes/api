@@ -66,6 +66,18 @@ export class Documento {
         });
     }
 
+    // Probables tipos de archivo válidos para renderizar dentro de un PDF
+    static extensionesValidas = [
+        'png',
+        'jpg',
+        'jpeg',
+        'gif',
+        'webp',
+        'svg',
+        'raw',
+        'tif'
+    ];
+
     /**
      *
      * @param sctid string Snomed concept ID
@@ -238,29 +250,33 @@ export class Documento {
     }
 
     // 'archivo adjunto'
-    static generarArchivoAdjuntoHTML(registro: any, template: string): any {
+    static generarArchivoAdjuntoHTML(registro: any, template: string, templateNoSoportado: string): any {
 
         let filePromises = [];
-        let adjuntos = '';
+        let adjunto = '';
 
         let templateAdjuntos = '';
-        filePromises = registro.valor.documentos.filter(doc => doc.ext !== 'pdf').map(documento => {
-            return new Promise(async (resolve, reject) => {
-                rupStore.readFile(documento.id).then((archivo: any) => {
+        filePromises = registro.valor.documentos.map(documento => {
+            if (this.extensionesValidas.indexOf(documento.ext) > -1) {
+                return new Promise(async (resolve, reject) => {
+                    rupStore.readFile(documento.id).then((archivo: any) => {
 
-                    let file = [];
-                    archivo.stream.on('data', (data) => {
-                        file.push(data);
+                        let file = [];
+                        archivo.stream.on('data', (data) => {
+                            file.push(data);
+                        });
+
+                        archivo.stream.on('end', () => {
+                            adjunto = `<img src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
+                            templateAdjuntos = template.replace('<!--descripcion-->', documento.descripcion.term).replace('<!--adjunto-->', adjunto);
+                            resolve(templateAdjuntos);
+                        });
+
                     });
-
-                    archivo.stream.on('end', () => {
-                        adjuntos = `<img src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
-                        templateAdjuntos = template.replace(`<!--adjuntos-->`, adjuntos);
-                        resolve(templateAdjuntos);
-                    });
-
                 });
-            });
+            } else {
+                return templateNoSoportado.replace('<!--descripcion-->', documento.descripcion.term).replace('<!--formato-->', documento.ext.toUpperCase());
+            }
 
         });
 
@@ -307,6 +323,7 @@ export class Documento {
     static planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/solicitud.html'), 'utf8');
     static insumoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/insumo.html'), 'utf8');
     static adjuntoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/adjunto.html'), 'utf8');
+    static adjuntoNoSoportadoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/adjuntoNoSoportado.html'), 'utf8');
     static nivelPadre = 0;
 
     static async generarInforme(registros) {
@@ -355,7 +372,7 @@ export class Documento {
                                 })];
                             } else if (this.esAdjunto(registros[i].concepto.conceptId)) {
 
-                                let adjuntos = await this.generarArchivoAdjuntoHTML(registros[i], this.adjuntoTemplate);
+                                let adjuntos = await this.generarArchivoAdjuntoHTML(registros[i], this.adjuntoTemplate, this.adjuntoNoSoportadoTemplate);
                                 this.informeRegistros = [...this.informeRegistros, ({
                                     concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag },
                                     valor: `<div class="nivel-${this.nivelPadre}">${adjuntos.join('<br>')}</div>`
