@@ -24,25 +24,51 @@ router.get('/minuta', async (req: any, res, next) => {
     }
 });
 
-router.patch('/minuta/:id', async (req, res, next) => {
-    try {
-        let minuta: any = await Minuta.findById(req.params.id);
-        console.log('body ', req.body);
-        minuta.temas = req.body.temas;
-        Auth.audit(minuta, req);
-        await minuta.save();
-        res.json(minuta);
-    } catch (error) {
-        return next(error);
-    }
-});
-
-router.put('/minuta/:id', (req, res, next) => {
-    Minuta.findByIdAndUpdate(req.params._id, req.body, { new: true }, (err, data) => {
+router.patch('/minuta/:id', (req, res, next) => {
+    Minuta.findById({
+        _id: req.params.id,
+    }, (err, data: any) => {
         if (err) {
             return next(err);
         }
-        res.json(data);
+        if (req.body.quienRegistra) {
+            data.quienRegistra = req.body.quienRegistra;
+        }
+        if (req.body.fecha) {
+            data.fecha = req.body.fecha;
+        }
+        if (req.body.participantes) {
+            data.participantes = req.body.participantes;
+        }
+        if (req.body.temas) {
+            data.temas = req.body.temas;
+        }
+        if (req.body.conclusiones) {
+            data.conclusiones = req.body.conclusiones;
+        }
+        if (req.body.pendientes) {
+            data.pendientes = req.body.pendientes;
+        }
+        if (req.body.lugarProxima) {
+            data.lugarProxima = req.body.lugarProxima;
+        }
+        if (req.body.fechaProxima) {
+            data.fechaProxima = req.body.fechaProxima;
+        }
+        if (req.body.estado) {
+            data.estado = req.body.estado;
+        }
+        if (req.body.origen) {
+            data.origen = req.body.origen;
+        }
+
+        Auth.audit(data, req);
+        data.save((errUpdate) => {
+            if (errUpdate) {
+                return next(errUpdate);
+            }
+            res.json(data);
+        });
     });
 });
 
