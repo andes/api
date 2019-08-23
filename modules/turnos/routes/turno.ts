@@ -405,6 +405,10 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
             return next(error);
         }
 
+        if (req.body.actualizaObraSocial) {
+            EventCore.emitAsync('facturacion:factura:recupero_financiero', req.body.turno);
+        }
+
         res.json(data);
     });
 });
