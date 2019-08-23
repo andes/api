@@ -357,36 +357,41 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
 
 router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     let agendaRes;
-
     try {
         agendaRes = await getAgenda(req.params.idAgenda);
     } catch (err) {
         return next(err);
     }
-    const indexBloque = (agendaRes as any).bloques.findIndex(bloq => {
-        return (bloq.id === req.params.idBloque);
-    });
-    const indexTurno = (agendaRes as any).bloques[indexBloque].turnos.findIndex(t => {
-        return (t.id === req.params.idTurno);
-        // return (console.log('Primero: ', t.id) === console.log('Segundo: ', req.params.idTurno));
-    });
+
+    let etiquetaTurno: string;
+    let posTurno: number;
+    let posBloque: number;
+
+    if (req.params.idBloque !== '-1') {
+        posBloque = (agendaRes as any).bloques.findIndex(bloque => Object.is(req.params.idBloque, String(bloque._id)));
+        posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(turno => Object.is(req.params.idTurno, String(turno._id)));
+        etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
+    } else {
+        posTurno = (agendaRes as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
+        etiquetaTurno = 'sobreturnos.' + posTurno;
+    }
 
     const update = {};
     if (req.body.avisoSuspension) {
-        const etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+        const etiquetaAvisoSuspension: string = etiquetaTurno + '.avisoSuspension';
         update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
     }
     if (req.body.motivoConsulta) {
-        const etiquetaMotivoConsulta: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
+        const etiquetaMotivoConsulta: string = etiquetaTurno + '.motivoConsulta';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
 
     }
     if (req.body.actualizaObraSocial) {
-        const etiquetaPaciente: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.paciente.obraSocial';
+        const etiquetaPaciente: string = etiquetaTurno + '.paciente.obraSocial';
         update[etiquetaPaciente] = req.body.actualizaObraSocial;
     }
     if (req.body.estadoFacturacion) {
-        const etiquetaEstadoFacturacion: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.estadoFacturacion';
+        const etiquetaEstadoFacturacion: string = etiquetaTurno + '.estadoFacturacion';
         update[etiquetaEstadoFacturacion] = req.body.estadoFacturacion;
     }
 
@@ -399,6 +404,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         if (error) {
             return next(error);
         }
+
         res.json(data);
     });
 });
