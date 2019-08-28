@@ -1,10 +1,15 @@
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-
 export let ProblemaSchema = new mongoose.Schema({
-    quienRegistra: {
-        type: String,
-        required: true
+    idProblema: {
+        type: String
+    },
+    idMinutaSQL: {
+        type: String
+    },
+
+    idMinutaMongo: {
+        type: mongoose.Schema.Types.ObjectId,
     },
     responsable: {
         type: String,
@@ -19,26 +24,17 @@ export let ProblemaSchema = new mongoose.Schema({
         enum: ['pendiente', 'resuelto', 'en proceso'],
         default: 'pendiente'
     },
-    origen: {
-        type: String
-    },
-    descripcionOrigen: {
-        type: String
-    },
     plazo: {
-        type: String,
+        type: Date,
         required: true
-    },
-    referenciaInforme: {
-        type: String
     },
     fechaRegistro: {
         type: Date
     },
-    adjuntos: [String],
-    idProblema: {
+    origen: {
         type: String
     },
+    adjuntos: [String]
 });
 
 ProblemaSchema.plugin(AuditPlugin);
