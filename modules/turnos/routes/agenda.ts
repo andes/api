@@ -276,34 +276,52 @@ router.get('/agenda/:id?', (req, res, next) => {
     }
 });
 
-router.post('/agenda', (req, res, next) => {
-    const data = new agenda(req.body);
+router.post('/agenda', async (req, res, next) => {
+    const data: any = new agenda(req.body);
     Auth.audit(data, req);
-    data.save((err) => {
+
+    try {
+        const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
+        if (!mensajesSolapamiento) {
+            let dataSaved = await data.save();
+            Logger.log(req, 'citas', 'insert', {
+                accion: 'Crear Agenda',
+                ruta: req.url,
+                method: req.method,
+                data: dataSaved,
+                err: false
+            });
+
+            EventCore.emitAsync('citas:agenda:create', dataSaved);
+            res.json(dataSaved);
+
+            // Al crear una nueva agenda la cacheo para Sips
+            operations.cacheTurnos(dataSaved).catch(error => {
+                return next(error);
+            });
+            // Fin de insert cache
+        } else {
+            // puede ser un mensaje de solapamiento o una excepción (Error)
+            Logger.log(req, 'citas', 'insert', {
+                accion: 'Crear Agenda',
+                ruta: req.url,
+                method: req.method,
+                data: req.body,
+                err: mensajesSolapamiento
+            });
+            return next(mensajesSolapamiento);
+        }
+    } catch (error) {
         Logger.log(req, 'citas', 'insert', {
             accion: 'Crear Agenda',
             ruta: req.url,
             method: req.method,
-            data,
-            err: err || false
+            data: req.body,
+            err: error
         });
-        // Fin de operaciones de cache
-        if (err) {
-            return next(err);
-        }
-
-        EventCore.emitAsync('citas:agenda:create', data);
-
-        res.json(data);
-
-        // Al crear una nueva agenda la cacheo para Sips
-        operations.cacheTurnos(data).catch(error => {
-            return error;
-        });
-        // Fin de insert cache
-    });
+        return next(error);
+    }
 });
-
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
 router.post('/agenda/clonar', (req, res, next) => {
@@ -395,26 +413,48 @@ router.post('/agenda/clonar', (req, res, next) => {
     }
 });
 
-router.put('/agenda/:id', (req, res, next) => {
-    agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
+router.put('/agenda/:id', async (req, res, next) => {
+    try {
+        const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
+        if (!mensajesSolapamiento) {
+            let data = await agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            Logger.log(req, 'citas', 'update', {
+                accion: 'Editar Agenda en estado Planificación',
+                ruta: req.url,
+                method: req.method,
+                data,
+                err: false
+            });
+
+            // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+            operations.cacheTurnos(data).catch(error => { return next(error); });
+            // Fin de insert cache
+            res.json(data);
+
+            EventCore.emitAsync('citas:agenda:update', data);
+
+        } else {
+            // puede ser un mensaje de solapamiento o una excepción (Error)
+            Logger.log(req, 'citas', 'insert', {
+                accion: 'Crear Agenda',
+                ruta: req.url,
+                method: req.method,
+                data: req.body,
+                err: mensajesSolapamiento
+            });
+            return next(mensajesSolapamiento);
+        }
+
+    } catch (error) {
         Logger.log(req, 'citas', 'update', {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
             method: req.method,
-            data,
-            err: err || false
+            data: req.body,
+            err: error
         });
-        if (err) {
-            return next(err);
-        }
-
-        // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-        operations.cacheTurnos(data).catch(error => { return next(error); });
-        // Fin de insert cache
-        res.json(data);
-
-        EventCore.emitAsync('citas:agenda:update', data);
-    });
+        return next(error);
+    }
 });
 
 router.patch('/agenda/:id*?', (req, res, next) => {
