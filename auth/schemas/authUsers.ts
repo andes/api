@@ -19,6 +19,7 @@ export const AuthUsersSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'organizacion'
         },
+        nombre: String,
         permisos: [String],
         activo: {
             type: Boolean,
