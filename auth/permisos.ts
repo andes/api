@@ -1,9 +1,11 @@
-/*
-* key es lo que se guarda en la base de datos, separado por : para indicar subpermiso
-* title es el nombre que se muestra en pantalla para referirse al permiso
-* comment es el title de HTML que ayuda a entender el permiso. Si el permiso no tiene comentario, se mostrará
-*       el título como ayuda. No agregarlo vacío -> comment: '', porque queda vacío la ayuda en HTML
-*/
+/**
+ *
+ * https://www.npmjs.com/package/shiro-trie
+ * key es lo que se guarda en la base de datos, separado por : para indicar subpermiso
+ * title es el nombre que se muestra en pantalla para referirse al permiso
+ * comment es el title de HTML que ayuda a entender el permiso. Si el permiso no tiene comentario, se mostrará
+ *       el título como ayuda. No agregarlo vacío -> comment: '', porque queda vacío la ayuda en HTML
+ **/
 export default [
     {
         key: 'turnos',

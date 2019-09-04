@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { Auth } from './../auth.class';
-import { authUsers } from '../schemas/permisos';
+import { AuthUsers } from '../schemas/authUsers';
 import { Organizacion } from './../../core/tm/schemas/organizacion';
 import * as mongoose from 'mongoose';
 
@@ -11,22 +11,6 @@ const sha1Hash = require('sha1');
 const shiroTrie = require('shiro-trie');
 const router = express.Router();
 
-
-router.put('/estadoPermisos/:username', Auth.authenticate(), async (req, res, next) => {
-    let user: any = await authUsers.findOne({ usuario: req.params.username });
-    if (user) {
-        try {
-            let organizacion = user.organizaciones.find(x => x._id.toString() === req.body.idOrganizacion.toString());
-            organizacion.activo = !organizacion.activo;
-            let obj = new authUsers(user);
-            Auth.audit(obj, req);
-            await obj.save();
-            return res.json(organizacion);
-        } catch (err) {
-            return next(err);
-        }
-    }
-});
 
 /**
  * Obtiene el user de la session
@@ -41,7 +25,7 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
  * Listado de organizaciones a las que el usuario tiene permiso
  * @get /api/auth/organizaciones
  */
-router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
+router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
     let username;
     if (req.query.user) {
         username = req.query.user;
@@ -49,33 +33,25 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         username = (req as any).user.usuario.username;
     }
 
-    authUsers.findOne({ usuario: username }, (err, user: any) => {
-        if (err) {
-            return next(err);
-        }
-        const organizacionesFiltradas = user.organizaciones.filter(x => x.activo === true);
+    const user: any = await AuthUsers.findOne({ usuario: username });
 
-        const organizaciones = organizacionesFiltradas.map((item) => {
-            if ((req as any).query.admin) {
-                const shiro = shiroTrie.new();
-                shiro.add(item.permisos);
+    const organizaciones = user.organizaciones.filter(x => x.activo === true).map((item) => {
+        if (req.query.admin) {
+            const shiro = shiroTrie.new();
+            const permisos = [...user.permisosGlobales, ...item.permisos];
+            shiro.add(permisos);
 
-                if (shiro.check('usuarios:set')) {
-                    return mongoose.Types.ObjectId(item._id);
-                } else {
-                    return null;
-                }
-            } else {
+            if (shiro.check('usuarios:set')) {
                 return mongoose.Types.ObjectId(item._id);
+            } else {
+                return null;
             }
-        }).filter(item => item !== null);
-        Organizacion.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
-            if (errOrgs) {
-                return next(errOrgs);
-            }
-            res.json(orgs);
-        });
-    });
+        } else {
+            return mongoose.Types.ObjectId(item._id);
+        }
+    }).filter(item => item !== null);
+    const orgs = await Organizacion.find({ _id: { $in: organizaciones } }, { nombre: 1 });
+    return res.json(orgs);
 });
 
 /**
@@ -88,7 +64,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     const username = (req as any).user.usuario.username;
     const orgId = mongoose.Types.ObjectId(req.body.organizacion);
     Promise.all([
-        authUsers.findOne({
+        AuthUsers.findOne({
             usuario: username,
             'organizaciones._id': orgId
         }),
@@ -99,7 +75,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
             const org = data[1];
             const oldToken: string = String(req.headers.authorization).substring(4);
             const nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
-            const refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
+            const refreshToken = Auth.refreshToken(oldToken, user, [...user.permisosGlobales, ...nuevosPermisos.permisos], org);
             res.send({
                 token: refreshToken
             });

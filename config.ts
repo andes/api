@@ -119,12 +119,6 @@ export const modules = {
         route: '/modules/fuentesAutenticas',
         middleware: appMiddleware
     },
-    usuarios: {
-        active: true,
-        path: './modules/usuarios/routes',
-        route: '/modules/usuarios',
-        middleware: appMiddleware
-    },
     matriculaciones: {
         active: true,
         path: './modules/matriculaciones/routes',
@@ -217,12 +211,6 @@ export const modules = {
         active: true,
         path: './modules/georeferencia/routes',
         route: '/modules/georeferencia',
-    },
-    perfiles: {
-        active: true,
-        path: './core/auth/routes',
-        route: '/core/auth',
-        middleware: appMiddleware
     }
 };
 

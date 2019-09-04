@@ -1,17 +1,19 @@
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-const schema = new mongoose.Schema({
+export const AuthUsersSchema = new mongoose.Schema({
     usuario: Number,
     activo: Boolean,
     nombre: String,
     apellido: String,
+    documento: String,
     password: String,
     foto: String,
     authMethod: {
         type: String,
         required: false
     },
+    permisosGlobales: [String],
     organizaciones: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId,
@@ -21,8 +23,14 @@ const schema = new mongoose.Schema({
         activo: {
             type: Boolean,
             default: true
-        }
-    }]
+        },
+        perfiles: [{
+            _id: mongoose.Schema.Types.ObjectId,
+            nombre: String
+        }]
+    }],
+    lastLogin: Date
 });
-schema.plugin(AuditPlugin);
-export let authUsers = mongoose.model('authUsers', schema, 'authUsers');
+AuthUsersSchema.plugin(AuditPlugin);
+
+export let AuthUsers = mongoose.model('authUsers', AuthUsersSchema, 'authUsers');

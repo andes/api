@@ -8,6 +8,7 @@ import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
 import * as jwt from 'jsonwebtoken';
 import * as configPrivate from '../config.private';
+import { Request } from '@andes/api-tool';
 const shiroTrie = require('shiro-trie');
 
 export class Auth {
@@ -30,7 +31,7 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    private static getShiro(req: express.Request): any {
+    private static getShiro(req: express.Request | Request): any {
         let shiro = (req as any).shiro;
         if (!shiro) {
             shiro = shiroTrie.new();
@@ -190,7 +191,7 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static audit(document: mongoose.Document, req: express.Request) {
+    static audit(document: mongoose.Document, req: express.Request | Request) {
         // Obtiene el usuario o app que está autenticada
         const i = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
         // Copia la organización desde el token
@@ -209,7 +210,7 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static check(req: express.Request, string: string): boolean {
+    static check(req: express.Request | Request, string: string): boolean {
         if (!(req as any).user || !(req as any).user.permisos) {
             return false;
         } else {
@@ -227,7 +228,7 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static getPermissions(req: express.Request, string: string): string[] {
+    static getPermissions(req: express.Request | Request, string: string): string[] {
         if (!(req as any).user || !(req as any).user.permisos) {
             return null;
         } else {
@@ -244,7 +245,7 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static getOrganization(req: express.Request, key = 'id'): string {
+    static getOrganization(req: express.Request | Request, key = 'id'): string {
         if (!(req as any).user || !(req as any).user.organizacion) {
             return null;
         } else {
