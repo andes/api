@@ -712,21 +712,38 @@ export class Documento {
         let html = fs.readFileSync(path.join(__dirname, '../../../templates/puco/constancia.html'), 'utf8');
 
         // logo header
-        let headerConstancia = fs.readFileSync(path.join(__dirname, '../../../templates/puco/img/header-puco.jpg'));
+        let headerConstancia;
+        let padron;
+        let textFooter: string;
+        let fechaActual = moment(new Date());
+        if (req.body.financiador === 'Programa SUMAR') {
+            padron = 'SUMAR';
+            headerConstancia = fs.readFileSync(path.join(__dirname, '../../../templates/puco/img/header_sumar.png'));
+            textFooter = 'Por la presente DEJO CONSTANCIA que la persona antes detallada está INSCRIPTA EN EL PLAN SUMAR.<br/>' +
+                'Reune los requisitos necesarios para el proceso de validación.<br/><br/>' +
+                'VÁLIDO PARA SER PRESENTADO ANTE AUTORIDADES DE ANSES.<br/>' +
+                'VÁLIDO DENTRO DE LOS 60 DÍAS DE LA FECHA DE EMISIÓN.<br/>' +
+                'Sin otro particular, saluda atentamente<br/>';
+        } else {
+            padron = 'PUCO';
+            headerConstancia = fs.readFileSync(path.join(__dirname, '../../../templates/puco/img/header-puco.jpg'));
+            textFooter = '(La presente tiene carácter de declaración jurada a los efectos de la Ley Provincial 3012, y ' +
+                'Disposición Provincial 1949/' + fechaActual.format('YYYY');
+        }
 
         // HEADER
         html = html
             .replace('<!--logoHeader-->', `<img class="logoHeader" src="data:image/jpg;base64,${headerConstancia.toString('base64')}">`);
 
         // BODY
-        let fechaActual = moment(new Date());
         html = html
             .replace('<!--nombre-->', req.body.nombre)
             .replace('<!--dni-->', req.body.dni)
             .replace('<!--financiador-->', req.body.codigoFinanciador + ' ' + req.body.financiador)
-            .replace('<!--añoActual-->', fechaActual.format('YYYY'))
-            .replace('<!--fechaActual-->', fechaActual.format('DD [de] MMMM [de] YYYY'));
-
+            .replace('<!--fechaActual-->', fechaActual.format('DD [de] MMMM [de] YYYY'))
+            .replace('<!--claveBeneficiario-->', (req.body.claveBeneficiario) ? 'Clave de Beneficiario: ' + req.body.claveBeneficiario : '')
+            .replace('<!--textFooter-->', textFooter)
+            .replace('<!--padron-->', padron);
         return html;
     }
 
