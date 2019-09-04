@@ -43,8 +43,18 @@ router.get('/prepagas', async (req, res, next) => {
 
 /* TODO: validar con recupero si es necesario mirar SUMAR */
 router.get('/sumar', async (req, res, next) => {
+
     try {
         let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+        res.json(arrayOSSumar);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.get('/padronSumar', async (req, res, next) => {
+    try {
+        let arrayOSSumar = await sumarController.getPacienteSumar(req.query.dni);
 
         res.json(arrayOSSumar);
     } catch (error) {

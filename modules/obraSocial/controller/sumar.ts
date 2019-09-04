@@ -8,3 +8,12 @@ export async function pacienteSumar(documento) {
     }
     return resultOS;
 }
+
+export async function getPacienteSumar(documento) {
+    let rta: any = await sumar.findOne({ afidni: documento, activo: 'S ' }).exec();
+    if (rta) {
+        return rta;
+    } else {
+        return;
+    }
+}
