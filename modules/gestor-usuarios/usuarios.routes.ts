@@ -8,7 +8,8 @@ import { EventCore } from '@andes/event-bus';
 import { log } from '@andes/log';
 import { logKeys } from '../../config';
 import { MongoQuery } from '@andes/core';
-
+import { Organizacion } from '../../core/tm/schemas/organizacion';
+const shiroTrie = require('shiro-trie');
 const isReachable = require('is-reachable');
 export const UsuariosRouter = express.Router();
 
@@ -18,7 +19,7 @@ export const UsuariosRouter = express.Router();
  */
 
 UsuariosRouter.post('/usuarios', Auth.authenticate(), async (req, res, next) => {
-    if (!Auth.check(req, 'usuarios:post')) {
+    if (!Auth.check(req, 'usuarios:write')) {
         return next(403);
     }
     try {
@@ -42,7 +43,7 @@ UsuariosRouter.post('/usuarios', Auth.authenticate(), async (req, res, next) => 
  */
 
 UsuariosRouter.patch('/usuarios/:id', Auth.authenticate(), async (req, res, next) => {
-    if (!Auth.check(req, 'usuarios:put')) {
+    if (!Auth.check(req, 'usuarios:write')) {
         return next(403);
     }
     try {
@@ -76,7 +77,7 @@ UsuariosRouter.patch('/usuarios/:id', Auth.authenticate(), async (req, res, next
  */
 
 UsuariosRouter.get('/usuarios/:documento', Auth.authenticate(), async (req: any, res, next) => {
-    if (!Auth.check(req, 'usuarios:get')) {
+    if (!Auth.check(req, 'usuarios:read')) {
         return next(403);
     }
     try {
@@ -105,7 +106,7 @@ UsuariosRouter.get('/usuarios/:documento', Auth.authenticate(), async (req: any,
  */
 
 UsuariosRouter.get('/usuarios/ldap/:documento', Auth.authenticate(), (req, res, next) => {
-    if (!Auth.check(req, 'usuarios:ldap')) {
+    if (!Auth.check(req, 'usuarios:write')) {
         return next(403);
     }
     const documento = req.params.documento;
@@ -212,6 +213,9 @@ UsuariosRouter.get('/usuarios', Auth.authenticate(), async (req: any, res, next)
 
 
 UsuariosRouter.post('/usuarios/:usuario/organizaciones/:organizacion', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'usuarios:write')) {
+        return next(403);
+    }
     try {
         const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
         if (user) {
@@ -227,6 +231,9 @@ UsuariosRouter.post('/usuarios/:usuario/organizaciones/:organizacion', Auth.auth
 });
 
 UsuariosRouter.patch('/usuarios/:usuario/organizaciones/:organizacion', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'usuarios:write')) {
+        return next(403);
+    }
     try {
         const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
         if (user) {
@@ -244,6 +251,9 @@ UsuariosRouter.patch('/usuarios/:usuario/organizaciones/:organizacion', Auth.aut
 
 
 UsuariosRouter.delete('/usuarios/:usuario/organizaciones/:organizacion', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'usuarios:write')) {
+        return next(403);
+    }
     try {
         const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
         if (user) {
@@ -259,3 +269,27 @@ UsuariosRouter.delete('/usuarios/:usuario/organizaciones/:organizacion', Auth.au
     }
 });
 
+
+UsuariosRouter.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
+    function checkPermisos(permisosList, permiso) {
+        const shiro = shiroTrie.new();
+        shiro.add(permisosList);
+        return shiro.check(permiso);
+    }
+    const ObjectId = mongoose.Types.ObjectId;
+    const username = (req as any).user.usuario.username;
+    const user: any = await AuthUsers.findOne({ usuario: username });
+
+    if (checkPermisos(user.permisosGlobales, 'global:usuarios:write')) {
+        const orgs = await Organizacion.find({}, { nombre: 1 }); // YES, GET ALL!
+        return res.json(orgs);
+    } else {
+        const organizaciones = user.organizaciones.filter(x => x.activo === true).map((org) => {
+            const enable = checkPermisos([...user.permisosGlobales, ...org.permisos], 'usuarios:write');
+            return enable ? ObjectId(org._id) : null;
+        }).filter(item => item !== null);
+        const orgs = await Organizacion.find({ _id: { $in: organizaciones } }, { nombre: 1 });
+        return res.json(orgs);
+    }
+
+});

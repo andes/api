@@ -25,33 +25,16 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
  * Listado de organizaciones a las que el usuario tiene permiso
  * @get /api/auth/organizaciones
  */
+
 router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
-    let username;
-    if (req.query.user) {
-        username = req.query.user;
-    } else {
-        username = (req as any).user.usuario.username;
-    }
-
+    const username = (req as any).user.usuario.username;
     const user: any = await AuthUsers.findOne({ usuario: username });
-
     const organizaciones = user.organizaciones.filter(x => x.activo === true).map((item) => {
-        if (req.query.admin) {
-            const shiro = shiroTrie.new();
-            const permisos = [...user.permisosGlobales, ...item.permisos];
-            shiro.add(permisos);
-
-            if (shiro.check('usuarios:set')) {
-                return mongoose.Types.ObjectId(item._id);
-            } else {
-                return null;
-            }
-        } else {
-            return mongoose.Types.ObjectId(item._id);
-        }
-    }).filter(item => item !== null);
+        return mongoose.Types.ObjectId(item._id);
+    });
     const orgs = await Organizacion.find({ _id: { $in: organizaciones } }, { nombre: 1 });
     return res.json(orgs);
+
 });
 
 /**
@@ -60,29 +43,26 @@ router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) =
  * @post /api/auth/organizaciones
  */
 
-router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
+router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
     const username = (req as any).user.usuario.username;
     const orgId = mongoose.Types.ObjectId(req.body.organizacion);
-    Promise.all([
+    const [user, org]: [any, any] = await Promise.all([
         AuthUsers.findOne({
             usuario: username,
             'organizaciones._id': orgId
         }),
         Organizacion.findOne({ _id: orgId }, { nombre: 1 })
-    ]).then((data: any[]) => {
-        if (data[0] && data[1]) {
-            const user = data[0];
-            const org = data[1];
-            const oldToken: string = String(req.headers.authorization).substring(4);
-            const nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
-            const refreshToken = Auth.refreshToken(oldToken, user, [...user.permisosGlobales, ...nuevosPermisos.permisos], org);
-            res.send({
-                token: refreshToken
-            });
-        } else {
-            next('Organización inválida');
-        }
-    });
+    ]);
+    if (user && org) {
+        const oldToken: string = String(req.headers.authorization).substring(4);
+        const nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
+        const refreshToken = Auth.refreshToken(oldToken, user, [...user.permisosGlobales, ...nuevosPermisos.permisos], org);
+        return res.send({
+            token: refreshToken
+        });
+    } else {
+        return next('Organización inválida');
+    }
 });
 
 /**

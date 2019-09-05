@@ -209,29 +209,13 @@ export default [
         key: 'usuarios',
         title: 'Gestor de usuarios',
         child: [
-            { key: 'set', title: 'Modificación de permisos', type: 'boolean' },
-            { key: 'get', title: 'Ver usuario', type: 'boolean' },
-            { key: 'ldap', title: 'Consutar usuario en LDAP', type: 'boolean' },
-            { key: 'post', title: 'Crear usuario', type: 'boolean' },
-            { key: 'put', title: 'Modificar usuario', type: 'boolean' },
-            { key: 'agregarEfector', title: 'Agregar efector', type: 'boolean' },
+            { key: 'read', title: 'Ver usuarios y permisos', type: 'boolean' },
+            { key: 'write', title: 'Agregar/modificar permisos', type: 'boolean' },
             {
-                key: 'perfil', title: 'Agrupación de permisos', avoidAll: true,
+                key: 'perfiles', title: 'Perfiles de usuarios', avoidAll: true,
                 child: [
-                    {
-                        key: 'crear', title: 'Crear y modificar agrupación de permisos', avoidAll: true,
-                        child: [
-                            { key: 'global', title: 'Global', comment: 'Crear y modificar agrupación de permisos de alcance global', type: 'boolean' },
-                            { key: 'local', title: 'Local', comment: 'Crear y modificar agrupación de permisos de alcance local', type: 'boolean' }
-                        ]
-                    },
-                    {
-                        key: 'eliminar', title: 'Eliminar agrupación de permisos', avoidAll: true,
-                        child: [
-                            { key: 'global', title: 'Global', comment: 'Eliminar agrupación de permisos de alcance global', type: 'boolean' },
-                            { key: 'local', title: 'Local', comment: 'Eliminar agrupación de permisos de alcance local', type: 'boolean' }
-                        ]
-                    }
+                    { key: 'read', title: 'Ver perfiles de usuarios', type: 'boolean' },
+                    { key: 'write', title: 'Crear/modificar perfiles de usuarios', type: 'boolean' }
                 ]
             }
         ]
