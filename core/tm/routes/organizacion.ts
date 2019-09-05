@@ -184,7 +184,7 @@ router.get('/organizaciones/:id/configuracion', async (req, res, next) => {
     try {
         const id = req.params.id;
         const org: any = await Organizacion.findById(id, { configuraciones: 1 });
-        return res.json(org.configuraciones);
+        return res.json(org.configuraciones || {});
     } catch (error) {
         return next(error);
     }

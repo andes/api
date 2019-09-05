@@ -25,7 +25,7 @@ router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
                         return next(err);
                     });
             } else {
-                res.json(null);
+                res.json([]);
             }
         }).catch(error => {
             return next(error);
@@ -39,7 +39,7 @@ router.get('/internaciones/pases/:idInternacion', (req, res, next) => {
             if (camas) {
                 res.json(camas);
             } else {
-                res.json(null);
+                res.json([]);
             }
         }).catch(err => {
             return next(err);
@@ -119,7 +119,7 @@ router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
                 res.json(resultado);
 
             } else {
-                res.json(null);
+                res.json([]);
             }
         }).catch(err => {
             return next(err);
