@@ -10,6 +10,7 @@ import * as Paciente from '../../../core/mpi/controller/paciente';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as snomed from '../../../core/term/controller/snomedCtr';
 import * as rup from '../../../modules/rup/schemas/elementoRUP';
+import * as configPrivate from '../../../config.private';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
 import { env } from 'process';
@@ -511,6 +512,17 @@ export class Documento {
 
                     // Se leen header y footer (si se le pasa un encoding, devuelve un string)
                     let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
+                    switch (configPrivate.dominio.nombre) {
+                        case 'SJ':
+                            html = html.replace('<!--Dominio-->', 'San Juan');
+                            break;
+                        case 'NQN':
+                            html = html.replace('<!--Dominio-->', 'Neuquén');
+                            break;
+                        default:
+                            html = html.replace('<!--Dominio-->', 'Neuquén');
+                            break;
+                    }
 
                     let nombreCompleto = paciente.apellido + ', ' + paciente.nombre;
                     let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
@@ -609,10 +621,30 @@ export class Documento {
                     }
 
                     // Logos comunes a todos los informes
-                    let logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional.png'));
-                    let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h.png'));
-                    let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp.png'));
-                    let logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-h.png'));
+                    let logoAdicional;
+                    let logoAndes;
+                    let logoPDP;
+                    let logoPDP2;
+                    switch (configPrivate.dominio.nombre) {
+                        case 'SJ':
+                            logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional-SJ.png'));
+                            logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h-SJ.png'));
+                            logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-SJ.png'));
+                            logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-h-SJ.png'));
+                            break;
+                        case 'NQN':
+                            logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional.png'));
+                            logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h.png'));
+                            logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp.png'));
+                            logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-h.png'));
+                            break;
+                        default:
+                            logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional.png'));
+                            logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h.png'));
+                            logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp.png'));
+                            logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-h.png'));
+                            break;
+                    }
 
                     // Firmas
                     html = html
