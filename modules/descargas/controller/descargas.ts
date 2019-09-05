@@ -257,15 +257,16 @@ export class Documento {
 
                         archivo.stream.on('end', () => {
                             adjunto = `<img class="w-25" src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
-                            templateAdjuntos = template.replace('<!--descripcion-->', documento.descripcion.term).replace('<!--adjunto-->', adjunto);
+                            const descripcion = documento.descripcion && documento.descripcion.term ? documento.descripcion.term : '';
+                            templateAdjuntos = template.replace('<!--descripcion-->', descripcion).replace('<!--adjunto-->', adjunto);
                             resolve(templateAdjuntos);
                         });
-
                     });
                 });
             } else {
                 const tipoArchivo = this.tipoDeArchivo(documento.ext);
-                return templateNoSoportado.replace('<!--descripcion-->', documento.descripcion.term).replace('<!--formato-->', `${tipoArchivo} (${documento.ext.toUpperCase()}, no se visualiza)`);
+                const descripcion = documento.descripcion && documento.descripcion.term ? documento.descripcion.term : '';
+                return templateNoSoportado.replace('<!--descripcion-->', descripcion).replace('<!--formato-->', `${tipoArchivo} (${documento.ext.toUpperCase()}, no se visualiza)`);
             }
 
         });
