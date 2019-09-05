@@ -29,6 +29,8 @@ router.patch('/problemas/:id', async (req, res, next) => {
         let problema: any = await Problema.findById(req.params.id);
         if (req.body.estado) {
             problema.estado = req.body.estado;
+            problema.resueltoPorId = req.body.resueltoPorId;
+            problema.resueltoPor = req.body.resueltoPor;
             Auth.audit(problema, req);
             await problema.save();
         }
