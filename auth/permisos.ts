@@ -245,6 +245,9 @@ export default [
                 child: [
                     { key: 'aprobar', title: 'aprobar', type: 'boolean' },
                 ]
+            }, {
+                key: 'reportes',
+                title: 'Reportes',
             }
         ]
     },
