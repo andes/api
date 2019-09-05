@@ -433,6 +433,9 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         if (req.query.bajaMatricula) {
             opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null] };
         }
+        if (req.query.bajaMatriculaE) {
+            opciones['formacionPosgrado.matriculacion.baja.motivo'] = { $nin: [null] };
+        }
 
         if (req.query.rematriculado) {
             opciones['rematriculado'] = true;
@@ -459,7 +462,35 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 $regex: utils.makePattern(req.query.especialidad)
             };
         }
+        if (req.query.especialidadCodigo) {
+            opciones['especialidad.codigo'] = req.query.especialidadCodigo;
+        }
+        if (req.query.profesionCodigo) {
+            opciones['formacionGrado.profesion.codigo'] = req.query.profesionCodigo;
+        }
+        if (req.query.profesionCodigoE) {
+            opciones['formacionPosgrado.profesion.codigo'] = req.query.profesionCodigoE;
+        }
 
+        if (req.query.matriculasPorVencer) {
+            opciones['$or'] = [{ // matrículas que están por vender dentro del periodo
+                $and: [{ 'formacionGrado.matriculacion.fin': { $gte: req.query.fechaDesde } },
+                { 'formacionGrado.matriculacion.fin': { $lte: req.query.fechaHasta } }]
+            },
+            {
+                $and: [{ 'formacionPosgrado.matriculacion.fin': { $gte: req.query.fechaDesde } },
+                { 'formacionPosgrado.matriculacion.fin': { $lte: req.query.fechaHasta } }]
+            }];
+        } else if (req.query.matriculasPorVencer === false) {
+            opciones['$or'] = [{ // matriculas que estan vigentes dentro del periodo
+                $and: [{ 'formacionGrado.matriculacion.inicio': { $lte: req.query.fechaDesde } },
+                { 'formacionGrado.matriculacion.fin': { $gte: req.query.fechaHasta } }]
+            },
+            {
+                $and: [{ 'formacionPosgrado.matriculacion.inicio': { $lte: req.query.fechaDesde } },
+                { 'formacionPosgrado.matriculacion.fin': { $gte: req.query.fechaHasta } }]
+            }];
+        }
 
         const radix = 10;
         const skip: number = parseInt(req.query.skip || 0, radix);
