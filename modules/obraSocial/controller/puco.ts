@@ -13,6 +13,9 @@ export async function obtenerVersiones() {
 
 export async function pacientePuco(documento) {
     let padron = await this.obtenerVersiones();   // trae las distintas versiones de los padrones
+    if (padron.length === 0) {
+        return [];
+    }
     padron = padron[0].version; // asigna el ultimo padron actualizado
     // realiza la busqueda por dni y el padron seteado anteriormente
     let resultOS = [];
