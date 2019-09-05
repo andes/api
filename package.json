@@ -50,6 +50,7 @@
     "ldapjs": "^1.0.1",
     "libxmljs": "^0.19.3",
     "mime-db": "^1.29.0",
+    "mime-types": "^2.1.24",
     "moment": "^2.19.3",
     "mongoose": "^5.4.14",
     "mongoose-gridfs": "^0.3.2",
