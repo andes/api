@@ -355,7 +355,7 @@ export function camasXfecha(idOrganizacion, fecha) {
         if (camas && camas.length) {
             return resolve(camas);
         } else {
-            return resolve(null);
+            return resolve([]);
         }
 
     });
