@@ -8,7 +8,7 @@ import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
 import * as jwt from 'jsonwebtoken';
 import * as configPrivate from '../config.private';
-import { Request } from '@andes/api-tool';
+import { Request, Response } from '@andes/api-tool';
 const shiroTrie = require('shiro-trie');
 
 export class Auth {
@@ -216,6 +216,24 @@ export class Auth {
         } else {
             return this.getShiro(req).check(string);
         }
+    }
+
+    /**
+     * Middleware Express de control de permisos
+     *
+     * @static
+     * @param {string} permisos Permiso a verificar
+     *
+     * @memberOf Auth
+     */
+
+    static authorize = (permiso: string) => {
+        return (req: express.Request | Request, res: express.Response | Response, next) => {
+            if (!Auth.check(req, permiso)) {
+                return next(403);
+            }
+            return next();
+        };
     }
 
     /**

@@ -10,11 +10,11 @@ class PerfilesResource extends ResourceBase {
     resourceName = 'perfiles';
     middlewares = [Auth.authenticate()];
     routesAuthorization = {
-        get: (req) => Auth.check(req, 'usuarios:perfiles:?'),
-        find: (req) => Auth.check(req, 'usuarios:perfiles:?'),
-        post: (req) => Auth.check(req, 'usuarios:perfiles:write'),
-        patch: (req) => Auth.check(req, 'usuarios:perfiles:write'),
-        delete: (req) => Auth.check(req, 'usuarios:perfiles:write'),
+        get: Auth.authorize('usuarios:perfiles:?'),
+        search: Auth.authorize('usuarios:perfiles:?'),
+        post: Auth.authorize('usuarios:perfiles:write'),
+        patch: Auth.authorize('usuarios:perfiles:write'),
+        delete: Auth.authorize('usuarios:perfiles:write'),
     };
     searchFileds = {
         // equivalente a { organizacion: { $in: [ null, value ] } }

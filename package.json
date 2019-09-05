@@ -6,7 +6,7 @@
   "dependencies": {
     "@agm/core": "^1.0.0-beta.5",
     "@andes/api-tool": "^1.0.0",
-    "@andes/core": "^1.0.1",
+    "@andes/core": "^1.1.1",
     "@andes/drive": "file:packages/drive",
     "@andes/event-bus": "file:packages/event-bus",
     "@andes/fhir": "file:packages/fhir",
@@ -90,6 +90,7 @@
     "node": "nodemon -q ./index.js",
     "tsc": "tsc",
     "tsc:w": "tsc -w",
+    "tsc:next": "tsc --target es2018 --lib es2018",
     "jobs": "tsc && node jobs/scheduler.js",
     "lint": "tslint --project .",
     "lint:fix": "tslint --project . --fix",

@@ -87,7 +87,7 @@ export function initAPI(app: Express) {
                     e = new Error(err);
                     (e as any).status = 400;
                     err = e;
-                } else {
+                } else if (!err.status) {
                     err.status = 500;
                 }
             }
