@@ -20,7 +20,7 @@ export interface SIISAObject extends Document {
 export const TipoDocumento = model<SIISAObject>('SIISATipoDocumento', ObjSIISASchema, 'siisa_tipoDocumento');
 export const Sexo = model<SIISAObject>('SIISASexo', ObjSIISASchema, 'siisa_sexo');
 export const Pais = model<SIISAObject>('SIISAPais', ObjSIISASchema, 'siisa_pais');
-export const Profesion = model<SIISAObject>('SIISAProfesion', ObjSIISASchema, 'siisa_profesion');
+export const Profesion = model<SIISAObject>('SIISAProfesion', ObjSIISASchema, 'profesion');
 export const EntidadFormadora = model<SIISAObject>('SIISAEntidadFormadora', ObjSIISASchema, 'siisa_entidadFormadora');
 export const Especialidad = model<SIISAObject>('SIISAEspecialidad', ObjSIISASchema, 'especialidad');
 export const ModalidadCertificacionEspecialidad = model<SIISAObject>('SIISAModalidadCertificacionEspecialidad', ObjSIISASchema, 'siisa_modalidadCertificacionEspecialidad');
