@@ -712,7 +712,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     }
 
                     prof['rematriculado'] = data[i].rematriculado === 1 ? 'Si' : 'No';
-                    prof['habilitado'] = data[i].habilitado;
+                    prof['habilitado'] = data[i].habilitado ? 'Si' : 'No';
 
                     profesionales.push(prof);
                 }
