@@ -544,15 +544,15 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // formacionGrado1
                     prof['profesion1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].profesion ? data[i].formacionGrado[0].profesion.nombre : '';
                     prof['tipoDeFormacion1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].profesion ? data[i].formacionGrado[0].profesion.tipoDeFormacion : '';
-                    prof['entidadFormadora1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? data[i].formacionGrado[0].entidadFormadora : '';
+                    prof['entidadFormadora1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? data[i].formacionGrado[0].entidadFormadora.nombre : '';
                     prof['fechaEgreso1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? data[i].formacionGrado[0].fechaEgreso : '';
                     if (data[i].formacionGrado && data[i].formacionGrado[0]) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[0].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionGrado[0].matriculacion.find(matricula => { return matricula.inicio === fechaUltimaMatricula; });
+                        let ultimaMatricula = data[i].formacionGrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero1'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                         prof['fechaInicio1'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
                         prof['fechaFin1'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
-                        prof['fechaBaja1'] = ultimaMatricula && ultimaMatricula.baja ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
+                        prof['fechaBaja1'] = ultimaMatricula && ultimaMatricula.baja && ultimaMatricula.baja.fecha ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
                         prof['motivoBaja1'] = ultimaMatricula && ultimaMatricula.baja ? ultimaMatricula.baja.motivo : '';
                     } else {
                         prof['matriculaGNumero1'] = '';
@@ -563,17 +563,17 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     }
                     prof['fechaInscripcion1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? moment(data[i].formacionGrado[0].fechaDeInscripcion).format('DD/MM/YYYY') : '';
                     // formacionGrado2
-                    prof['profesion2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].profesion.nombre : '';
-                    prof['tipoDeFormacion2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].profesion.tipoDeFormacion : '';
-                    prof['entidadFormadora2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].entidadFormadora : '';
+                    prof['profesion2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].profesion ? data[i].formacionGrado[1].profesion.nombre : '';
+                    prof['tipoDeFormacion2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].profesion ? data[i].formacionGrado[1].profesion.tipoDeFormacion : '';
+                    prof['entidadFormadora2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].entidadFormadora.nombre : '';
                     prof['fechaEgreso2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].fechaEgreso : '';
                     if (data[i].formacionGrado && data[i].formacionGrado[1]) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[1].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionGrado[1].matriculacion.find(matricula => { return matricula.inicio === fechaUltimaMatricula; });
+                        let ultimaMatricula = data[i].formacionGrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                         prof['fechaInicio2'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
                         prof['fechaFin2'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
-                        prof['fechaBaja2'] = ultimaMatricula && ultimaMatricula.baja ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
+                        prof['fechaBaja2'] = ultimaMatricula && ultimaMatricula.baja && ultimaMatricula.baja.fecha ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
                         prof['motivoBaja2'] = ultimaMatricula && ultimaMatricula.baja ? ultimaMatricula.baja.motivo : '';
                     } else {
                         prof['matriculaGNumero2'] = '';
@@ -584,17 +584,17 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     }
                     prof['fechaInscripcion2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? moment(data[i].formacionGrado[1].fechaDeInscripcion).format('DD/MM/YYYY') : '';
                     // formacionGrado3
-                    prof['profesion3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].profesion.nombre : '';
-                    prof['tipoDeFormacion3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].profesion.tipoDeFormacion : '';
-                    prof['entidadFormadora3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].entidadFormadora : '';
+                    prof['profesion3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].profesion ? data[i].formacionGrado[2].profesion.nombre : '';
+                    prof['tipoDeFormacion3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].profesion ? data[i].formacionGrado[2].profesion.tipoDeFormacion : '';
+                    prof['entidadFormadora3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].entidadFormadora.nombre : '';
                     prof['fechaEgreso3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].fechaEgreso : '';
                     if (data[i].formacionGrado && data[i].formacionGrado[2]) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[2].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionGrado[2].matriculacion.find(matricula => { return matricula.inicio === fechaUltimaMatricula; });
+                        let ultimaMatricula = data[i].formacionGrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                         prof['fechaInicio3'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
                         prof['fechaFin3'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
-                        prof['fechaBaja3'] = ultimaMatricula && ultimaMatricula.baja ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
+                        prof['fechaBaja3'] = ultimaMatricula && ultimaMatricula.baja && ultimaMatricula.baja.fecha ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
                         prof['motivoBaja3'] = ultimaMatricula && ultimaMatricula.baja ? ultimaMatricula.baja.motivo : '';
                     } else {
                         prof['matriculaGNumero3'] = '';
@@ -603,7 +603,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                         prof['fechaBaja3'] = '';
                         prof['motivoBaja3'] = '';
                     }
-                    prof['fechaInscripcion3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? moment(data[i].formacionGrado[0].fechaDeInscripcion).format('DD/MM/YYYY') : '';
+                    prof['fechaInscripcion3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? moment(data[i].formacionGrado[2].fechaDeInscripcion).format('DD/MM/YYYY') : '';
 
                     // formacionPosgrado1
                     prof['especialidad1'] = data[i].formacionPosgrado && data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].especialidad.nombre : '';
@@ -616,9 +616,39 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                         prof['matriculaPNumero1'] = '';
                     }
                     prof['tieneVencimiento1'] = data[i].formacionPosgrado && data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].tieneVencimiento ? 'Si' : 'No' : '';
+                    prof['especialidad2'] = data[i].formacionPosgrado && data[i].formacionPosgrado[1] ? data[i].formacionPosgrado[1].especialidad.nombre : '';
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[1]) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[1].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionPosgrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaPNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    } else {
+                        prof['matriculaPNumero2'] = '';
+                    }
+                    prof['tieneVencimiento2'] = data[i].formacionPosgrado && data[i].formacionPosgrado[1] ? data[i].formacionPosgrado[1].tieneVencimiento ? 'Si' : 'No' : '';
+
+                    // formacionPosgrado3
+                    prof['especialidad3'] = data[i].formacionPosgrado && data[i].formacionPosgrado[2] ? data[i].formacionPosgrado[2].especialidad.nombre : '';
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[2]) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[2].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionPosgrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaPNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    } else {
+                        prof['matriculaPNumero3'] = '';
+                    }
+                    prof['tieneVencimiento3'] = data[i].formacionPosgrado && data[i].formacionPosgrado[2] ? data[i].formacionPosgrado[2].tieneVencimiento ? 'Si' : 'No' : '';
+                    // formacionPosgrado4
+                    prof['especialidad4'] = data[i].formacionPosgrado && data[i].formacionPosgrado[3] ? data[i].formacionPosgrado[3].especialidad.nombre : '';
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[3]) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[3].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionPosgrado[3].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaPNumero4'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    } else {
+                        prof['matriculaPNumero4'] = '';
+                    }
+                    prof['tieneVencimiento4'] = data[i].formacionPosgrado && data[i].formacionPosgrado[3] ? data[i].formacionPosgrado[3].tieneVencimiento ? 'Si' : 'No' : '';
+
                     // prof['fechasDeAltas1'] = data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].fe ? 'Si' : 'No' : '';
                     // TODO: que hago con fechasDeAltas?
-                    // TODO: reppetir 4 veces el posgrado
 
                     let fechaUltimaSancion = Math.max.apply(null, data[i].sanciones.map(sancion => sancion.fecha));
                     let ultimaSancion = data[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; });
