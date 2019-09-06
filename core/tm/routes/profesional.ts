@@ -683,7 +683,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                         let celulares = data[i].contactos.filter(contacto => contacto.tipo === 'celular');
                         if (celulares) {
                             let minRanking = Math.min.apply(null, celulares.map(cel => cel.ranking));
-                            let celular = celulares.find(cel => cel.ranking === minRanking);
+                            let celular = minRanking ? celulares.find(cel => cel.ranking === minRanking) : celulares[0];
                             prof['celular'] = celular ? celular.valor : '';
                         } else {
                             prof['celular'] = '';
@@ -691,7 +691,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                         let emails = data[i].contactos.filter(contacto => contacto.tipo === 'email');
                         if (emails) {
                             let minRanking = Math.min.apply(null, emails.map(mail => mail.ranking));
-                            let email = emails.find(mail => mail.ranking === minRanking);
+                            let email = minRanking ? emails.find(mail => mail.ranking === minRanking) : emails[0];
                             prof['email'] = email ? email.valor : '';
                         } else {
                             prof['email'] = '';
@@ -699,7 +699,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                         let fijos = data[i].contactos.filter(contacto => contacto.tipo === 'fijo');
                         if (fijos) {
                             let minRanking = Math.min.apply(null, fijos.map(fij => fij.ranking));
-                            let fijo = fijos.find(fij => fij.ranking === minRanking);
+                            let fijo = minRanking ? fijos.find(fij => fij.ranking === minRanking) : fijos[0];
                             prof['fijo'] = fijo ? fijo.valor : '';
                         } else {
                             prof['fijo'] = '';
