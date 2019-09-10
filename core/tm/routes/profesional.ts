@@ -539,14 +539,14 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     prof['cuit'] = data[i].cuit;
                     prof['fechaNacimiento'] = moment(data[i].fechaNacimiento).format('DD/MM/YYYY');
                     prof['lugarNacimiento'] = data[i].lugarNacimiento;
-                    prof['nacionalidad'] = data[i].nacionalidad.nombre;
+                    prof['nacionalidad'] = data[i].nacionalidad ? data[i].nacionalidad.nombre : '';
                     prof['sexo'] = data[i].sexo;
                     // formacionGrado1
                     prof['profesion1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].profesion ? data[i].formacionGrado[0].profesion.nombre : '';
                     prof['tipoDeFormacion1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].profesion ? data[i].formacionGrado[0].profesion.tipoDeFormacion : '';
-                    prof['entidadFormadora1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? data[i].formacionGrado[0].entidadFormadora.nombre : '';
+                    prof['entidadFormadora1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].entidadFormadora ? data[i].formacionGrado[0].entidadFormadora.nombre : '';
                     prof['fechaEgreso1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? data[i].formacionGrado[0].fechaEgreso : '';
-                    if (data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].matriculado) {
+                    if (data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].matriculado && data[i].formacionGrado[0].matriculacion) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[0].matriculacion.map(matricula => matricula.inicio));
                         let ultimaMatricula = data[i].formacionGrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero1'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
@@ -565,9 +565,9 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // formacionGrado2
                     prof['profesion2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].profesion ? data[i].formacionGrado[1].profesion.nombre : '';
                     prof['tipoDeFormacion2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].profesion ? data[i].formacionGrado[1].profesion.tipoDeFormacion : '';
-                    prof['entidadFormadora2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].entidadFormadora.nombre : '';
+                    prof['entidadFormadora2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].entidadFormadora ? data[i].formacionGrado[1].entidadFormadora.nombre : '';
                     prof['fechaEgreso2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].fechaEgreso : '';
-                    if (data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].matriculado) {
+                    if (data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].matriculado && data[i].formacionGrado[1].matriculacion) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[1].matriculacion.map(matricula => matricula.inicio));
                         let ultimaMatricula = data[i].formacionGrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
@@ -586,9 +586,9 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // formacionGrado3
                     prof['profesion3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].profesion ? data[i].formacionGrado[2].profesion.nombre : '';
                     prof['tipoDeFormacion3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].profesion ? data[i].formacionGrado[2].profesion.tipoDeFormacion : '';
-                    prof['entidadFormadora3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].entidadFormadora.nombre : '';
+                    prof['entidadFormadora3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].entidadFormadora ? data[i].formacionGrado[2].entidadFormadora.nombre : '';
                     prof['fechaEgreso3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].fechaEgreso : '';
-                    if (data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].matriculado) {
+                    if (data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].matriculado && data[i].formacionGrado[2].matriculacion) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[2].matriculacion.map(matricula => matricula.inicio));
                         let ultimaMatricula = data[i].formacionGrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
@@ -607,7 +607,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
 
                     // formacionPosgrado1
                     prof['especialidad1'] = data[i].formacionPosgrado && data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].especialidad.nombre : '';
-                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[0] && data[i].formacionPosgrado[0].matriculado) {
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[0] && data[i].formacionPosgrado[0].matriculado && data[i].formacionPosgrado[0].matriculacion) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[0].matriculacion.map(matricula => matricula.inicio));
                         let ultimaMatricula = data[i].formacionPosgrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaPNumero1'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
@@ -617,7 +617,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     prof['tieneVencimiento1'] = data[i].formacionPosgrado && data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].tieneVencimiento ? 'Si' : 'No' : '';
                     // formacionPosgrado2
                     prof['especialidad2'] = data[i].formacionPosgrado && data[i].formacionPosgrado[1] ? data[i].formacionPosgrado[1].especialidad.nombre : '';
-                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[1] && data[i].formacionPosgrado[1].matriculado) {
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[1] && data[i].formacionPosgrado[1].matriculado && data[i].formacionPosgrado[1].matriculacion) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[1].matriculacion.map(matricula => matricula.inicio));
                         let ultimaMatricula = data[i].formacionPosgrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaPNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
@@ -628,7 +628,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
 
                     // formacionPosgrado3
                     prof['especialidad3'] = data[i].formacionPosgrado && data[i].formacionPosgrado[2] ? data[i].formacionPosgrado[2].especialidad.nombre : '';
-                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[2] && data[i].formacionPosgrado[2].matriculado) {
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[2] && data[i].formacionPosgrado[2].matriculado && data[i].formacionPosgrado[2].matriculacion) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[2].matriculacion.map(matricula => matricula.inicio));
                         let ultimaMatricula = data[i].formacionPosgrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaPNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
@@ -638,7 +638,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     prof['tieneVencimiento3'] = data[i].formacionPosgrado && data[i].formacionPosgrado[2] ? data[i].formacionPosgrado[2].tieneVencimiento ? 'Si' : 'No' : '';
                     // formacionPosgrado4
                     prof['especialidad4'] = data[i].formacionPosgrado && data[i].formacionPosgrado[3] ? data[i].formacionPosgrado[3].especialidad.nombre : '';
-                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[3] && data[i].formacionPosgrado[3].matriculado) {
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[3] && data[i].formacionPosgrado[3].matriculado && data[i].formacionPosgrado[3].matriculacion) {
                         let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[3].matriculacion.map(matricula => matricula.inicio));
                         let ultimaMatricula = data[i].formacionPosgrado[3].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaPNumero4'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
@@ -650,8 +650,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // prof['fechasDeAltas1'] = data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].fe ? 'Si' : 'No' : '';
                     // TODO: que hago con fechasDeAltas?
 
-                    let fechaUltimaSancion = Math.max.apply(null, data[i].sanciones.map(sancion => sancion.fecha));
-                    let ultimaSancion = data[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; });
+                    let fechaUltimaSancion = data[i].sanciones ? Math.max.apply(null, data[i].sanciones.map(sancion => sancion.fecha)) : null;
+                    let ultimaSancion = fechaUltimaSancion ? data[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; }) : null;
                     prof['sancionNumero'] = ultimaSancion ? ultimaSancion.numero : '';
                     prof['sancionMotivo'] = ultimaSancion ? ultimaSancion.motivo : '';
                     prof['sancionnormaLegal'] = ultimaSancion ? ultimaSancion.normaLegal : '';
