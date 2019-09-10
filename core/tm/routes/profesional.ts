@@ -512,8 +512,10 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     apellido: 1,
                     nombre: 1
                 });
-        } else {
+        } else if (!req.query.exportarPlanillaCalculo) {
             query = profesional.find(opciones).skip(skip).limit(limit);
+        } else {
+            query = profesional.find(opciones);
         }
 
         if (req.query.fields) {
