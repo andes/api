@@ -216,32 +216,32 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
                     anulado: { $exists: false }
                 }
             },
-            {
-                $project: {
-                    doc: '$$ROOT',
-                    tipo: true,
-                    fecha: true,
-                    notificado: true,
-                    sePresento: true,
-                    profesional: true,
-                    anulado: true,
-                    year: {
-                        $year: '$fecha'
-                    },
-                    month: {
-                        $month: '$fecha'
-                    },
-                    day: {
-                        $dayOfMonth: '$fecha'
+                {
+                    $project: {
+                        doc: '$$ROOT',
+                        tipo: true,
+                        fecha: true,
+                        notificado: true,
+                        sePresento: true,
+                        profesional: true,
+                        anulado: true,
+                        year: {
+                            $year: '$fecha'
+                        },
+                        month: {
+                            $month: '$fecha'
+                        },
+                        day: {
+                            $dayOfMonth: '$fecha'
+                        }
+                    }
+                },
+                {
+                    $match: {
+                        month: mes,
+                        year: anio
                     }
                 }
-            },
-            {
-                $match: {
-                    month: mes,
-                    year: anio
-                }
-            }
 
             ]);
 
@@ -274,33 +274,33 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
                     anulado: { $exists: false }
                 }
             },
-            {
-                $project: {
-                    tipo: true,
-                    fecha: true,
-                    anio: { $year: '$fecha' },
-                    mes: { $month: '$fecha' },
-                    dia: { $dayOfMonth: '$fecha' }
+                {
+                    $project: {
+                        tipo: true,
+                        fecha: true,
+                        anio: { $year: '$fecha' },
+                        mes: { $month: '$fecha' },
+                        dia: { $dayOfMonth: '$fecha' }
                     // hora: { $hour: '$fecha' },
                     // minutos: { $minute: '$fecha'}
-                }
-            }, {
-                $match: matchObj
-            }, {
-                $group: {
-                    _id: {
+                    }
+                }, {
+                    $match: matchObj
+                }, {
+                    $group: {
+                        _id: {
                         // tipo: '$tipo',
                         // fecha: '$fecha',
                         // anio: { $year: '$fecha' },
                         // mes: { $month: '$fecha' },
                         // dia: { $dayOfMonth: '$fecha' },
-                        fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
+                            fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
                         // hora: { $hour: '$fecha' },
                         // minutos: { $minute: '$fecha'}
-                    },
-                    count: { $sum: 1 }
-                }
-            }]);
+                        },
+                        count: { $sum: 1 }
+                    }
+                }]);
 
         response.json(aggregate);
 
@@ -311,33 +311,33 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
                     anulado: { $exists: false }
                 }
             },
-            {
-                $project: {
-                    tipo: true,
-                    fecha: true,
-                    anio: { $year: '$fecha' },
-                    mes: { $month: '$fecha' },
-                    dia: { $dayOfMonth: '$fecha' },
-                    horaTimeOffset: { $subtract: ['$fecha', 3 * 60 * 60 * 1000] },
-                    minutos: { $minute: '$fecha' }
-                }
-            }, {
-                $match: matchObj
-            }, {
-                $group: {
-                    _id: {
+                {
+                    $project: {
+                        tipo: true,
+                        fecha: true,
+                        anio: { $year: '$fecha' },
+                        mes: { $month: '$fecha' },
+                        dia: { $dayOfMonth: '$fecha' },
+                        horaTimeOffset: { $subtract: ['$fecha', 3 * 60 * 60 * 1000] },
+                        minutos: { $minute: '$fecha' }
+                    }
+                }, {
+                    $match: matchObj
+                }, {
+                    $group: {
+                        _id: {
                         // tipo: '$tipo',
                         // fecha: '$fecha',
-                        mes: { $month: '$fecha' },
-                        anio: { $year: '$fecha' },
-                        dia: { $dayOfMonth: '$fecha' },
-                        hora: { $hour: '$horaTimeOffset' },
-                        minutos: { $minute: '$fecha' }
+                            mes: { $month: '$fecha' },
+                            anio: { $year: '$fecha' },
+                            dia: { $dayOfMonth: '$fecha' },
+                            hora: { $hour: '$horaTimeOffset' },
+                            minutos: { $minute: '$fecha' }
                         // dateDifference: { $hour: '$dateDifference'}
-                    },
-                    count: { $sum: 1 }
-                }
-            }]);
+                        },
+                        count: { $sum: 1 }
+                    }
+                }]);
 
         response.json(aggregate);
     }
