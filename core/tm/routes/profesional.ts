@@ -432,8 +432,6 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
 
         if (req.query.bajaMatricula) {
             opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
-        }
-        if (req.query.bajaMatriculaE) {
             opciones['formacionPosgrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
         }
 
@@ -467,9 +465,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         }
         if (req.query.profesionCodigo) {
             opciones['formacionGrado.profesion.codigo'] = req.query.profesionCodigo;
-        }
-        if (req.query.profesionCodigoE) {
-            opciones['formacionPosgrado.profesion.codigo'] = req.query.profesionCodigoE;
+            opciones['formacionPosgrado.profesion.codigo'] = req.query.profesionCodigo;
         }
 
         if (req.query.matriculasPorVencer) {
