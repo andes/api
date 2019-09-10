@@ -174,12 +174,14 @@ export async function getConceptByExpression(expression) {
 
 export async function getConcepts(conceptsIds) {
     return SnomedModel.aggregate([
-        { $match:  { conceptId: { $in :  conceptsIds } } },
+        { $match: { conceptId: { $in: conceptsIds } } },
         { $unwind: '$relationships' },
-        { $match:  {
-            'relationships.active': true,
-            'relationships.characteristicType.conceptId': '900000000000010007',
-            'relationships.type.conceptId': '116680003' }
+        {
+            $match: {
+                'relationships.active': true,
+                'relationships.characteristicType.conceptId': '900000000000010007',
+                'relationships.type.conceptId': '116680003'
+            }
         },
         {
             $project: {
