@@ -431,10 +431,10 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         }
 
         if (req.query.bajaMatricula) {
-            opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null] };
+            opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
         }
         if (req.query.bajaMatriculaE) {
-            opciones['formacionPosgrado.matriculacion.baja.motivo'] = { $nin: [null] };
+            opciones['formacionPosgrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
         }
 
         if (req.query.rematriculado) {
