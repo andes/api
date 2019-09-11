@@ -482,6 +482,34 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
             if (req.params.id && !data) {
                 return next(404);
             }
+            if (data) {
+                const profesional = Auth.getProfesional(req);
+                const profesionalId = profesional && profesional.id && profesional.id.toString();
+                for (let i = 0; i < data.length; i++) {
+                    let profId = false;
+                    if (data[i].solicitud.profesional && data[i].solicitud.profesional.id) {
+                        profId = data[i].solicitud.profesional.id.toString();
+                    }
+                    const registros = data[i].ejecucion.registros;
+                    if (registros) {
+                        for (let j = 0; j < registros.length; j++) {
+                            const privacy = registros[j].privacy || { scope: 'public' };
+                            if (privacy.scope !== 'public' && profesionalId !== profId) {
+                                switch (privacy.scope) {
+                                    case 'private':
+                                        registros.splice(j, 1);
+                                        j--;
+                                        break;
+                                    case 'termOnly':
+                                        registros[j].valor = 'REGISTRO PRIVADO';
+                                        registros[j].registros = [];
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             res.json(data);
         });
     }

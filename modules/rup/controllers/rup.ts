@@ -123,19 +123,19 @@ export function buscarEnHuds(prestaciones, conceptos) {
             if (unRegistro.concepto && unRegistro.concepto.conceptId && conceptos.find(c => c.conceptId === unRegistro.concepto.conceptId)) {
                 data.push({
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
-                    fecha: unRegistro.createdAt,
+                    fecha: prestacion.ejecucion.fecha,
                     profesional: unRegistro.createdBy,
                     registro: unRegistro
                 });
             }
             // verificamos si el registro de la prestacion tiene alguno de los conceptos en su array de registros
-            let resultado = matchConcepts(unRegistro, conceptos);
+            let resultado: any = matchConcepts(unRegistro, conceptos);
 
-            if (resultado) {
+            if (resultado && resultado.id !== unRegistro.id) {
                 // agregamos el resultado a a devolver
                 data.push({
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
-                    fecha: unRegistro.createdAt,
+                    fecha: prestacion.ejecucion.fecha,
                     profesional: unRegistro.createdBy,
                     registro: resultado
                 });

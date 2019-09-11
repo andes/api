@@ -87,7 +87,7 @@ router.get('/puco', async (req, res, next) => {
             res.json([]);
         }
     } else {
-        res.json({ msg: 'Parámetros incorrectos' });
+        return next('Parámetros incorrectos');
     }
 });
 
@@ -117,7 +117,7 @@ router.get('/paciente', async (req, res, next) => {
             }
         }
     } else {
-        res.json({ msg: 'Parámetros incorrectos' });
+        return next('Parámetros incorrectos');
     }
 });
 
@@ -130,13 +130,13 @@ router.get('/puco/padrones', async (req, res, next) => {
     }
 });
 
-router.get('/os', async (req, res, next) => {
-    if (req.query.dni && req.query.sexo) {
-        let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
+router.get('/puco/:documento', async (req, res, next) => {
+    if (req.params.documento) {
+        let arrayOSPuco: any = await pucoController.pacientePuco(req.params.documento);
         if (arrayOSPuco.length > 0) {
             res.json(arrayOSPuco);
         } else {
-            let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+            let arrayOSSumar = await sumarController.pacienteSumar(req.params.documento);
             if (arrayOSSumar.length > 0) {
                 res.json(arrayOSSumar);
             } else {
@@ -144,9 +144,8 @@ router.get('/os', async (req, res, next) => {
             }
         }
     } else {
-        res.json({ msg: 'Parámetros incorrectos' });
+        return next('Parámetros incorrectos');
     }
 });
-
 
 module.exports = router;

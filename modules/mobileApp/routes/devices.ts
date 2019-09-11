@@ -54,7 +54,6 @@ router.post('/devices/update', (req: any, res, next) => {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
-
         const device_data = req.body.device;
         const device = user.devices.id(device_data.id);
         if (device) {

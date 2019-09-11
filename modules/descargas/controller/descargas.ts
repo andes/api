@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
+import * as mime from 'mime-types';
 // import * as htmlPdf from 'html-pdf-chrome';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
@@ -238,34 +239,48 @@ export class Documento {
     }
 
     // 'archivo adjunto'
-    static generarArchivoAdjuntoHTML(registro: any, template: string): any {
+    static generarArchivoAdjuntoHTML(registro: any, template: string, templateNoSoportado: string): any {
 
         let filePromises = [];
-        let adjuntos = '';
+        let adjunto = '';
 
         let templateAdjuntos = '';
         filePromises = registro.valor.documentos.map(documento => {
-            return new Promise(async (resolve, reject) => {
-                rupStore.readFile(documento.id).then((archivo: any) => {
+            if (mime.lookup(documento.ext).indexOf('image') > -1) {
+                return new Promise(async (resolve, reject) => {
+                    rupStore.readFile(documento.id).then((archivo: any) => {
 
-                    let file = [];
-                    archivo.stream.on('data', (data) => {
-                        file.push(data);
+                        let file = [];
+                        archivo.stream.on('data', (data) => {
+                            file.push(data);
+                        });
+
+                        archivo.stream.on('end', () => {
+                            adjunto = `<img class="w-25" src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
+                            const descripcion = documento.descripcion && documento.descripcion.term ? documento.descripcion.term : '';
+                            templateAdjuntos = template.replace('<!--descripcion-->', descripcion).replace('<!--adjunto-->', adjunto);
+                            resolve(templateAdjuntos);
+                        });
                     });
-
-                    archivo.stream.on('end', () => {
-                        adjuntos = `<img src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
-                        templateAdjuntos = template.replace(`<!--adjuntos-->`, adjuntos);
-                        resolve(templateAdjuntos);
-                    });
-
                 });
-            });
+            } else {
+                const tipoArchivo = this.tipoDeArchivo(documento.ext);
+                const descripcion = documento.descripcion && documento.descripcion.term ? documento.descripcion.term : '';
+                return templateNoSoportado.replace('<!--descripcion-->', descripcion).replace('<!--formato-->', `${tipoArchivo} (${documento.ext.toUpperCase()}, no se visualiza)`);
+            }
 
         });
 
         return Promise.all(filePromises);
 
+    }
+    static tipoDeArchivo(ext: string) {
+        const tipo = mime.lookup(ext);
+        if (tipo.indexOf('application') > -1) {
+            return 'documento';
+        } else {
+            return tipo.slice(0, tipo.indexOf('/'));
+        }
     }
 
     static crearProcedimientos(proc, template) {
@@ -307,6 +322,7 @@ export class Documento {
     static planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/solicitud.html'), 'utf8');
     static insumoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/insumo.html'), 'utf8');
     static adjuntoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/adjunto.html'), 'utf8');
+    static adjuntoNoSoportadoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/adjuntoNoSoportado.html'), 'utf8');
     static nivelPadre = 0;
 
     static async generarInforme(registros) {
@@ -355,7 +371,7 @@ export class Documento {
                                 })];
                             } else if (this.esAdjunto(registros[i].concepto.conceptId)) {
 
-                                let adjuntos = await this.generarArchivoAdjuntoHTML(registros[i], this.adjuntoTemplate);
+                                let adjuntos = await this.generarArchivoAdjuntoHTML(registros[i], this.adjuntoTemplate, this.adjuntoNoSoportadoTemplate);
                                 this.informeRegistros = [...this.informeRegistros, ({
                                     concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag },
                                     valor: `<div class="nivel-${this.nivelPadre}">${adjuntos.join('<br>')}</div>`
@@ -379,7 +395,7 @@ export class Documento {
                     }
                     if (registros[i] && registros[i].registros && registros[i].registros.length > 0) {
                         this.nivelPadre = 0;
-                        this.generarInforme(registros[i].registros);
+                        await this.generarInforme(registros[i].registros);
                     }
                 }
             }
@@ -404,6 +420,8 @@ export class Documento {
 
                 // Prestación
                 let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
+
+                let registro: any = req.body.idRegistro ? prestacion.ejecucion.registros.find(y => y.id === req.body.idRegistro) : null;
 
                 // Títulos default
                 let tituloFechaEjecucion = 'Fecha Ejecución';
@@ -474,10 +492,13 @@ export class Documento {
                         }
                     }
 
-
-                    let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
-                    // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
-                    await this.generarInforme(registros);
+                    if (!registro) {
+                        let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
+                        // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
+                        await this.generarInforme(registros);
+                    } else {
+                        await this.generarInforme([registro]);
+                    }
 
 
                     // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)

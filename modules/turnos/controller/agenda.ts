@@ -15,6 +15,7 @@ import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 import * as codificacionModel from '../../rup/schemas/codificacion';
+import { Types } from 'mongoose';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -1025,7 +1026,7 @@ export function getConsultaDiagnostico(params) {
                 $and: [
                     { horaInicio: { $gte: new Date(params.horaInicio) } },
                     { horaFin: { $lte: new Date(params.horaFin) } },
-                    { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'organizacion._id': { $eq: Types.ObjectId(params.organizacion) } },
                     { 'bloques.turnos.estado': 'asignado' }
 
                 ]
@@ -1150,7 +1151,7 @@ export async function getDatosTurnos(idTurno) {
     pipeline = [
         {
             $match: {
-                'bloques.turnos._id': mongoose.Types.ObjectId(idTurno)
+                'bloques.turnos._id': Types.ObjectId(idTurno)
             }
         },
         { $unwind: '$bloques' },
@@ -1171,7 +1172,7 @@ export function getCantidadConsultaXPrestacion(params) {
                 $and: [
                     { horaInicio: { $gte: new Date(params.horaInicio) } },
                     { horaFin: { $lte: new Date(params.horaFin) } },
-                    { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'organizacion._id': { $eq: Types.ObjectId(params.organizacion) } },
                     { 'bloques.turnos.estado': 'asignado' }
                 ]
             }
@@ -1255,3 +1256,76 @@ export async function poseeAsistencia(agenda) {
             (turno.diagnostico && turno.diagnostico.codificaciones && turno.diagnostico.codificaciones.length > 0)));
 }
 
+/** Verifica si existe solapamiento de agendas segun profesional y/o espacio físico en un determinado rango horario
+*
+* @export
+* @param {*} horaInicio
+* @param {*} horaFin
+* @param {*} profesionalesIds
+* @param {*} [espacioFisicoId]
+* @param {*} [agendaId]
+* @returns
+*/
+
+export async function verificarSolapamiento(data) {
+    const horaInicio = data.horaInicio;
+    const horaFin = data.horaFin;
+    const profesionalesIds = (data.profesionales) ? data.profesionales.map(p => p._id) : null;
+    const espacioFisicoId = (data.espacioFisico ? data.espacioFisico._id : null);
+    let response = null;
+
+    if (espacioFisicoId || (profesionalesIds && profesionalesIds.length)) {
+
+        // Se buscan las agendas que se solapen con la actual en algún punto
+        let $match: any = {
+            $and: [
+                {
+                    $or: [
+                        { horaInicio: { $lte: new Date(horaInicio) }, horaFin: { $gt: new Date(horaInicio) } },
+                        { horaInicio: { $lt: new Date(horaFin) }, horaFin: { $gte: new Date(horaFin) } },
+                        { horaInicio: { $gt: new Date(horaInicio), $lt: new Date(horaFin) } }
+                    ]
+                },
+                {
+                    estado: { $in: ['planificacion', 'disponible', 'publicada', 'pausada'] }
+                },
+                {
+                    _id: { $not: { $eq: Types.ObjectId(data.id) } }
+                }
+            ]
+        };
+
+        let $or = [];
+
+        if (profesionalesIds && profesionalesIds.length) {
+            $or.push({ 'profesionales._id': { $in: profesionalesIds.map(id => Types.ObjectId(id)) } });
+        }
+
+        if (espacioFisicoId) {
+            $or.push({ 'espacioFisico._id': espacioFisicoId });
+        }
+
+        $match.$and.push({ $or });
+        try {
+            const resultados = await agendaModel.aggregate([{ $match }]);
+            if (resultados.length > 0) {
+                response = 'La agenda no se pudo guardar:';
+                if (resultados.some(a => a.espacioFisico && a.espacioFisico._id === espacioFisicoId)) {
+                    response += ' El espacio físico está asignado a otra agenda en ese horario.';
+                }
+
+                let profesionales = [];
+                for (let resultado of resultados) {
+                    profesionales = profesionales.concat(resultado.profesionales);
+                }
+
+                if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
+                    response += ' Uno o más profesionales están asignados a otra agenda en ese horario.';
+                }
+            }
+        } catch (error) {
+            return error;
+        }
+    }
+    return response;
+}
