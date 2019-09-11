@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as profesion from '../schemas/profesion_model';
+import { profesion } from '../schemas/profesion_model';
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router.get('/profesiones/:id*?', (req, res, next) => {
 
     } else {
 
-        profesion.find({}).sort({codigoSISA: 1}).exec((error, data) => {
+        profesion.find({}).sort({ codigoSISA: 1 }).exec((error, data) => {
             if (error) {
                 return next(error);
             }

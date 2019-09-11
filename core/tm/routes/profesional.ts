@@ -1,6 +1,7 @@
 import { defaultLimit, maxLimit } from './../../../config';
 import * as express from 'express';
 import { profesional } from '../schemas/profesional';
+import { profesion } from '../schemas/profesion_model';
 import * as utils from '../../../utils/utils';
 import * as fs from 'fs';
 import { makeFs } from '../schemas/imagenes';
@@ -15,7 +16,7 @@ import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
-
+import moment = require('moment');
 
 let router = express.Router();
 
@@ -39,8 +40,112 @@ router.get('/profesionales/estadisticas', async (req, res, next) => {
         estadisticas['totalRematriculados'] = values[2];
         res.json(estadisticas);
     });
+});
 
+router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
+        return next(403);
+    }
+    const fechaDesde = req.query.fechaDesde;
+    const fechaHasta = req.query.fechaHasta;
+    let profesionaleSisaTotal = [];
 
+    let datos = await profesional.aggregate(
+        [
+            {
+                $match: {
+                    profesionalMatriculado: true
+                }
+            },
+            {
+                $unwind: '$formacionGrado'
+            }
+            , {
+                $match: {
+                    'formacionGrado.fechaDeInscripcion': {
+                        $gte: moment(fechaDesde).startOf('day').toDate(),
+                        $lte: moment(fechaHasta).endOf('day').toDate()
+                    }
+
+                }
+            },
+
+        ]);
+
+    for (let index = 0; index < datos.length; index++) {
+        let profesionalSisa = {};
+
+        const unProfesional = datos[index];
+        profesionalSisa['id_profesional'] = '';
+        profesionalSisa['id_profesional_profesión'] = '';
+        profesionalSisa['id_profesional_matricula'] = '';
+        profesionalSisa['id_tipodoc'] = 1;
+        profesionalSisa['nrodoc'] = unProfesional.documento;
+        profesionalSisa['nombre'] = unProfesional.nombre;
+        profesionalSisa['apellido'] = unProfesional.apellido;
+        profesionalSisa['sexo'] = unProfesional.sexo === 'femenino' ? 'F' : 'M';
+        profesionalSisa['fecha_nacimiento'] = moment(unProfesional.fechaNacimiento).format('DD/MM/YYYY');
+        profesionalSisa['id_país_nacimiento'] = '0';
+        profesionalSisa['id_loc_nacimiento'] = '0';
+        profesionalSisa['id_país'] = '0';
+        const domicilio = unProfesional.domicilios.find(x => x.tipo === 'real');
+        profesionalSisa['calle'] = domicilio ? domicilio.valor : '';
+        profesionalSisa['calle_nro'] = '-';
+        profesionalSisa['calle_piso'] = '-';
+        profesionalSisa['calle_dpto'] = '-';
+        profesionalSisa['id_localidad'] = '15';
+        profesionalSisa['id_provincia'] = '0';
+        profesionalSisa['id_pais_domicilio'] = '200';
+        const tel_celular = unProfesional.contactos.find(x => x.tipo === 'celular' && x.valor);
+        const tel_fijo = unProfesional.contactos.find(x => x.tipo === 'fijo' && x.valor);
+        const email = unProfesional.contactos.find(x => x.tipo === 'email' && x.valor);
+        profesionalSisa['tiene_teléfono'] = (tel_celular || tel_fijo || email) ? 'SI' : 'NO';
+        profesionalSisa['id_tipo_tel1'] = tel_celular ? '1' : '';
+        profesionalSisa['id_tipo_tel2'] = tel_fijo ? '2' : '';
+        profesionalSisa['id_tipo_tel3'] = '';
+        profesionalSisa['id_tipo_tel4'] = '';
+        profesionalSisa['tel1'] = tel_celular ? tel_celular.valor : '';
+        profesionalSisa['tel2'] = tel_fijo ? tel_fijo.valor : '';
+        profesionalSisa['tel3'] = '';
+        profesionalSisa['tel4'] = '';
+        profesionalSisa['libro'] = '';
+        profesionalSisa['folio'] = '';
+        profesionalSisa['acta'] = '';
+        profesionalSisa['expediente'] = '';
+        profesionalSisa['email'] = email ? email.valor : '';
+        profesionalSisa['email2'] = '';
+        profesionalSisa['cuil'] = unProfesional.cuit ? unProfesional.cuit : '';
+        let fallecido = unProfesional.fechaFallecimiento ? 'SI' : 'NO';
+        profesionalSisa['fallecido'] = fallecido;
+        profesionalSisa['fecha_fallecido'] = fallecido === 'SI' ? unProfesional.fecha_fallecido : '';
+        profesionalSisa['habilitado'] = unProfesional.habilitado && unProfesional.habilitado === true ? 'SI' : 'NO';
+        let profesionDeReferencia: any = await profesion.find({ codigo: unProfesional.formacionGrado.profesion.codigo }, (data: any) => { return data; });
+        profesionalSisa['id_profesión_referencia'] = profesionDeReferencia.profesionCodigoRef ? profesionDeReferencia.profesionCodigoRef : '';
+        profesionalSisa['id_profesión'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.profesion) ? unProfesional.formacionGrado.profesion.codigo : '';
+        profesionalSisa['titulo'] = unProfesional.formacionGrado ? unProfesional.formacionGrado.titulo : '';
+        let codigoInstitucion = unProfesional.formacionGrado ? unProfesional.formacionGrado.entidadFormadora.codigo : '';
+        profesionalSisa['id_institución_formadora'] = codigoInstitucion;
+        profesionalSisa['fecha_titulo'] = moment(unProfesional.formacionGrado.fechaEgreso).format('DD/MM/YYYY');
+        profesionalSisa['id_institución_sede'] = '';
+        profesionalSisa['revalida'] = 'NO';
+        profesionalSisa['id_institución_revalida'] = '';
+        profesionalSisa['fecha_revalida'] = '';
+        profesionalSisa['id_provincia_matricula'] = '15';
+        profesionalSisa['matricula'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.matriculacion) ? unProfesional.formacionGrado.matriculacion[unProfesional.formacionGrado.matriculacion.length - 1].matriculaNumero : '';
+        profesionalSisa['fecha_matricula'] = moment(unProfesional.formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY');
+        profesionalSisa['id_situación_matricula'] = '';
+        profesionalSisa['comentario'] = '';
+        profesionalSisa['sss'] = '';
+        profesionalSisa['sss_certificado'] = '';
+        profesionalSisa['sss_fecha'] = '';
+        profesionalSisa['id_sss_provincia'] = '';
+        profesionalSisa['id_sss_provincia2'] = '';
+        profesionalSisa['id_sss_provincia3'] = '';
+        profesionalSisa['rematriculación'] = unProfesional.rematriculado === 1 ? 'SI' : 'NO';
+        profesionaleSisaTotal.push(profesionalSisa);
+    }
+
+    res.status(201).json(profesionaleSisaTotal);
 });
 
 router.get('/profesionales/guia', async (req, res, next) => {
