@@ -83,7 +83,7 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
         profesionalSisa['nrodoc'] = unProfesional.documento;
         profesionalSisa['nombre'] = unProfesional.nombre;
         profesionalSisa['apellido'] = unProfesional.apellido;
-        profesionalSisa['sexo'] = unProfesional.sexo === 'femenino' ? 'F' : 'M';
+        profesionalSisa['sexo'] = (unProfesional.sexo === 'femenino' || unProfesional.sexo === 'Femenino') ? 'F' : 'M';
         profesionalSisa['fecha_nacimiento'] = moment(unProfesional.fechaNacimiento).format('DD/MM/YYYY');
         profesionalSisa['id_país_nacimiento'] = '0';
         profesionalSisa['id_loc_nacimiento'] = '0';
