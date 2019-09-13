@@ -1,6 +1,6 @@
-import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
+
 import * as mongoose from 'mongoose';
-import { SnomedConcept, ISnomedConcept } from './snomed-concept';
+import { SnomedConcept } from './snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
@@ -23,7 +23,16 @@ export let schema = new mongoose.Schema({
     },
     genero: SnomedConcept,
     /* Datos del paciente e internacion si la cama está ocupada */
-    paciente: pacienteSchema,
+    paciente: {
+        _id: mongoose.Schema.Types.ObjectId,
+        documento: String,
+        nombre: String,
+        apellido: String,
+        fechaNacimiento: {
+            type: Date,
+            es_indexed: true
+        }
+    },
     idInternacion: {
         type: mongoose.Schema.Types.ObjectId,
         default: null
