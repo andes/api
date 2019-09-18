@@ -77,6 +77,7 @@ const turnoSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
     },
+    auditable: Boolean,
     // Unificamos los diagnósticos(codificaciones) en un solo arreglo, el DIAGNOSTICO PRINCIPAL será el que este en la posición 0.
     // Si ambas codificaciones coinciden, la auditoría aprobó la cod.
     // Si las codificaciones difieren, auditoría realizo un reparo
