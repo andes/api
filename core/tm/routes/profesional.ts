@@ -367,16 +367,9 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
     if (req.query.matriculacion) {
         opciones['profesionalMatriculado'] = true;
     }
-    if (req.query.profesionCodigo) {
-        opciones['formacionGrado.profesion.codigo'] = req.query.profesionCodigo;
-        opciones['formacionPosgrado.profesion.codigo'] = req.query.profesionCodigo;
-    }
+
     if (req.query.especialidadCodigo) {
         opciones['especialidad.codigo'] = req.query.especialidadCodigo;
-    }
-    if (req.query.bajaMatricula) {
-        opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
-        opciones['formacionPosgrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
     }
 
     if (req.query.rematriculado) {
@@ -387,30 +380,19 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         opciones['rematriculado'] = false;
     }
 
-    if (req.query.estado) {
-        if (req.query.estado === 'Vigentes') {
-            req.query.estado = true;
-        }
-        if (req.query.estado === 'Suspendidas') {
-            req.query.estado = false;
-        }
-        opciones['formacionGrado.matriculado'] = req.query.estado;
-    }
-
-    if (req.query.estadoE) {
-        if (req.query.estadoE === 'Vigentes') {
-            req.query.estadoE = true;
-        }
-        if (req.query.estadoE === 'Suspendidas') {
-            req.query.estadoE = false;
-        }
-        opciones['formacionPosgrado.matriculado'] = req.query.estadoE;
-    }
-
     let unwindOptions = {};
     let projections = {};
     let match2 = {};
     if (req.query.tipoMatricula === 'grado') {
+        if (req.query.estado) {
+            opciones['formacionGrado.matriculado'] = (req.query.estado === 'Vigentes');
+        }
+        if (req.query.bajaMatricula) {
+            opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
+        }
+        if (req.query.profesionCodigo) {
+            opciones['formacionGrado.profesion.codigo'] = req.query.profesionCodigo;
+        }
         match2 = { 'formacionGrado.matriculado': true, 'formacionGrado.matriculacion.0': { $exists: true } };
         unwindOptions = { path: '$formacionGrado' };
         projections = {
@@ -455,6 +437,15 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         };
 
     } else {
+        if (req.query.estado) {
+            opciones['formacionPosgrado.matriculado'] = (req.query.estado === 'Vigentes');
+        }
+        if (req.query.bajaMatricula) {
+            opciones['formacionPosgrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
+        }
+        if (req.query.profesionCodigo) {
+            opciones['formacionPosgrado.profesion.codigo'] = req.query.profesionCodigo;
+        }
         match2 = { 'formacionPosgrado.matriculado': true, 'formacionPosgrado.matriculacion.0': { $exists: true } };
         unwindOptions = { path: '$formacionPosgrado' };
         projections = {
@@ -537,6 +528,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         pipeline.push({ $limit: limit });
         pipeline.push({ $skip: skip });
     }
+    console.log(JSON.stringify(pipeline));
     if (!req.query.exportarPlanillaCalculo) {
         const data = await profesional.aggregate(pipeline);
         try {
