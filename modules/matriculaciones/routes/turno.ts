@@ -3,7 +3,6 @@ import * as turno from '../schemas/turno';
 import { profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
-import { toArray } from '../../../utils/utils';
 let router = express.Router();
 
 
@@ -206,26 +205,69 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
 /**
  * Devuelve los turnos del tipo y mes pasados por parametro.
  */
-router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
+router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
+    if (req.query.fecha) {
+        const fecha = new Date(req.query.fecha);
+        let anio = fecha.getFullYear();
+        let mes = fecha.getMonth() + 1;
+        let aggregate = await turno.aggregate(
+            [{
+                $match: {
+                    anulado: { $exists: false }
+                }
+            },
+                {
+                    $project: {
+                        doc: '$$ROOT',
+                        tipo: true,
+                        fecha: true,
+                        notificado: true,
+                        sePresento: true,
+                        profesional: true,
+                        anulado: true,
+                        year: {
+                            $year: '$fecha'
+                        },
+                        month: {
+                            $month: '$fecha'
+                        },
+                        day: {
+                            $dayOfMonth: '$fecha'
+                        }
+                    }
+                },
+                {
+                    $match: {
+                        month: mes,
+                        year: anio
+                    }
+                }
 
+            ]);
+
+        response.json(aggregate);
+        return;
+
+
+    }
     let matchObj = {
         // comentado para diferenciar los diferentes tipo de turnos y filtrar por lo mismo
         // tipo: request.params.tipo
     };
     // matchObj['anulado'] = { $exists: false };
-    if (request.query.anio) {
-        matchObj['anio'] = parseInt(request.query.anio, 0);
+    if (req.query.anio) {
+        matchObj['anio'] = parseInt(req.query.anio, 0);
     }
 
-    if (request.query.mes) {
-        matchObj['mes'] = parseInt(request.query.mes, 0);
+    if (req.query.mes) {
+        matchObj['mes'] = parseInt(req.query.mes, 0);
     }
 
-    if (request.query.dia) {
-        matchObj['dia'] = parseInt(request.query.dia, 0);
+    if (req.query.dia) {
+        matchObj['dia'] = parseInt(req.query.dia, 0);
     }
 
-    if (!request.query.dia) {
+    if (!req.query.dia) {
         let aggregate = await turno.aggregate(
             [{
                 $match: {
