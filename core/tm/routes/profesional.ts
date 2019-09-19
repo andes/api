@@ -362,38 +362,37 @@ router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
 });
 
 router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, next) => {
-    const opcionesFecha = {};
-    const opciones = {};
+    const match = {};
+    const match2 = {};
     if (req.query.matriculacion) {
-        opciones['profesionalMatriculado'] = true;
-    }
-
-    if (req.query.especialidadCodigo) {
-        opciones['especialidad.codigo'] = req.query.especialidadCodigo;
+        match['profesionalMatriculado'] = true;
     }
 
     if (req.query.rematriculado) {
-        opciones['rematriculado'] = true;
+        match['rematriculado'] = true;
     }
 
     if (req.query.matriculado) {
-        opciones['rematriculado'] = false;
+        match['rematriculado'] = false;
     }
-
+    if (req.query.especialidadCodigo) {
+        match2['formacionPosgrado.especialidad.codigo'] = parseInt(req.query.especialidadCodigo, 10);
+    }
+    if (req.query.profesionCodigo) {
+        match2['formacionGrado.profesion.codigo'] = parseInt(req.query.profesionCodigo, 10);
+    }
     let unwindOptions = {};
     let projections = {};
-    let match2 = {};
     if (req.query.tipoMatricula === 'grado') {
-        if (req.query.estado) {
-            opciones['formacionGrado.matriculado'] = (req.query.estado === 'Vigentes');
+        match['formacionGrado.matriculado'] = true;
+        match['formacionGrado.matriculacion.0'] = { $exists: true };
+
+        if (req.query.vencidas) {
+            match2['ultimaMatricula.fin'] = { $lte: new Date() };
         }
         if (req.query.bajaMatricula) {
-            opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
+            match2['ultimaMatricula.baja.fecha'] = { $nin: [null, ''] };
         }
-        if (req.query.profesionCodigo) {
-            opciones['formacionGrado.profesion.codigo'] = req.query.profesionCodigo;
-        }
-        match2 = { 'formacionGrado.matriculado': true, 'formacionGrado.matriculacion.0': { $exists: true } };
         unwindOptions = { path: '$formacionGrado' };
         projections = {
             habilitado: 1,
@@ -413,6 +412,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             fotoArchivo: 1,
             firmas: 1,
             incluidoSuperintendencia: 1,
+            formacionPosgrado: 1,
             'formacionGrado.profesion': 1,
             'formacionGrado.entidadFormadora': 1,
             'formacionGrado.titulo': 1,
@@ -437,16 +437,16 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         };
 
     } else {
-        if (req.query.estado) {
-            opciones['formacionPosgrado.matriculado'] = (req.query.estado === 'Vigentes');
-        }
+
+        match['formacionPosgrado.matriculado'] = true;
+        match['formacionPosgrado.matriculacion.0'] = { $exists: true };
         if (req.query.bajaMatricula) {
-            opciones['formacionPosgrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
+            match2['ultimaMatriculaPosgrado.baja.fecha'] = { $nin: [null, ''] };
         }
-        if (req.query.profesionCodigo) {
-            opciones['formacionPosgrado.profesion.codigo'] = req.query.profesionCodigo;
+        if (req.query.vencidas) {
+            match2['formacionPosgrado.tieneVencimiento'] = true;
+            match2['ultimaMatriculaPosgrado.fin'] = { $lte: new Date() };
         }
-        match2 = { 'formacionPosgrado.matriculado': true, 'formacionPosgrado.matriculacion.0': { $exists: true } };
         unwindOptions = { path: '$formacionPosgrado' };
         projections = {
             habilitado: 1,
@@ -466,6 +466,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             fotoArchivo: 1,
             firmas: 1,
             incluidoSuperintendencia: 1,
+            formacionGrado: 1,
             'formacionPosgrado.profesion': 1,
             'formacionPosgrado.institucionFormadora': 1,
             'formacionPosgrado.especialidad': 1,
@@ -496,29 +497,28 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
     if (req.query.fechaDesde && req.query.fechaHasta) {
         if (req.query.matriculasPorVencer) {
             if (req.query.tipoMatricula === 'grado') {
-                opcionesFecha['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
+                match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
                 { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
             } else {
-                opcionesFecha['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
+                match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
                 { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
             }
         } else if (req.query.matriculasPorVencer === false) {
             if (req.query.tipoMatricula === 'grado') {
-                opcionesFecha['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
+                { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
             } else {
-                opcionesFecha['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
+                { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
             }
         }
     }
 
     let pipeline = [];
-    pipeline.push({ $match: opciones });
-    pipeline.push({ $match: match2 });
+    pipeline.push({ $match: match });
     pipeline.push({ $unwind: unwindOptions });
     pipeline.push({ $project: projections });
-    pipeline.push({ $match: opcionesFecha });
+    pipeline.push({ $match: match2 });
     if (!req.query.exportarPlanillaCalculo) {
         const radix = 10;
         let skip = 0;
@@ -528,7 +528,6 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         pipeline.push({ $limit: limit });
         pipeline.push({ $skip: skip });
     }
-    console.log(JSON.stringify(pipeline));
     if (!req.query.exportarPlanillaCalculo) {
         const data = await profesional.aggregate(pipeline);
         try {
