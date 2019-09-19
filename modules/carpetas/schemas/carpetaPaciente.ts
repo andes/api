@@ -10,5 +10,7 @@ let carpetaPacienteSchema = new mongoose.Schema({
     }]
 });
 
+carpetaPacienteSchema.index({ documento: 1 });
+
 let carpetaPaciente = mongoose.model('carpetaPaciente', carpetaPacienteSchema, 'carpetaPaciente');
 export = carpetaPaciente;

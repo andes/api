@@ -49,7 +49,7 @@ export let profesionalSchema = new mongoose.Schema({
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
         exportadoSisa: Boolean,
-        fechaDeInscripcion : Date
+        fechaDeInscripcion: Date
     }],
     formacionPosgrado: [{
         profesion: { type: ObjSIISASchema, required: false },
@@ -125,5 +125,7 @@ profesionalSchema.virtual('fallecido').get(function () {
 });
 
 profesionalSchema.plugin(AuditPlugin);
+
+profesionalSchema.index({ documento: 1 });
 
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');

@@ -94,6 +94,12 @@ export const PrestamoSchema = new Schema({
 
 PrestamoSchema.plugin(AuditPlugin);
 
+PrestamoSchema.index({
+    'organizacion._id': 1,
+    numero: 1,
+    createdAt: -1
+});
+
 // Exportar modelo
 export const Prestamo: Model<IPrestamo> = model<IPrestamo>('prestamos', PrestamoSchema, 'prestamos');
 

@@ -189,4 +189,15 @@ schema.pre('save', function (next) {
 schema.plugin(AuditPlugin);
 schema.index({ 'solicitud.turno': 1 });
 
+schema.index({ 'solicitud.fecha': -1 });
+schema.index({ 'paciente.id': 1 });
+schema.index({
+    'solicitud.organizacion.id': 1,
+    'solicitud.ambitoOrigen': 1,
+    'ejecucion.fecha': 1,
+    'solicitud.tipoPrestacion.conceptId': 1
+});
+schema.index({ 'solicitud.auditoria.auditor.documento': 1 });
+
+
 export let model = mongoose.model('prestacion', schema, 'prestaciones');
