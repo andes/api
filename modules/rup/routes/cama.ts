@@ -149,66 +149,74 @@ router.delete('/camas/eliminarCama/:idCama', Auth.authenticate(), (req, res, nex
     });
 });
 
-router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
-    CamaModel.findById({
-        _id: req.params.idCama,
-    }, (err, data: any) => {
-        if (err) {
-            return next(err);
-        }
-
-        switch (req.body.op) {
-            case 'sector':
-                if (req.body.sector) {
-                    data.sector = req.body.sector;
-                }
-                break;
-            case 'habitacion':
-                if (req.body.habitacion) {
-                    data.habitacion = req.body.habitacion;
-                }
-                break;
-            case 'nombre':
-                if (req.body.nombre) {
-                    data.nombre = req.body.nombre;
-                }
-                break;
-            case 'cambioUnidadOrganizativa':
-                if (req.body.unidadOrganizativa) {
-                    data.unidadOrganizativa.push(req.body.unidadOrganizativa);
-                }
-                break;
-            case 'tipoCama':
-                if (req.body.tipoCama) {
-                    data.tipoCama = req.body.tipoCama;
-                }
-                break;
-            case 'equipamiento':
-                if (req.body.equipamiento) {
-                    data.equipamiento.push(req.body.equipamiento);
-                }
-                break;
-            case 'estado':
-                if (req.body.estado) {
-                    data.estados.push(req.body.estado);
-                    data.ultimoEstado = req.body.estado;
-                }
-                break;
-            default:
-                return next(500);
-        }
-
-        // agregamos audit a la organizacion
-        Auth.audit(data, req);
-        // guardamos organizacion
-        data.save((errUpdate) => {
-            if (errUpdate) {
-                return next(errUpdate);
+router.patch('/camas/:idCama', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const unaCama: any = await CamaModel.findById({ _id: req.params.idCama });
+        if (unaCama) {
+            switch (req.body.op) {
+                case 'sector':
+                    if (req.body.sector) {
+                        unaCama.sector = req.body.sector;
+                    }
+                    break;
+                case 'habitacion':
+                    if (req.body.habitacion) {
+                        unaCama.habitacion = req.body.habitacion;
+                    }
+                    break;
+                case 'nombre':
+                    if (req.body.nombre) {
+                        unaCama.nombre = req.body.nombre;
+                    }
+                    break;
+                case 'cambioUnidadOrganizativa':
+                    if (req.body.unidadOrganizativa) {
+                        unaCama.unidadOrganizativa.push(req.body.unidadOrganizativa);
+                    }
+                    break;
+                case 'tipoCama':
+                    if (req.body.tipoCama) {
+                        unaCama.tipoCama = req.body.tipoCama;
+                    }
+                    break;
+                case 'equipamiento':
+                    if (req.body.equipamiento) {
+                        unaCama.equipamiento.push(req.body.equipamiento);
+                    }
+                    break;
+                case 'estado':
+                    if (req.body.estado) {
+                        unaCama.estados.push(req.body.estado);
+                        unaCama.ultimoEstado = req.body.estado;
+                    }
+                    break;
+                case 'estadoCama':
+                    if (req.body.idEstado) {
+                        const estadoActual = unaCama.estados.find(e => e.id === req.body.idEstado);
+                        if (req.body.fecha) {
+                            estadoActual.fecha = req.body.fecha;
+                        }
+                    }
+                    break;
+                default:
+                    return next(500);
             }
-            res.json(data);
-        });
-    });
+
+            Auth.audit(unaCama, req);
+            unaCama.save((errUpdate) => {
+                if (errUpdate) {
+                    return next(errUpdate);
+                }
+                res.json(unaCama);
+            });
+        } else {
+            return next(404);
+        }
+    } catch (err) {
+        return next(err);
+    }
 });
+
 
 router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), async (req, res, next) => {
     try {
@@ -222,7 +230,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), async (req, res
             const ultimoEstado = unaCama.estados.find(e => new Date(e.fecha) < new Date(req.body.fecha));
             if (ultimoEstado) {
                 if (req.body.estado === ultimoEstado.estado) {
-                    unaCama.estados.push(req.body);
+                    // unaCama.estados.push(req.body);
                 } else {
                     switch (req.body.estado) {
                         case 'reparacion':
