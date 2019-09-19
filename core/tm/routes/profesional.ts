@@ -525,8 +525,8 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         let limit = 0;
         skip = parseInt(req.query.skip || 0, radix);
         limit = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-        pipeline.push({ $limit: limit });
         pipeline.push({ $skip: skip });
+        pipeline.push({ $limit: limit });
     }
     if (!req.query.exportarPlanillaCalculo) {
         const data = await profesional.aggregate(pipeline);
