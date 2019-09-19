@@ -54,19 +54,26 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
         [
             {
                 $match: {
-                    profesionalMatriculado: true
+                    $and: [
+                        {
+                            'formacionGrado.fechaDeInscripcion': {
+                                $gte: moment(fechaDesde).startOf('day').toDate(),
+                                $lte: moment(fechaHasta).endOf('day').toDate()
+                            }
+                        },
+                        { profesionalMatriculado: true }
+                    ]
                 }
             },
             {
                 $unwind: '$formacionGrado'
-            }
-            , {
+            },
+            {
                 $match: {
                     'formacionGrado.fechaDeInscripcion': {
                         $gte: moment(fechaDesde).startOf('day').toDate(),
                         $lte: moment(fechaHasta).endOf('day').toDate()
                     }
-
                 }
             },
 
@@ -76,72 +83,72 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
         let profesionalSisa = {};
 
         const unProfesional = datos[index];
-        profesionalSisa['id_profesional'] = '';
-        profesionalSisa['id_profesional_profesión'] = '';
-        profesionalSisa['id_profesional_matricula'] = '';
-        profesionalSisa['id_tipodoc'] = 1;
-        profesionalSisa['nrodoc'] = unProfesional.documento;
-        profesionalSisa['nombre'] = unProfesional.nombre;
-        profesionalSisa['apellido'] = unProfesional.apellido;
-        profesionalSisa['sexo'] = (unProfesional.sexo === 'femenino' || unProfesional.sexo === 'Femenino') ? 'F' : 'M';
-        profesionalSisa['fecha_nacimiento'] = moment(unProfesional.fechaNacimiento).format('DD/MM/YYYY');
-        profesionalSisa['id_país_nacimiento'] = '0';
-        profesionalSisa['id_loc_nacimiento'] = '0';
-        profesionalSisa['id_país'] = '0';
+        profesionalSisa['ID_PROFESIONAL'] = '';
+        profesionalSisa['ID_PROFESIONAL_PROFESION'] = '';
+        profesionalSisa['ID_PROFESIONAL_MATRICULA'] = '';
+        profesionalSisa['ID_TIPODOC'] = 1;
+        profesionalSisa['NRODOC'] = unProfesional.documento;
+        profesionalSisa['NOMBRE'] = unProfesional.nombre;
+        profesionalSisa['APELLIDO'] = unProfesional.apellido;
+        profesionalSisa['SEXO'] = (unProfesional.sexo === 'femenino' || unProfesional.sexo === 'Femenino') ? 'F' : 'M';
+        profesionalSisa['FECHA_NACIMIENTO'] = moment(unProfesional.fechaNacimiento).format('DD/MM/YYYY');
+        profesionalSisa['ID_PAIS_NACIMIENTO'] = '0';
+        profesionalSisa['ID_LOC_NACIMIENTO'] = '0';
+        profesionalSisa['ID_PAIS'] = '0';
         const domicilio = unProfesional.domicilios.find(x => x.tipo === 'real');
-        profesionalSisa['calle'] = domicilio ? domicilio.valor : '';
-        profesionalSisa['calle_nro'] = '-';
-        profesionalSisa['calle_piso'] = '-';
-        profesionalSisa['calle_dpto'] = '-';
-        profesionalSisa['id_localidad'] = '15';
-        profesionalSisa['id_provincia'] = '0';
-        profesionalSisa['id_pais_domicilio'] = '200';
+        profesionalSisa['CALLE'] = domicilio ? domicilio.valor : '';
+        profesionalSisa['CALLE_NRO'] = '-';
+        profesionalSisa['CALLE_PISO'] = '-';
+        profesionalSisa['CALLE_DPTO'] = '-';
+        profesionalSisa['ID_LOCALIDAD_DOMICILIO'] = '0';
+        profesionalSisa['ID_PROVINCIA_DOMICILIO'] = '15';
+        profesionalSisa['ID_PAIS_DOMICILIO'] = '200';
         const tel_celular = unProfesional.contactos.find(x => x.tipo === 'celular' && x.valor);
         const tel_fijo = unProfesional.contactos.find(x => x.tipo === 'fijo' && x.valor);
         const email = unProfesional.contactos.find(x => x.tipo === 'email' && x.valor);
-        profesionalSisa['tiene_teléfono'] = (tel_celular || tel_fijo || email) ? 'SI' : 'NO';
-        profesionalSisa['id_tipo_tel1'] = tel_celular ? '1' : '';
-        profesionalSisa['id_tipo_tel2'] = tel_fijo ? '2' : '';
-        profesionalSisa['id_tipo_tel3'] = '';
-        profesionalSisa['id_tipo_tel4'] = '';
-        profesionalSisa['tel1'] = tel_celular ? tel_celular.valor : '';
-        profesionalSisa['tel2'] = tel_fijo ? tel_fijo.valor : '';
-        profesionalSisa['tel3'] = '';
-        profesionalSisa['tel4'] = '';
-        profesionalSisa['libro'] = '';
-        profesionalSisa['folio'] = '';
-        profesionalSisa['acta'] = '';
-        profesionalSisa['expediente'] = '';
-        profesionalSisa['email'] = email ? email.valor : '';
-        profesionalSisa['email2'] = '';
-        profesionalSisa['cuil'] = unProfesional.cuit ? unProfesional.cuit : '';
+        profesionalSisa['TIENE_TELEFONO'] = (tel_celular || tel_fijo || email) ? 'SI' : 'NO';
+        profesionalSisa['ID_TIPO_TE1'] = tel_fijo ? '1' : '';
+        profesionalSisa['ID_TIPO_TE2'] = tel_celular ? '2' : '';
+        profesionalSisa['ID_TIPO_TE3'] = '';
+        profesionalSisa['ID_TIPO_TE4'] = '';
+        profesionalSisa['TE1'] = tel_fijo ? tel_fijo.valor : '';
+        profesionalSisa['TE2'] = tel_celular ? tel_celular.valor : '';
+        profesionalSisa['TE3'] = '';
+        profesionalSisa['TE4'] = '';
+        profesionalSisa['LIBRO'] = '';
+        profesionalSisa['FOLIO'] = '';
+        profesionalSisa['ACTA'] = '';
+        profesionalSisa['EXPEDIENTE'] = '';
+        profesionalSisa['EMAIL'] = email ? email.valor : '';
+        profesionalSisa['EMAIL2'] = '';
+        profesionalSisa['CUIL'] = unProfesional.cuit ? unProfesional.cuit : '';
         let fallecido = unProfesional.fechaFallecimiento ? 'SI' : 'NO';
-        profesionalSisa['fallecido'] = fallecido;
-        profesionalSisa['fecha_fallecido'] = fallecido === 'SI' ? unProfesional.fecha_fallecido : '';
-        profesionalSisa['habilitado'] = unProfesional.habilitado && unProfesional.habilitado === true ? 'SI' : 'NO';
-        let profesionDeReferencia: any = await profesion.find({ codigo: unProfesional.formacionGrado.profesion.codigo }, (data: any) => { return data; });
-        profesionalSisa['id_profesión_referencia'] = profesionDeReferencia.profesionCodigoRef ? profesionDeReferencia.profesionCodigoRef : '';
-        profesionalSisa['id_profesión'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.profesion) ? unProfesional.formacionGrado.profesion.codigo : '';
-        profesionalSisa['titulo'] = unProfesional.formacionGrado ? unProfesional.formacionGrado.titulo : '';
-        let codigoInstitucion = unProfesional.formacionGrado ? unProfesional.formacionGrado.entidadFormadora.codigo : '';
-        profesionalSisa['id_institución_formadora'] = codigoInstitucion;
-        profesionalSisa['fecha_titulo'] = moment(unProfesional.formacionGrado.fechaEgreso).format('DD/MM/YYYY');
-        profesionalSisa['id_institución_sede'] = '';
-        profesionalSisa['revalida'] = 'NO';
-        profesionalSisa['id_institución_revalida'] = '';
-        profesionalSisa['fecha_revalida'] = '';
-        profesionalSisa['id_provincia_matricula'] = '15';
-        profesionalSisa['matricula'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.matriculacion) ? unProfesional.formacionGrado.matriculacion[unProfesional.formacionGrado.matriculacion.length - 1].matriculaNumero : '';
-        profesionalSisa['fecha_matricula'] = moment(unProfesional.formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY');
-        profesionalSisa['id_situación_matricula'] = '';
-        profesionalSisa['comentario'] = '';
-        profesionalSisa['sss'] = '';
-        profesionalSisa['sss_certificado'] = '';
-        profesionalSisa['sss_fecha'] = '';
-        profesionalSisa['id_sss_provincia'] = '';
-        profesionalSisa['id_sss_provincia2'] = '';
-        profesionalSisa['id_sss_provincia3'] = '';
-        profesionalSisa['rematriculación'] = unProfesional.rematriculado === 1 ? 'SI' : 'NO';
+        profesionalSisa['FALLECIDO'] = fallecido;
+        profesionalSisa['FECHA_FALLECIDO'] = fallecido === 'SI' ? unProfesional.fecha_fallecido : '';
+        profesionalSisa['HABILITADO'] = 'SI';
+        let profesionDeReferencia: any = await profesion.findOne({ codigo: unProfesional.formacionGrado.profesion.codigo });
+        profesionalSisa['ID_PROFESION_REFERENCIA'] = (profesionDeReferencia && profesionDeReferencia.profesionCodigoRef) ? profesionDeReferencia.profesionCodigoRef : '';
+        profesionalSisa['ID_PROFESION'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.profesion) ? unProfesional.formacionGrado.profesion.codigo : '';
+        profesionalSisa['TITULO'] = unProfesional.formacionGrado ? unProfesional.formacionGrado.titulo : '';
+        let codigoInstitucion = unProfesional.formacionGrado ? unProfesional.formacionGrado.entidadFormadora.codigo : '0';
+        profesionalSisa['ID_INSTITUCION_FORMADORA'] = codigoInstitucion;
+        profesionalSisa['FECHA_TITULO'] = moment(unProfesional.formacionGrado.fechaEgreso).format('DD/MM/YYYY');
+        profesionalSisa['ID_INSTITUCION_SEDE'] = '';
+        profesionalSisa['REVALIDA'] = 'NO';
+        profesionalSisa['ID_INSTITUCION_REVALIDA'] = '';
+        profesionalSisa['FECHA_REVALIDA'] = '';
+        profesionalSisa['ID_PROVINCIA_MATRICULA'] = '15';
+        profesionalSisa['MATRICULA'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.matriculacion) ? unProfesional.formacionGrado.matriculacion[unProfesional.formacionGrado.matriculacion.length - 1].matriculaNumero : '';
+        profesionalSisa['FECHA_MATRICULA'] = moment(unProfesional.formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY');
+        profesionalSisa['ID_SITUACION_MATRICULA'] = '1';
+        profesionalSisa['COMENTARIO'] = '';
+        profesionalSisa['SSS'] = 'NO';
+        profesionalSisa['SSS_CERTIFICADO'] = '';
+        profesionalSisa['SSS_FECHA'] = '';
+        profesionalSisa['ID_SSS_PROVINCIA'] = '';
+        profesionalSisa['ID_SSS_PROVINCIA2'] = '';
+        profesionalSisa['ID_SSS_PROVINCIA3'] = '';
+        profesionalSisa['REMATRICULACION'] = 'NO';
         profesionaleSisaTotal.push(profesionalSisa);
     }
 
