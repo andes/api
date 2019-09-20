@@ -1147,6 +1147,12 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
             if (req.body.agente) {
                 resultado.agenteMatriculador = req.body.agente;
             }
+            if (req.body.profesionExterna) {
+                resultado.profesionExterna = req.body.profesionExterna;
+            }
+            if (req.body.matriculaExterna) {
+                resultado.matriculaExterna = req.body.matriculaExterna;
+            }
         }
 
         Auth.audit(resultado, req);
