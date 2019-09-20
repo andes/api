@@ -1269,8 +1269,7 @@ function createResponseArray(matriculas: any[], req: any) {
             prof['fechaBaja1'] = matriculas[i].ultimaMatricula && matriculas[i].ultimaMatricula.baja && matriculas[i].ultimaMatricula.baja.fecha ? moment(matriculas[i].ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
             prof['motivoBaja1'] = matriculas[i].ultimaMatricula && matriculas[i].ultimaMatricula.baja ? matriculas[i].ultimaMatricula.baja.motivo : '';
             prof['fechaInscripcion1'] = matriculas[i].formacionGrado ? moment(matriculas[i].formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY') : '';
-        }
-        else {
+        } else {
             // formacionPosgrado1
             prof['especialidad1'] = matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.especialidad.nombre : '';
             prof['matriculaPNumero1'] = matriculas[i].ultimaMatriculaPosgrado ? matriculas[i].ultimaMatriculaPosgrado.matriculaNumero : '';
@@ -1308,8 +1307,7 @@ function createResponseArray(matriculas: any[], req: any) {
                 let minRanking = Math.min.apply(null, celulares.map(cel => cel.ranking));
                 let celular = minRanking ? celulares.find(cel => cel.ranking === minRanking) : celulares[0];
                 prof['celular'] = celular ? celular.valor : '';
-            }
-            else {
+            } else {
                 prof['celular'] = '';
             }
             let emails = matriculas[i].contactos.filter(contacto => contacto.tipo === 'email');
@@ -1317,8 +1315,7 @@ function createResponseArray(matriculas: any[], req: any) {
                 let minRanking = Math.min.apply(null, emails.map(mail => mail.ranking));
                 let email = minRanking ? emails.find(mail => mail.ranking === minRanking) : emails[0];
                 prof['email'] = email ? email.valor : '';
-            }
-            else {
+            } else {
                 prof['email'] = '';
             }
             let fijos = matriculas[i].contactos.filter(contacto => contacto.tipo === 'fijo');
@@ -1326,12 +1323,10 @@ function createResponseArray(matriculas: any[], req: any) {
                 let minRanking = Math.min.apply(null, fijos.map(fij => fij.ranking));
                 let fijo = minRanking ? fijos.find(fij => fij.ranking === minRanking) : fijos[0];
                 prof['fijo'] = fijo ? fijo.valor : '';
-            }
-            else {
+            } else {
                 prof['fijo'] = '';
             }
-        }
-        else {
+        } else {
             prof['celular'] = '';
             prof['email'] = '';
             prof['fijo'] = '';
