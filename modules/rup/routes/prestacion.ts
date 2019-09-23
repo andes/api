@@ -284,7 +284,7 @@ router.get('/prestaciones/solicitudes', async (req, res, next) => {
 
         if (req.query.estados) {
             pipeline.push({ $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } });
-            pipeline.push({ $match: {'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } }});
+            pipeline.push({ $match: { 'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } } });
         }
 
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
@@ -375,7 +375,7 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
         if (req.query.idPaciente) {
             let { paciente } = await buscarPaciente(req.query.idPaciente);
             if (paciente) {
-                query.where('paciente.id').in(paciente.vinculos);
+                query.where({ $or: [{ 'paciente.id': { $in: paciente.vinculos } }, { 'ejecucion.registros.valor.informe.pacientes.id': { $eq: paciente.id } }] });
             }
         }
         if (req.query.idPrestacionOrigen) {
