@@ -797,7 +797,7 @@ export function actualizarEstadoAgendas(start, end) {
             turnos = turnos.concat(agenda.sobreturnos);
         }
         todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
-        todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
+        todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && t.auditable === true && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
 
         if (todosAsistencia) {
             if (todosAuditados) {
