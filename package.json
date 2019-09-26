@@ -38,6 +38,7 @@
     "events": "^1.1.1",
     "express": "^4.16.3",
     "express-query-boolean": "^2.0.0",
+    "fast-csv": "^2.5.0",
     "geojson": "^0.4.1",
     "gridfs-stream": "^1.1.1",
     "handlebars": "^4.1.0",

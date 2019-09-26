@@ -670,17 +670,68 @@ router.get('/integracionCitasHPN', async (req, res, next) => {
 });
 
 router.post('/dashboard', async (req, res, next) => {
+    const permisos: any = {};
+    let tipoPrestacion = Auth.getPermissions(req, 'dashboard:citas:tipoPrestacion:?');
+    if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
+        permisos.tipoPrestacion = tipoPrestacion;
+    }
+
     try {
-        const stats = await AgendasEstadisticas.estadisticas(req.body);
+        const stats = await AgendasEstadisticas.estadisticas(req.body, permisos);
         return res.json(stats);
     } catch (err) {
         return next(err);
     }
 });
 
-router.post('/dashboard/localidades', async (req, res, next) => {
+router.post('/dashboard/descargarCsv', async (req, res, next) => {
+    const csv = require('fast-csv');
+    const fs = require('fs');
+    let ws = fs.createWriteStream('/tmp/dashboard.csv', { encoding: 'utf8' });
+
     try {
-        const stats = await AgendasEstadisticas.filtroPorCiudad(req.body);
+        csv
+            .write(req.body, { headers: true, transform: (row) => {
+                return {
+                    Nombre: row.nombre,
+                    Cantidad: row.count,
+                    '': '',
+                    'Consulta de': row.tipoDeFiltro ? row.tipoDeFiltro.toUpperCase() : '',
+                    Organización: row.organizacion ? (req as any).user.organizacion.nombre : '',
+                    'Fecha Desde': row.fechaDesde ? moment(row.fechaDesde).format('DD-MM-YYYY') : '',
+                    'Fecha Hasta': row.fechaHasta ? moment(row.fechaHasta).format('DD-MM-YYYY') : '',
+                    Prestación: row.prestacion ? row.prestacion.map(pr => pr.nombre) : '',
+                    Profesional: row.profesional ? row.profesional : '',
+                    'Tipo de Turno': (row.tipoTurno && row.tipoDeFiltro === 'turno') ? row.tipoTurno : '',
+                    Estado: (row.estado_agenda || row.estado_turno) ? (row.estado_agenda ? row.estado_agenda : row.estado_turno) : ''
+                };
+            }})
+            .pipe(ws)
+            .on('finish', () => {
+                res.download(('/tmp/dashboard.csv' as string), (err) => {
+                    if (err) {
+                        next(err);
+                        // fs.unlink('/tmp/my.csv');
+                    } else {
+                        next();
+                        // fs.unlink('/tmp/my.csv');
+                    }
+                });
+            });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.post('/dashboard/localidades', async (req, res, next) => {
+    const permisos: any = {};
+    let tipoPrestacion = Auth.getPermissions(req, 'dashboard:citas:tipoPrestacion:?');
+    if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
+        permisos.tipoPrestacion = tipoPrestacion;
+    }
+
+    try {
+        const stats = await AgendasEstadisticas.filtroPorCiudad(req.body, permisos);
         return res.json(stats);
     } catch (err) {
         return next(err);
