@@ -6,7 +6,6 @@ export interface ITipoPrestacion extends Document {
     term: String;
     fsn: String;
     semanticTag: 'procedimiento' | 'solicitud' | 'hallazgo' | 'trastorno' | 'antecedenteFamiliar' | 'régimen/tratamiento';
-
 }
 
 

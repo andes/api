@@ -600,6 +600,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'pendienteAuditoria':
                     case 'pendienteAsistencia':
                     case 'auditada':
+                        agendaCtrl.actualizarEstado(req, data);
+                        event = { object: 'agenda', accion: 'estado', data };
+                        break;
                     case 'borrada':
                         agendaCtrl.actualizarEstado(req, data);
                         event = { object: 'agenda', accion: 'estado', data };

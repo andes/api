@@ -799,20 +799,22 @@ export function actualizarEstadoAgendas(start, end) {
         todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
         todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && t.auditable === true && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
 
-        if (todosAsistencia) {
-            if (todosAuditados) {
-                agenda.estado = 'auditada';
-                actualizarAux(agenda);
+        if (agenda.nominalizada) {
+            if (todosAsistencia) {
+                if (todosAuditados) {
+                    agenda.estado = 'auditada';
+                    actualizarAux(agenda);
+                } else {
+                    if (agenda.estado !== 'pendienteAuditoria') {
+                        agenda.estado = 'pendienteAuditoria';
+                        actualizarAux(agenda);
+                    }
+                }
             } else {
-                if (agenda.estado !== 'pendienteAuditoria') {
-                    agenda.estado = 'pendienteAuditoria';
+                if (agenda.estado !== 'pendienteAsistencia') {
+                    agenda.estado = 'pendienteAsistencia';
                     actualizarAux(agenda);
                 }
-            }
-        } else {
-            if (agenda.estado !== 'pendienteAsistencia') {
-                agenda.estado = 'pendienteAsistencia';
-                actualizarAux(agenda);
             }
         }
     });
