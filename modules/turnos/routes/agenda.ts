@@ -381,43 +381,51 @@ router.post('/agenda/clonar', (req, res, next) => {
                                 turno.idPrestacionPaciente = null;
                                 turno.nota = null;
                                 turno._id = mongoose.Types.ObjectId();
+                                turno.diagnostico = { codificaciones: [] };
                                 turno.tipoTurno = undefined;
                                 turno.updatedAt = undefined;
                                 turno.updatedBy = undefined;
-                                turno.diagnostico = { codificaciones: [] };
                                 turno.reasignado = undefined;
                             });
+                            if (nueva.nominalizada) {
+                                bloque.turnos.forEach((turno, index1) => {
+                                    turno.tipoPrestacion = null;
+                                    turno.idPrestacionPaciente = null;
+                                    turno.paciente = null;
+                                    turno.nota = null;
+                                });
+                            }
                         } else {
                             bloque.turnos = [];
                         }
-                    });
-                    nueva['estado'] = 'planificacion';
-                    nueva['sobreturnos'] = [];
-                    Auth.audit(nueva, req);
-                    listaSaveAgenda.push(
-                        agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
-                            // Ver si es necesario especificar que fue una agenda clonada
-                            EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
+                        nueva['estado'] = 'planificacion';
+                        nueva['sobreturnos'] = [];
+                        Auth.audit(nueva, req);
+                        listaSaveAgenda.push(
+                            agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
+                                // Ver si es necesario especificar que fue una agenda clonada
+                                EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
 
-                            Logger.log(req, 'citas', 'insert', {
-                                accion: 'Clonar Agenda',
-                                ruta: req.url,
-                                method: req.method,
-                                data: nuevaAgenda,
-                                err: err || false
-                            });
-                        }).catch(error => {
-                            return (error);
-                        })
-                    );
+                                Logger.log(req, 'citas', 'insert', {
+                                    accion: 'Clonar Agenda',
+                                    ruta: req.url,
+                                    method: req.method,
+                                    data: nuevaAgenda,
+                                    err: err || false
+                                });
+                            }).catch(error => {
+                                return (error);
+                            })
+                        );
+                    });
                 }
-            });
+            }); // clones.forEach
             Promise.all(listaSaveAgenda).then(resultado => {
                 EventCore.emitAsync('citas:agenda:clone', data);
                 res.json(resultado);
             }).catch(error => { return next(error); });
-        });
-    }
+        }); // find
+    } // idagenda
 });
 
 router.put('/agenda/:id', async (req, res, next) => {
