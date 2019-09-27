@@ -424,6 +424,7 @@ export class Documento {
                 let registro: any = req.body.idRegistro ? prestacion.ejecucion.registros.find(y => y.id === req.body.idRegistro) : null;
 
                 // Títulos default
+                let tituloFechaSolicitud = 'Fecha Solicitud';
                 let tituloFechaEjecucion = 'Fecha Ejecución';
                 let tituloFechaValidacion = 'Fecha Validación';
 
@@ -541,40 +542,43 @@ export class Documento {
                         .replace('<!--nroCarpeta-->', (carpeta && carpeta.nroCarpeta ? carpeta.nroCarpeta : 'sin número de carpeta'))
                         .replace(/(<!--organizacionNombreSolicitud-->)/g, prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>'))
                         .replace('<!--orgacionacionDireccionSolicitud-->', orgacionacionDireccionSolicitud)
-                        .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'))
                         .replace('<!--profesionalSolicitud-->', profesionalSolicitud);
 
-                    let fechaEjecucion = new Date(prestacion.estados.find(x => x.tipo === 'ejecucion').createdAt);
-                    let fechaValidacion = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
+                    let fechaSolicitud: any = '';
+                    let fechaEjecucion: any = new Date(prestacion.estados.find(x => x.tipo === 'ejecucion').createdAt);
+                    let fechaValidacion: any = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
 
                     // BODY
 
                     if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
                         const valor = prestacion.ejecucion.registros[0].valor;
-                        const fechaIngreso = valor && valor.fechaDesde ? moment(valor.fechaDesde).format('DD/MM/YYYY') : null;
-                        const fechaEgreso = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') : null;
-                        const unidadOrganizativa = valor && valor.unidadOrganizativa ? valor.unidadOrganizativa.term : null;
-                        if (fechaIngreso) {
-                            html = html.replace('<!--fechaIngreso-->', '<b> Ingreso: </b>' + fechaIngreso + '&nbsp;&nbsp;&nbsp;');
-                        }
-                        if (fechaEgreso) {
-                            html = html.replace('<!--fechaEgreso-->', '<b> Egreso: </b>' + fechaEgreso + '&nbsp;&nbsp;&nbsp;');
-                        }
+                        fechaEjecucion = valor && valor.fechaDesde ? moment(valor.fechaDesde).format('DD/MM/YYYY') + ' hs' : null;
+                        fechaValidacion = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') + ' hs' : null;
+                        const unidadOrganizativa = valor && valor.unidadOrganizativa ? this.ucaseFirst(valor.unidadOrganizativa.term) : null;
+
+                        tituloFechaSolicitud = '';
+                        tituloFechaEjecucion = 'Fecha Ingreso';
+                        tituloFechaValidacion = 'Fecha Egreso';
+
                         if (unidadOrganizativa) {
-                            html = html.replace('<!--unidadOrganizativa-->', '<b> Servicio: </b>' + unidadOrganizativa + '&nbsp;&nbsp;&nbsp;');
+                            tituloFechaSolicitud = 'Servicio';
+                            fechaSolicitud = unidadOrganizativa;
                         }
 
+                    } else {
+                        tituloFechaSolicitud = 'Fecha Solicitud';
+                        fechaSolicitud = moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs';
+                        fechaEjecucion = moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs';
+                        fechaValidacion = moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs';
                     }
 
-
                     html = html.replace('<!--tipoPrestacion-->', tipoPrestacion)
-                        .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs')
+                        .replace('<!--tituloFechaSolicitud-->', tituloFechaSolicitud)
                         .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
                         .replace('<!--tituloFechaValidacion-->', tituloFechaValidacion)
-                        .replace('<!--fechaEjecucion-->', moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs')
-                        .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
+                        .replace('<!--fechaEjecucion-->', fechaEjecucion)
+                        .replace('<!--fechaValidacion-->', fechaValidacion)
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
-                        // .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
                         .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).join('') : this.informeRegistros);
                     // FOOTER
                     html = html
@@ -582,10 +586,10 @@ export class Documento {
                         .replace('<!--usuario-->', Auth.getUserName(req))
                         .replace(/(<!--fechaActual-->)/g, moment().format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--profesionalValidacion-->', profesionalValidacion)
-                        .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
+                        .replace('<!--fechaValidacion-->', fechaValidacion)
                         .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
                         .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
-                        .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'));
+                        .replace('<!--fechaSolicitud-->', fechaSolicitud);
 
                     if (firmaProfesional) {
                         html = html.replace('<!--firma1-->', `<img src="data:image/png;base64,${firmaProfesional}">`);
@@ -594,7 +598,6 @@ export class Documento {
                     if (config.informe && motivoPrincipalDeConsulta) {
                         html = html
                             .replace('<!--motivoPrincipalDeConsulta-->', motivoPrincipalDeConsulta);
-
                     }
 
                     // Se carga logo del efector, si no existe se muestra el nombre del efector como texto
@@ -733,18 +736,10 @@ export class Documento {
 
                     await this.generarHTML(req).then(async htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();
-                        fs.writeFileSync('/tmp/test.html', htmlPDF);
                         await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
-                            // async
-                            // const pdf2 = await htmlPdf.create(htmlPDF, options);
-                            // await pdf2.toFile('/tmp/test.pdf');
-                            // const base64 = pdf2.toBase64();
-                            // const buffer = pdf2.toBuffer();
-
                             if (err2) {
                                 reject(err2);
                             }
-
                             resolve(file.filename);
 
                         });
