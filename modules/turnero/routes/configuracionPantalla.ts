@@ -162,9 +162,9 @@ EventCore.on(/turnero-(.*)/, function (data) {
 EventSocket.on('turnero-proximo-llamado', async (paquete: Packet) => {
     try {
         const turno = paquete.data;
-        const espacioFisico = ObjectId(turno.espacioFisico.id);
+        const espacioFisico = ObjectId(turno.espacioFisico._id);
         const pantallas = await TurneroPantallaModel.find({
-            'espaciosFisicos.id': espacioFisico
+            'espaciosFisicos._id': espacioFisico
         });
         pantallas.forEach((pantalla) => {
             paquete.toRoom(`turnero-pantalla-${pantalla.id}`, 'mostrar-turno', turno);
