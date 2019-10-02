@@ -1,5 +1,5 @@
 import { userScheduler } from '../../../config.private';
-import * as pacienteModel from '../schemas/paciente';
+import { paciente } from '../schemas/paciente';
 import { matchSisa } from '../../../utils/servicioSisa';
 import * as controllerPaciente from './paciente';
 import * as debug from 'debug';
@@ -18,7 +18,7 @@ export async function mpiCorrector(done) {
         reportarError: true
     };
     try {
-        const pacientesReportados = await pacienteModel.pacienteMpi.find(condicion);
+        const pacientesReportados = await paciente.find(condicion);
         let doc: any;
         logger('llamada mpiCorrector ', pacientesReportados.length);
         for (doc of pacientesReportados) {
@@ -32,11 +32,11 @@ export async function mpiCorrector(done) {
     done();
 }
 
-async function consultarSisa(pacienteMpi: any) {
+async function consultarSisa(persona: any) {
     try {
-        logger('Inicia Consulta Sisa', pacienteMpi.documento);
+        logger('Inicia Consulta Sisa', persona.documento);
         // realiza la consulta con sisa y devuelve los resultados del matcheo
-        const resultado = await matchSisa(pacienteMpi);
+        const resultado = await matchSisa(persona);
 
 
         if (resultado) {
@@ -44,7 +44,7 @@ async function consultarSisa(pacienteMpi: any) {
             const pacienteSisa = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
             if (match >= 95) {
                 // Solo lo validamos con sisa si entra por aquí
-                await actualizarPaciente(pacienteMpi, pacienteSisa);
+                await actualizarPaciente(persona, pacienteSisa);
                 return true;
             } else {
                 // POST/PUT en una collection pacienteRejected para un control a posteriori
@@ -52,7 +52,7 @@ async function consultarSisa(pacienteMpi: any) {
                 const data = {
                     reportarError: 'false',
                 };
-                await controllerPaciente.updatePaciente(pacienteMpi, data, userScheduler);
+                await controllerPaciente.updatePaciente(persona, data, userScheduler);
             }
         }
         return false;
@@ -62,44 +62,6 @@ async function consultarSisa(pacienteMpi: any) {
     }
 }
 
-/*
-[REVISAR]
-function nuevoPacienteRejected(pacienteAndes: any) {
-    let pacienteMatch = new pacienteRejected();
-    pacienteMatch.id = pacienteAndes._id;
-    pacienteMatch['documento'] = pacienteAndes.documento;
-    pacienteMatch['nombre'] = pacienteAndes.nombre;
-    pacienteMatch['apellido'] = pacienteAndes.apellido;
-    pacienteMatch['sexo'] = pacienteAndes.sexo;
-    pacienteMatch['fechaNacimiento'] = pacienteAndes.fechaNacimiento;
-    pacienteRejected.findById(pacienteAndes.id).then((pac) => {
-        if (pac) {
-            pacienteMatch = pac;
-        }
-        pacienteMatch['porcentajeMatch'] = [{
-            entidad: 'Sisa',
-            match: pacienteAndes.matchSisa
-        }];
-        pacienteMatch.save()
-            .catch(err => {
-                logger('Error', err);
-            });
-        // Flag reportarError en false para que no se consulte infinitamente el con pacientes que no dan match
-        let data = {
-            reportarError: 'false',
-        };
-        controllerPaciente.updatePaciente(pacienteAndes, data, userScheduler)
-            .catch(err => {
-                logger('Error', err);
-                return err;
-            });
-    }).catch(err => {
-        logger('Error', err);
-        return err;
-    });
-}
-
-*/
 function actualizarPaciente(pacienteMpi: any, pacienteSisa: any) {
     if (!pacienteMpi.entidadesValidadoras.includes('Sisa')) {
         // Para que no vuelva a insertar la entidad si ya se registro por ella.
