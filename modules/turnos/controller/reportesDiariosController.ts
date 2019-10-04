@@ -10,7 +10,7 @@ export async function getResumenDiarioMensual(params: any) {
     let y = params['anio'];
     let m = params['mes'] - 1;
     let firstDay = new Date(y, m, 1);
-    let lastDay = new Date(y, m + 1, 0);
+    let lastDay = new Date(y, m + 1, 1);
 
     pipeline = [
         {
@@ -25,7 +25,7 @@ export async function getResumenDiarioMensual(params: any) {
             $match: {
                 'solicitud.fecha': {
                     $gte: firstDay,
-                    $lte: lastDay
+                    $lt: lastDay
                 },
                 'solicitud.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
                 'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['prestacion']),
