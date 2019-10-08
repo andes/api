@@ -22,12 +22,11 @@ export async function getCarpetasSolicitud(req) {
     const horaInicio = query.fechaDesde;
     const horaFin = query.fechaHasta;
 
-
-    // [TODO] Paralelizar la busquedas de turnos, sobreturnos y solicitudesManuales
-    const solicitudesManuales = await getSolicitudCarpetaManual({ organizacionId: organizacion, tipoPrestacionId: tipoPrestacion, espacioFisicoId: espacioFisico, profesionalId: profesional });
-    const agendas = await buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin);
-    const agendasSobreturno = await buscarAgendasSobreturnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin);
-
+    const [solicitudesManuales, agendas, agendasSobreturno] = await Promise.all([
+        getSolicitudCarpetaManual({ organizacionId: organizacion, tipoPrestacionId: tipoPrestacion, espacioFisicoId: espacioFisico, profesionalId: profesional }),
+        buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin),
+        buscarAgendasSobreturnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin)
+    ]);
 
     const nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales);
 
