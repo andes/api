@@ -1,4 +1,3 @@
-import { log } from './../../../core/log/schemas/log';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
@@ -515,13 +514,20 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
     }
 });
 
-router.post('/prestaciones', (req, res, next) => {
+router.post('/prestaciones', async (req, res, next) => {
     let dto = parseDate(JSON.stringify(req.body));
+
+    if (req.body.solicitud && req.body.solicitud.turno) {
+        let prestacionExistente = await Prestacion.find({ 'solicitud.turno': req.body.solicitud.turno });
+        if (prestacionExistente.length) {
+            return next('La prestación ya ha sido iniciada.');
+        }
+    }
     const data = new Prestacion(dto);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
-            return next(err);
+            return next('No fue posible crear la prestación');
         }
         res.json(data);
         EventCore.emitAsync('rup:prestacion:create', data);
