@@ -260,7 +260,8 @@ export const consolidadoPecas = {
 };
 
 export const fueraAgendaPecas = {
-      auth: {
+
+    auth: {
         user: '',
         password: ''
     },
