@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 
-export let WebHookSchema = new mongoose.Schema({
+export const WebHookSchema = new mongoose.Schema({
+    name: String,
     event: String,
     url: String,
     method: {
@@ -11,12 +12,16 @@ export let WebHookSchema = new mongoose.Schema({
     headers: mongoose.SchemaTypes.Mixed, // for Token AUTH
     data: mongoose.SchemaTypes.Mixed, // a projections of data to send
     filters: [mongoose.SchemaTypes.Mixed], // posibles filtros filtros
-
+    transform: {
+        type: String,
+        required: false
+    },
+    active: Boolean
 }, { timestamps: true });
 
-export let WebHook = mongoose.model('webhook', WebHookSchema, 'webhook');
+export const WebHook = mongoose.model('webhook', WebHookSchema, 'webhook');
 
-export let WebHookLogSchema = new mongoose.Schema({
+export const WebHookLogSchema = new mongoose.Schema({
     event: String,
     url: String,
     method: {
@@ -29,8 +34,6 @@ export let WebHookLogSchema = new mongoose.Schema({
     subscriptionId: mongoose.SchemaTypes.ObjectId,
     status: Number,
     response: mongoose.SchemaTypes.Mixed
-
-
 }, { timestamps: true });
 
 export let WebHookLog = mongoose.model('webhookLog', WebHookLogSchema, 'webhookLog');
