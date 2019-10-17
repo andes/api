@@ -8,6 +8,8 @@ import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express, Router } from 'express';
 import { AndesDrive } from '@andes/drive';
+import { apiOptionsMiddleware } from '@andes/api-tool';
+
 
 const requireDir = require('require-dir');
 
@@ -24,6 +26,8 @@ export function initAPI(app: Express) {
     app.use(bodyParser.urlencoded({
         extended: true
     }));
+    app.use(apiOptionsMiddleware);
+
     app.all('*', (req, res, next) => {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
@@ -55,6 +59,9 @@ export function initAPI(app: Express) {
         }
     }
 
+    app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').UsuariosRouter);
+    app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').PerfilesRouter);
+
     /**
      * Inicializa las rutas para adjuntar archivos
      */
@@ -80,7 +87,7 @@ export function initAPI(app: Express) {
                     e = new Error(err);
                     (e as any).status = 400;
                     err = e;
-                } else {
+                } else if (!err.status) {
                     err.status = 500;
                 }
             }

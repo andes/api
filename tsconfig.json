@@ -12,10 +12,15 @@
         "allowUnusedLabels": false,
         "baseUrl": ".",
         "paths": {
-            "@andes/event-bus/*": ["./packages/event-bus/*"],
-            "@andes/mongoose-plugin-audit/*": ["./packages/mongoose-plugin-audit/*"],
-            "@andes/fhir/*": ["./packages/fhir/*"],
-            "@andes/drive/*": ["./packages/drive/*"]
+            "@andes/event-bus/*": [
+                "./packages/event-bus/*"
+            ],
+            "@andes/fhir/*": [
+                "./packages/fhir/*"
+            ],
+            "@andes/drive/*": [
+                "./packages/drive/*"
+            ]
         },
         "typeRoots": [
             "node_modules/@types",

@@ -119,12 +119,6 @@ export const modules = {
         route: '/modules/fuentesAutenticas',
         middleware: appMiddleware
     },
-    usuarios: {
-        active: true,
-        path: './modules/usuarios/routes',
-        route: '/modules/usuarios',
-        middleware: appMiddleware
-    },
     matriculaciones: {
         active: true,
         path: './modules/matriculaciones/routes',
@@ -217,7 +211,6 @@ export const modules = {
         active: true,
         path: './modules/georeferencia/routes',
         route: '/modules/georeferencia',
-        middleware: appMiddleware
     }
 };
 
@@ -345,5 +338,21 @@ export const logKeys = {
     regexChecker: {
         key: 'mpi:regexChecker',
         operacion: 'JOB: intenta corregir errores en nombre y apellido de pacientes'
+    },
+    usuarioCreate: {
+        key: 'usuarios:crear',
+        operacion: 'crea un usuario'
+    },
+    usuarioCreateError: {
+        key: 'usuarios:crearError',
+        operacion: 'error al crear un usuario'
+    },
+    usuarioUpdate: {
+        key: 'usuarios:modificar',
+        operacion: 'modifica los permisos de un usuario'
+    },
+    usuarioUpdateError: {
+        key: 'usuarios:modificarError',
+        operacion: 'error al modificar los permisos de un usuario'
     }
 };
