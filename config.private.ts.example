@@ -244,7 +244,8 @@ export const wsSalud = {
     hpnWS: '',
 };
 
-export const conSqlPecas = {
+
+export const consolidadoPecas = {
     auth: {
         user: '',
         password: ''
@@ -255,7 +256,21 @@ export const conSqlPecas = {
     },
     table: {
         pecasTable: 'pecas_consolidadoPrueba',
-        fueraAgenda: ''
+    }
+};
+
+export const fueraAgendaPecas = {
+
+    auth: {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: ''
+    },
+    table: {
+        fueraAgenda: 'pecas_consolidadoPrueba',
     }
 };
 

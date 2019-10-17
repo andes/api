@@ -10,10 +10,10 @@ import { emailListString } from '../../../../config.private';
 
 let poolTurnos;
 const config = {
-    user: configPrivate.conSqlPecas.auth.user,
-    password: configPrivate.conSqlPecas.auth.password,
-    server: configPrivate.conSqlPecas.serverSql.server,
-    database: configPrivate.conSqlPecas.serverSql.database,
+    user: configPrivate.consolidadoPecas.auth.user,
+    password: configPrivate.consolidadoPecas.auth.password,
+    server: configPrivate.consolidadoPecas.serverSql.server,
+    database: configPrivate.consolidadoPecas.serverSql.database,
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
@@ -103,7 +103,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
     let numeroBloque = turno.sobreturno === 'SI' ? -1 : turno.numeroBloque;
 
 
-    let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
+    let queryInsert = 'INSERT INTO ' + configPrivate.consolidadoPecas.table.pecasTable +
         '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
         'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
         'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
@@ -151,7 +151,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
 }
 
 async function eliminaAgenda(idAgenda) {
-    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda ='${idAgenda}'`;
+    let query = `DELETE FROM ${configPrivate.consolidadoPecas.table.pecasTable} WHERE idAgenda ='${idAgenda}'`;
     try {
         return executeQuery(query);
     } catch (err) {

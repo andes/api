@@ -11,10 +11,10 @@ import { emailListString } from '../../../../config.private';
 
 let poolPrestaciones;
 const config = {
-    user: configPrivate.conSqlPecas.auth.user,
-    password: configPrivate.conSqlPecas.auth.password,
-    server: configPrivate.conSqlPecas.serverSql.server,
-    database: configPrivate.conSqlPecas.serverSql.database,
+    user: configPrivate.fueraAgendaPecas.auth.user,
+    password: configPrivate.fueraAgendaPecas.auth.password,
+    server: configPrivate.fueraAgendaPecas.serverSql.server,
+    database: configPrivate.fueraAgendaPecas.serverSql.database,
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
@@ -316,7 +316,7 @@ async function auxiliar(pres: any) {
         prestacion.telefono = pres.paciente && pres.paciente.telefono ? pres.paciente.telefono : '';
         let fechaNac = (prestacion.FechaNacimiento && moment(prestacion.FechaNacimiento).year()) > 1900 ? `'${prestacion.FechaNacimiento}'` : null;
 
-        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.fueraAgenda +
+        let queryInsert = 'INSERT INTO ' + configPrivate.fueraAgendaPecas.table.fueraAgenda +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'FechaConsulta, Periodo, Tipodeconsulta, estadoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
             'HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
@@ -366,7 +366,7 @@ function organizacionesExcluidas() {
 
 async function eliminaPrestacion(idPrestacion: string) {
     const result = new sql.Request(poolPrestaciones);
-    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.fueraAgenda} WHERE idPrestacion='${idPrestacion}'`;
+    let query = `DELETE FROM ${configPrivate.fueraAgendaPecas.table.fueraAgenda} WHERE idPrestacion='${idPrestacion}'`;
     return executeQuery(query);
 }
 
