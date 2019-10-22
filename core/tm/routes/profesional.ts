@@ -1041,9 +1041,7 @@ router.post('/profesionales/sendMail', (req, res, next) => {
         // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
     });
 
-
 });
-
 
 router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
@@ -1074,9 +1072,7 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
         next(err);
     }
 
-
 });
-
 
 // El delete está correcto, tomar como modelo para la documentación
 /**
@@ -1150,7 +1146,6 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
             }
             if (req.body.agente) {
                 resultado.agenteMatriculador = req.body.agente;
-
             }
         }
 
@@ -1161,7 +1156,6 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
     } catch (err) {
         next(err);
     }
-
 
 });
 
@@ -1195,15 +1189,13 @@ router.get('/resumen', (req, res, next) => {
                 fechaNacimiento: data[0].fechaNacimiento,
                 documento: data[0].documento,
                 nacionalidad: data[0].nacionalidad,
-                sexo: data[0].sexo
-
+                sexo: data[0].sexo,
+                formacionGrado: data[0].formacionGrado
             }];
-
         }
         res.json(resultado);
     });
 });
-
 
 router.post('/profesionales/migrarTurnos', async (req, res, next) => {
     migrarTurnos();
@@ -1214,7 +1206,6 @@ router.post('/profesionales/matriculaCero', async (req, res, next) => {
     res.json(ress);
 
 });
-
 
 router.post('/profesionales/formacionCero', async (req, res, next) => {
     let ress = await formacionCero();
@@ -1227,7 +1218,6 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
 //     res.json(ress);
 
 // });
-
 
 export = router;
 
