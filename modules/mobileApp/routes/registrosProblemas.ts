@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { Problema } from '../schemas/registrosProblemas';
 import { Auth } from '../../../auth/auth.class';
+import { notificarVencimientosMinutas } from '../controller/RecordatorioController';
 
 const router = express.Router();
 
@@ -38,6 +39,12 @@ router.patch('/problemas/:id', async (req, res, next) => {
     } catch (error) {
         return next(error);
     }
+});
+
+router.get('/prueba', async (req: any, res, next) => {
+    console.log("llegue aca");
+   let resultado =  await notificarVencimientosMinutas()
+    res.json(resultado);
 });
 
 export = router;

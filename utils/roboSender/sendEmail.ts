@@ -30,9 +30,10 @@ export function sendMail(options: MailOptions) {
             html: options.html,
             attachments: options.attachments
         };
-
+        console.log(mailOptions)
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
+                console.log(error)
                 return reject(error);
             }
             return resolve(info);

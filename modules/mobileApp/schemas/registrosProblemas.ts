@@ -17,6 +17,10 @@ export let ProblemaSchema = new mongoose.Schema({
         enum: ['pendiente', 'resuelto', 'en proceso'],
         default: 'pendiente'
     },
+    vencimientoNotificacion :{
+        type: Boolean,
+        default: false
+    },
     resueltoPorId: String,
     resueltoPor: String,
     origen: {
