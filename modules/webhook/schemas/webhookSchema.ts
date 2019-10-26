@@ -12,7 +12,7 @@ export const WebHookSchema = new mongoose.Schema({
     headers: mongoose.SchemaTypes.Mixed, // for Token AUTH
     data: mongoose.SchemaTypes.Mixed, // a projections of data to send
     filters: [mongoose.SchemaTypes.Mixed], // posibles filtros filtros
-    transform: {
+    trasform: {
         type: String,
         required: false
     },
