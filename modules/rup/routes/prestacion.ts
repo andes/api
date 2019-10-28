@@ -311,7 +311,7 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
         query.where('paciente.id').equals(req.query.idPaciente);
     }
 
-    if (req.query.origenTOP) {
+    if (req.query.origen === 'top') {
         query.where('solicitud.prestacionOrigen').exists(false);
     }
 
