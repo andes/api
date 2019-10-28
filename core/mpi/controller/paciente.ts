@@ -22,6 +22,8 @@ import { logKeys } from '../../../config';
 import * as mongoose from 'mongoose';
 import { nextTick } from 'async';
 
+const sharp = require('sharp');
+
 /**
  * Crea un paciente y lo sincroniza con elastic
  *
@@ -857,7 +859,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
             pacienteAndes.cuil = pacienteRenaper.cuil;
             pacienteAndes.estado = 'validado';
-            pacienteAndes.foto = pacienteRenaper.foto;
+            pacienteAndes.foto = await validarTamañoFoto(pacienteRenaper.foto);
             if (pacienteAndes.direccion.length) {
                 pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
             }
@@ -869,6 +871,42 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     } else {
         return await validarSisa(pacienteAndes, req);
     }
+}
+
+function validarTamañoFoto(foto) {
+    return new Promise(async (resolve, reject) => {
+        const buffer = Buffer.from(foto.substring(foto.indexOf(',') + 1));
+
+        if (buffer.length > 50000) {
+            let fotoNueva = await resizeFoto(foto);
+            resolve(fotoNueva);
+        } else {
+            resolve(foto);
+        }
+    });
+}
+
+function resizeFoto(foto) {
+    return new Promise((resolve, reject) => {
+        const base64Image = foto;
+
+        let parts = base64Image.split(';');
+        let mimType = parts[0].split(':')[1];
+        let imageData = parts[1].split(',')[1];
+
+        let img = new Buffer(imageData, 'base64');
+        sharp(img)
+            .resize(500, 500)
+            .toBuffer()
+            .then(resizedImageBuffer => {
+                let resizedImageData = resizedImageBuffer.toString('base64');
+                let resizedBase64 = `data:${mimType};base64,${resizedImageData}`;
+                resolve(resizedBase64);
+            })
+            .catch(error => {
+                reject(error);
+            });
+    });
 }
 
 async function validarSisa(pacienteAndes: any, req: any, foto = null) {
