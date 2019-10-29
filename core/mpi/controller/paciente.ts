@@ -873,40 +873,32 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     }
 }
 
-function validarTamañoFoto(foto) {
-    return new Promise(async (resolve, reject) => {
-        const buffer = Buffer.from(foto.substring(foto.indexOf(',') + 1));
+async function validarTamañoFoto(foto) {
+    const buffer = Buffer.from(foto.substring(foto.indexOf(',') + 1));
 
-        if (buffer.length > 50000) {
-            let fotoNueva = await resizeFoto(foto);
-            resolve(fotoNueva);
-        } else {
-            resolve(foto);
-        }
-    });
+    if (buffer.length > 50000) {
+        let fotoNueva = await resizeFoto(foto);
+        return fotoNueva;
+    } else {
+        return foto;
+    }
 }
 
-function resizeFoto(foto) {
-    return new Promise((resolve, reject) => {
-        const base64Image = foto;
+async function resizeFoto(foto) {
+    const base64Image = foto;
 
-        let parts = base64Image.split(';');
-        let mimType = parts[0].split(':')[1];
-        let imageData = parts[1].split(',')[1];
+    let parts = base64Image.split(';');
+    let mimType = parts[0].split(':')[1];
+    let imageData = parts[1].split(',')[1];
 
-        let img = new Buffer(imageData, 'base64');
-        sharp(img)
-            .resize(500, 500)
-            .toBuffer()
-            .then(resizedImageBuffer => {
-                let resizedImageData = resizedImageBuffer.toString('base64');
-                let resizedBase64 = `data:${mimType};base64,${resizedImageData}`;
-                resolve(resizedBase64);
-            })
-            .catch(error => {
-                reject(error);
-            });
-    });
+    let img = new Buffer(imageData, 'base64');
+    const semiTransparentRedPng = await sharp(img)
+        .resize(500, 500)
+        .toBuffer();
+
+    let resizedImageData = semiTransparentRedPng.toString('base64');
+    let resizedBase64 = `data:${mimType};base64,${resizedImageData}`;
+    return resizedBase64;
 }
 
 async function validarSisa(pacienteAndes: any, req: any, foto = null) {
