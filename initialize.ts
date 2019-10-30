@@ -61,6 +61,7 @@ export function initAPI(app: Express) {
 
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').UsuariosRouter);
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').PerfilesRouter);
+    app.use('/api/modules/huds-accesos', require('./modules/huds-accesos').HudsAccesoRouter);
 
     /**
      * Inicializa las rutas para adjuntar archivos
