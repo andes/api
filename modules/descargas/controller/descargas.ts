@@ -243,8 +243,9 @@ export class Documento {
 
         let filePromises = [];
         let adjunto = '';
-
+        let count = 0;
         let templateAdjuntos = '';
+
         filePromises = registro.valor.documentos.map(documento => {
             if (mime.lookup(documento.ext).indexOf('image') > -1) {
                 return new Promise(async (resolve, reject) => {
@@ -264,9 +265,12 @@ export class Documento {
                     });
                 });
             } else {
-                const tipoArchivo = this.tipoDeArchivo(documento.ext);
-                const descripcion = documento.descripcion && documento.descripcion.term ? documento.descripcion.term : '';
-                return templateNoSoportado.replace('<!--descripcion-->', descripcion).replace('<!--formato-->', `${tipoArchivo} (${documento.ext.toUpperCase()}, no se visualiza)`);
+                if (count === 0) {
+                    count++;
+                    return templateNoSoportado.replace('<!--cantidadAdjuntos-->', registro.valor.documentos.filter(x => mime.lookup(x.ext).indexOf('image') === -1).length);
+                } else {
+                    return null;
+                }
             }
 
         });
@@ -274,6 +278,7 @@ export class Documento {
         return Promise.all(filePromises);
 
     }
+
     static tipoDeArchivo(ext: string) {
         const tipo = mime.lookup(ext);
         if (tipo.indexOf('application') > -1) {
