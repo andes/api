@@ -61,6 +61,7 @@ router.patch('/minuta/:id', (req, res, next) => {
         if (req.body.origen) {
             data.origen = req.body.origen;
         }
+        
 
         Auth.audit(data, req);
         data.save((errUpdate) => {

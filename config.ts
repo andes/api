@@ -105,7 +105,7 @@ export const modules = {
         active: true,
         path: './modules/mobileApp/routes',
         route: '/modules/mobileApp',
-        middleware: null
+        middleware: appMiddleware
     },
     turnero: {
         active: true,
