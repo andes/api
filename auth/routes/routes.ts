@@ -129,12 +129,6 @@ router.post('/login', async (req, res, next) => {
     }
 });
 
-
-/**
- * Refresca el token de un usuario
- * @param {string} token token de la cuenta
- * @post /api/auth/refreshToken
- */
 router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
     try {
         const oldToken: string = req.body.token;
