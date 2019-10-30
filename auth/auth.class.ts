@@ -458,4 +458,13 @@ export class Auth {
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 4 }); // 4 Horas
     }
 
+    static refreshAPPToken(token: string) {
+        try {
+            const tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+            return this.generateUserToken(tokenData.usuario, tokenData.organizacion, tokenData.permisos, tokenData.profesional, tokenData.account_id);
+        } catch (e) {
+            return null;
+        }
+    }
+
 }
