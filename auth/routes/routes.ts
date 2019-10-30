@@ -129,19 +129,19 @@ router.post('/login', async (req, res, next) => {
     }
 });
 
-router.post('/refreshAppToken', async (req, res, next) => {
+router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
     try {
+
         const oldToken: string = req.body.token;
-        const refreshToken = Auth.refreshAPPToken(oldToken);
+        const usuario = (req as any).user.usuario;
+        const organizacion = req.body.organizacion ? req.body.organizacion : null;
+        let refreshToken = Auth.refreshToken(oldToken, usuario, [], organizacion);
         if (refreshToken) {
             return res.json({
                 token: refreshToken
             });
         } else {
-            return res.json({
-                mensaje: 'No fue posible actualizar el token',
-                token: oldToken
-            });
+            return next(403);
         }
 
     } catch (error) {
