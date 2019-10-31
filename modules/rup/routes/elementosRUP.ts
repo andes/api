@@ -2,8 +2,7 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { defaultLimit, maxLimit } from './../../../config';
 import { elementoRUP } from '../schemas/elementoRUP';
-import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
-import { SnomedModel } from '../../../core/term/schemas/snomed';
+import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
 const router = express.Router();
 
@@ -11,35 +10,29 @@ const router = express.Router();
  * Devueve los grupos sugeridos en la busqueda guiada por prestación.
  */
 
-router.get('/elementosRUP/:id/guiada', (req, res, next) => {
+router.get('/elementosRUP/:id/guiada', async (req, res, next) => {
     const prestacion = req.params.id;
-    elementoRUP.findOne({
-        'conceptos.conceptId': prestacion
-    }).then(async (elemento: any) => {
+    const elemento: any = await elementoRUP.findOne({ 'conceptos.conceptId': prestacion });
 
-        if (elemento && elemento.busqueda_guiada && elemento.busqueda_guiada.length > 0) {
+    if (elemento && elemento.busqueda_guiada && elemento.busqueda_guiada.length > 0) {
 
-            let flag = false;
-            for (const guia of elemento.busqueda_guiada) {
-                if (!guia.conceptIds.length) {
-                    const q = makeMongoQuery(guia.query);
-                    flag = true;
-                    guia.conceptIds = await SnomedModel.find(q, { conceptId: 1 }).then((docs: any[]) => {
-                        return docs.map(item => item.conceptId);
-                    }).catch(next);
-                }
+        let flag = false;
+        for (const guia of elemento.busqueda_guiada) {
+            if (!guia.conceptIds.length) {
+                guia.conceptIds = await SnomedCtr.getConceptByExpression(guia.query);
+                guia.conceptIds = guia.conceptIds.map(c => c.conceptId);
             }
-
-            res.json(elemento.busqueda_guiada);
-            if (flag) {
-                elemento.save();
-            }
-
-        } else {
-            res.json([]);
         }
 
-    }).catch(next);
+        res.json(elemento.busqueda_guiada);
+        if (flag) {
+            elemento.save();
+        }
+
+    } else {
+        res.json([]);
+    }
+
 });
 
 

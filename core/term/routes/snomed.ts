@@ -1,123 +1,34 @@
 import * as express from 'express';
-import { TextIndexModel } from '../schemas/snomed';
+// import { TextIndexModel } from '../schemas/snomed';
 import * as utils from '../../../utils/utils';
 import * as cie10 from '../schemas/cie10';
 import { SnomedCIE10Mapping } from './../controller/mapping';
 
+import { SnomedCtr } from '../controller/snomed.controller';
+
 const router = express.Router();
 
-/**
- * @swagger
- * /snomed:
- *   get:
- *     tags:
- *       - "snomed"
- *     description: Una info
- *     summary: Búsqueda de conceptos de SNOMED
- *     security:
- *       - JWT: []
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: search
- *         in: query
- *         description: Términos o ID de concepto a buscar
- *         required: true
- *         type: string
- *       - name: semanticTag
- *         in: query
- *         description: Filtra por uno o varios semantic tags
- *         required: false
- *         type: array
- *         items:
- *           type: string
- *       - name: limit
- *         in: query
- *         description: Limita la cantidad de registros
- *         required: false
- *         type: integer
- *         default: 100
- *       - name: skip
- *         in: query
- *         description: Indica la cantidad de registro a saltear
- *         required: false
- *         type: integer
- *         default: 0
- */
+function asArray(item) {
+    if (item) {
+        return Array.isArray(item) ? item : [item];
+    }
+    return null;
+}
 
-router.get('/snomed', (req, res, next) => {
+router.get('/snomed', async (req, res, next) => {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
     }
-    const conditions = {
-        languageCode: 'spanish',
-        conceptActive: true,
-        active: true
-    };
-    // Filtramos por semanticTag
-    if (req.query.semanticTag) {
-        conditions['$or'] = [...[], req.query.semanticTag].map((i) => { return { semanticTag: i }; });
-    }
 
-    // creamos un array de palabras a partir de la separacion del espacio
-    if (req.query.search) {
-        req.query.search = req.query.search.toLowerCase();
-        if (isNaN(req.query.search)) {
-            // Busca por palabras
-            conditions['$and'] = [];
-            const words = req.query.search.split(' ');
-            words.forEach((word) => {
-                // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
-                word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08').replace('ñ', 'n');
-                const expWord = '^' + utils.removeDiacritics(word) + '.*';
-
-                // agregamos la palabra a la condicion
-                conditions['$and'].push({ words: { $regex: expWord } });
-            });
-        } else {
-            // Busca por conceptId
-            conditions['conceptId'] = req.query.search.toString();
-        }
+    const semanticTags = asArray(req.query.semanticTag);
+    const search = req.query.search;
+    if (isNaN(search)) {
+        const conceptos = await SnomedCtr.searchTerms(search, { semanticTags, languageCode: 'es' });
+        return res.json(conceptos);
     } else {
-        if (req.query.refsetId) {
-            conditions['refsetIds'] = req.query.refsetId;
-        }
+        const concepto = await SnomedCtr.getConcept(search, '');
+        return res.json([concepto]);
     }
-    // preparamos query
-    const query = TextIndexModel.find(conditions, {
-        conceptId: 1,
-        term: 1,
-        fsn: 1,
-        semanticTag: 1,
-        refsetIds: 1
-    });
-
-    // limitamos resultados
-    query.limit(10000);
-    query.sort({ term: 1 });
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
-        }
-
-        // Eliminamos aquellos cuyo term sea igual al fsn (i.e. contiene el semanticTag)
-        data = data.filter((i: any) => i.term !== i.fsn);
-
-        // si es un búsqueda de palabras, ordenamos los resultados:
-        //    llevamos hacia arriba los que tengan el largo de cadena
-        //    mas corto, (deberia coincididr con lo que busco)
-        if (isNaN(req.query.search)) {
-            data.sort((a: any, b: any) => {
-                if (a.term.length < b.term.length) { return -1; }
-                if (a.term.length > b.term.length) { return 1; }
-                return 0;
-            });
-        }
-        const skip: number = parseInt(req.query.skip || 0, 10);
-        res.json(data.slice(skip, req.query.limit || 500));
-    });
 });
 
 /**
