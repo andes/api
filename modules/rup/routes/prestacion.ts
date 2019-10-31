@@ -311,6 +311,10 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
         query.where('paciente.id').equals(req.query.idPaciente);
     }
 
+    if (req.query.origen === 'top') {
+        query.where('solicitud.prestacionOrigen').exists(false);
+    }
+
     if (req.query.solicitudDesde) {
         query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
     }
