@@ -442,4 +442,20 @@ export class Auth {
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 2 }); // 2 Horas
     }
 
+     /**
+     * Genera un token para acceder a la HUDS de un paciente
+     *
+     * @static
+     * @returns {*} JWT
+     *
+     * @memberOf Auth
+     */
+    static generateHudsToken(): any {
+        const token = {
+            id: mongoose.Types.ObjectId(),
+            type: 'huds-token'
+        };
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 4 }); // 4 Horas
+    }
+
 }
