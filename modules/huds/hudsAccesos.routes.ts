@@ -4,7 +4,6 @@ import { Auth } from '../../auth/auth.class';
 import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
 import { Request } from '@andes/api-tool';
 
-const shiroTrie = require('shiro-trie');
 
 class HudsAccesoResource extends ResourceBase {
     Model = HudsAcceso;
@@ -28,3 +27,7 @@ class HudsAccesoResource extends ResourceBase {
 }
 export const HudsAccesoCtr = new HudsAccesoResource({});
 export const HudsAccesoRouter = HudsAccesoCtr.makeRoutes();
+
+HudsAccesoRouter.post('/huds-token', Auth.authenticate(), (req, res, next) => {
+    return res.json({ token: Auth.generateHudsToken() });
+});
