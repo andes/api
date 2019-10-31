@@ -1,4 +1,4 @@
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
@@ -24,7 +24,7 @@ const router = express.Router();
 
 router.get('/prestaciones/sinCama', (req, res, next) => {
     let query = {
-        'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
+        'solicitud.organizacion.id': Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
         'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion,
         'ejecucion.registros.valor.informeIngreso.fechaIngreso': {
@@ -57,7 +57,7 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
             enEspera.paseA = prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa ? prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa : null;
 
             // Buscamos si tiene una cama ocupada con el id de la internacion.
-            let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
+            let cama = await camasController.buscarCamaInternacion(Types.ObjectId(prestacion.id), 'ocupada');
             // Loopeamos los registros de la prestacion buscando el informe de egreso.
             let esEgreso = prestacion.ejecucion.registros.find(r => r.valor && r.valor.InformeEgreso);
             // Si no encontramos una cama ocupada quiere decir que esa prestacion va a formar parte
@@ -98,7 +98,7 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
 router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
     // verificamos que sea un ObjectId válido
-    if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
+    if (!Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Turno no encontrado');
     }
 
@@ -112,7 +112,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
         };
 
         if (req.query.idPrestacion) {
-            query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
+            query['_id'] = Types.ObjectId(req.query.idPrestacion);
         }
 
         if (req.query.deadline) {
@@ -141,7 +141,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) => {
 
     // verificamos que sea un ObjectId válido
-    if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
+    if (!Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Turno no encontrado');
     }
     // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
@@ -153,7 +153,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
     };
 
     if (req.query.idPrestacion) {
-        query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
+        query['_id'] = Types.ObjectId(req.query.idPrestacion);
     }
 
     const prestaciones = await Prestacion.find(query);
@@ -235,87 +235,105 @@ router.post('/solicitudes/dashboard', async (req, res, next) => {
     return res.json(solicitudes);
 });
 
-router.get('/prestaciones/solicitudes', (req, res, next) => {
-    let query;
-    if (req.query.estados) {
-        const estados = (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados;
-        query = Prestacion.find({
-            $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
+router.get('/prestaciones/solicitudes', async (req, res, next) => {
+    try {
+        let pipeline = [];
+
+        let match: any = { $and: [] };
+
+        if (req.query.solicitudDesde && req.query.solicitudHasta) {
+            match.$and.push({ 'solicitud.fecha': { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
+            match.$and.push({ 'solicitud.fecha': { $lte: (moment(req.query.solicitudHasta).endOf('day').toDate() as any) } });
+        }
+
+        if (req.query.origen === 'top') {
+            match.$and.push({ 'solicitud.prestacionOrigen': { $exists: false } });
+        }
+
+        if (req.query.estados) {
+            pipeline.push({ $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } });
+            match.$and.push({ 'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } });
+        }
+
+        match.$and.push({ 'estados.0.tipo': { $in: ['pendiente', 'auditoria'] } });
+
+        if (req.query.tieneTurno !== undefined) {
+            match.$and.push({ 'solicitud.turno': req.query.tieneTurno ? { $ne: null } : { $eq: null } });
+        }
+
+        if (req.query.organizacionOrigen) {
+            match.$and.push({ 'solicitud.organizacionOrigen': { $exists: true } });
+            match.$and.push({ 'solicitud.organizacionOrigen.id': Types.ObjectId(req.query.organizacionOrigen) });
+        }
+
+        if (req.query.prioridad) {
+            match.$and.push({ 'solicitud.registros.0.valor.solicitudPrestacion.prioridad': req.query.prioridad });
+        }
+
+        if (req.query.idPaciente) {
+            match.$and.push({ 'paciente.id': Types.ObjectId(req.query.idPaciente) });
+        }
+
+        if (req.query.prestacionDestino) {
+            match.$and.push({ 'solicitud.tipoPrestacion.id': { $eq: Types.ObjectId(req.query.prestacionDestino) } });
+        }
+
+        if (req.query.prestacionDestino) {
+            match.$and.push({ 'solicitud.organizacionOrigen': { $exists: true } });
+            match.$and.push({ 'solicitud.organizacionOrigen.id': Types.ObjectId(req.query.organizacionOrigen) });
+        }
+
+        if (req.query.tipoPrestaciones) {
+            match.$and.push({ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } });
+            match.$and.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } });
+        }
+
+        pipeline.push({ $match: match });
+        pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
+        pipeline.push({
+            $project: {
+                id: '$_id',
+                paciente: 1,
+                solicitud: 1,
+                ejecucion: 1,
+                noNominalizada: 1,
+                estados: 1,
+                createdAt: 1,
+                createdBy: 1,
+                updatedAt: 1,
+                updatedBy: 1,
+                lastState: 1,
+                esPrioritario: {
+                    $cond: {
+                        if: { $eq: ['$registroSolicitud.valor.solicitudPrestacion.prioridad', 'prioritario'] },
+                        then: -1,
+                        else: 1
+                    }
+                }
+            }
         });
-    } else {
-        query = Prestacion.find({}); // Trae todos
-    }
 
-    // Solicitudes tienen tipoPrestacionOrigen, entonces utilizamos esta propiedad
-    // para filtrarlas de de la colección prestaciones
-    // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
-    query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
-    if (req.query.tieneTurno !== undefined) {
-        if (req.query.tieneTurno === true) {
-            query.where('solicitud.turno').ne(null);
+        let sort = {};
+        sort['esPrioritario'] = 1;
+
+        if (req.query.ordenFecha || req.query.ordenFechaAsc) {
+            sort['solicitud.fecha'] = -1;
+        } else if (req.query.ordenFechaDesc) {
+            sort['solicitud.fecha'] = 1;
+        } else if (req.query.ordenFechaEjecucion) {
+            sort['ejecucion.fecha'] = -1;
         }
-        if (req.query.tieneTurno === false) {
-            query.where('solicitud.turno').equals(null);
+
+        pipeline.push({ $sort: sort });
+
+        if (req.query.limit) {
+            pipeline.push({ $limit: parseInt(req.query.limit, 10) });
         }
+
+        res.json(await Prestacion.aggregate(pipeline));
+    } catch (err) {
+        return next(404);
     }
-
-    if (req.query.idPaciente) {
-        query.where('paciente.id').equals(req.query.idPaciente);
-    }
-
-    if (req.query.origen === 'top') {
-        query.where('solicitud.prestacionOrigen').exists(false);
-    }
-
-    if (req.query.solicitudDesde) {
-        query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
-    }
-
-    if (req.query.solicitudHasta) {
-        query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
-    }
-
-    if (req.query.prestacionDestino) {
-        query.where('solicitud.tipoPrestacion.id').equals(req.query.prestacionDestino);
-    }
-
-    if (req.query.organizacionOrigen) {
-        const arr: any[] = [];
-        arr.push({ 'solicitud.organizacionOrigen': { $exists: true } });
-        arr.push({ 'solicitud.organizacionOrigen.id': req.query.organizacionOrigen });
-        query.and(arr);
-    }
-
-    if (req.query.tipoPrestaciones) {
-        const variable: any[] = [];
-        variable.push({ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones } });
-        variable.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones } });
-        query.or(variable);
-    }
-
-    // Ordenar por fecha de solicitud
-    if (req.query.ordenFecha || req.query.ordenFechaAsc) {
-        query.sort({ 'solicitud.fecha': -1 });
-    } else if (req.query.ordenFechaDesc) {
-        query.sort({ 'solicitud.fecha': 1 });
-    } else if (req.query.ordenFechaEjecucion) {
-        query.sort({ 'ejecucion.fecha': -1 });
-    }
-
-
-    if (req.query.limit) {
-        query.limit(parseInt(req.query.limit, 10));
-    }
-
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
-        }
-        if (req.params.id && !data) {
-            return next(404);
-        }
-        res.json(data);
-    });
 });
 
 router.get('/prestaciones/:id*?', async (req, res, next) => {
@@ -510,6 +528,10 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
                 if (req.body.ejecucion && req.body.ejecucion.organizacion) {
                     data.ejecucion.organizacion = req.body.ejecucion.organizacion;
+                }
+                if (req.body.prioridad) {
+                    data.solicitud.registros[0].valor.solicitudPrestacion.prioridad = req.body.prioridad;
+                    data.solicitud.registros[0].markModified('valor');
                 }
                 break;
             case 'romperValidacion':
