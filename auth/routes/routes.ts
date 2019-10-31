@@ -76,7 +76,6 @@ router.post('/login', async (req, res, next) => {
     // Función interna que genera token
     const login = async (user, prof) => {
         await updateUser(user.usuario, user.nombre, user.apellido, user.password);
-
         if (req.body.mobile) {
             if (prof && prof._id) {
                 checkMobile(prof._id).then((account: any) => {
@@ -130,6 +129,25 @@ router.post('/login', async (req, res, next) => {
     }
 });
 
+router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
+    try {
+
+        const oldToken: string = req.body.token;
+        const usuario = (req as any).user.usuario;
+        const organizacion = req.body.organizacion ? req.body.organizacion : null;
+        let refreshToken = Auth.refreshToken(oldToken, usuario, [], organizacion);
+        if (refreshToken) {
+            return res.json({
+                token: refreshToken
+            });
+        } else {
+            return next(403);
+        }
+
+    } catch (error) {
+        return next(403);
+    }
+});
 /**
  * Genera FileToken para poder acceder a archivos embebidos
  */
