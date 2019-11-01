@@ -442,18 +442,29 @@ export class Auth {
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 2 }); // 2 Horas
     }
 
-     /**
-     * Genera un token para acceder a la HUDS de un paciente
-     *
-     * @static
-     * @returns {*} JWT
-     *
-     * @memberOf Auth
-     */
-    static generateHudsToken(): any {
+    /**
+    * Genera un token para acceder a la HUDS de un paciente
+    *
+    * @static
+    * @returns {*} JWT
+    *
+    * @memberOf Auth
+    */
+    static generateHudsToken(user: any, organizacion: any, paciente: any): any {
         const token = {
             id: mongoose.Types.ObjectId(),
+            usuario: {
+                id: user._id,
+                nombreCompleto: user.nombre + ' ' + user.apellido,
+                nombre: user.nombre,
+                apellido: user.apellido,
+                username: user.usuario,
+                documento: user.usuario
+            },
+            organizacion,
+            paciente: mongoose.Types.ObjectId(paciente.id),
             type: 'huds-token'
+
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 4 }); // 4 Horas
     }
@@ -465,6 +476,10 @@ export class Auth {
         } catch (e) {
             return null;
         }
+    }
+
+    static decode(token: string) {
+        return jwt.decode(token);
     }
 
 }

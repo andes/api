@@ -22,7 +22,7 @@ const router = express.Router();
  * que el paciente no tiene una cama asignada.
  */
 
-router.get('/prestaciones/sinCama', (req, res, next) => {
+router.get('/prestaciones/sinCama', (req: any, res, next) => {
     let query = {
         'solicitud.organizacion.id': Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
@@ -95,7 +95,14 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
  *
  */
 
-router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
+router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
+    let tokenSettings;
+    if (req.query.hudsToken) {
+        tokenSettings = Auth.decode(req.query.hudsToken);
+    }
+    if (req.params.idPaciente && (!tokenSettings || String(tokenSettings.paciente) !== String(req.params.idPaciente))) {
+        return next(403);
+    }
 
     // verificamos que sea un ObjectId válido
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -138,7 +145,14 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 });
 
 
-router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) => {
+router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, next) => {
+    let tokenSettings;
+    if (req.query.hudsToken) {
+        tokenSettings = Auth.decode(req.query.hudsToken);
+    }
+    if (req.params.idPaciente && (!tokenSettings || String(tokenSettings.paciente) !== String(req.params.idPaciente))) {
+        return next(403);
+    }
 
     // verificamos que sea un ObjectId válido
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -235,11 +249,28 @@ router.post('/solicitudes/dashboard', async (req, res, next) => {
     return res.json(solicitudes);
 });
 
-router.get('/prestaciones/solicitudes', async (req, res, next) => {
+router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
         let pipeline = [];
-
+        let tokenSettings;
         let match: any = { $and: [] };
+
+        if (req.query.hudsToken) {
+            tokenSettings = Auth.decode(req.query.hudsToken);
+        }
+        if (req.query.idPaciente && (!tokenSettings || String(tokenSettings.paciente) !== String(req.query.idPaciente))) {
+            return next(403);
+        }
+
+        let query;
+        if (req.query.estados) {
+            const estados = (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados;
+            query = Prestacion.find({
+                $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
+            });
+        } else {
+            query = Prestacion.find({}); // Trae todos
+        }
 
         if (req.query.solicitudDesde && req.query.solicitudHasta) {
             match.$and.push({ 'solicitud.fecha': { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
@@ -334,7 +365,15 @@ router.get('/prestaciones/solicitudes', async (req, res, next) => {
     }
 });
 
-router.get('/prestaciones/:id*?', async (req, res, next) => {
+router.get('/prestaciones/:id*?', async (req: any, res, next) => {
+    let tokenSettings;
+    if (req.query.hudsToken) {
+        tokenSettings = Auth.decode(req.query.hudsToken);
+    }
+    if (req.query.idPaciente && (!tokenSettings || String(tokenSettings.paciente) !== String(req.query.idPaciente))) {
+        return next(403);
+    }
+
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {

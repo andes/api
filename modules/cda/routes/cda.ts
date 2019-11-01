@@ -244,10 +244,10 @@ router.get('/files/:name', async (req: any, res, next) => {
  */
 
 router.get('/paciente/', async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:list')) {
+    if (!Auth.check(req, 'cda:list') /* || req.user.type !== 'huds-token' || String(req.params.idPaciente) !== String(req.user.paciente)*/) {
         return next(403);
     }
-    let query;
+
     let lista = [];
     let list = [];
     pacienteCtr.buscarPacByDocYSexo(req.query.documento, req.query.sexo).then(async resultado => {
@@ -270,10 +270,9 @@ router.get('/paciente/', async (req: any, res, next) => {
 
 router.get('/paciente/:id', async (req: any, res, next) => {
     if (ObjectId.isValid(req.params.id)) {
-        if (!Auth.check(req, 'cda:list')) {
+        if (!Auth.check(req, 'cda:list') /* || req.user.type !== 'huds-token' || String(req.params.idPaciente) !== String(req.user.paciente)*/) {
             return next(403);
         }
-        let CDAFiles = makeFs();
         let pacienteID = req.params.id;
         let prestacion = req.query.prestacion;
         let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
@@ -355,7 +354,7 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  * API demostrativa, falta analizar como se va a buscar en el repositorio
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:list')) {
+    if (!Auth.check(req, 'cda:list') /* || req.user.type !== 'huds-token' || String(req.params.idPaciente) !== String(req.user.paciente)*/) {
         return next(403);
     }
     let pacienteID = req.params.id;
