@@ -129,11 +129,19 @@ router.post('/login', async (req, res, next) => {
     }
 });
 
+
+/**
+ * Refresca el token de un usuario
+ * @param {string} token token de la cuenta
+ * @post /api/auth/refreshToken
+ */
 router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
     try {
 
         const oldToken: string = req.body.token;
         const usuario = (req as any).user.usuario;
+        usuario['usuario'] = usuario.username;
+        usuario['_id'] = usuario.id;
         const organizacion = req.body.organizacion ? req.body.organizacion : null;
         let refreshToken = Auth.refreshToken(oldToken, usuario, [], organizacion);
         if (refreshToken) {
@@ -148,6 +156,7 @@ router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
         return next(403);
     }
 });
+
 /**
  * Genera FileToken para poder acceder a archivos embebidos
  */
