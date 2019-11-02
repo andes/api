@@ -30,7 +30,6 @@ export function sendMail(options: MailOptions) {
             html: options.html,
             attachments: options.attachments
         };
-
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 return reject(error);

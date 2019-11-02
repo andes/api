@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { Problema } from '../schemas/registrosProblemas';
 import { Auth } from '../../../auth/auth.class';
+import { notificarVencimientosMinutas } from '../controller/RecordatorioController';
 
 const router = express.Router();
 
@@ -39,5 +40,7 @@ router.patch('/problemas/:id', async (req, res, next) => {
         return next(error);
     }
 });
+
+
 
 export = router;
