@@ -10,18 +10,18 @@ router.post('/minutaLeidas', async (req, res, next) => {
     try {
         let options = {
             idMinuta: req.body.idMinuta,
-            idUsuario:  req.body.idUsuario,
-        }
-        let minuta =  await MinutasLeidas.findOne(options)
-        if(!minuta){
+            idUsuario: req.body.idUsuario,
+        };
+        let minuta = await MinutasLeidas.findOne(options);
+        if (!minuta) {
             const newMinuta = new MinutasLeidas(req.body);
             Auth.audit(newMinuta, req);
             let respuesta = await newMinuta.save();
             res.json(respuesta);
-        }else{
-            res.json({})
+        } else {
+            res.json({});
         }
-       
+
     } catch (error) {
         return next(error);
     }
@@ -29,9 +29,9 @@ router.post('/minutaLeidas', async (req, res, next) => {
 
 router.get('/minutaLeidas', async (req: any, res, next) => {
     try {
-        let options = {}
-        if(req.query.idUsuario){
-            let id  = mongoose.Types.ObjectId(req.query.idUsuario); 
+        let options = {};
+        if (req.query.idUsuario) {
+            let id = mongoose.Types.ObjectId(req.query.idUsuario);
             options['idUsuario'] = id;
         }
         let data = await MinutasLeidas.find(options);

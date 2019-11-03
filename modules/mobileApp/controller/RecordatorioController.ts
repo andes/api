@@ -210,58 +210,52 @@ export function enviarAgendaNotificacion() {
 }
 
 
-export async function notificarVencimientosMinutas(done?){
-  let destinatarios = await mailGestionModel.find({alerta:true})
-  let destinatariosMails = [];
-  for (let index = 0; index < destinatarios.length; index++) {
-    destinatariosMails.push((destinatarios[index] as any).direccion)
-  }  
-  const query = {
-            $where: 'this.estado !== "resuelto"',
-            plazo: { $lt: new Date()},
-            vencimientoNotificacion : {$ne:true}
-        };
-  let problemasVencidos = await Problema.find(query)
-  let mensajeProblemas:string='';
-  for (let index = 0; index < problemasVencidos.length; index++) {
-        const unProblema:any= problemasVencidos[index];
-         let minuta:any =  await Minuta.find({ _id: unProblema.idMinutaMongo})
-         let fecha =  "<li>Fecha de carga: "+new Date(unProblema.fechaRegistro).toLocaleString()+"</li>"
-         let responsable ="<li>Responsable: "+unProblema.responsable+"</li>"
-         let problema = "<li>Problema: "+unProblema.problema+"</li>"
-         let nombreCompleto = "<li>Quien Registro: "+unProblema.createdBy.nombreCompleto+"</li>"
-         let fechaMinuta = "<li>Fecha de la minuta: "+ (minuta.length > 0 ?  new Date(minuta[0].fecha).toLocaleString() : '')+"</li>"
-         let origen = "<li>Nivel: "+unProblema.origen+"</li>"
-         let fin = "</ul>"
-         let a =  mensajeProblemas.concat("<ul>",fecha,responsable,problema,nombreCompleto,fechaMinuta,origen,fin)
+export async function notificarVencimientosMinutas(done?) {
+    let destinatarios = await mailGestionModel.find({ alerta: true });
+    let destinatariosMails = [];
+    for (let index = 0; index < destinatarios.length; index++) {
+        destinatariosMails.push((destinatarios[index] as any).direccion);
+    }
+    const query = {
+        $where: 'this.estado !== "resuelto"',
+        plazo: { $lt: new Date() },
+        vencimientoNotificacion: { $ne: true }
+    };
+    let problemasVencidos = await Problema.find(query);
+    let mensajeProblemas = '';
+    for (let index = 0; index < problemasVencidos.length; index++) {
+        const unProblema: any = problemasVencidos[index];
+        let minuta: any = await Minuta.find({ _id: unProblema.idMinutaMongo });
+        let textoMensaje = `<ul><li>Fecha de carga: ${new Date(unProblema.fechaRegistro).toLocaleString()} </li>
+                    <li>Responsable: ${unProblema.responsable} </li>
+                    <li>Problema: ${unProblema.problema} </li>
+                    <li>Quien Registro: ${unProblema.createdBy.nombreCompleto} </li>
+                    <li>Fecha de la minuta: ${(minuta.length > 0 ? new Date(minuta[0].fecha).toLocaleString() : '')}</li>
+                    <li>Nivel: ${unProblema.origen}</li></ul>`;
 
-        mensajeProblemas =  mensajeProblemas+a;
+        mensajeProblemas = mensajeProblemas + textoMensaje;
 
     }
-    //let mensajeProblemas ="<ul><li>Fecha de carga: 2019-9-17 5:12:07 PM</li><li>Responsable: DIRECCION HCR  NEDER SOLANGE ROMANO</li><li>Problema: Respuesta dialisis zona metro</li><li>Quien Registro: JORGE NICOLAS NINNO</li><li>Nivel: HOSPITAL PROVINCIAL NEUQUEN  \"DR. EDUARDO CASTRO RENDON\"</li></ul><ul><li>Fecha de carga: 2019-9-17 5:12:07 PM</li><li>Responsable: DIRECCION HCR  NEDER SOLANGE ROMANO</li><li>Problema: Respuesta dialisis zona metro</li><li>Quien Registro: JORGE NICOLAS NINNO</li><li>Nivel: HOSPITAL PROVINCIAL NEUQUEN  \"DR. EDUARDO CASTRO RENDON\"</li></ul><ul><li>Fecha de carga: 2019-9-19 9:13:05 PM</li><li>Responsable: Bbb</li><li>Problema: Aaa</li><li>Quien Registro: SILVINA ANALIA ROA</li><li>Nivel: P.S. VILÚ MALLIN</li></ul><ul><li>Fecha de carga: 2019-9-17 5:12:07 PM</li><li>Responsable: DIRECCION HCR  NEDER SOLANGE ROMANO</li><li>Problema: Respuesta dialisis zona metro</li><li>Quien Registro: JORGE NICOLAS NINNO</li><li>Nivel: HOSPITAL PROVINCIAL NEUQUEN  \"DR. EDUARDO CASTRO RENDON\"</li></ul><ul><li>Fecha de carga: 2019-9-17 5:12:07 PM</li><li>Responsable: DIRECCION HCR  NEDER SOLANGE ROMANO</li><li>Problema: Respuesta dialisis zona metro</li><li>Quien Registro: JORGE NICOLAS NINNO</li><li>Nivel: HOSPITAL PROVINCIAL NEUQUEN  \"DR. EDUARDO CASTRO RENDON\"</li></ul><ul><li>Fecha de carga: 2019-9-19 9:13:05 PM</li><li>Responsable: Bbb</li><li>Problema: Aaa</li><li>Quien Registro: SILVINA ANALIA ROA</li><li>Nivel: P.S. VILÚ MALLIN</li></ul><ul><li>Fecha de carga: 2019-9-20 8:25:16 AM</li><li>Responsable: Hhhh</li><li>Problema: Todo mal</li><li>Quien Registro: CAROLINA CELESTE</li><li>Nivel: P.S. VILÚ MALLIN</li></ul>"
 
-
-    //let destinatariosMails = ['marcosavino19@gmail.com',"ultrakite6@gmail.com"]
     const data = {
         from: configPrivate.enviarMail.auth.user,
         to: destinatariosMails.toString(),
-        subject: 'vencimiento de problema',
+        subject: 'App Gestión: Notificación de vencimientos de problemas',
         text: '',
-        html : mensajeProblemas,
+        html: mensajeProblemas,
         attachments: ''
     };
 
-    
-    // let respuesta:any = await SendEmail.sendMail(data);
-    // if(respuesta.errno === undefined){
-    //     for (let index = 0; index < problemasVencidos.length; index++) {
-    //     const unProblema:any= problemasVencidos[index];
-    //     unProblema.vencimientoNotificacion = true;
-    //     Auth.audit(unProblema, (userScheduler as any));
-    //     await unProblema.save();
-    // }
-    // }
 
-     done();
-   // return mensajeProblemas;
+    let respuesta: any = await SendEmail.sendMail(data);
+    if (respuesta.errno === undefined) {
+        for (let index = 0; index < problemasVencidos.length; index++) {
+            const unProblema: any = problemasVencidos[index];
+            unProblema.vencimientoNotificacion = true;
+            Auth.audit(unProblema, (userScheduler as any));
+            await unProblema.save();
+        }
+    }
+
+    done();
 }

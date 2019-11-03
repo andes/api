@@ -61,7 +61,16 @@ router.patch('/minuta/:id', (req, res, next) => {
         if (req.body.origen) {
             data.origen = req.body.origen;
         }
-        
+        if (req.body.idZona) {
+            data.idZona = req.body.idZona;
+        }
+        if (req.body.idEfector) {
+            data.idEfector = req.body.idEfector;
+        }
+        if (req.body.idArea) {
+            data.idArea = req.body.idArea;
+        }
+
 
         Auth.audit(data, req);
         data.save((errUpdate) => {

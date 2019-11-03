@@ -31,7 +31,17 @@ export let MinutaSchema = new mongoose.Schema({
     },
     origen: {
         type: String
+    },
+    idZona: {
+        type: String
+    },
+    idArea: {
+        type: String
+    },
+    idEfector: {
+        type: String
     }
+
 });
 
 MinutaSchema.plugin(AuditPlugin);
