@@ -22,6 +22,15 @@ class EstadosResource extends ResourceBase {
             fn: MongoQuery.matchString
         },
     };
+
+    public async encontrar(organizacion, ambito, capa) {
+        const elementos = await this.search({ organizacion, ambito, capa }, {}, null);
+        if (elementos.length > 0) {
+            return elementos[0];
+        }
+
+        return null;
+    }
 }
 
 export const EstadosCtr = new EstadosResource({});

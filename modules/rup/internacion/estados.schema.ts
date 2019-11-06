@@ -23,4 +23,17 @@ const EstadoSchema = new mongoose.Schema({
     }]
 });
 
+EstadoSchema.methods.check = function (origen, destino) {
+    if (origen === destino) {
+        return true;
+    }
+
+    for (const relacion of this.relaciones) {
+        if (relacion.origen === origen && relacion.destino === destino) {
+            return true;
+        }
+    }
+    return false;
+};
+
 export const Estados = mongoose.model('internacionEstados', EstadoSchema, 'internacionEstados');

@@ -58,4 +58,4 @@ const CamaEstadosSchema = new mongoose.Schema({
 
 });
 
-export const CamaEstadoss = mongoose.model('internacionCamaEstadoss', CamaEstadosSchema, 'internacionCamaEstadoss');
+export const CamaEstados = mongoose.model('internacionCamaEstados', CamaEstadosSchema, 'internacionCamaEstados');
