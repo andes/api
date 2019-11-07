@@ -59,10 +59,10 @@ EventCore.on(/.*/, async function (body) {
         event
     });
     subscriptions.forEach((sub: any) => {
-        body = trasform[sub.trasform] ? trasform[sub.trasform](body) : body;
+        const bodyTransform = trasform[sub.trasform] ? trasform[sub.trasform](body) : body;
 
         if (sub.filters) {
-            const respuesta = !filterData(sub.filters, body);
+            const respuesta = !filterData(sub.filters, bodyTransform);
             if (respuesta) {
                 return null;
             }
@@ -70,7 +70,7 @@ EventCore.on(/.*/, async function (body) {
         const data = {
             id: new mongoose.Types.ObjectId(),
             subscription: sub._id,
-            data: body,
+            data: bodyTransform,
             event
         };
 
