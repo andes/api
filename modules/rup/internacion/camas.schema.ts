@@ -2,6 +2,8 @@ import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
+export const INTERNACION_CAPAS = ['medica', 'estadistica', 'enfermeria'];
+
 const CamaSchema = new mongoose.Schema({
     organizacion: {
         type: nombreSchema,

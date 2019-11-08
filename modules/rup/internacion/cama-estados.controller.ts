@@ -33,7 +33,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             }
         },
         {
-            $unwind: 'estados',
+            $unwind: '$estados',
         },
         {
             $group: {
@@ -47,8 +47,8 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             $lookup: {
                 from: 'internacionCamaEstados',
                 let: {
-                    camaId: '$_id',
-                    fecha: '$fechaMax'
+                    idCama: '$_id',
+                    fechaMax: '$fechaMax'
                 },
                 pipeline: [
                     {
@@ -56,17 +56,21 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                             idOrganizacion: mongoose.Types.ObjectId(organizacion),
                             ambito,
                             capa,
-                            idCama: '$camaId',
-                            start: { $lte: '$fechaMax' },
-                            end: { $gte: '$fechaMax' },
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$idCama', '$$idCama'] },
+                                    { $lte: ['$start', '$$fechaMax'] },
+                                    { $gte: ['$end', '$$fechaMax'] }
+                                ]
+                            },
                         }
                     },
                     {
-                        $unwind: 'estados',
+                        $unwind: '$estados',
                     },
                     {
                         $match: {
-                            'estados.fecha': '$fecha',
+                            $expr: { $eq: ['$estados.fecha', '$$fechaMax'] }
                         }
                     }
                 ],
@@ -77,13 +81,15 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             $unwind: '$estado'
         },
         {
-            $addField: {
-                'estado.idCama': '$_id'
+            $addFields: {
+                'estado.estados.idCama': '$_id',
+                'estado.estados.ambito': '$ambito',
+                'estado.estados.capa': '$capa',
             }
         },
         {
             $replaceRoot: {
-                newRoot: '$estado'
+                newRoot: '$estado.estados'
             }
         },
         {
@@ -99,7 +105,9 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             }
         },
         {
-            $unwind: 'cama'
+            $replaceRoot: {
+                newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
+            }
         }
     ];
 
@@ -162,7 +170,7 @@ export async function store({ organizacion, ambito, capa, cama }, estado) {
             ambito,
             capa,
             idCama: mongoose.Types.ObjectId(cama),
-            start: { $lge: estado.fecha },
+            start: { $lte: estado.fecha },
             end: { $gte: estado.fecha }
         },
         {

@@ -4,10 +4,11 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 const EstadoKey = String;
 
 const EstadoSchema = new mongoose.Schema({
-    organizacion: {
-        type: nombreSchema,
-        required: true
-    },
+    // organizacion: {
+    //     type: nombreSchema,
+    //     required: true
+    // },
+    organizacion: mongoose.SchemaTypes.ObjectId,
     ambito: String,
     capa: String,
     estados: [{

@@ -6,7 +6,7 @@ import moment = require('moment');
 
 const router = express.Router();
 
-router.get('/camas', asyncHandler(async (req: any, res) => {
+router.get('/camas', Auth.authenticate(), asyncHandler(async (req: any, res) => {
     const organizacion = Auth.getOrganization(req);
 
     const result = await CamasController.search({ organizacion, ambito: req.query.ambito, capa: req.query.capa }, req.query);
@@ -14,7 +14,7 @@ router.get('/camas', asyncHandler(async (req: any, res) => {
     res.json(result);
 }));
 
-router.get('/camas/:id', asyncHandler(async (req: any, res) => {
+router.get('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, res) => {
     const organizacion = Auth.getOrganization(req);
 
     const result = await CamasController.findById({ organizacion, ambito: req.query.ambito, capa: req.query.capa }, req.params.id, req.query.timestamp);
@@ -22,7 +22,7 @@ router.get('/camas/:id', asyncHandler(async (req: any, res) => {
     res.json(result);
 }));
 
-router.post('/camas', asyncHandler(async (req: any, res) => {
+router.post('/camas', Auth.authenticate(), asyncHandler(async (req: any, res) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -34,19 +34,19 @@ router.post('/camas', asyncHandler(async (req: any, res) => {
     res.json(result);
 }));
 
-router.patch('/camas/:id', asyncHandler(async (req: any, res) => {
+router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, res) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
-    const data = { ...req.body, organizacion, cama: req.params.id };
+    const data = { ...req.body, organizacion, id: req.params.id };
 
     const result = await CamasController.patch(data);
 
     res.json(result);
 }));
 
-router.delete('/camas/:id', asyncHandler(async (req: any, res) => {
+router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, res) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')

@@ -108,10 +108,14 @@
   },
   "homepage": "https://github.com/andes/api#readme",
   "devDependencies": {
+    "@types/jest": "^24.0.22",
     "@types/request": "^2.48.1",
     "before": "0.0.1",
     "chai": "^4.1.2",
+    "jest": "^24.9.0",
+    "mongodb-memory-server-global": "^6.0.1",
     "nodemon": "^1.17.4",
+    "ts-jest": "^24.1.0",
     "tslint": "^5.11.0",
     "tslint-eslint-rules": "^5.3.1"
   }

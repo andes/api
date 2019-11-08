@@ -1,8 +1,7 @@
-import { Camas } from './camas.schema';
+import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import moment = require('moment');
 import { EstadosCtr } from './estados.routes';
-import { CamaEstados } from './cama-estados.schema';
 
 export async function search({ organizacion, capa, ambito }, params) {
     let timestamp = moment();
@@ -14,13 +13,12 @@ export async function search({ organizacion, capa, ambito }, params) {
     return await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion, ambito, capa }, params);
 }
 
-export async function findById({ organizacion, capa, ambito }, idCama, timestamp) {
+export async function findById({ organizacion, capa, ambito }, idCama, timestamp = null) {
     if (!timestamp) {
         timestamp = moment();
     }
 
-    const estadoCama = await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion, ambito, capa }, { idCama, timestamp });
-
+    const estadoCama = await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion, ambito, capa }, { cama: idCama, timestamp });
     if (estadoCama.length > 0) {
         return estadoCama[0];
     }
@@ -28,8 +26,10 @@ export async function findById({ organizacion, capa, ambito }, idCama, timestamp
     return null;
 }
 
-export async function patch(data) {
-    const estadoCama = await findById({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa }, data.cama, data.estado.fecha);
+type CAMA = any;
+export async function patch(data: CAMA) {
+
+    const estadoCama = await findById({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa }, data.id, data.fecha);
 
     const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
 
@@ -38,23 +38,18 @@ export async function patch(data) {
     if (cambioPermitido) {
         const nuevoEstado = {
             ...estadoCama,
-            ...data.estado
+            ...data
         };
 
-        const [camaEncontrada] = await Promise.all([
-            Camas.findById(data.cama._id),
-            CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.cama }, nuevoEstado),
+        const [camaEncontrada, cats]: [any, any] = await Promise.all([
+            Camas.findById(data.id),
+            CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado),
         ]);
 
-        camaEncontrada.set({
-            organizacion: data.organizacion,
-            ambito: data.ambito,
-            unidadOrganizativaOriginal: data.unidadOrganizativa,
-            sectores: data.sectores,
-            nombre: data.nombre,
-            tipoCama: data.tipoCama,
-            equipamiento: data.equipamiento,
-        });
+        camaEncontrada.set(data);
+        if (data.unidadOrganizativa) {
+            camaEncontrada.unidadOrganizativaOriginal = data.unidadOrganizativa;
+        }
 
         return await camaEncontrada.save();
     }
@@ -85,9 +80,9 @@ export async function store(data) {
 
     const [camaGuardada] = await Promise.all([
         nuevaCama.save(),
-        CamasEstadosController.store({ organizacion: data.organizacion, ambito: data.ambito, capa: 'medica', cama: nuevaCama._id }, nuevoEstado),
-        CamasEstadosController.store({ organizacion: data.organizacion, ambito: data.ambito, capa: 'enfermeria', cama: nuevaCama._id }, nuevoEstado),
-        CamasEstadosController.store({ organizacion: data.organizacion, ambito: data.ambito, capa: 'estadistica', cama: nuevaCama._id }, nuevoEstado),
+        ...INTERNACION_CAPAS.map(capa => {
+            return CamasEstadosController.store({ organizacion: data.organizacion.id, ambito: data.ambito, capa, cama: nuevaCama._id }, nuevoEstado);
+        })
     ]);
 
     return camaGuardada;
