@@ -835,6 +835,41 @@ export function actualizarEstadoAgendas(start, end) {
     });
 }
 
+//agendas con el primer turno disponible agrupadas por profesional
+export async function turnosDisponibles(prestacion, organizacion) {
+    const pipelineAgendas = [];
+    const matchAgendas = {};
+    matchAgendas['organizacion._id'] = { $eq: organizacion }; //  compararar con id de organización del token
+    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
+    matchAgendas['$or'] = [
+        { 'bloques.restantesProgramados': { $gt: 0 } },
+        { $and: [{ 'bloques.restantesDelDia': { $gt: 0 } }, { horaInicio: { $lte: new Date(moment().endOf('day').format('YYYY-MM-DD HH:mm')) } }] }];
+    matchAgendas['estado'] = 'publicada'
+    matchAgendas['tipoPrestaciones.conceptId'] = prestacion;
+    pipelineAgendas.push({ $match: matchAgendas });
+    pipelineAgendas.push({ $unwind: '$bloques' });
+    pipelineAgendas.push({ $match: { $expr: { $or: [{ $gt: ['$bloques.restantesProgramados', 0] }, { $gt: ['$bloques.restantesDelDia', 0] }] } } });
+    pipelineAgendas.push({ $unwind: '$bloques.tipoPrestaciones' });
+    pipelineAgendas.push({ $unwind: '$bloques' });
+    pipelineAgendas.push({ $unwind: '$bloques.turnos' });
+    pipelineAgendas.push({ $match: { 'bloques.tipoPrestaciones.conceptId': prestacion } });
+    pipelineAgendas.push({ $match: { 'bloques.turnos.estado': 'disponible' } });
+    pipelineAgendas.push({
+        "$sort": {
+            "bloques.turnos.horaInicio": 1
+        }
+    });
+    pipelineAgendas.push({ "$group": { "_id": '$profesionales', "resultado": { "$push": '$$ROOT' } } });
+    pipelineAgendas.push({ "$project": { "resultado": { "$arrayElemAt": ['$resultado', 0] }, "_id": 0 } });
+    console.log(JSON.stringify(pipelineAgendas));
+    let agendas = await agendaModel.aggregate(pipelineAgendas);
+    console.log(agendas);
+    return agendas;
+
+}
+
+
+
 async function actualizarAux(agenda: any) {
     Auth.audit(agenda, (userScheduler as any));
     await saveAgenda(agenda);
