@@ -835,6 +835,52 @@ export function actualizarEstadoAgendas(start, end) {
     });
 }
 
+export async function prestacionesDisponibles(params) {
+    const pipelinePrestaciones = [];
+    var pipeline;
+    const matchAgendas = {};
+    matchAgendas['organizacion._id'] = { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(params)) };
+    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
+    matchAgendas['$or'] = [
+        { 'bloques.restantesProgramados': { $gt: 0 } },
+        { $and: [{ 'bloques.restantesDelDia': { $gt: 0 } }, { horaInicio: { $lte: new Date(moment().endOf('day').format('YYYY-MM-DD HH:mm')) } }] }];
+    matchAgendas['estado'] = 'publicada';
+    matchAgendas['dinamica'] = false;
+    pipelinePrestaciones.push({ $match: matchAgendas });
+    pipelinePrestaciones.push({ $unwind: '$bloques' });
+    pipelinePrestaciones.push({ $match: { $expr: { $or: [{ $gt: ['$bloques.restantesProgramados', 0] }, { $gt: ['$bloques.restantesDelDia', 0] }] } } });
+    pipelinePrestaciones.push({
+        $project: {
+            prestaciones: '$bloques.tipoPrestaciones',
+            _id: 0
+        }
+    });
+    pipelinePrestaciones.push({ $unwind: '$prestaciones' });
+    pipelinePrestaciones.push({
+        $group: {
+            _id: {
+                conceptId: '$prestaciones.conceptId',
+            },
+            resultado: { $push: '$$ROOT' }
+        }
+    });
+    pipelinePrestaciones.push({ $project: { resultado: { $arrayElemAt: ['$resultado', 0] }, _id: 0 } });
+    pipelinePrestaciones.push({ $unwind: '$resultado' });
+    pipelinePrestaciones.push({
+        $project: {
+            _id: '$resultado.prestaciones._id',
+            conceptId: '$resultado.prestaciones.conceptId',
+            fsn: '$resultado.prestaciones.fsn',
+            semanticTag: '$resultado.prestaciones.semanticTag',
+            term: '$resultado.prestaciones.term'
+        }
+    });
+    let prestaciones = await agendaModel.aggregate(pipelinePrestaciones);
+    return prestaciones;
+}
+
+
+
 //agendas con el primer turno disponible agrupadas por profesional
 export async function turnosDisponibles(prestacion, organizacion) {
     const pipelineAgendas = [];
