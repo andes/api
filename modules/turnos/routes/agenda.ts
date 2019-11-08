@@ -761,6 +761,27 @@ router.get('/agenda/turno/:idTurno', async (req, res, next) => {
     }
 
 });
+
+/**
+ * Get agendas disponibles a partir de un conceptId
+ * Filtrando los bloques con ese tipo de prestación y turnos de acceso directo disponibles
+ * y solo devolviendo una agenda por profesional con el turno más próximo
+ */
+
+router.get('/disponiblesTotem', async (req: any, res, next) => {
+    if (!req.query.prestacion) {
+        return res.json();
+    }
+    try {
+        const organization = new mongoose.Types.ObjectId(Auth.getOrganization(req))
+        const turnos = await agendaCtrl.turnosDisponibles(req.query.prestacion, organization);
+        console.log(turnos);
+        res.json(turnos);
+    } catch (err) {
+        return next(err);
+    }
+});
+
 /**
  * Get prestaciones que corresponden a agendas disponibles para el totem
  * osea, que tienen turnos de acceso directo disponibles
@@ -819,47 +840,5 @@ router.get('/prestacionesTotem', async (req: any, res, next) => {
 });
 
 
-/**
- * Get agendas disponibles a partir de un conceptId
- * Filtrando los bloques con ese tipo de prestación y turnos de acceso directo disponibles
- * y solo devolviendo una agenda por profesional
- */
-
-router.get('/disponiblesTotem', async (req: any, res, next) => {
-
-    const pipelineAgendas = [];
-    const matchAgendas = {};
-    if (!req.query.prestacion) {
-        return res.json();
-    }
-    matchAgendas['organizacion._id'] = { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) }; // TODO: compararar con id de organización del token
-    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment('day').format('YYYY-MM-DD HH:mm')) };
-    matchAgendas['$or'] = [
-        { 'bloques.restantesProgramados': { $gt: 0 } },
-        { 'bloques.restantesDelDia': { $gt: 0 } }];
-
-    matchAgendas['estado'] = 'publicada';
-    matchAgendas['dinamica'] = false;
-    if (req.query.prestacion) {
-        matchAgendas['tipoPrestaciones.conceptId'] = req.query.prestacion;
-    }
-    pipelineAgendas.push({ $match: matchAgendas });
-    // Las siguientes dos operaciones del aggregate son para filtrar solo 1 agenda por profesional
-    pipelineAgendas.push({ $group: { _id: '$profesionales', resultado: { $push: '$$ROOT' } } });
-    pipelineAgendas.push({ $sort: { 'resultado.bloques.turnos.horaInicio': 1.0 } });
-    pipelineAgendas.push({ $project: { resultado: { $arrayElemAt: ['$resultado', 0] }, _id: 0 } });
-    pipelineAgendas.push({ $unwind: '$resultado' });
-    pipelineAgendas.push({ $unwind: '$resultado.bloques' });
-    pipelineAgendas.push({ $match: { $expr: { $or: [{ $gt: ['$resultado.bloques.restantesProgramados', 0] }, { $gt: ['$resultado.bloques.restantesDelDia', 0] }] } } });
-    pipelineAgendas.push({ $unwind: '$resultado.bloques.tipoPrestaciones' });
-    pipelineAgendas.push({ $match: { 'resultado.bloques.tipoPrestaciones.conceptId': req.query.prestacion } });
-    console.log(pipelineAgendas);
-    try {
-        let prestaciones = await agenda.aggregate(pipelineAgendas);
-        res.json(prestaciones.map(elem => { return elem.resultado; }));
-    } catch (err) {
-        return next(err);
-    }
-});
 
 export = router;
