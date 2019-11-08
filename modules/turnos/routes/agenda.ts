@@ -788,57 +788,13 @@ router.get('/disponiblesTotem', async (req: any, res, next) => {
  */
 
 router.get('/prestacionesTotem', async (req: any, res, next) => {
-    const pipelinePrestaciones = [];
-    const matchAgendas = {};
-
-    matchAgendas['organizacion._id'] = { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) };
-    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
-    matchAgendas['$or'] = [
-        { 'bloques.restantesProgramados': { $gt: 0 } },
-        { 'bloques.restantesDelDia': { $gt: 0 } }];
-
-    matchAgendas['estado'] = 'publicada';
-    matchAgendas['dinamica'] = false;
-
-    pipelinePrestaciones.push({ $match: matchAgendas });
-    pipelinePrestaciones.push({ $unwind: '$bloques' });
-    pipelinePrestaciones.push({ $match: { $expr: { $or: [{ $gt: ['$bloques.restantesProgramados', 0] }, { $gt: ['$bloques.restantesDelDia', 0] }] } } });
-    pipelinePrestaciones.push({
-        $project: {
-            prestaciones: '$bloques.tipoPrestaciones',
-            _id: 0
-        }
-    });
-    pipelinePrestaciones.push({ $unwind: '$prestaciones' });
-    pipelinePrestaciones.push({
-        $group: {
-            _id: {
-                conceptId: '$prestaciones.conceptId',
-            },
-            resultado: { $push: '$$ROOT' }
-        }
-    });
-    pipelinePrestaciones.push({ $project: { resultado: { $arrayElemAt: ['$resultado', 0] }, _id: 0 } });
-    pipelinePrestaciones.push({ $unwind: '$resultado' });
-
-    pipelinePrestaciones.push({
-        $project: {
-            _id: '$resultado.prestaciones._id',
-            conceptId: '$resultado.prestaciones.conceptId',
-            fsn: '$resultado.prestaciones.fsn',
-            semanticTag: '$resultado.prestaciones.semanticTag',
-            term: '$resultado.prestaciones.term'
-        }
-    });
-
     try {
-        let prestaciones = await agenda.aggregate(pipelinePrestaciones);
+        const prestaciones = await agendaCtrl.prestacionesDisponibles(req);
         res.json(prestaciones);
     } catch (err) {
         return next(err);
     }
 });
-
 
 
 export = router;
