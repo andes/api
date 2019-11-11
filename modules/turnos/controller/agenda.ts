@@ -836,85 +836,186 @@ export function actualizarEstadoAgendas(start, end) {
 }
 
 export async function prestacionesDisponibles(params) {
-    const pipelinePrestaciones = [];
-    var pipeline;
-    const matchAgendas = {};
-    matchAgendas['organizacion._id'] = { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(params)) };
-    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
-    matchAgendas['$or'] = [
-        { 'bloques.restantesProgramados': { $gt: 0 } },
-        { $and: [{ 'bloques.restantesDelDia': { $gt: 0 } }, { horaInicio: { $lte: new Date(moment().endOf('day').format('YYYY-MM-DD HH:mm')) } }] }];
-    matchAgendas['estado'] = 'publicada';
-    matchAgendas['dinamica'] = false;
-    pipelinePrestaciones.push({ $match: matchAgendas });
-    pipelinePrestaciones.push({ $unwind: '$bloques' });
-    pipelinePrestaciones.push({ $match: { $expr: { $or: [{ $gt: ['$bloques.restantesProgramados', 0] }, { $gt: ['$bloques.restantesDelDia', 0] }] } } });
-    pipelinePrestaciones.push({
-        $project: {
-            prestaciones: '$bloques.tipoPrestaciones',
-            _id: 0
+    let pipelinePrestaciones = [];
+    pipelinePrestaciones = [
+        {
+            $match: {
+                'organizacion._id': {
+                    $eq: new mongoose.Types.ObjectId(Auth.getOrganization(params))
+                },
+                'bloques.turnos.horaInicio': { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) },
+                estado: 'publicada',
+                dinamica: false
+            }
+        },
+        {
+            $match:
+            {
+                $or: [
+                    {
+                        'bloques.restantesProgramados': {
+                            $gt: 0
+                        }
+                    },
+                    {
+                        $and: [
+                            {
+                                'bloques.restantesDelDia': {
+                                    $gt: 0
+                                }
+                            }, {
+                                horaInicio: { $lte: new Date(moment().endOf('day').format('YYYY-MM-DD HH:mm')) }
+                            }]
+                    }]
+
+            }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $match: {
+                $expr: {
+                    $or: [{
+                        $gt: ['$bloques.restantesProgramados', 0]
+                    }, {
+                        $gt: ['$bloques.restantesDelDia', 0]
+                    }]
+                }
+            }
+        },
+        {
+            $project: {
+                prestaciones: '$bloques.tipoPrestaciones',
+                _id: 0
+            }
+        },
+        {
+            $unwind: '$prestaciones'
+        },
+        {
+            $group: {
+                _id: {
+                    conceptId: '$prestaciones.conceptId',
+                },
+                resultado: { $push: '$$ROOT' }
+            }
+        },
+        {
+            $project: {
+                resultado: {
+                    $arrayElemAt: ['$resultado', 0]
+                },
+                _id: 0
+            }
+        },
+        {
+            $unwind: '$resultado'
+        },
+        {
+            $project: {
+                _id: '$resultado.prestaciones._id',
+                conceptId: '$resultado.prestaciones.conceptId',
+                fsn: '$resultado.prestaciones.fsn',
+                semanticTag: '$resultado.prestaciones.semanticTag',
+                term: '$resultado.prestaciones.term'
+            }
         }
-    });
-    pipelinePrestaciones.push({ $unwind: '$prestaciones' });
-    pipelinePrestaciones.push({
-        $group: {
-            _id: {
-                conceptId: '$prestaciones.conceptId',
-            },
-            resultado: { $push: '$$ROOT' }
-        }
-    });
-    pipelinePrestaciones.push({ $project: { resultado: { $arrayElemAt: ['$resultado', 0] }, _id: 0 } });
-    pipelinePrestaciones.push({ $unwind: '$resultado' });
-    pipelinePrestaciones.push({
-        $project: {
-            _id: '$resultado.prestaciones._id',
-            conceptId: '$resultado.prestaciones.conceptId',
-            fsn: '$resultado.prestaciones.fsn',
-            semanticTag: '$resultado.prestaciones.semanticTag',
-            term: '$resultado.prestaciones.term'
-        }
-    });
+
+    ];
     let prestaciones = await agendaModel.aggregate(pipelinePrestaciones);
     return prestaciones;
 }
 
-
-
-//agendas con el primer turno disponible agrupadas por profesional
+// agendas con el primer turno disponible agrupadas por profesional
 export async function turnosDisponibles(prestacion, organizacion) {
-    const pipelineAgendas = [];
-    const matchAgendas = {};
-    matchAgendas['organizacion._id'] = { $eq: organizacion }; //  compararar con id de organización del token
-    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
-    matchAgendas['$or'] = [
-        { 'bloques.restantesProgramados': { $gt: 0 } },
-        { $and: [{ 'bloques.restantesDelDia': { $gt: 0 } }, { horaInicio: { $lte: new Date(moment().endOf('day').format('YYYY-MM-DD HH:mm')) } }] }];
-    matchAgendas['estado'] = 'publicada'
-    matchAgendas['tipoPrestaciones.conceptId'] = prestacion;
-    pipelineAgendas.push({ $match: matchAgendas });
-    pipelineAgendas.push({ $unwind: '$bloques' });
-    pipelineAgendas.push({ $match: { $expr: { $or: [{ $gt: ['$bloques.restantesProgramados', 0] }, { $gt: ['$bloques.restantesDelDia', 0] }] } } });
-    pipelineAgendas.push({ $unwind: '$bloques.tipoPrestaciones' });
-    pipelineAgendas.push({ $unwind: '$bloques' });
-    pipelineAgendas.push({ $unwind: '$bloques.turnos' });
-    pipelineAgendas.push({ $match: { 'bloques.tipoPrestaciones.conceptId': prestacion } });
-    pipelineAgendas.push({ $match: { 'bloques.turnos.estado': 'disponible' } });
-    pipelineAgendas.push({
-        "$sort": {
-            "bloques.turnos.horaInicio": 1
+    let pipelineAgendas = [];
+    pipelineAgendas = [
+
+        {
+            $match: {
+                'organizacion._id': {
+                    $eq: organizacion
+                },
+                'bloques.turnos.horaInicio': { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) },
+                estado: 'publicada',
+                'tipoPrestaciones.conceptId': prestacion,
+                $or: [
+                    {
+                        'bloques.restantesProgramados': {
+                            $gt: 0
+                        }
+                    },
+                    {
+                        $and: [
+                            {
+                                'bloques.restantesDelDia': {
+                                    $gt: 0
+                                }
+                            }, {
+                                horaInicio: { $lte: new Date(moment().endOf('day').format('YYYY-MM-DD HH:mm')) }
+                            }]
+                    }]
+            }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $match: {
+                $expr: {
+                    $or: [
+                        { $gt: ['$bloques.restantesProgramados', 0] },
+                        { $gt: ['$bloques.restantesDelDia', 0] }
+                    ]
+                }
+            }
+        },
+        {
+            $unwind: '$bloques.tipoPrestaciones'
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $unwind: '$bloques.turnos'
+        },
+        {
+            $match: {
+                'bloques.tipoPrestaciones.conceptId': prestacion
+            }
+        },
+        {
+            $match: {
+                'bloques.turnos.estado': 'disponible'
+            }
+        },
+        {
+            $sort: {
+                'bloques.turnos.horaInicio': 1
+            }
+        },
+        {
+            $group: {
+                _id: '$profesionales',
+                resultado: {
+                    $push: '$$ROOT'
+                }
+            }
+        },
+        {
+            $project: {
+                resultado: {
+                    $arrayElemAt: ['$resultado', 0]
+                },
+                _id: 0
+            }
         }
-    });
-    pipelineAgendas.push({ "$group": { "_id": '$profesionales', "resultado": { "$push": '$$ROOT' } } });
-    pipelineAgendas.push({ "$project": { "resultado": { "$arrayElemAt": ['$resultado', 0] }, "_id": 0 } });
-    console.log(JSON.stringify(pipelineAgendas));
+    ];
     let agendas = await agendaModel.aggregate(pipelineAgendas);
-    console.log(agendas);
     return agendas;
 
 }
-
-
 
 async function actualizarAux(agenda: any) {
     Auth.audit(agenda, (userScheduler as any));
