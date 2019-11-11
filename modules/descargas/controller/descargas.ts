@@ -518,16 +518,16 @@ export class Documento {
 
 
                     // Se leen header y footer (si se le pasa un encoding, devuelve un string)
-                    let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
-                    switch (configPrivate.dominio.nombre) {
+                    let html;
+                    switch (configPrivate.dominio) {
                         case 'SJ':
-                            html = html.replace('<!--Dominio-->', 'San Juan');
+                            html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informeSJ.html'), 'utf8');
                             break;
                         case 'NQN':
-                            html = html.replace('<!--Dominio-->', 'Neuquén');
+                            html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
                             break;
                         default:
-                            html = html.replace('<!--Dominio-->', 'Neuquén');
+                            html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
                             break;
                     }
 
@@ -634,7 +634,7 @@ export class Documento {
                     let logoAndes;
                     let logoPDP;
                     let logoPDP2;
-                    switch (configPrivate.dominio.nombre) {
+                    switch (configPrivate.dominio) {
                         case 'SJ':
                             logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional-SJ.png'));
                             logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h-SJ.png'));
