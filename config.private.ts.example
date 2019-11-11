@@ -36,6 +36,10 @@ export const ports = {
     ldapPort: getEnv('LDAP_PORT', ':389')
 };
 
+// Dominio
+// export const dominio = 'SJ';
+export const dominio = 'NQN';
+
 // Hosts
 export const hosts = {
     ldap: getEnv('LDAP_HOST', 'ldap.neuquen.gov.ar'),
