@@ -423,7 +423,7 @@ export class Documento {
     private static async generarHTML(req) {
         return new Promise(async (resolve, reject) => {
             try {
-
+                let dominio = configPrivate.dominio;
                 // Prestación
                 let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
 
@@ -519,7 +519,7 @@ export class Documento {
 
                     // Se leen header y footer (si se le pasa un encoding, devuelve un string)
                     let html;
-                    switch (configPrivate.dominio) {
+                    switch (dominio) {
                         case 'SJ':
                             html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informeSJ.html'), 'utf8');
                             break;
@@ -634,7 +634,7 @@ export class Documento {
                     let logoAndes;
                     let logoPDP;
                     let logoPDP2;
-                    switch (configPrivate.dominio) {
+                    switch (dominio) {
                         case 'SJ':
                             logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional-SJ.png'));
                             logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h-SJ.png'));
