@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import * as moment from 'moment';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
@@ -137,16 +138,34 @@ export function getTurno(req) {
 
 }
 
-
+/**
+ * Este método va a ser reemplazado por uno del mismo nombre pero dentro del controller de paciente
+ * @deprecated
+ *
+ */
 export async function getHistorialPaciente(req) {
+    // console.warn('Deprecation warning: getHistorialPaciente is deprecated. Use getHistorialPaciente in core/mpi/controller/paciente');
     if (req.query && req.query.pacienteId) {
         const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
         let { paciente } = await buscarPaciente(idPaciente);
         try {
             let pipelineTurno = [];
+            let pipelineSobreturno = [];
+            if (req.query.turnosProximos) {
+                pipelineTurno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
+                pipelineSobreturno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
+            }
+            if (req.query.organizacion) {
+                pipelineTurno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
+                pipelineSobreturno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
+            }
+            if (req.query.conceptId) {
+                pipelineTurno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });
+                pipelineSobreturno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });
+            }
             const turnos = [];
             let turno;
-            pipelineTurno = [
+            pipelineTurno.push(
 
                 {
                     $match: {
@@ -207,11 +226,8 @@ export async function getHistorialPaciente(req) {
                         'turno.horaInicio': -1.0
                     }
                 }
-
-            ];
-
-            let pipelineSobreturno = [];
-            pipelineSobreturno = [
+            );
+            pipelineSobreturno.push(
 
                 {
                     $match: {
@@ -267,7 +283,7 @@ export async function getHistorialPaciente(req) {
                     }
                 }
 
-            ];
+            );
             let data2 = await agenda.aggregate(pipelineTurno).exec();
             const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
             data2 = data2.concat(sobreturnos);

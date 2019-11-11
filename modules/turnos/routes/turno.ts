@@ -4,8 +4,6 @@ import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 import { paciente } from '../../../core/mpi/schemas/paciente';
-import * as pacienteController from '../../../core/mpi/controller/paciente';
-
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
