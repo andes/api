@@ -768,14 +768,13 @@ router.get('/agenda/turno/:idTurno', async (req, res, next) => {
  * y solo devolviendo una agenda por profesional con el turno más próximo
  */
 
-router.get('/disponiblesTotem', async (req: any, res, next) => {
+router.get('/totem/disponibles', async (req: any, res, next) => {
     if (!req.query.prestacion) {
         return res.json();
     }
     try {
-        const organization = new mongoose.Types.ObjectId(Auth.getOrganization(req))
+        const organization = new mongoose.Types.ObjectId(Auth.getOrganization(req));
         const turnos = await agendaCtrl.turnosDisponibles(req.query.prestacion, organization);
-        console.log(turnos);
         res.json(turnos);
     } catch (err) {
         return next(err);
@@ -787,7 +786,7 @@ router.get('/disponiblesTotem', async (req: any, res, next) => {
  * osea, que tienen turnos de acceso directo disponibles
  */
 
-router.get('/prestacionesTotem', async (req: any, res, next) => {
+router.get('/totem/prestaciones', async (req: any, res, next) => {
     try {
         const prestaciones = await agendaCtrl.prestacionesDisponibles(req);
         res.json(prestaciones);
