@@ -829,4 +829,19 @@ router.patch('/pacientes/mpi/:id', (req, res, next) => {
         });
 });
 
+router.get('/pacientes/:id/turnos', async (req, res, next) => {
+    try {
+        let resultado = await controller.buscarPaciente(req.params.id);
+        if (resultado) {
+            const turnosResult = controller.getHistorialPaciente(req, resultado.paciente);
+            const turnos = await Promise.all([turnosResult]);
+            res.json(turnos);
+        } else {
+            return next('Paciente no encontrado');
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
 export = router;

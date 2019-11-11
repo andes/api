@@ -701,21 +701,23 @@ router.post('/dashboard/descargarCsv', async (req, res, next) => {
 
     try {
         csv
-            .write(req.body, { headers: true, transform: (row) => {
-                return {
-                    Nombre: row.nombre,
-                    Cantidad: row.count,
-                    '': '',
-                    'Consulta de': row.tipoDeFiltro ? row.tipoDeFiltro.toUpperCase() : '',
-                    Organización: row.organizacion ? (req as any).user.organizacion.nombre : '',
-                    'Fecha Desde': row.fechaDesde ? moment(row.fechaDesde).format('DD-MM-YYYY') : '',
-                    'Fecha Hasta': row.fechaHasta ? moment(row.fechaHasta).format('DD-MM-YYYY') : '',
-                    Prestación: row.prestacion ? row.prestacion.map(pr => pr.nombre) : '',
-                    Profesional: row.profesional ? row.profesional : '',
-                    'Tipo de Turno': (row.tipoTurno && row.tipoDeFiltro === 'turno') ? row.tipoTurno : '',
-                    Estado: (row.estado_agenda || row.estado_turno) ? (row.estado_agenda ? row.estado_agenda : row.estado_turno) : ''
-                };
-            }})
+            .write(req.body, {
+                headers: true, transform: (row) => {
+                    return {
+                        Nombre: row.nombre,
+                        Cantidad: row.count,
+                        '': '',
+                        'Consulta de': row.tipoDeFiltro ? row.tipoDeFiltro.toUpperCase() : '',
+                        Organización: row.organizacion ? (req as any).user.organizacion.nombre : '',
+                        'Fecha Desde': row.fechaDesde ? moment(row.fechaDesde).format('DD-MM-YYYY') : '',
+                        'Fecha Hasta': row.fechaHasta ? moment(row.fechaHasta).format('DD-MM-YYYY') : '',
+                        Prestación: row.prestacion ? row.prestacion.map(pr => pr.nombre) : '',
+                        Profesional: row.profesional ? row.profesional : '',
+                        'Tipo de Turno': (row.tipoTurno && row.tipoDeFiltro === 'turno') ? row.tipoTurno : '',
+                        Estado: (row.estado_agenda || row.estado_turno) ? (row.estado_agenda ? row.estado_agenda : row.estado_turno) : ''
+                    };
+                }
+            })
             .pipe(ws)
             .on('finish', () => {
                 res.download(('/tmp/dashboard.csv' as string), (err) => {

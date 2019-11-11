@@ -1,3 +1,4 @@
+import { pacienteSchema } from './../schemas/paciente';
 import * as config from '../../../config';
 import * as moment from 'moment';
 import { paciente, pacienteMpi } from '../schemas/paciente';
@@ -7,6 +8,7 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { matchSisa } from '../../../utils/servicioSisa';
 import { getServicioRenaper } from '../../../utils/servicioRenaper';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
@@ -923,3 +925,159 @@ export async function actualizarGeoReferencia(dataPaciente, req) {
     }
 }
 
+export async function getHistorialPaciente(req, dataPaciente) {
+    try {
+        let pipelineTurno = [];
+        let pipelineSobreturno = [];
+        if (req.query.turnosProximos) {
+            pipelineTurno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
+            pipelineSobreturno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
+        }
+        if (req.query.organizacion) {
+            pipelineTurno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
+            pipelineSobreturno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
+        }
+        if (req.query.conceptId) {
+            pipelineTurno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });
+            pipelineSobreturno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });
+        }
+        const turnos = [];
+        let turno;
+        pipelineTurno.push(
+
+            {
+                $match: {
+                    estado: {
+                        $in: [
+                            'publicada',
+                            'pendienteAsistencia',
+                            'pendienteAuditoria',
+                            'auditada',
+                            'disponible',
+                            'pausada'
+                        ]
+                    },
+                    'bloques.turnos.paciente.id': { $in: dataPaciente.vinculos }
+                }
+            },
+            {
+                $unwind: {
+                    path: '$bloques'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$bloques.turnos'
+                }
+            },
+            {
+                $match: {
+                    'bloques.turnos.paciente.id': { $in: dataPaciente.vinculos }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        id: '$_id',
+                        turnoId: '$bloques.turnos._id'
+                    },
+                    agenda_id: {
+                        $first: '$_id'
+                    },
+                    bloque_id: { $first: '$bloques._id' },
+                    organizacion: {
+                        $first: '$organizacion'
+                    },
+                    profesionales: {
+                        $first: '$profesionales'
+                    },
+                    turno: {
+                        $first: '$bloques.turnos'
+                    },
+                    espacioFisico: {
+                        $first: '$espacioFisico'
+                    }
+                }
+            },
+            {
+                $sort: {
+                    'turno.horaInicio': -1.0
+                }
+            }
+        );
+        pipelineSobreturno.push(
+
+            {
+                $match: {
+                    estado: {
+                        $in: [
+                            'publicada',
+                            'pendienteAsistencia',
+                            'pendienteAuditoria',
+                            'auditada',
+                            'disponible',
+                            'pausada'
+                        ]
+                    },
+                    'sobreturnos.paciente.id': { $in: dataPaciente.vinculos }
+                }
+            },
+            {
+                $unwind: {
+                    path: '$sobreturnos'
+                }
+            },
+            {
+                $match: {
+                    'sobreturnos.paciente.id': { $in: dataPaciente.vinculos }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        id: '$_id',
+                        turnoId: '$sobreturnos._id'
+                    },
+                    agenda_id: {
+                        $first: '$_id'
+                    },
+                    organizacion: {
+                        $first: '$organizacion'
+                    },
+                    profesionales: {
+                        $first: '$profesionales'
+                    },
+                    turno: {
+                        $first: '$sobreturnos'
+                    },
+                    espacioFisico: {
+                        $first: '$espacioFisico'
+                    }
+                }
+            },
+            {
+                $sort: {
+                    'turno.horaInicio': -1.0
+                }
+            }
+
+        );
+        let data2 = await agenda.aggregate(pipelineTurno).exec();
+        const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
+        data2 = data2.concat(sobreturnos);
+        data2.forEach(elem => {
+            turno = elem.turno;
+            turno.id = turno._id;
+            turno.agenda_id = elem.agenda_id;
+            turno.bloque_id = (elem.bloque_id) ? elem.bloque_id : null;
+            turno.organizacion = elem.organizacion;
+            turno.profesionales = elem.profesionales;
+            turno.paciente = elem.turno.paciente;
+            turno.espacioFisico = elem.espacioFisico;
+            turnos.push(turno);
+        });
+        return (turnos);
+    } catch (error) {
+        return (error);
+    }
+}
