@@ -16,4 +16,7 @@ export let vacunasSchema = new mongoose.Schema({
     efector: String
 });
 
+vacunasSchema.index({ documento: 1 });
+vacunasSchema.index({ idvacuna: 1 });
+
 export let vacunas = mongoose.model('vacunas', vacunasSchema, 'nomivac');

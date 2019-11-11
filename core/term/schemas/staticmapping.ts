@@ -12,4 +12,6 @@ export let schema = new mongoose.Schema({
     }
 });
 
+schema.index({ conceptId: 1 });
+
 export let model = mongoose.model('snomed-cie10-static', schema, 'snomed-cie10-static');

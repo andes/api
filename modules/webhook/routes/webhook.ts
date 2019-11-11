@@ -48,27 +48,29 @@ function filterData(filters: any[], data) {
     return continua;
 }
 
+const trasform = {
+    fhir: Fhir.encode
+};
+
 EventCore.on(/.*/, async function (body) {
     const event = this.event;
-    let bodyFhir = null;
-    if (event === 'mpi:patient:create' || event === 'mpi:patient:update') {
-        bodyFhir = (Object as any).assign({}, Fhir.encode(body));
-    }
-
-    let subscriptions = await WebHook.find({
+    const subscriptions = await WebHook.find({
+        active: true,
         event
     });
     subscriptions.forEach((sub: any) => {
+        const bodyTransform = trasform[sub.trasform] ? trasform[sub.trasform](body) : body;
+
         if (sub.filters) {
-            let respuesta = !filterData(sub.filters, body);
+            const respuesta = !filterData(sub.filters, bodyTransform);
             if (respuesta) {
                 return null;
             }
         }
-        let data = {
+        const data = {
             id: new mongoose.Types.ObjectId(),
             subscription: sub._id,
-            data: bodyFhir ? bodyFhir : body,
+            data: bodyTransform,
             event
         };
 
@@ -81,7 +83,7 @@ EventCore.on(/.*/, async function (body) {
             timeout: 10000,
         }, (error, response, _body) => {
 
-            let log = new WebHookLog({
+            const log = new WebHookLog({
                 event,
                 url: sub.url,
                 method: sub.method,

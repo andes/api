@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
-import { ObjSIISASchema } from './siisa';
+import { ObjSIISASchema, EspecialidadSIISASchema } from './siisa';
 
 const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -49,12 +49,12 @@ export let profesionalSchema = new mongoose.Schema({
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
         exportadoSisa: Boolean,
-        fechaDeInscripcion : Date
+        fechaDeInscripcion: Date
     }],
     formacionPosgrado: [{
         profesion: { type: ObjSIISASchema, required: false },
         institucionFormadora: { type: ObjSIISASchema, required: false },
-        especialidad: { type: ObjSIISASchema, required: false },
+        especialidad: { type: EspecialidadSIISASchema, required: false },
         fechaIngreso: { type: Date, required: false },
         fechaEgreso: { type: Date, required: false },
         observacion: String,
@@ -82,7 +82,7 @@ export let profesionalSchema = new mongoose.Schema({
         papelesVerificados: { type: Boolean, default: false },
         exportadoSisa: Boolean,
         tieneVencimiento: Boolean,
-        notas: String
+        notas: [{ type: String, required: false }]
     }],
     sanciones: [{
         numero: { type: Number, required: false },
@@ -95,7 +95,7 @@ export let profesionalSchema = new mongoose.Schema({
         fecha: { type: Date, required: false },
         vencimiento: { type: Date, required: false }
     }],
-    notas: { type: String, required: false },
+    notas: [{ type: String, required: false }],
     rematriculado: { type: Number, default: false },
     agenteMatriculador: { type: String, required: false },
     supervisor: {
@@ -125,5 +125,7 @@ profesionalSchema.virtual('fallecido').get(function () {
 });
 
 profesionalSchema.plugin(AuditPlugin);
+
+profesionalSchema.index({ documento: 1 });
 
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');

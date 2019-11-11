@@ -21,6 +21,11 @@ import { Types } from 'mongoose';
 export function darAsistencia(req, data, tid = null) {
     const turno = getTurno(req, data, tid);
     turno.asistencia = 'asistio';
+
+    if (!turno.horaAsistencia) {
+        turno.horaAsistencia = new Date();
+    }
+
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
     return turno;
@@ -29,6 +34,11 @@ export function darAsistencia(req, data, tid = null) {
 // Turno
 export function sacarAsistencia(req, data, tid = null) {
     const turno = getTurno(req, data, tid);
+
+    if (turno.horaAsistencia) {
+        turno.horaAsistencia = null;
+    }
+
     turno.asistencia = undefined;
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
@@ -37,6 +47,11 @@ export function sacarAsistencia(req, data, tid = null) {
 // Turno
 export function marcarNoAsistio(req, data, tid = null) {
     const turno = getTurno(req, data, tid);
+
+    if (turno.horaAsistencia) {
+        turno.horaAsistencia = null;
+    }
+
     turno.asistencia = 'noAsistio';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
@@ -799,20 +814,22 @@ export function actualizarEstadoAgendas(start, end) {
         todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
         todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
 
-        if (todosAsistencia) {
-            if (todosAuditados) {
-                agenda.estado = 'auditada';
-                actualizarAux(agenda);
+        if (agenda.nominalizada) {
+            if (todosAsistencia) {
+                if (todosAuditados) {
+                    agenda.estado = 'auditada';
+                    actualizarAux(agenda);
+                } else {
+                    if (agenda.estado !== 'pendienteAuditoria') {
+                        agenda.estado = 'pendienteAuditoria';
+                        actualizarAux(agenda);
+                    }
+                }
             } else {
-                if (agenda.estado !== 'pendienteAuditoria') {
-                    agenda.estado = 'pendienteAuditoria';
+                if (agenda.estado !== 'pendienteAsistencia') {
+                    agenda.estado = 'pendienteAsistencia';
                     actualizarAux(agenda);
                 }
-            }
-        } else {
-            if (agenda.estado !== 'pendienteAsistencia') {
-                agenda.estado = 'pendienteAsistencia';
-                actualizarAux(agenda);
             }
         }
     });

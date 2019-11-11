@@ -1,6 +1,7 @@
 import { defaultLimit, maxLimit } from './../../../config';
 import * as express from 'express';
 import { profesional } from '../schemas/profesional';
+import { profesion } from '../schemas/profesion_model';
 import * as utils from '../../../utils/utils';
 import * as fs from 'fs';
 import { makeFs } from '../schemas/imagenes';
@@ -15,7 +16,7 @@ import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
-
+import moment = require('moment');
 
 let router = express.Router();
 
@@ -39,8 +40,119 @@ router.get('/profesionales/estadisticas', async (req, res, next) => {
         estadisticas['totalRematriculados'] = values[2];
         res.json(estadisticas);
     });
+});
 
+router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
+        return next(403);
+    }
+    const fechaDesde = req.query.fechaDesde;
+    const fechaHasta = req.query.fechaHasta;
+    let profesionaleSisaTotal = [];
 
+    let datos = await profesional.aggregate(
+        [
+            {
+                $match: {
+                    $and: [
+                        {
+                            'formacionGrado.fechaDeInscripcion': {
+                                $gte: moment(fechaDesde).startOf('day').toDate(),
+                                $lte: moment(fechaHasta).endOf('day').toDate()
+                            }
+                        },
+                        { profesionalMatriculado: true }
+                    ]
+                }
+            },
+            {
+                $unwind: '$formacionGrado'
+            },
+            {
+                $match: {
+                    'formacionGrado.fechaDeInscripcion': {
+                        $gte: moment(fechaDesde).startOf('day').toDate(),
+                        $lte: moment(fechaHasta).endOf('day').toDate()
+                    }
+                }
+            },
+
+        ]);
+
+    for (let index = 0; index < datos.length; index++) {
+        let profesionalSisa = {};
+
+        const unProfesional = datos[index];
+        profesionalSisa['ID_PROFESIONAL'] = '';
+        profesionalSisa['ID_PROFESIONAL_PROFESION'] = '';
+        profesionalSisa['ID_PROFESIONAL_MATRICULA'] = '';
+        profesionalSisa['ID_TIPODOC'] = 1;
+        profesionalSisa['NRODOC'] = unProfesional.documento;
+        profesionalSisa['NOMBRE'] = unProfesional.nombre;
+        profesionalSisa['APELLIDO'] = unProfesional.apellido;
+        profesionalSisa['SEXO'] = (unProfesional.sexo === 'femenino' || unProfesional.sexo === 'Femenino') ? 'F' : 'M';
+        profesionalSisa['FECHA_NACIMIENTO'] = moment(unProfesional.fechaNacimiento).format('DD/MM/YYYY');
+        profesionalSisa['ID_PAIS_NACIMIENTO'] = '0';
+        profesionalSisa['ID_LOC_NACIMIENTO'] = '0';
+        profesionalSisa['ID_PAIS'] = '0';
+        const domicilio = unProfesional.domicilios.find(x => x.tipo === 'real');
+        profesionalSisa['CALLE'] = domicilio ? domicilio.valor : '';
+        profesionalSisa['CALLE_NRO'] = '-';
+        profesionalSisa['CALLE_PISO'] = '-';
+        profesionalSisa['CALLE_DPTO'] = '-';
+        profesionalSisa['ID_LOCALIDAD_DOMICILIO'] = '0';
+        profesionalSisa['ID_PROVINCIA_DOMICILIO'] = '15';
+        profesionalSisa['ID_PAIS_DOMICILIO'] = '200';
+        const tel_celular = unProfesional.contactos.find(x => x.tipo === 'celular' && x.valor);
+        const tel_fijo = unProfesional.contactos.find(x => x.tipo === 'fijo' && x.valor);
+        const email = unProfesional.contactos.find(x => x.tipo === 'email' && x.valor);
+        profesionalSisa['TIENE_TELEFONO'] = (tel_celular || tel_fijo || email) ? 'SI' : 'NO';
+        profesionalSisa['ID_TIPO_TE1'] = tel_fijo ? '1' : '';
+        profesionalSisa['ID_TIPO_TE2'] = tel_celular ? '2' : '';
+        profesionalSisa['ID_TIPO_TE3'] = '';
+        profesionalSisa['ID_TIPO_TE4'] = '';
+        profesionalSisa['TE1'] = tel_fijo ? tel_fijo.valor : '';
+        profesionalSisa['TE2'] = tel_celular ? tel_celular.valor : '';
+        profesionalSisa['TE3'] = '';
+        profesionalSisa['TE4'] = '';
+        profesionalSisa['LIBRO'] = '';
+        profesionalSisa['FOLIO'] = '';
+        profesionalSisa['ACTA'] = '';
+        profesionalSisa['EXPEDIENTE'] = '';
+        profesionalSisa['EMAIL'] = email ? email.valor : '';
+        profesionalSisa['EMAIL2'] = '';
+        profesionalSisa['CUIL'] = unProfesional.cuit ? unProfesional.cuit : '';
+        let fallecido = unProfesional.fechaFallecimiento ? 'SI' : 'NO';
+        profesionalSisa['FALLECIDO'] = fallecido;
+        profesionalSisa['FECHA_FALLECIDO'] = fallecido === 'SI' ? unProfesional.fecha_fallecido : '';
+        profesionalSisa['HABILITADO'] = 'SI';
+        let profesionDeReferencia: any = await profesion.findOne({ codigo: unProfesional.formacionGrado.profesion.codigo });
+        profesionalSisa['ID_PROFESION_REFERENCIA'] = (profesionDeReferencia && profesionDeReferencia.profesionCodigoRef) ? profesionDeReferencia.profesionCodigoRef : '';
+        profesionalSisa['ID_PROFESION'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.profesion) ? unProfesional.formacionGrado.profesion.codigo : '';
+        profesionalSisa['TITULO'] = unProfesional.formacionGrado ? unProfesional.formacionGrado.titulo : '';
+        let codigoInstitucion = unProfesional.formacionGrado ? unProfesional.formacionGrado.entidadFormadora.codigo : '0';
+        profesionalSisa['ID_INSTITUCION_FORMADORA'] = codigoInstitucion;
+        profesionalSisa['FECHA_TITULO'] = moment(unProfesional.formacionGrado.fechaEgreso).format('DD/MM/YYYY');
+        profesionalSisa['ID_INSTITUCION_SEDE'] = '';
+        profesionalSisa['REVALIDA'] = 'NO';
+        profesionalSisa['ID_INSTITUCION_REVALIDA'] = '';
+        profesionalSisa['FECHA_REVALIDA'] = '';
+        profesionalSisa['ID_PROVINCIA_MATRICULA'] = '15';
+        profesionalSisa['MATRICULA'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.matriculacion) ? unProfesional.formacionGrado.matriculacion[unProfesional.formacionGrado.matriculacion.length - 1].matriculaNumero : '';
+        profesionalSisa['FECHA_MATRICULA'] = moment(unProfesional.formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY');
+        profesionalSisa['ID_SITUACION_MATRICULA'] = '1';
+        profesionalSisa['COMENTARIO'] = '';
+        profesionalSisa['SSS'] = 'NO';
+        profesionalSisa['SSS_CERTIFICADO'] = '';
+        profesionalSisa['SSS_FECHA'] = '';
+        profesionalSisa['ID_SSS_PROVINCIA'] = '';
+        profesionalSisa['ID_SSS_PROVINCIA2'] = '';
+        profesionalSisa['ID_SSS_PROVINCIA3'] = '';
+        profesionalSisa['REMATRICULACION'] = 'NO';
+        profesionaleSisaTotal.push(profesionalSisa);
+    }
+
+    res.status(201).json(profesionaleSisaTotal);
 });
 
 router.get('/profesionales/guia', async (req, res, next) => {
@@ -248,6 +360,189 @@ router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
 
     });
 });
+
+router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, next) => {
+    const match = {};
+    const match2 = {};
+    if (req.query.matriculacion) {
+        match['profesionalMatriculado'] = true;
+    }
+
+    if (req.query.rematriculado) {
+        match['rematriculado'] = true;
+    }
+
+    if (req.query.matriculado) {
+        match['rematriculado'] = false;
+    }
+    if (req.query.especialidadCodigo) {
+        match2['formacionPosgrado.especialidad.codigo'] = parseInt(req.query.especialidadCodigo, 10);
+    }
+    if (req.query.profesionCodigo) {
+        match2['formacionGrado.profesion.codigo'] = parseInt(req.query.profesionCodigo, 10);
+    }
+    let unwindOptions = {};
+    let projections = {};
+    if (req.query.tipoMatricula === 'grado') {
+        match['formacionGrado.matriculado'] = true;
+        match['formacionGrado.matriculacion.0'] = { $exists: true };
+
+        if (req.query.vencidas) {
+            match2['ultimaMatricula.fin'] = { $lte: new Date() };
+        }
+        if (req.query.bajaMatricula) {
+            match2['ultimaMatricula.baja.fecha'] = { $nin: [null, ''] };
+        }
+        unwindOptions = { path: '$formacionGrado' };
+        projections = {
+            habilitado: 1,
+            nombre: 1,
+            apellido: 1,
+            tipoDocumento: 1,
+            documento: 1,
+            documentoVencimiento: 1,
+            cuit: 1,
+            fechaNacimiento: 1,
+            lugarNacimiento: 1,
+            fechaFallecimiento: 1,
+            nacionalidad: 1,
+            sexo: 1,
+            contactos: 1,
+            domicilios: 1,
+            fotoArchivo: 1,
+            firmas: 1,
+            incluidoSuperintendencia: 1,
+            formacionPosgrado: 1,
+            'formacionGrado.profesion': 1,
+            'formacionGrado.entidadFormadora': 1,
+            'formacionGrado.titulo': 1,
+            'formacionGrado.fechaTitulo': 1,
+            'formacionGrado.fechaEgreso': 1,
+            'formacionGrado.renovacion': 1,
+            'formacionGrado.papelesVerificados': 1,
+            'formacionGrado.matriculado': 1,
+            'formacionGrado.exportadoSisa': 1,
+            'formacionGrado.fechaDeInscripcion': 1,
+            ultimaMatricula: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] },
+            sanciones: 1,
+            notas: 1,
+            rematriculado: 1,
+            agenteMatriculador: 1,
+            supervisor: 1,
+            OtrosDatos: 1,
+            idRenovacion: 1,
+            documentoViejo: 1,
+            turno: 1,
+            profesionalMatriculado: 1
+        };
+
+    } else {
+
+        match['formacionPosgrado.matriculado'] = true;
+        match['formacionPosgrado.matriculacion.0'] = { $exists: true };
+        if (req.query.bajaMatricula) {
+            match2['ultimaMatriculaPosgrado.baja.fecha'] = { $nin: [null, ''] };
+        }
+        if (req.query.vencidas) {
+            match2['formacionPosgrado.tieneVencimiento'] = true;
+            match2['ultimaMatriculaPosgrado.fin'] = { $lte: new Date() };
+        }
+        unwindOptions = { path: '$formacionPosgrado' };
+        projections = {
+            habilitado: 1,
+            nombre: 1,
+            apellido: 1,
+            tipoDocumento: 1,
+            documento: 1,
+            documentoVencimiento: 1,
+            cuit: 1,
+            fechaNacimiento: 1,
+            lugarNacimiento: 1,
+            fechaFallecimiento: 1,
+            nacionalidad: 1,
+            sexo: 1,
+            contactos: 1,
+            domicilios: 1,
+            fotoArchivo: 1,
+            firmas: 1,
+            incluidoSuperintendencia: 1,
+            formacionGrado: 1,
+            'formacionPosgrado.profesion': 1,
+            'formacionPosgrado.institucionFormadora': 1,
+            'formacionPosgrado.especialidad': 1,
+            'formacionPosgrado.fechaIngreso': 1,
+            'formacionPosgrado.fechaEgreso': 1,
+            'formacionPosgrado.observacion': 1,
+            'formacionPosgrado.certificacion': 1,
+            'formacionPosgrado.fechasDeAltas': 1,
+            'formacionPosgrado.matriculado': 1,
+            'formacionPosgrado.revalida': 1,
+            'formacionPosgrado.papelesVerificados': 1,
+            'formacionPosgrado.exportadoSisa': 1,
+            'formacionPosgrado.tieneVencimiento': 1,
+            'formacionPosgrado.notas': 1,
+            ultimaMatriculaPosgrado: { $arrayElemAt: ['$formacionPosgrado.matriculacion', -1] },
+            sanciones: 1,
+            notas: 1,
+            rematriculado: 1,
+            agenteMatriculador: 1,
+            supervisor: 1,
+            OtrosDatos: 1,
+            idRenovacion: 1,
+            documentoViejo: 1,
+            turno: 1,
+            profesionalMatriculado: 1
+        };
+    }
+    if (req.query.fechaDesde && req.query.fechaHasta) {
+        if (req.query.matriculasPorVencer) {
+            if (req.query.tipoMatricula === 'grado') {
+                match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
+                { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+            } else {
+                match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
+                { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
+            }
+        } else if (req.query.matriculasPorVencer === false) {
+            if (req.query.tipoMatricula === 'grado') {
+                match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
+                { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+            } else {
+                match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
+                { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+            }
+        }
+    }
+
+    let pipeline = [];
+    pipeline.push({ $match: match });
+    pipeline.push({ $unwind: unwindOptions });
+    pipeline.push({ $project: projections });
+    pipeline.push({ $match: match2 });
+    if (!req.query.exportarPlanillaCalculo) {
+        const radix = 10;
+        let skip = 0;
+        let limit = 0;
+        skip = parseInt(req.query.skip || 0, radix);
+        limit = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        pipeline.push({ $skip: skip });
+        pipeline.push({ $limit: limit });
+    }
+    if (!req.query.exportarPlanillaCalculo) {
+        const data = await profesional.aggregate(pipeline);
+        try {
+            res.json(data);
+        } catch (error) {
+            return next(error);
+        }
+    } else {
+        const matriculas = await toArray(profesional.aggregate(pipeline).cursor({}).exec());
+        let responseArray = createResponseArray(matriculas, req);
+        res.status(201).json(responseArray);
+    }
+});
+
+
 router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
@@ -319,7 +614,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         }
 
         if (req.query.bajaMatricula) {
-            opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null] };
+            opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
+            opciones['formacionPosgrado.matriculacion.baja.motivo'] = { $nin: [null, ''] };
         }
 
         if (req.query.rematriculado) {
@@ -348,7 +644,6 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             };
         }
 
-
         const radix = 10;
         const skip: number = parseInt(req.query.skip || 0, radix);
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
@@ -369,8 +664,10 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     apellido: 1,
                     nombre: 1
                 });
-        } else {
+        } else if (!req.query.exportarPlanillaCalculo) {
             query = profesional.find(opciones).skip(skip).limit(limit);
+        } else {
+            query = profesional.find(opciones);
         }
 
         if (req.query.fields) {
@@ -381,7 +678,200 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             if (err) {
                 return next(err);
             }
-            res.json(data);
+            if (!req.query.exportarPlanillaCalculo) {
+                res.json(data);
+            } else {
+                let profesionales = [];
+                for (let i = 0; i < data.length; i++) {
+                    let prof = {};
+
+                    prof['nombre'] = data[i].nombre;
+                    prof['apellido'] = data[i].apellido;
+                    prof['tipoDocumento'] = data[i].tipoDocumento;
+                    prof['documento'] = data[i].documento;
+                    prof['documentoVencimiento'] = data[i].documentoVencimiento;
+                    prof['cuit'] = data[i].cuit;
+                    prof['fechaNacimiento'] = moment(data[i].fechaNacimiento).format('DD/MM/YYYY');
+                    prof['lugarNacimiento'] = data[i].lugarNacimiento;
+                    prof['nacionalidad'] = data[i].nacionalidad ? data[i].nacionalidad.nombre : '';
+                    prof['sexo'] = data[i].sexo;
+                    // formacionGrado1
+                    prof['profesion1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].profesion ? data[i].formacionGrado[0].profesion.nombre : '';
+                    prof['tipoDeFormacion1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].profesion ? data[i].formacionGrado[0].profesion.tipoDeFormacion : '';
+                    prof['entidadFormadora1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].entidadFormadora ? data[i].formacionGrado[0].entidadFormadora.nombre : '';
+                    prof['fechaEgreso1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? data[i].formacionGrado[0].fechaEgreso : '';
+                    if (data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].matriculado && data[i].formacionGrado[0].matriculacion) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[0].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionGrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaGNumero1'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                        prof['fechaInicio1'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
+                        prof['fechaFin1'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
+                        prof['fechaBaja1'] = ultimaMatricula && ultimaMatricula.baja && ultimaMatricula.baja.fecha ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
+                        prof['motivoBaja1'] = ultimaMatricula && ultimaMatricula.baja ? ultimaMatricula.baja.motivo : '';
+                    } else {
+                        prof['matriculaGNumero1'] = '';
+                        prof['fechaInicio1'] = '';
+                        prof['fechaFin1'] = '';
+                        prof['fechaBaja1'] = '';
+                        prof['motivoBaja1'] = '';
+                    }
+                    prof['fechaInscripcion1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? moment(data[i].formacionGrado[0].fechaDeInscripcion).format('DD/MM/YYYY') : '';
+                    // formacionGrado2
+                    prof['profesion2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].profesion ? data[i].formacionGrado[1].profesion.nombre : '';
+                    prof['tipoDeFormacion2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].profesion ? data[i].formacionGrado[1].profesion.tipoDeFormacion : '';
+                    prof['entidadFormadora2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].entidadFormadora ? data[i].formacionGrado[1].entidadFormadora.nombre : '';
+                    prof['fechaEgreso2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].fechaEgreso : '';
+                    if (data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].matriculado && data[i].formacionGrado[1].matriculacion) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[1].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionGrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaGNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                        prof['fechaInicio2'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
+                        prof['fechaFin2'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
+                        prof['fechaBaja2'] = ultimaMatricula && ultimaMatricula.baja && ultimaMatricula.baja.fecha ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
+                        prof['motivoBaja2'] = ultimaMatricula && ultimaMatricula.baja ? ultimaMatricula.baja.motivo : '';
+                    } else {
+                        prof['matriculaGNumero2'] = '';
+                        prof['fechaInicio2'] = '';
+                        prof['fechaFin2'] = '';
+                        prof['fechaBaja2'] = '';
+                        prof['motivoBaja2'] = '';
+                    }
+                    prof['fechaInscripcion2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? moment(data[i].formacionGrado[1].fechaDeInscripcion).format('DD/MM/YYYY') : '';
+                    // formacionGrado3
+                    prof['profesion3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].profesion ? data[i].formacionGrado[2].profesion.nombre : '';
+                    prof['tipoDeFormacion3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].profesion ? data[i].formacionGrado[2].profesion.tipoDeFormacion : '';
+                    prof['entidadFormadora3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].entidadFormadora ? data[i].formacionGrado[2].entidadFormadora.nombre : '';
+                    prof['fechaEgreso3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].fechaEgreso : '';
+                    if (data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].matriculado && data[i].formacionGrado[2].matriculacion) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[2].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionGrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaGNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                        prof['fechaInicio3'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
+                        prof['fechaFin3'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
+                        prof['fechaBaja3'] = ultimaMatricula && ultimaMatricula.baja && ultimaMatricula.baja.fecha ? moment(ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
+                        prof['motivoBaja3'] = ultimaMatricula && ultimaMatricula.baja ? ultimaMatricula.baja.motivo : '';
+                    } else {
+                        prof['matriculaGNumero3'] = '';
+                        prof['fechaInicio3'] = '';
+                        prof['fechaFin3'] = '';
+                        prof['fechaBaja3'] = '';
+                        prof['motivoBaja3'] = '';
+                    }
+                    prof['fechaInscripcion3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? moment(data[i].formacionGrado[2].fechaDeInscripcion).format('DD/MM/YYYY') : '';
+
+                    // formacionPosgrado1
+                    prof['especialidad1'] = data[i].formacionPosgrado && data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].especialidad.nombre : '';
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[0] && data[i].formacionPosgrado[0].matriculado && data[i].formacionPosgrado[0].matriculacion) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[0].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionPosgrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaPNumero1'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    } else {
+                        prof['matriculaPNumero1'] = '';
+                    }
+                    prof['tieneVencimiento1'] = data[i].formacionPosgrado && data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].tieneVencimiento ? 'Si' : 'No' : '';
+                    // formacionPosgrado2
+                    prof['especialidad2'] = data[i].formacionPosgrado && data[i].formacionPosgrado[1] ? data[i].formacionPosgrado[1].especialidad.nombre : '';
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[1] && data[i].formacionPosgrado[1].matriculado && data[i].formacionPosgrado[1].matriculacion) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[1].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionPosgrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaPNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    } else {
+                        prof['matriculaPNumero2'] = '';
+                    }
+                    prof['tieneVencimiento2'] = data[i].formacionPosgrado && data[i].formacionPosgrado[1] ? data[i].formacionPosgrado[1].tieneVencimiento ? 'Si' : 'No' : '';
+
+                    // formacionPosgrado3
+                    prof['especialidad3'] = data[i].formacionPosgrado && data[i].formacionPosgrado[2] ? data[i].formacionPosgrado[2].especialidad.nombre : '';
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[2] && data[i].formacionPosgrado[2].matriculado && data[i].formacionPosgrado[2].matriculacion) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[2].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionPosgrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaPNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    } else {
+                        prof['matriculaPNumero3'] = '';
+                    }
+                    prof['tieneVencimiento3'] = data[i].formacionPosgrado && data[i].formacionPosgrado[2] ? data[i].formacionPosgrado[2].tieneVencimiento ? 'Si' : 'No' : '';
+                    // formacionPosgrado4
+                    prof['especialidad4'] = data[i].formacionPosgrado && data[i].formacionPosgrado[3] ? data[i].formacionPosgrado[3].especialidad.nombre : '';
+                    if (data[i].formacionPosgrado && data[i].formacionPosgrado[3] && data[i].formacionPosgrado[3].matriculado && data[i].formacionPosgrado[3].matriculacion) {
+                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[3].matriculacion.map(matricula => matricula.inicio));
+                        let ultimaMatricula = data[i].formacionPosgrado[3].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        prof['matriculaPNumero4'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    } else {
+                        prof['matriculaPNumero4'] = '';
+                    }
+                    prof['tieneVencimiento4'] = data[i].formacionPosgrado && data[i].formacionPosgrado[3] ? data[i].formacionPosgrado[3].tieneVencimiento ? 'Si' : 'No' : '';
+
+                    // prof['fechasDeAltas1'] = data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].fe ? 'Si' : 'No' : '';
+                    // TODO: que hago con fechasDeAltas?
+
+                    let fechaUltimaSancion = data[i].sanciones ? Math.max.apply(null, data[i].sanciones.map(sancion => sancion.fecha)) : null;
+                    let ultimaSancion = fechaUltimaSancion ? data[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; }) : null;
+                    prof['sancionNumero'] = ultimaSancion ? ultimaSancion.numero : '';
+                    prof['sancionMotivo'] = ultimaSancion ? ultimaSancion.motivo : '';
+                    prof['sancionnormaLegal'] = ultimaSancion ? ultimaSancion.normaLegal : '';
+                    prof['sancionFecha'] = ultimaSancion ? moment(ultimaSancion.fecha).format('DD/MM/YYYY') : '';
+                    prof['sancionVencimiento'] = ultimaSancion ? moment(ultimaSancion.vencimiento).format('DD/MM/YYYY') : '';
+
+                    prof['domicilio1'] = data[i].domicilios && data[i].domicilios[0] ? data[i].domicilios[0].valor : '';
+                    prof['codPos1'] = data[i].domicilios && data[i].domicilios[0] ? data[i].domicilios[0].codigoPostal : '';
+                    prof['pais1'] = data[i].domicilios && data[i].domicilios[0] && data[i].domicilios[0].ubicacion && data[i].domicilios[0].ubicacion.pais ? data[i].domicilios[0].ubicacion.pais.nombre : '';
+                    prof['provincia1'] = data[i].domicilios && data[i].domicilios[0] && data[i].domicilios[0].ubicacion && data[i].domicilios[0].ubicacion.provincia ? data[i].domicilios[0].ubicacion.provincia.nombre : '';
+                    prof['provincia1'] = data[i].domicilios && data[i].domicilios[0] && data[i].domicilios[0].ubicacion && data[i].domicilios[0].ubicacion.provincia ? data[i].domicilios[0].ubicacion.provincia.nombre : '';
+                    prof['localidad1'] = data[i].domicilios && data[i].domicilios[0] && data[i].domicilios[0].ubicacion && data[i].domicilios[0].ubicacion.localidad ? data[i].domicilios[0].ubicacion.localidad.nombre : '';
+
+                    prof['domicilio2'] = data[i].domicilios && data[i].domicilios[1] ? data[i].domicilios[1].valor : '';
+                    prof['codPos2'] = data[i].domicilios && data[i].domicilios[1] ? data[i].domicilios[1].codigoPostal : '';
+                    prof['pais2'] = data[i].domicilios && data[i].domicilios[1] && data[i].domicilios[1].ubicacion && data[i].domicilios[1].ubicacion.pais ? data[i].domicilios[1].ubicacion.pais.nombre : '';
+                    prof['provincia2'] = data[i].domicilios && data[i].domicilios[1] && data[i].domicilios[1].ubicacion && data[i].domicilios[1].ubicacion.provincia ? data[i].domicilios[1].ubicacion.provincia.nombre : '';
+                    prof['provincia2'] = data[i].domicilios && data[i].domicilios[1] && data[i].domicilios[1].ubicacion && data[i].domicilios[1].ubicacion.provincia ? data[i].domicilios[1].ubicacion.provincia.nombre : '';
+                    prof['localidad2'] = data[i].domicilios && data[i].domicilios[1] && data[i].domicilios[1].ubicacion && data[i].domicilios[1].ubicacion.localidad ? data[i].domicilios[1].ubicacion.localidad.nombre : '';
+
+                    prof['domicilio3'] = data[i].domicilios && data[i].domicilios[2] ? data[i].domicilios[2].valor : '';
+                    prof['codPos3'] = data[i].domicilios && data[i].domicilios[2] ? data[i].domicilios[2].codigoPostal : '';
+                    prof['pais3'] = data[i].domicilios && data[i].domicilios[2] && data[i].domicilios[2].ubicacion && data[i].domicilios[2].ubicacion.pais ? data[i].domicilios[2].ubicacion.pais.nombre : '';
+                    prof['provincia3'] = data[i].domicilios && data[i].domicilios[2] && data[i].domicilios[2].ubicacion && data[i].domicilios[2].ubicacion.provincia ? data[i].domicilios[2].ubicacion.provincia.nombre : '';
+                    prof['provincia3'] = data[i].domicilios && data[i].domicilios[2] && data[i].domicilios[2].ubicacion && data[i].domicilios[2].ubicacion.provincia ? data[i].domicilios[2].ubicacion.provincia.nombre : '';
+                    prof['localidad3'] = data[i].domicilios && data[i].domicilios[2] && data[i].domicilios[2].ubicacion && data[i].domicilios[2].ubicacion.localidad ? data[i].domicilios[2].ubicacion.localidad.nombre : '';
+
+                    if (data[i].contactos) {
+                        let celulares = data[i].contactos.filter(contacto => contacto.tipo === 'celular');
+                        if (celulares) {
+                            let minRanking = Math.min.apply(null, celulares.map(cel => cel.ranking));
+                            let celular = minRanking ? celulares.find(cel => cel.ranking === minRanking) : celulares[0];
+                            prof['celular'] = celular ? celular.valor : '';
+                        } else {
+                            prof['celular'] = '';
+                        }
+                        let emails = data[i].contactos.filter(contacto => contacto.tipo === 'email');
+                        if (emails) {
+                            let minRanking = Math.min.apply(null, emails.map(mail => mail.ranking));
+                            let email = minRanking ? emails.find(mail => mail.ranking === minRanking) : emails[0];
+                            prof['email'] = email ? email.valor : '';
+                        } else {
+                            prof['email'] = '';
+                        }
+                        let fijos = data[i].contactos.filter(contacto => contacto.tipo === 'fijo');
+                        if (fijos) {
+                            let minRanking = Math.min.apply(null, fijos.map(fij => fij.ranking));
+                            let fijo = minRanking ? fijos.find(fij => fij.ranking === minRanking) : fijos[0];
+                            prof['fijo'] = fijo ? fijo.valor : '';
+                        } else {
+                            prof['fijo'] = '';
+                        }
+                    } else {
+                        prof['celular'] = '';
+                        prof['email'] = '';
+                        prof['fijo'] = '';
+
+                    }
+
+                    prof['rematriculado'] = data[i].rematriculado === 1 ? 'Si' : 'No';
+                    prof['habilitado'] = data[i].habilitado ? 'Si' : 'No';
+
+                    profesionales.push(prof);
+                }
+                res.status(201).json(profesionales);
+            }
         });
     }
 });
@@ -752,3 +1242,99 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
 
 
 export = router;
+
+function createResponseArray(matriculas: any[], req: any) {
+    let responseArray = [];
+    for (let i = 0; i < matriculas.length; i++) {
+        let prof = {};
+        prof['nombre'] = matriculas[i].nombre;
+        prof['apellido'] = matriculas[i].apellido;
+        prof['tipoDocumento'] = matriculas[i].tipoDocumento;
+        prof['documento'] = matriculas[i].documento;
+        prof['documentoVencimiento'] = matriculas[i].documentoVencimiento;
+        prof['cuit'] = matriculas[i].cuit;
+        prof['fechaNacimiento'] = moment(matriculas[i].fechaNacimiento).format('DD/MM/YYYY');
+        prof['lugarNacimiento'] = matriculas[i].lugarNacimiento;
+        prof['nacionalidad'] = matriculas[i].nacionalidad ? matriculas[i].nacionalidad.nombre : '';
+        prof['sexo'] = matriculas[i].sexo;
+        if (req.query.tipoMatricula === 'grado') {
+            // formacionGrado1
+            prof['profesion1'] = matriculas[i].formacionGrado && matriculas[i].formacionGrado.profesion ? matriculas[i].formacionGrado.profesion.nombre : '';
+            prof['tipoDeFormacion1'] = matriculas[i].formacionGrado && matriculas[i].formacionGrado.profesion ? matriculas[i].formacionGrado.profesion.tipoDeFormacion : '';
+            prof['entidadFormadora1'] = matriculas[i].formacionGrado && matriculas[i].formacionGrado.entidadFormadora ? matriculas[i].formacionGrado.entidadFormadora.nombre : '';
+            prof['fechaEgreso1'] = matriculas[i].formacionGrado ? matriculas[i].formacionGrado.fechaEgreso : '';
+            prof['matriculaGNumero1'] = matriculas[i].ultimaMatricula ? matriculas[i].ultimaMatricula.matriculaNumero : '';
+            prof['fechaInicio1'] = matriculas[i].ultimaMatricula ? moment(matriculas[i].ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
+            prof['fechaFin1'] = matriculas[i].ultimaMatricula ? moment(matriculas[i].ultimaMatricula.fin).format('DD/MM/YYYY') : '';
+            prof['fechaBaja1'] = matriculas[i].ultimaMatricula && matriculas[i].ultimaMatricula.baja && matriculas[i].ultimaMatricula.baja.fecha ? moment(matriculas[i].ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
+            prof['motivoBaja1'] = matriculas[i].ultimaMatricula && matriculas[i].ultimaMatricula.baja ? matriculas[i].ultimaMatricula.baja.motivo : '';
+            prof['fechaInscripcion1'] = matriculas[i].formacionGrado ? moment(matriculas[i].formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY') : '';
+        } else {
+            // formacionPosgrado1
+            prof['especialidad1'] = matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.especialidad.nombre : '';
+            prof['matriculaPNumero1'] = matriculas[i].ultimaMatriculaPosgrado ? matriculas[i].ultimaMatriculaPosgrado.matriculaNumero : '';
+            prof['tieneVencimiento1'] = matriculas[i].formacionPosgrado && matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.tieneVencimiento ? 'Si' : 'No' : '';
+            prof['fechasDeAltas1'] = matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.fe ? 'Si' : 'No' : '';
+        }
+        let fechaUltimaSancion = matriculas[i].sanciones ? Math.max.apply(null, matriculas[i].sanciones.map(sancion => sancion.fecha)) : null;
+        let ultimaSancion = fechaUltimaSancion ? matriculas[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; }) : null;
+        prof['sancionNumero'] = ultimaSancion ? ultimaSancion.numero : '';
+        prof['sancionMotivo'] = ultimaSancion ? ultimaSancion.motivo : '';
+        prof['sancionnormaLegal'] = ultimaSancion ? ultimaSancion.normaLegal : '';
+        prof['sancionFecha'] = ultimaSancion ? moment(ultimaSancion.fecha).format('DD/MM/YYYY') : '';
+        prof['sancionVencimiento'] = ultimaSancion ? moment(ultimaSancion.vencimiento).format('DD/MM/YYYY') : '';
+        prof['domicilio1'] = matriculas[i].domicilios && matriculas[i].domicilios[0] ? matriculas[i].domicilios[0].valor : '';
+        prof['codPos1'] = matriculas[i].domicilios && matriculas[i].domicilios[0] ? matriculas[i].domicilios[0].codigoPostal : '';
+        prof['pais1'] = matriculas[i].domicilios && matriculas[i].domicilios[0] && matriculas[i].domicilios[0].ubicacion && matriculas[i].domicilios[0].ubicacion.pais ? matriculas[i].domicilios[0].ubicacion.pais.nombre : '';
+        prof['provincia1'] = matriculas[i].domicilios && matriculas[i].domicilios[0] && matriculas[i].domicilios[0].ubicacion && matriculas[i].domicilios[0].ubicacion.provincia ? matriculas[i].domicilios[0].ubicacion.provincia.nombre : '';
+        prof['provincia1'] = matriculas[i].domicilios && matriculas[i].domicilios[0] && matriculas[i].domicilios[0].ubicacion && matriculas[i].domicilios[0].ubicacion.provincia ? matriculas[i].domicilios[0].ubicacion.provincia.nombre : '';
+        prof['localidad1'] = matriculas[i].domicilios && matriculas[i].domicilios[0] && matriculas[i].domicilios[0].ubicacion && matriculas[i].domicilios[0].ubicacion.localidad ? matriculas[i].domicilios[0].ubicacion.localidad.nombre : '';
+        prof['domicilio2'] = matriculas[i].domicilios && matriculas[i].domicilios[1] ? matriculas[i].domicilios[1].valor : '';
+        prof['codPos2'] = matriculas[i].domicilios && matriculas[i].domicilios[1] ? matriculas[i].domicilios[1].codigoPostal : '';
+        prof['pais2'] = matriculas[i].domicilios && matriculas[i].domicilios[1] && matriculas[i].domicilios[1].ubicacion && matriculas[i].domicilios[1].ubicacion.pais ? matriculas[i].domicilios[1].ubicacion.pais.nombre : '';
+        prof['provincia2'] = matriculas[i].domicilios && matriculas[i].domicilios[1] && matriculas[i].domicilios[1].ubicacion && matriculas[i].domicilios[1].ubicacion.provincia ? matriculas[i].domicilios[1].ubicacion.provincia.nombre : '';
+        prof['provincia2'] = matriculas[i].domicilios && matriculas[i].domicilios[1] && matriculas[i].domicilios[1].ubicacion && matriculas[i].domicilios[1].ubicacion.provincia ? matriculas[i].domicilios[1].ubicacion.provincia.nombre : '';
+        prof['localidad2'] = matriculas[i].domicilios && matriculas[i].domicilios[1] && matriculas[i].domicilios[1].ubicacion && matriculas[i].domicilios[1].ubicacion.localidad ? matriculas[i].domicilios[1].ubicacion.localidad.nombre : '';
+        prof['domicilio3'] = matriculas[i].domicilios && matriculas[i].domicilios[2] ? matriculas[i].domicilios[2].valor : '';
+        prof['codPos3'] = matriculas[i].domicilios && matriculas[i].domicilios[2] ? matriculas[i].domicilios[2].codigoPostal : '';
+        prof['pais3'] = matriculas[i].domicilios && matriculas[i].domicilios[2] && matriculas[i].domicilios[2].ubicacion && matriculas[i].domicilios[2].ubicacion.pais ? matriculas[i].domicilios[2].ubicacion.pais.nombre : '';
+        prof['provincia3'] = matriculas[i].domicilios && matriculas[i].domicilios[2] && matriculas[i].domicilios[2].ubicacion && matriculas[i].domicilios[2].ubicacion.provincia ? matriculas[i].domicilios[2].ubicacion.provincia.nombre : '';
+        prof['provincia3'] = matriculas[i].domicilios && matriculas[i].domicilios[2] && matriculas[i].domicilios[2].ubicacion && matriculas[i].domicilios[2].ubicacion.provincia ? matriculas[i].domicilios[2].ubicacion.provincia.nombre : '';
+        prof['localidad3'] = matriculas[i].domicilios && matriculas[i].domicilios[2] && matriculas[i].domicilios[2].ubicacion && matriculas[i].domicilios[2].ubicacion.localidad ? matriculas[i].domicilios[2].ubicacion.localidad.nombre : '';
+        if (matriculas[i].contactos) {
+            let celulares = matriculas[i].contactos.filter(contacto => contacto.tipo === 'celular');
+            if (celulares) {
+                let minRanking = Math.min.apply(null, celulares.map(cel => cel.ranking));
+                let celular = minRanking ? celulares.find(cel => cel.ranking === minRanking) : celulares[0];
+                prof['celular'] = celular ? celular.valor : '';
+            } else {
+                prof['celular'] = '';
+            }
+            let emails = matriculas[i].contactos.filter(contacto => contacto.tipo === 'email');
+            if (emails) {
+                let minRanking = Math.min.apply(null, emails.map(mail => mail.ranking));
+                let email = minRanking ? emails.find(mail => mail.ranking === minRanking) : emails[0];
+                prof['email'] = email ? email.valor : '';
+            } else {
+                prof['email'] = '';
+            }
+            let fijos = matriculas[i].contactos.filter(contacto => contacto.tipo === 'fijo');
+            if (fijos) {
+                let minRanking = Math.min.apply(null, fijos.map(fij => fij.ranking));
+                let fijo = minRanking ? fijos.find(fij => fij.ranking === minRanking) : fijos[0];
+                prof['fijo'] = fijo ? fijo.valor : '';
+            } else {
+                prof['fijo'] = '';
+            }
+        } else {
+            prof['celular'] = '';
+            prof['email'] = '';
+            prof['fijo'] = '';
+        }
+        prof['rematriculado'] = matriculas[i].rematriculado === 1 ? 'Si' : 'No';
+        prof['habilitado'] = matriculas[i].habilitado ? 'Si' : 'No';
+        responseArray.push(prof);
+    }
+    return responseArray;
+}
+

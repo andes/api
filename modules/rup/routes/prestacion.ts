@@ -1,4 +1,3 @@
-import { log } from './../../../core/log/schemas/log';
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
@@ -312,6 +311,10 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
         query.where('paciente.id').equals(req.query.idPaciente);
     }
 
+    if (req.query.origen === 'top') {
+        query.where('solicitud.prestacionOrigen').exists(false);
+    }
+
     if (req.query.solicitudDesde) {
         query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
     }
@@ -515,13 +518,13 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
     }
 });
 
-router.post('/prestaciones', (req, res, next) => {
+router.post('/prestaciones', async (req, res, next) => {
     let dto = parseDate(JSON.stringify(req.body));
     const data = new Prestacion(dto);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
-            return next(err);
+            return next('No fue posible crear la prestación');
         }
         res.json(data);
         EventCore.emitAsync('rup:prestacion:create', data);

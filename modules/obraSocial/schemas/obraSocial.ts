@@ -7,5 +7,7 @@ export const ObraSocialSchema = new mongoose.Schema({
     financiador: String
 });
 
+ObraSocialSchema.index({ codigoPuco: 1 });
+
 export let ObraSocial: any = mongoose.model('obraSocial', ObraSocialSchema, 'obraSocial');
 

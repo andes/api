@@ -82,6 +82,7 @@ export class DocumentoCenso {
                      <td>${ params.resumenCenso.ingresoEgresoDia}</td>
                      <td>${ params.resumenCenso.pacientesDia}</td>
                       <td>${ params.resumenCenso.disponibles24}</td>
+                      <td>${ params.resumenCenso.diasEstada}</td>
                  </tr>`;
 
             }

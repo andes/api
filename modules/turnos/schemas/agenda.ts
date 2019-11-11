@@ -144,6 +144,32 @@ schema.pre('save', function (next) {
 // Habilitar plugin de auditoría
 schema.plugin(AuditPlugin);
 
+schema.index({
+    horaInicio: 1,
+    horaFin: 1,
+    'organizacion._id': 1
+});
+
+schema.index({
+    estado: 1
+});
+
+schema.index({
+    'sobreturnos.paciente.id': 1,
+    estado: 1
+});
+
+schema.index({
+    'bloques.turnos._id': 1
+});
+
+schema.index({
+    'bloques.turnos.paciente.id': 1
+});
+
+schema.index({
+    'sobreturnos._id': 1
+});
 // Exportar modelo
 const model = mongoose.model('agenda', schema, 'agenda');
 

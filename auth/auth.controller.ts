@@ -1,10 +1,10 @@
-import { authUsers } from './schemas/permisos';
+import { AuthUsers } from './schemas/authUsers';
 import { profesional } from './../core/tm/schemas/profesional';
 import * as authMobile from '../modules/mobileApp/controller/AuthController';
 
 
 export async function findUser(username) {
-    const pAuth = authUsers.findOne({ usuario: username });
+    const pAuth = AuthUsers.findOne({ usuario: username });
     const pProfesional = profesional.findOne({ documento: username }, { matriculas: true, especialidad: true });
     const [auth, prof] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
@@ -18,9 +18,9 @@ export async function findUser(username) {
 
 
 export async function updateUser(documento, nombre, apellido, password) {
-    return await authUsers.findOneAndUpdate(
+    return await AuthUsers.findOneAndUpdate(
         { usuario: documento },
-        { password, nombre, apellido },
+        { password, nombre, apellido, lastLogin: new Date() },
     );
 }
 

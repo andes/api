@@ -4,13 +4,6 @@ export let ProblemaSchema = new mongoose.Schema({
     idProblema: {
         type: String
     },
-    idMinutaSQL: {
-        type: String
-    },
-
-    idMinutaMongo: {
-        type: mongoose.Schema.Types.ObjectId,
-    },
     responsable: {
         type: String,
         required: true
@@ -24,6 +17,11 @@ export let ProblemaSchema = new mongoose.Schema({
         enum: ['pendiente', 'resuelto', 'en proceso'],
         default: 'pendiente'
     },
+    resueltoPorId: String,
+    resueltoPor: String,
+    origen: {
+        type: String
+    },
     plazo: {
         type: Date,
         required: true
@@ -31,8 +29,11 @@ export let ProblemaSchema = new mongoose.Schema({
     fechaRegistro: {
         type: Date
     },
-    origen: {
+    idMinutaSQL: {
         type: String
+    },
+    idMinutaMongo: {
+        type: mongoose.Schema.Types.ObjectId,
     },
     adjuntos: [String]
 });

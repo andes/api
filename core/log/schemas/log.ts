@@ -64,4 +64,6 @@ export let logSchema = new mongoose.Schema({
     }
 });
 
+logSchema.index({ modulo: 1, operacion: 1 });
+
 export let log = mongoose.model('log', logSchema, 'log');
