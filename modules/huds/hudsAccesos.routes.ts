@@ -89,3 +89,15 @@ HudsAccesoRouter.get('/accesos/:id', Auth.authenticate(), async (req: any, res, 
         }
     } else { return 'Parametros incorrectos'; }
 });
+
+
+HudsAccesoRouter.get('/checkToken', Auth.authenticate(), (req: any, res, next) => {
+    let resp = false;
+    if (req.query.token && req.query.idPaciente) {
+        let tokenSettings = Auth.decode(req.query.token);
+        if (tokenSettings && String(tokenSettings.paciente) === String(req.query.idPaciente)) {
+            resp = true;
+        }
+    }
+    return res.json(resp);
+});
