@@ -1,1 +1,2 @@
-export { HudsAccesoCtr, HudsAccesoRouter } from './hudsAccesos.routes';
+export { HudsAccesosCtr } from './hudsAccesos.controller';
+export { HudsAccesoRouter } from './hudsAccesos.routes';

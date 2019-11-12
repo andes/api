@@ -20,7 +20,7 @@ export async function logAcceso(req, paciente, matricula, motivo, idTurno, idPre
     }
 }
 
-async function execLog(req, paciente, matricula, motivo, turno, prestacion, bucketNumber) {
+async function execLog(req, paciente, matricula, motivoAcceso, turno, prestacion, bucketNumber) {
     const now = new Date();
     return HudsAcceso.updateOne(
         {
@@ -40,7 +40,7 @@ async function execLog(req, paciente, matricula, motivo, turno, prestacion, buck
                     fecha: now,
                     usuario: user(req),
                     matricula,
-                    motivo,
+                    motivoAcceso,
                     turno,
                     prestacion,
                     organizacion: organizacion(req),
