@@ -124,12 +124,12 @@ export async function formacionCero() {
 
 export async function search(filter, fields) {
     const match = {};
-    const project = {documento: -1, apellido: -1, nombre: -1};
+    const project = { documento: -1, apellido: -1, nombre: -1 };
     if (filter.id) {
         match['_id'] = mongoose.Types.ObjectId(filter.id);
     }
     if (fields.matricula) {
-        project['matricula'] = { $arrayElemAt: ['$formacionGrado.matriculacion.matriculaNumero', -1]};
+        project['matricula'] = { $arrayElemAt: ['$formacionGrado.matriculacion.matriculaNumero', -1] };
     }
 
     const aggregate = [
@@ -138,7 +138,8 @@ export async function search(filter, fields) {
         },
         {
             $project: project
-        }
+        },
+
     ];
 
     return await profesional.aggregate(aggregate);

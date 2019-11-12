@@ -1,6 +1,5 @@
 import * as express from 'express';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-import { paciente as Paciente } from '../../../core/mpi/schemas/paciente';
 import { model as Cie10 } from '../../../core/term/schemas/cie10';
 import { makeFs } from '../schemas/CDAFiles';
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
@@ -279,16 +278,19 @@ router.get('/paciente/:id', async (req: any, res, next) => {
         if (req.query.hudsToken) {
             tokenSettings = Auth.decode(req.query.hudsToken);
         }
-        if (!Auth.check(req, 'cda:list') || req.user.type !== 'paciente-token' || !tokenSettings || String(tokenSettings.paciente) !== String(req.params.id)) {
+        if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token') || !tokenSettings || String(tokenSettings.paciente) !== String(req.params.id)) {
             return next(403);
         }
         let pacienteID = req.params.id;
         let prestacion = req.query.prestacion;
-        let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
-
+        let list;
+        try {
+            list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
+        } catch (err) {
+            return next({ message: 'no existe el paciente' });
+        }
         res.json(list);
     }
-
 });
 
 
