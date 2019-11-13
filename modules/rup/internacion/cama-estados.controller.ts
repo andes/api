@@ -36,6 +36,11 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             $unwind: '$estados',
         },
         {
+            $match: {
+                'estados.fecha': { $lte: moment(fecha).toDate() }
+            }
+        },
+        {
             $group: {
                 _id: '$idCama',
                 fechaMax: {
@@ -72,6 +77,9 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                         $match: {
                             $expr: { $eq: ['$estados.fecha', '$$fechaMax'] }
                         }
+                    },
+                    {
+                        $limit: 1
                     }
                 ],
                 as: 'estado'
@@ -147,7 +155,7 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
             }
         },
         {
-            $unwind: 'estados',
+            $unwind: '$estados',
         },
         {
             $match: {
@@ -156,6 +164,18 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
                     $gte: moment(desde).toDate()
                 },
                 ...secondMatch
+            }
+        },
+        {
+            $addFields: {
+                'estados.idCama': '$idCama',
+                'estados.ambito': '$ambito',
+                'estados.capa': '$capa',
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: '$estados'
             }
         },
     ];

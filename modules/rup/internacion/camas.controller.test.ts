@@ -155,7 +155,7 @@ describe('Internacion - camas', () => {
         const camaDB: any = await Camas.findById(cama._id);
         expect(camaDB.tipoCama.conceptId).toBe('1234567890');
 
-        let camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id);
+        let camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'h').toDate());
 
 
         expect(camaEncontrada.estado).toBe('inactiva');
@@ -184,7 +184,7 @@ describe('Internacion - camas', () => {
         });
         expect(resultNull).toBeNull();
 
-        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id);
+        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'h').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
 
 
@@ -198,10 +198,17 @@ describe('Internacion - camas', () => {
                 id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'HOSPITAL NEUQUEN'
+            },
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
             }
         });
 
-        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id);
+        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'month').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
 
         camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'enfermeria', ambito: 'internacion' }, cama._id);
