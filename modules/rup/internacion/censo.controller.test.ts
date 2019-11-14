@@ -13,7 +13,7 @@ let mongoServer: any;
 beforeAll(async () => {
     mongoServer = new MongoMemoryServer();
     // const mongoUri = await mongoServer.getConnectionString();
-    const mongoUri = 'mongodb://172.16.3.218:27017/andes';
+    const mongoUri = 'mongodb://localhost:27017/andes';
     mongoose.connect(mongoUri);
 });
 

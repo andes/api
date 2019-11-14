@@ -116,6 +116,9 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             $replaceRoot: {
                 newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
             }
+        },
+        {
+            $project: { cama: 0 }
         }
     ];
 

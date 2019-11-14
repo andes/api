@@ -1,12 +1,148 @@
-const mongoose = require('mongoose');
-import moment = require('moment');
+import * as mongoose from 'mongoose';
+import * as moment from 'moment';
 import { model as Prestaciones } from '../schemas/prestacion';
 import * as CamasEstadosController from './cama-estados.controller';
+const groupBy = (xs: any[], key: string) => {
+    return xs.reduce((rv, x) => {
+        (rv[x[key]] = rv[x[key]] || []).push(x);
+        return rv;
+    }, {});
+};
+
+async function mergeDatos(snapshots, movimientos) {
+    let internaciones = [...new Set([...Object.keys(snapshots).filter(snap => snap !== 'null'), ...Object.keys(movimientos).filter(mov => mov !== 'null')])];
+    const mapping = {};
+    internaciones.forEach(inter => {
+        if (snapshots[inter] && movimientos[inter]) {
+            mapping[inter] = [...snapshots[inter], ...movimientos[inter]];
+        } else if (snapshots[inter]) {
+            mapping[inter] = snapshots[inter];
+        } else if (movimientos[inter]) {
+            mapping[inter] = movimientos[inter];
+        }
+
+        mapping[inter].sort((a, b) => (a.fecha - b.fecha));
+    });
+
+    return mapping;
+}
+
+async function realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, camas) {
+    const prestaciones = await Prestaciones.find({ _id: { $in: [...Object.keys(internaciones)] } });
+
+    let existenciaALas0 = 0;
+    let existenciaALas24 = 0;
+    let ingresos = 0;
+    let pasesDe = 0;
+    let altas = 0;
+    let defunciones = 0;
+    let pasesA = 0;
+    let ingresosYEgresos = 0;
+    let disponibles = 0;
+
+    let tablaPacientes = {};
+
+    const ps = Object.keys(internaciones).map(async idInter => {
+        const allMovimientos = internaciones[idInter];
+        const ultimoMovimiento = allMovimientos[allMovimientos.length - 1];
+        const prestacion = prestaciones.find(p => String(p.id) === String(ultimoMovimiento.idInternacion));
+        const informesInternacion: any = await getInformesInternacion(prestacion);
+        const fechaEgreso = informesInternacion.egreso.fechaEgreso;
+        const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
+
+        if (!tablaPacientes[ultimoMovimiento.paciente._id]) {
+            const cama = camas[String(ultimoMovimiento.idCama)][0];
+            tablaPacientes[ultimoMovimiento.paciente._id] = {
+                datos: {
+                    paciente: ultimoMovimiento.paciente,
+                    cama: {
+                        nombre: cama.nombre,
+                        tipoCama: cama.tipoCama,
+                        sectores: cama.sectores
+                    },
+                },
+                actividad: []
+            };
+        }
+
+        if (moment(fechaIngreso).isBefore(timestampStart.toDate())) {
+            existenciaALas0++;
+            tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                ingreso: null,
+                paseDe: null,
+                egreso: null,
+                paseA: null,
+            });
+        } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
+            ingresos++;
+            tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                ingreso: 'SI',
+            });
+        }
+
+        if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
+            ingresosYEgresos++;
+            tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                ingreso: 'SI',
+                egreso: informesInternacion.egreso.tipoEgreso.id,
+            });
+        }
+
+        if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
+            if (informesInternacion.egreso.tipoEgreso.id === 'Defuncion') {
+                defunciones++;
+            } else {
+                altas++;
+            }
+            tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                egreso: informesInternacion.egreso.tipoEgreso.id,
+            });
+        }
+
+        let movimientoAnterior;
+        for (const movimiento of allMovimientos) {
+            if (movimientoAnterior && String(movimientoAnterior.unidadOrganizativa._id) !== String(movimiento.unidadOrganizativa.id)) {
+                if (String(movimientoAnterior.unidadOrganizativa._id) !== unidadOrganizativa) {
+                    pasesDe++;
+                    tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                        paseDe: 'SI',
+                    });
+                } else {
+                    pasesA++;
+                    tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                        paseA: 'SI',
+                    });
+                }
+            }
+
+            movimientoAnterior = movimiento;
+        }
+    });
+
+    await Promise.all(ps);
+
+    existenciaALas24 = existenciaALas0 + ingresos - altas - defunciones;
+
+    return {
+        pacientes: tablaPacientes,
+        censo: {
+            existenciaALas0,
+            ingresos,
+            pasesDe,
+            altas,
+            defunciones,
+            pasesA,
+            existenciaALas24,
+            ingresosYEgresos,
+            pacientesDia: existenciaALas24 + ingresosYEgresos,
+            disponibles
+        }
+    };
+}
 
 export async function censoDiario({ organizacion, timestamp, unidadOrganizativa }) {
     const ambito = 'internacion';
     const capa = 'estadistica';
-
     if (!timestamp) {
         timestamp = moment();
     }
@@ -14,105 +150,20 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
     const timestampStart = moment(timestamp).startOf('day');
     const timestampEnd = moment(timestamp).endOf('day');
 
-    let estadosCamas = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
+    const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
+    const snapshotsUO = snapshots.filter(item => String(item.unidadOrganizativa._id) === unidadOrganizativa);
+    const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
 
-    estadosCamas = estadosCamas.filter(item => String(item.unidadOrganizativa._id) === unidadOrganizativa);
+    const snapshotsAgrupados = groupBy(snapshotsUO, 'idInternacion');
+    const snapshotsPorCama = groupBy(snapshots, 'idCama');
+    const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
 
-    let existenciaALas0 = 0;
-    let ingresos = 0;
-    let pasesDe = 0;
-    let altas = 0;
-    let defunciones = 0;
-    let pasesA = 0;
-    let ingresosYEgresos = 0;
-    let pacientesDia = 0;
-    let disponibles = 0;
-
-    let allMovimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
+    const internaciones = await mergeDatos(snapshotsAgrupados, movimientosAgrupados);
 
 
-    let groupBy = (xs, key) => {
-        return xs.reduce((rv, x) => {
-            (rv[x[key]] = rv[x[key]] || []).push(x);
-            return rv;
-        }, {});
-    };
+    const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, snapshotsPorCama);
 
-    const movimientosAgrupadosInternacion = groupBy(allMovimientos, 'idInternacion');
-
-    Object.keys(movimientosAgrupadosInternacion).forEach(v => {
-        movimientosAgrupadosInternacion[v] = movimientosAgrupadosInternacion[v].sort((a, b) => a.fecha - b.fecha);
-    });
-
-    const idsPrestacion = [];
-    for (const estadoCama of estadosCamas) {
-        if (estadoCama.estado === 'ocupada') {
-            existenciaALas0++;
-            idsPrestacion.push(estadoCama.idInternacion);
-        }
-        if (estadoCama.estado !== 'inactiva') {
-            disponibles++;
-        }
-    }
-
-    Object.keys(movimientosAgrupadosInternacion).filter(mov => mov !== 'null').map(async idInter => {
-        idsPrestacion.push(mongoose.Types.ObjectId(idInter));
-    });
-
-    console.log(idsPrestacion);
-
-    const prestaciones = await Prestaciones.find({ _id: { $in: idsPrestacion.map(mongoose.Types.ObjectId) } });
-
-    const ps = idsPrestacion.map(async idInter => {
-        const prestacion = prestaciones.find(p => String(p.id) === String(idInter));
-        if (prestacion) {
-            const informesPrestacion: any = await getInformesInternacion(prestacion);
-            const ingreso = informesPrestacion.ingreso;
-            const egreso = informesPrestacion.egreso;
-
-            if (moment(ingreso.fechaIngreso).isSame(egreso.fechaEgreso, 'day')) {
-                ingresos++;
-                ingresosYEgresos++;
-                if (egreso.tipoEgreso.id === 'Defunción') {
-                    defunciones++;
-                } else {
-                    altas++;
-                }
-            } else if (moment(ingreso.fechaIngreso).isSame(timestamp, 'day')) {
-                ingresos++;
-            } else if (moment(egreso.fechaEgreso).isSame(timestamp, 'day')) {
-                if (egreso.tipoEgreso.id === 'Defunción') {
-                    defunciones++;
-                } else {
-                    altas++;
-                }
-            }
-
-            if (egreso.UnidadOrganizativaDestino) {
-                if (String(egreso.UnidadOrganizativaDestino._id) === unidadOrganizativa) {
-                    pasesDe++;
-                    ingresos++;
-                } else if (String(egreso.UnidadOrganizativaDestino._id) !== unidadOrganizativa) {
-                    pasesA++;
-                }
-            }
-        }
-    });
-
-    await Promise.all(ps);
-
-    let resultado = {
-        existenciaALas0,
-        ingresos,
-        defunciones,
-        altas,
-        ingresosYEgresos,
-        existenciaALas24: existenciaALas0 + ingresos - altas - defunciones,
-        pacientesDia: existenciaALas0 + ingresos,
-        disponibles
-    };
-
-    console.log(resultado);
+    return resultado;
 }
 
 async function getInformesInternacion(prestacion) {
