@@ -8,6 +8,8 @@ export async function buscarCarpeta(req) {
         if (req.query.documento && req.query.organizacion) {
             carpeta = carpetaPaciente.find({ documento: req.query.documento });
             carpeta.where('carpetaEfectores.organizacion._id').equals(req.query.organizacion);
+        } else {
+            return [];
         }
     }
     return await carpeta;
