@@ -9,11 +9,11 @@ router.post('/operaciones/:module/:op', (req, res, next) => {
     if (!Auth.check(req, 'log:post')) {
         return next(403);
     }
-    const resultado = Logger.log(req, req.params.module, req.params.op, req.body.data, (err) => {
+    Logger.log(req, req.params.module, req.params.op, req.body.data, (err) => {
         if (err) {
             return next(err);
         }
-        res.json(resultado);
+        res.json({ status: 'ok' });
     });
 });
 
