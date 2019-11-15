@@ -178,11 +178,6 @@ export const modules = {
         path: './modules/version/routes',
         route: '/version'
     },
-    webhook: {
-        active: true,
-        path: './modules/webhook/routes',
-        route: '/modules/webhook'
-    },
     configFacturacionAutomatica: {
         active: true,
         path: './modules/facturacionAutomatica/routes',

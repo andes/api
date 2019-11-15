@@ -1,9 +1,8 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import { EventCore } from '@andes/event-bus';
-import { WebHook, WebHookLog } from '../schemas/webhookSchema';
 import { Patient } from '@andes/fhir';
-import * as webhookController from '../controllers/webhookController';
+import { WebHook, WebHookLog } from './webhookSchema';
 const request = require('request');
 let router = express.Router();
 
@@ -48,59 +47,6 @@ function filterData(filters: any[], data) {
     }
     return continua;
 }
-
-router.get('/webhooks', async (req: any, res, next) => {
-    try {
-        let data = await WebHook.find({});
-        res.json(data);
-    } catch (error) {
-        return next(error);
-    }
-});
-
-router.get('/webhooks/:nombre', async (req: any, res, next) => {
-    try {
-        let data = await WebHook.find({
-            $or: [{ name: { $regex: req.params.nombre, $options: 'i' } },
-            { nombre: { $regex: req.params.nombre, $options: 'i' } }]
-        });
-        res.json(data);
-    } catch (error) {
-        return next(error);
-    }
-});
-
-router.post('/webhooks', async (req, res, next) => {
-    try {
-        req.body.method = req.body.method.nombre;
-        let n = await WebHook.insertMany(req.body);
-        res.json(n);
-    } catch (error) {
-        return next(error);
-    }
-});
-
-router.patch('/webhooks/:id', async (req, res, next) => {
-    const id = req.params.id;
-    const body = req.body;
-    req.body.method = req.body.method.nombre;
-    const hook = await webhookController.update(id, body, req);
-    if (hook) {
-        return res.json(hook);
-    } else {
-        return next(422);
-    }
-});
-
-router.delete('/webhooks/:id', async (req, res, next) => {
-    const id = req.params.id;
-    const plantilla = await webhookController.remove(id);
-    if (plantilla) {
-        return res.json(plantilla);
-    } else {
-        return next(422);
-    }
-});
 
 const trasform = {
     fhir: Patient.encode
