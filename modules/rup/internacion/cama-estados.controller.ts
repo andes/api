@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import moment = require('moment');
 import { CamaEstados } from './cama-estados.schema';
+import { ObjectId } from '@andes/core';
 
 export async function snapshotEstados({ fecha, organizacion, ambito, capa }, filtros) {
     const firstMatch = {};
@@ -125,21 +126,49 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
     return await CamaEstados.aggregate(aggregate);
 }
 
+function wrapObjectId(objectId: ObjectId) {
+    return new mongoose.Types.ObjectId(objectId);
+}
 
-export async function searchEstados({ desde, hasta, organizacion, ambito, capa }, filtros) {
+interface SearchEstadosParams {
+    /**
+     * ID de la Cama (string o ObjectId)
+     */
+    cama: ObjectId;
+
+    /**
+     * ID del paciente (string o ObjectId)
+     */
+    paciente: ObjectId;
+
+    /**
+     * ID del paciente (string o ObjectId)
+     */
+    internacion: ObjectId;
+
+    estado: string;
+
+}
+
+
+/**
+ * Devuelve los movimientos de camas e internaciones en un periodo determinado.
+ */
+
+export async function searchEstados({ desde, hasta, organizacion, ambito, capa }, filtros: Partial<SearchEstadosParams> = {}) {
     const firstMatch = {};
     const secondMatch = {};
 
     if (filtros.cama) {
-        firstMatch['idCama'] = mongoose.Types.ObjectId(filtros.cama);
+        firstMatch['idCama'] = wrapObjectId(filtros.cama);
     }
 
     if (filtros.paciente) {
-        secondMatch['estados.paciente.id'] = mongoose.Types.ObjectId(filtros.paciente);
+        secondMatch['estados.paciente.id'] = wrapObjectId(filtros.paciente);
     }
 
     if (filtros.internacion) {
-        secondMatch['estados.idInternacion'] = mongoose.Types.ObjectId(filtros.internacion);
+        secondMatch['estados.idInternacion'] = wrapObjectId(filtros.internacion);
     }
 
     if (filtros.estado) {
@@ -149,7 +178,7 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
     const aggregate = [
         {
             $match: {
-                idOrganizacion: mongoose.Types.ObjectId(organizacion),
+                idOrganizacion: wrapObjectId(organizacion),
                 ambito,
                 capa,
                 start: { $lte: moment(hasta).toDate() },
@@ -211,4 +240,29 @@ export async function store({ organizacion, ambito, capa, cama }, estado) {
             upsert: true
         }
     );
+}
+
+/**
+ * Operación especial para modificar la fecha de un estado
+ */
+
+export async function patch({ organizacion, ambito, capa, cama }, from: Date, to: Date) {
+    const result = await CamaEstados.update(
+        {
+            idOrganizacion: mongoose.Types.ObjectId(organizacion),
+            ambito,
+            capa,
+            idCama: mongoose.Types.ObjectId(cama),
+            start: { $lte: from },
+            end: { $gte: from }
+
+        },
+        {
+            $set: { 'estados.$[elemento].fecha': to }
+        },
+        {
+            arrayFilters: [{ 'elemento.fecha': from }]
+        }
+    );
+    return result.nModified > 0 && result.ok === 1;
 }

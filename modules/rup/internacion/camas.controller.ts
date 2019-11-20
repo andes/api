@@ -75,7 +75,7 @@ export async function patch(data: CAMA) {
             ...data
         };
 
-        const [camaEncontrada, cats]: [any, any] = await Promise.all([
+        const [camaEncontrada]: [any, any] = await Promise.all([
             Camas.findById(data.id),
             CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado),
         ]);
@@ -122,4 +122,23 @@ export async function store(data) {
     ]);
 
     return camaGuardada;
+}
+
+
+export async function changeTime({ organizacion, capa, ambito, cama }, from: Date, to: Date, internacionId) {
+    let start, end;
+    if (from.getTime() <= to.getTime()) {
+        start = from;
+        end = to;
+    } else {
+        start = to;
+        end = from;
+    }
+    const movement = await CamasEstadosController.searchEstados({ desde: start, hasta: end, organizacion, capa, ambito }, { internacion: internacionId });
+    // Porque el movimiento a cambiar de fecha va a ser encontrado
+    if (movement.length > 1) {
+        return false;
+    }
+    const valid = await CamasEstadosController.patch({ organizacion, capa, ambito, cama }, from, to);
+    return valid;
 }

@@ -1,31 +1,27 @@
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+
 import * as moment from 'moment';
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import { model as Prestaciones } from '../schemas/prestacion';
-import { store, findById, search, patch, listaEspera } from './camas.controller';
+import { store, findById, search, patch, changeTime, listaEspera } from './camas.controller';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import { CamaEstados } from './cama-estados.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import { EstadosCtr } from './estados.routes';
 import { Auth } from '../../../auth/auth.class';
+import { patch as patchEstados } from './cama-estados.controller';
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
 let mongoServer: any;
 let cama: any;
+
 beforeAll(async () => {
     mongoServer = new MongoMemoryServer();
     const mongoUri = await mongoServer.getConnectionString();
     mongoose.connect(mongoUri);
 });
 
-beforeEach(async () => {
-    await Camas.remove({});
-    await CamaEstados.remove({});
-    await Prestaciones.remove({});
-    cama = await store(seedCama());
-});
 
 afterAll(async () => {
     await mongoose.disconnect();
@@ -63,8 +59,11 @@ function seedCama() {
 
 describe('Internacion - camas', () => {
 
-    beforeAll(async () => {
-
+    beforeEach(async () => {
+        await Camas.remove({});
+        await CamaEstados.remove({});
+        await Prestaciones.remove({});
+        cama = await store(seedCama());
     });
 
 
@@ -252,6 +251,103 @@ describe('Internacion - camas', () => {
         const listaEsp = await listaEspera({ fecha: moment().toDate().toISOString(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
         expect(listaEsp.length).toBe(1);
         expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
+
+    });
+
+    test('update fecha de un estado', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
+            ambito: 'internacion',
+            capa: 'medica',
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, null);
+
+        const from = moment().add(1, 'h').toDate();
+        const to = moment().add(2, 'h').toDate();
+
+        const estados = await patch({
+            id: cama._id,
+            ambito: 'internacion',
+            capa: 'medica',
+            estado: 'inactiva',
+            fecha: from,
+            organizacion: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'HOSPITAL NEUQUEN'
+            },
+            tipoCama: {
+                fsn: 'cama saturada (objeto físico)',
+                term: 'cama saturada',
+                conceptId: '1234567890',
+                semanticTag: 'objeto físico'
+            }
+        });
+
+        const valid = await patchEstados({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion', cama: cama._id }, from, to);
+
+        const camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'h').toDate());
+        expect(camaEncontrada.fecha.toISOString()).toBe(to.toISOString());
+
+    });
+
+    test('update fecha de un estado fallida', async () => {
+        const fechaIngreso = moment().add(2, 'hour').toDate();
+        await patch({
+            id: cama._id,
+            ambito: 'internacion',
+            capa: 'medica',
+            estado: 'ocupada',
+            fecha: fechaIngreso,
+            organizacion: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'HOSPITAL NEUQUEN'
+            },
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
+            },
+            idInternacion: '57f67a7ad86d9f64130a138d'
+        });
+
+        const fechaPase = moment().add(3, 'hour').toDate();
+        await patch({
+            id: cama._id,
+            ambito: 'internacion',
+            capa: 'medica',
+            estado: 'ocupada',
+            fecha: fechaPase,
+            organizacion: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'HOSPITAL NEUQUEN'
+            },
+            unidadOrganizativa: {
+                refsetIds: [],
+                fsn: 'servicio de adicciones (medio ambiente)',
+                term: 'servicio de adicciones',
+                conceptId: '4561000013103',
+                semanticTag: 'medio ambiente'
+            }
+        });
+
+
+        const fechaNuevaIngreso = moment().add(4, 'hour').toDate();
+        const mustBeNull = await changeTime({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion', cama: cama._id }, fechaIngreso, fechaNuevaIngreso, '57f67a7ad86d9f64130a138d');
+        expect(mustBeNull).toBe(false);
 
     });
 
