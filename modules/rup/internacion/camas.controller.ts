@@ -68,8 +68,10 @@ export async function store(data) {
         equipamiento: data.equipamiento,
     });
 
+    const fecha = data.fecha || moment().toDate();
+
     const nuevoEstado = {
-        fecha: moment().toDate(),
+        fecha,
         estado: 'disponible',
         unidadOrganizativa: data.unidadOrganizativa,
         especialidades: data.especialidades,

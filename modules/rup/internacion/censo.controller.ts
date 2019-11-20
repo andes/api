@@ -1,7 +1,11 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { model as Prestaciones } from '../schemas/prestacion';
+import { Camas } from './camas.schema';
+import { Censos } from './censos.schema';
 import * as CamasEstadosController from './cama-estados.controller';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
+
 const groupBy = (xs: any[], key: string) => {
     return xs.reduce((rv, x) => {
         (rv[x[key]] = rv[x[key]] || []).push(x);
@@ -38,7 +42,6 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
     let defunciones = 0;
     let pasesA = 0;
     let ingresosYEgresos = 0;
-    let disponibles = 0;
 
     let tablaPacientes = {};
 
@@ -49,6 +52,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         const informesInternacion: any = await getInformesInternacion(prestacion);
         const fechaEgreso = informesInternacion.egreso.fechaEgreso;
         const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
+        const primerUO = String(allMovimientos[0].unidadOrganizativa._id);
+        const ultimaUO = String(ultimoMovimiento.unidadOrganizativa._id);
 
         if (!tablaPacientes[ultimoMovimiento.paciente._id]) {
             const cama = camas[String(ultimoMovimiento.idCama)][0];
@@ -65,38 +70,44 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             };
         }
 
-        if (moment(fechaIngreso).isBefore(timestampStart.toDate())) {
-            existenciaALas0++;
-            tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
-                ingreso: null,
-                paseDe: null,
-                egreso: null,
-                paseA: null,
-            });
-        } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
-            ingresos++;
-            tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
-                ingreso: 'SI',
-            });
-        }
-
-        if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
-            ingresosYEgresos++;
-            tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
-                ingreso: 'SI',
-                egreso: informesInternacion.egreso.tipoEgreso.id,
-            });
-        }
-
-        if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
-            if (informesInternacion.egreso.tipoEgreso.id === 'Defuncion') {
-                defunciones++;
-            } else {
-                altas++;
+        if ((primerUO === String(unidadOrganizativa)) && (ultimaUO === String(unidadOrganizativa))) {
+            if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
+                ingresosYEgresos++;
+                tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                    ingreso: 'SI',
+                    egreso: informesInternacion.egreso.tipoEgreso.id,
+                });
             }
-            tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
-                egreso: informesInternacion.egreso.tipoEgreso.id,
-            });
+        }
+
+        if (primerUO === String(unidadOrganizativa)) {
+            if (moment(fechaIngreso).isBefore(timestampStart.toDate())) {
+                existenciaALas0++;
+                tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                    ingreso: null,
+                    paseDe: null,
+                    egreso: null,
+                    paseA: null,
+                });
+            } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
+                ingresos++;
+                tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                    ingreso: 'SI',
+                });
+            }
+        }
+
+        if (ultimaUO === String(unidadOrganizativa)) {
+            if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
+                if (informesInternacion.egreso.tipoEgreso.id === 'Defuncion') {
+                    defunciones++;
+                } else {
+                    altas++;
+                }
+                tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                    egreso: informesInternacion.egreso.tipoEgreso.id,
+                });
+            }
         }
 
         let movimientoAnterior;
@@ -104,12 +115,12 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             if (movimientoAnterior && String(movimientoAnterior.unidadOrganizativa._id) !== String(movimiento.unidadOrganizativa.id)) {
                 if (String(movimientoAnterior.unidadOrganizativa._id) !== unidadOrganizativa) {
                     pasesDe++;
-                    tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                    tablaPacientes[movimiento.paciente._id].actividad.push({
                         paseDe: 'SI',
                     });
                 } else {
                     pasesA++;
-                    tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                    tablaPacientes[movimiento.paciente._id].actividad.push({
                         paseA: 'SI',
                     });
                 }
@@ -121,7 +132,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
 
     await Promise.all(ps);
 
-    existenciaALas24 = existenciaALas0 + ingresos - altas - defunciones;
+    existenciaALas24 = existenciaALas0 + ingresos + pasesDe - altas - defunciones - pasesA;
 
     return {
         pacientes: tablaPacientes,
@@ -135,7 +146,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             existenciaALas24,
             ingresosYEgresos,
             pacientesDia: existenciaALas24 + ingresosYEgresos,
-            disponibles
+            disponibles: 0
         }
     };
 }
@@ -156,12 +167,25 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
 
     const snapshotsAgrupados = groupBy(snapshotsUO, 'idInternacion');
     const snapshotsPorCama = groupBy(snapshots, 'idCama');
+    const movimientosPorCama = groupBy(movimientos, 'idCama');
     const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
 
     const internaciones = await mergeDatos(snapshotsAgrupados, movimientosAgrupados);
 
-
     const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, snapshotsPorCama);
+
+    const camas = await mergeDatos(snapshotsPorCama, movimientosPorCama);
+
+    let camasDisponibles = 0;
+    const ps = Object.keys(camas).map(idCama => {
+        if (camas[idCama][camas[idCama].length - 1].estado === 'disponible') {
+            camasDisponibles++;
+        }
+    });
+
+    await Promise.all(ps);
+
+    resultado.censo.disponibles = camasDisponibles;
 
     return resultado;
 }
@@ -178,4 +202,78 @@ async function getInformesInternacion(prestacion) {
         response['ingreso'] = ingresoExiste.valor.informeIngreso;
     }
     return response;
+}
+
+export async function censoMensualJob(done) {
+    let cantidadMeses = 1;
+
+    const camasXOrg = await Camas.aggregate([
+        { $group: { _id: '$organizacion._id' } }
+    ]);
+
+    const idsOrg = camasXOrg.map(a => a._id);
+
+    const organizaciones: any = await Organizacion.find({
+        _id: { $in: idsOrg }
+    });
+
+    const fechaDesde = moment().subtract(cantidadMeses, 'months').startOf('month');
+    const fechahasta = moment();
+    const dias = fechahasta.diff(fechaDesde, 'days');
+
+    for (let i = dias; i > 0; i--) {
+        const timestamp = moment().subtract(i, 'days');
+        for (const organizacion of organizaciones) {
+            for (const unidadOrganizativa of organizacion.unidadesOrganizativas) {
+                const resultado: any = await censoDiario({ organizacion: organizacion._id, timestamp, unidadOrganizativa: unidadOrganizativa._id });
+
+                const nuevoCenso = {
+                    fecha: timestamp.startOf('day').toDate(),
+                    censo: resultado.censo
+                };
+
+                await store({ organizacion: organizacion._id, unidadOrganizativa }, nuevoCenso);
+            }
+        }
+    }
+
+    done();
+}
+
+export async function store({ organizacion, unidadOrganizativa }, censo) {
+    await Censos.update(
+        {
+            idOrganizacion: mongoose.Types.ObjectId(organizacion),
+            'unidadOrganizativa.conceptId': unidadOrganizativa.conceptId,
+            start: { $lte: censo.fecha },
+            end: { $gte: censo.fecha }
+        },
+        {
+            $pull: { censos: { fecha: censo.fecha } },
+        },
+        {
+            multi: true
+        }
+    );
+
+    return await Censos.update(
+        {
+            idOrganizacion: mongoose.Types.ObjectId(organizacion),
+            'unidadOrganizativa.conceptId': unidadOrganizativa.conceptId,
+            start: { $lte: censo.fecha },
+            end: { $gte: censo.fecha }
+        },
+        {
+            $push: { censos: censo },
+            $setOnInsert: {
+                idOrganizacion: mongoose.Types.ObjectId(organizacion),
+                unidadOrganizativa,
+                start: moment(censo.fecha).startOf('month').toDate(),
+                end: moment(censo.fecha).endOf('month').toDate(),
+            }
+        },
+        {
+            upsert: true
+        }
+    );
 }
