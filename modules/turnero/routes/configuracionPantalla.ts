@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { TurneroPantallaModel } from '../schemas/turneroPantalla';
+import { TurneroPantalla } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
 import { EventSocket, EventCore } from '@andes/event-bus';
 import { Packet, Websockets } from '../../../websockets';
@@ -9,20 +9,20 @@ import { Packet, Websockets } from '../../../websockets';
 const ObjectId = mongoose.Types.ObjectId;
 const router = express.Router();
 
-// router.use('/pantalla', Auth.authenticate());
-
 router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
     try {
         let organizacion = Auth.getOrganization(req);
         let opciones = {
             organizacion: ObjectId(organizacion)
         };
-
         if (req.query.nombre) {
             opciones['nombre'] = req.query.nombre;
         }
-
-        let pantallas = await TurneroPantallaModel.find(opciones);
+        let query = TurneroPantalla.find(opciones);
+        if (req.query.fields) {
+            query.select(req.query.fields);
+        }
+        let pantallas = await query;
         return res.json(pantallas);
     } catch (e) {
         return next(e);
@@ -31,7 +31,7 @@ router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
 
 router.get('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) => {
     try {
-        const pantalla = await TurneroPantallaModel.findById(req.params.id);
+        const pantalla = await TurneroPantalla.findById(req.params.id);
         return res.json(pantalla);
     } catch (err) {
         return next(err);
@@ -53,7 +53,7 @@ router.post('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
         let pantallaData = req.body;
         let organizacion = Auth.getOrganization(req);
 
-        let pantalla: any = new TurneroPantallaModel(pantallaData);
+        let pantalla: any = new TurneroPantalla(pantallaData);
 
         pantalla.organizacion = ObjectId(organizacion);
         pantalla.token = generarToken();
@@ -76,7 +76,7 @@ router.post('/pantalla/:id/retoken', Auth.authenticate(), async (req: any, res, 
             _id: ObjectId(id),
             organizacion: ObjectId(organizacion)
         };
-        const pantalla = await TurneroPantallaModel.findOne(query);
+        const pantalla = await TurneroPantalla.findOne(query);
         if (pantalla) {
             pantalla.token = generarToken();
             pantalla.expirationTime = moment().add(1, 'hours').toDate();
@@ -95,7 +95,7 @@ router.patch('/pantalla/:id', Auth.authenticate(), async (req, res, next) => {
     try {
         const id = req.params.id;
         const data = req.body;
-        const pantalla = await TurneroPantallaModel.findByIdAndUpdate(id, data, { new: true });
+        const pantalla = await TurneroPantalla.findByIdAndUpdate(id, data, { new: true });
 
         res.json(pantalla);
         EventCore.emitAsync('turnero-update', { pantalla });
@@ -107,7 +107,7 @@ router.patch('/pantalla/:id', Auth.authenticate(), async (req, res, next) => {
 
 router.delete('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) => {
     try {
-        const pantalla = await TurneroPantallaModel.findById(req.params.id);
+        const pantalla = await TurneroPantalla.findById(req.params.id);
         await pantalla.remove();
         res.json({ message: 'OK' });
         EventCore.emitAsync('turnero-remove', { pantalla });
@@ -120,7 +120,7 @@ router.delete('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) 
 
 router.post('/pantalla/activate', async (req, res, next) => {
     let codigo = req.body.codigo;
-    let pantallas = await TurneroPantallaModel.find({
+    let pantallas = await TurneroPantalla.find({
         token: codigo,
         expirationTime: { $gt: new Date() },
     });
@@ -129,7 +129,6 @@ router.post('/pantalla/activate', async (req, res, next) => {
         pantalla.token = null;
         pantalla.expirationTime = null;
         await pantalla.save();
-
 
         let token = Auth.generateAppToken(pantalla, {}, [`turnero:${pantalla._id}`], 'turnero-token');
         res.send({ token });
@@ -163,7 +162,7 @@ EventSocket.on('turnero-proximo-llamado', async (paquete: Packet) => {
     try {
         const turno = paquete.data;
         const espacioFisico = ObjectId(turno.espacioFisico.id);
-        const pantallas = await TurneroPantallaModel.find({
+        const pantallas = await TurneroPantalla.find({
             'espaciosFisicos.id': espacioFisico
         });
         pantallas.forEach((pantalla) => {

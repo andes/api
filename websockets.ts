@@ -114,7 +114,7 @@ export class Websockets {
         log('Websocket start');
         let redis = require('socket.io-redis');
         let socketIO = require('socket.io');
-        this.io = socketIO(server);
+        this.io = socketIO(server, { path: '/ws', transports: ['websocket', 'polling'] });
         if (RedisWebSockets.active) {
             this.io.adapter(redis({ host: RedisWebSockets.host, port: RedisWebSockets.port }));
         }

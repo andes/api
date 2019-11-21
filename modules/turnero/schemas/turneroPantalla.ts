@@ -27,4 +27,4 @@ export const TurneroPantallaSchema = new Schema({
     playlist: { type: String, required: false },
 });
 
-export const TurneroPantallaModel: Model<IPantalla> = model('turneroPantallas', TurneroPantallaSchema, 'turneroPantallas');
+export const TurneroPantalla: Model<IPantalla> = model('turneroPantallas', TurneroPantallaSchema, 'turneroPantallas');
