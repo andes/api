@@ -491,6 +491,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                 }
                                 EventCore.emitAsync('citas:agenda:update', data[0]);
                             });
+                            return res.json(data[0]);
                         }).catch(err2 => { return next(err2); });
                     }
                 } else {
@@ -515,12 +516,13 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                         return next(error);
                                     }
                                 });
+                                return res.json(data2[0]);
                             }).catch(err3 => { return next(err3); });
                         }
                     });
                 }
                 // Fin de insert cache
-                return res.json(data[0]);
+                // return res.json(data[0]);
             });
         }
         // return next('ObjectID Inválido');
