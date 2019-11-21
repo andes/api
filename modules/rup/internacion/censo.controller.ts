@@ -204,6 +204,25 @@ async function getInformesInternacion(prestacion) {
     return response;
 }
 
+export async function censoMensual({ organizacion, unidadOrganizativa, fechaDesde, fechaHasta }) {
+    const resultado = [];
+    const bucketsCensos: any = await Censos.find({
+        idOrganizacion: mongoose.Types.ObjectId(organizacion),
+        'unidadOrganizativa.conceptId': unidadOrganizativa,
+        start: { $gte: moment(fechaDesde).startOf('month') },
+        end: { $lte: moment(fechaHasta).endOf('month') }
+    });
+
+    for (const bucket of bucketsCensos) {
+        const censos = bucket.censos.filter(censo =>
+            (moment(censo.fecha).isSameOrAfter(fechaDesde, 'day')
+                && moment(censo.fecha).isSameOrBefore(fechaHasta, 'day')));
+        resultado.push(...censos);
+    }
+
+    return resultado;
+}
+
 export async function censoMensualJob(done) {
     let cantidadMeses = 1;
 

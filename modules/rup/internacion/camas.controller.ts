@@ -6,19 +6,19 @@ import { EstadosCtr } from './estados.routes';
 export async function search({ organizacion, capa, ambito }, params) {
     let timestamp = moment();
 
-    if (params.timestamp) {
-        timestamp = moment(params.timestamp);
+    if (params.fecha) {
+        timestamp = moment(params.fecha);
     }
 
-    return await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion, ambito, capa }, params);
+    return await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion: organizacion._id, ambito, capa }, params);
 }
 
 export async function findById({ organizacion, capa, ambito }, idCama, timestamp = null) {
     if (!timestamp) {
-        timestamp = moment();
+        timestamp = moment().toDate();
     }
 
-    const estadoCama = await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion, ambito, capa }, { cama: idCama, timestamp });
+    const estadoCama = await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion: organizacion._id, ambito, capa }, { cama: idCama });
     if (estadoCama.length > 0) {
         return estadoCama[0];
     }
@@ -29,7 +29,7 @@ export async function findById({ organizacion, capa, ambito }, idCama, timestamp
 type CAMA = any;
 export async function patch(data: CAMA) {
 
-    const estadoCama = await findById({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa }, data.id, data.fecha);
+    const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
 
     const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
 
