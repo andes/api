@@ -1,4 +1,4 @@
-import { WebHookLog } from '../schemas/webhookLogSchema';
+import { WebHookLog } from '../../webhooklog/webhooklog.schema';
 
 
 export async function getById(id) {

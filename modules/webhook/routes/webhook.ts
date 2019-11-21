@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as express from 'express';
 import { EventCore } from '@andes/event-bus';
 import { WebHook } from '../schemas/webhookSchema';
-import { WebHookLog } from '../schemas/webhookLogSchema';
+import { WebHookLog } from '../../webhooklog/webhooklog.schema';
 
 import * as Fhir from '../../../packages/fhir/src/patient';
 const request = require('request');

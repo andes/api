@@ -15,5 +15,4 @@ export const WebHookLogSchema = new mongoose.Schema({
     response: mongoose.SchemaTypes.Mixed,
     updatedAt: Date
 }, { timestamps: true });
-
-export let WebHookLog = mongoose.model('webhookLog', WebHookLogSchema, 'webhookLog');
+export const WebHookLog = mongoose.model('webhookLog', WebHookLogSchema, 'webhookLog');
