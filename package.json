@@ -12,7 +12,7 @@
     "@andes/fhir": "^1.0.3",
     "@andes/log": "^1.1.5",
     "@andes/match": "^1.1.12",
-    "@andes/mongoose-plugin-audit": "^1.0.0",
+    "@andes/mongoose-plugin-audit": "^1.1.0",
     "@types/async": "^2.0.49",
     "@types/bcrypt-nodejs": "0.0.30",
     "@types/core-js": "^0.9.36",

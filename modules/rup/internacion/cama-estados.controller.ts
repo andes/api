@@ -2,6 +2,8 @@ import * as mongoose from 'mongoose';
 import moment = require('moment');
 import { CamaEstados } from './cama-estados.schema';
 import { ObjectId } from '@andes/core';
+import { Request } from '@andes/api-tool';
+import { AuditDocument } from '@andes/mongoose-plugin-audit';
 
 export async function snapshotEstados({ fecha, organizacion, ambito, capa }, filtros) {
     const firstMatch = {};
@@ -215,7 +217,8 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
     return await CamaEstados.aggregate(aggregate);
 }
 
-export async function store({ organizacion, ambito, capa, cama }, estado) {
+export async function store({ organizacion, ambito, capa, cama }, estado, req: Request) {
+    AuditDocument(estado, req.user);
     return await CamaEstados.update(
         {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),

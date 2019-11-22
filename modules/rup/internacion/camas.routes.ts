@@ -1,12 +1,12 @@
 import * as express from 'express';
 import * as CamasController from './camas.controller';
-import { asyncHandler } from '@andes/api-tool';
+import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
 
 const router = express.Router();
 
-router.get('/camas', Auth.authenticate(), asyncHandler(async (req: any, res) => {
+router.get('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -17,7 +17,7 @@ router.get('/camas', Auth.authenticate(), asyncHandler(async (req: any, res) => 
     res.json(result);
 }));
 
-router.get('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, res, next) => {
+router.get('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -32,19 +32,19 @@ router.get('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, res,
     }
 }));
 
-router.post('/camas', Auth.authenticate(), asyncHandler(async (req: any, res) => {
+router.post('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
     const data = { ...req.body, organizacion };
 
-    const result = await CamasController.store(data);
+    const result = await CamasController.store(data, req);
 
     res.json(result);
 }));
 
-router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, res, next) => {
+router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -52,7 +52,7 @@ router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, re
 
     const data = { ...req.body, organizacion, id: req.params.id };
 
-    const result = await CamasController.patch(data);
+    const result = await CamasController.patch(data, req);
 
     if (result) {
         return res.json(result);
@@ -62,7 +62,7 @@ router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, re
 
 }));
 
-router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, res) => {
+router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -73,7 +73,7 @@ router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: any, r
     };
     const data = { ...req.body, organizacion, cama: req.params.id, estado };
 
-    const result = await CamasController.patch(data);
+    const result = await CamasController.patch(data, req);
 
     res.json(result);
 }));

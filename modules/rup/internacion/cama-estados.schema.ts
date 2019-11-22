@@ -1,9 +1,9 @@
-import * as mongoose from 'mongoose';
+import { SchemaTypes, Schema, model } from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 
-const CamaEstadosSchema = new mongoose.Schema({
-    idCama: mongoose.Types.ObjectId,
-    idOrganizacion: mongoose.Types.ObjectId,
+const CamaEstadosSchema = new Schema({
+    idCama: SchemaTypes.ObjectId,
+    idOrganizacion: SchemaTypes.ObjectId,
     ambito: String,
     capa: String,
     start: Date,
@@ -29,7 +29,7 @@ const CamaEstadosSchema = new mongoose.Schema({
         genero: SnomedConcept,
         /* Datos del paciente e internacion si la cama está ocupada */
         paciente: {
-            id: mongoose.Schema.Types.ObjectId,
+            id: SchemaTypes.ObjectId,
             documento: String,
             sexo: String,
             genero: String,
@@ -38,7 +38,7 @@ const CamaEstadosSchema = new mongoose.Schema({
             fechaNacimiento: Date
         },
         idInternacion: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: SchemaTypes.ObjectId,
             default: null
         },
         observaciones: {
@@ -54,7 +54,13 @@ const CamaEstadosSchema = new mongoose.Schema({
             required: false,
             default: null
         },
+
+        createdAt: { type: Date, required: false },
+        createdBy: { type: SchemaTypes.Mixed, required: false },
+        updatedAt: { type: Date, required: false },
+        updatedBy: { type: SchemaTypes.Mixed, required: false },
     }]
 });
 
-export const CamaEstados = mongoose.model('internacionCamaEstados', CamaEstadosSchema, 'internacionCamaEstados');
+
+export const CamaEstados = model('internacionCamaEstados', CamaEstadosSchema, 'internacionCamaEstados');

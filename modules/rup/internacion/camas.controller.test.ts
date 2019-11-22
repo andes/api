@@ -69,7 +69,7 @@ describe('Internacion - camas', () => {
         await Camas.remove({});
         await CamaEstados.remove({});
         await Prestaciones.remove({});
-        cama = await store(seedCama());
+        cama = await store(seedCama(), REQMock);
     });
 
 
@@ -93,11 +93,6 @@ describe('Internacion - camas', () => {
     });
 
     test('cama - findById', async () => {
-<<<<<<< HEAD
-=======
-        const cama: any = await store(seedCama());
-
->>>>>>> feat(mapa-camas): audit estados
         const camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id);
         expect(camaEncontrada._id.toString()).toBe(cama._id.toString());
         expect(camaEncontrada.nombre).toBe(cama.nombre);
@@ -106,6 +101,7 @@ describe('Internacion - camas', () => {
         const camas = await search({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, {});
 
         expect(camas.length).toBe(1);
+        expect(camas[0].createdAt).toBeDefined();
 
         const camasFiltradas = await search({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, { cama: cama._id });
 
@@ -167,7 +163,7 @@ describe('Internacion - camas', () => {
                 conceptId: '1234567890',
                 semanticTag: 'objeto físico'
             }
-        });
+        }, REQMock);
 
         const camaDB: any = await Camas.findById(cama._id);
         expect(camaDB.tipoCama.conceptId).toBe('1234567890');
@@ -198,7 +194,7 @@ describe('Internacion - camas', () => {
                 conceptId: '1234567890',
                 semanticTag: 'objeto físico'
             }
-        });
+        }, REQMock);
         expect(resultNull).toBeNull();
 
         camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'h').toDate());
@@ -223,7 +219,7 @@ describe('Internacion - camas', () => {
                 apellido: 'PEREZ',
                 documento: '38432297'
             }
-        });
+        }, REQMock);
 
         camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'month').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
@@ -256,7 +252,7 @@ describe('Internacion - camas', () => {
 
     test('Cama - Lista Espera con Cama Ocupada', async () => {
         const nuevoOcupado = estadoOcupada();
-        await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+        await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
         const nuevaPrestacion: any = new Prestaciones(prestacion());
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
@@ -305,7 +301,7 @@ describe('Internacion - camas', () => {
                 conceptId: '1234567890',
                 semanticTag: 'objeto físico'
             }
-        });
+        }, REQMock);
 
         const valid = await patchEstados({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion', cama: cama._id }, from, to);
 
@@ -335,7 +331,7 @@ describe('Internacion - camas', () => {
                 documento: '38432297'
             },
             idInternacion: '57f67a7ad86d9f64130a138d'
-        });
+        }, REQMock);
 
         const fechaPase = moment().add(3, 'hour').toDate();
         await patch({
@@ -356,7 +352,7 @@ describe('Internacion - camas', () => {
                 conceptId: '4561000013103',
                 semanticTag: 'medio ambiente'
             }
-        });
+        }, REQMock);
 
 
         const fechaNuevaIngreso = moment().add(4, 'hour').toDate();

@@ -33,7 +33,7 @@ beforeEach(async () => {
     await Camas.remove({});
     await CamaEstados.remove({});
     await Prestaciones.remove({});
-    cama = await store(seedCama());
+    cama = await store(seedCama(), REQMock);
 });
 
 afterAll(async () => {
@@ -97,7 +97,7 @@ test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     await nuevaPrestacion.save();
 
-    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada());
+    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada(), REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -123,7 +123,7 @@ test('Censo diario - Paciente desde 0hs tiene alta', async () => {
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     await nuevaPrestacion.save();
 
-    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada());
+    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada(), REQMock);
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
     expect(resultado.censo).toEqual({
@@ -150,7 +150,7 @@ test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     await nuevaPrestacion.save();
 
-    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada());
+    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada(), REQMock);
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
     expect(resultado.censo).toEqual({
@@ -172,7 +172,7 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     await nuevaPrestacion.save();
 
-    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada());
+    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada(), REQMock);
     const nuevoOcupado = estadoOcupada();
     nuevoOcupado.fecha = moment().toDate();
     nuevoOcupado.unidadOrganizativa = {
@@ -184,7 +184,7 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -210,7 +210,7 @@ test('Censo diario - Paciente ingresa y se queda', async () => {
 
     const nuevoOcupado = estadoOcupada();
     nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -237,7 +237,7 @@ test('Censo diario - Paciente ingresa y tiene alta', async () => {
 
     const nuevoOcupado = estadoOcupada();
     nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -266,7 +266,7 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
 
     const nuevoOcupado = estadoOcupada();
     nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -292,7 +292,7 @@ test('Censo diario - Paciente ingresa y tiene pase A', async () => {
 
     const nuevoOcupado = estadoOcupada();
     nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const nuevoEstado = estadoOcupada();
     nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
@@ -305,7 +305,7 @@ test('Censo diario - Paciente ingresa y tiene pase A', async () => {
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -331,7 +331,7 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', 
 
     const nuevoOcupado = estadoOcupada();
     nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const nuevoEstado = estadoOcupada();
     nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
@@ -344,12 +344,12 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', 
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
     const nuevoEstadoVuelve = estadoOcupada();
     nuevoEstadoVuelve.fecha = moment(new Date()).add(45, 'minutes').toDate();
 
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -376,7 +376,7 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene alta'
 
     const nuevoOcupado = estadoOcupada();
     nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const nuevoEstado = estadoOcupada();
     nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
@@ -389,12 +389,12 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene alta'
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
     const nuevoEstadoVuelve = estadoOcupada();
     nuevoEstadoVuelve.fecha = moment(new Date()).add(45, 'minutes').toDate();
 
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -423,7 +423,7 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defun
 
     const nuevoOcupado = estadoOcupada();
     nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const nuevoEstado = estadoOcupada();
     nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
@@ -436,12 +436,12 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defun
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
     const nuevoEstadoVuelve = estadoOcupada();
     nuevoEstadoVuelve.fecha = moment(new Date()).add(45, 'minutes').toDate();
 
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 
@@ -477,11 +477,11 @@ test('Censo diario - Paciente tiene paseDe y se queda', async () => {
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const nuevoEstado = estadoOcupada();
     nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
@@ -519,11 +519,11 @@ test('Censo diario - Paciente tiene paseDe y tiene alta', async () => {
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const nuevoEstado = estadoOcupada();
     nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
@@ -563,11 +563,11 @@ test('Censo diario - Paciente tiene paseDe y tiene defuncion', async () => {
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const nuevoEstado = estadoOcupada();
     nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
@@ -602,11 +602,11 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
     const nuevoEstado = estadoOcupada();
     nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
     const nuevoEstadoPase = estadoOcupada();
     nuevoEstadoPase.fecha = moment(new Date()).add(45, 'minutes').toDate();
@@ -619,7 +619,7 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
         semanticTag: 'medio ambiente',
         refsetIds: []
     };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoPase);
+    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoPase, REQMock);
 
     const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
 

@@ -1,9 +1,10 @@
 import * as mongoose from 'mongoose';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import * as CamasEstadosController from './cama-estados.controller';
-import moment = require('moment');
+import * as moment from 'moment';
 import { EstadosCtr } from './estados.routes';
 import { model as Prestaciones } from '../schemas/prestacion';
+import { Request } from '@andes/api-tool';
 
 export async function search({ organizacion, capa, ambito }, params) {
     let timestamp = moment();
@@ -61,7 +62,14 @@ export async function listaEspera({ fecha, organizacion }) {
 }
 
 type CAMA = any;
-export async function patch(data: CAMA) {
+
+/**
+ * Modifica el estado de una cama (movimiento).
+ * @param data
+ * @param req
+ */
+
+export async function patch(data: CAMA, req: Request) {
 
     const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
 
@@ -77,22 +85,27 @@ export async function patch(data: CAMA) {
 
         const [camaEncontrada]: [any, any] = await Promise.all([
             Camas.findById(data.id),
-            CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado),
+            CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado, req),
         ]);
 
         camaEncontrada.set(data);
         if (data.unidadOrganizativa) {
             camaEncontrada.unidadOrganizativaOriginal = data.unidadOrganizativa;
         }
-
+        camaEncontrada.audit(req);
         return await camaEncontrada.save();
     }
 
     return null;
 }
 
-export async function store(data) {
-    const nuevaCama = new Camas({
+/**
+ * Crea una cama de creo. Genera el movimiento inicial en cada capa.
+ * @param data
+ * @param req
+ */
+export async function store(data, req: Request) {
+    const nuevaCama: any = new Camas({
         organizacion: data.organizacion,
         ambito: data.ambito,
         unidadOrganizativaOriginal: data.unidadOrganizativa,
@@ -101,6 +114,7 @@ export async function store(data) {
         tipoCama: data.tipoCama,
         equipamiento: data.equipamiento,
     });
+    nuevaCama.audit(req);
 
     const fecha = data.fecha || moment().toDate();
 
@@ -117,7 +131,7 @@ export async function store(data) {
     const [camaGuardada] = await Promise.all([
         nuevaCama.save(),
         ...INTERNACION_CAPAS.map(capa => {
-            return CamasEstadosController.store({ organizacion: data.organizacion.id, ambito: data.ambito, capa, cama: nuevaCama._id }, nuevoEstado);
+            return CamasEstadosController.store({ organizacion: data.organizacion.id, ambito: data.ambito, capa, cama: nuevaCama._id }, nuevoEstado, req);
         })
     ]);
 

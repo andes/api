@@ -1,10 +1,11 @@
-import * as mongoose from 'mongoose';
+import { SchemaTypes, Schema, model } from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export const INTERNACION_CAPAS = ['medica', 'estadistica', 'enfermeria'];
 
-const CamaSchema = new mongoose.Schema({
+const CamaSchema = new Schema({
     organizacion: {
         type: nombreSchema,
         required: true
@@ -33,4 +34,6 @@ const CamaSchema = new mongoose.Schema({
     equipamiento: [SnomedConcept],
 });
 
-export const Camas = mongoose.model('internacionCamas', CamaSchema, 'internacionCamas');
+CamaSchema.plugin(AuditPlugin);
+
+export const Camas = model('internacionCamas', CamaSchema, 'internacionCamas');
