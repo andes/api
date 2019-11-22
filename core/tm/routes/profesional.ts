@@ -235,7 +235,7 @@ router.get('/profesionales/matching', async (req, res, next) => {
 });
 
 
-router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, next) => {
+router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFoto')) {
         return next(403);
     }
@@ -244,26 +244,18 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
     const id = req.query.id;
     const fotoProf = makeFs();
     try {
-        fotoProf.find({ 'metadata.idProfesional': id }, {}, {
-            sort: { _id: -1 }
-        }, (err, file) => {
-            if (file[0] == null) {
-                res.setHeader('Content-Type', 'image/jpeg');
-                // input.pipe(decoder).pipe(res);
-                // input.end(img);
-                res.end(img);
-            } else {
-                fotoProf.readById(file[0].id, (err2, buffer) => {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
-                    const _img = buffer.toString('base64');
-                    return res.send(_img);
-                });
-            }
-        });
+        const file = await fotoProf.find({ 'metadata.idProfesional': id }, {}, {sort: { _id: -1 }});
+        if (file.length > 0) {
+            fotoProf.readById(file[0].id, (err2, buffer) => {
+                if (err2) {
+                    return next(err2);
+                }
+                const _img = buffer.toString('base64');
+                return res.json(_img);
+            });
+        } else {
+            return res.json(img);
+        }
     } catch (ex) {
         return next(ex);
     }
