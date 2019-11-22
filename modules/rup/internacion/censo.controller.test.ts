@@ -13,11 +13,15 @@ import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import * as CensoController from './censo.controller';
 import { Auth } from '../../../auth/auth.class';
 
+const REQMock: any = {
+    user: {}
+};
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
 let mongoServer: any;
 let cama: any;
+
 beforeAll(async () => {
     mongoServer = new MongoMemoryServer();
     const mongoUri = await mongoServer.getConnectionString();

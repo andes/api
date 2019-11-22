@@ -1,14 +1,14 @@
-import * as mongoose from 'mongoose';
-import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import { SchemaTypes, Schema, model } from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 const EstadoKey = String;
 
-const EstadoSchema = new mongoose.Schema({
+const EstadoSchema = new Schema({
     // organizacion: {
     //     type: nombreSchema,
     //     required: true
     // },
-    organizacion: mongoose.SchemaTypes.ObjectId,
+    organizacion: SchemaTypes.ObjectId,
     ambito: String,
     capa: String,
     estados: [{
@@ -37,4 +37,6 @@ EstadoSchema.methods.check = function (origen, destino) {
     return false;
 };
 
-export const Estados = mongoose.model('internacionEstados', EstadoSchema, 'internacionEstados');
+EstadoSchema.plugin(AuditPlugin);
+
+export const Estados = model('internacionEstados', EstadoSchema, 'internacionEstados');

@@ -55,7 +55,6 @@ const CamaEstadosSchema = new mongoose.Schema({
             default: null
         },
     }]
-
 });
 
 export const CamaEstados = mongoose.model('internacionCamaEstados', CamaEstadosSchema, 'internacionCamaEstados');

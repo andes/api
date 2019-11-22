@@ -29,6 +29,12 @@ afterAll(async () => {
 });
 
 
+const REQMock: any = {
+    user: {
+        usuario: { nombre: 'JUAN' }
+    }
+};
+
 function seedCama() {
     return {
         organizacion: {
@@ -83,10 +89,15 @@ describe('Internacion - camas', () => {
             expect(camaEstadoDB.length).toBe(1);
             expect(camaEstadoDB[0].estados[0].estado).toBe('disponible');
         });
-        await Promise.all(test);
+        return await Promise.all(test);
     });
 
     test('cama - findById', async () => {
+<<<<<<< HEAD
+=======
+        const cama: any = await store(seedCama());
+
+>>>>>>> feat(mapa-camas): audit estados
         const camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id);
         expect(camaEncontrada._id.toString()).toBe(cama._id.toString());
         expect(camaEncontrada.nombre).toBe(cama.nombre);
@@ -117,7 +128,10 @@ describe('Internacion - camas', () => {
                 { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'ocupada', destino: 'disponible' },
             ]
-        }, null);
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         await EstadosCtr.create({
             organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
@@ -133,7 +147,7 @@ describe('Internacion - camas', () => {
                 { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'ocupada', destino: 'disponible' },
             ]
-        }, null);
+        }, REQMock);
 
 
         const estados = await patch({
@@ -269,7 +283,7 @@ describe('Internacion - camas', () => {
                 { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'ocupada', destino: 'disponible' },
             ]
-        }, null);
+        }, REQMock);
 
         const from = moment().add(1, 'h').toDate();
         const to = moment().add(2, 'h').toDate();
