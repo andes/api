@@ -8,8 +8,12 @@ router.get('/sms', async (req, res, next) => {
         telefono: req.query.telefono,
         mensaje: req.query.mensaje
     };
-    const resultado = await sendSms(smsOptions);
-    return res.json(resultado);
+    try {
+        const resultado = await sendSms(smsOptions);
+        return res.json(resultado);
+    } catch (error) {
+        return res.json('1');
+    }
 });
 
 export = router;
