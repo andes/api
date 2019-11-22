@@ -845,29 +845,10 @@ export async function prestacionesDisponibles(params) {
                 },
                 'bloques.turnos.horaInicio': { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) },
                 estado: 'publicada',
-                dinamica: false
-            }
-        },
-        {
-            $match:
-            {
-                $or: [
-                    {
-                        'bloques.restantesProgramados': {
-                            $gt: 0
-                        }
-                    },
-                    {
-                        $and: [
-                            {
-                                'bloques.restantesDelDia': {
-                                    $gt: 0
-                                }
-                            }, {
-                                horaInicio: { $lte: new Date(moment().endOf('day').format('YYYY-MM-DD HH:mm')) }
-                            }]
-                    }]
-
+                dinamica: false,
+                'bloques.restantesMobile': {
+                    $gt: 0
+                }
             }
         },
         {
@@ -875,12 +856,8 @@ export async function prestacionesDisponibles(params) {
         },
         {
             $match: {
-                $expr: {
-                    $or: [{
-                        $gt: ['$bloques.restantesProgramados', 0]
-                    }, {
-                        $gt: ['$bloques.restantesDelDia', 0]
-                    }]
+                'bloques.restantesMobile': {
+                    $gt: 0
                 }
             }
         },
@@ -940,22 +917,9 @@ export async function turnosDisponibles(prestacion, organizacion) {
                 'bloques.turnos.horaInicio': { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) },
                 estado: 'publicada',
                 'tipoPrestaciones.conceptId': prestacion,
-                $or: [
-                    {
-                        'bloques.restantesProgramados': {
-                            $gt: 0
-                        }
-                    },
-                    {
-                        $and: [
-                            {
-                                'bloques.restantesDelDia': {
-                                    $gt: 0
-                                }
-                            }, {
-                                horaInicio: { $lte: new Date(moment().endOf('day').format('YYYY-MM-DD HH:mm')) }
-                            }]
-                    }]
+                'bloques.restantesMobile': {
+                    $gt: 0
+                }
             }
         },
         {
@@ -963,11 +927,8 @@ export async function turnosDisponibles(prestacion, organizacion) {
         },
         {
             $match: {
-                $expr: {
-                    $or: [
-                        { $gt: ['$bloques.restantesProgramados', 0] },
-                        { $gt: ['$bloques.restantesDelDia', 0] }
-                    ]
+                'bloques.restantesMobile': {
+                    $gt: 0
                 }
             }
         },
