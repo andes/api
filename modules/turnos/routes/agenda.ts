@@ -595,6 +595,10 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         agendaCtrl.editarAgenda(req, data);
                         event = { object: 'agenda', accion: 'update', data };
                         break;
+                    case 'agregarTurno':
+                        event = { object: 'turno', accion: 'asignar', data: null };
+                        event.data = agendaCtrl.agregarTurno(req, data);
+                        break;
                     case 'agregarSobreturno':
                         event = { object: 'turno', accion: 'asignar', data: null };
                         event.data = agendaCtrl.agregarSobreturno(req, data);

@@ -413,6 +413,20 @@ export function editarAgenda(req, data) {
 }
 
 // Agenda
+export function agregarTurno(req, data) {
+    const turno = req.body.turno;
+    if (turno) {
+        const usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        // Copia la organización desde el token
+        usuario.organizacion = (req as any).user.organizacion;
+        turno.updatedAt = new Date();
+        turno.updatedBy = usuario;
+        data.bloques[0].turnos.push(turno);
+        return data.bloques[0].turnos[data.bloques[0].turnos - 1]; // Para poder trackear el id del sobreturno
+    }
+}
+
+// Agenda
 export function agregarSobreturno(req, data) {
     const sobreturno = req.body.sobreturno;
     if (sobreturno) {
