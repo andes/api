@@ -27,7 +27,7 @@ export function sendSms(smsOptions: SmsOptions) {
                             return reject(xmlFaultString);
                         }
                     } catch (e) {
-                        // return reject(e);
+                        return reject(e);
                     }
                 }
                 if (result && result.return) {
@@ -96,7 +96,11 @@ function operador(operadorName) {
 function getXMLOption(xml, option) {
     const xmlDocument = libxmljs.parseXml(xml);
     const xmlData = xmlDocument.get(option);
-    return xmlData.text();
+    if (xmlData) {
+        return xmlData.text();
+    } else {
+        return null;
+    }
 }
 
 function createClient(url) {
