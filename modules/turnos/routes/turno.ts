@@ -251,7 +251,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 break;
             case ('programado'):
                 update['bloques.' + posBloque + '.restantesProgramados'] = countBloques.programado - 1;
-                if (req.body.emitidoPor && req.body.emitidoPor === 'appMobile') {
+                if (req.body.emitidoPor && (req.body.emitidoPor === 'appMobile' || req.body.emitidoPor === 'totem')) {
                     update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
                 }
                 break;
