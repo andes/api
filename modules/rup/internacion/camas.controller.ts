@@ -1,7 +1,9 @@
+import * as mongoose from 'mongoose';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import moment = require('moment');
 import { EstadosCtr } from './estados.routes';
+import { model as Prestaciones } from '../schemas/prestacion';
 
 export async function search({ organizacion, capa, ambito }, params) {
     let timestamp = moment();
@@ -24,6 +26,38 @@ export async function findById({ organizacion, capa, ambito }, idCama, timestamp
     }
 
     return null;
+}
+
+export async function listaEspera({ fecha, organizacion }) {
+    const ambito = 'internacion';
+    const capa = 'estadistica';
+
+    const prestaciones = await Prestaciones.aggregate([
+        {
+            $match: {
+                'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion._id),
+                'solicitud.ambitoOrigen': 'internacion',
+                'solicitud.tipoPrestacion.conceptId': '32485007',
+                'ejecucion.registros.valor.informeIngreso.fechaIngreso': {
+                    $lte: moment(fecha).toDate().toISOString()
+                }
+            }
+        },
+        {
+            $unwind: '$estados'
+        },
+        {
+            $match: {
+                'estados.tipo': 'ejecucion'
+            }
+        }
+    ]);
+
+    const estadoCama = await CamasEstadosController.snapshotEstados({ fecha, organizacion: organizacion._id, ambito, capa }, {});
+
+    const listaDeEspera = prestaciones.filter(prest => estadoCama.filter(est => prest._id !== est.idInternacion));
+
+    return listaDeEspera;
 }
 
 type CAMA = any;

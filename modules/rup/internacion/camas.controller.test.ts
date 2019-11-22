@@ -1,21 +1,30 @@
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 import * as moment from 'moment';
-
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
-
-import { store, findById, search, patch } from './camas.controller';
+import { model as Prestaciones } from '../schemas/prestacion';
+import { store, findById, search, patch, listaEspera } from './camas.controller';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import { CamaEstados } from './cama-estados.schema';
+import * as CamasEstadosController from './cama-estados.controller';
 import { EstadosCtr } from './estados.routes';
+import { Auth } from '../../../auth/auth.class';
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
 let mongoServer: any;
+let cama: any;
 beforeAll(async () => {
     mongoServer = new MongoMemoryServer();
     const mongoUri = await mongoServer.getConnectionString();
     mongoose.connect(mongoUri);
+});
+
+beforeEach(async () => {
+    await Camas.remove({});
+    await CamaEstados.remove({});
+    await Prestaciones.remove({});
+    cama = await store(seedCama());
 });
 
 afterAll(async () => {
@@ -60,9 +69,6 @@ describe('Internacion - camas', () => {
 
 
     test('create cama', async () => {
-
-        const cama: any = await store(seedCama());
-
         const camaDB: any = await Camas.findById(cama._id);
         const test = INTERNACION_CAPAS.map(async (capa) => {
             const camaEstadoDB: any = await CamaEstados.find({
@@ -82,24 +88,22 @@ describe('Internacion - camas', () => {
     });
 
     test('cama - findById', async () => {
-        const cama: any = await store(seedCama());
-        const camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id);
+        const camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id);
         expect(camaEncontrada._id.toString()).toBe(cama._id.toString());
         expect(camaEncontrada.nombre).toBe(cama.nombre);
 
 
-        const camas = await search({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, {});
+        const camas = await search({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, {});
 
-        expect(camas.length).toBe(2);
+        expect(camas.length).toBe(1);
 
-        const camasFiltradas = await search({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, { cama: cama._id });
+        const camasFiltradas = await search({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, { cama: cama._id });
 
         expect(camasFiltradas.length).toBe(1);
 
     });
 
     test('cama - patch de estados', async () => {
-        const cama: any = await store(seedCama());
         const maquinaEstados = await EstadosCtr.create({
             organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
             ambito: 'internacion',
@@ -155,12 +159,12 @@ describe('Internacion - camas', () => {
         const camaDB: any = await Camas.findById(cama._id);
         expect(camaDB.tipoCama.conceptId).toBe('1234567890');
 
-        let camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'h').toDate());
+        let camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'h').toDate());
 
 
         expect(camaEncontrada.estado).toBe('inactiva');
 
-        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'enfermeria', ambito: 'internacion' }, cama._id);
+        camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'enfermeria', ambito: 'internacion' }, cama._id);
         expect(camaEncontrada.estado).toBe('disponible');
 
 
@@ -184,7 +188,7 @@ describe('Internacion - camas', () => {
         });
         expect(resultNull).toBeNull();
 
-        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'h').toDate());
+        camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'h').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
 
 
@@ -208,13 +212,13 @@ describe('Internacion - camas', () => {
             }
         });
 
-        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'month').toDate());
+        camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, moment().add(3, 'month').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
 
-        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'enfermeria', ambito: 'internacion' }, cama._id);
+        camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'enfermeria', ambito: 'internacion' }, cama._id);
         expect(camaEncontrada.estado).toBe('disponible');
 
-        camaEncontrada = await findById({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'enfermeria', ambito: 'internacion' }, cama._id, moment().add(3, 'month').toDate());
+        camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'enfermeria', ambito: 'internacion' }, cama._id, moment().add(3, 'month').toDate());
         expect(camaEncontrada.estado).toBe('ocupada');
 
         const _estados = await CamaEstados.find({
@@ -226,4 +230,437 @@ describe('Internacion - camas', () => {
         expect(_estados.length).toBe(2);
     });
 
+    test('Cama - Lista Espera con Cama Disponible', async () => {
+        const nuevaPrestacion: any = new Prestaciones(prestacion());
+        Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
+        await nuevaPrestacion.save();
+
+        const listaEsp = await listaEspera({ fecha: moment().toDate().toISOString(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
+        expect(listaEsp.length).toBe(1);
+        expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
+
+    });
+
+    test('Cama - Lista Espera con Cama Ocupada', async () => {
+        const nuevoOcupado = estadoOcupada();
+        await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado);
+
+        const nuevaPrestacion: any = new Prestaciones(prestacion());
+        Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
+        await nuevaPrestacion.save();
+
+        const listaEsp = await listaEspera({ fecha: moment().toDate().toISOString(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
+        expect(listaEsp.length).toBe(1);
+        expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
+
+    });
+
 });
+
+function estadoOcupada() {
+    return {
+        fecha: moment().toDate(),
+        estado: 'ocupada',
+        unidadOrganizativa: {
+            refsetIds: [],
+            fsn: 'servicio de adicciones (medio ambiente)',
+            term: 'servicio de adicciones',
+            conceptId: '4561000013106',
+            semanticTag: 'medio ambiente',
+            _id: mongoose.Types.ObjectId('5c8a88e2af621b10273ba23d'),
+            id: mongoose.Types.ObjectId('5c8a88e2af621b10273ba23d')
+        },
+        especialidades: [
+            {
+                refsetIds: [],
+                _id: mongoose.Types.ObjectId('5c95036cc5861a722ddd563d'),
+                fsn: 'medicina general (calificador)',
+                term: 'medicina general',
+                conceptId: '394802001',
+                semanticTag: 'calificador'
+            }
+        ],
+        esCensable: true,
+        genero: {
+            refsetIds: [],
+            fsn: 'género femenino (hallazgo)',
+            term: 'género femenino',
+            conceptId: '703118005',
+            semanticTag: 'hallazgo'
+        },
+        paciente: {
+            claveBlocking: [
+                'ANSRALN',
+                'ANSRN',
+                'ALNNTN',
+                '6496566365',
+                '6496'
+            ],
+            entidadesValidadoras: [
+                'Sisa',
+                'RENAPER'
+            ],
+            _id: mongoose.Types.ObjectId('5d3af64e5086740d0f5bc6b5'),
+            identificadores: [
+                {
+                    entidad: 'SIPS',
+                    valor: '733776'
+                }
+            ],
+            contacto: [
+                {
+                    activo: true,
+                    _id: mongoose.Types.ObjectId('5cf4f5facdb7f026ed635a77'),
+                    tipo: 'celular',
+                    valor: '2995166965',
+                    ranking: 0,
+                    ultimaActualizacion: '2019-06-03T10:26:09.207Z'
+                }
+            ],
+            direccion: [],
+            relaciones: [],
+            financiador: [],
+            carpetaEfectores: [],
+            notas: [],
+            documento: '40616354',
+            estado: 'validado',
+            nombre: 'AILEN ANTONELA',
+            apellido: 'ANZORENA',
+            sexo: 'femenino',
+            genero: 'femenino',
+            fechaNacimiento: '1997-11-01T03:00:00.000Z',
+            estadoCivil: null,
+            activo: true,
+            createdAt: '2019-04-09T10:15:12.355Z',
+            createdBy: {
+                id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
+                nombreCompleto: 'Miriam Lorena Sanchez',
+                nombre: 'Miriam Lorena',
+                apellido: 'Sanchez',
+                username: 29882039,
+                documento: 29882039,
+                organizacion: {
+                    _id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
+                    nombre: 'HOSPITAL NEUQUEN',
+                    id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d')
+                }
+            },
+            scan: '00249041503@ANZORENA@AILN ANTONELA@F@40616354@A@01/11/1997@25/02/2014',
+            updatedAt: '2019-07-26T12:47:10.703Z',
+            updatedBy: {
+                id: mongoose.Types.ObjectId('5b5a00ae43563f10834c067c'),
+                nombreCompleto: 'MARIA RAQUEL MU�OZ',
+                nombre: 'MARIA RAQUEL',
+                apellido: 'MU�OZ',
+                username: 27932209,
+                documento: 27932209,
+                organizacion: {
+                    _id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
+                    nombre: 'HOSPITAL NEUQUEN',
+                    id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d')
+                }
+            },
+            cuil: '27406163542',
+            reportarError: false
+        },
+        idInternacion: mongoose.Types.ObjectId('5d3af64ec7d7a7158e23c356'),
+        observaciones: null,
+        esMovimiento: true,
+        sugierePase: null
+    };
+}
+
+function prestacion() {
+    return {
+        _id: mongoose.Types.ObjectId('5d3af64ec8d7a7158e12c242'),
+        solicitud: {
+            tipoPrestacion: {
+                refsetIds: [],
+                fsn: 'admisión hospitalaria (procedimiento)',
+                semanticTag: 'procedimiento',
+                conceptId: '32485007',
+                term: 'internación'
+            },
+            tipoPrestacionOrigen: {
+                refsetIds: []
+            },
+            organizacion: {
+                id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
+                nombre: 'HOSPITAL NEUQUEN'
+            },
+            profesional: {
+                id: mongoose.Types.ObjectId('58f74fd4d03019f919ea1a4b'),
+                nombre: 'LEANDRO MARIANO JAVIER',
+                apellido: 'DERGO',
+                documento: '26331447'
+            },
+            ambitoOrigen: 'internacion',
+            fecha: '2019-07-29T22:00:00.000Z',
+            turno: null,
+            registros: []
+        },
+        ejecucion: {
+            organizacion: {
+                id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
+                nombre: 'HOSPITAL NEUQUEN'
+            },
+            fecha: '2019-07-29T22:00:00.000Z',
+            registros: [
+                {
+                    privacy: {
+                        scope: 'public'
+                    },
+                    _id: mongoose.Types.ObjectId('5d4c717820cc5bcbad5987c6'),
+                    destacado: false,
+                    esSolicitud: false,
+                    esDiagnosticoPrincipal: false,
+                    relacionadoCon: [],
+                    registros: [],
+                    nombre: 'documento de solicitud de admisión',
+                    concepto: {
+                        fsn: 'documento de solicitud de admisión (elemento de registro)',
+                        semanticTag: 'elemento de registro',
+                        refsetIds: [
+                            '900000000000497000'
+                        ],
+                        conceptId: '721915006',
+                        term: 'documento de solicitud de admisión'
+                    },
+                    valor: {
+                        informeIngreso: {
+                            fechaIngreso: moment().subtract(5, 'month').toDate().toISOString(),
+                            horaNacimiento: '2019-08-08T18:55:43.192Z',
+                            edadAlIngreso: '86 año/s',
+                            origen: 'Emergencia',
+                            ocupacionHabitual: 'Jubilado, retirado',
+                            situacionLaboral: 'No trabaja y no busca trabajo',
+                            nivelInstruccion: 'Primario completo',
+                            especialidades: [
+                                {
+                                    conceptId: '394802001',
+                                    fsn: 'medicina general (calificador)',
+                                    semanticTag: 'calificador',
+                                    term: 'medicina general'
+                                }
+                            ],
+                            obraSocial: {
+                                nombre: 'INSTITUTO NACIONAL DE SERVICIOS SOCIALES PARA JUBILADOS Y PENSIONADOS',
+                                codigoFinanciador: 500807.0
+                            },
+                            nroCarpeta: null,
+                            motivo: 'neumonia',
+                            organizacionOrigen: null,
+                            profesional: {
+                                _id: mongoose.Types.ObjectId('58f74fd4d03019f919ea1a4b'),
+                                nombre: 'LEANDRO MARIANO JAVIER',
+                                apellido: 'DERGO',
+                                documento: '26331447',
+                                nombreCompleto: 'DERGO, LEANDRO MARIANO JAVIER',
+                                id: mongoose.Types.ObjectId('58f74fd4d03019f919ea1a4b')
+                            },
+                            PaseAunidadOrganizativa: null
+                        }
+                    },
+                    createdAt: '2019-08-08T19:01:12.952Z',
+                    createdBy: {
+                        id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
+                        nombreCompleto: 'Miriam Lorena Sanchez',
+                        nombre: 'Miriam Lorena',
+                        apellido: 'Sanchez',
+                        username: 29882039.0,
+                        documento: 29882039.0,
+                        organizacion: {
+                            _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
+                            nombre: 'HOSPITAL NEUQUEN',
+                            id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
+                        }
+                    },
+                    updatedAt: '2019-10-29T16:32:18.491Z',
+                    updatedBy: {
+                        id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),
+                        nombreCompleto: 'KATHERINE DANIELA SALINAS',
+                        nombre: 'KATHERINE DANIELA',
+                        apellido: 'SALINAS',
+                        username: 36489710.0,
+                        documento: 36489710.0,
+                        organizacion: {
+                            _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
+                            nombre: 'HOSPITAL NEUQUEN',
+                            id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
+                        }
+                    }
+                },
+                {
+                    privacy: {
+                        scope: 'public'
+                    },
+                    _id: mongoose.Types.ObjectId('5d4c720c2dbb2023a5576c35'),
+                    destacado: false,
+                    esSolicitud: false,
+                    esDiagnosticoPrincipal: true,
+                    relacionadoCon: [],
+                    registros: [],
+                    esPrimeraVez: true,
+                    nombre: 'alta del paciente',
+                    concepto: {
+                        fsn: 'alta del paciente (procedimiento)',
+                        semanticTag: 'procedimiento',
+                        refsetIds: [
+                            '900000000000497000'
+                        ],
+                        conceptId: '58000006',
+                        term: 'alta del paciente'
+                    },
+                    valor: {
+                        InformeEgreso: {
+                            fechaEgreso: moment(new Date()).add(1, 'days'),
+                            nacimientos: [
+                                {
+                                    pesoAlNacer: null,
+                                    condicionAlNacer: null,
+                                    terminacion: null,
+                                    sexo: null
+                                }
+                            ],
+                            procedimientosQuirurgicos: [],
+                            causaExterna: {
+                                producidaPor: null,
+                                lugar: null,
+                                comoSeProdujo: null
+                            },
+                            diasDeEstada: 1.0,
+                            tipoEgreso: {
+                                id: 'Alta médica',
+                                nombre: 'Alta médica'
+                            },
+                            diagnosticoPrincipal: {
+                                _id: mongoose.Types.ObjectId('59bbf1ed53916746547cbdba'),
+                                idCie10: 1187.0,
+                                idNew: 3568.0,
+                                capitulo: '10',
+                                grupo: '02',
+                                causa: 'J12',
+                                subcausa: '9',
+                                codigo: 'J12.9',
+                                nombre: '(J12.9) Neumonía viral, no especificada',
+                                sinonimo: 'Neumonia viral, no especificada',
+                                descripcion: '10.Enfermedades del sistema respiratorio (J00-J99)',
+                                c2: true,
+                                reporteC2: 'Neumonia',
+                                id: mongoose.Types.ObjectId('59bbf1ed53916746547cbdba')
+                            }
+                        }
+                    },
+                    createdAt: '2019-08-08T19:03:40.224Z',
+                    createdBy: {
+                        id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
+                        nombreCompleto: 'Miriam Lorena Sanchez',
+                        nombre: 'Miriam Lorena',
+                        apellido: 'Sanchez',
+                        username: 29882039.0,
+                        documento: 29882039.0,
+                        organizacion: {
+                            _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
+                            nombre: 'HOSPITAL NEUQUEN',
+                            id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
+                        }
+                    },
+                    updatedAt: '2019-10-29T16:32:18.491Z',
+                    updatedBy: {
+                        id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),
+                        nombreCompleto: 'KATHERINE DANIELA SALINAS',
+                        nombre: 'KATHERINE DANIELA',
+                        apellido: 'SALINAS',
+                        username: 36489710.0,
+                        documento: 36489710.0,
+                        organizacion: {
+                            _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
+                            nombre: 'HOSPITAL NEUQUEN',
+                            id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
+                        }
+                    }
+                }
+            ]
+        },
+        noNominalizada: false,
+        paciente: {
+            id: mongoose.Types.ObjectId('5bf7f2b3beee2831326e6c4c'),
+            nombre: 'HERMINIA',
+            apellido: 'URRA',
+            documento: '2305918',
+            sexo: 'femenino',
+            fechaNacimiento: '1932-08-15T04:00:00.000Z'
+        },
+        estados: [
+            {
+                idOrigenModifica: null,
+                motivoRechazo: null,
+                _id: mongoose.Types.ObjectId('5d4c717820cc5bcbad5987c7'),
+                tipo: 'ejecucion',
+                createdAt: '2019-08-08T19:01:12.952Z',
+                createdBy: {
+                    id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
+                    nombreCompleto: 'Miriam Lorena Sanchez',
+                    nombre: 'Miriam Lorena',
+                    apellido: 'Sanchez',
+                    username: 29882039.0,
+                    documento: 29882039.0,
+                    organizacion: {
+                        _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
+                        nombre: 'HOSPITAL NEUQUEN',
+                        id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
+                    }
+                }
+            },
+            {
+                idOrigenModifica: null,
+                motivoRechazo: null,
+                _id: mongoose.Types.ObjectId('5db869929929a9fe57109744'),
+                tipo: 'validada',
+                createdAt: '2019-10-29T16:32:18.491Z',
+                createdBy: {
+                    id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),
+                    nombreCompleto: 'KATHERINE DANIELA SALINAS',
+                    nombre: 'KATHERINE DANIELA',
+                    apellido: 'SALINAS',
+                    username: 36489710.0,
+                    documento: 36489710.0,
+                    organizacion: {
+                        _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
+                        nombre: 'HOSPITAL NEUQUEN',
+                        id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
+                    }
+                }
+            }
+        ],
+        createdAt: '2019-08-08T19:01:12.952Z',
+        createdBy: {
+            id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
+            nombreCompleto: 'Miriam Lorena Sanchez',
+            nombre: 'Miriam Lorena',
+            apellido: 'Sanchez',
+            username: 29882039.0,
+            documento: 29882039.0,
+            organizacion: {
+                _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
+                nombre: 'HOSPITAL NEUQUEN',
+                id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
+            }
+        },
+        __v: 3.0,
+        updatedAt: '2019-10-29T16:32:18.491Z',
+        updatedBy: {
+            id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),
+            nombreCompleto: 'KATHERINE DANIELA SALINAS',
+            nombre: 'KATHERINE DANIELA',
+            apellido: 'SALINAS',
+            username: 36489710.0,
+            documento: 36489710.0,
+            organizacion: {
+                _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
+                nombre: 'HOSPITAL NEUQUEN',
+                id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
+            }
+        }
+    };
+}
