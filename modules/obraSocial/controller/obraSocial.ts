@@ -1,5 +1,5 @@
 import { pacientePuco } from '../controller/puco';
-import { pacienteSumar } from '../controller/sumar';
+import { getPacienteSumar } from '../controller/sumar';
 /*Lo cambiamos porque las prepagas no se consultan de la tabla */
 export async function getObraSocial(paciente) {
     if (!paciente.documento) { return []; }
@@ -8,9 +8,9 @@ export async function getObraSocial(paciente) {
     if (arrayOSPuco.length > 0) {
         return arrayOSPuco;
     } else {
-        let arrayOSSumar = await pacienteSumar(paciente.documento);
+        let arrayOSSumar = await getPacienteSumar(paciente.documento);
         if (arrayOSSumar.length > 0) {
-            return arrayOSSumar;
+            return [{ codigoPuco: null, nombre: null, financiador: 'SUMAR' }];
         } else {
             return [];
         }
