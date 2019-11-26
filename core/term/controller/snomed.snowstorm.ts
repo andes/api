@@ -1,6 +1,7 @@
 import { Client } from 'elasticsearch';
 import { snomed, conSql } from '../../../config.private';
 import { handleHttpRequest } from '../../../utils/requestHandler';
+import * as utils from '../../../utils/utils';
 
 // ID del atributo que genera una relación padre-hijo
 const IsASct = '116680003';
@@ -178,11 +179,13 @@ export async function getConceptByExpression(expression, term = null, form = 'st
 
 
 export async function searchTerms(text, { semanticTags, languageCode }) {
-    const terms = text.split(' ');
+    const textFold = utils.removeDiacritics(text);
+    const terms = textFold.split(' ');
     const searchStrig = terms.map(i => i + '*').join(' ');
     semanticTags = semanticTags || [];
     languageCode = languageCode || 'es';
 
+    // Buscamos todos los conceptos que tengas descripciones que matcheen con la busqueda.
     const searchResult = await snowstormClient.search({
         index: 'description',
         type: 'description',
@@ -191,14 +194,7 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
             query: {
                 bool: {
                     must: [
-                        {
-                            term: {
-                                languageCode: {
-                                    value: languageCode,
-                                    boost: 1.0
-                                }
-                            }
-                        }
+                        { term: { languageCode: { value: languageCode, boost: 1.0 } } }
                     ],
                     filter: [
                         {
@@ -222,26 +218,37 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
                     boost: 1.0
                 }
             },
-            stored_fields: [
-                'descriptionId',
-                'conceptId'
-            ],
+            stored_fields: ['descriptionId', 'conceptId'],
             sort: [
-                {
-                    termLen: {
-                        order: 'asc'
-                    }
-                },
-                {
-                    _score: {
-                        order: 'asc'
-                    }
-                }
+                { termLen: { order: 'asc' } },
+                { _score: { order: 'asc' } }
             ]
         }
     });
     const ids = searchResult.hits.hits.map(item => item.fields.conceptId[0]);
 
+
+    // Verificamos si los concepts están activos o no. Filtramos solo por activos.
+    const conceptsActive = await snowstormClient.search({
+        index: 'concept',
+        type: 'concept',
+        size: '10000',
+        body: {
+            query: {
+                bool: {
+                    filter: [
+                        { terms: { active: [true], boost: 1.0 } },
+                        { terms: { conceptId: ids, boost: 1.0 } }
+                    ],
+                    adjust_pure_negative: true,
+                    boost: 1.0
+                }
+            }
+        }
+    });
+    const idsActive = conceptsActive.hits.hits.map(item => item._source.conceptId);
+
+    // Tenemos que hacer una segunda busqueda por semantic tag porque snowstorm no tiene el semtag en cada dato.
     const searchResult2 = await snowstormClient.search({
         index: 'description',
         type: 'description',
@@ -250,54 +257,17 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
             query: {
                 bool: {
                     must: [
-                        {
-                            bool: {
-                                should: semanticTags.map(value => ({ term: { tag: value } }))
-                            }
-                        },
-                        {
-                            term: {
-                                languageCode: {
-                                    value: languageCode,
-                                    boost: 1.0
-                                }
-                            }
-                        },
-                        {
-                            terms: {
-                                active: [
-                                    true
-                                ],
-                                boost: 1.0
-                            }
-                        },
-                        {
-                            terms: {
-                                typeId: [
-                                    '900000000000003001'
-                                ],
-                                boost: 1.0
-                            }
-                        },
-                        {
-                            terms: {
-                                conceptId: ids,
-                                boost: 1.0
-                            }
-                        }
+                        { bool: { should: semanticTags.map(value => ({ term: { tag: value } })) } },
+                        { term: { languageCode: { value: languageCode, boost: 1.0 } } },
+                        { terms: { active: [true], boost: 1.0 } },
+                        { terms: { typeId: ['900000000000003001'], boost: 1.0 } },
+                        { terms: { conceptId: idsActive, boost: 1.0 } }
                     ],
                     adjust_pure_negative: true,
                     boost: 1.0
                 }
             },
-            _source: {
-                includes: [
-                    'conceptId',
-                    'term',
-                    'tag'
-                ],
-                excludes: []
-            }
+            _source: { includes: ['conceptId', 'term', 'tag'], excludes: [] }
         }
     });
 
@@ -309,7 +279,7 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
         };
     });
 
-
+    // Por ultimo teniendo el listado de conceptos por activo y semtag volvemos a buscar los terminos que matcheen.
     const searchResult3 = await snowstormClient.search({
         index: 'description',
         type: 'description',
@@ -318,24 +288,10 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
             query: {
                 bool: {
                     must: [
-                        {
-                            term: {
-                                languageCode: {
-                                    value: languageCode,
-                                    boost: 1.0
-                                }
-                            }
-                        }
+                        { term: { languageCode: { value: languageCode, boost: 1.0 } } },
                     ],
                     must_not: [
-                        {
-                            terms: {
-                                typeId: [
-                                    '900000000000003001'
-                                ],
-                                boost: 1.0
-                            }
-                        }
+                        { terms: { typeId: ['900000000000003001'], boost: 1.0 } }
                     ],
                     filter: [
                         {
@@ -356,48 +312,23 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
                         },
                         {
                             bool: {
-                                must: [
-                                    {
-                                        terms: {
-                                            conceptId: realConcept.map(i => i.conceptId),
-                                            boost: 1.0
-                                        }
-                                    }
-                                ],
+                                must: [{ terms: { conceptId: realConcept.map(i => i.conceptId), boost: 1.0 } }],
                                 adjust_pure_negative: true,
                                 boost: 1.0
                             }
                         },
-                        {
-                            terms: {
-                                active: [
-                                    true
-                                ],
-                                boost: 1.0
-                            }
-                        },
+                        { terms: { active: [true], boost: 1.0 } },
                     ],
                     adjust_pure_negative: true,
                     boost: 1.0
                 },
             },
             _source: {
-                includes: [
-                    'conceptId',
-                    'term'
-                ]
+                includes: ['conceptId', 'term']
             },
             sort: [
-                {
-                    termLen: {
-                        order: 'asc'
-                    }
-                },
-                {
-                    _score: {
-                        order: 'asc'
-                    }
-                }
+                { termLen: { order: 'asc' } },
+                { _score: { order: 'asc' } }
             ],
         }
     });
