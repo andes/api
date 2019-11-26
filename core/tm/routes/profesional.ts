@@ -244,7 +244,7 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, re
     const id = req.query.id;
     const fotoProf = makeFs();
     try {
-        const file = await fotoProf.find({ 'metadata.idProfesional': id }, {}, {sort: { _id: -1 }});
+        const file = await fotoProf.find({ 'metadata.idProfesional': id }, {}, { sort: { _id: -1 } });
         if (file.length > 0) {
             fotoProf.readById(file[0].id, (err2, buffer) => {
                 if (err2) {
@@ -261,52 +261,48 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, re
     }
 
 });
-router.get('/profesionales/firma', Auth.authenticate(), (req: any, res, next) => {
+router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFirma')) {
     //     return next(403);
     // }
-    if (req.query.id) {
-        const id = req.query.id;
-        const fotoProf = makeFsFirma();
-        fotoProf.find({ 'metadata.idProfesional': id }, {}, { sort: { _id: -1 } }, (err, file) => {
-            if (file[0] == null) {
-                res.send(null);
-            } else {
+    try {
+        if (req.query.id) {
+            const id = req.query.id;
+            const fotoProf = makeFsFirma();
+            const file = await fotoProf.find({ 'metadata.idProfesional': id }, {}, { sort: { _id: -1 } });
+            if (file && file.length > 0) {
                 fotoProf.readById(file[0].id, (err2, buffer) => {
                     if (err2) {
                         return next(err2);
                     }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
                     const firma = buffer.toString('base64');
-                    return res.send(firma);
+                    return res.json(firma);
                 });
-            }
-        });
-
-    }
-    if (req.query.firmaAdmin) {
-        let idAdmin = req.query.firmaAdmin;
-        let fotoAdmin = makeFsFirmaAdmin();
-        fotoAdmin.find({ 'metadata.idSupervisor': idAdmin }, {}, { sort: { _id: -1 } }, (err, file) => {
-            if (file[0] == null) {
-                res.send(null);
             } else {
-                let stream1 = fotoAdmin.readById(file[0]._id, (err2, buffer) => {
+                return res.json(null);
+            }
+        }
+        if (req.query.firmaAdmin) {
+            let idAdmin = req.query.firmaAdmin;
+            let fotoAdmin = makeFsFirmaAdmin();
+            const file = await fotoAdmin.find({ 'metadata.idSupervisor': idAdmin }, {}, { sort: { _id: -1 } });
+            if (file && file.length > 0) {
+                fotoAdmin.readById(file[0]._id, (err2, buffer) => {
                     if (err2) {
                         return next(err2);
                     }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
                     let firmaAdmin = {
                         firma: buffer.toString('base64'),
                         administracion: file[0].metadata.administracion
                     };
-                    return res.send(firmaAdmin);
+                    return res.json(firmaAdmin);
                 });
+            } else {
+                return res.json(null);
             }
-        });
-
+        }
+    } catch (ex) {
+        return next(ex);
     }
 
 });
