@@ -15,6 +15,7 @@ logs
 **.map
 
 !swagger/static*/*.js
+!jest.config.js
 
 # Dependency directories
 node_modules
