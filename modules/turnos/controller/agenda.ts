@@ -835,6 +835,149 @@ export function actualizarEstadoAgendas(start, end) {
     });
 }
 
+export async function prestacionesDisponibles(params) {
+    let pipelinePrestaciones = [];
+    pipelinePrestaciones = [
+        {
+            $match: {
+                'organizacion._id': {
+                    $eq: new mongoose.Types.ObjectId(Auth.getOrganization(params))
+                },
+                'bloques.turnos.horaInicio': { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) },
+                estado: 'publicada',
+                dinamica: false,
+                'bloques.restantesMobile': {
+                    $gt: 0
+                }
+            }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $match: {
+                'bloques.restantesMobile': {
+                    $gt: 0
+                }
+            }
+        },
+        {
+            $project: {
+                prestaciones: '$bloques.tipoPrestaciones',
+                _id: 0
+            }
+        },
+        {
+            $unwind: '$prestaciones'
+        },
+        {
+            $group: {
+                _id: {
+                    conceptId: '$prestaciones.conceptId',
+                },
+                resultado: { $push: '$$ROOT' }
+            }
+        },
+        {
+            $project: {
+                resultado: {
+                    $arrayElemAt: ['$resultado', 0]
+                },
+                _id: 0
+            }
+        },
+        {
+            $unwind: '$resultado'
+        },
+        {
+            $project: {
+                _id: '$resultado.prestaciones._id',
+                conceptId: '$resultado.prestaciones.conceptId',
+                fsn: '$resultado.prestaciones.fsn',
+                semanticTag: '$resultado.prestaciones.semanticTag',
+                term: '$resultado.prestaciones.term'
+            }
+        }
+
+    ];
+    let prestaciones = await agendaModel.aggregate(pipelinePrestaciones);
+    return prestaciones;
+}
+
+// agendas con el primer turno disponible agrupadas por profesional
+export async function turnosDisponibles(prestacion, organizacion) {
+    let pipelineAgendas = [];
+    pipelineAgendas = [
+
+        {
+            $match: {
+                'organizacion._id': {
+                    $eq: organizacion
+                },
+                'bloques.turnos.horaInicio': { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) },
+                estado: 'publicada',
+                'tipoPrestaciones.conceptId': prestacion,
+                'bloques.restantesMobile': {
+                    $gt: 0
+                }
+            }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $match: {
+                'bloques.restantesMobile': {
+                    $gt: 0
+                }
+            }
+        },
+        {
+            $unwind: '$bloques.tipoPrestaciones'
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $unwind: '$bloques.turnos'
+        },
+        {
+            $match: {
+                'bloques.tipoPrestaciones.conceptId': prestacion
+            }
+        },
+        {
+            $match: {
+                'bloques.turnos.estado': 'disponible'
+            }
+        },
+        {
+            $sort: {
+                'bloques.turnos.horaInicio': 1
+            }
+        },
+        {
+            $group: {
+                _id: '$profesionales',
+                resultado: {
+                    $push: '$$ROOT'
+                }
+            }
+        },
+        {
+            $project: {
+                resultado: {
+                    $arrayElemAt: ['$resultado', 0]
+                },
+                _id: 0
+            }
+        }
+    ];
+    let agendas = await agendaModel.aggregate(pipelineAgendas);
+    return agendas;
+
+}
+
 async function actualizarAux(agenda: any) {
     Auth.audit(agenda, (userScheduler as any));
     await saveAgenda(agenda);

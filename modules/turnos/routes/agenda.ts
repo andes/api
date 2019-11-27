@@ -703,21 +703,23 @@ router.post('/dashboard/descargarCsv', async (req, res, next) => {
 
     try {
         csv
-            .write(req.body, { headers: true, transform: (row) => {
-                return {
-                    Nombre: row.nombre,
-                    Cantidad: row.count,
-                    '': '',
-                    'Consulta de': row.tipoDeFiltro ? row.tipoDeFiltro.toUpperCase() : '',
-                    Organización: row.organizacion ? (req as any).user.organizacion.nombre : '',
-                    'Fecha Desde': row.fechaDesde ? moment(row.fechaDesde).format('DD-MM-YYYY') : '',
-                    'Fecha Hasta': row.fechaHasta ? moment(row.fechaHasta).format('DD-MM-YYYY') : '',
-                    Prestación: row.prestacion ? row.prestacion.map(pr => pr.nombre) : '',
-                    Profesional: row.profesional ? row.profesional : '',
-                    'Tipo de Turno': (row.tipoTurno && row.tipoDeFiltro === 'turno') ? row.tipoTurno : '',
-                    Estado: (row.estado_agenda || row.estado_turno) ? (row.estado_agenda ? row.estado_agenda : row.estado_turno) : ''
-                };
-            }})
+            .write(req.body, {
+                headers: true, transform: (row) => {
+                    return {
+                        Nombre: row.nombre,
+                        Cantidad: row.count,
+                        '': '',
+                        'Consulta de': row.tipoDeFiltro ? row.tipoDeFiltro.toUpperCase() : '',
+                        Organización: row.organizacion ? (req as any).user.organizacion.nombre : '',
+                        'Fecha Desde': row.fechaDesde ? moment(row.fechaDesde).format('DD-MM-YYYY') : '',
+                        'Fecha Hasta': row.fechaHasta ? moment(row.fechaHasta).format('DD-MM-YYYY') : '',
+                        Prestación: row.prestacion ? row.prestacion.map(pr => pr.nombre) : '',
+                        Profesional: row.profesional ? row.profesional : '',
+                        'Tipo de Turno': (row.tipoTurno && row.tipoDeFiltro === 'turno') ? row.tipoTurno : '',
+                        Estado: (row.estado_agenda || row.estado_turno) ? (row.estado_agenda ? row.estado_agenda : row.estado_turno) : ''
+                    };
+                }
+            })
             .pipe(ws)
             .on('finish', () => {
                 res.download(('/tmp/dashboard.csv' as string), (err) => {
@@ -759,104 +761,39 @@ router.get('/agenda/turno/:idTurno', async (req, res, next) => {
     }
 
 });
+
+/**
+ * Get agendas disponibles a partir de un conceptId
+ * Filtrando los bloques con ese tipo de prestación y turnos de acceso directo disponibles
+ * y solo devolviendo una agenda por profesional con el turno más próximo
+ */
+
+router.get('/totem/disponibles', async (req: any, res, next) => {
+    if (!req.query.prestacion) {
+        return res.json();
+    }
+    try {
+        const organization = new mongoose.Types.ObjectId(Auth.getOrganization(req));
+        const turnos = await agendaCtrl.turnosDisponibles(req.query.prestacion, organization);
+        res.json(turnos);
+    } catch (err) {
+        return next(err);
+    }
+});
+
 /**
  * Get prestaciones que corresponden a agendas disponibles para el totem
  * osea, que tienen turnos de acceso directo disponibles
  */
 
-router.get('/prestacionesDisponibles', async (req: any, res, next) => {
-    const pipelinePrestaciones = [];
-    const matchAgendas = {};
-
-    matchAgendas['organizacion._id'] = { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) };
-    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
-    matchAgendas['$or'] = [
-        { 'bloques.restantesProgramados': { $gt: 0 } },
-        { 'bloques.restantesDelDia': { $gt: 0 } }];
-
-    matchAgendas['estado'] = 'publicada';
-    matchAgendas['dinamica'] = false;
-
-    pipelinePrestaciones.push({ $match: matchAgendas });
-    pipelinePrestaciones.push({ $unwind: '$bloques' });
-    pipelinePrestaciones.push({ $match: { $expr: { $or: [{ $gt: ['$bloques.restantesProgramados', 0] }, { $gt: ['$bloques.restantesDelDia', 0] }] } } });
-    pipelinePrestaciones.push({
-        $project: {
-            prestaciones: '$bloques.tipoPrestaciones',
-            _id: 0
-        }
-    });
-    pipelinePrestaciones.push({ $unwind: '$prestaciones' });
-    pipelinePrestaciones.push({
-        $group: {
-            _id: {
-                conceptId: '$prestaciones.conceptId',
-            },
-            resultado: { $push: '$$ROOT' }
-        }
-    });
-    pipelinePrestaciones.push({ $project: { resultado: { $arrayElemAt: ['$resultado', 0] }, _id: 0 } });
-    pipelinePrestaciones.push({ $unwind: '$resultado' });
-
-    pipelinePrestaciones.push({
-        $project: {
-            _id: '$resultado.prestaciones._id',
-            conceptId: '$resultado.prestaciones.conceptId',
-            fsn: '$resultado.prestaciones.fsn',
-            semanticTag: '$resultado.prestaciones.semanticTag',
-            term: '$resultado.prestaciones.term'
-        }
-    });
-
+router.get('/totem/prestaciones', async (req: any, res, next) => {
     try {
-        let prestaciones = await agenda.aggregate(pipelinePrestaciones);
+        const prestaciones = await agendaCtrl.prestacionesDisponibles(req);
         res.json(prestaciones);
     } catch (err) {
         return next(err);
     }
 });
 
-
-/**
- * Get agendas disponibles a partir de un conceptId
- * Filtrando los bloques con ese tipo de prestación y turnos de acceso directo disponibles
- * y solo devolviendo una agenda por profesional
- */
-
-router.get('/agendasDisponibles', async (req: any, res, next) => {
-
-    const pipelineAgendas = [];
-    const matchAgendas = {};
-    if (!req.query.prestacion) {
-        return res.json();
-    }
-    matchAgendas['organizacion._id'] = { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) }; // TODO: compararar con id de organización del token
-    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
-    matchAgendas['$or'] = [
-        { 'bloques.restantesProgramados': { $gt: 0 } },
-        { 'bloques.restantesDelDia': { $gt: 0 } }];
-
-    matchAgendas['estado'] = 'publicada';
-    matchAgendas['dinamica'] = false;
-    if (req.query.prestacion) {
-        matchAgendas['tipoPrestaciones.conceptId'] = req.query.prestacion;
-    }
-    pipelineAgendas.push({ $match: matchAgendas });
-    // Las siguientes dos operaciones del aggregate son para filtrar solo 1 agenda por profesional
-    pipelineAgendas.push({ $group: { _id: '$profesionales', resultado: { $push: '$$ROOT' } } });
-    pipelineAgendas.push({ $project: { resultado: { $arrayElemAt: ['$resultado', 0] }, _id: 0 } });
-    pipelineAgendas.push({ $unwind: '$resultado' });
-    pipelineAgendas.push({ $unwind: '$resultado.bloques' });
-    pipelineAgendas.push({ $match: { $expr: { $or: [{ $gt: ['$resultado.bloques.restantesProgramados', 0] }, { $gt: ['$resultado.bloques.restantesDelDia', 0] }] } } });
-    pipelineAgendas.push({ $unwind: '$resultado.bloques.tipoPrestaciones' });
-    pipelineAgendas.push({ $match: { 'resultado.bloques.tipoPrestaciones.conceptId': req.query.prestacion } });
-
-    try {
-        let prestaciones = await agenda.aggregate(pipelineAgendas);
-        res.json(prestaciones.map(elem => { return elem.resultado; }));
-    } catch (err) {
-        return next(err);
-    }
-});
 
 export = router;
