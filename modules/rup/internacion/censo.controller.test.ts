@@ -33,7 +33,7 @@ beforeEach(async () => {
     await Camas.remove({});
     await CamaEstados.remove({});
     await Prestaciones.remove({});
-    cama = await store(seedCama(), REQMock);
+    cama = await store(seedCama() as any, REQMock);
 });
 
 afterAll(async () => {
@@ -45,7 +45,7 @@ function seedCama() {
     return {
         fecha: moment().subtract(2, 'day'),
         organizacion: {
-            id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
+            _id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
             nombre: 'HOSPITAL NEUQUEN'
         },
         ambito: 'internacion',
@@ -67,8 +67,8 @@ function seedCama() {
             semanticTag: 'objeto físico'
         },
         equipamiento: [],
-        censable: true,
-        movimiento: true
+        esCensable: true,
+        esMovimiento: true
     };
 }
 

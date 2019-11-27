@@ -38,7 +38,7 @@ const REQMock: any = {
 function seedCama() {
     return {
         organizacion: {
-            id: '57f67a7ad86d9f64130a138d',
+            _id: '57f67a7ad86d9f64130a138d',
             nombre: 'HOSPITAL NEUQUEN'
         },
         ambito: 'internacion',
@@ -58,8 +58,8 @@ function seedCama() {
             semanticTag: 'objeto físico'
         },
         equipamiento: [],
-        censable: true,
-        movimiento: true
+        esCensable: true,
+        esMovimiento: true
     };
 }
 
@@ -69,7 +69,7 @@ describe('Internacion - camas', () => {
         await Camas.remove({});
         await CamaEstados.remove({});
         await Prestaciones.remove({});
-        cama = await store(seedCama(), REQMock);
+        cama = await store(seedCama() as any, REQMock);
     });
 
 
@@ -96,7 +96,6 @@ describe('Internacion - camas', () => {
         const camaEncontrada = await findById({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id);
         expect(camaEncontrada._id.toString()).toBe(cama._id.toString());
         expect(camaEncontrada.nombre).toBe(cama.nombre);
-
 
         const camas = await search({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, {});
 
@@ -153,7 +152,6 @@ describe('Internacion - camas', () => {
             estado: 'inactiva',
             fecha: moment().add(1, 'h').toDate(),
             organizacion: {
-                id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'HOSPITAL NEUQUEN'
             },
@@ -161,7 +159,8 @@ describe('Internacion - camas', () => {
                 fsn: 'cama saturada (objeto físico)',
                 term: 'cama saturada',
                 conceptId: '1234567890',
-                semanticTag: 'objeto físico'
+                semanticTag: 'objeto físico',
+                refsetIds: []
             }
         }, REQMock);
 
@@ -184,7 +183,6 @@ describe('Internacion - camas', () => {
             estado: 'disponible',
             fecha: moment().add(2, 'h').toDate(),
             organizacion: {
-                id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'HOSPITAL NEUQUEN'
             },
@@ -192,7 +190,8 @@ describe('Internacion - camas', () => {
                 fsn: 'cama saturada (objeto físico)',
                 term: 'cama saturada',
                 conceptId: '1234567890',
-                semanticTag: 'objeto físico'
+                semanticTag: 'objeto físico',
+                refsetIds: []
             }
         }, REQMock);
         expect(resultNull).toBeNull();
@@ -208,7 +207,6 @@ describe('Internacion - camas', () => {
             estado: 'ocupada',
             fecha: moment().add(2, 'month').toDate(),
             organizacion: {
-                id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'HOSPITAL NEUQUEN'
             },
@@ -217,7 +215,8 @@ describe('Internacion - camas', () => {
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'JUANCITO',
                 apellido: 'PEREZ',
-                documento: '38432297'
+                documento: '38432297',
+                sexo: ''
             }
         }, REQMock);
 
@@ -244,7 +243,7 @@ describe('Internacion - camas', () => {
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
         await nuevaPrestacion.save();
 
-        const listaEsp = await listaEspera({ fecha: moment().toDate().toISOString(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
+        const listaEsp = await listaEspera({ fecha: moment().toDate(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
         expect(listaEsp.length).toBe(1);
         expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
 
@@ -258,7 +257,7 @@ describe('Internacion - camas', () => {
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
         await nuevaPrestacion.save();
 
-        const listaEsp = await listaEspera({ fecha: moment().toDate().toISOString(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
+        const listaEsp = await listaEspera({ fecha: moment().toDate(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
         expect(listaEsp.length).toBe(1);
         expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
 
@@ -291,7 +290,6 @@ describe('Internacion - camas', () => {
             estado: 'inactiva',
             fecha: from,
             organizacion: {
-                id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'HOSPITAL NEUQUEN'
             },
@@ -299,7 +297,8 @@ describe('Internacion - camas', () => {
                 fsn: 'cama saturada (objeto físico)',
                 term: 'cama saturada',
                 conceptId: '1234567890',
-                semanticTag: 'objeto físico'
+                semanticTag: 'objeto físico',
+                refsetIds: []
             }
         }, REQMock);
 
@@ -319,7 +318,6 @@ describe('Internacion - camas', () => {
             estado: 'ocupada',
             fecha: fechaIngreso,
             organizacion: {
-                id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'HOSPITAL NEUQUEN'
             },
@@ -341,7 +339,6 @@ describe('Internacion - camas', () => {
             estado: 'ocupada',
             fecha: fechaPase,
             organizacion: {
-                id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'HOSPITAL NEUQUEN'
             },
@@ -356,7 +353,7 @@ describe('Internacion - camas', () => {
 
 
         const fechaNuevaIngreso = moment().add(4, 'hour').toDate();
-        const mustBeNull = await changeTime({ organizacion: '57f67a7ad86d9f64130a138d', capa: 'medica', ambito: 'internacion', cama: cama._id }, fechaIngreso, fechaNuevaIngreso, '57f67a7ad86d9f64130a138d');
+        const mustBeNull = await changeTime({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, fechaIngreso, fechaNuevaIngreso, '57f67a7ad86d9f64130a138d');
         expect(mustBeNull).toBe(false);
 
     });

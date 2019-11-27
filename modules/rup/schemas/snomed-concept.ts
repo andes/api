@@ -5,7 +5,7 @@ export interface ISnomedConcept {
     term: String;
     fsn: String;
     semanticTag: String;
-    refsetIds: [String];
+    refsetIds: String[];
 }
 
 export let SnomedConcept = {

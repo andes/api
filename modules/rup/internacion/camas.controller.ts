@@ -5,8 +5,80 @@ import * as moment from 'moment';
 import { EstadosCtr } from './estados.routes';
 import { model as Prestaciones } from '../schemas/prestacion';
 import { Request } from '@andes/api-tool';
+import { ObjectId } from '@andes/core';
+import { ISnomedConcept } from '../schemas/snomed-concept';
 
-export async function search({ organizacion, capa, ambito }, params) {
+interface INombre {
+    _id: ObjectId;
+    nombre?: String;
+}
+
+interface InternacionConfig {
+    /**
+     * ID de la organización de consulta.
+     */
+    organizacion: INombre;
+
+    /**
+     * El proceso hospitalario. 'internacion' o 'guardia'.
+     * Por el momento solo se va a usar internacion.
+     */
+
+    ambito: String;
+
+    /**
+     * La vista del mapa de capa. enfermeria, medica, estadistica.
+     */
+
+    capa: String;
+}
+
+interface SearchParams {
+    cama?: ObjectId;
+    paciente?: ObjectId;
+    internacion?: ObjectId;
+    estado?: ObjectId;
+    fecha?: Date;
+}
+
+export interface ICama {
+    _id: ObjectId;
+    id: ObjectId;
+    genero: ISnomedConcept;
+    estado: String;
+    esCensable: Boolean;
+    idInternacion: ObjectId;
+    esMovimiento: Boolean;
+    fecha: Date;
+    unidadOrganizativa: ISnomedConcept;
+    especialidades: ISnomedConcept[];
+    createdAt: Date;
+    createdBy: Object;
+    organizacion: { _id: ObjectId, nombre: String };
+    ambito: String;
+    unidadOrganizativaOriginal: ISnomedConcept;
+    sectores: Object[];
+    nombre: String;
+    tipoCama: ISnomedConcept;
+    equipamiento: ISnomedConcept[];
+    capa: String;
+    paciente?: {
+        _id: ObjectId;
+        id: ObjectId;
+        nombre: String;
+        apellido: String;
+        sexo?: String;
+        documento?: String;
+        fechaNacimiento?: Date;
+    };
+}
+
+
+/**
+ * Listado de camas y sus estados a una fecha determinada.
+ */
+
+export async function search({ organizacion, capa, ambito }: InternacionConfig, params: SearchParams): Promise<ICama[]> {
     let timestamp = moment();
 
     if (params.fecha) {
@@ -16,7 +88,11 @@ export async function search({ organizacion, capa, ambito }, params) {
     return await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion: organizacion._id, ambito, capa }, params);
 }
 
-export async function findById({ organizacion, capa, ambito }, idCama, timestamp = null) {
+
+/**
+ * Devuelve una cama en particular a una cierta hora.
+ */
+export async function findById({ organizacion, capa, ambito }: InternacionConfig, idCama: ObjectId, timestamp: Date = null): Promise<ICama> {
     if (!timestamp) {
         timestamp = moment().toDate();
     }
@@ -29,14 +105,14 @@ export async function findById({ organizacion, capa, ambito }, idCama, timestamp
     return null;
 }
 
-export async function listaEspera({ fecha, organizacion }) {
+export async function listaEspera({ fecha, organizacion }: { fecha: Date, organizacion: INombre }) {
     const ambito = 'internacion';
     const capa = 'estadistica';
 
     const prestaciones = await Prestaciones.aggregate([
         {
             $match: {
-                'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion._id),
+                'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion._id as any),
                 'solicitud.ambitoOrigen': 'internacion',
                 'solicitud.tipoPrestacion.conceptId': '32485007',
                 'ejecucion.registros.valor.informeIngreso.fechaIngreso': {
@@ -61,7 +137,6 @@ export async function listaEspera({ fecha, organizacion }) {
     return listaDeEspera;
 }
 
-type CAMA = any;
 
 /**
  * Modifica el estado de una cama (movimiento).
@@ -69,7 +144,7 @@ type CAMA = any;
  * @param req
  */
 
-export async function patch(data: CAMA, req: Request) {
+export async function patch(data: Partial<ICama>, req: Request) {
 
     const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
 
@@ -104,7 +179,7 @@ export async function patch(data: CAMA, req: Request) {
  * @param data
  * @param req
  */
-export async function store(data, req: Request) {
+export async function store(data: Partial<ICama>, req: Request) {
     const nuevaCama: any = new Camas({
         organizacion: data.organizacion,
         ambito: data.ambito,
@@ -124,22 +199,26 @@ export async function store(data, req: Request) {
         unidadOrganizativa: data.unidadOrganizativa,
         especialidades: data.especialidades,
         genero: data.genero,
-        esCensable: data.censable,
-        esMovimiento: data.movimiento,
+        esCensable: data.esCensable,
+        esMovimiento: data.esMovimiento,
     };
 
     const [camaGuardada] = await Promise.all([
         nuevaCama.save(),
         ...INTERNACION_CAPAS.map(capa => {
-            return CamasEstadosController.store({ organizacion: data.organizacion.id, ambito: data.ambito, capa, cama: nuevaCama._id }, nuevoEstado, req);
+            return CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa, cama: nuevaCama._id }, nuevoEstado, req);
         })
     ]);
 
     return camaGuardada;
 }
 
+/**
+ * Operacion especial para cambiar la fecha de un estado.
 
-export async function changeTime({ organizacion, capa, ambito, cama }, from: Date, to: Date, internacionId) {
+ */
+
+export async function changeTime({ organizacion, capa, ambito }: InternacionConfig, cama: ObjectId, from: Date, to: Date, internacionId: ObjectId) {
     let start, end;
     if (from.getTime() <= to.getTime()) {
         start = from;
@@ -148,11 +227,11 @@ export async function changeTime({ organizacion, capa, ambito, cama }, from: Dat
         start = to;
         end = from;
     }
-    const movement = await CamasEstadosController.searchEstados({ desde: start, hasta: end, organizacion, capa, ambito }, { internacion: internacionId });
+    const movement = await CamasEstadosController.searchEstados({ desde: start, hasta: end, organizacion: organizacion._id, capa, ambito }, { internacion: internacionId });
     // Porque el movimiento a cambiar de fecha va a ser encontrado
     if (movement.length > 1) {
         return false;
     }
-    const valid = await CamasEstadosController.patch({ organizacion, capa, ambito, cama }, from, to);
+    const valid = await CamasEstadosController.patch({ organizacion: organizacion._id, capa, ambito, cama }, from, to);
     return valid;
 }

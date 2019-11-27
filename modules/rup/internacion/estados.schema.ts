@@ -1,13 +1,20 @@
-import { SchemaTypes, Schema, model } from 'mongoose';
+import { SchemaTypes, Schema, model, Types, Model, Document } from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 const EstadoKey = String;
+type IEstadoKey = String;
+
+export interface IEstados {
+    organizacion: Types.ObjectId;
+    ambito: String;
+    capa: String;
+    estados: { key: IEstadoKey, label: String, color: String, icon: String }[];
+    relaciones: { origen: IEstadoKey, destino: IEstadoKey }[];
+}
+
+export interface IEstadosDocument extends Document, IEstados { }
 
 const EstadoSchema = new Schema({
-    // organizacion: {
-    //     type: nombreSchema,
-    //     required: true
-    // },
     organizacion: SchemaTypes.ObjectId,
     ambito: String,
     capa: String,
@@ -39,4 +46,5 @@ EstadoSchema.methods.check = function (origen, destino) {
 
 EstadoSchema.plugin(AuditPlugin);
 
-export const Estados = model('internacionEstados', EstadoSchema, 'internacionEstados');
+export const Estados: Model<IEstadosDocument> = model('internacionEstados', EstadoSchema, 'internacionEstados');
+
