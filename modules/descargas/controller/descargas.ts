@@ -774,7 +774,6 @@ export class Documento {
                             left: '0cm'
                         },
                         header: {
-                            top: '0cm',
                             height: '0cm'
                         },
                         footer: {
