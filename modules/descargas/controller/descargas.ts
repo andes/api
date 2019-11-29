@@ -513,8 +513,12 @@ export class Documento {
                             break;
                     }
 
-                    // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
-                    await this.generarInforme(registros);
+                    if (!registro) {
+                        // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
+                        await this.generarInforme(registros);
+                    } else {
+                        await this.generarInforme([registro]);
+                    }
 
 
                     // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
