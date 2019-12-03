@@ -1,6 +1,5 @@
-import * as mongoose from 'mongoose';
-import { WebHook } from './webhookSchema';
-import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
+import { WebHook } from './webhook.schema';
+import { MongoQuery, ResourceBase } from '@andes/core';
 
 class WebhookResource extends ResourceBase {
     Model = WebHook;
