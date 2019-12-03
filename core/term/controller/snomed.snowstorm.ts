@@ -1,5 +1,5 @@
 import { Client } from 'elasticsearch';
-import { snomed, conSql } from '../../../config.private';
+import { snomed } from '../../../config.private';
 import { handleHttpRequest } from '../../../utils/requestHandler';
 import * as utils from '../../../utils/utils';
 
@@ -194,7 +194,8 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
             query: {
                 bool: {
                     must: [
-                        { term: { languageCode: { value: languageCode, boost: 1.0 } } }
+                        { term: { languageCode: { value: languageCode, boost: 1.0 } } },
+                        branchesClause
                     ],
                     filter: [
                         {
@@ -238,7 +239,8 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
                 bool: {
                     filter: [
                         { terms: { active: [true], boost: 1.0 } },
-                        { terms: { conceptId: ids, boost: 1.0 } }
+                        { terms: { conceptId: ids, boost: 1.0 } },
+                        branchesClause
                     ],
                     adjust_pure_negative: true,
                     boost: 1.0
@@ -257,6 +259,7 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
             query: {
                 bool: {
                     must: [
+                        branchesClause,
                         { bool: { should: semanticTags.map(value => ({ term: { tag: value } })) } },
                         { term: { languageCode: { value: languageCode, boost: 1.0 } } },
                         { terms: { active: [true], boost: 1.0 } },
@@ -288,6 +291,7 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
             query: {
                 bool: {
                     must: [
+                        branchesClause,
                         { term: { languageCode: { value: languageCode, boost: 1.0 } } },
                     ],
                     must_not: [
@@ -347,3 +351,30 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
     });
 
 }
+
+function getBranches() {
+    let branchName: string = snomed.snowstormBranch;
+    let index = branchName.indexOf('/');
+    const branches = [];
+    while (index >= 0) {
+        const branch = branchName.substring(0, index);
+        branches.push(branch);
+
+        index = branchName.indexOf('/', index + 1);
+        // branchName = branchName.substr(index + 1);
+    }
+    branches.push(branchName);
+
+    return branches;
+}
+
+
+function branchFilterClause() {
+    const branches = getBranches();
+
+    const branchClause = branches.map(b => ({ term: { path: b } }));
+
+    return { bool: { should: branchClause } };
+}
+
+const branchesClause = branchFilterClause();
