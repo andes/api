@@ -454,7 +454,7 @@ router.post('/pacientes', async (req, res, next) => {
         let ignorarSugerencias = req.body.ignoreCheck;
         if (pacienteNuevo.documento) {
             // Todo loguear posible duplicado si ignora el check
-            let resultado = await controller.checkRepetido(pacienteNuevo);
+            let resultado = await controller.checkRepetido(pacienteNuevo, req.body.incluirTemporales);
             if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
                 pacienteNuevo.activo = true;
                 let pacienteObj = await controller.createPaciente(pacienteNuevo, req);
