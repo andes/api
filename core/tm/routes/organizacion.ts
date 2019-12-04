@@ -149,6 +149,10 @@ router.get('/organizaciones', async (req, res, next) => {
         filtros['codigo.cuie'] = req.query.cuie;
     }
 
+    if (req.query.turnosMobile) {
+        filtros['turnosMobile'] = req.query.turnosMobile;
+    }
+
     if (req.query.sisa) {
         filtros['codigo.sisa'] = req.query.sisa;
     }
