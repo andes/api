@@ -3,23 +3,20 @@ import * as configPrivate from '../config.private';
 const isReachable = require('is-reachable');
 const sha1Hash = require('sha1');
 
+function sleep(ms) {
+    return new Promise((resolve) => { setTimeout(() => resolve('timeout'), ms); });
+}
 
 export async function checkPassword(user, password): Promise<any> {
     const server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
-    return new Promise((resolve, reject) => {
+    const ladpPromise = new Promise((resolve, reject) => {
         if (!configPrivate.auth.useLdap) {
             return resolve({ nombre: user.nombre, apellido: user.apellido });
         }
-        let tempResponse: any = null;
-        if (user.password === sha1Hash(password)) {
-            tempResponse = {
-                nombre: user.nombre,
-                apellido: user.apellido
-            };
-        }
+
         isReachable(server).then(reachable => {
             if (!reachable) {
-                return resolve(tempResponse);
+                return resolve('timeout');
             }
             // Conecta a LDAP
             const dn = 'uid=' + user.usuario + ',' + configPrivate.auth.ldapOU;
@@ -31,17 +28,17 @@ export async function checkPassword(user, password): Promise<any> {
             });
 
             ldap.on('connectError', (err) => {
-                return resolve(tempResponse);
+                return resolve('timeout');
             });
             ldap.on('error', (err) => {
-                return resolve(tempResponse);
+                return resolve('timeout');
             });
             ldap.on('connect', () => {
 
                 ldap.bind(dn, password, (err) => {
                     if (err) {
                         if (err.name === 'InvalidCredentialsError') {
-                            return resolve(false);
+                            return resolve('invalid');
                         } else {
                             return;
                         }
@@ -53,7 +50,7 @@ export async function checkPassword(user, password): Promise<any> {
                         sizeLimit: 1
                     }, (err2, searchResult) => {
                         if (err2) {
-                            return resolve(false);
+                            return resolve('invalid');
                         }
 
                         searchResult.on('searchEntry', (entry) => {
@@ -61,7 +58,7 @@ export async function checkPassword(user, password): Promise<any> {
                         });
 
                         searchResult.on('error', (err3) => {
-                            return resolve(false);
+                            return resolve('invalid');
                         });
                     });
                 });
@@ -70,6 +67,23 @@ export async function checkPassword(user, password): Promise<any> {
         });
 
     });
+
+    const response = await Promise.race([ladpPromise, sleep(3000)]);
+    if (response === 'timeout') {
+        // PASSWORD CACHE
+        if (user.password === sha1Hash(password)) {
+            return {
+                nombre: user.nombre,
+                apellido: user.apellido
+            };
+        } else {
+            return null;
+        }
+    } else if (response === 'invalid') {
+        return null;
+    } else {
+        return response;
+    }
 }
 
 export async function getUserInfo(documento): Promise<any> {
