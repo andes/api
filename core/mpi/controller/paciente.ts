@@ -929,13 +929,19 @@ export async function getHistorialPaciente(req, dataPaciente) {
     try {
         let pipelineTurno = [];
         let pipelineSobreturno = [];
+        let organizacionId;
+        if (req.query.organizacion) {
+            organizacionId = req.query.organizacion;
+        } else {
+            organizacionId = Auth.getOrganization(req);
+        }
         if (req.query.turnosProximos) {
             pipelineTurno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
             pipelineSobreturno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
         }
         if (req.query.organizacion) {
-            pipelineTurno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
-            pipelineSobreturno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
+            pipelineTurno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(organizacionId) } } });
+            pipelineSobreturno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(organizacionId) } } });
         }
         if (req.query.conceptId) {
             pipelineTurno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });

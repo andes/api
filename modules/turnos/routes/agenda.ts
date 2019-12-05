@@ -773,7 +773,7 @@ router.get('/totem/disponibles', async (req: any, res, next) => {
         return res.json();
     }
     try {
-        const organization = new mongoose.Types.ObjectId(Auth.getOrganization(req));
+        const organization = new mongoose.Types.ObjectId(req.query.organizacion);
         const turnos = await agendaCtrl.turnosDisponibles(req.query.prestacion, organization);
         res.json(turnos);
     } catch (err) {
