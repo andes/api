@@ -10,13 +10,13 @@ const snowstormClient = new Client({
     host: snomed.snowstormElastic
 });
 
-async function httpGetSnowstorm(url: String, qs = {}) {
+async function httpGetSnowstorm(url: String, qs = {}, languageCode = 'es') {
     const [status, body] = await handleHttpRequest({
         url: `${snomed.snowstormHost}/${url}`,
         json: true,
         useQuerystring: true,
         headers: {
-            'Accept-Language': 'es'
+            'Accept-Language': languageCode
         },
         qs
     });
@@ -155,30 +155,31 @@ export async function getConceptByExpression(expression, term = null, form = 'st
         termActive: true,
         term
     };
-    if (form === 'stated') {
-        qs.statedEcl = expression;
-    } else {
-        qs.ecl = expression;
-    }
-    const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts`, qs);
+    qs[form === 'stated' ? 'statedEcl' : 'ecl'] = expression;
+    const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts`, qs, languageCode);
     if (response) {
-        const items = response.items;
-        const ps = items.map((concept) => {
-            return {
-                conceptId: concept.conceptId,
-                term: concept.pt.term,
-                fsn: concept.fsn.term,
-                semanticTag: getSemanticTagFromFsn(concept.fsn.term),
-                refsetIds: [],
-            };
-        });
-        return ps;
+        if (term) {
+            const ids = response.items.map(c => c.conceptId);
+            return await searchTerms(term, { languageCode, semanticTags: null }, ids);
+        } else {
+            const items = response.items;
+            const ps = items.map((concept) => {
+                return {
+                    conceptId: concept.conceptId,
+                    term: concept.pt.term,
+                    fsn: concept.fsn.term,
+                    semanticTag: getSemanticTagFromFsn(concept.fsn.term),
+                    refsetIds: [],
+                };
+            });
+            return ps;
+        }
     }
     return null;
 }
 
 
-export async function searchTerms(text, { semanticTags, languageCode }) {
+export async function searchTerms(text, { semanticTags, languageCode }, conceptIds: string[] = null) {
     const textFold = utils.removeDiacritics(text);
     const terms = textFold.split(' ');
     const searchStrig = terms.map(i => i + '*').join(' ');
@@ -186,47 +187,52 @@ export async function searchTerms(text, { semanticTags, languageCode }) {
     languageCode = languageCode || 'es';
 
     // Buscamos todos los conceptos que tengas descripciones que matcheen con la busqueda.
-    const searchResult = await snowstormClient.search({
-        index: 'description',
-        type: 'description',
-        size: '10000',
-        body: {
-            query: {
-                bool: {
-                    must: [
-                        { term: { languageCode: { value: languageCode, boost: 1.0 } } },
-                        branchesClause
-                    ],
-                    filter: [
-                        {
-                            simple_query_string: {
-                                query: searchStrig,
-                                fields: [
-                                    'termFolded^1.0'
-                                ],
-                                flags: -1,
-                                default_operator: 'and',
-                                analyze_wildcard: false,
-                                auto_generate_synonyms_phrase_query: true,
-                                fuzzy_prefix_length: 0,
-                                fuzzy_max_expansions: 50,
-                                fuzzy_transpositions: true,
-                                boost: 1.0
+    let ids;
+    if (!conceptIds) {
+        const searchResult = await snowstormClient.search({
+            index: 'description',
+            type: 'description',
+            size: '10000',
+            body: {
+                query: {
+                    bool: {
+                        must: [
+                            { term: { languageCode: { value: languageCode, boost: 1.0 } } },
+                            branchesClause
+                        ],
+                        filter: [
+                            {
+                                simple_query_string: {
+                                    query: searchStrig,
+                                    fields: [
+                                        'termFolded^1.0'
+                                    ],
+                                    flags: -1,
+                                    default_operator: 'and',
+                                    analyze_wildcard: false,
+                                    auto_generate_synonyms_phrase_query: true,
+                                    fuzzy_prefix_length: 0,
+                                    fuzzy_max_expansions: 50,
+                                    fuzzy_transpositions: true,
+                                    boost: 1.0
+                                }
                             }
-                        }
-                    ],
-                    adjust_pure_negative: true,
-                    boost: 1.0
-                }
-            },
-            stored_fields: ['descriptionId', 'conceptId'],
-            sort: [
-                { termLen: { order: 'asc' } },
-                { _score: { order: 'asc' } }
-            ]
-        }
-    });
-    const ids = searchResult.hits.hits.map(item => item.fields.conceptId[0]);
+                        ],
+                        adjust_pure_negative: true,
+                        boost: 1.0
+                    }
+                },
+                stored_fields: ['descriptionId', 'conceptId'],
+                sort: [
+                    { termLen: { order: 'asc' } },
+                    { _score: { order: 'asc' } }
+                ]
+            }
+        });
+        ids = searchResult.hits.hits.map(item => item.fields.conceptId[0]);
+    } else {
+        ids = conceptIds;
+    }
 
 
     // Verificamos si los concepts están activos o no. Filtramos solo por activos.
