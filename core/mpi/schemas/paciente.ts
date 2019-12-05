@@ -81,7 +81,7 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         documento: String,
         foto: String
     }],
-    financiador: ObraSocialSchema,
+    financiador: [ObraSocialSchema],
     claveBlocking: { type: [String], es_indexed: true },
     entidadesValidadoras: [String],
     scan: {

@@ -5,8 +5,9 @@ export const ObraSocialSchema = new mongoose.Schema({
     codigoPuco: Number,
     nombre: String,
     financiador: String,
-    prepaga: Boolean,
-    idObraSocial: Number
+    prepaga: { type: Boolean, required: false },
+    idObraSocial: { type: Number, required: false },
+    numeroAfiliado: { type: String, required: false }
 });
 
 ObraSocialSchema.index({ codigoPuco: 1 });

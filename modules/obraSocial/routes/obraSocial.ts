@@ -3,7 +3,7 @@ import { Puco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
 import * as pucoController from '../controller/puco';
 import * as sumarController from '../controller/sumar';
-import * as obrasocialController from '../controller/obraSocial'
+import * as obrasocialController from '../controller/obraSocial';
 const router = express.Router();
 
 /**
