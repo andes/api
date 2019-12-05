@@ -3,14 +3,14 @@ import { Puco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
 import * as pucoController from '../controller/puco';
 import * as sumarController from '../controller/sumar';
-import * as prepagaController from '../controller/prepagas';
+import * as obrasocialController from '../controller/obraSocial'
 const router = express.Router();
 
 /**
  * Obtiene todas las obras sociales
  * @returns array de obras sociales
  */
-router.get('/', async (req, res, next) => {
+router.get('/obrasSociales', async (req, res, next) => {
     let query;
     query = ObraSocial.find({});
     if (req.query.nombre) {
@@ -97,36 +97,6 @@ router.get('/puco', async (req, res, next) => {
     }
 });
 
-/**
- * Obtiene los datos de las obras sociales asociada a un paciente
- * verifica en padronPrepagas, luego en PUCO y por último en sumar
- * @param {dni, sexo}
- * @returns array de datos obra sociales
- */
-
-router.get('/paciente', async (req, res, next) => {
-    if (req.query.dni && req.query.sexo) {
-        let prepaga = await prepagaController.getPaciente(req.query.dni, req.query.sexo);
-        if (prepaga) {
-            res.json([prepaga]);
-        } else {
-            let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
-            if (arrayOSPuco.length > 0) {
-                res.json(arrayOSPuco);
-            } else {
-                let arrayOSSumar = await sumarController.getPacienteSumar(req.query.dni);
-                if (arrayOSSumar.length > 0) {
-                    res.json([{ codigoPuco: null, nombre: null, financiador: 'SUMAR' }]);
-                } else {
-                    res.json([]);
-                }
-            }
-        }
-    } else {
-        return next('Parámetros incorrectos');
-    }
-});
-
 router.get('/puco/padrones', async (req, res, next) => {
     try {
         let resp = await pucoController.obtenerVersiones();
@@ -136,19 +106,10 @@ router.get('/puco/padrones', async (req, res, next) => {
     }
 });
 
-router.get('/puco/:documento', async (req, res, next) => {
+router.get('/obraSocial/:documento', async (req, res, next) => {
     if (req.params.documento) {
-        let arrayOSPuco: any = await pucoController.pacientePuco(req.params.documento);
-        if (arrayOSPuco.length > 0) {
-            res.json(arrayOSPuco);
-        } else {
-            let arrayOSSumar = await sumarController.getPacienteSumar(req.params.documento);
-            if (arrayOSSumar.length > 0) {
-                res.json([{ codigoPuco: null, nombre: null, financiador: 'SUMAR' }]);
-            } else {
-                res.json([]);
-            }
-        }
+        let resp = await obrasocialController.getObraSocial(req.params);
+        res.json(resp);
     } else {
         return next('Parámetros incorrectos');
     }

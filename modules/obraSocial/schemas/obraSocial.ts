@@ -4,7 +4,9 @@ export const ObraSocialSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     codigoPuco: Number,
     nombre: String,
-    financiador: String
+    financiador: String,
+    prepaga: Boolean,
+    idObraSocial: Number
 });
 
 ObraSocialSchema.index({ codigoPuco: 1 });
