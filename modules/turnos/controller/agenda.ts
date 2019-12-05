@@ -837,11 +837,17 @@ export function actualizarEstadoAgendas(start, end) {
 
 export async function prestacionesDisponibles(params) {
     let pipelinePrestaciones = [];
+    let organizacionId;
+    if (params.query.organizacion) {
+        organizacionId = params.query.organizacion;
+    } else {
+        organizacionId = Auth.getOrganization(params);
+    }
     pipelinePrestaciones = [
         {
             $match: {
                 'organizacion._id': {
-                    $eq: new mongoose.Types.ObjectId(Auth.getOrganization(params))
+                    $eq: new mongoose.Types.ObjectId(organizacionId)
                 },
                 'bloques.turnos.horaInicio': { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) },
                 estado: 'publicada',
