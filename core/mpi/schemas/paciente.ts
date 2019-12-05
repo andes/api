@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { Connections } from './../../../connections';
 import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
-import * as financiadorSchema from './financiador';
+import { ObraSocialSchema } from '../../../modules/obraSocial/schemas/obraSocial';
 import * as constantes from './constantes';
 import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
@@ -80,7 +80,7 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         documento: String,
         foto: String
     }],
-    financiador: [financiadorSchema],
+    financiador: ObraSocialSchema,
     claveBlocking: { type: [String], es_indexed: true },
     entidadesValidadoras: [String],
     scan: {
