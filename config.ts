@@ -353,5 +353,41 @@ export const logKeys = {
     usuarioUpdateError: {
         key: 'usuarios:modificarError',
         operacion: 'error al modificar los permisos de un usuario'
+    },
+    cdaCheck1: {
+        key: 'cda:',
+        operacion: 'error al cargar CDA ya existente'
+    },
+    cdaCheck2: {
+        key: 'cda:notFound:tipoPrestacion',
+        operacion: 'error al cargar CDA con tipo de prestación inválida'
+    },
+    cdaCheck2a: {
+        key: 'cda:notFound:loinc',
+        operacion: 'error al cargar CDA con tipo de prestación inválida'
+    },
+    cdaCheck3: {
+        key: 'cda:notFound:cie10',
+        operacion: 'código CIE10 inválido'
+    },
+    cdaCheck4: {
+        key: 'cda:notFound:paciente',
+        operacion: 'paciente no encontrado'
+    },
+    cdaCheck5: {
+        key: 'cda:notFound:archivo',
+        operacion: 'archivo no encontrado en ANDES'
+    },
+    cdaCheck6: {
+        key: 'cda:organizacion',
+        operacion: 'organización incorrecta, organización del CDA no corresponde a la del usuario logueado'
+    },
+    cdaCheck7: {
+        key: 'cda:format',
+        operacion: 'error en el formato del CDA'
+    },
+    cdaCheck8: {
+        key: 'cda:notFound:xml',
+        operacion: 'archivo xml no encontrado'
     }
 };

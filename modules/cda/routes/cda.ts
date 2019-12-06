@@ -9,6 +9,8 @@ import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import { AndesDrive } from '@andes/drive';
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
 
 const ObjectId = Types.ObjectId;
 
@@ -30,6 +32,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         }
         const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
+            andesLog(req, logKeys.cdaCheck1.key, null, logKeys.cdaCheck1.operacion, null, null);
             return next({ error: `prestacion_existente  ${idPrestacion}` });
         }
 
@@ -39,6 +42,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         // Devuelve un Loinc asociado al código SNOMED
         let prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
         if (!prestacion) {
+            andesLog(req, logKeys.cdaCheck2.key, null, logKeys.cdaCheck2.operacion, req.body.tipoPrestacion, null);
             // Es obligatorio que posea prestación
             return next({ error: `prestacion_invalida ${req.body.tipoPrestacion}` });
         }
@@ -56,6 +60,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
                     { codigo: cie10Code + '.8' }]
             });
             if (!cie10) {
+                andesLog(req, logKeys.cdaCheck3.key, null, logKeys.cdaCheck3.operacion, cie10Code, null);
                 return next({ error: `cie10_invalid  ${cie10Code}` });
             }
         }
@@ -66,6 +71,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
 
         const paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         if (!paciente) {
+            andesLog(req, logKeys.cdaCheck4.key, null, logKeys.cdaCheck4.operacion, dataPaciente, null);
             return next({ error: 'paciente_inexistente' });
         }
         const uniqueId = String(new ObjectId());
@@ -84,6 +90,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
                     };
                     adjuntos = [{ path: fileData.data, id: ObjectId(fileData.id), adapter: 'drive' }];
                 } else {
+                    andesLog(req, logKeys.cdaCheck5.key, null, logKeys.cdaCheck5.operacion, file, null);
                     return next({ error: 'file_not_exists' });
                 }
             } else {
@@ -142,6 +149,7 @@ router.post('/', async (req: any, res, next) => {
                 const uniqueId = new ObjectId();
 
                 if (cdaData.organizacion.id !== orgId) {
+                    andesLog(req, logKeys.cdaCheck6.key, null, logKeys.cdaCheck6.operacion, cdaData, null);
                     return next({ error: 'wrong_organization' });
                 }
 
@@ -151,6 +159,7 @@ router.post('/', async (req: any, res, next) => {
 
                 const yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
                 if (yaExiste) {
+                    andesLog(req, logKeys.cdaCheck1.key, null, logKeys.cdaCheck1.operacion, cdaData, null);
                     return next({ error: 'prestacion_existente' });
                 }
 
@@ -159,6 +168,7 @@ router.post('/', async (req: any, res, next) => {
 
                 const prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
                 if (!prestacion) {
+                    andesLog(req, logKeys.cdaCheck2a.key, null, logKeys.cdaCheck2a.operacion, cdaData, null);
                     // Es obligatorio que posea prestación
                     return next({ error: 'prestacion_invalida' });
                 }
@@ -193,11 +203,13 @@ router.post('/', async (req: any, res, next) => {
                 res.json({ cda: uniqueId, paciente: pacientec._id });
 
             } else {
+                andesLog(req, logKeys.cdaCheck7.key, null, logKeys.cdaCheck7.operacion, dom, null);
                 return next({ error: 'cda_format_error' });
             }
 
         }).catch(next);
     } else {
+        andesLog(req, logKeys.cdaCheck8.key, null, logKeys.cdaCheck8.operacion, cda64, null);
         return next({ error: 'xml_file_missing' });
     }
 
