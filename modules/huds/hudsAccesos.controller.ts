@@ -24,7 +24,7 @@ export async function search(filtros) {
     }
 
     if (filtros.paciente) {
-        match['accesos.paciente'] = mongoose.Types.ObjectId(filtros.paciente);
+        match['paciente'] = mongoose.Types.ObjectId(filtros.paciente);
     }
 
     if (filtros.turno) {
