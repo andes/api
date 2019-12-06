@@ -243,10 +243,6 @@ router.get('/files/:name', async (req: any, res, next) => {
  */
 
 router.get('/paciente/', async (req: any, res, next) => {
-    let tokenSettings;
-    if (req.query.hudsToken) {
-        tokenSettings = Auth.decode(req.query.hudsToken);
-    }
     if (!Auth.check(req, 'cda:list')) {
         return next(403);
     }
@@ -273,12 +269,7 @@ router.get('/paciente/', async (req: any, res, next) => {
 
 router.get('/paciente/:id', async (req: any, res, next) => {
     if (ObjectId.isValid(req.params.id)) {
-        let tokenSettings;
-
-        if (req.query.hudsToken) {
-            tokenSettings = Auth.decode(req.query.hudsToken);
-        }
-        if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token') || !tokenSettings || String(tokenSettings.paciente) !== String(req.params.id)) {
+        if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token') || !Auth.checkHudsToken(req, req.params.id)) {
             return next(403);
         }
         let pacienteID = req.params.id;
@@ -365,11 +356,8 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  * API demostrativa, falta analizar como se va a buscar en el repositorio
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
-    let tokenSettings;
-    if (req.query.hudsToken) {
-        tokenSettings = Auth.decode(req.query.hudsToken);
-    }
-    if (!Auth.check(req, 'cda:list') || req.user.type !== 'paciente-token' || !tokenSettings || String(tokenSettings.paciente) !== String(req.params.id)) {
+
+    if (!Auth.check(req, 'cda:list') || req.user.type !== 'paciente-token' || !Auth.checkHudsToken(req, req.params.id)) {
         return next(403);
     }
     let pacienteID = req.params.id;

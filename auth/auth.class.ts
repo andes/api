@@ -482,4 +482,29 @@ export class Auth {
         return jwt.decode(token);
     }
 
+    /**
+    * Verifica el token para acceder a la HUDS de un paciente
+    *
+    * @static
+    * @param {express.Request} req Corresponde al request actual
+    * @param {int} paciente Identificador del paciente
+    * @returns {boolean} Devuelve verdadero si el token le corresponde al paciente
+    *
+    * @memberOf Auth
+    */
+
+    static checkHudsToken(req: express.Request, paciente) {
+        try {
+            let tokenSettings;
+            if (req.query.hudsToken) {
+                tokenSettings = Auth.decode(req.query.hudsToken);
+                return (String(tokenSettings.paciente) === String(paciente));
+            }
+        } catch (e) {
+            return null;
+        }
+
+        return null;
+    }
+
 }

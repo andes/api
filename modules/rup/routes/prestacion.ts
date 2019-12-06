@@ -96,11 +96,8 @@ router.get('/prestaciones/sinCama', (req: any, res, next) => {
  */
 
 router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
-    let tokenSettings;
-    if (req.query.hudsToken) {
-        tokenSettings = Auth.decode(req.query.hudsToken);
-    }
-    if (req.params.idPaciente && (!tokenSettings || String(tokenSettings.paciente) !== String(req.params.idPaciente))) {
+
+    if (req.params.idPaciente && (!Auth.checkHudsToken(req, req.params.idPaciente))) {
         return next(403);
     }
 
@@ -146,11 +143,8 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
 
 router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, next) => {
-    let tokenSettings;
-    if (req.query.hudsToken) {
-        tokenSettings = Auth.decode(req.query.hudsToken);
-    }
-    if (req.params.idPaciente && (!tokenSettings || String(tokenSettings.paciente) !== String(req.params.idPaciente))) {
+
+    if (req.params.idPaciente && (!Auth.checkHudsToken(req, req.params.idPaciente))) {
         return next(403);
     }
 
@@ -366,11 +360,8 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 });
 
 router.get('/prestaciones/:id*?', async (req: any, res, next) => {
-    let tokenSettings;
-    if (req.query.hudsToken) {
-        tokenSettings = Auth.decode(req.query.hudsToken);
-    }
-    if (req.query.idPaciente && (!tokenSettings || String(tokenSettings.paciente) !== String(req.query.idPaciente))) {
+
+    if (req.query.idPaciente && (!Auth.checkHudsToken(req, req.query.idPaciente))) {
         return next(403);
     }
 
