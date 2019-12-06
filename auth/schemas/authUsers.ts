@@ -34,7 +34,8 @@ export const AuthUsersSchema = new mongoose.Schema({
     configuracion: {
         type: mongoose.SchemaTypes.Mixed,
         default: {}
-    }
+    },
+    disclaimers: [{ createdAt: Date, _id: { type: mongoose.Schema.Types.ObjectId, ref: 'dislaimer' } }],
 });
 AuthUsersSchema.plugin(AuditPlugin);
 

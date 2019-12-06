@@ -1,3 +1,4 @@
+import { Disclaimer } from './../../core/tm/schemas/disclaimer';
 import * as mongoose from 'mongoose';
 import { AuthUsers } from '../../auth/schemas/authUsers';
 import { Auth } from '../../auth/auth.class';
@@ -6,9 +7,7 @@ import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { getUserInfo } from '../../auth/ldap.controller';
 import { Request, Response } from '@andes/api-tool';
 
-
 const shiroTrie = require('shiro-trie');
-
 class UsuariosResource extends ResourceBase {
     Model = AuthUsers;
     resourceName = 'usuarios';
@@ -100,7 +99,6 @@ UsuariosRouter.patch('/usuarios/:usuario/organizaciones/:organizacion', Auth.aut
     }
 });
 
-
 UsuariosRouter.delete('/usuarios/:usuario/organizaciones/:organizacion', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'usuarios:write')) {
         return next(403);
@@ -119,7 +117,6 @@ UsuariosRouter.delete('/usuarios/:usuario/organizaciones/:organizacion', Auth.au
         return next(err);
     }
 });
-
 
 UsuariosRouter.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
     function checkPermisos(permisosList, permiso) {
@@ -148,4 +145,62 @@ UsuariosRouter.get('/organizaciones', Auth.authenticate(), async (req: any, res,
         return res.json(orgs);
     }
 
+});
+
+UsuariosRouter.post('/usuarios/:usuario/disclaimers/:disclaimer', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
+        if (user) {
+            const disclaimer = user.disclaimers.push(req.params.disclaimer);
+
+            Auth.audit(user, req);
+            await user.save();
+            return res.json(disclaimer);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+UsuariosRouter.patch('/usuarios/:usuario/disclaimers/:disclaimer', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
+        if (user) {
+            const disclaimer = user.disclaimers.id(req.params.disclaimer);
+            disclaimer.set(req.body);
+            user.markModified('disclaimers');
+            Auth.audit(user, req);
+            await user.save();
+            return res.json(disclaimer);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+UsuariosRouter.delete('/usuarios/:usuario/disclaimers/:disclaimer', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
+        if (user) {
+            const disclaimer = user.disclaimers.id(req.params.disclaimer);
+            disclaimer.remove();
+            Auth.audit(user, req);
+            await user.save();
+            return res.json(disclaimer);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+UsuariosRouter.get('/usuarios/:usuario/disclaimers', Auth.authenticate(), async (req: any, res, next) => {
+    try {
+        const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
+        if (user) {
+            const disclaimers = user.disclaimers;
+            return res.json(disclaimers);
+        }
+    } catch (err) {
+        return next(err);
+    }
 });
