@@ -1,5 +1,5 @@
 import { PlantillasRUP } from '../schemas/plantillasRUP';
-import { getConceptByExpression } from '../../../core/term/controller/snomedCtr';
+import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { Auth } from '../../../auth/auth.class';
 import { Types } from 'mongoose';
 const ObjectId = Types.ObjectId;
@@ -8,7 +8,7 @@ export async function create(data, req) {
     // [TODO] implementar permisos especiales para crear elementos Globales o no.
     const expression = data.expression;
 
-    const conceptos = await getConceptByExpression(expression);
+    const conceptos = await SnomedCtr.getConceptByExpression(expression);
     data.conceptos = conceptos;
 
     const plantilla = new PlantillasRUP(data);
@@ -21,7 +21,7 @@ export async function update(id, data, req) {
     if (plantilla) {
 
         const expression = data.expression;
-        const conceptos = await getConceptByExpression(expression);
+        const conceptos = await SnomedCtr.getConceptByExpression(expression);
         data.conceptos = conceptos;
 
         plantilla.set(data);

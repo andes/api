@@ -120,10 +120,14 @@ export const puco = {
     }
 };
 
-
 export const snomed = {
+    adapter: getEnv('SNOMED_ADAPTER', 'snowstorm'),
     dbName: getEnv('SNOMED_DB', 'es-edition'),
-    dbVersion: getEnv('SNOMED_VERSION', 'v20171200')
+    dbVersion: getEnv('SNOMED_VERSION', 'v20171200'),
+
+    snowstormHost: getEnv('SNOWSTORM_HOST', 'http://localhost:8080'),
+    snowstormElastic: getEnv('SNOWSTORM_ELASTIC', 'http://localhost:9201'),
+    snowstormBranch: getEnv('SNOWSTORM_BRANCH', 'MAIN/SNOMEDCT-ES')
 };
 
 // Push Notifications

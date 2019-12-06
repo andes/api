@@ -2,7 +2,7 @@ import { model as Prestacion } from '../schemas/prestacion';
 import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 import moment = require('moment');
-import { getConcepts } from '../../../core/term/controller/snomedCtr';
+import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { paciente as Paciente, pacienteMpi as PacienteMpi } from '../../../core/mpi/schemas/paciente';
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -73,8 +73,8 @@ export async function estadisticaDemografica(ids) {
     const { pacientes, demografia } = data[0];
     let idPacientes = pacientes.map(paciente => ObjectId(paciente._id));
 
-    const p1 = Paciente.find({_id: { $in: idPacientes}}, { direccion: 1 });
-    const p2 = PacienteMpi.find({_id: { $in: idPacientes}}, { direccion: 1 });
+    const p1 = Paciente.find({ _id: { $in: idPacientes } }, { direccion: 1 });
+    const p2 = PacienteMpi.find({ _id: { $in: idPacientes } }, { direccion: 1 });
     const [andes, mpi] = await Promise.all([p1, p2]);
 
     function getLocalidad(direccion) {
@@ -213,69 +213,85 @@ export async function dashboard(org, prestaciones, desde, hasta) {
 
     // Obtengo el listado de concepto y busco su metadata
     const concepts = registros.map(e => e.concepto.conceptId);
-    const conceptos = await getConcepts(concepts);
+    const conceptos = await SnomedCtr.getConcepts(concepts);
 
     return { pacientes, registros, metadata: conceptos };
 }
 
 const facets = {
     solicitudesDestino: [
-        { $group: {
-            _id: '$solicitud.tipoPrestacion.conceptId',
-            count: { $sum: 1 },
-            nombre: { $first: '$solicitud.tipoPrestacion.term' }
-        }}
+        {
+            $group: {
+                _id: '$solicitud.tipoPrestacion.conceptId',
+                count: { $sum: 1 },
+                nombre: { $first: '$solicitud.tipoPrestacion.term' }
+            }
+        }
     ],
 
     solicitudesOrigen: [
-        { $group: {
-            _id: '$solicitud.tipoPrestacionOrigen.conceptId',
-            count: { $sum: 1 },
-            nombre: { $first: '$solicitud.tipoPrestacionOrigen.term' }
-        }}
+        {
+            $group: {
+                _id: '$solicitud.tipoPrestacionOrigen.conceptId',
+                count: { $sum: 1 },
+                nombre: { $first: '$solicitud.tipoPrestacionOrigen.term' }
+            }
+        }
     ],
 
     organizacionesEntrada: [
-        { $group: {
-            _id: '$solicitud.organizacionOrigen.id',
-            count: { $sum: 1 },
-            nombre: { $first: '$solicitud.organizacionOrigen.nombre'}
-        }}
+        {
+            $group: {
+                _id: '$solicitud.organizacionOrigen.id',
+                count: { $sum: 1 },
+                nombre: { $first: '$solicitud.organizacionOrigen.nombre' }
+            }
+        }
     ],
 
     organizacionesSalida: [
-        { $group: {
-            _id: '$solicitud.organizacion.id',
-            count: { $sum: 1 },
-            nombre: { $first: '$solicitud.organizacion.nombre'}
-        }}
+        {
+            $group: {
+                _id: '$solicitud.organizacion.id',
+                count: { $sum: 1 },
+                nombre: { $first: '$solicitud.organizacion.nombre' }
+            }
+        }
     ],
 
     profesionalesOrigen: [
-        { $group: {
-            _id: '$solicitud.profesionalOrigen.id',
-            count: { $sum: 1 },
-            nombre: {$addToSet: { $concat: ['$solicitud.profesionalOrigen.nombre', ' ', '$solicitud.profesionalOrigen.apellido'] }}
-        }}
+        {
+            $group: {
+                _id: '$solicitud.profesionalOrigen.id',
+                count: { $sum: 1 },
+                nombre: { $addToSet: { $concat: ['$solicitud.profesionalOrigen.nombre', ' ', '$solicitud.profesionalOrigen.apellido'] } }
+            }
+        }
     ],
 
     profesionalesDestino: [
-        { $group: {
-            _id: '$solicitud.profesional.id',
-            count: { $sum: 1 },
-            nombre: {$addToSet: { $concat: ['$solicitud.profesional.nombre', ' ', '$solicitud.profesional.apellido'] }}
-        }}
+        {
+            $group: {
+                _id: '$solicitud.profesional.id',
+                count: { $sum: 1 },
+                nombre: { $addToSet: { $concat: ['$solicitud.profesional.nombre', ' ', '$solicitud.profesional.apellido'] } }
+            }
+        }
     ],
 
     estados: [
-        { $addFields: {
-            estado: { $arrayElemAt: ['$estados', -1] }
-        }},
-        { $group: {
-            _id: '$estado.tipo',
-            count: { $sum: 1 },
-            nombre: {$first: '$estado.tipo'}
-        }}
+        {
+            $addFields: {
+                estado: { $arrayElemAt: ['$estados', -1] }
+            }
+        },
+        {
+            $group: {
+                _id: '$estado.tipo',
+                count: { $sum: 1 },
+                nombre: { $first: '$estado.tipo' }
+            }
+        }
     ]
 };
 
@@ -369,8 +385,8 @@ export async function dashboardSolicitudes(filtros, user) {
         { $match: matchInicial },
         { $match: matchSolicitudEntrada },
         { $match: matchFiltros },
-        { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] }}},
-        { $match: matchEstados}, // Filtro por el último estado
+        { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] } } },
+        { $match: matchEstados }, // Filtro por el último estado
         { $facet: makeFacet('entrada') }
     ];
     let pipelineSalida = [
@@ -378,8 +394,8 @@ export async function dashboardSolicitudes(filtros, user) {
         { $match: matchInicial },
         { $match: matchSolicitudSalida },
         { $match: matchFiltros },
-        { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] }}},
-        { $match: matchEstados}, // Filtro por el último estado
+        { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] } } },
+        { $match: matchEstados }, // Filtro por el último estado
         { $facet: makeFacet('salida') }
     ];
 

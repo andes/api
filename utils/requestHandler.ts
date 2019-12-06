@@ -16,7 +16,7 @@ export function handleHttpRequest(params): Promise<any> {
     return new Promise((resolve, reject) => {
         request(params, (err, response, body) => {
             if (!err) {
-                let status = response && response.statusCode;
+                const status = response && response.statusCode;
                 return resolve([status, body]);
             } else {
                 return reject(err);

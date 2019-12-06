@@ -8,7 +8,7 @@ import { Auth } from '../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import * as Paciente from '../../../core/mpi/controller/paciente';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-import * as snomed from '../../../core/term/controller/snomedCtr';
+import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import * as rup from '../../../modules/rup/schemas/elementoRUP';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
@@ -466,7 +466,7 @@ export class Documento {
                     }
 
                     // Vemos si el tipo de prestación tiene registros que son hijos directos (TP: Ecografía; Hijo: Ecografía obstétrica)
-                    let hijos = await snomed.getChildren(prestacion.solicitud.tipoPrestacion.conceptId, { all: true });
+                    let hijos = await SnomedCtr.getChildren(prestacion.solicitud.tipoPrestacion.conceptId, { all: true });
                     let motivoPrincipalDeConsulta;
                     let tituloRegistro;
                     let contenidoInforme;
