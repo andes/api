@@ -1,6 +1,6 @@
 import { model as Prestacion } from '../schemas/prestacion';
 
-import { sendMessage, getPacsConfig, ADT04Message, ORM04Message, ORU01Message } from '../controllers/pacs.controller';
+import { sendMessage, getPacsConfig, ADT04Message, ORM01Message, ORU01Message } from '../controllers/pacs.controller';
 
 
 import * as express from 'express';
@@ -22,11 +22,11 @@ router.post('/prestaciones/pacs/programar', async (req, res, next) => {
         const prestacion: any = await Prestacion.findById(prestacionId);
 
         const config = await getPacsConfig(prestacion.solicitud.organizacion, conceptId);
-
+       // console.log(config.messages.adt04.mappings.msh.values);
         const a04 = await ADT04Message(config, prestacion.paciente, prestacion.solicitud.organizacion);
         const resp = await sendMessage(config, a04);
 
-        const o01 = await ORM04Message(config, prestacion, { conceptId, term });
+        const o01 = await ORM01Message(config, prestacion, { conceptId, term });
         const resp1 = await sendMessage(config, o01);
 
 

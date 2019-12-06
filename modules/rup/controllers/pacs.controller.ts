@@ -5,6 +5,7 @@ import { PacsConfig } from '../schemas/pacs.schema';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { SnomedModel } from '../../../core/term/schemas/snomed';
 import * as hex64 from 'hex64';
+import { appendFileSync } from 'fs';    
 
 // acordarse de eliminar cualquier caracter de control de los strings
 export async function sendMessage(config, message) {
@@ -28,9 +29,9 @@ export async function makeMessage(config, data) {
 
     const [status, body] = await handleHttpRequest(options);
     const { message } = body;
-
+    appendFileSync("hl7.txt",message);
     const m: string = message.replace('\n', '\r').replace('\n', '\r').replace('\n', '\r').replace('\n', '\r');
-
+    console.log(m);
     return String(m + '\r');
 }
 
@@ -49,7 +50,7 @@ export async function ADT04Message(config, paciente, organizacion) {
     return await makeMessage(config.messages['adt04'], paciente);
 }
 
-export async function ORM04Message(config, prestacion, procedimiento) {
+export async function ORM01Message(config, prestacion, procedimiento) {
     const dto = {
         _id: hex64.encode(String(prestacion._id)),
         paciente: prestacion.paciente,
@@ -62,7 +63,7 @@ export async function ORM04Message(config, prestacion, procedimiento) {
         fecha: moment(prestacion.ejecucion.fecha).format('YYYYMMDD'),
         message_datetime: moment().format('YYYYMMDDHHMM')
     };
-    return await makeMessage(config.messages['orm04'], dto);
+    return await makeMessage(config.messages['orm01'], dto);
 }
 export async function ORU01Message(config, prestacion, registro) {
     const dto = {
@@ -85,25 +86,27 @@ export async function ORU01Message(config, prestacion, registro) {
 export async function getPacsConfig(organizacion, conceptId) {
     const config: any = await PacsConfig.findOne({ 'organizacion.id': organizacion.id });
     if (config) {
-        let orm04 = null;
+       // console.log(config);
+        let orm01 = null;
         for (let i = 0; i < config.mapping.length; i++) {
             const item = config.mapping[i];
             const querySnomed = makeMongoQuery(`${item.expression} and ${conceptId}`);
             const result = await SnomedModel.find(querySnomed);
+            console.log(result);
             if (result.length > 0) {
-                orm04 = item.orm04;
+                orm01 = item.orm01;
                 break;
             }
         }
-        if (orm04) {
+        if (orm01) {
             let data = config.toObject();
-            data.messages['orm04'] = orm04;
+            data.messages['orm01'] = orm01;
             return data;
         }
     }
 }
 
-
+/*
 export const o01Config = {
     format: 'hl7-2.4',
     adapter: 'default',
@@ -533,5 +536,6 @@ export const a04Config = {
         }
     }
 };
+*/
 // const a = JSON.stringify(r01Config);
 // console.log(a);

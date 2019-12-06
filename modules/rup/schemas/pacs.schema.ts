@@ -15,7 +15,7 @@ export let PacsSchema = new mongoose.Schema({
     messages: mongoose.SchemaTypes.Mixed,
     mapping: [{
         expression: String,
-        orm04: Object  //
+        orm01: Object  //
     }]
 
 });
