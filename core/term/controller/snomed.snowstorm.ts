@@ -180,7 +180,7 @@ export async function getConceptByExpression(expression, term = null, form = 'st
 
 
 export async function searchTerms(text, { semanticTags, languageCode }, conceptIds: string[] = null) {
-    const textFold = utils.removeDiacritics(text);
+    const textFold = utils.removeDiacritics(text).replace(/[\u00F1]/g, 'n');
     const terms = textFold.split(' ');
     const searchStrig = terms.map(i => i + '*').join(' ');
     semanticTags = semanticTags || [];

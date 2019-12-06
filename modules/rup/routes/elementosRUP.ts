@@ -19,6 +19,7 @@ router.get('/elementosRUP/:id/guiada', async (req, res, next) => {
         let flag = false;
         for (const guia of elemento.busqueda_guiada) {
             if (!guia.conceptIds.length) {
+                flag = true;
                 guia.conceptIds = await SnomedCtr.getConceptByExpression(guia.query);
                 guia.conceptIds = guia.conceptIds.map(c => c.conceptId);
             }
