@@ -18,7 +18,8 @@ router.post('/accesos/token', asyncHandler(async (req: any, res) => {
     // Persiste los datos de accesos y genera el token para acceder a la HUDS del paciente
     const organizacionId = Auth.getOrganization(req);
     // Busca la matricula del profesional
-    const idProfesional = (req as any).user.profesional ? (req as any).user.profesional.id : null;
+    const profesional = Auth.getProfesional(req);
+    const idProfesional = profesional ? profesional.id : null;
     let matricula = null;
     if (idProfesional) {
         const datosProfesional: any = await search({ id: idProfesional }, { matricula: 1 });

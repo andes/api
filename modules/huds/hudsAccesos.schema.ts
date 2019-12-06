@@ -6,7 +6,7 @@ export const HudsAccesoSchema = new Schema({
         type: SchemaTypes.ObjectId,
         required: true
     },
-    anio: Number,
+    start: Number,
     cantidadAccesos: Number,
     bucketNumber: String,
     accesos: [{
