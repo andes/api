@@ -22,16 +22,16 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     const pacienteAndes = req.body;
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
+            const repetidoP = controller.checkRepetido(pacienteAndes);
+            let validacionP = controller.validarPaciente(pacienteAndes, req);
+            let [checkRepetido, validacion]: any = await Promise.all([repetidoP, validacionP]);
+
             // chequeamos si el par dni-sexo ya existe en ANDES
-            const resultadoCheck = await controller.checkRepetido(pacienteAndes);
-            let resultado;
-            if (resultadoCheck.dniRepetido) {
-                resultado = { paciente: resultadoCheck.resultadoMatching[0].paciente, existente: true };
-            } else {
-                resultado = await controller.validarPaciente(pacienteAndes, req);
-                resultado.existente = false;
+            if (checkRepetido.dniRepetido) {
+                let repetidoValidado = checkRepetido.resultadoMatching.find(elem => elem.paciente.documento === pacienteAndes.documento.toString() && elem.paciente.estado === 'validado');
+                validacion.existente = (repetidoValidado) ? repetidoValidado.paciente : checkRepetido.resultadoMatching[0].paciente;
             }
-            res.json(resultado);
+            res.json(validacion);
         } catch (err) {
             return next(err);
         }
