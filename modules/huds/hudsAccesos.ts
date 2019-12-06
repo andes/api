@@ -25,14 +25,14 @@ async function execLog(req, paciente, matricula, motivoAcceso, turno, prestacion
     return HudsAcceso.updateOne(
         {
             paciente,
-            anio: moment(now).year(),
+            start: moment(now).startOf('year'),
             bucketNumber
         },
         {
             $inc: { cantidadAccesos: 1 },
             $setOnInsert: {
                 paciente,
-                anio: moment(now).year(),
+                start: moment(now).startOf('year'),
                 bucketNumber
             },
             $push: {
