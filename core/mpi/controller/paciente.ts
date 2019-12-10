@@ -1,3 +1,5 @@
+import { espacioFisico } from './../../../modules/turnos/schemas/espacioFisico';
+import { pacienteSchema } from './../schemas/paciente';
 import * as config from '../../../config';
 import * as moment from 'moment';
 import { paciente, pacienteMpi } from '../schemas/paciente';
@@ -7,6 +9,7 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { matchSisa } from '../../../utils/servicioSisa';
 import { getServicioRenaper } from '../../../utils/servicioRenaper';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
@@ -923,3 +926,169 @@ export async function actualizarGeoReferencia(dataPaciente, req) {
     }
 }
 
+export async function getHistorialPaciente(req, dataPaciente) {
+    try {
+        let pipelineTurno = [];
+        let pipelineSobreturno = [];
+        if (req.query.desde) {
+            pipelineTurno.push({ $match: { horaInicio: { $gte: req.query.desde.toDate() } } });
+            pipelineSobreturno.push({ $match: { horaInicio: { $gte: req.query.desde.toDate() } } });
+        }
+        if (req.query.hasta) {
+            pipelineTurno.push({ $match: { horaInicio: { $lte: req.query.hasta.toDate() } } });
+            pipelineSobreturno.push({ $match: { horaInicio: { $lte: req.query.hasta.toDate() } } });
+        }
+        if (req.query.organizacion) {
+            pipelineTurno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
+            pipelineSobreturno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
+        }
+        if (req.query.conceptId) {
+            pipelineTurno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });
+            pipelineSobreturno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });
+        }
+        const turnos = [];
+        let turno;
+        pipelineTurno.push(
+
+            {
+                $match: {
+                    estado: {
+                        $nin: [
+                            'planificacion',
+                            'borrada',
+                            'suspendida']
+                    },
+                    'bloques.turnos.paciente.id': { $in: dataPaciente.vinculos }
+                }
+            },
+            {
+                $unwind: {
+                    path: '$bloques'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$bloques.turnos'
+                }
+            },
+            {
+                $match: {
+                    'bloques.turnos.paciente.id': { $in: dataPaciente.vinculos }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        id: '$_id',
+                        turnoId: '$bloques.turnos._id'
+                    },
+                    agenda_id: {
+                        $first: '$_id'
+                    },
+                    bloque_id: { $first: '$bloques._id' },
+                    organizacion: {
+                        $first: '$organizacion'
+                    },
+                    profesionales: {
+                        $first: '$profesionales'
+                    },
+                    turno: {
+                        $first: '$bloques.turnos'
+                    },
+                    espacioFisico: {
+                        $first: '$espacioFisico'
+                    }
+                }
+            },
+            {
+                $sort: {
+                    'turno.horaInicio': -1.0
+                }
+            },
+            {
+                $project: {
+                    turno: 1,
+                    id: '$turnos._id',
+                    agenda_id: 1,
+                    bloque_id: 1,
+                    organizacion: 1,
+                    profesionales: 1,
+                    paciente: '$turno.paciente',
+                    espacioFisico: 1
+                }
+            }
+
+        );
+        pipelineSobreturno.push(
+
+            {
+                $match: {
+                    estado: {
+                        $nin: [
+                            'planificacion',
+                            'borrada',
+                            'suspendida']
+                    },
+                    'sobreturnos.paciente.id': { $in: dataPaciente.vinculos }
+                }
+            },
+            {
+                $unwind: {
+                    path: '$sobreturnos'
+                }
+            },
+            {
+                $match: {
+                    'sobreturnos.paciente.id': { $in: dataPaciente.vinculos }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        id: '$_id',
+                        turnoId: '$sobreturnos._id'
+                    },
+                    agenda_id: {
+                        $first: '$_id'
+                    },
+                    organizacion: {
+                        $first: '$organizacion'
+                    },
+                    profesionales: {
+                        $first: '$profesionales'
+                    },
+                    turno: {
+                        $first: '$sobreturnos'
+                    },
+                    espacioFisico: {
+                        $first: '$espacioFisico'
+                    }
+                }
+            },
+            {
+                $sort: {
+                    'turno.horaInicio': -1.0
+                }
+            },
+            {
+                $project: {
+                    turno: 1,
+                    id: '$turnos._id',
+                    agenda_id: 1,
+                    bloque_id: 1,
+                    organizacion: 1,
+                    profesionales: 1,
+                    paciente: '$turno.paciente',
+                    espacioFisico: 1
+                }
+            }
+
+        );
+        let resultado = await agenda.aggregate(pipelineTurno).exec();
+        const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
+        resultado = resultado.concat(sobreturnos);
+        return (resultado);
+    } catch (error) {
+        return (error);
+    }
+}
