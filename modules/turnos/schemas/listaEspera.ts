@@ -8,11 +8,15 @@ const listaEsperaSchema = new mongoose.Schema({
         apellido: String,
         documento: String
     },
-    tipoPrestacion: { type: tipoPrestacionSchema},
+    tipoPrestacion: { type: tipoPrestacionSchema },
     profesional: {
         id: mongoose.Schema.Types.ObjectId,
         nombre: String,
         apellido: String
+    },
+    organizacion: {
+        id: mongoose.Schema.Types.ObjectId,
+        nombre: String
     },
     fecha: Date, // si es una solicitud es la fecha en que se solicitó
     // si es demanda rechazada es la fecha en que no se atendió la demanda

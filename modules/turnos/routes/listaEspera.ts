@@ -1,11 +1,14 @@
 import * as express from 'express';
 import * as listaEspera from '../schemas/listaEspera';
+import { model as Prestacion } from '../../../modules/rup/schemas/prestacion';
 import * as agenda from '../schemas/agenda';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 // import * as config from '../../../config';
 import * as moment from 'moment';
 import { Logger } from '../../../utils/logService';
+import { Auth } from '../../../auth/auth.class';
+import { SnomedModel } from '../../../../api/core/term/schemas/snomed';
 
 const async = require('async');
 const router = express.Router();
@@ -50,7 +53,7 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 
 });
 
-router.post('/listaEspera', (req, res, next) => {
+router.post('/listaEspera', async (req, res, next) => {
 
     const newItem = new listaEspera(req.body);
     newItem.save((err) => {
@@ -64,7 +67,27 @@ router.post('/listaEspera', (req, res, next) => {
         });
         res.json(newItem);
     });
-
+    const prest: any = await SnomedModel.findOne({ conceptId: 419069000 });
+    const date = new Date();
+    const newPrestacion = new Prestacion({
+        paciente: req.body.paciente,
+        solicitud: {
+            fecha: date,
+            tipoPrestacion: {
+                id: prest._id,
+                conceptId: prest.conceptId,
+                term: prest.preferredTerm,
+                fsn: prest.fullySpecifiedName,
+                semanticTag: prest.semtag
+            }
+        },
+        estados: {
+            fecha: date,
+            tipo: 'rechazada'
+        }
+    });
+    Auth.audit(newPrestacion, req);
+    await newPrestacion.save();
 });
 
 router.put('/listaEspera/:_id', (req, res, next) => {
@@ -90,14 +113,14 @@ router.post('/listaEspera/IdAgenda/:_id', (req, res, next) => {
                 break;
         }
 
-        async.each(listaEsperaPaciente, (listaEsperaData, callback)  => {
+        async.each(listaEsperaPaciente, (listaEsperaData, callback) => {
             const newItem = new listaEspera(listaEsperaData);
 
             newItem.save((err1, item) => {
                 callback();
             });
 
-        }, (err2)  => {
+        }, (err2) => {
             if (err2) {
                 return next(err2);
             }
@@ -107,7 +130,7 @@ router.post('/listaEspera/IdAgenda/:_id', (req, res, next) => {
 });
 
 
-router.delete('/listaEspera/:_id', (req, res, next)  => {
+router.delete('/listaEspera/:_id', (req, res, next) => {
     listaEspera.findByIdAndRemove(req.params._id, req.body, (err, data) => {
         if (err) { return next(err); }
         res.json(data);
