@@ -8,7 +8,7 @@ import { defaultLimit, maxLimit } from './../../../config';
 import * as moment from 'moment';
 import { Logger } from '../../../utils/logService';
 import { Auth } from '../../../auth/auth.class';
-import { SnomedModel } from '../../../../api/core/term/schemas/snomed';
+import { SnomedModel } from '../../../core/term/schemas/snomed';
 
 const async = require('async');
 const router = express.Router();
