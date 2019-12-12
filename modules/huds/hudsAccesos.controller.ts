@@ -19,7 +19,7 @@ export async function search(filtros) {
     }
 
     if (filtros.fechaHasta) {
-        fechas.push({ 'accesos.fecha': { $gte: new Date(filtros.fechaHasta) } });
+        fechas.push({ 'accesos.fecha': { $lte: new Date(filtros.fechaHasta) } });
         filtros['$and'] = fechas;
     }
 
