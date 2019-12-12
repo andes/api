@@ -51,6 +51,31 @@ export async function getResumenDiarioMensual(params: any) {
                             86400000
                         ]
                     }
+                },
+                turno: {
+                    $switch: {
+                        branches: [
+                            {
+                                case: {
+                                    $and: [
+                                        { $gte: [{ $hour: "$ejecucion.fecha" }, 7 ] },
+                                        { $lt: [{ $hour: "$ejecucion.fecha" }, 13] }
+                                    ]
+                                },
+                                then: "maniana"
+                            },
+                            {
+                                case: {
+                                    $and: [
+                                        { $gte: [{ $hour: "$ejecucion.fecha" }, 13 ] },
+                                        { $lt: [{ $hour: "$ejecucion.fecha" }, 20] }
+                                    ]
+                                },
+                                then: "tarde"
+                            },
+                        ],
+                        default: "noche"
+                    }
                 }
             }
         },
@@ -59,6 +84,7 @@ export async function getResumenDiarioMensual(params: any) {
                 _id: {
                     dia: '$dia',
                     sexo: '$pacienteSexo',
+                    turno: "$turno",
                     edad: {
                         $switch: {
                             branches: [
@@ -134,6 +160,7 @@ export async function getResumenDiarioMensual(params: any) {
                 _id: 0,
                 fechaISO:  '$fecha',
                 fecha: { $dateToString: { format: '%d-%m-%G', date: '$fecha' } },
+                turno: '$_id.turno',
                 sexo: '$_id.sexo',
                 edad: '$_id.edad',
                 total: '$total'
@@ -142,14 +169,20 @@ export async function getResumenDiarioMensual(params: any) {
         {
             $sort: {
                 fechaISO: 1,
-                edad: 1
+                edad: 1,
+                turno: 1
             }
-        }
+        },
+
     ];
 
     let data = await prestacionModel.aggregate(pipeline);
-
-    let formatedData = formatData(data, y, m);
+    // formateamos la data por los tres turnos disponibles
+    const turnos = ["maniana", "tarde", "noche"];
+    const formatedData = {};
+    for(const turno of turnos) {
+        formatedData[turno] = formatData(data.filter(x => x.turno == turno), y, m);
+    }
 
     return formatedData;
 }
