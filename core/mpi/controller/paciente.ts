@@ -931,12 +931,12 @@ export async function getHistorialPaciente(req, dataPaciente) {
         let pipelineTurno = [];
         let pipelineSobreturno = [];
         if (req.query.desde) {
-            pipelineTurno.push({ $match: { horaInicio: { $gte: req.query.desde.toDate() } } });
-            pipelineSobreturno.push({ $match: { horaInicio: { $gte: req.query.desde.toDate() } } });
+            pipelineTurno.push({ $match: { horaInicio: { $gte: moment(req.query.desde).toDate() } } });
+            pipelineSobreturno.push({ $match: { horaInicio: { $gte: moment(req.query.desde).toDate() } } });
         }
         if (req.query.hasta) {
-            pipelineTurno.push({ $match: { horaInicio: { $lte: req.query.hasta.toDate() } } });
-            pipelineSobreturno.push({ $match: { horaInicio: { $lte: req.query.hasta.toDate() } } });
+            pipelineTurno.push({ $match: { horaInicio: { $lte: moment(req.query.hasta).toDate() } } });
+            pipelineSobreturno.push({ $match: { horaInicio: { $lte: moment(req.query.hasta).toDate() } } });
             let organizacionId;
             if (req.query.organizacion) {
                 organizacionId = req.query.organizacion;
