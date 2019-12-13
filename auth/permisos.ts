@@ -166,7 +166,16 @@ export default [
             { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
             { key: 'inicio', title: 'Punto de inicio', type: 'boolean' },
             { key: 'mapaDeCamas', title: 'Mapa de camas', type: 'boolean' },
-            { key: 'descargarListado', title: 'Descargar listado internación', type: 'boolean' }
+            { key: 'descargarListado', title: 'Descargar listado internación', type: 'boolean' },
+            {
+                key: 'rol',
+                title: 'Rol del usuario',
+                child: [
+                    { key: 'medica', title: 'Médico', type: 'boolean' },
+                    { key: 'enfermeria', title: 'Enfermero', type: 'boolean' },
+                    { key: 'estadistica', title: 'Estadístico', type: 'boolean' },
+                ]
+            }
         ]
 
     },

@@ -79,10 +79,10 @@ export interface ICama {
  */
 
 export async function search({ organizacion, capa, ambito }: InternacionConfig, params: SearchParams): Promise<ICama[]> {
-    let timestamp = moment();
+    let timestamp = moment().toDate();
 
     if (params.fecha) {
-        timestamp = moment(params.fecha);
+        timestamp = moment(params.fecha).toDate();
     }
 
     return await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion: organizacion._id, ambito, capa }, params);

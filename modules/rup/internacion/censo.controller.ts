@@ -50,7 +50,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         const ultimoMovimiento = allMovimientos[allMovimientos.length - 1];
         const prestacion = prestaciones.find(p => String(p.id) === String(ultimoMovimiento.idInternacion));
         const informesInternacion: any = await getInformesInternacion(prestacion);
-        const fechaEgreso = informesInternacion.egreso.fechaEgreso;
+        const fechaEgreso = informesInternacion.egreso ? informesInternacion.egreso.fechaEgreso : null;
         const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
         const primerUO = String(allMovimientos[0].unidadOrganizativa._id);
         const ultimaUO = String(ultimoMovimiento.unidadOrganizativa._id);
@@ -70,13 +70,27 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             };
         }
 
-        if ((primerUO === String(unidadOrganizativa)) && (ultimaUO === String(unidadOrganizativa))) {
-            if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
-                ingresosYEgresos++;
-                tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
-                    ingreso: 'SI',
-                    egreso: informesInternacion.egreso.tipoEgreso.id,
-                });
+        if (fechaEgreso) {
+            if ((primerUO === String(unidadOrganizativa)) && (ultimaUO === String(unidadOrganizativa))) {
+                if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
+                    ingresosYEgresos++;
+                    tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                        ingreso: 'SI',
+                        egreso: informesInternacion.egreso.tipoEgreso.id,
+                    });
+                }
+            }
+            if (ultimaUO === String(unidadOrganizativa)) {
+                if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
+                    if (informesInternacion.egreso.tipoEgreso.id === 'Defuncion') {
+                        defunciones++;
+                    } else {
+                        altas++;
+                    }
+                    tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                        egreso: informesInternacion.egreso.tipoEgreso.id,
+                    });
+                }
             }
         }
 
@@ -97,18 +111,6 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             }
         }
 
-        if (ultimaUO === String(unidadOrganizativa)) {
-            if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
-                if (informesInternacion.egreso.tipoEgreso.id === 'Defuncion') {
-                    defunciones++;
-                } else {
-                    altas++;
-                }
-                tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
-                    egreso: informesInternacion.egreso.tipoEgreso.id,
-                });
-            }
-        }
 
         let movimientoAnterior;
         for (const movimiento of allMovimientos) {

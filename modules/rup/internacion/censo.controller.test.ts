@@ -200,6 +200,35 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         pacientesDia: 0,
         disponibles: 0
     });
+
+    const censoMan = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const censoManUO = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa: '5af19d078db89356597271fe' });
+
+    expect(censoMan.censo).toEqual({
+        existenciaALas0: 0,
+        ingresos: 0,
+        pasesDe: 0,
+        altas: 0,
+        defunciones: 0,
+        pasesA: 0,
+        existenciaALas24: 0,
+        ingresosYEgresos: 0,
+        pacientesDia: 0,
+        disponibles: 0
+    });
+
+    expect(censoManUO.censo).toEqual({
+        existenciaALas0: 1,
+        ingresos: 0,
+        pasesDe: 0,
+        altas: 0,
+        defunciones: 0,
+        pasesA: 0,
+        existenciaALas24: 1,
+        ingresosYEgresos: 0,
+        pacientesDia: 1,
+        disponibles: 0
+    });
 });
 
 test('Censo diario - Paciente ingresa y se queda', async () => {
@@ -893,7 +922,7 @@ function prestacion() {
                     },
                     valor: {
                         InformeEgreso: {
-                            fechaEgreso: moment(new Date()).add(1, 'days'),
+                            fechaEgreso: moment(new Date()).add(4, 'days'),
                             nacimientos: [
                                 {
                                     pesoAlNacer: null,

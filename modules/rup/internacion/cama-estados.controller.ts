@@ -8,7 +8,6 @@ import { AuditDocument } from '@andes/mongoose-plugin-audit';
 export async function snapshotEstados({ fecha, organizacion, ambito, capa }, filtros) {
     const firstMatch = {};
     const secondMatch = {};
-
     if (filtros.cama) {
         firstMatch['idCama'] = mongoose.Types.ObjectId(filtros.cama);
     }
@@ -121,7 +120,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             }
         },
         {
-            $project: { cama: 0 }
+            $project: { cama: 0, __v: 0 }
         }
     ];
 

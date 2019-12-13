@@ -23,7 +23,7 @@ router.get('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, 
         nombre: Auth.getOrganization(req, 'nombre')
     };
 
-    const result = await CamasController.findById({ organizacion, ambito: req.query.ambito, capa: req.query.capa }, req.params.id, req.query.timestamp);
+    const result = await CamasController.findById({ organizacion, ambito: req.query.ambito, capa: req.query.capa }, req.params.id, req.query.fecha);
 
     if (result) {
         return res.json(result);
@@ -37,7 +37,8 @@ router.post('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
-    const data = { ...req.body, organizacion };
+
+    const data = { ...req.body.params, organizacion };
 
     const result = await CamasController.store(data, req);
 
@@ -50,7 +51,7 @@ router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request
         nombre: Auth.getOrganization(req, 'nombre')
     };
 
-    const data = { ...req.body, organizacion, id: req.params.id };
+    const data = { ...req.body.params, organizacion, id: req.params.id };
 
     const result = await CamasController.patch(data, req);
 
