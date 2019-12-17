@@ -844,4 +844,57 @@ router.get('/pacientes/:id/turnos', async (req, res, next) => {
     }
 });
 
+
+router.get('/listado/csv', async (req, res, next) => {
+    let fechaIni = new Date('2018-08-30');
+    let pipeline = [{ '$match': { 'createdAt': { '$gte': fechaIni }, 'documento': { '$ne': '' }, 'activo': true } },
+    { '$addFields': { 'dire': { '$slice': ['$direccion', 0, 1] } } }, { '$unwind': '$dire' },
+    {
+        '$project': {
+            '_id': 1, 'nombre': 1, 'apellido': 1, 'documento': 1, 'sexo': 1, 'estado': 1, 'fechaNacimiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$fechaNacimiento' } },
+            'fechaEmpadronamiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$createdAt' } },
+            'efectorEmpadronamiento': '$createdBy.organizacion.nombre', 'idEfectorEmpadronamiento': '$createdBy.organizacion._id',
+            'provincia': '$dire.ubicacion.provincia.nombre', 'localidad': '$dire.ubicacion.localidad.nombre', 'calle': '$dire.valor',
+            'pais': '$dire.ubicacion.pais.nombre'
+        }
+    }];
+    try {
+        let resultadosAndes = await pacienteMpi.aggregate(pipeline);
+        // let resultadosMpi = pacienteMpi.find().exec();
+        // const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
+        // let listado = [...pacientes[0], ...pacientes[1]];
+
+        const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+        const csvWriter = createCsvWriter({
+            path: 'pacientesMPI.csv',
+            header: [
+                { id: '_id', title: 'IdPaciente' },
+                { id: 'documento', title: 'DNI' },
+                { id: 'nombre', title: 'Nombre' },
+                { id: 'apellido', title: 'Apellido' },
+                { id: 'sexo', title: 'Sexo' },
+                { id: 'estado', title: 'Estado' },
+                { id: 'fechaNacimiento', title: 'Fecha de Nacimiento' },
+                { id: 'fechaEmpadronamiento', title: 'Fecha de Empadronamiento' },
+                { id: 'efectorEmpadronamiento', title: 'Efector_Empadronamiento' },
+                { id: 'idEfectorEmpadronamiento', title: 'id_Efector_Empadronamiento' },
+                { id: 'provincia', title: 'Provincia' },
+                { id: 'localidad', title: 'Localidad' },
+                { id: 'calle', title: 'Calle' },
+                { id: 'pais', title: 'Pais' }
+            ]
+        });
+
+        csvWriter.writeRecords(resultadosAndes)       // returns a promise
+            .then(() => {
+                console.log('...Done');
+                res.json([]);
+            });
+    } catch (error) {
+        console.log(error);
+        return next(error);
+    }
+
+});
+
 export = router;
