@@ -5,6 +5,7 @@ import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { tipoPrestacionSchema } from './tipoPrestacion';
 
 export let MapaSectoresSchema = new Schema({
     tipoSector: SnomedConcept,
@@ -55,7 +56,7 @@ const _schema = new Schema({
     mapaSectores: [MapaSectoresSchema],
     unidadesOrganizativas: [SnomedConcept],
     configuraciones: SchemaTypes.Mixed,
-    ofertaPrestacional: [{ idSisa: Number, nombre: String }] // "prestaciones" traidas de sisa. Se muestran en la app mobile
+    ofertaPrestacional: [{ prestacion: tipoPrestacionSchema, detalle: String }] // "prestaciones" traidas de sisa. Se muestran en la app mobile
 });
 
 _schema.plugin(AuditPlugin);
