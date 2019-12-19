@@ -184,6 +184,11 @@ export const modules = {
         route: '/modules/facturacionAutomatica',
         middleware: appMiddleware
     },
+    biQueries: {
+        active: true,
+        path: './modules/bi-queries/routes',
+        route: '/modules/bi-queries'
+    },
     carpetas: {
         active: true,
         path: './modules/carpetas/routes',
