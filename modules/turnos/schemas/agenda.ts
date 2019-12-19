@@ -6,6 +6,7 @@ import * as turnoSchema from '../../../modules/turnos/schemas/turno';
 import { NombreApellidoSchema } from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { InstitucionSchema } from '../institucion.schema';
 
 const schema = new mongoose.Schema({
     organizacion: {
@@ -19,6 +20,10 @@ const schema = new mongoose.Schema({
     profesionales: [NombreApellidoSchema],
     espacioFisico: {
         type: espacioFisicoSchema
+    },
+    otroEspacioFisico: {
+        type: InstitucionSchema,
+        required: false
     },
     horaInicio: {
         type: Date,
