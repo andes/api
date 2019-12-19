@@ -825,9 +825,24 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
 
     try {
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resRenaper);
+        if (pacienteAndes.id) {
+            const weights = config.mpi.weightsDefault;
+            let match = new Matching();
+            let matchPacienteRena = {
+                documento: pacienteAndes.documento,
+                nombre: resRenaper.datos.nombres,
+                apellido: resRenaper.datos.apellido,
+                fechaNacimiento: resRenaper.datos.fechaNacimiento,
+                sexo: sexoQuery
+            };
+            let valorMatching = match.matchPersonas(pacienteAndes, matchPacienteRena, weights, config.algoritmo);
+            resRenaper.datos.matching = valorMatching;
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper.datos, pacienteAndes);
+        } else {
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper.datos, null);
+        }
     } catch (error) {
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
