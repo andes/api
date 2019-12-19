@@ -2,6 +2,7 @@ import { model, Model, Types, SchemaTypes, Schema, Document } from 'mongoose';
 
 export interface IPantalla extends Document {
     nombre: String;
+    tipo: String;
     token: String;
     organizacion: Types.ObjectId;
     expirationTime: Date;
@@ -16,6 +17,7 @@ export interface IPantalla extends Document {
 
 export const TurneroPantallaSchema = new Schema({
     nombre: String,
+    tipo: String,
     token: { type: String, required: false },
     organizacion: SchemaTypes.ObjectId,
     expirationTime: Date,

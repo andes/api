@@ -359,7 +359,7 @@ export class Auth {
      * @memberOf Auth
      */
 
-    static generateAppToken(user: any, organizacion: any, permisos: string[], type: 'app-token' | 'turnero-token' = 'app-token'): any {
+    static generateAppToken(user: any, organizacion: any, permisos: string[], type: 'app-token' | 'turnero-token' | 'totem-token' = 'app-token'): any {
         // Un token por organización. A futuro distintos permisos en la organización externa deberá modificarse esto!
         const token: AppToken = {
             id: mongoose.Types.ObjectId(),
