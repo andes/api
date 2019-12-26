@@ -43,7 +43,7 @@
     "fast-csv": "^2.5.0",
     "geojson": "^0.4.1",
     "gridfs-stream": "^1.1.1",
-    "handlebars": "^4.1.0",
+    "handlebars": "^4.3.0",
     "html-pdf": "^2.2.0",
     "http": "0.0.0",
     "http-status-codes": "^1.1.6",
