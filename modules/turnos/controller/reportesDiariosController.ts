@@ -58,23 +58,23 @@ export async function getResumenDiarioMensual(params: any) {
                             {
                                 case: {
                                     $and: [
-                                        { $gte: [{ $hour: "$ejecucion.fecha" }, 7 ] },
-                                        { $lt: [{ $hour: "$ejecucion.fecha" }, 13] }
+                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 7 ] },
+                                        { $lt: [{ $hour: '$ejecucion.fecha' }, 13] }
                                     ]
                                 },
-                                then: "maniana"
+                                then: 'maniana'
                             },
                             {
                                 case: {
                                     $and: [
-                                        { $gte: [{ $hour: "$ejecucion.fecha" }, 13 ] },
-                                        { $lt: [{ $hour: "$ejecucion.fecha" }, 20] }
+                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 13 ] },
+                                        { $lt: [{ $hour: '$ejecucion.fecha' }, 20] }
                                     ]
                                 },
-                                then: "tarde"
+                                then: 'tarde'
                             },
                         ],
-                        default: "noche"
+                        default: 'noche'
                     }
                 }
             }
@@ -84,7 +84,7 @@ export async function getResumenDiarioMensual(params: any) {
                 _id: {
                     dia: '$dia',
                     sexo: '$pacienteSexo',
-                    turno: "$turno",
+                    turno: '$turno',
                     edad: {
                         $switch: {
                             branches: [
@@ -178,7 +178,7 @@ export async function getResumenDiarioMensual(params: any) {
 
     let data = await prestacionModel.aggregate(pipeline);
     // formateamos la data por los tres turnos disponibles
-    const turnos = ["maniana", "tarde", "noche"];
+    const turnos = ['maniana', 'tarde', 'noche'];
     const formatedData = {};
     for(const turno of turnos) {
         formatedData[turno] = formatData(data.filter(x => x.turno == turno), y, m);
