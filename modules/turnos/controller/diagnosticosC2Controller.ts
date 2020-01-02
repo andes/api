@@ -186,22 +186,24 @@ export function getDiagnosticos(params) {
             }
         ];
 
-        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
-        const data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
-        let data2 = await toArray(codificacionModel.aggregate(pipeline2).cursor({}).exec());
-        data = data.concat(data1, data2);
+        let p1 = toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        let p2 = toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
+        let p3 = toArray(codificacionModel.aggregate(pipeline2).cursor({}).exec());
 
+        let [diagnosticosTurnos, diagnosticosSobreturnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2, p3]);
+
+        let diagnosticos = diagnosticosTurnos.concat(diagnosticosSobreturnos, diagnosticosFueraAgenda);
 
         let arr = [];
         // Se carga el arreglo arr con todos los reporte C2 de data, sin repetir.
-        data.forEach(e => {
+        diagnosticos.forEach(e => {
             if (!arr.some(x => { return e.codigo.reporteC2 === x.codigo.reporteC2; })) {
                 arr.push({ _id: e._id, codigo: e.codigo, paciente: [] });
             }
         });
 
         // A cada reporte C2 le carga los pacientes sin repetir
-        data.forEach(e => {
+        diagnosticos.forEach(e => {
             let match = arr.filter(ee => ee.codigo.reporteC2 === e.codigo.reporteC2)[0];
             e.paciente.forEach(pac => {
                 if (!match.paciente.some(pac2 => { return pac.documento === pac2.documento && pac.sexo === pac2.sexo; })) {
