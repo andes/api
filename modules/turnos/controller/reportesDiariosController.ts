@@ -58,7 +58,7 @@ export async function getResumenDiarioMensual(params: any) {
                             {
                                 case: {
                                     $and: [
-                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 7 ] },
+                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 7] },
                                         { $lt: [{ $hour: '$ejecucion.fecha' }, 13] }
                                     ]
                                 },
@@ -67,7 +67,7 @@ export async function getResumenDiarioMensual(params: any) {
                             {
                                 case: {
                                     $and: [
-                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 13 ] },
+                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 13] },
                                         { $lt: [{ $hour: '$ejecucion.fecha' }, 20] }
                                     ]
                                 },
@@ -180,8 +180,8 @@ export async function getResumenDiarioMensual(params: any) {
     // formateamos la data por los tres turnos disponibles
     const turnos = ['maniana', 'tarde', 'noche'];
     const formatedData = {};
-    for(const turno of turnos) {
-        formatedData[turno] = formatData(data.filter(x => x.turno == turno), y, m);
+    for (const turno of turnos) {
+        formatedData[turno] = formatData(data.filter(x => x.turno === turno), y, m);
     }
 
     return formatedData;
