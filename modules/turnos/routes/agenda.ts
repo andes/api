@@ -200,6 +200,10 @@ router.get('/agenda/:id?', (req, res, next) => {
             query.where('espacioFisico._id').equals(req.query.espacioFisico);
         }
 
+        if (req.query.otroEspacioFisico) {
+            query.where('otroEspacioFisico._id').equals(req.query.otroEspacioFisico);
+        }
+
         if (req.query.estado) {
             query.where('estado').equals(req.query.estado);
         }

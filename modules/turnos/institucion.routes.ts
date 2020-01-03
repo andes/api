@@ -1,18 +1,25 @@
-import { institucion } from './institucion.schema';
+import { institucion, IInstitucion } from './institucion.schema';
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { Auth } from '../../auth/auth.class';
 
-
-class InstitucionResource extends ResourceBase {
+class InstitucionResource extends ResourceBase<IInstitucion>  {
     Model = institucion;
     resourceName = 'institucion';
     keyId = '_id';
     searchFileds = {
-        search: (value) => {
-            return {
-                nombre: (text: string) => new RegExp(`^${text}`)
-            };
+        _id: MongoQuery.partialString,
+        nombre: MongoQuery.partialString,
+        detalle: MongoQuery.partialString,
+        tipo: MongoQuery.partialString,
+        customFieldContacto: {
+            field: 'contacto.valor',
+            fn: MongoQuery.partialString
         },
+        customFieldDireccion: {
+            field: 'direccion.valor',
+            fn: MongoQuery.partialString
+        },
+        activo: MongoQuery.equalMatch,
+        search: ['_id', 'nombre', 'detalle', 'tipo', 'customFieldContacto', 'customFieldDireccion']
     };
 }
 

@@ -409,7 +409,11 @@ export function editarAgenda(req, data) {
     if (req.body.profesional) {
         data.profesionales = req.body.profesional;
     }
-    data.espacioFisico = req.body.espacioFisico;
+    if (req.body.espacioFisico) {
+        data.espacioFisico = req.body.espacioFisico;
+    } else {
+        data.otroEspacioFisico = req.body.otroEspacioFisico;
+    }
 }
 
 // Agenda
