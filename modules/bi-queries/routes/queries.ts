@@ -1,15 +1,48 @@
 import * as express from 'express';
-import { EventCore } from '@andes/event-bus';
+
+const request = require('request');
 
 let router = express.Router();
 
 router.get('/biQueries', async (req, res, next) => {
-    console.log("Entra a biqueries");
-    let pepe = 'Capoooo';
-    EventCore.emitAsync('queries:consultas:getQueries', pepe);
-
-    res.json({ message: 'Enviado a bi queries' });
+    let url = 'http://localhost:3000/';
+    let resp: any;
+    let options = {
+        method: 'POST',
+        uri: `${url}queries/descargarCsv`,
+        body: {
+            event: 'queries:consultas:getQueries',
+            data: ''
+        },
+        json: true,
+        timeout: 10000,
+    };
+    request(options, async (error, response, _body) => {
+        if (error) {
+            return next(error);
+        }
+        res.send(_body);
+    });
 });
-
+router.post('/descargarCSV', async (req, res, next) => {
+    let url = 'http://localhost:3000/';
+    let resp: any;
+    let options = {
+        method: 'POST',
+        uri: `${url}queries/descargarCsv`,
+        body: {
+            event: 'queries:consultas:getCsv',
+            data: req.body.params
+        },
+        json: true,
+        timeout: 10000,
+    };
+    request(options, async (error, response, _body) => {
+        if (error) {
+            return next(error);
+        }
+        res.send(_body);
+    });
+});
 
 export = router;
