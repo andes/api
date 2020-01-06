@@ -278,11 +278,6 @@ router.get('/prestaciones/solicitudes', async (req, res, next) => {
             match.$and.push({ 'solicitud.tipoPrestacion.id': { $eq: Types.ObjectId(req.query.prestacionDestino) } });
         }
 
-        if (req.query.prestacionDestino) {
-            match.$and.push({ 'solicitud.organizacionOrigen': { $exists: true } });
-            match.$and.push({ 'solicitud.organizacionOrigen.id': Types.ObjectId(req.query.organizacionOrigen) });
-        }
-
         if (req.query.tipoPrestaciones) {
             match.$and.push({ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } });
             match.$and.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } });
