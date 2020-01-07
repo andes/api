@@ -9,7 +9,7 @@ router.get('/biQueries', async (req, res, next) => {
     let resp: any;
     let options = {
         method: 'POST',
-        uri: `${url}queries/descargarCsv`,
+        uri: `${url}queries/obtenerQueries`,
         body: {
             event: 'queries:consultas:getQueries',
             data: ''
