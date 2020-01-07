@@ -31,7 +31,6 @@ export async function getResumenDiarioMensual(params: any) {
                 estado: { $arrayElemAt: ['$estados', -1] }
             }
         },
-        
         {
             $match: {
                 'estado.tipo': 'validada',
