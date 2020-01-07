@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
+// 'motivoRechazo' se reemplaza con 'observaciones'. Dejar temporalmente ambos campos y remover 'motivoRechazo' una vez que la implementación de 'observaciones' se
 export let schema = new mongoose.Schema({
     tipo: {
         type: String,
@@ -13,6 +14,11 @@ export let schema = new mongoose.Schema({
         default: null
     },
     motivoRechazo: {
+        type: String,
+        required: false,
+        default: null
+    },
+    observaciones: {
         type: String,
         required: false,
         default: null
