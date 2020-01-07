@@ -32,6 +32,8 @@ export let profesionalSchema = new mongoose.Schema({
     sexo: { type: String, required: false },
     contactos: [contactoSchema],
     domicilios: [direccionSchema],
+    validadoRenaper: { type: Boolean, default: false },
+    foto: { type: String, required: false },
     fotoArchivo: { type: String, required: false },
     firmas: [{
         imgArchivo: { type: String, required: false },
