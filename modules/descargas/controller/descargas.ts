@@ -124,6 +124,7 @@ export class Documento {
             'trastorno',
             'objeto físico',
             'medicamento clínico',
+            'fármaco de uso clínico'
         ],
 
         procedimientos: [

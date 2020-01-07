@@ -23,6 +23,7 @@ export let SemanticTag = {
         'trastorno',
         'régimen/tratamiento',
         'medio ambiente',
-        'medicamento clínico'
+        'medicamento clínico',
+        'fármaco de uso clínico'
     ]
 };
