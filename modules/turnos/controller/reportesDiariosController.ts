@@ -14,14 +14,6 @@ export async function getResumenDiarioMensual(params: any) {
 
     pipeline = [
         {
-            $project: {
-                solicitud: 1,
-                ejecucion: 1,
-                paciente: 1,
-                estado: { $arrayElemAt: ['$estados', -1] }
-            }
-        },
-        {
             $match: {
                 'solicitud.fecha': {
                     $gte: firstDay,
@@ -29,6 +21,19 @@ export async function getResumenDiarioMensual(params: any) {
                 },
                 'solicitud.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
                 'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['prestacion']),
+            }
+        },
+        {
+            $project: {
+                solicitud: 1,
+                ejecucion: 1,
+                paciente: 1,
+                estado: { $arrayElemAt: ['$estados', -1] }
+            }
+        },
+        
+        {
+            $match: {
                 'estado.tipo': 'validada',
             }
         },
