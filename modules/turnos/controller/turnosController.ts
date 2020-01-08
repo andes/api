@@ -218,6 +218,9 @@ export async function getHistorialPaciente(req) {
                         },
                         espacioFisico: {
                             $first: '$espacioFisico'
+                        },
+                        otroEspacioFisico: {
+                            $first: '$otroEspacioFisico'
                         }
                     }
                 },
@@ -296,6 +299,7 @@ export async function getHistorialPaciente(req) {
                 turno.profesionales = elem.profesionales;
                 turno.paciente = elem.turno.paciente;
                 turno.espacioFisico = elem.espacioFisico;
+                turno.otroEspacioFisico = elem.otroEspacioFisico;
                 turnos.push(turno);
             });
             return (turnos);
