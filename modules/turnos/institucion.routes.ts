@@ -6,15 +6,14 @@ class InstitucionResource extends ResourceBase<IInstitucion>  {
     resourceName = 'institucion';
     keyId = '_id';
     searchFileds = {
-        _id: MongoQuery.partialString,
         nombre: MongoQuery.partialString,
         detalle: MongoQuery.partialString,
         tipo: MongoQuery.partialString,
-        customFieldContacto: {
+        contacto: {
             field: 'contacto.valor',
             fn: MongoQuery.partialString
         },
-        customFieldDireccion: {
+        direccion: {
             field: 'direccion.valor',
             fn: MongoQuery.partialString
         },

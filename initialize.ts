@@ -71,7 +71,6 @@ export function initAPI(app: Express) {
     app.use('/api/modules/huds', require('./modules/huds').HudsAccesoRouter);
     app.use('/api/modules/webhook', require('./modules/webhook').WebhookRouter);
     app.use('/api/modules/webhook', require('./modules/webhook/webhooklog').WebhookLogRouter);
-<<<<<<< HEAD
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').CamasRouter);
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').EstadosRouter);
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').CensosRouter);
@@ -83,10 +82,8 @@ export function initAPI(app: Express) {
             proxy(configPrivate.hosts.BI_QUERY)
         );
     }
-=======
     app.use('/api/modules/turnos', require('./modules/turnos').InstitucionRouter);
 
->>>>>>> feat(instituciones): se agrega esquema instituciones
 
     /**
      * Inicializa las rutas para adjuntar archivos
