@@ -82,6 +82,7 @@ export async function exportarInternaciones(filtros, idOrganizacion) {
             let informeDeIngreso = documento.ejecucion.registros[0].valor.informeIngreso;   // para acceder a informes
             let informeDeEgreso = (datosEgreso) ? documento.ejecucion.registros[1].valor.InformeEgreso : null;
             const paciente: any = (await buscarPaciente(documento.paciente.id)).paciente;
+
             let mapEspecialidadServicio: any = (informeDeIngreso.especialidades) ? mapeoEspecialidadServicio.find(map => map.codigoOrigen === informeDeIngreso.especialidades[0].conceptId) : null; // la primer especialidad que encuentre
             let ubicacion = (paciente.direccion && paciente.direccion.length && paciente.direccion[0].ubicacion) ? paciente.direccion[0].ubicacion : null; // path ubicacion en coleccion 'paciente'
             let datosLocalidad = (ubicacion && ubicacion.localidad) ? localidades.find(loc => loc.id === ubicacion.localidad.id) : null; // documento de coleccion 'localidad' correspondiente a la del paciente
@@ -118,8 +119,8 @@ export async function exportarInternaciones(filtros, idOrganizacion) {
                     PaisRes: 'Argentina',
                     CodSexo: CodSexo[paciente.sexo],
                     Sexo: paciente.sexo,
-                    CodAsoc: (informeDeIngreso.obraSocial !== null) ? 1 : 5,
-                    Osoc: (informeDeIngreso.obraSocial !== null) ? informeDeIngreso.obraSocial.nombre : '',
+                    CodAsoc: (informeDeIngreso.obraSocial) ? 1 : 5,
+                    Osoc: (informeDeIngreso.obraSocial) ? informeDeIngreso.obraSocial.nombre : '',
                     CodNivelI: CodNivelI[informeDeIngreso.nivelInstruccion],
                     NivelInst: informeDeIngreso.nivelInstruccion,
                     CodSitLab: CodSitLab[informeDeIngreso.situacionLaboral],
