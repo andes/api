@@ -102,7 +102,9 @@ const turnoSchema = new mongoose.Schema({
     },
     confirmedAt: Date, /* Confirmación del turno por el  paciente */
     updatedAt: Date,
-    updatedBy: mongoose.Schema.Types.Mixed
+    updatedBy: mongoose.Schema.Types.Mixed,
+    fechaHoraDacion: Date,
+    usuarioDacion: mongoose.Schema.Types.Mixed
 });
 
 export = turnoSchema;

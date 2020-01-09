@@ -76,6 +76,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         // Copia la organización desde el token
         usuario.organizacion = (req as any).user.organizacion;
         const tipoTurno = (esHoy ? 'delDia' : 'programado');
+        const fecha = new Date();
         const turno = {
             horaInicio: (agendaRes as any).horaInicio,
             estado: 'asignado',
@@ -84,8 +85,10 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             motivoConsulta: req.body.motivoConsulta,
             paciente: req.body.paciente,
             tipoPrestacion: req.body.tipoPrestacion,
-            updatedAt: new Date(),
-            updatedBy: usuario
+            updatedAt: fecha,
+            updatedBy: usuario,
+            fechaHoraDacion: fecha,
+            usuarioDacion: usuario
         };
         const turnos = ((agendaRes as any).bloques[0].turnos);
         turnos.push(turno);
