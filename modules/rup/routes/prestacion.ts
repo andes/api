@@ -325,7 +325,7 @@ router.get('/prestaciones/solicitudes', async (req, res, next) => {
             pipeline.push({ $limit: parseInt(req.query.limit, 10) });
         }
 
-        res.json(await Prestacion.aggregate(pipeline));
+        res.json(await Prestacion.aggregate(pipeline).allowDiskUse(true));
     } catch (err) {
         return next(404);
     }
