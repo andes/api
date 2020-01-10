@@ -279,6 +279,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
         const etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
         const etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
+        const etiquetaUsuarioDacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.usuarioDacion';
+        const etiquetaFechHoraDacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.fechaHoraDacion';
 
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
@@ -296,6 +298,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         }
         update[etiquetaUpdateAt] = new Date();
         update[etiquetaUpdateBy] = usuario;
+        update[etiquetaUsuarioDacion] = usuario;
+        update[etiquetaFechHoraDacion] = new Date();
 
         const query = {
             _id: req.body.idAgenda,
@@ -322,7 +326,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
                     nota: update[etiquetaNota],
                     emitidoPor: update[etiquetaEmitidoPor], // agregamos el emitidoPor
-                    motivoConsulta: update[etiquetaMotivoConsulta]
+                    motivoConsulta: update[etiquetaMotivoConsulta],
+                    usuarioDacion: update[etiquetaUsuarioDacion],
+                    fechaHoraDacion: update[etiquetaFechHoraDacion]
                 };
 
                 // Se actualiza el campo financiador del paciente

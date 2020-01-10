@@ -1063,6 +1063,7 @@ export function actualizarTurnosMobile() {
             localAddress: ''
         }
     };
+
     return cursor.eachAsync(async doc => {
         const agenda: any = doc;
         try {
