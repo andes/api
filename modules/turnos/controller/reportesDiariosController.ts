@@ -6,6 +6,7 @@ import * as mongoose from 'mongoose';
 export async function getResumenDiarioMensual(params: any) {
 
     let pipeline = [];
+
     let y = params['anio'];
     let m = params['mes'] - 1;
     let firstDay = new Date(y, m, 1);
@@ -14,57 +15,41 @@ export async function getResumenDiarioMensual(params: any) {
     pipeline = [
         {
             $match: {
-                horaInicio: {
+                'solicitud.fecha': {
                     $gte: firstDay,
                     $lte: lastDay
                 },
-                'organizacion._id': new mongoose.Types.ObjectId(params['organizacion']),
-                'tipoPrestaciones._id': new mongoose.Types.ObjectId(params['prestacion']),
-                estado: { $nin: ['borrada', 'suspendida'] }
+                'solicitud.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
+                'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['prestacion']),
             }
         },
         {
-            $unwind: {
-                path: '$tipoPrestaciones'
-            }
-        },
-        {
-            $match: {
-                'organizacion._id': new mongoose.Types.ObjectId(params['organizacion']),
-                'tipoPrestaciones._id': new mongoose.Types.ObjectId(params['prestacion']),
-                estado: { $nin: ['borrada', 'suspendida'] }
-            }
-        },
-        {
-            $unwind: {
-                path: '$bloques'
-            }
-        },
-        {
-            $unwind: {
-                path: '$bloques.turnos'
+            $project: {
+                solicitud: 1,
+                ejecucion: 1,
+                paciente: 1,
+                estado: { $arrayElemAt: ['$estados', -1] }
             }
         },
         {
             $match: {
-                'bloques.turnos.estado': 'asignado',
-
-                'bloques.turnos.asistencia': 'asistio'
+                'estado.tipo': 'validada',
             }
         },
         {
             $project: {
                 _id: 0,
-                fecha: '$horaInicio',
-                turnoEstado: '$bloques.turnos.estado',
-                pacienteSexo: '$bloques.turnos.paciente.sexo',
+                fecha: '$ejecucion.fecha',
+                dia: { $dayOfMonth: '$ejecucion.fecha' },
+                turnoEstado: '$estado.tipo',
+                pacienteSexo: '$paciente.sexo',
                 pacienteEdad: {
                     $trunc: {
                         $divide: [
                             {
                                 $subtract: [
-                                    '$horaInicio',
-                                    '$bloques.turnos.paciente.fechaNacimiento'
+                                    '$ejecucion.fecha',
+                                    '$paciente.fechaNacimiento'
                                 ]
                             },
                             86400000
@@ -76,7 +61,7 @@ export async function getResumenDiarioMensual(params: any) {
         {
             $group: {
                 _id: {
-                    fecha: '$fecha',
+                    dia: '$dia',
                     sexo: '$pacienteSexo',
                     edad: {
                         $switch: {
@@ -144,14 +129,15 @@ export async function getResumenDiarioMensual(params: any) {
                         }
                     }
                 },
-                total: { $sum: 1 }
+                total: { $sum: 1 },
+                fecha: {$first: '$fecha'},
             }
         },
         {
             $project: {
                 _id: 0,
-                fechaISO:  '$_id.fecha',
-                fecha: { $dateToString: { format: '%d-%m-%G', date: '$_id.fecha' } },
+                fechaISO:  '$fecha',
+                fecha: { $dateToString: { format: '%d-%m-%G', date: '$fecha' } },
                 sexo: '$_id.sexo',
                 edad: '$_id.edad',
                 total: '$total'
@@ -165,7 +151,7 @@ export async function getResumenDiarioMensual(params: any) {
         }
     ];
 
-    let data = await agendaModel.aggregate(pipeline);
+    let data = await prestacionModel.aggregate(pipeline);
 
     let formatedData = formatData(data, y, m);
 
@@ -214,8 +200,9 @@ function formatData(data: any, anio: number, mes: number) {
 
             reg.total.m = sumarTotal(currData, 'masculino');
             reg.total.f = sumarTotal(currData, 'femenino');
-            reg.total.total = currData.map(r => { return r.total; }).reduce((a, b) => { return a + b; });
+            reg.total.total = currData.map(r => { return r.total ; }).reduce((a, b) => { return a + b; });
         }
+
         res.push(reg);
     }
 
@@ -290,7 +277,7 @@ function sumar(currData, sexo, edad) {
 
 function sumarTotal(currData, sexo) {
     let cantidad = currData.filter(r => r.sexo === sexo);
-    return cantidad.length > 0 ? cantidad.map(r => { return r.total; }).reduce((a, b) => { return a + b; }) : 0;
+    return cantidad.length > 0 ? cantidad.map(r => { return r.total ; }).reduce((a, b) => { return a + b; }) : 0;
 }
 
 export async function getPlanillaC1(params: any) {
@@ -393,5 +380,4 @@ export async function getPlanillaC1(params: any) {
     );
 
     return data;
-
 }
