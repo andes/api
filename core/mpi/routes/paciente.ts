@@ -833,9 +833,8 @@ router.get('/pacientes/:id/turnos', async (req, res, next) => {
     try {
         let resultado = await controller.buscarPaciente(req.params.id);
         if (resultado) {
-            const turnosResult = controller.getHistorialPaciente(req, resultado.paciente);
-            const turnos = await Promise.all([turnosResult]);
-            res.json(turnos);
+            const turnosResult = await controller.getHistorialPaciente(req, resultado.paciente);
+            res.json(turnosResult);
         } else {
             return next('Paciente no encontrado');
         }

@@ -976,12 +976,12 @@ export async function getHistorialPaciente(req, dataPaciente) {
         let pipelineTurno = [];
         let pipelineSobreturno = [];
         if (req.query.desde) {
-            pipelineTurno.push({ $match: { horaInicio: { $gte: req.query.desde.toDate() } } });
-            pipelineSobreturno.push({ $match: { horaInicio: { $gte: req.query.desde.toDate() } } });
+            pipelineTurno.push({ $match: { horaInicio: { $gte: moment(req.query.desde).startOf('day').toDate() } } });
+            pipelineSobreturno.push({ $match: { horaInicio: { $gte: moment(req.query.desde).startOf('day').toDate() } } });
         }
         if (req.query.hasta) {
-            pipelineTurno.push({ $match: { horaInicio: { $lte: req.query.hasta.toDate() } } });
-            pipelineSobreturno.push({ $match: { horaInicio: { $lte: req.query.hasta.toDate() } } });
+            pipelineTurno.push({ $match: { horaInicio: { $lte: moment(req.query.hasta).endOf('day').toDate() } } });
+            pipelineSobreturno.push({ $match: { horaInicio: { $lte: moment(req.query.hasta).endOf('day').toDate() } } });
         }
         if (req.query.organizacion) {
             pipelineTurno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
