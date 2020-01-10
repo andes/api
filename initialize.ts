@@ -14,11 +14,12 @@ import { apiOptionsMiddleware } from '@andes/api-tool';
 const requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
+    // Inicializa Mongoose
+    Connections.initialize();
+
     // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
 
-    // Inicializa Mongoose
-    Connections.initialize();
 
     // Configura Express
     app.use(bodyParser.json({ limit: '150mb' }));

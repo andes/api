@@ -269,7 +269,7 @@ router.get('/paciente/', async (req: any, res, next) => {
 
 router.get('/paciente/:id', async (req: any, res, next) => {
     if (ObjectId.isValid(req.params.id)) {
-        if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token')) {
+        if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
             return next(403);
         }
         let pacienteID = req.params.id;
@@ -357,7 +357,7 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
 
-    if (!Auth.check(req, 'cda:list') || req.user.type !== 'paciente-token' ) {
+    if (!Auth.check(req, 'cda:list') || req.user.type !== 'paciente-token') {
         return next(403);
     }
     let pacienteID = req.params.id;
