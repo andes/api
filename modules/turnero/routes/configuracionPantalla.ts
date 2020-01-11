@@ -99,7 +99,6 @@ router.patch('/pantalla/:id', Auth.authenticate(), async (req, res, next) => {
         const id = req.params.id;
         const data = req.body;
         const pantalla = await TurneroPantalla.findByIdAndUpdate(id, data, { new: true });
-
         res.json(pantalla);
         EventCore.emitAsync('turnero-update', { pantalla });
         return;

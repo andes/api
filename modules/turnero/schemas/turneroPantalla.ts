@@ -13,6 +13,7 @@ export interface IPantalla extends Document {
         }
     };
     playlist?: String;
+    bloqueada: Boolean;
 }
 
 export const TurneroPantallaSchema = new Schema({
@@ -27,6 +28,7 @@ export const TurneroPantallaSchema = new Schema({
         nombre: String
     }],
     playlist: { type: String, required: false },
+    bloqueada: Boolean
 });
 
 export const TurneroPantalla: Model<IPantalla> = model('turneroPantallas', TurneroPantallaSchema, 'turneroPantallas');
