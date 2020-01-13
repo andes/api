@@ -19,7 +19,7 @@ export async function procesar(parametros: any) {
     };
 
     if (parametros.documento) {
-        match['paciente.documento'] =  parametros.documento;
+        match['paciente.documento'] = parametros.documento;
     }
 
     if (parametros.estadoFacturacion) {
@@ -79,7 +79,7 @@ export async function procesar(parametros: any) {
         await prestaciones.eachAsync(async (prestacion, error) => {
             let filtroOS = false;
             let dtoPrestacion = {
-                fecha: prestacion.createdAt,
+                fecha: prestacion.prestacion.ejecucion.fecha,
                 paciente: prestacion.paciente,
                 financiador: prestacion.paciente && prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial : null,
                 prestacion: prestacion.prestacion.solicitud.tipoPrestacion,
