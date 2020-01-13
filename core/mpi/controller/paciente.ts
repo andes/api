@@ -765,7 +765,7 @@ export async function matchPaciente(dataPaciente) {
  * @param {*} nuevoPaciente
  * @returns Promise<boolean> || error
  */
-export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching: any[], dniRepetido: boolean, macheoAlto: boolean }> {
+export async function checkRepetido(nuevoPaciente, incluirTemporales = true): Promise<{ resultadoMatching: any[], dniRepetido: boolean, macheoAlto: boolean }> {
     let matchingInputData = {
         type: 'suggest',
         claveBlocking: 'documento',
@@ -786,7 +786,7 @@ export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching:
     // Extraemos los validados de los resultados
     let similaresValidados = candidatos.filter(elem => elem.paciente.estado === 'validado');
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
-    if (nuevoPaciente.estado === 'validado') {
+    if (nuevoPaciente.estado === 'validado' || !incluirTemporales) {
         candidatos = similaresValidados;
     }
 
