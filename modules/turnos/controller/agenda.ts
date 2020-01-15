@@ -197,6 +197,43 @@ export function suspenderTurno(req, data, turno) {
     }
 }
 
+
+function condificarUnturno(registro, codigoCie10, codificaciones) {
+    if (registro.esDiagnosticoPrincipal) {
+        codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+            codificacionProfesional: {
+                snomed: {
+                    conceptId: registro.concepto.conceptId,
+                    term: registro.concepto.term,
+                    fsn: registro.concepto.fsn,
+                    semanticTag: registro.concepto.semanticTag,
+                    refsetIds: registro.concepto.refsetIds
+                },
+                cie10: codigoCie10
+            },
+            primeraVez: registro.esPrimeraVez,
+        });
+
+    } else {
+        codificaciones.push({
+            codificacionProfesional: {
+                snomed: {
+                    conceptId: registro.concepto.conceptId,
+                    term: registro.concepto.term,
+                    fsn: registro.concepto.fsn,
+                    semanticTag: registro.concepto.semanticTag,
+                    refsetIds: registro.concepto.refsetIds
+                },
+                cie10: codigoCie10
+            },
+            primeraVez: registro.esPrimeraVez
+        });
+    }
+
+    return codificaciones;
+
+}
+
 // Turno
 export function codificarTurno(req, data, tid) {
     return new Promise((resolve, reject) => {
@@ -216,97 +253,50 @@ export function codificarTurno(req, data, tid) {
                 const prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
                     return f.concepto.semanticTag !== 'elemento de registro';
                 });
-                prestaciones.forEach(registro => {
+                prestaciones.forEach(async registro => {
                     const parametros = {
                         conceptId: registro.concepto.conceptId,
                         paciente: turno.paciente,
                         secondaryConcepts: prestaciones.map(r => r.concepto.conceptId)
                     };
                     const map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
-                    map.transform(parametros.conceptId).then(target => {
+                    try {
+                        let codigoCie10: any = {
+                            codigo: 'Mapeo no disponible'
+                        };
+                        let target = await map.transform(parametros.conceptId);
                         if (target) {
-                            // Buscar en cie10 los primeros 5 digitos
-                            cie10.model.findOne({
+                            let cie = await cie10.model.findOne({
                                 codigo: (target as String).substring(0, 5)
-                            }).then(cie => {
-                                if (cie != null) {
-                                    if (registro.esDiagnosticoPrincipal) {
-                                        codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
-                                            codificacionProfesional: {
-                                                snomed: {
-                                                    conceptId: registro.concepto.conceptId,
-                                                    term: registro.concepto.term,
-                                                    fsn: registro.concepto.fsn,
-                                                    semanticTag: registro.concepto.semanticTag,
-                                                    refsetIds: registro.concepto.refsetIds
-                                                },
-                                                cie10: {
-                                                    causa: (cie as any).causa,
-                                                    subcausa: (cie as any).subcausa,
-                                                    codigo: (cie as any).codigo,
-                                                    nombre: (cie as any).nombre,
-                                                    sinonimo: (cie as any).sinonimo,
-                                                    c2: (cie as any).c2,
-                                                    reporteC2: (cie as any).reporteC2,
-                                                    ficha: (cie as any).ficha
-                                                }
-                                            },
-                                            primeraVez: registro.esPrimeraVez,
-                                        });
-
-                                    } else {
-                                        codificaciones.push({
-                                            codificacionProfesional: {
-                                                snomed: {
-                                                    conceptId: registro.concepto.conceptId,
-                                                    term: registro.concepto.term,
-                                                    fsn: registro.concepto.fsn,
-                                                    semanticTag: registro.concepto.semanticTag,
-                                                    refsetIds: registro.concepto.refsetIds
-                                                },
-                                                cie10: {
-                                                    causa: (cie as any).causa,
-                                                    subcausa: (cie as any).subcausa,
-                                                    codigo: (cie as any).codigo,
-                                                    nombre: (cie as any).nombre,
-                                                    sinonimo: (cie as any).sinonimo,
-                                                    c2: (cie as any).c2,
-                                                    reporteC2: (cie as any).reporteC2,
-                                                    ficha: (cie as any).ficha
-                                                }
-                                            },
-                                            primeraVez: registro.esPrimeraVez
-                                        });
-                                    }
-                                } else {
-                                    codificaciones.push({
-                                        codificacionProfesional: {
-                                            snomed: {
-                                                conceptId: registro.concepto.conceptId,
-                                                term: registro.concepto.term,
-                                                fsn: registro.concepto.fsn,
-                                                semanticTag: registro.concepto.semanticTag,
-                                                refsetIds: registro.concepto.refsetIds
-                                            },
-                                            cie10: {
-                                                codigo: 'Mapeo no disponible'
-                                            }
-                                        },
-                                        primeraVez: registro.esPrimeraVez
-                                    });
-                                }
-                                if (prestaciones.length === codificaciones.length) {
-                                    turno.diagnostico = {
-                                        ilegible: false,
-                                        codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
-                                    };
-                                    turno.asistencia = 'asistio';
-                                    resolve(data);
-                                }
-
-                            }).catch(err1 => {
-                                reject(err1);
                             });
+                            if (cie != null) {
+                                codigoCie10 = {
+                                    causa: (cie as any).causa,
+                                    subcausa: (cie as any).subcausa,
+                                    codigo: (cie as any).codigo,
+                                    nombre: (cie as any).nombre,
+                                    sinonimo: (cie as any).sinonimo,
+                                    c2: (cie as any).c2,
+                                    reporteC2: (cie as any).reporteC2,
+                                    ficha: (cie as any).ficha
+                                };
+                            }
+                        }
+                        if (registro.esDiagnosticoPrincipal) {
+                            codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+                                codificacionProfesional: {
+                                    snomed: {
+                                        conceptId: registro.concepto.conceptId,
+                                        term: registro.concepto.term,
+                                        fsn: registro.concepto.fsn,
+                                        semanticTag: registro.concepto.semanticTag,
+                                        refsetIds: registro.concepto.refsetIds
+                                    },
+                                    cie10: codigoCie10
+                                },
+                                primeraVez: registro.esPrimeraVez,
+                            });
+
                         } else {
                             codificaciones.push({
                                 codificacionProfesional: {
@@ -317,24 +307,25 @@ export function codificarTurno(req, data, tid) {
                                         semanticTag: registro.concepto.semanticTag,
                                         refsetIds: registro.concepto.refsetIds
                                     },
-                                    cie10: {
-                                        codigo: 'Mapeo no disponible'
-                                    }
+                                    cie10: codigoCie10
                                 },
                                 primeraVez: registro.esPrimeraVez
                             });
-                            if (prestaciones.length === codificaciones.length) {
-                                turno.diagnostico = {
-                                    ilegible: false,
-                                    codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
-                                };
-                                turno.asistencia = 'asistio';
-                                resolve(data);
-                            }
                         }
-                    }).catch(error => {
+
+                        if (prestaciones.length === codificaciones.length) {
+                            turno.diagnostico = {
+                                ilegible: false,
+                                codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                            };
+                            turno.asistencia = 'asistio';
+                            resolve(data);
+                        }
+
+                    } catch (error) {
                         reject(error);
-                    });
+                    }
+
                 });
             } else {
                 return resolve(null);
