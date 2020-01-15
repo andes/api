@@ -17,6 +17,18 @@ router.get('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res:
     res.json(result);
 }));
 
+router.get('/camas/:id/historial', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+    const organizacion = Auth.getOrganization(req);
+    const ambito = req.query.ambito;
+    const capa = req.query.capa;
+    const cama = req.params.id;
+    const desde = req.query.desde;
+    const hasta = req.query.hasta;
+
+    const result = await CamasController.historial({ organizacion, ambito, capa }, cama, desde, hasta);
+    return res.json(result);
+}));
+
 router.get('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
