@@ -52,9 +52,12 @@ export async function checkPassword(user, password): Promise<any> {
                         if (err2) {
                             return resolve('invalid');
                         }
-
                         searchResult.on('searchEntry', (entry) => {
-                            return resolve({ nombre: entry.object.givenName, apellido: entry.object.sn });
+                            let obj = getObjeto(entry);
+                            return resolve({
+                                nombre: transform(obj.givenName),
+                                apellido: transform(obj.sn),
+                            });
                         });
 
                         searchResult.on('error', (err3) => {
@@ -84,6 +87,41 @@ export async function checkPassword(user, password): Promise<any> {
     } else {
         return response;
     }
+}
+
+function getObjeto(entry: any) {
+    let obj = {
+        dn: entry.dn.toString(),
+        controls: [],
+        mail: null,
+        telephoneNumber: null,
+        sn: Buffer,
+        cn: null,
+        givenName: null,
+        uid: null,
+        carLicense: null,
+        objectClass: null
+    };
+    entry.attributes.forEach(
+        (a) => {
+            let item = a.buffers;
+            if (item && item.length) {
+                if (item.length > 1) {
+                    obj[a.type] = item.slice();
+                } else {
+                    obj[a.type] = item[0];
+                }
+            } else {
+                obj[a.type] = [];
+            }
+        });
+    return obj;
+}
+
+function transform(input) {
+    let str = JSON.stringify(input).substr(24);
+    str = str.substring(0, str.length - 1);
+    return (String.fromCharCode.apply(String, JSON.parse(str)));
 }
 
 export async function getUserInfo(documento): Promise<any> {
@@ -129,9 +167,10 @@ export async function getUserInfo(documento): Promise<any> {
                         }
 
                         searchResult.on('searchEntry', (entry) => {
+                            let obj = getObjeto(entry);
                             return resolve({
-                                nombre: entry.object.givenName,
-                                apellido: entry.object.sn,
+                                nombre: transform(obj.givenName),
+                                apellido: transform(obj.sn),
                                 usuario: entry.object.uid,
                                 documento: String(entry.object.uid),
                                 organizaciones: []
