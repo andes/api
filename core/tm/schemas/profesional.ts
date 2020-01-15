@@ -32,6 +32,8 @@ export let profesionalSchema = new mongoose.Schema({
     sexo: { type: String, required: false },
     contactos: [contactoSchema],
     domicilios: [direccionSchema],
+    validadoRenaper: { type: Boolean, default: false },
+    foto: { type: String, required: false },
     fotoArchivo: { type: String, required: false },
     firmas: [{
         imgArchivo: { type: String, required: false },
@@ -111,7 +113,11 @@ export let profesionalSchema = new mongoose.Schema({
     idRenovacion: { type: String, required: false },
     documentoViejo: { type: Number, required: false },
     turno: Date,
-    profesionalMatriculado: { type: Boolean, default: true }
+    profesionalMatriculado: { type: Boolean, default: true },
+    /* externa significa que no son matriculados con la app de matriculaciones como pueden ser los psicólogos, kinesiólogos, etc
+    */
+    profesionExterna: { type: ObjSIISASchema, required: false },
+    matriculaExterna: { type: String, required: false }
 });
 
 
