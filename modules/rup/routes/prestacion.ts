@@ -279,8 +279,10 @@ router.get('/prestaciones/solicitudes', async (req, res, next) => {
         }
 
         if (req.query.tipoPrestaciones) {
-            match.$and.push({ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } });
-            match.$and.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } });
+            match.$and.push({
+                $or: [{ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } },
+                { 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
+            });
         }
 
         pipeline.push({ $match: match });
