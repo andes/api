@@ -250,11 +250,6 @@ router.get('/prestaciones/solicitudes', async (req, res, next) => {
             match.$and.push({ 'solicitud.prestacionOrigen': { $exists: false } });
         }
 
-        if (req.query.estados) {
-            pipeline.push({ $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } });
-            match.$and.push({ 'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } });
-        }
-
         match.$and.push({ 'estados.0.tipo': { $in: ['pendiente', 'auditoria'] } });
 
         if (req.query.tieneTurno !== undefined) {
@@ -286,6 +281,12 @@ router.get('/prestaciones/solicitudes', async (req, res, next) => {
         }
 
         pipeline.push({ $match: match });
+
+        if (req.query.estados) {
+            pipeline.push({ $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } });
+            pipeline.push({ $match: {'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } }});
+        }
+
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
         pipeline.push({
             $project: {
