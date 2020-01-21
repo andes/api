@@ -246,15 +246,7 @@ router.post('/solicitudes/dashboard', async (req, res, next) => {
 router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
         let pipeline = [];
-        let tokenSettings;
         let match: any = { $and: [] };
-
-        if (req.query.hudsToken) {
-            tokenSettings = Auth.decode(req.query.hudsToken);
-        }
-        if (req.query.idPaciente && (!tokenSettings || String(tokenSettings.paciente) !== String(req.query.idPaciente))) {
-            return next(403);
-        }
 
         let query;
         if (req.query.estados) {
