@@ -211,6 +211,23 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
                 newRoot: '$estados'
             }
         },
+        {
+            $lookup: {
+                from: 'internacionCamas',
+                localField: 'idCama',
+                foreignField: '_id',
+                as: 'cama'
+
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
+            }
+        },
+        {
+            $project: { cama: 0, __v: 0 }
+        }
     ];
 
     return await CamaEstados.aggregate(aggregate);

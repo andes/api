@@ -17,15 +17,16 @@ router.get('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res:
     res.json(result);
 }));
 
-router.get('/camas/:id/historial', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+router.get('/camas/historial', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = Auth.getOrganization(req);
     const ambito = req.query.ambito;
     const capa = req.query.capa;
-    const cama = req.params.id;
+    const cama = req.query.idCama;
+    const internacion = req.query.idInternacion;
     const desde = req.query.desde;
     const hasta = req.query.hasta;
 
-    const result = await CamasController.historial({ organizacion, ambito, capa }, cama, desde, hasta);
+    const result = await CamasController.historial({ organizacion, ambito, capa }, cama, internacion, desde, hasta);
     return res.json(result);
 }));
 

@@ -88,8 +88,8 @@ export async function search({ organizacion, capa, ambito }: InternacionConfig, 
     return await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion: organizacion._id, ambito, capa }, params);
 }
 
-export async function historial({ organizacion, capa, ambito }, cama: ObjectId, desde: Date, hasta: Date) {
-    const movimientos = await CamasEstadosController.searchEstados({ desde, hasta, organizacion, capa, ambito }, { cama });
+export async function historial({ organizacion, capa, ambito }, cama: ObjectId, internacion: ObjectId, desde: Date, hasta: Date) {
+    const movimientos = await CamasEstadosController.searchEstados({ desde, hasta, organizacion, capa, ambito }, { cama, internacion });
     return movimientos;
 }
 
