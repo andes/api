@@ -418,11 +418,10 @@ async function savePrestamoCarpeta(req, nuevoPrestamo: IPrestamo) {
 }
 
 async function savePrestamosCarpetas(req, nuevosPrestamos: IPrestamo[]) {
-    nuevosPrestamos.forEach(async _prestamo => {
-        Auth.audit(_prestamo, req);
-        await _prestamo.save();
-    });
-
+    return await Promise.all(nuevosPrestamos.map(prestamo => {
+        Auth.audit(prestamo, req);
+        return prestamo.save();
+    }));
 }
 
 export async function getHistorial(req) {
