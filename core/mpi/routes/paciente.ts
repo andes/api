@@ -13,6 +13,7 @@ import { EventCore } from '@andes/event-bus';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
+
 const logD = debug('paciente-controller');
 const router = express.Router();
 
@@ -305,6 +306,43 @@ router.get('/pacientes/:id', async (req, res, next) => {
         } else {
             return res.json(pacienteBuscado);
         }
+    } catch (err) {
+        return next('Paciente no encontrado');
+    }
+
+});
+
+router.get('/pacientes/:id/foto', async (req, res, next) => {
+    const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
+
+    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
+        return next(404);
+    }
+    try {
+        const idPaciente = req.params.id;
+        const { paciente: pacienteBuscado } = await controller.buscarPaciente(idPaciente);
+        if (pacienteBuscado) {
+            if (!pacienteBuscado.foto) {
+                res.writeHead(200, {
+                    'Content-Type': 'image/svg+xml'
+                });
+                return res.end('<svg version="1.1" id="Layer_4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="480px" height="535px" viewBox="0 0 480 535" enable-background="new 0 0 480 535" xml:space="preserve"><g id="Layer_3"><linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="240" y1="535" x2="240" y2="4.882812e-04"><stop  offset="0" style="stop-color:#C5C5C5"/><stop  offset="1" style="stop-color:#9A9A9A"/></linearGradient><rect fill="url(#SVGID_1_)" width="480" height="535"/></g><g id="Layer_2"><path fill="#FFFFFF" d="M347.5,250c0,59.375-48.125,107.5-107.5,107.5c-59.375,0-107.5-48.125-107.5-107.5c0-59.375,48.125-107.5,107.5-107.5C299.375,142.5,347.5,190.625,347.5,250z"/><path fill="#FFFFFF" d="M421.194,535C413.917,424.125,335.575,336.834,240,336.834c-95.576,0-173.917,87.291-181.194,198.166H421.194z"/></g></svg>');
+            }
+            const imagen = pacienteBuscado.foto;
+            const match = imagen.match(base64RegExp);
+            const mimeType = match[1];
+            const data = match[2];
+            const imgStream = Buffer.from(data, 'base64');
+
+            res.writeHead(200, {
+                'Content-Type': mimeType,
+                'Content-Length': imgStream.length
+            });
+            res.end(imgStream);
+        } else {
+            return next(404);
+        }
+
     } catch (err) {
         return next('Paciente no encontrado');
     }
