@@ -353,9 +353,11 @@ router.post('/agenda/clonar', (req, res, next) => {
                     nueva['updatedAt'] = undefined;
                     nueva['nota'] = null;
 
-                    nueva.bloques.forEach(b => {
-                        nueva.cupo += b.turnos.length;
-                    });
+                    if (nueva.dinamica && nueva.cupo >= 0) {
+                        nueva.bloques.forEach(b => {
+                            nueva.cupo += b.turnos.length;
+                        });
+                    }
 
                     // nueva['bloques'] = data['bloques'];
                     nueva['bloques'].forEach((bloque) => {
