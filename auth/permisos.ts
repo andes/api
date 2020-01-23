@@ -221,77 +221,78 @@ export default [
             }
         ]
     },
-    /*   {
-          key: 'matriculaciones',
-          title: 'Matriculaciones',
-          comment: '',
-          child: [
-              {
-                  key: 'profesionales',
-                  title: 'Gestor de profesionales',
-                  child: [
-                      { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
-                      { key: 'getProfesionalFoto', title: 'Ver foto de profesional', type: 'boolean' },
-                      { key: 'postProfesional', title: 'Crear profesional', type: 'boolean' },
-                      { key: 'putProfesional', title: 'Actualizar profesional', type: 'boolean' },
-                      { key: 'deleteProfesional', title: 'Borrar profesional', type: 'boolean' }
-                  ]
-              },
-              {
-                  key: 'turnos',
-                  title: 'Gestor de turnos',
-                  child: [
-                      { key: 'postTurno', title: 'Crear nuevo turno', type: 'boolean' },
-                      { key: 'getTurnosProximos', title: 'Consultar próximos turnos', type: 'boolean' },
-                      { key: 'getTurno', title: 'Ver turno', type: 'boolean' }
-                  ]
-              },
-              {
-                  key: 'agenda',
-                  title: 'Agenda',
-                  child: [
-                      { key: 'postAgenda', title: 'Crear nueva agenda', type: 'boolean' },
-                      { key: 'putAgenda', title: 'Actualizar agenda', type: 'boolean' }
-                  ]
-              },
-              {
-                  key: 'supervisor',
-                  title: 'supervisor',
-                  child: [
-                      { key: 'aprobar', title: 'aprobar', type: 'boolean' },
-                  ]
-              }, {
-                  key: 'reportes',
-                  title: 'Reportes',
-              }
-          ]
-      },
-      {
-          key: 'tm',
-          title: 'Tablas maestras',
-          comment: 'Tablas maestras para agregar organizaciones',
-          child: [
-              {
-                  key: 'especialidad',
-                  title: 'Especialidades',
-                  child: [
-                      { key: 'postEspecialidad', title: 'insertar especialidad', type: 'boolean' },
-                      { key: 'putEspecialidad', title: 'actualizar especialidad', type: 'boolean' },
-                      { key: 'deleteEspecialidad', title: 'borrar especialidad', type: 'boolean' }
-                  ]
-              },
-              {
-                  key: 'organizacion',
-                  title: 'Organizaciones',
-                  child: [
-                      { key: 'create', title: 'Crear nueva', type: 'boolean' },
-                      { key: 'edit', title: 'Editar organizaciones', type: 'boolean' },
-                      { key: 'delete', title: 'Borrar organizaciones', type: 'boolean' },
-                      { key: 'sectores', title: 'Editar sectores físicos', type: 'organizacion' }
-                  ]
-              },
-          ]
-      },*/
+    {
+        key: 'matriculaciones',
+        title: 'Matriculaciones',
+        comment: '',
+        visibility: 'restricted',
+        child: [
+            {
+                key: 'profesionales',
+                title: 'Gestor de profesionales',
+                child: [
+                    { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
+                    { key: 'getProfesionalFoto', title: 'Ver foto de profesional', type: 'boolean' },
+                    { key: 'postProfesional', title: 'Crear profesional', type: 'boolean' },
+                    { key: 'putProfesional', title: 'Actualizar profesional', type: 'boolean' },
+                    { key: 'deleteProfesional', title: 'Borrar profesional', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'turnos',
+                title: 'Gestor de turnos',
+                child: [
+                    { key: 'postTurno', title: 'Crear nuevo turno', type: 'boolean' },
+                    { key: 'getTurnosProximos', title: 'Consultar próximos turnos', type: 'boolean' },
+                    { key: 'getTurno', title: 'Ver turno', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'agenda',
+                title: 'Agenda',
+                child: [
+                    { key: 'postAgenda', title: 'Crear nueva agenda', type: 'boolean' },
+                    { key: 'putAgenda', title: 'Actualizar agenda', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'supervisor',
+                title: 'supervisor',
+                child: [
+                    { key: 'aprobar', title: 'aprobar', type: 'boolean' },
+                ]
+            }, {
+                key: 'reportes',
+                title: 'Reportes',
+            }
+        ]
+    },
+    {
+        key: 'tm',
+        title: 'Tablas maestras',
+        comment: 'Tablas maestras para agregar organizaciones',
+        child: [
+            {
+                key: 'especialidad',
+                title: 'Especialidades',
+                child: [
+                    { key: 'postEspecialidad', title: 'insertar especialidad', type: 'boolean' },
+                    { key: 'putEspecialidad', title: 'actualizar especialidad', type: 'boolean' },
+                    { key: 'deleteEspecialidad', title: 'borrar especialidad', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'organizacion',
+                title: 'Organizaciones',
+                child: [
+                    { key: 'create', title: 'Crear nueva', type: 'boolean' },
+                    { key: 'edit', title: 'Editar organizaciones', type: 'boolean' },
+                    { key: 'delete', title: 'Borrar organizaciones', type: 'boolean' },
+                    { key: 'sectores', title: 'Editar sectores físicos', type: 'organizacion' }
+                ]
+            },
+        ]
+    },
     {
         key: 'cda',
         title: 'Módulo CDA',
@@ -350,10 +351,11 @@ export default [
         child: [
         ]
     },
-    /*{
+    {
         key: 'auditoriaPacientes',
         title: 'Auditoria Pacientes',
         comment: '',
+        visibility: 'restricted',
         child: [
             {
                 key: 'vincular',
@@ -367,7 +369,7 @@ export default [
             }
 
         ]
-    }, */
+    },
     {
         key: 'espaciosFisicos',
         title: 'Edición de espacios físicos',
@@ -422,6 +424,17 @@ export default [
                 ]
             }
         ]
-    }
+    },
+    {
+        key: 'analytics',
+        title: 'Analytics',
+        visibility: 'restricted',
+        comment: '',
+        avoidAll: true,
+        child: [
+            { key: 'read', title: 'Acceso básico a Analytics', type: 'boolean' },
+            { key: 'full', title: 'Acceso completo a analytics', type: 'boolean' },
+        ]
+    },
 
 ];
