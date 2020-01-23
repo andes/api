@@ -352,6 +352,11 @@ router.post('/agenda/clonar', (req, res, next) => {
                     nueva['updatedBy'] = undefined;
                     nueva['updatedAt'] = undefined;
                     nueva['nota'] = null;
+
+                    nueva.bloques.forEach(b => {
+                        nueva.cupo += b.turnos.length;
+                    });
+
                     // nueva['bloques'] = data['bloques'];
                     nueva['bloques'].forEach((bloque) => {
                         bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
