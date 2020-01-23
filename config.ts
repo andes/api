@@ -178,6 +178,17 @@ export const modules = {
         path: './modules/version/routes',
         route: '/version'
     },
+    registroNovedades: {
+        active: true,
+        path: './modules/registro-novedades/routes',
+        route: '/modules/registro-novedades',
+        middleware: appMiddleware
+    },
+    webhook: {
+        active: true,
+        path: './modules/webhook/routes',
+        route: '/modules/webhook'
+    },
     configFacturacionAutomatica: {
         active: true,
         path: './modules/facturacionAutomatica/routes',
