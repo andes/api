@@ -851,8 +851,148 @@ router.get('/pacientes/:id/turnos', async (req, res, next) => {
 
 
 router.get('/listado/csv', async (req, res, next) => {
-    let fechaIni = new Date('2018-08-30');
-    let pipeline = [{ "$match": { 'profesionalMatriculado': true } },
+    let fechaIni = new Date('2019-01-01');
+    let pipeline1 = [
+        {
+            $match: {
+                'ejecucion.registros.concepto.conceptId': {
+                    $in: ["46973005", "164783007", "371911009", "40594005",
+                        "413153004", "446695008", "46973005", "2511000013101"]
+                }, 'ejecucion.fecha': { $gte: fechaIni }
+            }
+        },
+        { $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } },
+        { $match: { 'lastState.tipo': 'validada' } },
+        {
+            $project: {
+                paciente: 1, 'fechaEjecucion': '$ejecucion.fecha', 'efector': '$ejecucion.organizacion.nombre',
+                'tipoPrestacion': '$solicitud.tipoPrestacion.term', 'registros': '$ejecucion.registros'
+            }
+        },
+        { $unwind: '$registros' },
+        {
+            $match: {
+                'registros.concepto.conceptId': {
+                    $in: ["46973005", "164783007", "371911009", "40594005",
+                        "413153004", "446695008", "46973005", "2511000013101"]
+                }
+            }
+        },
+        {
+            $project: {
+                paciente: 1, 'fechaEjecucion': 1, 'efector': 1,
+                'tipoPrestacion': 1, 'registro0': { $arrayElemAt: ['$registros.registros', 0] }, 'registro1': { $arrayElemAt: ['$registros.registros', 1] }
+            }
+        },
+        {
+            $match: {
+                'registro0.valor': { $ne: null }, 'registro1.valor': { $ne: null }
+            }
+        },
+        {
+            $project: {
+                'nombre': '$paciente.nombre', 'apellido': '$paciente.apellido', 'documento': '$paciente.documento', 'sexo': '$paciente.sexo',
+                'fechaNacimiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$paciente.fechaNacimiento' } },
+                'fechaEjecucion': { '$dateToString': { 'format': '%d/%m/%Y', date: '$fechaEjecucion' } }, 'efector': 1,
+                'tipoPrestacion': 1, 'presionSistolica': '$registro0.valor', 'presionDiastolica': '$registro1.valor'
+            }
+        },
+        {
+            $group: {
+                _id: '$documento',
+                prestaciones: { $push: '$$ROOT' }
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: { $arrayElemAt: ['$prestaciones', 0] }
+            }
+        }
+    ];
+
+
+    let pipeline2 = [
+        {
+            $match: {
+                'ejecucion.registros.concepto.conceptId': {
+                    $in: ["61746007", "2621000013108", "2621000013108", "410634009", "410634009", "410636006", "410636006", "410637002",
+                        "410637002", "410638007", "410638007", "410639004", "410640002", "410641003"]
+                }, 'ejecucion.fecha': { $gte: fechaIni }
+            }
+        },
+        { $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } },
+        { $match: { 'lastState.tipo': 'validada' } },
+        {
+            $project: {
+                paciente: 1, 'fechaEjecucion': '$ejecucion.fecha', 'efector': '$ejecucion.organizacion.nombre',
+                'tipoPrestacion': '$solicitud.tipoPrestacion.term', 'registros': '$ejecucion.registros'
+            }
+        },
+        { $unwind: '$registros' },
+        {
+            $match: {
+                'registros.concepto.conceptId': {
+                    $in: ["61746007", "2621000013108", "2621000013108", "410634009", "410634009", "410636006", "410636006", "410637002",
+                        "410637002", "410638007", "410638007", "410639004", "410640002", "410641003"]
+                }
+            }
+        },
+        {
+            $project: {
+                paciente: 1, 'fechaEjecucion': 1, 'efector': 1,
+                'tipoPrestacion': 1, 'registros': '$registros.registros'
+            }
+        },
+        { $unwind: '$registros' },
+        {
+            $match: {
+                'registros.concepto.conceptId': {
+                    $in: ["46973005", "164783007", "371911009", "40594005",
+                        "413153004", "446695008", "46973005", "2511000013101"]
+                }
+            }
+        },
+        {
+            $project: {
+                paciente: 1, 'fechaEjecucion': 1, 'efector': 1,
+                'tipoPrestacion': 1, 'registro0': { $arrayElemAt: ['$registros.registros', 0] }, 'registro1': { $arrayElemAt: ['$registros.registros', 1] }
+            }
+        },
+        {
+            $match: {
+                'registro0.valor': { $ne: null }, 'registro1.valor': { $ne: null }
+            }
+        },
+        {
+            $project: {
+                'nombre': '$paciente.nombre', 'apellido': '$paciente.apellido', 'documento': '$paciente.documento', 'sexo': '$paciente.sexo',
+                'fechaNacimiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$paciente.fechaNacimiento' } },
+                'fechaEjecucion': { '$dateToString': { 'format': '%d/%m/%Y', date: '$fechaEjecucion' } }, 'efector': 1,
+                'tipoPrestacion': 1, 'presionSistolica': '$registro0.valor', 'presionDiastolica': '$registro1.valor'
+            }
+        },
+        {
+            $group: {
+                _id: '$documento',
+                prestaciones: { $push: '$$ROOT' }
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: { $arrayElemAt: ['$prestaciones', 0] }
+            }
+        }
+    ];
+
+
+
+
+
+
+
+
+
+    /*[{ "$match": { 'profesionalMatriculado': true } },
     { $unwind: '$formacionGrado' },
     {
         "$unwind": {
@@ -875,7 +1015,7 @@ router.get('/listado/csv', async (req, res, next) => {
             especialidad: '$formacionPosgrado.especialidad.nombre',
             matriculaEspecialidad: '$matriculaEspecialidad.matriculaNumero'
         }
-    }];
+    }];*/
 
 
 
@@ -967,32 +1107,33 @@ router.get('/listado/csv', async (req, res, next) => {
                 { id: 'efector', title: 'efector' }
      */
     try {
-        let resultadosAndes = await profesional.aggregate(pipeline);
+        let resultados1Andes = await prestaciones.aggregate(pipeline1);
+        let resultados2Andes = await prestaciones.aggregate(pipeline2);
         // let resultadosMpi = pacienteMpi.find().exec();
         // const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
         // let listado = [...pacientes[0], ...pacientes[1]];
 
-
+        let listado = [...resultados1Andes, ...resultados2Andes];
         const createCsvWriter = require('csv-writer').createObjectCsvWriter;
         const csvWriter = createCsvWriter({
-            path: 'profesionalesConEspecialidad.csv',
+            path: 'Pacientes_TA_20200122.csv',
             header: [
                 { id: '_id', title: 'ID' },
                 { id: 'nombre', title: 'Nombre' },
                 { id: 'apellido', title: 'Apellido' },
                 { id: 'documento', title: 'DNI' },
-                { id: 'fechaNacimiento', title: 'fechaNacimiento' },
-                { id: 'sexo', title: 'sexo' },
-                { id: 'formacionGrado', title: 'formacion de grado' },
-                { id: 'matriculaGrado', title: 'matriculaGrado' },
-                { id: 'especialidad', title: 'especialidad' },
-                { id: 'matriculaEspecialidad', title: 'matriculaEspecialidad' },
-
+                { id: 'fechaNacimiento', title: 'FechaNacimiento' },
+                { id: 'sexo', title: 'Sexo' },
+                { id: 'efector', title: 'Efector' },
+                { id: 'tipoPrestacion', title: 'TipoPrestacion' },
+                { id: 'fechaEjecucion', title: 'Fecha prestación' },
+                { id: 'presionSistolica', title: 'P. Sistólica' },
+                { id: 'presionDiastolica', title: 'P. Diastólica' },
 
             ]
         });
 
-        csvWriter.writeRecords(resultadosAndes)       // returns a promise
+        csvWriter.writeRecords(listado)       // returns a promise
             .then(() => {
                 console.log('...Done');
                 res.json([]);
@@ -1061,7 +1202,7 @@ router.get('/listado/seguimiento', async (req, res, next) => {
         console.log('termina', dataAndes);
         const createCsvWriter = require('csv-writer').createObjectCsvWriter;
         const csvWriter = createCsvWriter({
-            path: 'Seguimiento.csv',
+            path: 'Pacientes_TA_20200122.csv',
             header: [
                 { id: 'documento', title: 'DNI' },
                 { id: 'nombre', title: 'Nombre' },
