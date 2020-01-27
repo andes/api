@@ -9,6 +9,7 @@ export class RelacionController extends SubresourceController {
         documento: MemoryQuery.partialString,
         nombre: MemoryQuery.partialString,
         apellido: MemoryQuery.partialString,
+        foto: MemoryQuery.partialString,
         relacion: {
             id: MemoryQuery.matchString,
             nombre: MemoryQuery.partialString,
