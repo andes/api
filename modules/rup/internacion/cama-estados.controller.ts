@@ -13,15 +13,15 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
     }
 
     if (filtros.paciente) {
-        secondMatch['estados.paciente.id'] = mongoose.Types.ObjectId(filtros.paciente);
+        secondMatch['paciente.id'] = mongoose.Types.ObjectId(filtros.paciente);
     }
 
     if (filtros.internacion) {
-        secondMatch['estados.idInternacion'] = mongoose.Types.ObjectId(filtros.internacion);
+        secondMatch['idInternacion'] = mongoose.Types.ObjectId(filtros.internacion);
     }
 
     if (filtros.estado) {
-        secondMatch['estados.estado'] = filtros.estado;
+        secondMatch['estado'] = filtros.estado;
     }
 
     const aggregate = [
