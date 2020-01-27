@@ -18,6 +18,9 @@ router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
         if (req.query.nombre) {
             opciones['nombre'] = req.query.nombre;
         }
+        if (req.query.tipo) {
+            opciones['tipo'] = req.query.tipo;
+        }
         let query = TurneroPantalla.find(opciones);
         if (req.query.fields) {
             query.select(req.query.fields);
@@ -96,7 +99,6 @@ router.patch('/pantalla/:id', Auth.authenticate(), async (req, res, next) => {
         const id = req.params.id;
         const data = req.body;
         const pantalla = await TurneroPantalla.findByIdAndUpdate(id, data, { new: true });
-
         res.json(pantalla);
         EventCore.emitAsync('turnero-update', { pantalla });
         return;
@@ -120,8 +122,10 @@ router.delete('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) 
 
 router.post('/pantalla/activate', async (req, res, next) => {
     let codigo = req.body.codigo;
+    let tipoPantalla = req.body.tipo;
     let pantallas = await TurneroPantalla.find({
         token: codigo,
+        tipo: tipoPantalla,
         expirationTime: { $gt: new Date() },
     });
     if (pantallas.length) {
@@ -129,13 +133,20 @@ router.post('/pantalla/activate', async (req, res, next) => {
         pantalla.token = null;
         pantalla.expirationTime = null;
         await pantalla.save();
-
-        let token = Auth.generateAppToken(pantalla, {}, [`turnero:${pantalla._id}`], 'turnero-token');
+        let token = '';
+        if (pantalla.tipo === 'totem') {
+            const organizacion = {
+                id: pantalla.organizacion,
+                nombre: 'totem'
+            };
+            token = Auth.generateAppToken(pantalla, organizacion, ['turnos:*', 'mpi:*'], 'totem-token');
+        } else {
+            token = Auth.generateAppToken(pantalla, {}, [`turnero:${pantalla._id}`], `turnero-token`);
+        }
         res.send({ token });
-
-        EventCore.emitAsync('turnero-activated', { pantalla });
+        EventCore.emitAsync(`${pantalla.tipo}-activated`, { pantalla });
     } else {
-        return next({ message: 'no eiste pantalla' });
+        return next({ message: 'no existe pantalla' });
     }
 });
 
