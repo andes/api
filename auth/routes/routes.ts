@@ -129,7 +129,6 @@ router.post('/login', async (req, res, next) => {
     }
 });
 
-
 /**
  * Refresca el token de un usuario
  * @param {string} token token de la cuenta
@@ -137,7 +136,6 @@ router.post('/login', async (req, res, next) => {
  */
 router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
     try {
-
         const oldToken: string = req.body.token;
         const usuario = (req as any).user.usuario;
         usuario['usuario'] = usuario.username;
@@ -156,7 +154,6 @@ router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
         return next(403);
     }
 });
-
 /**
  * Genera FileToken para poder acceder a archivos embebidos
  */

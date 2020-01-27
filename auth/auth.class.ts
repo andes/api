@@ -442,4 +442,69 @@ export class Auth {
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 2 }); // 2 Horas
     }
 
+    /**
+    * Genera un token para acceder a la HUDS de un paciente
+    *
+    * @static
+    * @returns {*} JWT
+    *
+    * @memberOf Auth
+    */
+    static generateHudsToken(user: any, organizacion: any, paciente: any): any {
+        const token = {
+            id: mongoose.Types.ObjectId(),
+            usuario: {
+                id: user._id,
+                nombreCompleto: user.nombre + ' ' + user.apellido,
+                nombre: user.nombre,
+                apellido: user.apellido,
+                username: user.usuario,
+                documento: user.usuario
+            },
+            organizacion,
+            paciente: mongoose.Types.ObjectId(paciente.id),
+            type: 'huds-token'
+
+        };
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 4 }); // 4 Horas
+    }
+
+    static refreshAPPToken(token: string) {
+        try {
+            const tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+            return this.generateUserToken(tokenData.usuario, tokenData.organizacion, tokenData.permisos, tokenData.profesional, tokenData.account_id);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    static decode(token: string) {
+        return jwt.decode(token);
+    }
+
+    /**
+    * Verifica el token para acceder a la HUDS de un paciente
+    *
+    * @static
+    * @param {express.Request} req Corresponde al request actual
+    * @param {int} paciente Identificador del paciente
+    * @returns {boolean} Devuelve verdadero si el token le corresponde al paciente
+    *
+    * @memberOf Auth
+    */
+
+    static checkHudsToken(req: express.Request, paciente) {
+        try {
+            let tokenSettings;
+            if (req.query.hudsToken) {
+                tokenSettings = Auth.decode(req.query.hudsToken);
+                return (String(tokenSettings.paciente) === String(paciente));
+            }
+        } catch (e) {
+            return null;
+        }
+
+        return null;
+    }
+
 }

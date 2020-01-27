@@ -1,6 +1,5 @@
 import * as express from 'express';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-import { paciente as Paciente } from '../../../core/mpi/schemas/paciente';
 import { model as Cie10 } from '../../../core/term/schemas/cie10';
 import { makeFs } from '../schemas/CDAFiles';
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
@@ -247,7 +246,7 @@ router.get('/paciente/', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:list')) {
         return next(403);
     }
-    let query;
+
     let lista = [];
     let list = [];
     pacienteCtr.buscarPacByDocYSexo(req.query.documento, req.query.sexo).then(async resultado => {
@@ -270,17 +269,19 @@ router.get('/paciente/', async (req: any, res, next) => {
 
 router.get('/paciente/:id', async (req: any, res, next) => {
     if (ObjectId.isValid(req.params.id)) {
-        if (!Auth.check(req, 'cda:list')) {
+        if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token') || !Auth.checkHudsToken(req, req.params.id)) {
             return next(403);
         }
-        let CDAFiles = makeFs();
         let pacienteID = req.params.id;
         let prestacion = req.query.prestacion;
-        let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
-
+        let list;
+        try {
+            list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
+        } catch (err) {
+            return next({ message: 'no existe el paciente' });
+        }
         res.json(list);
     }
-
 });
 
 
@@ -355,7 +356,8 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  * API demostrativa, falta analizar como se va a buscar en el repositorio
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:list')) {
+
+    if (!Auth.check(req, 'cda:list') || req.user.type !== 'paciente-token' || !Auth.checkHudsToken(req, req.params.id)) {
         return next(403);
     }
     let pacienteID = req.params.id;

@@ -1,7 +1,5 @@
 import * as mongoose from 'mongoose';
 import { profesional } from '../schemas/profesional';
-import * as moment from 'moment';
-import { sendSms } from '../../../utils/roboSender/sendSms';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
 import { userScheduler } from '../../../config.private';
@@ -122,4 +120,27 @@ export async function matriculaCero() {
 export async function formacionCero() {
     let profesionales: any = await profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; });
     return profesionales;
+}
+
+export async function search(filter, fields) {
+    const match = {};
+    const project = { documento: -1, apellido: -1, nombre: -1 };
+    if (filter.id) {
+        match['_id'] = mongoose.Types.ObjectId(filter.id);
+    }
+    if (fields.matricula) {
+        project['matricula'] = { $arrayElemAt: ['$formacionGrado.matriculacion.matriculaNumero', -1] };
+    }
+
+    const aggregate = [
+        {
+            $match: match
+        },
+        {
+            $project: project
+        },
+
+    ];
+
+    return await profesional.aggregate(aggregate);
 }
