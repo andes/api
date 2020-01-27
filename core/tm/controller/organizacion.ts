@@ -1,6 +1,6 @@
 import { sisa } from '../../../config.private';
 import { handleHttpRequest } from '../../../utils/requestHandler';
-export async function validarOrganizacionSisa(orgCodSisa: Number) {
+export async function validarOrganizacionSisa(orgCodSisa: any) {
     const data = {
         usuario: sisa.username,
         clave: sisa.password
@@ -32,7 +32,7 @@ export async function validarOrganizacionSisa(orgCodSisa: Number) {
  * @param {Number} orgCodSisa
  * @returns
  */
-export async function obtenerOfertaPrestacional(orgCodSisa: Number) {
+export async function obtenerOfertaPrestacional(orgCodSisa: any) {
     const data = {
         usuario: sisa.username,
         clave: sisa.password
