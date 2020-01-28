@@ -607,7 +607,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             agendaCtrl.editarAgenda(req, data);
                             event = { object: 'agenda', accion: 'update', data };
                         } else {
-                            return res.json({ mensaje: 'Operación no exitosa' });
+                            return next('Operacion no exitosa');
                         }
                         break;
                     case 'agregarSobreturno':
@@ -616,7 +616,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         break;
                     case 'disponible':
                         if (estadoAgenda !== 'planificacion') {
-                            return res.json({ mensaje: 'Operación no exitosa' });
+                            return next('Operacion no exitosa');
                         } else {
                             agendaCtrl.actualizarEstado(req, data);
                             event = { object: 'agenda', accion: 'estado', data };
@@ -624,7 +624,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         break;
                     case 'publicada':
                         if (estadoAgenda !== 'planificacion' && estadoAgenda !== 'disponible') {
-                            return res.json({ mensaje: 'Operación no exitosa' });
+                            return next('Operacion no exitosa');
                         } else {
                             agendaCtrl.actualizarEstado(req, data);
                             event = { object: 'agenda', accion: 'estado', data };
@@ -632,7 +632,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         break;
                     case 'pausada':
                         if (estadoAgenda === 'planificacion' || estadoAgenda === 'pausada' || estadoAgenda === 'suspendida' || estadoAgenda === 'auditada' || estadoAgenda === 'pendienteAuditoria') {
-                            return res.json({ mensaje: 'Operación no exitosa' });
+                            return next('Operacion no exitosa');
                         } else {
                             agendaCtrl.actualizarEstado(req, data);
                             event = { object: 'agenda', accion: 'estado', data };
@@ -640,7 +640,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         break;
                     case 'prePausada':
                         if (estadoAgenda !== 'pausada') {
-                            return res.json({ mensaje: 'Operación no exitosa' });
+                            return next('Operacion no exitosa');
                         } else {
                             agendaCtrl.actualizarEstado(req, data);
                             event = { object: 'agenda', accion: 'estado', data };
@@ -657,7 +657,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             agendaCtrl.actualizarEstado(req, data);
                             event = { object: 'agenda', accion: 'estado', data };
                         } else {
-                            return res.json({ mensaje: 'Operación no exitosa' });
+                            return next('Operacion no exitosa');
                         }
                         break;
                     case 'suspendida':
@@ -669,7 +669,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                 return res.json({ data, mensaje: 'No se puede suspender la agenda ya que posee asistencia registrada' });
                             }
                         } else {
-                            return res.json({ mensaje: 'Operación no exitosa' });
+                            return next('Operacion no exitosa');
                         }
                         break;
                     case 'avisos':
