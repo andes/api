@@ -55,6 +55,7 @@
     "mime-db": "^1.29.0",
     "mime-types": "^2.1.24",
     "moment": "^2.19.3",
+    "mongodb-memory-server": "^6.2.4",
     "mongoose": "^5.4.14",
     "mongoose-gridfs": "^0.3.2",
     "mssql": "^4.1.0",
@@ -95,6 +96,7 @@
     "jobs": "tsc && node jobs/scheduler.js",
     "lint": "tslint --project .",
     "lint:fix": "tslint --project . --fix",
+    "test": "jest",
     "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js"
   },
   "repository": {
@@ -109,10 +111,13 @@
   "homepage": "https://github.com/andes/api#readme",
   "devDependencies": {
     "@types/request": "^2.48.1",
+    "@types/jest": "^25.1.0",
+    "jest": "^25.1.0",
     "before": "0.0.1",
     "chai": "^4.1.2",
     "nodemon": "^1.17.4",
     "tslint": "^5.11.0",
+    "ts-jest": "^25.0.0",
     "tslint-eslint-rules": "^5.3.1"
   }
 }
