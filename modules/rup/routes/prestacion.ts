@@ -556,6 +556,26 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                         return next('Prestación validada, no se puede volver a validar.');
                     }
                     data['estados'].push(req.body.estado);
+                    if (req.body.estado.tipo === 'asignada') {
+                        if (req.body.profesional) {
+                            data.solicitud.profesional = req.body.profesional;
+                        }
+
+                        if (!data.solicitud.historial) {
+                            data.solicitud.historial = [];
+                        }
+
+                        let registroHistorial: any = {
+                            organizacion: data.solicitud.organizacion,
+                            accion: 'asignacionProfesional'
+                        };
+
+                        if (data.solicitud.profesional) {
+                            registroHistorial.profesional = data.solicitud.profesional;
+                        }
+
+                        data.solicitud.historial.push(registroHistorial);
+                    }
                 }
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
@@ -570,6 +590,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     data.solicitud.registros[0].valor.solicitudPrestacion.prioridad = req.body.prioridad;
                     data.solicitud.registros[0].markModified('valor');
                 }
+
                 break;
             case 'romperValidacion':
                 if (data.estados[data.estados.length - 1].tipo !== 'validada') {
