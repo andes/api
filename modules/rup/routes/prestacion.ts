@@ -97,10 +97,6 @@ router.get('/prestaciones/sinCama', (req: any, res, next) => {
 
 router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
-    if (req.params.idPaciente) {
-        return next(403);
-    }
-
     // verificamos que sea un ObjectId válido
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Turno no encontrado');
@@ -143,10 +139,6 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
 
 router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, next) => {
-
-    if (req.params.idPaciente) {
-        return next(403);
-    }
 
     // verificamos que sea un ObjectId válido
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -352,10 +344,6 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 });
 
 router.get('/prestaciones/:id*?', async (req: any, res, next) => {
-
-    if (req.query.idPaciente && (!Auth.checkHudsToken(req, req.query.idPaciente))) {
-        return next(403);
-    }
 
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
