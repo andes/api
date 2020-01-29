@@ -97,7 +97,7 @@ router.get('/prestaciones/sinCama', (req: any, res, next) => {
 
 router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
-    if (req.params.idPaciente && (!Auth.checkHudsToken(req, req.params.idPaciente))) {
+    if (req.params.idPaciente) {
         return next(403);
     }
 
@@ -144,7 +144,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
 router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, next) => {
 
-    if (req.params.idPaciente && (!Auth.checkHudsToken(req, req.params.idPaciente))) {
+    if (req.params.idPaciente) {
         return next(403);
     }
 
