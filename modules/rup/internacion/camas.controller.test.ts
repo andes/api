@@ -243,7 +243,7 @@ describe('Internacion - camas', () => {
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
         await nuevaPrestacion.save();
 
-        const listaEsp = await listaEspera({ fecha: moment().toDate(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
+        const listaEsp = await listaEspera({ fecha: moment().toDate(), organizacion: { _id: '57f67a7ad86d9f64130a138d' }, ambito: 'internacion', capa: 'estadistica' });
         expect(listaEsp.length).toBe(1);
         expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
 
@@ -257,7 +257,7 @@ describe('Internacion - camas', () => {
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
         await nuevaPrestacion.save();
 
-        const listaEsp = await listaEspera({ fecha: moment().toDate(), organizacion: { _id: '57f67a7ad86d9f64130a138d' } });
+        const listaEsp = await listaEspera({ fecha: moment().toDate(), organizacion: { _id: '57f67a7ad86d9f64130a138d' }, ambito: 'internacion', capa: 'estadistica' });
         expect(listaEsp.length).toBe(1);
         expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
 
@@ -708,26 +708,6 @@ function prestacion() {
                     apellido: 'Sanchez',
                     username: 29882039.0,
                     documento: 29882039.0,
-                    organizacion: {
-                        _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
-                        nombre: 'HOSPITAL NEUQUEN',
-                        id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
-                    }
-                }
-            },
-            {
-                idOrigenModifica: null,
-                motivoRechazo: null,
-                _id: mongoose.Types.ObjectId('5db869929929a9fe57109744'),
-                tipo: 'validada',
-                createdAt: '2019-10-29T16:32:18.491Z',
-                createdBy: {
-                    id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),
-                    nombreCompleto: 'KATHERINE DANIELA SALINAS',
-                    nombre: 'KATHERINE DANIELA',
-                    apellido: 'SALINAS',
-                    username: 36489710.0,
-                    documento: 36489710.0,
                     organizacion: {
                         _id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8'),
                         nombre: 'HOSPITAL NEUQUEN',

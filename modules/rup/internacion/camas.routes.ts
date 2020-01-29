@@ -30,6 +30,16 @@ router.get('/camas/historial', Auth.authenticate(), asyncHandler(async (req: Req
     return res.json(result);
 }));
 
+router.get('/lista-espera', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+    const organizacion = Auth.getOrganization(req);
+    const ambito = req.query.ambito;
+    const capa = req.query.capa;
+    const fecha = req.query.fecha;
+
+    const listaEspera = await CamasController.listaEspera({ fecha, organizacion: { _id: organizacion }, ambito, capa });
+    return res.json(listaEspera);
+}));
+
 router.get('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
@@ -51,7 +61,7 @@ router.post('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res
         nombre: Auth.getOrganization(req, 'nombre')
     };
 
-    const data = { ...req.body.params, organizacion };
+    const data = { ...req.body, organizacion };
 
     const result = await CamasController.store(data, req);
 
@@ -64,7 +74,7 @@ router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request
         nombre: Auth.getOrganization(req, 'nombre')
     };
 
-    const data = { ...req.body.params, organizacion, id: req.params.id };
+    const data = { ...req.body, organizacion, id: req.params.id };
 
     const result = await CamasController.patch(data, req);
 

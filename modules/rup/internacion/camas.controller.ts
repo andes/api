@@ -109,34 +109,41 @@ export async function findById({ organizacion, capa, ambito }: InternacionConfig
     return null;
 }
 
-export async function listaEspera({ fecha, organizacion }: { fecha: Date, organizacion: INombre }) {
-    const ambito = 'internacion';
-    const capa = 'estadistica';
+export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha: Date, organizacion: INombre, ambito: String, capa: String }) {
 
-    const prestaciones = await Prestaciones.aggregate([
+    const $match = {};
+    if (fecha) {
+        $match['ejecucion.registros.valor.informeIngreso.fechaIngreso'] = {
+            $lte: moment(fecha).toDate().toISOString()
+        };
+    } else {
+        fecha = new Date();
+    }
+
+
+    const prestaciones$ = Prestaciones.aggregate([
         {
             $match: {
                 'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion._id as any),
                 'solicitud.ambitoOrigen': 'internacion',
                 'solicitud.tipoPrestacion.conceptId': '32485007',
-                'ejecucion.registros.valor.informeIngreso.fechaIngreso': {
-                    $lte: moment(fecha).toDate().toISOString()
-                }
+                ...$match
             }
         },
         {
-            $unwind: '$estados'
+            $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } }
         },
         {
-            $match: {
-                'estados.tipo': 'ejecucion'
-            }
-        }
+            $match: { 'lastState.tipo': 'ejecucion' }
+        },
+        { $project: { _v: 0, lastState: 0 } }
     ]);
 
-    const estadoCama = await CamasEstadosController.snapshotEstados({ fecha, organizacion: organizacion._id, ambito, capa }, {});
+    const estadoCama$ = CamasEstadosController.snapshotEstados({ fecha, organizacion: organizacion._id, ambito, capa }, {});
 
-    const listaDeEspera = prestaciones.filter(prest => estadoCama.filter(est => prest._id !== est.idInternacion));
+    const [prestaciones, estadoCama] = await Promise.all([prestaciones$, estadoCama$]);
+
+    const listaDeEspera = prestaciones.filter(prest => !estadoCama.find(est => String(prest._id) === String(est.idInternacion)));
 
     return listaDeEspera;
 }
@@ -149,7 +156,6 @@ export async function listaEspera({ fecha, organizacion }: { fecha: Date, organi
  */
 
 export async function patch(data: Partial<ICama>, req: Request) {
-
     const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
 
     const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
