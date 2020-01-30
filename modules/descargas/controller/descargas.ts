@@ -7,6 +7,7 @@ import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import * as Paciente from '../../../core/mpi/controller/paciente';
+import { searchMatriculas } from '../../../core/tm/controller/profesional';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import * as rup from '../../../modules/rup/schemas/elementoRUP';
@@ -426,242 +427,239 @@ export class Documento {
     }
 
     private static async generarHTML(req) {
-        return new Promise(async (resolve, reject) => {
-            try {
+        // Se leen header y footer (si se le pasa un encoding, devuelve un string)
+        let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
 
-                // Prestación
-                let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
+        // Prestación
+        let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
+        let registro: any = req.body.idRegistro ? prestacion.ejecucion.registros.find(y => y.id === req.body.idRegistro) : null;
 
-                let registro: any = req.body.idRegistro ? prestacion.ejecucion.registros.find(y => y.id === req.body.idRegistro) : null;
+        // Títulos default
+        let tituloFechaSolicitud = 'Fecha Solicitud';
+        let tituloFechaEjecucion = 'Fecha Ejecución';
+        let tituloFechaValidacion = 'Fecha Validación';
 
-                // Títulos default
-                let tituloFechaSolicitud = 'Fecha Solicitud';
-                let tituloFechaEjecucion = 'Fecha Ejecución';
-                let tituloFechaValidacion = 'Fecha Validación';
+        // Configuraciones de informe propios de la prestación
+        let config: any = await this.getPrestacionInformeParams(prestacion.solicitud.tipoPrestacion.conceptId);
 
-                // Configuraciones de informe propios de la prestación
-                let config: any = await this.getPrestacionInformeParams(prestacion.solicitud.tipoPrestacion.conceptId);
+        if (!config) {
+            config = await this.getPrestacionInformeComponent(prestacion.solicitud.tipoPrestacion.conceptId);
+        }
 
-                if (!config) {
-                    config = await this.getPrestacionInformeComponent(prestacion.solicitud.tipoPrestacion.conceptId);
-                }
+        // Se crea un objecto nuevo
+        config = JSON.parse(JSON.stringify(config));
 
-                // Se crea un objecto nuevo
-                config = JSON.parse(JSON.stringify(config));
+        // Paciente
+        let mpi: any = await Paciente.buscarPaciente(prestacion.paciente.id);
+        let paciente = mpi.paciente;
 
-                // Paciente
-                let mpi: any = await Paciente.buscarPaciente(prestacion.paciente.id);
-                let paciente = mpi.paciente;
+        if (paciente.id && config) {
 
-                if (paciente.id && config) {
+            let tipoPrestacion;
+            let tituloInforme;
 
-                    let tipoPrestacion;
-                    let tituloInforme;
-
-                    if (config.informe) {
-                        // Override título "Fecha Ejecución"?
-                        tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : tituloFechaEjecucion;
-                        // Override título "Fecha Validación"?
-                        tituloFechaValidacion = config.informe.fechaValidacionOverride ? config.informe.fechaValidacionOverride : tituloFechaValidacion;
-                    }
-
-                    // Vemos si el tipo de prestación tiene registros que son hijos directos (TP: Ecografía; Hijo: Ecografía obstétrica)
-                    let hijos = await SnomedCtr.getChildren(prestacion.solicitud.tipoPrestacion.conceptId, { all: true });
-                    let motivoPrincipalDeConsulta;
-                    let tituloRegistro;
-                    let contenidoInforme;
-
-                    // Override título del primer registro?
-                    if (config.informe && config.informe.tipoPrestacionTituloOverride) {
-                        tituloRegistro = hijos.find(x => prestacion.ejecucion.registros.find(y => y.concepto.conceptId === x.conceptId));
-
-                        tipoPrestacion = prestacion.ejecucion.registros[0].nombre;
-                        tituloInforme = config.informe.registroTituloOverride;
-                        prestacion.ejecucion.registros[0].concepto.term = tituloInforme;
-                        tituloInforme = tituloInforme[0].toUpperCase() + tituloInforme.slice(1);
-
-                        if (prestacion.solicitud.tipoPrestacion.conceptId === '73761001') {
-                            tipoPrestacion = prestacion.solicitud.tipoPrestacion.term;
-                            tituloInforme = '';
-                        }
-
-                    } else {
-                        // Si tiene un hijo directo, usamos su nombre como título de la consulta
-                        tipoPrestacion = prestacion.solicitud.tipoPrestacion.term[0].toUpperCase() + prestacion.solicitud.tipoPrestacion.term.slice(1);
-                    }
-
-                    // Existe configuración de PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL?
-                    if (config.informe && config.informe.motivoPrincipalDeConsultaOverride) {
-                        if (prestacion.ejecucion.registros.length > 1) {
-                            let existeConcepto = prestacion.ejecucion.registros.find(x => this.existeSemanticTagMPC(x.concepto.semanticTag) && x.esDiagnosticoPrincipal);
-
-                            if (existeConcepto && existeConcepto.esDiagnosticoPrincipal && tituloRegistro && tituloRegistro.conceptId !== existeConcepto.concepto.conceptId) {
-                                motivoPrincipalDeConsulta = existeConcepto;
-                                if (motivoPrincipalDeConsulta) {
-                                    motivoPrincipalDeConsulta = '<b>PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL: </b>' + motivoPrincipalDeConsulta.concepto.term;
-                                }
-                            }
-                        }
-                    }
-
-
-                    let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
-
-                    switch (prestacion.ejecucion.registros[0].concepto.conceptId) {
-                        case '310634005':
-                            registros = this.filtroColonoscopia(registros);
-                            break;
-                    }
-
-                    if (!registro) {
-                        // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
-                        await this.generarInforme(registros);
-                    } else {
-                        await this.generarInforme([registro]);
-                    }
-
-
-                    // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
-                    if (!config.informe || config.informe.registrosDefault) {
-                        contenidoInforme = this.informeRegistros.filter(x => x !== undefined ? x : null);
-
-                    } else {
-                        contenidoInforme = this.informeRegistros;
-                    }
-
-
-                    // Se leen header y footer (si se le pasa un encoding, devuelve un string)
-                    let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
-
-                    let nombreCompleto = paciente.apellido + ', ' + paciente.nombre;
-                    let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
-                    let hoy = moment();
-                    let edad = paciente.fechaNacimiento ? hoy.diff(moment(paciente.fechaNacimiento), 'years') + ' años | ' : '';
-                    let datosRapidosPaciente = paciente.sexo + ' | ' + edad + paciente.documento;
-
-                    let idOrg = (Auth.getOrganization(req, 'id') as any);
-                    let organizacion: any = await this.getOrgById(idOrg);
-
-                    let carpeta = paciente.carpetaEfectores.find(x => x.organizacion.id === idOrg);
-
-                    const firmaProfesional = await this.getFirma(prestacion.solicitud.profesional);
-                    let profesionalSolicitud = prestacion.solicitud.profesional.apellido + ', ' + prestacion.solicitud.profesional.nombre;
-                    const profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
-
-                    profesionalSolicitud += '<br>' + prestacion.solicitud.organizacion.nombre.substring(0, prestacion.solicitud.organizacion.nombre.indexOf('-'));
-
-
-                    let orgacionacionDireccionSolicitud = organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre;
-
-                    // HEADER
-                    html = html
-                        .replace('<!--paciente-->', nombreCompleto)
-                        .replace('<!--datosRapidosPaciente-->', datosRapidosPaciente)
-                        .replace('<!--fechaNacimiento-->', fechaNacimiento)
-                        .replace('<!--nroCarpeta-->', (carpeta && carpeta.nroCarpeta ? carpeta.nroCarpeta : 'sin número de carpeta'))
-                        .replace(/(<!--organizacionNombreSolicitud-->)/g, prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>'))
-                        .replace('<!--orgacionacionDireccionSolicitud-->', orgacionacionDireccionSolicitud)
-                        .replace('<!--profesionalSolicitud-->', profesionalSolicitud);
-
-                    let fechaSolicitud: any = '';
-                    let fechaEjecucion: any = new Date(prestacion.estados.find(x => x.tipo === 'ejecucion').createdAt);
-                    let fechaValidacion: any = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
-
-                    // BODY
-
-                    if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
-                        const valor = prestacion.ejecucion.registros[0].valor;
-                        fechaEjecucion = valor && valor.fechaDesde ? moment(valor.fechaDesde).format('DD/MM/YYYY') + ' hs' : null;
-                        fechaValidacion = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') + ' hs' : null;
-                        const unidadOrganizativa = valor && valor.unidadOrganizativa ? this.ucaseFirst(valor.unidadOrganizativa.term) : null;
-
-                        tituloFechaSolicitud = '';
-                        tituloFechaEjecucion = 'Fecha Ingreso';
-                        tituloFechaValidacion = 'Fecha Egreso';
-
-                        if (unidadOrganizativa) {
-                            tituloFechaSolicitud = 'Servicio';
-                            fechaSolicitud = unidadOrganizativa;
-                        }
-
-                    } else {
-                        tituloFechaSolicitud = 'Fecha Solicitud';
-                        fechaSolicitud = moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs';
-                        fechaEjecucion = moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs';
-                        fechaValidacion = moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs';
-                    }
-
-                    html = html.replace('<!--tipoPrestacion-->', tipoPrestacion)
-                        .replace('<!--tituloFechaSolicitud-->', tituloFechaSolicitud)
-                        .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
-                        .replace('<!--tituloFechaValidacion-->', tituloFechaValidacion)
-                        .replace('<!--fechaEjecucion-->', fechaEjecucion)
-                        .replace('<!--fechaValidacion-->', fechaValidacion)
-                        .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
-                        // .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
-                        .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).concat() : this.informeRegistros);
-
-
-                    // FOOTER
-                    html = html
-                        .replace('<!--profesionalFirmante1-->', profesionalSolicitud)
-                        .replace('<!--usuario-->', Auth.getUserName(req))
-                        .replace(/(<!--fechaActual-->)/g, moment().format('DD/MM/YYYY HH:mm') + ' hs')
-                        .replace('<!--profesionalValidacion-->', profesionalValidacion)
-                        .replace('<!--fechaValidacion-->', fechaValidacion)
-                        .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
-                        .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
-                        .replace('<!--fechaSolicitud-->', fechaSolicitud);
-
-                    if (firmaProfesional) {
-                        html = html.replace('<!--firma1-->', `<img src="data:image/png;base64,${firmaProfesional}">`);
-                    }
-
-                    if (config.informe && motivoPrincipalDeConsulta) {
-                        html = html
-                            .replace('<!--motivoPrincipalDeConsulta-->', motivoPrincipalDeConsulta);
-                    }
-
-                    // Se carga logo del efector, si no existe se muestra el nombre del efector como texto
-                    let nombreLogo = prestacion.solicitud.organizacion.nombre.toLocaleLowerCase().replace(/-|\./g, '').replace(/ {2,}| /g, '-');
-                    try {
-                        let logoEfector;
-                        logoEfector = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/efectores/' + nombreLogo + '.png'));
-                        html = html
-                            .replace('<!--logoOrganizacion-->', `<img class="logo-efector" src="data:image/png;base64,${logoEfector.toString('base64')}">`);
-                    } catch (fileError) {
-                        html = html
-                            .replace('<!--logoOrganizacion-->', `<b class="no-logo-efector">${prestacion.solicitud.organizacion.nombre}</b>`);
-                    }
-
-                    // Logos comunes a todos los informes
-                    let logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional.png'));
-                    let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h.png'));
-                    let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp.png'));
-                    let logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-h.png'));
-
-                    // Firmas
-                    html = html
-                        .replace('<!--logoAdicional-->', `<img class="logo-adicional" src="data:image/png;base64,${logoAdicional.toString('base64')}">`)
-                        .replace('<!--logoAndes-->', `<img class="logo-andes" src="data:image/png;base64,${logoAndes.toString('base64')}">`)
-                        .replace('<!--logoPDP-->', `<img class="logo-pdp" src="data:image/png;base64,${logoPDP.toString('base64')}">`)
-                        .replace('<!--logoPDP2-->', `<img class="logo-pdp-h" src="data:image/png;base64,${logoPDP2.toString('base64')}">`);
-
-                    html = html.replace(/>,</g, '><');
-
-                    // Limpio el informe
-                    this.informeRegistros = [];
-                    this.nivelPadre = 0;
-
-                    resolve(html);
-
-                } else {
-                    resolve(false);
-                }
-            } catch (e) {
-                return reject(e);
+            if (config.informe) {
+                // Override título "Fecha Ejecución"?
+                tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : tituloFechaEjecucion;
+                // Override título "Fecha Validación"?
+                tituloFechaValidacion = config.informe.fechaValidacionOverride ? config.informe.fechaValidacionOverride : tituloFechaValidacion;
             }
-        });
+
+            // Vemos si el tipo de prestación tiene registros que son hijos directos (TP: Ecografía; Hijo: Ecografía obstétrica)
+            let hijos = await SnomedCtr.getChildren(prestacion.solicitud.tipoPrestacion.conceptId, { all: true });
+            let motivoPrincipalDeConsulta;
+            let tituloRegistro;
+            let contenidoInforme;
+
+            // Override título del primer registro?
+            if (config.informe && config.informe.tipoPrestacionTituloOverride) {
+                tituloRegistro = hijos.find(x => prestacion.ejecucion.registros.find(y => y.concepto.conceptId === x.conceptId));
+
+                tipoPrestacion = prestacion.ejecucion.registros[0].nombre;
+                tituloInforme = config.informe.registroTituloOverride;
+                prestacion.ejecucion.registros[0].concepto.term = tituloInforme;
+                tituloInforme = tituloInforme[0].toUpperCase() + tituloInforme.slice(1);
+
+                if (prestacion.solicitud.tipoPrestacion.conceptId === '73761001') {
+                    tipoPrestacion = prestacion.solicitud.tipoPrestacion.term;
+                    tituloInforme = '';
+                }
+
+            } else {
+                // Si tiene un hijo directo, usamos su nombre como título de la consulta
+                tipoPrestacion = prestacion.solicitud.tipoPrestacion.term[0].toUpperCase() + prestacion.solicitud.tipoPrestacion.term.slice(1);
+            }
+
+            // Existe configuración de PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL?
+            if (config.informe && config.informe.motivoPrincipalDeConsultaOverride) {
+                if (prestacion.ejecucion.registros.length > 1) {
+                    let existeConcepto = prestacion.ejecucion.registros.find(x => this.existeSemanticTagMPC(x.concepto.semanticTag) && x.esDiagnosticoPrincipal);
+
+                    if (existeConcepto && existeConcepto.esDiagnosticoPrincipal && tituloRegistro && tituloRegistro.conceptId !== existeConcepto.concepto.conceptId) {
+                        motivoPrincipalDeConsulta = existeConcepto;
+                        if (motivoPrincipalDeConsulta) {
+                            motivoPrincipalDeConsulta = '<b>PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL: </b>' + motivoPrincipalDeConsulta.concepto.term;
+                        }
+                    }
+                }
+            }
+
+
+            let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
+
+            switch (prestacion.ejecucion.registros[0].concepto.conceptId) {
+                case '310634005':
+                    registros = this.filtroColonoscopia(registros);
+                    break;
+            }
+
+            if (!registro) {
+                // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
+                await this.generarInforme(registros);
+            } else {
+                await this.generarInforme([registro]);
+            }
+
+
+            // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
+            if (!config.informe || config.informe.registrosDefault) {
+                contenidoInforme = this.informeRegistros.filter(x => x !== undefined ? x : null);
+            } else {
+                contenidoInforme = this.informeRegistros;
+            }
+
+            let nombreCompleto = paciente.apellido + ', ' + paciente.nombre;
+            let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
+            let hoy = moment();
+            let edad = paciente.fechaNacimiento ? hoy.diff(moment(paciente.fechaNacimiento), 'years') + ' años | ' : '';
+            let datosRapidosPaciente = paciente.sexo + ' | ' + edad + paciente.documento;
+
+            let idOrg = (Auth.getOrganization(req, 'id') as any);
+            let organizacion: any = await this.getOrgById(idOrg);
+
+            let carpeta = paciente.carpetaEfectores.find(x => x.organizacion.id === idOrg);
+
+            const firmaProfesional = await this.getFirma(prestacion.solicitud.profesional);
+
+            // let profesionalSolicitud = prestacion.solicitud.profesional.apellido + ', ' + prestacion.solicitud.profesional.nombre;
+            let infoMatriculas = await searchMatriculas(prestacion.solicitud.profesional.id);
+
+            let profesionalSolicitudNombreFooter = `${infoMatriculas.apellido}, ${infoMatriculas.nombre} <br>`;
+            let profesionalSolicitudFooter = '';
+            infoMatriculas.formacionGrado.forEach(e => profesionalSolicitudFooter =  `${profesionalSolicitudFooter}${e.nombre} MP ${e.numero} <br>`);
+            infoMatriculas.formacionPosgrado.forEach(e => profesionalSolicitudFooter =  `${profesionalSolicitudFooter}${e.nombre} ME ${e.numero} <br>`);
+            profesionalSolicitudFooter = profesionalSolicitudFooter.substring(0, profesionalSolicitudFooter.length - 5);
+
+            const profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
+
+            let orgacionacionDireccionSolicitud = organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre;
+
+            let profesionalSolicitud = `${prestacion.solicitud.profesional.apellido}, ${prestacion.solicitud.profesional.nombre}<br>
+                ${prestacion.solicitud.organizacion.nombre.substring(0, prestacion.solicitud.organizacion.nombre.indexOf('-')) }`;
+
+            // HEADER
+            html = html
+                .replace('<!--paciente-->', nombreCompleto)
+                .replace('<!--datosRapidosPaciente-->', datosRapidosPaciente)
+                .replace('<!--fechaNacimiento-->', fechaNacimiento)
+                .replace('<!--nroCarpeta-->', (carpeta && carpeta.nroCarpeta ? carpeta.nroCarpeta : 'sin número de carpeta'))
+                .replace(/(<!--organizacionNombreSolicitud-->)/g, prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>'))
+                .replace('<!--orgacionacionDireccionSolicitud-->', orgacionacionDireccionSolicitud)
+                .replace('<!--profesionalSolicitud-->', profesionalSolicitud);
+
+            let fechaSolicitud: any = '';
+            let fechaEjecucion: any = new Date(prestacion.estados.find(x => x.tipo === 'ejecucion').createdAt);
+            let fechaValidacion: any = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
+
+            // BODY
+
+            if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
+                const valor = prestacion.ejecucion.registros[0].valor;
+                fechaEjecucion = valor && valor.fechaDesde ? moment(valor.fechaDesde).format('DD/MM/YYYY') + ' hs' : null;
+                fechaValidacion = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') + ' hs' : null;
+                const unidadOrganizativa = valor && valor.unidadOrganizativa ? this.ucaseFirst(valor.unidadOrganizativa.term) : null;
+
+                tituloFechaSolicitud = '';
+                tituloFechaEjecucion = 'Fecha Ingreso';
+                tituloFechaValidacion = 'Fecha Egreso';
+
+                if (unidadOrganizativa) {
+                    tituloFechaSolicitud = 'Servicio';
+                    fechaSolicitud = unidadOrganizativa;
+                }
+
+            } else {
+                tituloFechaSolicitud = 'Fecha Solicitud';
+                fechaSolicitud = moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs';
+                fechaEjecucion = moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs';
+                fechaValidacion = moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs';
+            }
+
+            html = html.replace('<!--tipoPrestacion-->', tipoPrestacion)
+                .replace('<!--tituloFechaSolicitud-->', tituloFechaSolicitud)
+                .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
+                .replace('<!--tituloFechaValidacion-->', tituloFechaValidacion)
+                .replace('<!--fechaEjecucion-->', fechaEjecucion)
+                .replace('<!--fechaValidacion-->', fechaValidacion)
+                .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
+                // .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
+                .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).concat() : this.informeRegistros);
+
+
+            // FOOTER
+            html = html
+                .replace('<!--profesionalFirmante1-->', profesionalSolicitudNombreFooter)
+                .replace('<!--profesionalMatriculas-->', profesionalSolicitudFooter)
+                .replace('<!--usuario-->', Auth.getUserName(req))
+                .replace(/(<!--fechaActual-->)/g, moment().format('DD/MM/YYYY HH:mm') + ' hs')
+                .replace('<!--profesionalValidacion-->', profesionalValidacion)
+                .replace('<!--fechaValidacion-->', fechaValidacion)
+                .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
+                .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
+                .replace('<!--fechaSolicitud-->', fechaSolicitud);
+
+            if (firmaProfesional) {
+                html = html.replace('<!--firma1-->', `<img src="data:image/png;base64,${firmaProfesional}">`);
+            }
+
+            if (config.informe && motivoPrincipalDeConsulta) {
+                html = html
+                    .replace('<!--motivoPrincipalDeConsulta-->', motivoPrincipalDeConsulta);
+            }
+
+            // Se carga logo del efector, si no existe se muestra el nombre del efector como texto
+            let nombreLogo = prestacion.solicitud.organizacion.nombre.toLocaleLowerCase().replace(/-|\./g, '').replace(/ {2,}| /g, '-');
+            try {
+                let logoEfector;
+                logoEfector = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/efectores/' + nombreLogo + '.png'));
+                html = html
+                    .replace('<!--logoOrganizacion-->', `<img class="logo-efector" src="data:image/png;base64,${logoEfector.toString('base64')}">`);
+            } catch (fileError) {
+                html = html
+                    .replace('<!--logoOrganizacion-->', `<b class="no-logo-efector">${prestacion.solicitud.organizacion.nombre}</b>`);
+            }
+
+            // Logos comunes a todos los informes
+            let logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional.png'));
+            let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h.png'));
+            let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp.png'));
+            let logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-h.png'));
+
+            // Firmas
+            html = html
+                .replace('<!--logoAdicional-->', `<img class="logo-adicional" src="data:image/png;base64,${logoAdicional.toString('base64')}">`)
+                .replace('<!--logoAndes-->', `<img class="logo-andes" src="data:image/png;base64,${logoAndes.toString('base64')}">`)
+                .replace('<!--logoPDP-->', `<img class="logo-pdp" src="data:image/png;base64,${logoPDP.toString('base64')}">`)
+                .replace('<!--logoPDP2-->', `<img class="logo-pdp-h" src="data:image/png;base64,${logoPDP2.toString('base64')}">`);
+
+            html = html.replace(/>,</g, '><');
+
+            // Limpio el informe
+            this.informeRegistros = [];
+            this.nivelPadre = 0;
+        }
+
+        return html;
     }
 
     private static filtroColonoscopia(registros: any[]) {

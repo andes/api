@@ -1,9 +1,10 @@
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { profesional } from '../schemas/profesional';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
 import { userScheduler } from '../../../config.private';
 import { Auth } from './../../../auth/auth.class';
+import moment = require('moment');
 
 /**
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
@@ -126,7 +127,7 @@ export async function search(filter, fields) {
     const match = {};
     const project = { documento: -1, apellido: -1, nombre: -1 };
     if (filter.id) {
-        match['_id'] = mongoose.Types.ObjectId(filter.id);
+        match['_id'] = Types.ObjectId(filter.id);
     }
     if (fields.matricula) {
         project['matricula'] = { $arrayElemAt: ['$formacionGrado.matriculacion.matriculaNumero', -1] };
@@ -143,4 +144,19 @@ export async function search(filter, fields) {
     ];
 
     return await profesional.aggregate(aggregate);
+}
+
+export async function searchMatriculas(profesionalId) {
+    const _profesional: any = await profesional.findById(profesionalId);
+
+    let filterFormaciones = (e => !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date()));
+
+    return {
+        nombre: _profesional.nombre,
+        apellido: _profesional.apellido,
+        formacionGrado: _profesional.formacionGrado ?
+            _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [],
+        formacionPosgrado: _profesional.formacionPosgrado ?
+            _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : []
+    };
 }
