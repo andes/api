@@ -69,7 +69,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').PerfilesRouter);
     app.use('/api/modules/huds', require('./modules/huds').HudsAccesoRouter);
     app.use('/api/modules/webhook', require('./modules/webhook').WebhookRouter);
-    app.use('/api/modules', require('./modules/webhooklog').WebhookLogRouter);
+    app.use('/api/modules', require('./modules/webhook/webhooklog').WebhookLogRouter);
 
     /**
      * Inicializa las rutas para adjuntar archivos

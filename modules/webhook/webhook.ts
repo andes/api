@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import { EventCore } from '@andes/event-bus';
-import { WebHook } from '../schemas/webhookSchema';
-import { WebHookLog } from '../../webhooklog/webhooklog.schema';
+import { WebHook } from './webhook.schema';
+import { WebHookLog } from './webhooklog/webhooklog.schema';
 import { Patient } from '@andes/fhir';
 
 const request = require('request');
