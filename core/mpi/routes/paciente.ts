@@ -851,289 +851,61 @@ router.get('/pacientes/:id/turnos', async (req, res, next) => {
 
 
 router.get('/listado/csv', async (req, res, next) => {
-    let fechaIni = new Date('2019-01-01');
-    let pipeline1 = [
-        {
-            $match: {
-                'ejecucion.registros.concepto.conceptId': {
-                    $in: ["46973005", "164783007", "371911009", "40594005",
-                        "413153004", "446695008", "46973005", "2511000013101"]
-                }, 'ejecucion.fecha': { $gte: fechaIni }
-            }
-        },
-        { $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } },
-        { $match: { 'lastState.tipo': 'validada' } },
-        {
-            $project: {
-                paciente: 1, 'fechaEjecucion': '$ejecucion.fecha', 'efector': '$ejecucion.organizacion.nombre',
-                'tipoPrestacion': '$solicitud.tipoPrestacion.term', 'registros': '$ejecucion.registros'
-            }
-        },
-        { $unwind: '$registros' },
-        {
-            $match: {
-                'registros.concepto.conceptId': {
-                    $in: ["46973005", "164783007", "371911009", "40594005",
-                        "413153004", "446695008", "46973005", "2511000013101"]
-                }
-            }
-        },
-        {
-            $project: {
-                paciente: 1, 'fechaEjecucion': 1, 'efector': 1,
-                'tipoPrestacion': 1, 'registro0': { $arrayElemAt: ['$registros.registros', 0] }, 'registro1': { $arrayElemAt: ['$registros.registros', 1] }
-            }
-        },
-        {
-            $match: {
-                'registro0.valor': { $ne: null }, 'registro1.valor': { $ne: null }
-            }
-        },
-        {
-            $project: {
-                'nombre': '$paciente.nombre', 'apellido': '$paciente.apellido', 'documento': '$paciente.documento', 'sexo': '$paciente.sexo',
-                'fechaNacimiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$paciente.fechaNacimiento' } },
-                'fechaEjecucion': { '$dateToString': { 'format': '%d/%m/%Y', date: '$fechaEjecucion' } }, 'efector': 1,
-                'tipoPrestacion': 1, 'presionSistolica': '$registro0.valor', 'presionDiastolica': '$registro1.valor'
-            }
-        },
-        {
-            $group: {
-                _id: '$documento',
-                prestaciones: { $push: '$$ROOT' }
-            }
-        },
-        {
-            $replaceRoot: {
-                newRoot: { $arrayElemAt: ['$prestaciones', 0] }
-            }
-        }
-    ];
-
-
-    let pipeline2 = [
-        {
-            $match: {
-                'ejecucion.registros.concepto.conceptId': {
-                    $in: ["61746007", "2621000013108", "2621000013108", "410634009", "410634009", "410636006", "410636006", "410637002",
-                        "410637002", "410638007", "410638007", "410639004", "410640002", "410641003"]
-                }, 'ejecucion.fecha': { $gte: fechaIni }
-            }
-        },
-        { $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } },
-        { $match: { 'lastState.tipo': 'validada' } },
-        {
-            $project: {
-                paciente: 1, 'fechaEjecucion': '$ejecucion.fecha', 'efector': '$ejecucion.organizacion.nombre',
-                'tipoPrestacion': '$solicitud.tipoPrestacion.term', 'registros': '$ejecucion.registros'
-            }
-        },
-        { $unwind: '$registros' },
-        {
-            $match: {
-                'registros.concepto.conceptId': {
-                    $in: ["61746007", "2621000013108", "2621000013108", "410634009", "410634009", "410636006", "410636006", "410637002",
-                        "410637002", "410638007", "410638007", "410639004", "410640002", "410641003"]
-                }
-            }
-        },
-        {
-            $project: {
-                paciente: 1, 'fechaEjecucion': 1, 'efector': 1,
-                'tipoPrestacion': 1, 'registros': '$registros.registros'
-            }
-        },
-        { $unwind: '$registros' },
-        {
-            $match: {
-                'registros.concepto.conceptId': {
-                    $in: ["46973005", "164783007", "371911009", "40594005",
-                        "413153004", "446695008", "46973005", "2511000013101"]
-                }
-            }
-        },
-        {
-            $project: {
-                paciente: 1, 'fechaEjecucion': 1, 'efector': 1,
-                'tipoPrestacion': 1, 'registro0': { $arrayElemAt: ['$registros.registros', 0] }, 'registro1': { $arrayElemAt: ['$registros.registros', 1] }
-            }
-        },
-        {
-            $match: {
-                'registro0.valor': { $ne: null }, 'registro1.valor': { $ne: null }
-            }
-        },
-        {
-            $project: {
-                'nombre': '$paciente.nombre', 'apellido': '$paciente.apellido', 'documento': '$paciente.documento', 'sexo': '$paciente.sexo',
-                'fechaNacimiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$paciente.fechaNacimiento' } },
-                'fechaEjecucion': { '$dateToString': { 'format': '%d/%m/%Y', date: '$fechaEjecucion' } }, 'efector': 1,
-                'tipoPrestacion': 1, 'presionSistolica': '$registro0.valor', 'presionDiastolica': '$registro1.valor'
-            }
-        },
-        {
-            $group: {
-                _id: '$documento',
-                prestaciones: { $push: '$$ROOT' }
-            }
-        },
-        {
-            $replaceRoot: {
-                newRoot: { $arrayElemAt: ['$prestaciones', 0] }
-            }
-        }
-    ];
-
-
-
-
-
-
-
-
-
-    /*[{ "$match": { 'profesionalMatriculado': true } },
-    { $unwind: '$formacionGrado' },
+    let fechaIni = new Date('2018-08-17');
+    let pipeline1 = [{ '$match': { 'createdAt': { '$gte': fechaIni }, 'documento': { '$ne': '' }, 'activo': true, 'estado': 'validado' } },
+    { '$addFields': { 'dire': { '$slice': ['$direccion', 0, 1] } } }, { '$unwind': '$dire' },
     {
-        "$unwind": {
-            "path": '$formacionPosgrado',
-            "preserveNullAndEmptyArrays": true
+        '$project': {
+            '_id': 1, 'nombre': 1, 'apellido': 1, 'documento': 1, 'sexo': 1, 'estado': 1, 'fechaNacimiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$fechaNacimiento' } },
+            'fechaEmpadronamiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$createdAt' } },
+            'efectorEmpadronamiento': '$createdBy.organizacion.nombre', 'idEfectorEmpadronamiento': '$createdBy.organizacion._id',
+            'provincia': '$dire.ubicacion.provincia.nombre', 'localidad': '$dire.ubicacion.localidad.nombre', 'calle': '$dire.valor',
+            'pais': '$dire.ubicacion.pais.nombre', 'geoReferencia': '$dire.geoReferencia'
         }
-    },
-    {
-        $addFields: {
-            matriculaGrado: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] },
-            matriculaEspecialidad: { $arrayElemAt: ['$formacionPosgrado.matriculacion', -1] }
-        }
-    },
-    {
-        $project: {
-            _id: 1, nombre: 1, apellido: 1, tipoDocumento: 1, documento: 1, cuit: 1,
-            fechaNacimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$fechaNacimiento' } }, sexo: 1,
-            formacionGrado: '$formacionGrado.profesion.nombre',
-            matriculaGrado: '$matriculaGrado.matriculaNumero',
-            especialidad: '$formacionPosgrado.especialidad.nombre',
-            matriculaEspecialidad: '$matriculaEspecialidad.matriculaNumero'
-        }
-    }];*/
+    }];
+    console.log('pipeline1', JSON.stringify(pipeline1));
+    // resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
+    // console.log('resRenaper', resRenaper);
 
 
-
-    /* [{ '$match': { profesionalMatriculado: true } },
-    {
-        $addFields: {
-            'profesion1': { $slice: ['$formacionGrado', 0, 1] },
-            'profesion2': { $slice: ['$formacionGrado', 1, 1] },
-            'profesion3': { $slice: ['$formacionGrado', 2, 1] },
-            'profesion4': { $slice: ['$formacionGrado', 3, 1] },
-            'profesion5': { $slice: ['$formacionGrado', 4, 1] },
-            'especialidad1': { $slice: ['$formacionPosgrado', 0, 1] },
-            'especialidad2': { $slice: ['$formacionPosgrado', 1, 1] },
-            'especialidad3': { $slice: ['$formacionPosgrado', 2, 1] },
-            'especialidad4': { $slice: ['$formacionPosgrado', 3, 1] },
-            'especialidad5': { $slice: ['$formacionPosgrado', 4, 1] }
-        }
-    },
-    {
-        $project: {
-            _id: 1, nombre: 1, apellido: 1, documento: 1, cuit: 1, habilitado: 1,
-            profesion1: '$profesion1.profesion.nombre',
-            matricula1: { $arrayElemAt: [{ $arrayElemAt: ['$profesion1.matriculacion.matriculaNumero', -1] }, -1] },
-            matricula1Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$profesion1.matriculacion.fin', -1] }, -1] },
-            profesion2: '$profesion2.profesion.nombre',
-            matricula2: { $arrayElemAt: [{ $arrayElemAt: ['$profesion2.matriculacion.matriculaNumero', -1] }, -1] },
-            matricula2Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$profesion2.matriculacion.fin', -1] }, -1] },
-            profesion3: '$profesion3.profesion.nombre',
-            matricula3: { $arrayElemAt: [{ $arrayElemAt: ['$profesion3.matriculacion.matriculaNumero', -1] }, -1] },
-            matricula3Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$profesion3.matriculacion.fin', -1] }, -1] },
-            profesion4: '$profesion4.profesion.nombre',
-            matricula4: { $arrayElemAt: [{ $arrayElemAt: ['$profesion4.matriculacion.matriculaNumero', -1] }, -1] },
-            matricula4Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$profesion4.matriculacion.fin', -1] }, -1] },
-            profesion5: '$profesion5.profesion.nombre',
-            matricula5: { $arrayElemAt: [{ $arrayElemAt: ['$profesion5.matriculacion.matriculaNumero', -1] }, -1] },
-            matricula5Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$profesion5.matriculacion.fin', -1] }, -1] },
-            especialidad1: '$especialidad1.especialidad.nombre',
-            matriculaEsp1: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad1.matriculacion.matriculaNumero', -1] }, -1] },
-            matriculaEsp1Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad1.matriculacion.fin', -1] }, -1] },
-            especialidad2: '$especialidad2.especialidad.nombre',
-            matriculaEsp2: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad2.matriculacion.matriculaNumero', -1] }, -1] },
-            matriculaEsp2Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad2.matriculacion.fin', -1] }, -1] },
-            especialidad3: '$especialidad3.especialidad.nombre',
-            matriculaEsp3: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad3.matriculacion.matriculaNumero', -1] }, -1] },
-            matriculaEsp3Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad3.matriculacion.fin', -1] }, -1] },
-            especialidad4: '$especialidad4.especialidad.nombre',
-            matriculaEsp4: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad4.matriculacion.matriculaNumero', -1] }, -1] },
-            matriculaEsp4Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad4.matriculacion.fin', -1] }, -1] },
-            especialidad5: '$especialidad5.especialidad.nombre',
-            matriculaEsp5: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad5.matriculacion.matriculaNumero', -1] }, -1] },
-            matriculaEsp5Vencimiento: { $arrayElemAt: [{ $arrayElemAt: ['$especialidad5.matriculacion.fin', -1] }, -1] },
-        }
-    }, {
-        $project: {
-            _id: 1, nombre: 1, apellido: 1, documento: 1, cuit: 1, habilitado: 1,
-            profesion1: 1, matricula1: 1, matricula1Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matricula1Vencimiento' } },
-            profesion2: 1, matricula2: 1, matricula2Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matricula2Vencimiento' } },
-            profesion3: 1, matricula3: 1, matricula3Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matricula3Vencimiento' } },
-            profesion4: 1, matricula4: 1, matricula4Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matricula4Vencimiento' } },
-            profesion5: 1, matricula5: 1, matricula5Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matricula5Vencimiento' } },
-            especialidad1: 1, matriculaEsp1: 1, matriculaEsp1Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matriculaEsp1Vencimiento' } },
-            especialidad2: 1, matriculaEsp2: 1, matriculaEsp2Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matriculaEsp2Vencimiento' } },
-            especialidad3: 1, matriculaEsp3: 1, matriculaEsp3Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matriculaEsp3Vencimiento' } },
-            especialidad4: 1, matriculaEsp4: 1, matriculaEsp4Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matriculaEsp4Vencimiento' } },
-            especialidad5: 1, matriculaEsp5: 1, matriculaEsp5Vencimiento: { '$dateToString': { 'format': '%d/%m/%Y', date: '$matriculaEsp5Vencimiento' } }
-        }
-    }]; */
-
-    /*  [{ '$match': { 'createdAt': { '$gte': fechaIni }, 'documento': { '$ne': '' }, 'activo': true } },
-     { '$addFields': { 'dire': { '$slice': ['$direccion', 0, 1] } } }, { '$unwind': '$dire' },
-     {
-         '$project': {
-             '_id': 1, 'nombre': 1, 'apellido': 1, 'documento': 1, 'sexo': 1, 'estado': 1, 'fechaNacimiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$fechaNacimiento' } },
-             'fechaEmpadronamiento': { '$dateToString': { 'format': '%d/%m/%Y', date: '$createdAt' } },
-             'efectorEmpadronamiento': '$createdBy.organizacion.nombre', 'idEfectorEmpadronamiento': '$createdBy.organizacion._id',
-             'provincia': '$dire.ubicacion.provincia.nombre', 'localidad': '$dire.ubicacion.localidad.nombre', 'calle': '$dire.valor',
-             'pais': '$dire.ubicacion.pais.nombre'
-         }
-     }];
-      { id: 'documento', title: 'DNI' },
-                { id: 'nombre', title: 'Nombre' },
-                { id: 'apellido', title: 'Apellido' },
-                { id: 'fechaNacimiento', title: 'fechaNacimiento' },
-                { id: 'sexo', title: 'sexo' },
-                { id: 'conceptId', title: 'conceptId' },
-                { id: 'term', title: 'term' },
-                { id: 'tipoPrestacion', title: 'Prestación' },
-                { id: 'fechaPrestacion', title: 'fechaPrestacion' },
-                { id: 'efector', title: 'efector' }
-     */
     try {
-        let resultados1Andes = await prestaciones.aggregate(pipeline1);
-        let resultados2Andes = await prestaciones.aggregate(pipeline2);
+        let resultados1Andes = await paciente.aggregate(pipeline1);
         // let resultadosMpi = pacienteMpi.find().exec();
         // const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
         // let listado = [...pacientes[0], ...pacientes[1]];
 
-        let listado = [...resultados1Andes, ...resultados2Andes];
+        let salida = await Promise.all(
+            resultados1Andes.map(async paciente => {
+                console.log('paciente', paciente);
+                let financiador: any = await getObraSocial(paciente);
+                console.log('financiador', financiador);
+                paciente.financiador = financiador.nombre ? financiador.nombre : '';
+                paciente.geoReferencia = paciente.geoReferencia ? paciente.geoReferencia[0] + ',' + paciente.geoReferencia[1] : '';
+                return paciente;
+            }));
+        console.log('salida', salida);
         const createCsvWriter = require('csv-writer').createObjectCsvWriter;
         const csvWriter = createCsvWriter({
-            path: 'Pacientes_TA_20200122.csv',
+            path: 'Pacientes_20200131.csv',
             header: [
-                { id: '_id', title: 'ID' },
+                { id: 'documento', title: 'DNI' },
                 { id: 'nombre', title: 'Nombre' },
                 { id: 'apellido', title: 'Apellido' },
-                { id: 'documento', title: 'DNI' },
-                { id: 'fechaNacimiento', title: 'FechaNacimiento' },
-                { id: 'sexo', title: 'Sexo' },
-                { id: 'efector', title: 'Efector' },
-                { id: 'tipoPrestacion', title: 'TipoPrestacion' },
-                { id: 'fechaEjecucion', title: 'Fecha prestación' },
-                { id: 'presionSistolica', title: 'P. Sistólica' },
-                { id: 'presionDiastolica', title: 'P. Diastólica' },
-
+                { id: 'fechaNacimiento', title: 'fechaNacimiento' },
+                { id: 'sexo', title: 'sexo' },
+                { id: 'estado', title: 'estado' },
+                { id: 'fechaEmpadronamiento', title: 'fechaEmpadronamiento' },
+                { id: 'efectorEmpadronamiento', title: 'efector' },
+                { id: 'provincia', title: 'provincia' },
+                { id: 'localidad', title: 'localidad' },
+                { id: 'calle', title: 'calle' },
+                { id: 'pais', title: 'pais' },
+                { id: 'financiador', title: 'Financiador' },
+                { id: 'geoReferencia', title: 'geoReferencia' }
             ]
         });
 
-        csvWriter.writeRecords(listado)       // returns a promise
+        csvWriter.writeRecords(salida)       // returns a promise
             .then(() => {
                 console.log('...Done');
                 res.json([]);

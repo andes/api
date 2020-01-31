@@ -825,7 +825,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
 
     try {
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
-        console.log('resRenaper', resRenaper);
+        // console.log('resRenaper', resRenaper);
         andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resRenaper);
     } catch (error) {
         andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');

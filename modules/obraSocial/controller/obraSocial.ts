@@ -2,6 +2,7 @@ import { pacientePuco } from '../controller/puco';
 import { getPacienteSumar } from '../controller/sumar';
 /*Lo cambiamos porque las prepagas no se consultan de la tabla */
 export async function getObraSocial(paciente) {
+    console.log('obtener Obra social', paciente);
     if (!paciente.documento) { return []; }
 
     let arrayOSPuco: any = await pacientePuco(paciente.documento);
