@@ -874,19 +874,18 @@ router.get('/listado/csv', async (req, res, next) => {
         // const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
         // let listado = [...pacientes[0], ...pacientes[1]];
 
-        let salida = await Promise.all(
-            resultados1Andes.map(async paciente => {
-                console.log('paciente', paciente);
-                let financiador: any = await getObraSocial(paciente);
-                console.log('financiador', financiador);
-                paciente.financiador = financiador.nombre ? financiador.nombre : '';
-                paciente.geoReferencia = paciente.geoReferencia ? paciente.geoReferencia[0] + ',' + paciente.geoReferencia[1] : '';
-                return paciente;
-            }));
-        console.log('salida', salida);
+        let salida = await Promise.all(resultados1Andes.map(async paciente => {
+            // console.log('paciente', paciente);
+            let financiador: any = await getObraSocial(paciente);
+            // console.log('financiador', financiador);
+            paciente.financiador = financiador.nombre ? financiador.nombre : '';
+            paciente.geoReferencia = paciente.geoReferencia ? paciente.geoReferencia[0] + ',' + paciente.geoReferencia[1] : '';
+            return paciente;
+        }));
+        // console.log('salida', salida);
         const createCsvWriter = require('csv-writer').createObjectCsvWriter;
         const csvWriter = createCsvWriter({
-            path: 'Pacientes_20200131.csv',
+            path: 'Pacientes_20200201.csv',
             header: [
                 { id: 'documento', title: 'DNI' },
                 { id: 'nombre', title: 'Nombre' },
@@ -895,7 +894,7 @@ router.get('/listado/csv', async (req, res, next) => {
                 { id: 'sexo', title: 'sexo' },
                 { id: 'estado', title: 'estado' },
                 { id: 'fechaEmpadronamiento', title: 'fechaEmpadronamiento' },
-                { id: 'efectorEmpadronamiento', title: 'efector' },
+                { id: 'efectorEmpadronamiento', title: 'efectorEmpadronamiento' },
                 { id: 'provincia', title: 'provincia' },
                 { id: 'localidad', title: 'localidad' },
                 { id: 'calle', title: 'calle' },
