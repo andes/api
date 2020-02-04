@@ -1,11 +1,12 @@
 import * as express from 'express';
 
 const request = require('request');
+const urlMicroServices = 'http://localhost:3000/'; // Ver de agregar al config.private
 
 let router = express.Router();
 
 router.get('/biQueries', async (req, res, next) => {
-    let url = 'http://localhost:3000/';
+    let url = urlMicroServices;
     let resp: any;
     let options = {
         method: 'POST',
@@ -25,7 +26,7 @@ router.get('/biQueries', async (req, res, next) => {
     });
 });
 router.post('/descargarCSV', async (req, res, next) => {
-    let url = 'http://localhost:3000/';
+    let url = urlMicroServices;
     let resp: any;
     let options = {
         method: 'POST',
