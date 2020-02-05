@@ -241,8 +241,11 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         let pipeline = [];
         let match: any = { $and: [] };
 
-        if (req.query.solicitudDesde && req.query.solicitudHasta) {
+        if (req.query.solicitudDesde) {
             match.$and.push({ 'solicitud.fecha': { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
+        }
+
+        if (req.query.solicitudHasta) {
             match.$and.push({ 'solicitud.fecha': { $lte: (moment(req.query.solicitudHasta).endOf('day').toDate() as any) } });
         }
 
@@ -274,6 +277,14 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.idPaciente) {
             match.$and.push({ 'paciente.id': Types.ObjectId(req.query.idPaciente) });
+        }
+
+        if (req.query.idProfesional) {
+            match.$and.push({ 'solicitud.profesional.id': Types.ObjectId(req.query.idProfesional) });
+        }
+
+        if (req.query.idProfesionalOrigen) {
+            match.$and.push({ 'solicitud.profesionalOrigen.id': Types.ObjectId(req.query.idProfesionalOrigen) });
         }
 
         if (req.query.prestacionDestino) {
@@ -589,26 +600,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 if (req.body.prioridad) {
                     data.solicitud.registros[0].valor.solicitudPrestacion.prioridad = req.body.prioridad;
                     data.solicitud.registros[0].markModified('valor');
-                }
-                if (req.body.estado.tipo === 'asignada') {
-                    if (req.body.profesional) {
-                        data.solicitud.profesional = req.body.profesional;
-                    }
-
-                    if (!data.solicitud.historial) {
-                        data.solicitud.historial = [];
-                    }
-
-                    let registroHistorial: any = {
-                        organizacion: data.solicitud.organizacion,
-                        accion: 'asignacionProfesional'
-                    };
-
-                    if (data.solicitud.profesional) {
-                        registroHistorial.profesional = data.solicitud.profesional;
-                    }
-
-                    data.solicitud.historial.push(registroHistorial);
                 }
                 break;
             case 'romperValidacion':
