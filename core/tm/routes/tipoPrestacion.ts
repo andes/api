@@ -6,6 +6,10 @@ import * as mongoose from 'mongoose';
 const router = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
 
+/**
+ * [DEPRECATED] Actualizar a /api/core/tm/conceptos-turneables
+ */
+
 router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
     let query;
     // Búsqueda por un sólo ID
@@ -48,35 +52,5 @@ router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
         res.json(data);
     });
 });
-
-// router.post('/tiposPrestaciones', function (req, res, next) {
-//     let tp = new tipoPrestacion(req.body);
-//     tp.save((err) => {
-//         if (err) {
-//             return next(err);
-//         }
-
-//         res.json(tp);
-//     });
-// });
-
-// router.put('/tiposPrestaciones/:id', function (req, res, next) {
-//     tipoPrestacion.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
-//         if (err) {
-//             return next(err);
-//         }
-//         res.json(data);
-//     });
-// });
-
-// router.delete('/tiposPrestaciones/:id', function (req, res, next) {
-//     tipoPrestacion.findByIdAndRemove(req.params.id, function (err, data) {
-//         if (err) {
-//             return next(err);
-//         }
-
-//         res.json(data);
-//     });
-// });
 
 export = router;
