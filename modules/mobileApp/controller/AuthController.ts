@@ -364,6 +364,10 @@ export function updateAccount(account, data) {
             });
         }
 
+        if (data.lastLogin) {
+            account.lastLogin = data.lastLogin;
+        }
+
         Promise.all([promise, promise_password]).then(() => {
 
             account.save((err) => {
