@@ -542,18 +542,18 @@ export class Auth {
     * @memberOf Auth
     */
 
-    static checkHudsToken(req: express.Request, paciente) {
+    static checkHudsToken(token: string, paciente: string) {
         try {
             let tokenSettings;
-            if (req.query.hudsToken) {
-                tokenSettings = Auth.decode(req.query.hudsToken);
-                return (String(tokenSettings.paciente) === String(paciente));
+            if (token) {
+                tokenSettings = Auth.decode(token);
+                return (String(tokenSettings.paciente) === String(paciente) // token corresponde al paciente param
+                    && (Date.now() <= tokenSettings.exp * 1000));   // token todavia esta activo
             }
         } catch (e) {
             return null;
         }
-
-        return null;
+        return false;
     }
 
 }

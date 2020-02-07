@@ -96,6 +96,9 @@ router.get('/prestaciones/sinCama', (req: any, res, next) => {
  */
 
 router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
+    if (req.params.idPaciente && (!Auth.checkHudsToken(req.query.hudsToken, req.params.idPaciente))) {
+        return next(403);
+    }
 
     // verificamos que sea un ObjectId válido
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -139,7 +142,9 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
 
 router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, next) => {
-
+    if (req.params.idPaciente && (!Auth.checkHudsToken(req.query.hudsToken, req.params.idPaciente))) {
+        return next(403);
+    }
     // verificamos que sea un ObjectId válido
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Turno no encontrado');
@@ -293,7 +298,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.estados) {
             pipeline.push({ $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } });
-            pipeline.push({ $match: {'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } }});
+            pipeline.push({ $match: { 'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } } });
         }
 
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });

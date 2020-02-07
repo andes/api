@@ -14,6 +14,11 @@ router.get('/accesos', asyncHandler(async (req: any, res) => {
     res.json(result);
 }));
 
+router.get('/accesos/checkToken', ((req: any, res) => {
+    const result = Auth.checkHudsToken(req.query.token, req.query.paciente);
+    res.json(result);
+}));
+
 router.post('/accesos/token', asyncHandler(async (req: any, res) => {
     // Persiste los datos de accesos y genera el token para acceder a la HUDS del paciente
     const organizacionId = Auth.getOrganization(req);
@@ -28,6 +33,5 @@ router.post('/accesos/token', asyncHandler(async (req: any, res) => {
     logAcceso(req, req.body.paciente.id, matricula, req.body.motivo, req.body.idTurno, req.body.idPrestacion);
     return res.json({ token: Auth.generateHudsToken(req.body.usuario, organizacionId, req.body.paciente) });
 }));
-
 
 export const HudsAccesoRouter = router;
