@@ -41,28 +41,31 @@ router.get('/frecuentesProfesional', async (req, res, next) => {
         ...(req.query.tipoPrestacion) && { 'tipoPrestacion.conceptId': req.query.tipoPrestacion }
     };
 
-
-    const pipeline = [
-        { $match: query },
-        { $unwind: '$frecuentes' },
-        { $project: { 'frecuentes.concepto': 1, 'frecuentes.frecuencia': 1, 'frecuentes.esSolicitud': 1, _id: 0 } },
-        {
-            $group: {
-                _id: {
-                    conceptId: '$frecuentes.concepto.conceptId',
-                    term: '$frecuentes.concepto.term',
-                    fsn: '$frecuentes.concepto.fsn',
-                    refsetIds: '$frecuentes.concepto.refsetIds',
-                    semanticTag: '$frecuentes.concepto.semanticTag'
-                },
-                frecuencia: { $sum: '$frecuentes.frecuencia' },
-                esSolicitud: { $last: '$frecuentes.esSolicitud' }
-            }
-        },
-        { $sort: { frecuencia: -1, '_id.conceptId': 1 } },
-        { $project: { _id: 0, concepto: '$_id', frecuencia: 1, esSolicitud: 1, } }
-    ];
-
+    let pipeline = [];
+    pipeline.push({ $match: query });
+    pipeline.push({ $unwind: '$frecuentes' });
+    pipeline.push({ $project: { 'frecuentes.concepto': 1, 'frecuentes.frecuencia': 1, 'frecuentes.esSolicitud': 1, _id: 0 } });
+    pipeline.push({
+        $group: {
+            _id: {
+                conceptId: '$frecuentes.concepto.conceptId',
+                term: '$frecuentes.concepto.term',
+                fsn: '$frecuentes.concepto.fsn',
+                refsetIds: '$frecuentes.concepto.refsetIds',
+                semanticTag: '$frecuentes.concepto.semanticTag'
+            },
+            frecuencia: { $sum: '$frecuentes.frecuencia' },
+            esSolicitud: { $last: '$frecuentes.esSolicitud' }
+        }
+    });
+    pipeline.push({ $sort: { frecuencia: -1, '_id.conceptId': 1 } });
+    pipeline.push({ $project: { _id: 0, concepto: '$_id', frecuencia: 1, esSolicitud: 1, } });
+    if (req.query.skip) {
+        pipeline.push({ $skip: parseInt(req.query.skip, 10) });
+    }
+    if (req.query.limit) {
+        pipeline.push({ $limit: parseInt(req.query.limit, 10) });
+    }
     try {
         const frecuente = await toArray(ProfesionalMeta.aggregate(pipeline).cursor({}).exec());
         res.json(frecuente);
