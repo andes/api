@@ -1,10 +1,10 @@
 import { userScheduler } from '../../../config.private';
 import { paciente } from '../schemas/paciente';
 import { matchSisa } from '../../../utils/servicioSisa';
-import * as controllerPaciente from './paciente';
-import * as debug from 'debug';
+import { updatePaciente } from './paciente';
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
 
-const logger = debug('mpiCorrector');
 
 /**
  * Corrije nombre y apellido de los pacientes reportados con errores
@@ -20,31 +20,27 @@ export async function mpiCorrector(done) {
     try {
         const pacientesReportados = await paciente.find(condicion);
         let doc: any;
-        logger('llamada mpiCorrector ', pacientesReportados.length);
         for (doc of pacientesReportados) {
-            logger('llamada con ', doc.documento);
             await consultarSisa(doc);
         }
     } catch (err) {
-        logger('Error', err);
     }
-    logger('Proceso finalizado');
     done();
 }
 
 async function consultarSisa(persona: any) {
     try {
-        logger('Inicia Consulta Sisa', persona.documento);
         // realiza la consulta con sisa y devuelve los resultados del matcheo
         const resultado = await matchSisa(persona);
-
-
         if (resultado) {
             const match = resultado['matcheos'].matcheo; // Valor del matcheo de sisa
-            const pacienteSisa = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
+            const pacienteSisa: any = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
             if (match >= 95) {
                 // Solo lo validamos con sisa si entra por aquí
                 await actualizarPaciente(persona, pacienteSisa);
+                let datosAnteriores = { nombre: persona.nombre, apellido: persona.apellido };
+                let nuevosDatos = { nombre: pacienteSisa.nombre, apellido: pacienteSisa.apellido };
+                andesLog(userScheduler, logKeys.mpiCorrector.key, persona._id, logKeys.mpiCorrector.operacion, nuevosDatos, datosAnteriores);
                 return true;
             } else {
                 // POST/PUT en una collection pacienteRejected para un control a posteriori
@@ -52,12 +48,13 @@ async function consultarSisa(persona: any) {
                 const data = {
                     reportarError: 'false',
                 };
-                await controllerPaciente.updatePaciente(persona, data, userScheduler);
+                await updatePaciente(persona, data, userScheduler);
+                andesLog(userScheduler, logKeys.mpiCorrector.key, persona._id, logKeys.mpiCorrector.operacion, null, null, 'matching: ' + match);
             }
         }
         return false;
     } catch (err) {
-        logger('Error', err);
+        andesLog(userScheduler, logKeys.mpiCorrector.key, persona._id, logKeys.mpiCorrector.operacion, null, null, 'Error actualizando paciente');
         return false;
     }
 }
@@ -75,6 +72,6 @@ function actualizarPaciente(pacienteMpi: any, pacienteSisa: any) {
         entidadesValidadoras: pacienteMpi.entidadesValidadoras
     };
     // PUT de paciente en MPI
-    return controllerPaciente.updatePaciente(pacienteMpi, data, userScheduler);
+    return updatePaciente(pacienteMpi, data, userScheduler);
 }
 
