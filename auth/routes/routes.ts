@@ -5,7 +5,7 @@ import { Organizacion } from './../../core/tm/schemas/organizacion';
 import * as mongoose from 'mongoose';
 
 import { checkPassword } from '../ldap.controller';
-import { findUser, updateUser, checkMobile } from '../auth.controller';
+import { findUser, updateUser, checkMobile, generateTokenPayload } from '../auth.controller';
 
 const sha1Hash = require('sha1');
 const shiroTrie = require('shiro-trie');
@@ -27,7 +27,7 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
  */
 
 router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
-    const username = (req as any).user.usuario.username;
+    const username = (req as any).user.usuario.username || (req as any).user.usuario;
     const user: any = await AuthUsers.findOne({ usuario: username });
     const organizaciones = user.organizaciones.filter(x => x.activo === true).map((item) => {
         return mongoose.Types.ObjectId(item._id);
@@ -43,8 +43,23 @@ router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) =
  * @post /api/auth/organizaciones
  */
 
+router.post('/v2/organizaciones', Auth.authenticate(), async (req, res, next) => {
+    const username = req.user.usuario.username || req.user.usuario;
+    const orgId = mongoose.Types.ObjectId(req.body.organizacion);
+    const account_id = (req as any).user.account_id;
+
+    const dto = await generateTokenPayload(username, orgId, account_id);
+    if (dto) {
+        return res.send({
+            token: dto.token
+        });
+    } else {
+        return next('Organización inválida');
+    }
+});
+
 router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
-    const username = (req as any).user.usuario.username;
+    const username = req.user.usuario.username || req.user.usuario;
     const orgId = mongoose.Types.ObjectId(req.body.organizacion);
     const [user, org]: [any, any] = await Promise.all([
         AuthUsers.findOne({
@@ -91,7 +106,7 @@ router.post('/login', async (req, res, next) => {
             }
         } else {
             res.json({
-                token: Auth.generateUserToken(user, null, [], prof)
+                token: Auth.generateUserToken2(user.usuario)
             });
         }
     };
@@ -133,6 +148,7 @@ router.post('/login', async (req, res, next) => {
  * Refresca el token de un usuario
  * @param {string} token token de la cuenta
  * @post /api/auth/refreshToken
+ * SE USA EN APP MOBILE
  */
 router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
     try {

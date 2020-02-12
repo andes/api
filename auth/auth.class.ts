@@ -9,6 +9,8 @@ import * as passportJWT from 'passport-jwt';
 import * as jwt from 'jsonwebtoken';
 import * as configPrivate from '../config.private';
 import { Request, Response } from '@andes/api-tool';
+import { ObjectId } from '@andes/core';
+
 const shiroTrie = require('shiro-trie');
 
 export class Auth {
@@ -81,7 +83,9 @@ export class Auth {
     static authenticate() {
         return [
             passport.authenticate('jwt', { session: false }),
-            this.appTokenProtected()
+            this.appTokenProtected(),
+            this.extractToken(),
+            this.recovertPayloadMiddleware()
         ];
     }
 
@@ -162,6 +166,33 @@ export class Auth {
                 }
             } else {
                 next();
+            }
+        };
+    }
+
+    /**
+     * A partir de un token cargar el payload en el request asi sigue la Aplicaicon como corresponde.
+     * Cargar permisos, usuarios, organizacion, profesional, etc.
+     */
+    static recovertPayloadMiddleware() {
+        return async (req, res, next) => {
+            if (req.user.type === 'user-token-2' && req.user.organizacion) {
+                const { getTokenPayload } = require('./auth.controller');
+                const payload = await getTokenPayload(req.token, req.user);
+                req.user = {
+                    id: req.user.id,
+                    type: req.user.type,
+                    account_id: req.user.account_id,
+
+                    usuario: payload.usuario,
+                    profesional: payload.profesional,
+                    permisos: payload.permisos,
+                    organizacion: payload.organizacion
+
+                };
+                return next();
+            } else {
+                return next();
             }
         };
     }
@@ -313,6 +344,23 @@ export class Auth {
 
 
     /**
+     * Version dos del token. Con menos datos.
+     * Solo posee el username y la organización.
+     */
+
+    static generateUserToken2(username: string, organizacion: ObjectId = null, account_id = null): any {
+        // Crea el token con los datos de sesión
+        const token: any = {
+            id: mongoose.Types.ObjectId(),
+            usuario: username,
+            organizacion,
+            account_id,
+            type: 'user-token-2'
+        };
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
+    }
+
+    /**
      * Genera un token de usuario firmado
      *
      * @static
@@ -325,6 +373,7 @@ export class Auth {
      *
      * @memberOf Auth
      */
+
     static generateUserToken(user: any, organizacion: any, permisos: any[], profesional: any, account_id: string = null): any {
         // Crea el token con los datos de sesión
         const token: UserToken = {
