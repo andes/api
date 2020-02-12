@@ -13,7 +13,7 @@ const router = express.Router();
  * Chequea que el paciente este asociado a la cuenta
  */
 
-router.get('/paciente/:id', (req: any, res, next) => {
+router.get('/paciente/:id', Auth.authenticate(), (req: any, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = req.user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
@@ -43,7 +43,7 @@ router.get('/paciente/:id', (req: any, res, next) => {
  *
  */
 
-router.put('/paciente/:id', (req: any, res, next) => {
+router.put('/paciente/:id', Auth.authenticate(), (req: any, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = req.user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
@@ -82,7 +82,7 @@ router.put('/paciente/:id', (req: any, res, next) => {
  * [No esta en uso]
  */
 
-router.patch('/pacientes/:id', (req, res, next) => {
+router.patch('/pacientes/:id', Auth.authenticate(), (req, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = (req as any).user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
@@ -119,7 +119,7 @@ router.patch('/pacientes/:id', (req, res, next) => {
  * Devuelve los CDA de laboratorios de un paciente.
  */
 
-router.get('/laboratorios/(:id)', async (req, res, next) => {
+router.get('/laboratorios/(:id)', Auth.authenticate(), async (req, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = (req as any).user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);

@@ -4,7 +4,7 @@ import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 
-router.post('/minuta', async (req, res, next) => {
+router.post('/minuta', Auth.authenticate(), async (req, res, next) => {
     try {
         const newMinuta = new Minuta(req.body);
         Auth.audit(newMinuta, req);
@@ -15,7 +15,7 @@ router.post('/minuta', async (req, res, next) => {
     }
 });
 
-router.get('/minuta', async (req: any, res, next) => {
+router.get('/minuta', Auth.authenticate(), async (req: any, res, next) => {
     try {
         let data = await Minuta.find({});
         res.json(data);
@@ -24,7 +24,7 @@ router.get('/minuta', async (req: any, res, next) => {
     }
 });
 
-router.patch('/minuta/:id', (req, res, next) => {
+router.patch('/minuta/:id', Auth.authenticate(), (req, res, next) => {
     Minuta.findById({
         _id: req.params.id,
     }, (err, data: any) => {

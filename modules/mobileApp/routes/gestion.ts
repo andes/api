@@ -1,12 +1,13 @@
 import * as express from 'express';
 import { urlDatosGestion } from '../../../config.private';
 const request = require('request');
+import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 const urlGestion = urlDatosGestion;
 
 
-router.get('/datosGestion/', (req, res, next) => {
+router.get('/datosGestion/', Auth.authenticate(), (req, res, next) => {
     let options = {
         method: 'GET',
         uri: urlGestion,

@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as authController from '../controller/AuthController';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
+import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ const router = express.Router();
  *
  */
 
-router.put('/account', (req: any, res, next) => {
+router.put('/account', Auth.authenticate(), (req: any, res, next) => {
     const id = req.user.account_id;
     PacienteApp.findById(mongoose.Types.ObjectId(id), (err, account: any) => {
         if (!account) {
@@ -36,7 +37,7 @@ router.put('/account', (req: any, res, next) => {
  * @param id {string} ID del paciente a crear
  */
 
-router.post('/create/:id', (req: any, res, next) => {
+router.post('/create/:id', Auth.authenticate(), (req: any, res, next) => {
 
     const pacienteId = req.params.id;
     const contacto = req.body;
@@ -65,7 +66,7 @@ router.post('/create/:id', (req: any, res, next) => {
  * @param id {string} ID del paciente a chequear
  */
 
-router.get('/check/:id', (req: any, res, next) => {
+router.get('/check/:id', Auth.authenticate(), (req: any, res, next) => {
     const pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
@@ -90,7 +91,7 @@ router.get('/check/:id', (req: any, res, next) => {
  * [DEPRECATED]
  */
 
-router.post('/v2/reenviar-codigo', (req, res, next) => {
+router.post('/v2/reenviar-codigo', Auth.authenticate(), (req, res, next) => {
     const pacienteId = req.body.id;
     const contacto = req.body.contacto;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {

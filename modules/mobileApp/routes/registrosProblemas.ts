@@ -4,7 +4,7 @@ import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 
-router.post('/problemas', async (req, res, next) => {
+router.post('/problemas', Auth.authenticate(), async (req, res, next) => {
     try {
         const newProblema = new Problema(req.body);
         Auth.audit(newProblema, req);
@@ -15,7 +15,7 @@ router.post('/problemas', async (req, res, next) => {
     }
 });
 
-router.get('/problemas', async (req: any, res, next) => {
+router.get('/problemas', Auth.authenticate(), async (req: any, res, next) => {
     try {
         let data = await Problema.find({});
         res.json(data);
@@ -24,7 +24,7 @@ router.get('/problemas', async (req: any, res, next) => {
     }
 });
 
-router.patch('/problemas/:id', async (req, res, next) => {
+router.patch('/problemas/:id', Auth.authenticate(), async (req, res, next) => {
     try {
         let problema: any = await Problema.findById(req.params.id);
         if (req.body.estado) {

@@ -10,7 +10,7 @@ const router = express.Router();
  * Obtenemos las vacunas del Paciente App
  */
 
-router.get('/vacunas', (req: any, res, next) => {
+router.get('/vacunas', Auth.authenticate(), (req: any, res, next) => {
     try {
         const pacienteId = req.user.pacientes[0].id;
         controller.buscarPaciente(pacienteId).then(async data => {
@@ -29,7 +29,7 @@ router.get('/vacunas', (req: any, res, next) => {
  * Cantidad de vacunas de un paciente
  */
 
-router.get('/vacunas/count', async (req: any, res, next) => {
+router.get('/vacunas/count', Auth.authenticate(), async (req: any, res, next) => {
     try {
         const pacienteId = req.user.pacientes[0].id;
         controller.buscarPaciente(pacienteId).then(async data => {
@@ -46,7 +46,7 @@ router.get('/vacunas/count', async (req: any, res, next) => {
  * Insertamos una nueva vacuna, verificando previamente que no exista en la base de datos.
  */
 
-router.post('/nomivac', async (req: any, res, next) => {
+router.post('/nomivac', Auth.authenticate(), async (req: any, res, next) => {
     if (!Auth.check(req, 'vacunas:nomivac:post')) {
         return next(HttpStatus.UNAUTHORIZED);
     }

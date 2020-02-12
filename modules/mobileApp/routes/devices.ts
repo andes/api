@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { deviceModel } from '../schemas/device';
 const router = express.Router();
+import { Auth } from '../../../auth/auth.class';
 
 /**
  * register new device for pacienteApp
@@ -12,7 +13,7 @@ const router = express.Router();
  * @param app_version {String}
  */
 
-router.post('/devices/register', (req: any, res, next) => {
+router.post('/devices/register', Auth.authenticate(), (req: any, res, next) => {
     const token: string = req.headers.authorization.substring(4);
     const user_id = req.user.account_id;
     pacienteApp.findById(user_id, (errFind, user: any) => {
@@ -47,7 +48,7 @@ router.post('/devices/register', (req: any, res, next) => {
  * }
  */
 
-router.post('/devices/update', (req: any, res, next) => {
+router.post('/devices/update', Auth.authenticate(), (req: any, res, next) => {
     const token: string = req.headers.authorization.substring(4);
     const user_id = req.user.account_id;
     pacienteApp.findById(user_id, (errFind, user: any) => {
@@ -76,7 +77,7 @@ router.post('/devices/update', (req: any, res, next) => {
  * @param id {ObjectId}
  */
 
-router.post('/devices/delete', (req: any, res, next) => {
+router.post('/devices/delete', Auth.authenticate(), (req: any, res, next) => {
     // let token: string = req.headers.authorization.substring(4);
     const user_id = req.user.account_id;
 

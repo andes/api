@@ -3,6 +3,8 @@ import * as agenda from '../../turnos/schemas/agenda';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as moment from 'moment';
 import { getDistanceBetweenPoints } from '../../../utils/utilCoordenadas';
+import * as agendaController from '../controller/AgendaController';
+import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 
@@ -10,7 +12,7 @@ const router = express.Router();
  * Get agendas con turnos disponibles
  */
 
-router.get('/agendasDisponibles', async (req: any, res, next) => {
+router.get('/agendasDisponibles', Auth.authenticate(), async (req: any, res, next) => {
     const pipelineAgendas = [];
     const matchAgendas = {};
 
@@ -73,6 +75,15 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
         res.json(agendasResultado);
     } catch (err) {
         res.status(422).json({ message: err });
+    }
+});
+
+router.get('/prestaciones/:id', async (req: any, res, next) => {
+    try {
+        const prestaciones = await agendaController.ofertaPrestacional(req.params.id);
+        res.json(prestaciones);
+    } catch (err) {
+        return next(err);
     }
 });
 

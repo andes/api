@@ -15,13 +15,13 @@ import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 const router = express.Router();
 
 // Envía el sms al paciente recordando el turno con 24 Hs de antelación
-router.post('/turnos/smsRecordatorioTurno', (req, res, next) => {
+router.post('/turnos/smsRecordatorioTurno', Auth.authenticate(), (req, res, next) => {
 
     recordatorioController.enviarTurnoRecordatorio();
     res.json({});
 });
 
-router.get('/turnos/recordatorioTurno', (req, res, next) => {
+router.get('/turnos/recordatorioTurno', Auth.authenticate(), (req, res, next) => {
 
     recordatorioController.buscarTurnosARecordar(1);
     res.json({});
@@ -31,7 +31,7 @@ router.get('/turnos/recordatorioTurno', (req, res, next) => {
  * Get turnos del Paciente App
  */
 
-router.get('/turnos', async (req: any, res, next) => {
+router.get('/turnos', Auth.authenticate(), async (req: any, res, next) => {
     const pipelineTurno = [];
     const turnos = [];
     let turno;
@@ -169,7 +169,7 @@ router.get('/turnos', async (req: any, res, next) => {
 
 });
 
-router.get('/turnos/ubicacion/organizacion/:id', async (req, res, next) => {
+router.get('/turnos/ubicacion/organizacion/:id', Auth.authenticate(), async (req, res, next) => {
     const idOrganizacion = req.params.id;
     const org: any = await Organizacion.findById(idOrganizacion);
     let efector = (Object as any).assign({}, org);
@@ -189,7 +189,7 @@ router.get('/turnos/ubicacion/organizacion/:id', async (req, res, next) => {
  * @param  agenda_id {string} id de la agenda
  */
 
-router.post('/turnos/cancelar', (req: any, res, next) => {
+router.post('/turnos/cancelar', Auth.authenticate(), (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
     const pacienteId = req.user.pacientes[0].id;
 
@@ -245,7 +245,7 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
  * @param bloque_id {string} id del bloque
  */
 
-router.post('/turnos/confirmar', (req: any, res, next) => {
+router.post('/turnos/confirmar', Auth.authenticate(), (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
     const pacienteId = req.user.pacientes[0].id;
 
@@ -308,7 +308,7 @@ router.post('/turnos/confirmar', (req: any, res, next) => {
  * @param agenda_id {string} id de la agenda
  * @param bloque_id {string} id del bloque
  */
-router.post('/turnos/asistencia', (req: any, res, next) => {
+router.post('/turnos/asistencia', Auth.authenticate(), (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
     const pacienteId = req.user.pacientes[0].id;
 
