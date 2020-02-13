@@ -544,17 +544,16 @@ export function updateRelacion(nuevaRelacion, data) {
     if (data) {
         // verifico si el paciente tiene relaciones
         if (data.relaciones) {
-            const objRel = data.relaciones.find(elem => {
-                if (elem && nuevaRelacion && elem.referencia && nuevaRelacion.referencia) {
-                    // checkeamos si ya existe la relacion que queremos insertar..
-                    if (elem.referencia.toString() === nuevaRelacion.referencia.toString()) {
-                        return elem;
-                    }
-                }
-            });
-            if (!objRel) {
-                data.markModified('relaciones');
+            const objRel = data.relaciones.findIndex(elem =>
+                elem && nuevaRelacion && elem.referencia && nuevaRelacion.referencia
+                && elem.referencia.toString() === nuevaRelacion.referencia.toString()
+            );
+
+            data.markModified('relaciones');
+            if (objRel < 0) {
                 data.relaciones.push(nuevaRelacion);
+            } else {
+                data.relaciones[objRel] = nuevaRelacion;
             }
         } else {
             data.markModified('relaciones');
