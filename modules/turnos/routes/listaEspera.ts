@@ -65,7 +65,7 @@ router.post('/listaEspera', async (req, res, next) => {
     });
 });
 
-router.put('/listaEspera/:_id', (req, res, next) => {
+router.put('/listaEspera/:id', (req, res, next) => {
     listaEspera.findByIdAndUpdate(req.params._id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
@@ -75,7 +75,7 @@ router.put('/listaEspera/:_id', (req, res, next) => {
 });
 
 /*Si viene un id es porque se están enviando pacientes a la lista de espera desde una agenda suspendida*/
-router.post('/listaEspera/IdAgenda/:_id', (req, res, next) => {
+router.post('/listaEspera/IdAgenda/:id', (req, res, next) => {
     agenda.findById(req.params._id, (err, data) => {
         if (err) {
             return next(err);
@@ -105,7 +105,7 @@ router.post('/listaEspera/IdAgenda/:_id', (req, res, next) => {
 });
 
 
-router.delete('/listaEspera/:_id', (req, res, next) => {
+router.delete('/listaEspera/:id', (req, res, next) => {
     listaEspera.findByIdAndRemove(req.params._id, req.body, (err, data) => {
         if (err) { return next(err); }
         res.json(data);
