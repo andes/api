@@ -3,7 +3,6 @@ import * as listaEspera from '../schemas/listaEspera';
 import * as agenda from '../schemas/agenda';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
-// import * as config from '../../../config';
 import * as moment from 'moment';
 import { Logger } from '../../../utils/logService';
 
@@ -50,7 +49,7 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 
 });
 
-router.post('/listaEspera', (req, res, next) => {
+router.post('/listaEspera', async (req, res, next) => {
 
     const newItem = new listaEspera(req.body);
     newItem.save((err) => {
@@ -64,10 +63,9 @@ router.post('/listaEspera', (req, res, next) => {
         });
         res.json(newItem);
     });
-
 });
 
-router.put('/listaEspera/:_id', (req, res, next) => {
+router.put('/listaEspera/:id', (req, res, next) => {
     listaEspera.findByIdAndUpdate(req.params._id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
@@ -77,7 +75,7 @@ router.put('/listaEspera/:_id', (req, res, next) => {
 });
 
 /*Si viene un id es porque se están enviando pacientes a la lista de espera desde una agenda suspendida*/
-router.post('/listaEspera/IdAgenda/:_id', (req, res, next) => {
+router.post('/listaEspera/IdAgenda/:id', (req, res, next) => {
     agenda.findById(req.params._id, (err, data) => {
         if (err) {
             return next(err);
@@ -90,14 +88,14 @@ router.post('/listaEspera/IdAgenda/:_id', (req, res, next) => {
                 break;
         }
 
-        async.each(listaEsperaPaciente, (listaEsperaData, callback)  => {
+        async.each(listaEsperaPaciente, (listaEsperaData, callback) => {
             const newItem = new listaEspera(listaEsperaData);
 
             newItem.save((err1, item) => {
                 callback();
             });
 
-        }, (err2)  => {
+        }, (err2) => {
             if (err2) {
                 return next(err2);
             }
@@ -107,7 +105,7 @@ router.post('/listaEspera/IdAgenda/:_id', (req, res, next) => {
 });
 
 
-router.delete('/listaEspera/:_id', (req, res, next)  => {
+router.delete('/listaEspera/:id', (req, res, next) => {
     listaEspera.findByIdAndRemove(req.params._id, req.body, (err, data) => {
         if (err) { return next(err); }
         res.json(data);
