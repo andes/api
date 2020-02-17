@@ -402,6 +402,12 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
     });
 });
 
+router.post('/cda/regenerar', (req, res, next) => {
+    EventCore.emitAsync('monitoreo:cda:create', req.body);
+    res.json(200);
+});
+
+
 /**
  * @swagger
  * /pacientes/mpi/{id}:
