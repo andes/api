@@ -184,11 +184,6 @@ export const modules = {
         route: '/modules/registro-novedades',
         middleware: appMiddleware
     },
-    webhook: {
-        active: true,
-        path: './modules/webhook/routes',
-        route: '/modules/webhook'
-    },
     configFacturacionAutomatica: {
         active: true,
         path: './modules/facturacionAutomatica/routes',
