@@ -9,28 +9,41 @@ import { Auth } from '../../../auth/auth.class';
  * @param {*} tid id del turno que se libera
  * @param {*} req request
  */
-export function liberarRefTurno(tid, req) {
-    const query = Prestacion.findOne({ $where: 'this.estados[this.estados.length - 1].tipo ==  "pendiente"' });
-    query.where({ 'solicitud.turno': mongoose.Types.ObjectId(tid) });
-    query.exec((err, data1: any) => {
-        if (err) {
-            return ({
-                err: 'No se encontro prestacion para el turno'
-            });
-        }
-        if (data1 && data1.solicitud) {
-            data1.solicitud.turno = undefined;
-            Auth.audit(data1, req);
+export async function liberarRefTurno(turno, req) {
+    try {
+        const query = Prestacion.findOne({ $where: 'this.estados[this.estados.length - 1].tipo ==  "pendiente"' });
+        query.where({ 'solicitud.turno': mongoose.Types.ObjectId(turno.id) });
+        let prestacion: any = await query.exec();
+        if (!prestacion) {
+            return { err: 'No se encontro prestacion para el turno' };
+        } else if (prestacion.solicitud) {
+            prestacion.solicitud.turno = null;
 
-            data1.save((error) => {
-                if (error) {
-                    return (error);
-                }
-            });
-            return (data1);
+            updateRegistroHistorial(prestacion, turno);
+            Auth.audit(prestacion, req);
+            return prestacion.save();
         }
+    } catch (err) {
+        return (err);
+    }
+}
 
-    });
+function updateRegistroHistorial(prestacion, turno) {
+    if (!prestacion.solicitud.historial) {
+        prestacion.solicitud.historial = [];
+    }
+
+    let registroHistorial: any = {
+        turno,
+        organizacion: prestacion.solicitud.organizacion,
+        accion: 'liberacionTurno'
+    };
+
+    if (prestacion.solicitud.profesional) {
+        registroHistorial.profesional = prestacion.solicitud.profesional;
+    }
+
+    prestacion.solicitud.historial.push(registroHistorial);
 }
 
 export async function enEjecucion(turno) {

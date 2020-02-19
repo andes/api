@@ -566,11 +566,11 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         if (turno.paciente && turno.paciente.id) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data);
                         }
+                        await prestacionCtrl.liberarRefTurno(turno, req);
                         let liberado = await agendaCtrl.liberarTurno(req, data, turno);
                         if (!liberado) {
                             return next('Turno en ejecución');
                         }
-                        prestacionCtrl.liberarRefTurno(turno._id, req);
                         event = { object: 'turno', accion: 'liberar', data: turno };
                         break;
                     case 'suspenderTurno':

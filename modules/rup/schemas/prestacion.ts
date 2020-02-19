@@ -1,6 +1,7 @@
 import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
 import * as registro from './prestacion.registro';
+import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
@@ -107,7 +108,9 @@ export let schema = new mongoose.Schema({
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
-        }
+        },
+
+        historial: [PrestacionSolicitudHistorialschema]
     },
 
     // Datos de la ejecución (i.e. realización)
