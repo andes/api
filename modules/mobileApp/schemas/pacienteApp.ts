@@ -42,6 +42,9 @@ export let pacienteAppSchema = new mongoose.Schema({
         type: String
         // required: true
     },
+    lastLogin: {
+        type: Date
+    },
     // Si fue usado o no
     pacientes: [
         {

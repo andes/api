@@ -125,5 +125,21 @@ router.post('/v2/reenviar-codigo', (req, res, next) => {
     });
 });
 
+router.patch('/account', async (req: any, res, next) => {
+    const id = req.user.account_id;
+    try {
+        const account = await PacienteApp.findById(mongoose.Types.ObjectId(id));
+        try {
+            const acc = await authController.updateAccount(account, req.body);
+            return res.json({ message: 'OK', account: acc });
+        } catch (errUpdate) {
+            return res.status(422).send(errUpdate);
+        }
+    } catch (e) {
+        return res.status(422).send({ error: '' });
+    }
+
+
+});
 
 export = router;
