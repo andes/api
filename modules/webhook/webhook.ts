@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { EventCore } from '@andes/event-bus';
-import { Patient } from '@andes/fhir';
+import { Patient, Practitioner } from '@andes/fhir';
 import { WebHook, WebHookLog } from './webhook.schema';
 const request = require('request');
 
@@ -48,7 +48,8 @@ function filterData(filters: any[], data) {
 }
 
 const trasform = {
-    fhir: Patient.encode
+    fhir: Patient.encode,
+    fhirPractitioner: Practitioner.encode
 };
 
 EventCore.on(/.*/, async function (body) {
