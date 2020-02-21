@@ -20,7 +20,7 @@ import * as Barrio from '../../tm/schemas/barrio';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
 import * as mongoose from 'mongoose';
-import { nextTick } from 'async';
+import * as localidadController from '../../tm/controller/localidad';
 
 const sharp = require('sharp');
 
@@ -850,6 +850,26 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     // Respuesta correcta de renaper?
     if (resRenaper && resRenaper.datos && resRenaper.datos.nroError === 0) {
         let pacienteRenaper = resRenaper.datos;
+
+        if (pacienteAndes.direccion.length) {
+            pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
+            // Completamos campos correspondientes a dirección legal
+            let ubicacion = await localidadController.matchUbicacion(pacienteRenaper.provincia, pacienteRenaper.ciudad);
+            pacienteAndes.direccion[1] = {
+                valor: pacienteRenaper.calle + ' ' + pacienteRenaper.numero,
+                codigoPostal: pacienteRenaper.cpostal,
+                ubicacion: {
+                    pais: (ubicacion.provincia) ? ubicacion.provincia.pais : null,
+                    provincia: (ubicacion.provincia) ? ubicacion.provincia : null,
+                    localidad: (ubicacion.localidad) ? ubicacion.localidad : null,
+                    barrio: null,
+                },
+                ranking: 0,
+                geoReferencia: null,
+                ultimaActualizacion: new Date(),
+                activo: true
+            };
+        }
         band = regtest.test(pacienteRenaper.nombres);
         band = band || regtest.test(pacienteRenaper.apellido);
         if (!band) {
@@ -865,7 +885,6 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             return { paciente: pacienteAndes, validado: true };
         } else {
             return await validarSisa(pacienteAndes, req, pacienteRenaper.foto);
-
         }
     } else {
         return await validarSisa(pacienteAndes, req);

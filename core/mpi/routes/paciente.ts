@@ -12,7 +12,6 @@ import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
-
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 const logD = debug('paciente-controller');
 const router = express.Router();
