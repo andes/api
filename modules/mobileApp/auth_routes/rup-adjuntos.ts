@@ -25,8 +25,7 @@ router.post('/prestaciones-adjuntar', Auth.authenticate(), (req: any, res, next)
     const registro = req.body.registro;
     const pacienteId = req.body.paciente;
     const prestacionId = req.body.prestacion;
-    const profesionalId = req.user.profesional.id;
-
+    const profesionalId = req.user.profesional;
     const adjunto = (new PrestacionAdjunto() as any);
     adjunto.paciente = pacienteId;
     adjunto.prestacion = prestacionId;
@@ -36,7 +35,6 @@ router.post('/prestaciones-adjuntar', Auth.authenticate(), (req: any, res, next)
     adjunto.createdAt = new Date();
     adjunto.save().then(() => {
         // [TODO] Send notifications to devices
-
         if (req.user.profesional) {
             NotificationService.solicitudAdjuntos((profesionalId), adjunto._id);
         }
