@@ -12,6 +12,7 @@ import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
 import async = require('async');
+import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
 const router = express.Router();
@@ -255,6 +256,10 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             match.$and.push({ 'solicitud.fecha': { $lte: (moment(req.query.solicitudHasta).endOf('day').toDate() as any) } });
         }
 
+        if (req.query.pacienteDocumento) {
+            match.$and.push({ 'paciente.documento': { $eq: req.query.pacienteDocumento }});
+        }
+
         if (req.query.origen === 'top') {
             match.$and.push({ 'solicitud.prestacionOrigen': { $exists: false } });
         }
@@ -265,8 +270,11 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             match.$and.push({ 'solicitud.turno': req.query.tieneTurno ? { $ne: null } : { $eq: null } });
         }
 
+        if (req.query.organizacion) {
+            match.$and.push({ 'solicitud.organizacion.id': Types.ObjectId(req.query.organizacion) });
+        }
+
         if (req.query.organizacionOrigen) {
-            match.$and.push({ 'solicitud.organizacionOrigen': { $exists: true } });
             match.$and.push({ 'solicitud.organizacionOrigen.id': Types.ObjectId(req.query.organizacionOrigen) });
         }
 
@@ -297,7 +305,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
-        pipeline.push({
+        let project = {
             $project: {
                 id: '$_id',
                 paciente: 1,
@@ -318,7 +326,34 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                     }
                 }
             }
-        });
+        };
+
+        if (req.query.paciente && !Types.ObjectId.isValid(req.query.paciente)) {
+            (project.$project as any).datosPaciente =  { $concat: ['$paciente.nombre', ' ', '$paciente.apellido', ' ', '$paciente.documento'] };
+        }
+
+        pipeline.push(project);
+
+        if (req.query.paciente) {
+            if (Types.ObjectId.isValid(req.query.paciente)) {
+                pipeline.push( {
+                    $match: { 'paciente.id' : Types.ObjectId(req.query.paciente)}
+                });
+            } else {
+                let conditions = {};
+                conditions['$and'] = [];
+                const words = req.query.paciente.toUpperCase().split(' ');
+                words.forEach((word) => {
+                    word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08').replace('ñ', 'n');
+                    const expWord = removeDiacritics(word) + '.*';
+                    conditions['$and'].push({ datosPaciente: { $regex: expWord } });
+                });
+
+                pipeline.push( {
+                    $match: conditions
+                });
+            }
+        }
 
         let sort = {};
         sort['esPrioritario'] = 1;
@@ -332,6 +367,10 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         pipeline.push({ $sort: sort });
+
+        if (req.query.skip) {
+            pipeline.push({ $skip: parseInt(req.query.skip, 10) });
+        }
 
         if (req.query.limit) {
             pipeline.push({ $limit: parseInt(req.query.limit, 10) });
