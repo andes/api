@@ -21,9 +21,12 @@ import { Types } from 'mongoose';
 export function darAsistencia(req, data, tid = null) {
     const turno = getTurno(req, data, tid);
     turno.asistencia = 'asistio';
-
     if (!turno.horaAsistencia) {
-        turno.horaAsistencia = new Date();
+        if (moment(turno.horaInicio).format('YYYY-MM-DD') < moment().startOf('day').format('YYYY-MM-DD')) {
+            turno.horaAsistencia = turno.horaInicio; // Para el caso donde se inicia una prestacion de un turno con fecha anterior a hoy
+        } else {
+            turno.horaAsistencia = new Date();
+        }
     }
 
     turno.updatedAt = new Date();
