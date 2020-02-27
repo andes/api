@@ -241,23 +241,13 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         let pipeline = [];
         let match: any = { $and: [] };
 
-        let query;
-        if (req.query.estados) {
-            const estados = (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados;
-            query = Prestacion.find({
-                $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
-            });
-        } else {
-            query = Prestacion.find({}); // Trae todos
-        }
-
         if (req.query.solicitudDesde && req.query.solicitudHasta) {
             match.$and.push({ 'solicitud.fecha': { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
             match.$and.push({ 'solicitud.fecha': { $lte: (moment(req.query.solicitudHasta).endOf('day').toDate() as any) } });
         }
 
         if (req.query.pacienteDocumento) {
-            match.$and.push({ 'paciente.documento': { $eq: req.query.pacienteDocumento }});
+            match.$and.push({ 'paciente.documento': { $eq: req.query.pacienteDocumento } });
         }
 
         if (req.query.origen === 'top') {
@@ -301,7 +291,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.estados) {
             pipeline.push({ $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } });
-            pipeline.push({ $match: {'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } }});
+            pipeline.push({ $match: { 'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } } });
         }
 
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
@@ -329,15 +319,15 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         };
 
         if (req.query.paciente && !Types.ObjectId.isValid(req.query.paciente)) {
-            (project.$project as any).datosPaciente =  { $concat: ['$paciente.nombre', ' ', '$paciente.apellido', ' ', '$paciente.documento'] };
+            (project.$project as any).datosPaciente = { $concat: ['$paciente.nombre', ' ', '$paciente.apellido', ' ', '$paciente.documento'] };
         }
 
         pipeline.push(project);
 
         if (req.query.paciente) {
             if (Types.ObjectId.isValid(req.query.paciente)) {
-                pipeline.push( {
-                    $match: { 'paciente.id' : Types.ObjectId(req.query.paciente)}
+                pipeline.push({
+                    $match: { 'paciente.id': Types.ObjectId(req.query.paciente) }
                 });
             } else {
                 let conditions = {};
@@ -349,7 +339,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                     conditions['$and'].push({ datosPaciente: { $regex: expWord } });
                 });
 
-                pipeline.push( {
+                pipeline.push({
                     $match: conditions
                 });
             }
