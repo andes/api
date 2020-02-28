@@ -9,7 +9,7 @@ export async function getResumenDiarioMensual(params: any) {
 
     let y = params['anio'];
     let m = params['mes'] - 1;
-    let firstDay = new Date(y, m, 0);
+    let firstDay = new Date(y, m, 1);
     let lastDay = new Date(y, m + 1, 1);
 
     pipeline = [
