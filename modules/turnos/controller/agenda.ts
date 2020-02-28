@@ -1427,18 +1427,36 @@ export async function verificarSolapamiento(data) {
         try {
             const resultados = await agendaModel.aggregate([{ $match }]);
             if (resultados.length > 0) {
+                
                 response = 'La agenda no se pudo guardar:';
                 if (resultados.some(a => a.espacioFisico && a.espacioFisico._id === espacioFisicoId)) {
                     response += ' El espacio físico está asignado a otra agenda en ese horario.';
                 }
 
                 let profesionales = [];
+                let org : string; //nombre de la organizacion 
+                let agenda_creada_por : string;
+                let prestaciones_agenta: string;
+                let prestaciones_agenta_ = [];
+                prestaciones_agenta = '';
                 for (let resultado of resultados) {
                     profesionales = profesionales.concat(resultado.profesionales);
+                    org = resultado.organizacion.nombre;
+                  
+                    agenda_creada_por = resultado.createdBy.nombreCompleto;
+                    
+                    for (let prestacion_ag of resultado.tipoPrestaciones)
+                    {
+                      
+                        prestaciones_agenta_ = prestaciones_agenta_.concat(prestacion_ag.term);
+                        prestaciones_agenta += prestacion_ag.term+',';
+                        
+                    }
                 }
-
+                
                 if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
-                    response += ' Uno o más profesionales están asignados a otra agenda en ese horario.';
+                    response += ' Uno o más profesionales están asignados a otra agenda en ese horario. <br> <br> <br> Centro de Salud:<strong> ' + org +' </strong> <br> Prestacion: <strong>'+prestaciones_agenta_ +'</strong><br> Creada por: <strong>'+ agenda_creada_por+' </strong>';
+                    // response += ' Uno o más profesionales están asignados a otra agenda en ese horario.';
                 }
             }
         } catch (error) {
