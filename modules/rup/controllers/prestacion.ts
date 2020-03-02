@@ -19,7 +19,7 @@ export async function liberarRefTurno(turno, req) {
         } else if (prestacion.solicitud) {
             prestacion.solicitud.turno = null;
 
-            updateRegistroHistorial(prestacion, turno);
+            updateRegistroHistorial(prestacion, turno, 'liberacionTurno');
             Auth.audit(prestacion, req);
             return prestacion.save();
         }
@@ -28,7 +28,7 @@ export async function liberarRefTurno(turno, req) {
     }
 }
 
-function updateRegistroHistorial(prestacion, turno) {
+function updateRegistroHistorial(prestacion, turno, _accion) {
     if (!prestacion.solicitud.historial) {
         prestacion.solicitud.historial = [];
     }
@@ -36,7 +36,7 @@ function updateRegistroHistorial(prestacion, turno) {
     let registroHistorial: any = {
         turno,
         organizacion: prestacion.solicitud.organizacion,
-        accion: 'liberacionTurno'
+        accion: _accion
     };
 
     if (prestacion.solicitud.profesional) {
