@@ -5,7 +5,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 export let schema = new mongoose.Schema({
     tipo: {
         type: String,
-        enum: ['anulada', 'pendiente', 'ejecucion', 'auditoria', 'aceptada', 'rechazada', 'validada', 'desvinculada', 'modificada'],
+        enum: ['anulada', 'pendiente', 'ejecucion', 'auditoria', 'aceptada', 'rechazada', 'validada', 'desvinculada', 'modificada', 'asignada'],
         required: true,
     },
     idOrigenModifica: {

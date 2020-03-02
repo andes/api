@@ -17,7 +17,7 @@ export async function liberarRefTurno(turno, req) {
         if (!prestacion) {
             return { err: 'No se encontro prestacion para el turno' };
         } else if (prestacion.solicitud) {
-            prestacion.solicitud.turno = null;
+            prestacion.solicitud.turno = undefined;
 
             updateRegistroHistorial(prestacion, turno);
             Auth.audit(prestacion, req);
