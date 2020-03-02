@@ -17,6 +17,7 @@ import { toArray } from '../../../utils/utils';
 import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
 import moment = require('moment');
+import { AuthUsers } from '../../../auth/schemas/authUsers';
 
 let router = express.Router();
 
@@ -531,10 +532,12 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
 });
 
 
-router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
+router.get('/profesionales/:id*?', Auth.authenticate(), async (req, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
-    // }
+    let authAusersProfesionales: any;
+
+    let OrganizacionId = req.user.organizacion._id;
     const opciones = {};
     let query;
     if (req.params.id) {
@@ -631,12 +634,18 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 $regex: utils.makePattern(req.query.especialidad)
             };
         }
-
         const radix = 10;
         const skip: number = parseInt(req.query.skip || 0, radix);
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
         if (req.query.nombreCompleto) {
+
+            let resultado = await AuthUsers.find({ 'organizaciones._id': OrganizacionId }).select('-_id documento');
+            const arregloDniProfesionales: any = [];
+            for (let  prof of resultado) {
+                arregloDniProfesionales.push(prof.get('documento'));
+            }
+
             const filter = [{
                 apellido: {
                     $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
@@ -647,11 +656,12 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 }
             }];
             let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
-            query = profesional.find(q).
+            query = profesional.find({documento: { $in: arregloDniProfesionales }}, q).
                 sort({
                     apellido: 1,
                     nombre: 1
                 });
+
         } else if (!req.query.exportarPlanillaCalculo) {
             query = profesional.find(opciones).skip(skip).limit(limit);
         } else {
@@ -673,7 +683,6 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 for (let i = 0; i < data.length; i++) {
                     let prof = {};
 
-                    prof['nombre'] = data[i].nombre;
                     prof['apellido'] = data[i].apellido;
                     prof['tipoDocumento'] = data[i].tipoDocumento;
                     prof['documento'] = data[i].documento;
