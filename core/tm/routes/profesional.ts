@@ -683,6 +683,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), async (req, res, next) =
                 for (let i = 0; i < data.length; i++) {
                     let prof = {};
 
+                    prof['nombre'] = data[i].nombre;
                     prof['apellido'] = data[i].apellido;
                     prof['tipoDocumento'] = data[i].tipoDocumento;
                     prof['documento'] = data[i].documento;
