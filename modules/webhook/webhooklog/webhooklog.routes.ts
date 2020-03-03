@@ -4,7 +4,7 @@ import { WebHookLog } from './webhooklog.schema';
 
 class WebhookLogResource extends ResourceBase {
     Model = WebHookLog;
-    resourceName = 'webhooklogs';
+    resourceName = 'log';
     keyId = '_id';
 
     searchFileds = {
