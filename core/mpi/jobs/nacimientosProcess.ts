@@ -53,7 +53,7 @@ async function relacionar(mama, bebe) {
 
         if (mama.relaciones) {
             // Ya existe relación con el bebé?
-            let resultado = mama.relaciones.filter(rel => rel.nombre !== bebe.nombre && rel.apellido !== bebe.apellido);
+            let resultado = mama.relaciones.filter(rel => rel.nombre.toUpperCase() === bebe.nombre.toUpperCase() && rel.apellido.toUpperCase() === bebe.apellido.toUpperCase() && rel.relacion.nombre === parentescoBebe[0].nombre);
 
             if (resultado.length === 0) {
                 // Si no existe, insertamos al bebé en ANDES y lo relacionamos
@@ -148,7 +148,6 @@ function parsearPacientes(importedData) {
         });
     }
 
-    parsedData.mama.direccion = parsedData.bebe.direccion = null;
     let bebe = new paciente(parsedData.bebe);
     let mama = new paciente(parsedData.mama);
     return { bebe, mama };
@@ -171,7 +170,7 @@ async function procesarDataNacimientos(nacimiento) {
         // --> Obtener paciente de Fuentas auténticas
         let nuevaMama = await validarPaciente(resultadoParse.mama);
         let mamaAndes = await createPaciente(nuevaMama.paciente, userScheduler);
-        await relacionar(mamaAndes.paciente, resultadoParse.bebe);
+        await relacionar(mamaAndes, resultadoParse.bebe);
     }
 }
 
@@ -214,18 +213,23 @@ export async function obtenerModificaciones(fecha: string = null) {
         resultadoBusqueda = JSON.parse(resultadoBusqueda[1]);
 
         for (let bebeMod of resultadoBusqueda) {
-            let bebe: any = await buscarPacienteWithcondition({ certificadoRenaper: bebeMod.nrocertificado });
-            if (bebe.paciente._id) {
-                // Se actualizan sólo los siguientes datos del bebé
-                let updateBebe = {
-                    nombre: bebeMod.nnombres,
-                    apellido: bebeMod.napellidos,
-                    documento: bebeMod.nnrodoc,
-                    fechaNacimiento: moment(bebeMod.nfechanac.trim(), 'YYYY-MM-DD', 'ar', true),
-                    sexo: (bebeMod.ntiposexo === '1' ? 'masculino' : 'femenino'),
-                    genero: (bebeMod.ntiposexo === '1' ? 'masculino' : 'femenino'),
-                };
-                await updatePaciente(bebe.paciente, updateBebe, userScheduler);
+            try {
+                let bebe: any = await buscarPacienteWithcondition({ certificadoRenaper: bebeMod.nrocertificado });
+                if (bebe.paciente._id) {
+                    // Se actualizan sólo los siguientes datos del bebé
+                    let updateBebe = {
+                        nombre: bebeMod.nnombres,
+                        apellido: bebeMod.napellidos,
+                        documento: bebeMod.nnrodoc,
+                        fechaNacimiento: moment(bebeMod.nfechanac.trim(), 'YYYY-MM-DD', 'ar', true),
+                        sexo: (bebeMod.ntiposexo === '1' ? 'masculino' : 'femenino'),
+                        genero: (bebeMod.ntiposexo === '1' ? 'masculino' : 'femenino'),
+                    };
+                    await updatePaciente(bebe.paciente, updateBebe, userScheduler);
+                }
+            } catch (error) {
+                // no se hace nada
+                // la función buscarPacienteWithcondition hace un reject cuando no encuentra al paciente
             }
         }
     } catch (error) {
