@@ -1434,21 +1434,18 @@ export async function verificarSolapamiento(data) {
 
                 let profesionales = [];
                 let org: string; // nombre de la organizacion
-                let agenda_creada_por: string;
-                let prestaciones_agenta: string;
-                let prestaciones_agenda_ = [];
-                prestaciones_agenta = '';
+                let AgendaCreadaPor: string;
+                let PrestacionesAgenda = [];
                 for (let resultado of resultados) {
                     profesionales = profesionales.concat(resultado.profesionales);
                     org = resultado.organizacion.nombre;
-                    agenda_creada_por = resultado.createdBy.nombreCompleto;
-                    for (let prestacion_ag of resultado.tipoPrestaciones) {
-                        prestaciones_agenda_ = prestaciones_agenda_.concat(prestacion_ag.term);
-                        prestaciones_agenta += prestacion_ag.term + ',';
+                    AgendaCreadaPor = resultado.createdBy.nombreCompleto;
+                    for (let PrestacionAg of resultado.tipoPrestaciones) {
+                        PrestacionesAgenda = PrestacionesAgenda.concat(PrestacionAg.term);
                     }
                 }
                 if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
-                    response += `Uno o más profesionales están asignados a otra agenda en ese horario. <br> <br> <br> Centro de Salud: <strong>${org}</strong> <br> Prestacion: <strong>${prestaciones_agenda_}</strong><br> Creada por: <strong>${agenda_creada_por}</strong>`;
+                    response += `Uno o más profesionales están asignados a otra agenda en ese horario. <br> <br> <br> Centro de Salud: <strong>${org}</strong> <br> Prestacion: <strong>${PrestacionesAgenda}</strong><br> Creada por: <strong>${AgendaCreadaPor}</strong>`;
                     // response += ' Uno o más profesionales están asignados a otra agenda en ese horario.';
                 }
             }
