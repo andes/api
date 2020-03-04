@@ -1434,18 +1434,18 @@ export async function verificarSolapamiento(data) {
 
                 let profesionales = [];
                 let org: string; // nombre de la organizacion
-                let AgendaCreadaPor: string;
-                let PrestacionesAgenda = [];
+                let agendaCreadaPor: string;
+                let prestacionesAgenda = [];
                 for (let resultado of resultados) {
                     profesionales = profesionales.concat(resultado.profesionales);
                     org = resultado.organizacion.nombre;
-                    AgendaCreadaPor = resultado.createdBy.nombreCompleto;
+                    agendaCreadaPor = resultado.createdBy.nombreCompleto;
                     for (let PrestacionAg of resultado.tipoPrestaciones) {
-                        PrestacionesAgenda = PrestacionesAgenda.concat(PrestacionAg.term);
+                        prestacionesAgenda = prestacionesAgenda.concat(PrestacionAg.term);
                     }
                 }
                 if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
-                    response += `Uno o más profesionales están asignados a otra agenda en ese horario. <br> <br> <br> Centro de Salud: <strong>${org}</strong> <br> Prestacion: <strong>${PrestacionesAgenda}</strong><br> Creada por: <strong>${AgendaCreadaPor}</strong>`;
+                    response += `Uno o más profesionales están asignados a otra agenda en ese horario. <br> <br> <br> Centro de Salud: <strong>${org}</strong> <br> Prestacion: <strong>${prestacionesAgenda}</strong><br> Creada por: <strong>${agendaCreadaPor}</strong>`;
                     // response += ' Uno o más profesionales están asignados a otra agenda en ese horario.';
                 }
             }
