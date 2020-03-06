@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export const WebHookSchema = new mongoose.Schema({
-    name: String,
+    nombre: String,
     event: String,
     url: String,
     method: {
