@@ -10,41 +10,36 @@ export async function getById(id) {
     return novedad;
 }
 
-export async function getAllNovedades(cadena, fechaIni, fechaFin, skip, limit) {
+export async function getAllNovedades(titulo, modulos, fechaIni, fechaFin, skip, limit) {
     let pipeline = [];
+    let match: any = { $and: [] };
     let novedades = null;
-    let fI: any, fF: any;
-    let condition = {}, conditionCadena: any, condFecha: any;
-    if (fechaIni) { fI = new Date(fechaIni); }
-    if (fechaFin) { fF = new Date(fechaFin); }
-    if (cadena) {
-        let cad: RegExp = new RegExp(cadena, 'i');
-        conditionCadena = { $or: [{ titulo: { $regex: cad } }, { 'modulo.nombre': { $regex: cad } }] }; //  { descripcion: { $regex: cadena } },
+    if (fechaIni) {
+        match.$and.push({
+            'fecha': { $gte: new Date(fechaIni) }
+        });
     }
-
-    if (fI && fF) {
-        condFecha = { fecha: { $gte: fI, $lte: fF } };
-    } else {
-        if (fI) { condFecha = { fecha: { $gte: fI } }; }
-        if (fF) { condFecha = { fecha: { $lte: fF } }; }
+    if (fechaFin) {
+        match.$and.push({
+            'fecha': { $lte: new Date(fechaFin) }
+        });
     }
-
-    if (conditionCadena && condFecha) {
-        condition['$and'] = [conditionCadena, condFecha];
-    } else {
-        condition = (conditionCadena) ? conditionCadena : (condFecha) ? condFecha : null;
+    if (titulo) {
+        match.$and.push({
+            'titulo': { $regex: titulo }
+        });
     }
-    if (condition) {
-        pipeline = [
-            { $match: condition },
-            { $project: { fecha: 1, titulo: 1, descripcion: 1, modulo: 1, imagenes: 1, activa: 1 } }
-        ];
-        novedades = await RegistroNovedades.aggregate(pipeline).sort({ fecha: -1 }).skip(skip).limit(limit);
-    } else {
-        novedades = await RegistroNovedades.find().sort({ fecha: -1 }).skip(skip).limit(limit);
+    if (modulos.length) {
+        match.$and.push({ 'modulo.id': { $in: modulos } });
     }
+    if (match['$and'].length) {
+        pipeline.push({ '$match': match });
+    };
+    pipeline.push({ $project: { fecha: 1, titulo: 1, descripcion: 1, modulo: 1, imagenes: 1, activa: 1 } });
+    novedades = await RegistroNovedades.aggregate(pipeline).sort({ fecha: -1 }).skip(skip).limit(limit);
     return novedades;
 }
+
 export async function getAllModulosAndes() {
     return await ModuloAndes.find();
 }

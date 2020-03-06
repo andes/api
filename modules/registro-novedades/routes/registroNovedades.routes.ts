@@ -31,7 +31,7 @@ router.get('/novedades/:id', async (req: any, res, next) => {
  */
 router.get('/novedades', async (req: any, res, next) => {
     if (req.query) {
-        let cadena = req.query.search;
+        let titulo = req.query.search;
         const fechaInicio = req.query.fechaInicio;
         const fechaFin = req.query.fechaFin;
         // Paginado
@@ -39,7 +39,7 @@ router.get('/novedades', async (req: any, res, next) => {
         let skip = parseInt(req.query.skip || 0, 10);
         let limit = Math.min(parseInt(req.query.limit || config.defaultLimit, 10), config.maxLimit);
         try {
-            let data = await RegistroNovedadesController.getAllNovedades(cadena, fechaInicio, fechaFin, skip, limit);
+            let data = await RegistroNovedadesController.getAllNovedades(titulo, [], fechaInicio, fechaFin, skip, limit);
             return res.json(data);
         } catch (err) {
             return next(err);
