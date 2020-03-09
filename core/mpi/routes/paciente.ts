@@ -365,6 +365,9 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
 });
 
 router.post('/cda/regenerar', (req, res, next) => {
+    if (!Auth.check(req, 'mpi:paciente:deleteMpi')) {
+        return next(403);
+    }
     EventCore.emitAsync('monitoreo:cda:create', req.body);
     res.json(200);
 });
