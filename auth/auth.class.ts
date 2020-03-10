@@ -333,7 +333,7 @@ export class Auth {
             return null;
         } else {
             const profesional = {
-                id: (req as any).user.profesional.id,
+                id: (req as any).user.profesional,
                 nombre: (req as any).user.usuario.nombre,
                 apellido: (req as any).user.usuario.apellido,
                 documento: (req as any).user.usuario.documento
