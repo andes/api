@@ -9,6 +9,7 @@ import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import { AndesDrive } from '@andes/drive';
+import { cdaLog } from '../cda.log';
 
 const ObjectId = Types.ObjectId;
 
@@ -28,17 +29,18 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         if (Auth.check(req, 'cda:organizacion') && req.body.organizacion) {
             orgId = req.body.organizacion;
         }
+
+        const dataPaciente = req.body.paciente;
+        const dataProfesional = req.body.profesional;
         const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
             return next({ error: `prestacion_existente  ${idPrestacion}` });
         }
 
-        const dataPaciente = req.body.paciente;
-        const dataProfesional = req.body.profesional;
-
         // Devuelve un Loinc asociado al código SNOMED
         let prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
         if (!prestacion) {
+            cdaLog.error('create', req.body.tipoPrestacion, 'prestacion_invalida', req);
             // Es obligatorio que posea prestación
             return next({ error: `prestacion_invalida ${req.body.tipoPrestacion}` });
         }
@@ -66,6 +68,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
 
         const paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         if (!paciente) {
+            cdaLog.error('create', dataPaciente, 'paciente_inexistente', req);
             return next({ error: 'paciente_inexistente' });
         }
         const uniqueId = String(new ObjectId());
@@ -110,7 +113,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
                 organizacion: organizacion._id
             }
         };
-        let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
+        await cdaCtr.storeCDA(uniqueId, cda, metadata);
         res.json({ cda: uniqueId, paciente: paciente._id });
 
         EventCore.emitAsync('huds:cda:create', { cda: uniqueId, paciente: paciente._id });
@@ -128,79 +131,79 @@ router.post('/', async (req: any, res, next) => {
     const orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
     const cda64 = req.body.cda;
     const adjunto64 = req.body.adjunto;
-
     const cdaStream: any = cdaCtr.base64toStream(cda64);
-    const cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
 
+    try {
+        const cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
+        if (cdaXml.length > 0) {
+            cdaCtr.validateSchemaCDA(cdaXml).then(async (dom) => {
+                const cdaData: any = cdaCtr.checkAndExtract(dom);
 
-    if (cdaXml.length > 0) {
-        cdaCtr.validateSchemaCDA(cdaXml).then(async (dom) => {
+                if (cdaData) {
+                    const uniqueId = new ObjectId();
 
-            const cdaData: any = cdaCtr.checkAndExtract(dom);
-
-            if (cdaData) {
-                const uniqueId = new ObjectId();
-
-                if (cdaData.organizacion.id !== orgId) {
-                    return next({ error: 'wrong_organization' });
-                }
-
-                cdaData.fecha = moment(cdaData.fecha, 'YYYYMMDDhhmmss').toDate();
-                cdaData.paciente.fechaNacimiento = moment(cdaData.paciente.fechaNacimiento, 'YYYYMMDDhhmmss');
-                cdaData.paciente.sexo = cdaData.paciente.sexo === 'M' ? 'masculino' : 'femenino';
-
-                const yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
-                if (yaExiste) {
-                    return next({ error: 'prestacion_existente' });
-                }
-
-                const organizacion = await Organizacion.findById(orgId);
-                const dataProfesional = req.body.profesional;
-
-                const prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
-                if (!prestacion) {
-                    // Es obligatorio que posea prestación
-                    return next({ error: 'prestacion_invalida' });
-                }
-
-                let pacientec = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
-
-                let fileData, adjuntos;
-                if (cdaData.adjunto && adjunto64) {
-                    const fileObj: any = cdaCtr.base64toStream(adjunto64);
-                    fileObj.metadata = {
-                        cdaId: uniqueId,
-                        paciente: ObjectId(pacientec.id)
-                    };
-                    fileObj.filename = cdaData.adjunto;
-                    fileData = await cdaCtr.storeFile(fileObj);
-                    adjuntos = [{ path: fileData.data, id: fileData.id }];
-                }
-                let metadata = {
-                    paciente: pacientec._id,
-                    prestacion,
-                    organizacion,
-                    profesional: dataProfesional,
-                    fecha: cdaData.fecha,
-                    adjuntos,
-                    extras: {
-                        id: cdaData.id,
-                        organizacion: ObjectId(orgId)
+                    if (cdaData.organizacion.id !== orgId) {
+                        return next({ error: 'wrong_organization' });
                     }
-                };
-                let obj = await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
+                    cdaData.fecha = moment(cdaData.fecha, 'YYYYMMDDhhmmss').toDate();
+                    cdaData.paciente.fechaNacimiento = moment(cdaData.paciente.fechaNacimiento, 'YYYYMMDDhhmmss');
+                    cdaData.paciente.sexo = cdaData.paciente.sexo === 'M' ? 'masculino' : 'femenino';
 
-                res.json({ cda: uniqueId, paciente: pacientec._id });
+                    const yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
+                    if (yaExiste) {
+                        return next({ error: 'prestacion_existente' });
+                    }
 
-            } else {
-                return next({ error: 'cda_format_error' });
-            }
+                    const organizacion = await Organizacion.findById(orgId);
+                    const dataProfesional = req.body.profesional;
 
-        }).catch(next);
-    } else {
-        return next({ error: 'xml_file_missing' });
+                    const prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
+                    if (!prestacion) {
+                        cdaLog.error('create', cdaData.paciente, 'prestacion_invalida', req);
+                        // Es obligatorio que posea prestación
+                        return next({ error: 'prestacion_invalida' });
+                    }
+
+                    let pacientec = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
+
+                    let fileData, adjuntos;
+                    if (cdaData.adjunto && adjunto64) {
+                        const fileObj: any = cdaCtr.base64toStream(adjunto64);
+                        fileObj.metadata = {
+                            cdaId: uniqueId,
+                            paciente: ObjectId(pacientec.id)
+                        };
+                        fileObj.filename = cdaData.adjunto;
+                        fileData = await cdaCtr.storeFile(fileObj);
+                        adjuntos = [{ path: fileData.data, id: fileData.id }];
+                    }
+                    let metadata = {
+                        paciente: pacientec._id,
+                        prestacion,
+                        organizacion,
+                        profesional: dataProfesional,
+                        fecha: cdaData.fecha,
+                        adjuntos,
+                        extras: {
+                            id: cdaData.id,
+                            organizacion: ObjectId(orgId)
+                        }
+                    };
+                    await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
+
+                    res.json({ cda: uniqueId, paciente: pacientec._id });
+
+                } else {
+                    return next({ error: 'cda_format_error' });
+                }
+
+            }).catch(next);
+        } else {
+            return next({ error: 'xml_file_missing' });
+        }
+    } catch (err) {
+        return next(err);
     }
-
 });
 
 /**
@@ -424,3 +427,4 @@ router.get('/:id/:name', async (req: any, res, next) => {
 
 
 export = router;
+
