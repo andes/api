@@ -141,7 +141,7 @@ router.post('/pantalla/activate', async (req, res, next) => {
             };
             token = Auth.generateAppToken(pantalla, organizacion, ['turnos:*', 'mpi:*'], 'totem-token');
         } else {
-            token = Auth.generateAppToken(pantalla, {}, [`turnero:${pantalla._id}`], `turnero-token`);
+            token = Auth.generateAppToken(pantalla, {}, [`turnero:${pantalla.id}`], `turnero-token`);
         }
         res.send({ token });
         EventCore.emitAsync(`${pantalla.tipo}-activated`, { pantalla });
