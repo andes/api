@@ -1,10 +1,12 @@
-import { RoboModel } from './../../../utils/roboSender/roboSchema';
-import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
+import { RoboModel } from '../../utils/roboSender/roboSchema';
+import { MongoQuery, ResourceBase } from '@andes/core';
+import { Auth } from '../../auth/auth.class';
 
 class SendMessageCacheResource extends ResourceBase {
     Model = RoboModel;
     resourceName = 'sendMessageCache';
     keyId = '_id';
+    middlewares = [Auth.authenticate()];
     searchFileds = {
         email: MongoQuery.partialString,
         phone: MongoQuery.partialString,
@@ -20,4 +22,4 @@ class SendMessageCacheResource extends ResourceBase {
 }
 
 export const SendMessageCacheCtr = new SendMessageCacheResource({});
-module.exports = SendMessageCacheCtr.makeRoutes();
+export const SendMessageCacheRouter = SendMessageCacheCtr.makeRoutes();

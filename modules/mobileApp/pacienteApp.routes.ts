@@ -1,11 +1,13 @@
 
-import { pacienteApp } from '../schemas/pacienteApp';
-import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
+import { pacienteApp } from './schemas/pacienteApp';
+import { MongoQuery, ResourceBase } from '@andes/core';
+import { Auth } from '../../auth/auth.class';
 
 class PacienteAppResource extends ResourceBase {
     Model = pacienteApp;
     resourceName = 'pacienteApp';
     keyId = '_id';
+    middlewares = [Auth.authenticate()];
     searchFileds = {
         documento: MongoQuery.partialString,
         search: (value) => {
@@ -18,5 +20,6 @@ class PacienteAppResource extends ResourceBase {
     };
 }
 
+
 export const PacienteAppCtr = new PacienteAppResource({});
-module.exports = PacienteAppCtr.makeRoutes();
+export const PacienteAppRouter = PacienteAppCtr.makeRoutes();
