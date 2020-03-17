@@ -1,4 +1,4 @@
-import { roboModel } from './roboSchema';
+import { RoboModel } from './roboSchema';
 
 export interface ISms {
     phone: string;
@@ -23,7 +23,7 @@ export interface IEmail {
 }
 
 export function sendSms(data: ISms, options: any = {}) {
-    const obj = new roboModel({
+    const obj = new RoboModel({
         message: data.message,
         phone: data.phone,
         from: options.from ? options.from : 'undefined',
@@ -39,7 +39,7 @@ export function sendSms(data: ISms, options: any = {}) {
 }
 
 export function sendEmail(data: IEmail, options: any = {}) {
-    const obj = new roboModel({
+    const obj = new RoboModel({
         message: data.plainText,
         phone: null,
 
@@ -60,8 +60,8 @@ export function sendEmail(data: IEmail, options: any = {}) {
 }
 
 export function removeSend(id) {
-    return new Promise ((resolve, reject) => {
-        roboModel.findById(id, (err, doc: any) => {
+    return new Promise((resolve, reject) => {
+        RoboModel.findById(id, (err, doc: any) => {
             if (doc) {
                 doc.status = 'canceled';
                 doc.updatedAt = new Date();

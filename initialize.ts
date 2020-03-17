@@ -9,6 +9,7 @@ import * as HttpStatus from 'http-status-codes';
 import { Express, Router } from 'express';
 import { AndesDrive } from '@andes/drive';
 import { apiOptionsMiddleware } from '@andes/api-tool';
+import { SendMessageCacheRouter, PacienteAppRouter } from './modules/mobileApp';
 
 
 const requireDir = require('require-dir');
@@ -71,6 +72,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/webhook', require('./modules/webhook').WebhookRouter);
     app.use('/api/modules/webhook', require('./modules/webhook/webhooklog').WebhookLogRouter);
 
+
     /**
      * Inicializa las rutas para adjuntar archivos
      */
@@ -112,4 +114,7 @@ export function initAPI(app: Express) {
             });
         }
     });
+
+    app.use('/api/modules/mobileApp', SendMessageCacheRouter);
+    app.use('/api/modules/mobileApp', PacienteAppRouter);
 }

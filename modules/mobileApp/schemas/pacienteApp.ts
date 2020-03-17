@@ -69,10 +69,8 @@ export let pacienteAppSchema = new mongoose.Schema({
         codigo: String,
         fechaExpiracion: Date
     },
-    devices: [deviceSchema]
-}, {
-    timestamps: true
-});
+    devices: [deviceSchema],
+}, { timestamps: true });
 
 pacienteAppSchema.pre('save', function (next) {
 

@@ -1,7 +1,7 @@
 import * as configPrivate from '../../config.private';
 import * as mailTools from './sendEmail';
 import * as smsTools from './sendSms';
-import { roboModel } from './roboSchema';
+import { RoboModel } from './roboSchema';
 
 import * as debug from 'debug';
 const log = debug('roboSender');
@@ -17,7 +17,7 @@ export function roboSender() {
 
         let counter = 0;
 
-        roboModel.find(condition).then((enviosPendientes: any[]) => {
+        RoboModel.find(condition).then((enviosPendientes: any[]) => {
             log('Encuentro ', enviosPendientes.length, 'mensajes para enviar');
             if (enviosPendientes.length > 0) {
                 enviosPendientes.forEach(async env => {
@@ -91,7 +91,7 @@ function changeState(env, newState) {
         env.tries += 1;
         env.updatedAt = new Date();
 
-        env.save((err, datos)  => {
+        env.save((err, datos) => {
             if (err) {
                 return reject();
             }

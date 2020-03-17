@@ -35,5 +35,5 @@ export let roboSchema = new mongoose.Schema({
     },
 });
 
-export let roboModel = mongoose.model('sendMessageCache', roboSchema, 'sendMessageCache');
+export let RoboModel = mongoose.model('sendMessageCache', roboSchema, 'sendMessageCache');
 
