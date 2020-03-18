@@ -1056,3 +1056,34 @@ EventCore.on('mpi:patient:create', async (patientCreated) => {
     }
 
 });
+export async function buscarRelaciones(dni) {
+    const pac: any = await paciente.findOne(dni);
+    let relaciones = pac.relaciones;
+    let arrayRelaciones: any = [];
+    if (relaciones) {
+        for (let index = 0; index < relaciones.length; index++) {
+            let objetoRelacion: any = new Object();
+            objetoRelacion.nombre = relaciones[index].nombre;
+            objetoRelacion.apellido = relaciones[index].apellido;
+            objetoRelacion.documento = relaciones[index].documento;
+            objetoRelacion.relacion = relaciones[index].relacion;
+            let pacienteRelacion: any = await paciente.findOne({ documento: objetoRelacion.documento });
+            objetoRelacion.id = pacienteRelacion.id;
+            objetoRelacion.edad = calcularEdad(pacienteRelacion.fechaNacimiento);
+            arrayRelaciones.push(objetoRelacion);
+        }
+    }
+    return arrayRelaciones;
+}
+
+export function calcularEdad(fecha) {
+    let hoy = new Date();
+    let cumpleanos = new Date(fecha);
+    let edad = hoy.getFullYear() - cumpleanos.getFullYear();
+    let m = hoy.getMonth() - cumpleanos.getMonth();
+
+    if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) {
+        edad--;
+    }
+    return edad;
+}
