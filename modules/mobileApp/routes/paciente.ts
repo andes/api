@@ -3,7 +3,7 @@ import { Auth } from './../../../auth/auth.class';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
-
+import { paciente } from '../../../core/mpi/schemas/paciente';
 const router = express.Router();
 
 /**
@@ -13,29 +13,42 @@ const router = express.Router();
  * Chequea que el paciente este asociado a la cuenta
  */
 
-router.get('/paciente/:id', (req: any, res, next) => {
+router.get('/paciente/:id', async (req: any, res, next) => {
     const idPaciente = req.params.id;
-    const pacientes = req.user.pacientes;
-    const index = pacientes.findIndex(item => item.id === idPaciente);
-    if (index >= 0) {
-        return controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
-            // [TODO] Projectar datos que se pueden mostrar al paciente
-            const pac = resultado.paciente;
-            delete pac.claveBloking;
-            delete pac.entidadesValidadoras;
-            delete pac.carpetaEfectores;
-            delete pac.createdBy;
-
+    if (req.query.familiar) {
+        const pac: any = await paciente.findOne({ _id: idPaciente });
+        if (pac) {
             return res.json(pac);
-
-        }).catch(error => {
-            return res.status(422).send({ message: 'invalid_id' });
-        });
+        } else {
+            return res.status(422).send({ message: 'Paciente no encontrado' });
+        }
     } else {
-        return res.status(422).send({ message: 'unauthorized' });
+        const pacientes = req.user.pacientes;
+        const index = pacientes.findIndex(item => item.id === idPaciente);
+        if (index >= 0) {
+            return controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
+                // [TODO] Projectar datos que se pueden mostrar al paciente
+                const pac = resultado.paciente;
+                delete pac.claveBloking;
+                delete pac.entidadesValidadoras;
+                delete pac.carpetaEfectores;
+                delete pac.createdBy;
+                return res.json(pac);
+
+            }).catch(error => {
+                return res.status(422).send({ message: 'invalid_id' });
+            });
+        } else {
+            return res.status(422).send({ message: 'unauthorized' });
+        }
     }
 });
 
+router.get('/relaciones', async (req: any, res, next) => {
+    controllerPaciente.buscarRelaciones(req.query).then((resultado) => {
+        return res.json(resultado);
+    });
+});
 /**
  * Modifica datos de contacto y otros
  *
@@ -49,6 +62,7 @@ router.put('/paciente/:id', (req: any, res, next) => {
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
         controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
+            // tslint:disable-next-line: no-shadowed-variable
             const paciente = resultado.paciente;
             const data: any = {};
 
@@ -124,6 +138,7 @@ router.get('/laboratorios/(:id)', async (req, res, next) => {
     const pacientes = (req as any).user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
+        // tslint:disable-next-line: no-shadowed-variable
         let { paciente } = await controllerPaciente.buscarPaciente(idPaciente);
         if (!paciente) {
             return next({ message: 'no existe el paciente' });

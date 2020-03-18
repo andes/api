@@ -34,11 +34,15 @@ router.get('/turnos/recordatorioTurno', (req, res, next) => {
 router.get('/turnos', async (req: any, res, next) => {
     const pipelineTurno = [];
     const turnos = [];
+    let pacienteId;
     let turno;
     const matchTurno = {};
-
-    const pacienteId = req.user.pacientes[0].id;
-
+    if (req.query.familiar) {
+        const familiar = JSON.parse(req.query.familiar);
+        pacienteId = familiar.id;
+    } else {
+        pacienteId = req.user.pacientes[0].id;
+    }
     let { paciente } = await controllerPaciente.buscarPaciente(pacienteId);
     if (!paciente) {
         return next({ message: 'no existe el paciente' });
@@ -190,8 +194,13 @@ router.get('/turnos/ubicacion/organizacion/:id', async (req, res, next) => {
  */
 
 router.post('/turnos/cancelar', (req: any, res, next) => {
+    let pacienteId;
+    if (req.body.familiar) {
+        pacienteId = req.body.familiar.id;
+    } else {
+        pacienteId = req.user.pacientes[0].id;
+    }
     /* Por el momento usamos el primer paciente */
-    const pacienteId = req.user.pacientes[0].id;
 
     const turnoId = req.body.turno_id;
     const agendaId = req.body.agenda_id;
