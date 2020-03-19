@@ -10,7 +10,7 @@ export async function getObraSocial(paciente) {
     } else {
         let arrayOSSumar = await getPacienteSumar(paciente.documento);
         if (arrayOSSumar.length > 0) {
-            return [{ codigoPuco: null, nombre: null, financiador: 'SUMAR' }];
+            return [{ codigoPuco: null, nombre: 'SUMAR', financiador: 'SUMAR' }];
         } else {
             return [];
         }
