@@ -216,6 +216,22 @@ router.put('/organizaciones/:id', Auth.authenticate(), async (req, res, next) =>
     }
 });
 
+router.patch('/organizaciones/:id', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const resultado = await Organizacion.findById(req.params.id);
+        switch (req.body.op) {
+            case 'updateCodigoServSalud':
+                resultado.codigo.servSalud = req.body.data;
+                break;
+        }
+        Auth.audit(resultado, req);
+        await resultado.save();
+        res.json(resultado);
+    } catch (err) {
+        next(err);
+    }
+});
+
 router.delete('/organizaciones/:id', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:delete')) {
         return next(403);
