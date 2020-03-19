@@ -53,4 +53,19 @@ router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
     });
 });
 
+router.patch('/tiposPrestaciones/:id', async (req, res, next) => {
+    try {
+        const resultado = await tipoPrestacion.findById(req.params.id);
+        switch (req.body.op) {
+            case 'updateCodigoServSalud':
+                resultado.codigoServSalud = req.body.data;
+                break;
+        }
+        await resultado.save();
+        res.json(resultado);
+    } catch (err) {
+        next(err);
+    }
+});
+
 export = router;
