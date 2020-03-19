@@ -1434,15 +1434,11 @@ export async function verificarSolapamiento(data) {
 
                 let profesionales = [];
                 let org = []; // nombre de la organizacion
-                // let org: string; // nombre de la organizacion
-                // let agendaCreadaPor: string;
                 let agendaCreadaPor = [];
                 let prestacionesAgenda = [];
                 for (let resultado of resultados) {
                     profesionales = profesionales.concat(resultado.profesionales);
-                    // org = resultado.organizacion.nombre;
                     org = org.concat(resultado.organizacion.nombre);
-                    // agendaCreadaPor = resultado.createdBy.nombreCompleto;
                     agendaCreadaPor = agendaCreadaPor.concat(resultado.createdBy.nombreCompleto);
                     for (let prestacionAg of resultado.tipoPrestaciones) {
                         prestacionesAgenda = prestacionesAgenda.concat(prestacionAg.term);
