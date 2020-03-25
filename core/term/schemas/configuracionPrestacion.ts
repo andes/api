@@ -19,8 +19,6 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'organizacion'
         },
-        idEspecialidad: Number, // id Interno de SIPS
-        nombreEspecialidad: String, // nombre de la especialidad en SIPS
         codigo: Number, // Codigo de la prestación (va a servir para vincular las prestaciones que tengan distinto ID)
     }]
 });
