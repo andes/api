@@ -105,15 +105,15 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
                     res.status(400).send('Debe ingresar al menos un parámetro');
                     return next(400);
                 }
-                query.exec(async (err, data) => {
-                    if (err) {
-                        return next(err);
-                    }
-                    if (req.query.nombreMedicamento) { // Si es una búsqueda por nombre de medicamento
+                if (req.query.nombreMedicamento) {
+                    try {
+                        let data;
                         data = await formularioTerapeutico.find({ descripcion: RegExp('^.*' + req.query.nombreMedicamento + '.*$', 'i') });
+                        res.json(data);
+                    } catch (error) {
+                        return next(error);
                     }
-                    res.json(data);
-                });
+                }
             }
         }
 
