@@ -14,9 +14,10 @@ const router = express.Router();
  */
 
 router.get('/paciente/:id', async (req: any, res, next) => {
+    let pac: any;
     const idPaciente = req.params.id;
     if (req.query.familiar) {
-        const pac: any = await paciente.findOne({ _id: idPaciente });
+        pac = await paciente.findOne({ _id: idPaciente });
         if (pac) {
             return res.json(pac);
         } else {
@@ -26,18 +27,19 @@ router.get('/paciente/:id', async (req: any, res, next) => {
         const pacientes = req.user.pacientes;
         const index = pacientes.findIndex(item => item.id === idPaciente);
         if (index >= 0) {
-            return controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
+            try {
+                const resultado = await controllerPaciente.buscarPaciente(pacientes[index].id);
+                pac = resultado.paciente;
                 // [TODO] Projectar datos que se pueden mostrar al paciente
-                const pac = resultado.paciente;
                 delete pac.claveBloking;
                 delete pac.entidadesValidadoras;
                 delete pac.carpetaEfectores;
                 delete pac.createdBy;
                 return res.json(pac);
 
-            }).catch(error => {
+            } catch (error) {
                 return res.status(422).send({ message: 'invalid_id' });
-            });
+            }
         } else {
             return res.status(422).send({ message: 'unauthorized' });
         }
@@ -45,9 +47,8 @@ router.get('/paciente/:id', async (req: any, res, next) => {
 });
 
 router.get('/relaciones', async (req: any, res, next) => {
-    controllerPaciente.buscarRelaciones(req.query).then((resultado) => {
-        return res.json(resultado);
-    });
+    const relacion = await controllerPaciente.buscarRelaciones(req.query);
+    return res.json(relacion);
 });
 /**
  * Modifica datos de contacto y otros
@@ -56,12 +57,13 @@ router.get('/relaciones', async (req: any, res, next) => {
  *
  */
 
-router.put('/paciente/:id', (req: any, res, next) => {
+router.put('/paciente/:id', async (req: any, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = req.user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
+        try {
+            const resultado = await controllerPaciente.buscarPaciente(pacientes[index].id);
             // tslint:disable-next-line: no-shadowed-variable
             const paciente = resultado.paciente;
             const data: any = {};
@@ -83,9 +85,9 @@ router.put('/paciente/:id', (req: any, res, next) => {
                 return next(error);
             });
 
-        }).catch(error => {
+        } catch (error) {
             return next({ message: 'invalid_id' });
-        });
+        }
     } else {
         return next({ message: 'unauthorized' });
     }
@@ -96,13 +98,14 @@ router.put('/paciente/:id', (req: any, res, next) => {
  * [No esta en uso]
  */
 
-router.patch('/pacientes/:id', (req, res, next) => {
+router.patch('/pacientes/:id', async (req, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = (req as any).user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
 
     if (index >= 0) {
-        controllerPaciente.buscarPaciente(req.params.id).then((resultado: any) => {
+        try {
+            const resultado = await controllerPaciente.buscarPaciente(req.params.id);
             if (resultado) {
                 switch (req.body.op) {
                     case 'updateFotoMobile':
@@ -122,9 +125,9 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     return res.json(resultado.paciente);
                 });
             }
-        }).catch((err) => {
+        } catch (err) {
             return next(err);
-        });
+        }
     }
 });
 
