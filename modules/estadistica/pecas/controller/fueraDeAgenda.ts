@@ -49,7 +49,6 @@ export async function fueraAgendaPecas(start, end, done) {
     try {
         poolPrestaciones = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
-        // console.log('ex', ex);
         return (ex);
     }
 
@@ -269,6 +268,7 @@ async function auxiliar(pres: any) {
             prestacion.Desc3DiagAuditado = pres.diagnostico.codificaciones[2].codificacionAuditoria.nombre;
         }
 
+        prestacion.idProfesional = pres.prestacion.solicitud.profesional.id ? String(pres.prestacion.solicitud.profesional.id) : null;
         prestacion.Profesional = pres.createdBy.nombreCompleto.replace('\'', '\'\'');
         prestacion.TipoProfesional = null;
         prestacion.CodigoEspecialidad = null;
@@ -326,7 +326,7 @@ async function auxiliar(pres: any) {
             'Piso, Depto, Manzana, Longitud, Latitud, Peso, Talla, TAS, TAD, IMC, RCVG, Diag1CodigoOriginal, Desc1DiagOriginal,' +
             'Diag1CodigoAuditado, Desc1DiagAuditado, SemanticTag1, SnomedConcept1, SnomedTerm1, primeraVez1, Diag2CodigoOriginal, Desc2DiagOriginal,' +
             'Diag2CodigoAuditado, Desc2DiagAuditado, SemanticTag2, SnomedConcept2, SnomedTerm2, primeraVez2, Diag3CodigoOriginal, Desc3DiagOriginal,' +
-            'Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, Profesional, TipoProfesional,' +
+            'Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, idProfesional, Profesional, TipoProfesional,' +
             'CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, codifica, updated, idPrestacion) ' +
             'VALUES  ( ' + prestacion.idEfector + ',\'' + prestacion.Organizacion + '\',\'' + prestacion.TipoEfector + '\',\'' + prestacion.DescTipoEfector +
             '\',' + prestacion.IdZona + ',\'' + prestacion.Zona + '\',\'' + prestacion.SubZona + '\',' + prestacion.idEfectorSuperior + ',\'' + prestacion.EfectorSuperior + '\',\'' + prestacion.AreaPrograma +
@@ -348,9 +348,8 @@ async function auxiliar(pres: any) {
             '\',\'' + prestacion.semanticTag2 + '\',\'' + prestacion.conceptId2 + '\',\'' + prestacion.term2 + '\',' + prestacion.primeraVez2 +
             ',\'' + prestacion.Diag3CodigoOriginal + '\',\'' + prestacion.Desc3DiagOriginal + '\',\'' + prestacion.Diag3CodigoAuditado + '\',\'' + prestacion.Desc3DiagAuditado +
             '\',\'' + prestacion.semanticTag3 + '\',\'' + prestacion.conceptId3 + '\',\'' + prestacion.term3 + '\',' + prestacion.primeraVez3 +
-            ',\'' + prestacion.Profesional + '\',\'' + prestacion.TipoProfesional + '\',' + prestacion.CodigoEspecialidad + ',\'' + prestacion.Especialidad +
+            ',\'' + prestacion.idProfesional + '\',\'' + prestacion.Profesional + '\',\'' + prestacion.TipoProfesional + '\',' + prestacion.CodigoEspecialidad + ',\'' + prestacion.Especialidad +
             '\',' + prestacion.CodigoServicio + ',\'' + prestacion.Servicio + '\',\'' + prestacion.codifica + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\',\'' + pres.idPrestacion + '\')';
-
         return executeQuery(queryInsert);
 
     } catch (error) {
