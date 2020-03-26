@@ -7,6 +7,8 @@ import * as constantes from './constantes';
 import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
+import * as pac from '../controller/paciente';
+
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
@@ -129,61 +131,11 @@ pacienteSchema.virtual('nombreCompleto').get(function () {
     return this.nombre + ' ' + this.apellido;
 });
 pacienteSchema.virtual('edad').get(function () {
-    let edad = null;
-    if (this.fechaNacimiento) {
-        const birthDate = new Date(this.fechaNacimiento);
-        const currentDate = new Date();
-        let years = (currentDate.getFullYear() - birthDate.getFullYear());
-        if (currentDate.getMonth() < birthDate.getMonth() ||
-            currentDate.getMonth() === birthDate.getMonth() && currentDate.getDate() < birthDate.getDate()) {
-            years--;
-        }
-        edad = years;
-    }
-    return edad;
+    return pac.calcularEdad(this.fechaNacimiento);
 });
 pacienteSchema.virtual('edadReal').get(function () {
     // Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
-    let edad: Object;
-    let fechaNac: any;
-    const fechaActual: Date = new Date();
-    let fechaAct: any;
-    let difAnios: any;
-    let difDias: any;
-    let difMeses: any;
-    let difHs: any;
-
-    fechaNac = moment(this.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
-    fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
-    difDias = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
-    difAnios = Math.floor(difDias / 365.25);
-    difMeses = Math.floor(difDias / 30.4375);
-    difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
-
-
-    if (difAnios !== 0) {
-        edad = {
-            valor: difAnios,
-            unidad: 'Años'
-        };
-    } else if (difMeses !== 0) {
-        edad = {
-            valor: difMeses,
-            unidad: 'Meses'
-        };
-    } else if (difDias !== 0) {
-        edad = {
-            valor: difDias,
-            unidad: 'Días'
-        };
-    } else if (difHs !== 0) {
-        edad = {
-            valor: difHs,
-            unidad: 'Horas'
-        };
-    }
-
-    return edad;
+    return pac.edadReal(this.fechaNacimiento);
 });
 
 pacienteSchema.methods.basicos = function () {
