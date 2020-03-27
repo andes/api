@@ -67,7 +67,7 @@ function getAccount(code, email) {
  */
 
 router.post('/v2/check', (req, res, next) => {
-    const email = req.body.email;
+    const email = (req.body.email) ? req.body.email.toLowerCase() : null;
     const code = req.body.code;
     if (!email || !code) {
         return next('faltan datos');
@@ -88,7 +88,7 @@ router.post('/v2/check', (req, res, next) => {
  */
 
 router.post('/v2/verificar', (req, res, next) => {
-    const email = req.body.email;
+    const email = (req.body.email) ? req.body.email.toLowerCase() : null;
     const code = req.body.code;
     const mpiData = req.body.paciente;
     if (!email || !code) {
@@ -116,7 +116,7 @@ router.post('/v2/verificar', (req, res, next) => {
  */
 
 router.post('/v2/registrar', (req, res, next) => {
-    const email = req.body.email;
+    const email = (req.body.email) ? req.body.email.toLowerCase() : null;
     const code = req.body.code;
     const password = req.body.password;
     // let mpiData = req.body.paciente;

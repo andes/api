@@ -202,8 +202,8 @@ export function createUserFromPaciente(pacienteData, contacto) {
         if (!dataPacienteApp.email) {
             return reject({ error: 'email_not_found' });
         }
-
-        PacienteApp.findOne({ email: dataPacienteApp.email }, (err, existingUser) => {
+        const email = contacto.email.toLowerCase();
+        PacienteApp.findOne({ email }, (err, existingUser) => {
 
             if (err) {
                 return reject({ error: 'unknow_error' });
@@ -212,7 +212,7 @@ export function createUserFromPaciente(pacienteData, contacto) {
             if (existingUser) {
                 return reject({ error: 'email_exists' });
             }
-
+            dataPacienteApp.email = email;
             const user = new PacienteApp(dataPacienteApp);
 
             user.save((errSave, userSaved: any) => {
