@@ -439,11 +439,11 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
         let posTurno: number;
         let posBloque: number;
         if (req.params.idBloque !== '-1') {
-            posBloque = (agendaRes as any).bloques.findIndex(bloque => Object.is(req.params.idBloque, String(bloque._id)));
-            posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(turno => Object.is(req.params.idTurno, String(turno._id)));
+            posBloque = agendaRes.bloques.findIndex(bloque => Object.is(req.params.idBloque, String(bloque._id)));
+            posTurno = agendaRes.bloques[posBloque].turnos.findIndex(turno => Object.is(req.params.idTurno, String(turno._id)));
             etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
         } else {
-            posTurno = (agendaRes as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
+            posTurno = agendaRes.sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
             etiquetaTurno = 'sobreturnos.' + posTurno;
         }
         const usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
@@ -455,6 +455,12 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
         const query = {
             _id: req.params.idAgenda,
         };
+
+        // Si la asistencia viene en null o undefined, se remueve el atributo para no fallar en la validación
+        if (!req.body.turno.asistencia) {
+            delete req.body.turno.asistencia;
+        }
+
         update[etiquetaTurno] = req.body.turno;
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
         (agenda as any).findOneAndUpdate(query, update, { new: true },
