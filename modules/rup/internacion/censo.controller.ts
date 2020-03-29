@@ -6,6 +6,9 @@ import { Censos } from './censos.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
+/**
+ * Agrupa por cierta key. Por cada valor genera un array de esos elementos
+ */
 const groupBy = (xs: any[], key: string) => {
     return xs.reduce((rv, x) => {
         (rv[x[key]] = rv[x[key]] || []).push(x);
@@ -13,19 +16,25 @@ const groupBy = (xs: any[], key: string) => {
     }, {});
 };
 
-async function mergeDatos(snapshots, movimientos) {
-    let internaciones = [...new Set([...Object.keys(snapshots).filter(snap => snap !== 'null'), ...Object.keys(movimientos).filter(mov => mov !== 'null')])];
+/**
+ * Concatena el estado a cierta hora con los movimientos. Casos:
+ *    - internacion presente a cierta hora y tiene movimientos (viene de días anteriores)
+ *    - internacion presente a cierta hora y no tiene movimientos (viene de días anteriores)
+ *    - internacion no presente a cierta hora pero tiene movimientos (ingresa el día de la fecha)
+ */
+async function unificarMovimientos(snapshots, movimientos) {
+    const idInternacionesUnicos = [...new Set([...Object.keys(snapshots).filter(snap => snap !== 'null'), ...Object.keys(movimientos).filter(mov => mov !== 'null')])];
     const mapping = {};
-    internaciones.forEach(inter => {
-        if (snapshots[inter] && movimientos[inter]) {
-            mapping[inter] = [...snapshots[inter], ...movimientos[inter]];
-        } else if (snapshots[inter]) {
-            mapping[inter] = snapshots[inter];
-        } else if (movimientos[inter]) {
-            mapping[inter] = movimientos[inter];
+    idInternacionesUnicos.forEach(idInternacion => {
+        if (snapshots[idInternacion] && movimientos[idInternacion]) {
+            mapping[idInternacion] = [...snapshots[idInternacion], ...movimientos[idInternacion]];
+        } else if (snapshots[idInternacion]) {
+            mapping[idInternacion] = snapshots[idInternacion];
+        } else if (movimientos[idInternacion]) {
+            mapping[idInternacion] = movimientos[idInternacion];
         }
 
-        mapping[inter].sort((a, b) => (a.fecha - b.fecha));
+        mapping[idInternacion].sort((a, b) => (a.fecha - b.fecha));
     });
 
     return mapping;
@@ -45,36 +54,39 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
 
     let tablaPacientes = {};
 
-    const ps = Object.keys(internaciones).map(async idInter => {
+    Object.keys(internaciones).map(async idInter => {
         const allMovimientos = internaciones[idInter];
         const ultimoMovimiento = allMovimientos[allMovimientos.length - 1];
         const prestacion = prestaciones.find(p => String(p.id) === String(ultimoMovimiento.idInternacion));
-        const informesInternacion: any = await getInformesInternacion(prestacion);
+        const informesInternacion: any = getInformesInternacion(prestacion);
         const fechaEgreso = informesInternacion.egreso ? informesInternacion.egreso.fechaEgreso : null;
         const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
         const primerUO = String(allMovimientos[0].unidadOrganizativa._id);
         const ultimaUO = String(ultimoMovimiento.unidadOrganizativa._id);
 
-        if (!tablaPacientes[ultimoMovimiento.paciente._id]) {
-            const cama = camas[String(ultimoMovimiento.idCama)][0];
-            tablaPacientes[ultimoMovimiento.paciente._id] = {
-                datos: {
-                    paciente: ultimoMovimiento.paciente,
-                    cama: {
-                        nombre: cama.nombre,
-                        tipoCama: cama.tipoCama,
-                        sectores: cama.sectores
+        function checkPaciente(movimiento) {
+            if (!tablaPacientes[movimiento.paciente.id]) {
+                const cama = camas[String(movimiento.idCama)][0];
+                tablaPacientes[movimiento.paciente.id] = {
+                    datos: {
+                        paciente: movimiento.paciente,
+                        cama: {
+                            nombre: cama.nombre,
+                            tipoCama: cama.tipoCama,
+                            sectores: cama.sectores
+                        },
                     },
-                },
-                actividad: []
-            };
+                    actividad: []
+                };
+            }
         }
 
         if (fechaEgreso) {
             if ((primerUO === String(unidadOrganizativa)) && (ultimaUO === String(unidadOrganizativa))) {
                 if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
                     ingresosYEgresos++;
-                    tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                    checkPaciente(ultimoMovimiento);
+                    tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                         ingreso: 'SI',
                         egreso: informesInternacion.egreso.tipoEgreso.id,
                     });
@@ -87,7 +99,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     } else {
                         altas++;
                     }
-                    tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                    checkPaciente(ultimoMovimiento);
+                    tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                         egreso: informesInternacion.egreso.tipoEgreso.id,
                     });
                 }
@@ -97,7 +110,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         if (primerUO === String(unidadOrganizativa)) {
             if (moment(fechaIngreso).isBefore(timestampStart.toDate())) {
                 existenciaALas0++;
-                tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                checkPaciente(ultimoMovimiento);
+                tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                     ingreso: null,
                     paseDe: null,
                     egreso: null,
@@ -105,7 +119,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                 });
             } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
                 ingresos++;
-                tablaPacientes[ultimoMovimiento.paciente._id].actividad.push({
+                checkPaciente(ultimoMovimiento);
+                tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                     ingreso: 'SI',
                 });
             }
@@ -114,15 +129,17 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
 
         let movimientoAnterior;
         for (const movimiento of allMovimientos) {
-            if (movimientoAnterior && String(movimientoAnterior.unidadOrganizativa._id) !== String(movimiento.unidadOrganizativa.id)) {
+            if (movimientoAnterior && String(movimientoAnterior.unidadOrganizativa._id) !== String(movimiento.unidadOrganizativa._id)) {
                 if (String(movimientoAnterior.unidadOrganizativa._id) !== unidadOrganizativa) {
                     pasesDe++;
-                    tablaPacientes[movimiento.paciente._id].actividad.push({
+                    checkPaciente(ultimoMovimiento);
+                    tablaPacientes[movimiento.paciente.id].actividad.push({
                         paseDe: 'SI',
                     });
                 } else {
                     pasesA++;
-                    tablaPacientes[movimiento.paciente._id].actividad.push({
+                    checkPaciente(ultimoMovimiento);
+                    tablaPacientes[movimiento.paciente.id].actividad.push({
                         paseA: 'SI',
                     });
                 }
@@ -131,8 +148,6 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             movimientoAnterior = movimiento;
         }
     });
-
-    await Promise.all(ps);
 
     existenciaALas24 = existenciaALas0 + ingresos + pasesDe - altas - defunciones - pasesA;
 
@@ -164,35 +179,39 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
     const timestampEnd = moment(timestamp).endOf('day');
 
     const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
-    const snapshotsUO = snapshots.filter(item => String(item.unidadOrganizativa._id) === unidadOrganizativa);
+
+    // const snapshotsUO = snapshots.filter(item => String(item.unidadOrganizativa._id) === unidadOrganizativa);
+
     const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
 
-    const snapshotsAgrupados = groupBy(snapshotsUO, 'idInternacion');
+    const snapshotsAgrupados = groupBy(snapshots, 'idInternacion');
     const snapshotsPorCama = groupBy(snapshots, 'idCama');
     const movimientosPorCama = groupBy(movimientos, 'idCama');
     const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
 
-    const internaciones = await mergeDatos(snapshotsAgrupados, movimientosAgrupados);
+    const internaciones = await unificarMovimientos(snapshotsAgrupados, movimientosAgrupados);
 
     const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, snapshotsPorCama);
 
-    const camas = await mergeDatos(snapshotsPorCama, movimientosPorCama);
+    const camas = await unificarMovimientos(snapshotsPorCama, movimientosPorCama);
 
     let camasDisponibles = 0;
-    const ps = Object.keys(camas).map(idCama => {
-        if (camas[idCama][camas[idCama].length - 1].estado === 'disponible') {
+    Object.keys(camas).map(idCama => {
+        const ultimoMov = camas[idCama][camas[idCama].length - 1];
+        const esDisponible = ultimoMov.estado === 'disponible';
+        const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa._id) === unidadOrganizativa;
+        if (esDisponible && estaUnidadOrganizativa) {
             camasDisponibles++;
         }
     });
 
-    await Promise.all(ps);
 
     resultado.censo.disponibles = camasDisponibles;
 
     return resultado;
 }
 
-async function getInformesInternacion(prestacion) {
+function getInformesInternacion(prestacion) {
     let registros = prestacion.ejecucion.registros;
     let egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
     let ingresoExiste = registros.find(registro => registro.concepto.conceptId === '721915006');
