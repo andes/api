@@ -153,7 +153,18 @@ export default [
         key: 'internacion',
         title: 'Módulo Internación',
         comment: '',
+        avoidAll: true,
         child: [
+            {
+                key: 'rol',
+                title: 'Rol del usuario',
+                avoidAll: true,
+                child: [
+                    { key: 'medica', title: 'Médico', type: 'boolean' },
+                    { key: 'enfermeria', title: 'Enfermero', type: 'boolean' },
+                    { key: 'estadistica', title: 'Estadístico', type: 'boolean' },
+                ]
+            },
             {
                 key: 'cama',
                 title: 'Acciones sobre una cama',
@@ -167,15 +178,6 @@ export default [
             { key: 'inicio', title: 'Punto de inicio', type: 'boolean' },
             { key: 'mapaDeCamas', title: 'Mapa de camas', type: 'boolean' },
             { key: 'descargarListado', title: 'Descargar listado internación', type: 'boolean' },
-            {
-                key: 'rol',
-                title: 'Rol del usuario',
-                child: [
-                    { key: 'medica', title: 'Médico', type: 'boolean' },
-                    { key: 'enfermeria', title: 'Enfermero', type: 'boolean' },
-                    { key: 'estadistica', title: 'Estadístico', type: 'boolean' },
-                ]
-            }
         ]
 
     },
