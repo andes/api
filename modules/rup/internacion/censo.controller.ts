@@ -61,8 +61,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         const informesInternacion: any = getInformesInternacion(prestacion);
         const fechaEgreso = informesInternacion.egreso ? informesInternacion.egreso.fechaEgreso : null;
         const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
-        const primerUO = String(allMovimientos[0].unidadOrganizativa._id);
-        const ultimaUO = String(ultimoMovimiento.unidadOrganizativa._id);
+        const primerUO = String(allMovimientos[0].unidadOrganizativa.conceptId);
+        const ultimaUO = String(ultimoMovimiento.unidadOrganizativa.conceptId);
 
         function checkPaciente(movimiento) {
             if (!tablaPacientes[movimiento.paciente.id]) {
@@ -129,8 +129,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
 
         let movimientoAnterior;
         for (const movimiento of allMovimientos) {
-            if (movimientoAnterior && String(movimientoAnterior.unidadOrganizativa._id) !== String(movimiento.unidadOrganizativa._id)) {
-                if (String(movimientoAnterior.unidadOrganizativa._id) !== unidadOrganizativa) {
+            if (movimientoAnterior && String(movimientoAnterior.unidadOrganizativa.conceptId) !== String(movimiento.unidadOrganizativa.conceptId)) {
+                if (String(movimientoAnterior.unidadOrganizativa.conceptId) !== unidadOrganizativa) {
                     pasesDe++;
                     checkPaciente(ultimoMovimiento);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
@@ -180,7 +180,7 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
 
     const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
 
-    // const snapshotsUO = snapshots.filter(item => String(item.unidadOrganizativa._id) === unidadOrganizativa);
+    // const snapshotsUO = snapshots.filter(item => String(item.unidadOrganizativa.conceptId) === unidadOrganizativa);
 
     const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
 
@@ -196,10 +196,10 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
     const camas = await unificarMovimientos(snapshotsPorCama, movimientosPorCama);
 
     let camasDisponibles = 0;
-    Object.keys(camas).map(idCama => {
+    Object.keys(camas).forEach(idCama => {
         const ultimoMov = camas[idCama][camas[idCama].length - 1];
         const esDisponible = ultimoMov.estado === 'disponible';
-        const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa._id) === unidadOrganizativa;
+        const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
         if (esDisponible && estaUnidadOrganizativa) {
             camasDisponibles++;
         }
@@ -265,7 +265,7 @@ export async function censoMensualJob(done) {
         const timestamp = moment().subtract(i, 'days');
         for (const organizacion of organizaciones) {
             for (const unidadOrganizativa of organizacion.unidadesOrganizativas) {
-                const resultado: any = await censoDiario({ organizacion: organizacion._id, timestamp, unidadOrganizativa: unidadOrganizativa._id });
+                const resultado: any = await censoDiario({ organizacion: organizacion._id, timestamp, unidadOrganizativa: unidadOrganizativa.conceptId });
 
                 const nuevoCenso = {
                     fecha: timestamp.startOf('day').toDate(),
