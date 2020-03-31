@@ -147,7 +147,15 @@ interface SearchEstadosParams {
      */
     internacion: ObjectId;
 
+    /**
+     * Estado de la cama
+     */
     estado: string;
+
+    /**
+     * Filtra estados que significan un movimiento en la cama y/o internación
+     */
+    esMovimiento: boolean;
 
 }
 
@@ -174,6 +182,10 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
 
     if (filtros.estado) {
         secondMatch['estados.estado'] = filtros.estado;
+    }
+
+    if (filtros.esMovimiento !== undefined && filtros.esMovimiento !== null) {
+        secondMatch['estados.esMovimiento'] = filtros.esMovimiento;
     }
 
     const aggregate = [

@@ -25,8 +25,9 @@ router.get('/camas/historial', Auth.authenticate(), asyncHandler(async (req: Req
     const internacion = req.query.idInternacion;
     const desde = req.query.desde;
     const hasta = req.query.hasta;
+    const esMovimiento = req.query.esMovimiento;
 
-    const result = await CamasController.historial({ organizacion, ambito, capa }, cama, internacion, desde, hasta);
+    const result = await CamasController.historial({ organizacion, ambito, capa }, cama, internacion, desde, hasta, esMovimiento);
     return res.json(result);
 }));
 
