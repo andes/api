@@ -134,13 +134,13 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     pasesDe++;
                     checkPaciente(ultimoMovimiento);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
-                        paseDe: 'SI',
+                        paseDe: movimientoAnterior.unidadOrganizativa.term
                     });
                 } else {
                     pasesA++;
                     checkPaciente(ultimoMovimiento);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
-                        paseA: 'SI',
+                        paseA: movimiento.unidadOrganizativa.term
                     });
                 }
             }
