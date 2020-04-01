@@ -358,7 +358,7 @@ export class Documento {
                             let valorRegistro = ((registros[i].valor).replace('<p>', '')).replace('</p>', '');
                             this.informeRegistros = [...this.informeRegistros, ({
                                 concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag },
-                                valor: `<div class="nivel-${this.nivelPadre}"><p>${nombreRegistro}: <small>${valorRegistro}</small></p></div>`
+                                valor: `<div class="nivel-${this.nivelPadre}"><p>${nombreRegistro}:<br><br><small>${valorRegistro}</small></p></div>`
                             })];
                         } else if (registros[i].valor !== null) {
                             if (this.esHallazgo(registros[i].concepto.semanticTag)) {
