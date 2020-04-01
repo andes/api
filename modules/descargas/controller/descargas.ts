@@ -445,6 +445,10 @@ export class Documento {
 
                 if (!config) {
                     config = await this.getPrestacionInformeComponent(prestacion.solicitud.tipoPrestacion.conceptId);
+
+                    if (!config) {
+                        config = {};
+                    }
                 }
 
                 // Se crea un objecto nuevo
@@ -807,7 +811,6 @@ export class Documento {
                     //     port: 9222, // port Chrome is listening on
                     // };
                     this.options = options || phantomPDFOptions;
-
                     await this.generarHTML(req).then(async htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();
                         await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
