@@ -69,6 +69,34 @@ router.post('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res
     res.json(result);
 }));
 
+router.patch('/camas/changeTime/:id', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const organizacion = {
+            _id: Auth.getOrganization(req),
+            nombre: Auth.getOrganization(req, 'nombre')
+        };
+        let idCama = req.params.id;
+        let capa = req.body.capa;
+        let ambito = req.body.ambito;
+        let fecha = new Date(req.body.fechaActualizar);
+        let nuevafecha = new Date(req.body.nuevaFecha);
+        let idInternacion = req.body.idInternacion;
+        const cambiaEstado = await CamasController.changeTime({
+            organizacion: { _id: organizacion._id }, capa, ambito
+        }, idCama, fecha, nuevafecha, idInternacion);
+
+        if (cambiaEstado) {
+            const camaActualizada = await CamasController.findById({ organizacion, capa, ambito }, idCama, nuevafecha);
+            res.json(camaActualizada);
+        } else {
+            return next('No se puede realizar el cambio de estado');
+        }
+
+    } catch (err) {
+        return next(err);
+    }
+});
+
 router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
