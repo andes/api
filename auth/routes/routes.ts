@@ -6,6 +6,7 @@ import * as mongoose from 'mongoose';
 
 import { checkPassword } from '../ldap.controller';
 import { findUser, updateUser, checkMobile, generateTokenPayload } from '../auth.controller';
+import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
 
 const sha1Hash = require('sha1');
 const shiroTrie = require('shiro-trie');
@@ -93,14 +94,16 @@ router.post('/login', async (req, res, next) => {
         await updateUser(user.usuario, user.nombre, user.apellido, user.password);
         if (req.body.mobile) {
             if (prof && prof._id) {
-                checkMobile(prof._id).then((account: any) => {
+                try {
+                    let account: any = await checkMobile(prof._id);
+                    await updateAccount(account, { lastLogin: new Date() });
                     return res.json({
                         token: Auth.generateUserToken(user, null, [], prof, account._id),
                         user: account
                     });
-                }).catch((e) => {
+                } catch (e) {
                     return next(403);
-                });
+                }
             } else {
                 return next(403);
             }

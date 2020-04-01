@@ -35,7 +35,7 @@ router.post('/login', (req, res, next) => {
             return res.status(422).send({ error: 'Cuenta inexistente' });
         }
 
-        return user.comparePassword(password, (errPassword, isMatch) => {
+        return user.comparePassword(password, async (errPassword, isMatch) => {
             if (errPassword) {
                 return next(errPassword);
             }
@@ -60,13 +60,12 @@ router.post('/login', (req, res, next) => {
                     user
                 });
 
-                buscarPaciente(user.pacientes[0].id).then((resultado) => {
-                    if (resultado.paciente) {
-                        user.pacientes[0] = resultado.paciente.basicos();
-                        EventCore.emitAsync('mobile:patient:login', user);
-                    }
-                });
-
+                let resultado = await buscarPaciente(user.pacientes[0].id);
+                if (resultado.paciente) {
+                    user.pacientes[0] = resultado.paciente.basicos();
+                    authController.updateAccount(user, { lastLogin: new Date() });
+                    EventCore.emitAsync('mobile:patient:login', user);
+                }
                 return;
             } else {
                 return res.status(422).send({ error: 'e-mail o password incorrecto' });
