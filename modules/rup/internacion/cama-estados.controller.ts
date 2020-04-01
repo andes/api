@@ -177,7 +177,10 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
     }
 
     if (filtros.internacion) {
-        secondMatch['estados.idInternacion'] = wrapObjectId(filtros.internacion);
+        secondMatch['$or'] = [
+            { 'estados.idInternacion': wrapObjectId(filtros.internacion) },
+            { 'estados.extras.idInternacion': wrapObjectId(filtros.internacion) }
+        ];
     }
 
     if (filtros.estado) {
@@ -246,6 +249,10 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
 }
 
 export async function store({ organizacion, ambito, capa, cama }, estado, req: Request) {
+    delete estado['createdAt'];
+    delete estado['createdBy'];
+    delete estado['updatedAt'];
+    delete estado['updatedBy'];
     AuditDocument(estado, req.user);
     return await CamaEstados.update(
         {

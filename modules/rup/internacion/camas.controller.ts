@@ -71,6 +71,7 @@ export interface ICama {
         documento?: String;
         fechaNacimiento?: Date;
     };
+    extras: any;
 }
 
 
@@ -163,6 +164,18 @@ export async function patch(data: Partial<ICama>, req: Request) {
     const cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado);
 
     if (cambioPermitido) {
+        if ((data as any).idCama || (data as any).createdAt) {
+            // Desde la app mande todo el Objeto y no solo que quiero modifcar.
+            delete data['idCama'];
+            delete data['extras'];
+            delete data['createdAt'];
+            delete data['createdBy'];
+            delete data['updatedAt'];
+            delete data['updatedBy'];
+        }
+
+        estadoCama.extras = null; // Los extras no se transfieren entre estados
+
         const nuevoEstado = {
             ...estadoCama,
             ...data
