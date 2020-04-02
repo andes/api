@@ -26,8 +26,18 @@ const EstadoSchema = new Schema({
         icon: String
     }],
     relaciones: [{
+        nombre: String,
         origen: EstadoKey,
         destino: EstadoKey,
+        color: String,
+        icon: String,
+        accion: String,
+        parametros: [{
+            label: String,
+            options: [{
+                nombre: String
+            }]
+        }]
     }]
 });
 
