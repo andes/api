@@ -292,9 +292,11 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.tipoPrestaciones) {
+            let tipoPrestaciones = req.query.tipoPrestaciones;
+            tipoPrestaciones = Array.isArray(tipoPrestaciones) ? tipoPrestaciones : [tipoPrestaciones];
             match.$and.push({
-                $or: [{ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } },
-                { 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
+                $or: [{ 'solicitud.tipoPrestacion.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } },
+                { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
             });
         }
 
