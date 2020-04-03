@@ -81,6 +81,9 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                         }
                     },
                     {
+                        $sort: { 'estados.createdAt': -1 }
+                    },
+                    {
                         $limit: 1
                     }
                 ],
