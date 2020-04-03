@@ -11,7 +11,7 @@ export const ModuloSchema = new Schema({
         required: true
     },
     subtitulo: String,
-    claseCss: String,
+    color: String,
     icono: String,
     linkAcceso: {
         type: String,

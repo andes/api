@@ -9,7 +9,7 @@ class ModuloResource extends ResourceBase {
         search: ['nombre'],
         nombre: MongoQuery.partialString,
         descripcion: MongoQuery.partialString,
-        claseCss: MongoQuery.partialString,
+        color: MongoQuery.partialString,
         linkAcceso: MongoQuery.partialString,
         icono: MongoQuery.partialString,
         subtitulo: MongoQuery.partialString,

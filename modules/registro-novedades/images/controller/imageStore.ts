@@ -5,44 +5,47 @@ import * as stream from 'stream';
 
 const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
-export function storeFile(base64, metadata) {
-    const match = base64.match(base64RegExp);
-    const mime = match[1];
-    const data = match[2];
-
-    return new Promise((resolve, reject) => {
-        const uniqueId = String(new mongoose.Types.ObjectId());
-        const input = new stream.PassThrough();
-        const decoder64 = base64_stream.decode();
-        const ImageFiles = makeFs();
-        ImageFiles.write({
-            _id: uniqueId,
-            filename: uniqueId + '.' + mime.split('/')[1],
-            contentType: mime,
-            metadata
-        },
-            input.pipe(decoder64),
-            (error, createdFile) => {
-                resolve(createdFile);
-            }
-        );
-        input.end(data);
-    });
+export async function storeFile(base64, metadata) {
+    try {
+        const match = base64.match(base64RegExp);
+        const mime = match[1];
+        const data = match[2];
+        let writePromise = new Promise((resolve) => {
+            const uniqueId = String(new mongoose.Types.ObjectId());
+            const input = new stream.PassThrough();
+            const decoder64 = base64_stream.decode();
+            const ImageFiles = makeFs();
+            ImageFiles.write(
+                {
+                    _id: uniqueId,
+                    filename: uniqueId + '.' + mime.split('/')[1],
+                    contentType: mime,
+                    metadata
+                }, input.pipe(decoder64),
+                (error, createdFile) => {
+                    resolve(createdFile);
+                }
+            );
+            input.end(data);
+        });
+        let result = await writePromise;
+        return result;
+    } catch (e) {
+        return e;
+    }
 }
 
-export function readFile(id) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const ImageFiles = makeFs();
-            const contexto = await ImageFiles.findById(id);
-            const stream2 = ImageFiles.readById(id);
-            resolve({
-                file: contexto,
-                stream: stream2
-            });
-        } catch (e) {
-            return reject(e);
-        }
-    });
+export async function readFile(id) {
+    try {
+        const ImageFiles = makeFs();
+        const contexto = await ImageFiles.findById(id);
+        const imageStream = ImageFiles.readById(id);
+        return {
+            file: contexto,
+            stream: imageStream
+        };
+    } catch (e) {
+        return e;
+    }
 }
 
