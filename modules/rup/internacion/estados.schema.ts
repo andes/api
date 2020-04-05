@@ -1,5 +1,6 @@
 import { SchemaTypes, Schema, model, Types, Model, Document } from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { SnomedConcept } from '../schemas/snomed-concept';
 
 const EstadoKey = String;
 type IEstadoKey = String;
@@ -23,7 +24,14 @@ const EstadoSchema = new Schema({
         key: EstadoKey,
         label: String,
         color: String,
-        icon: String
+        icon: String,
+        acciones: [{
+            label: String,
+            tipo: String,
+            parametros: {
+                concepto: { type: SnomedConcept, require: false }
+            }
+        }]
     }],
     relaciones: [{
         nombre: String,
