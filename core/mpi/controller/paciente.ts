@@ -1,5 +1,3 @@
-import { espacioFisico } from './../../../modules/turnos/schemas/espacioFisico';
-import { pacienteSchema } from './../schemas/paciente';
 import * as config from '../../../config';
 import * as moment from 'moment';
 import { paciente, pacienteMpi } from '../schemas/paciente';

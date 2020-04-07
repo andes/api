@@ -43,8 +43,6 @@ async function consultarSisa(persona: any) {
                 andesLog(userScheduler, logKeys.mpiCorrector.key, persona._id, logKeys.mpiCorrector.operacion, nuevosDatos, datosAnteriores);
                 return true;
             } else {
-                // POST/PUT en una collection pacienteRejected para un control a posteriori
-                // nuevoPacienteRejected(pacienteMpi);
                 const data = {
                     reportarError: 'false',
                 };

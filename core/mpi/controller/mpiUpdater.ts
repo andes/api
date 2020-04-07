@@ -2,7 +2,6 @@ import { userScheduler } from '../../../config.private';
 import * as controller from './paciente';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { logKeys } from '../../../config';
-import * as servicioAnses from './../../../utils/servicioAnses';
 import { log } from '@andes/log';
 
 /**

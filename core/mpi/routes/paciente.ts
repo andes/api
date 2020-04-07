@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { Matching } from '@andes/match';
 import { pacienteMpi, paciente } from '../schemas/paciente';
 import { log } from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
@@ -347,112 +346,6 @@ router.get('/pacientes/:id/foto', async (req, res, next) => {
         return next('Paciente no encontrado');
     }
 
-});
-
-router.put('/pacientes/mpi/:id', (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:putMpi')) {
-        return next(403);
-    }
-    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
-        return next(404);
-    }
-    const ObjectId = mongoose.Types.ObjectId;
-    const objectId = new ObjectId(req.params.id);
-    const query = {
-        _id: objectId
-    };
-
-    const match = new Matching();
-
-    pacienteMpi.findById(query, async (err, patientFound: any) => {
-        if (err) {
-            return next(404);
-        }
-
-        const connElastic = new ElasticSync();
-        if (patientFound) {
-            const data = req.body;
-            controller.updatePacienteMpi(patientFound, data, req).then(async (p: any) => {
-                res.json(p);
-            }).catch(next);
-        } else {
-            const newPatient: any = new pacienteMpi(req.body);
-            const claves = match.crearClavesBlocking(newPatient);
-            newPatient['claveBlocking'] = claves;
-            newPatient['apellido'] = newPatient['apellido'].toUpperCase();
-            newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-
-            Auth.audit(newPatient, req);
-            newPatient.save((err2) => {
-                if (err2) {
-                    return next(err2);
-                }
-                const nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                delete nuevoPac._id;
-
-                connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
-                    EventCore.emitAsync('mpi:patient:update', newPatient);
-                    Logger.log(req, 'mpi', 'elasticInsertInPut', newPatient);
-                    res.json();
-                }).catch(error => {
-                    return next(error);
-                });
-            });
-        }
-    });
-});
-
-/**
- * @swagger
- * /pacientes/mpi/{id}:
- *   delete:
- *     tags:
- *       - Paciente
- *     description: Eliminar un paciente del core de MPI
- *     summary: Eliminar un paciente del core de MPI
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: Id de un paciente
- *         required: true
- *         type: string
- *
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
-router.delete('/pacientes/mpi/:id', (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:deleteMpi')) {
-        return next(403);
-    }
-
-    const query = {
-        _id: new mongoose.Types.ObjectId(req.params.id)
-    };
-
-    pacienteMpi.findById(query, (err, patientFound) => {
-        if (err) {
-            return next(err);
-        }
-        patientFound.remove();
-
-        const connElastic = new ElasticSync();
-        connElastic.delete(patientFound._id.toString()).then(() => {
-            res.json(patientFound);
-            EventCore.emitAsync('mpi:patient:delete', patientFound);
-        }).catch(error => {
-            return next(error);
-        });
-        Auth.audit(patientFound, req);
-    }).catch((error) => {
-        return next(error);
-    });
 });
 
 /**
@@ -823,42 +716,6 @@ router.patch('/pacientes/:id', async (req, res, next) => {
         return next(error);
     }
 
-});
-
-// Patch específico para actualizar masivamente MPI (NINGUN USUARIO DEBERIA TENER PERMISOS PARA ESTO)
-router.patch('/pacientes/mpi/:id', (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:patchMpi')) {
-        return next(403);
-    }
-    controller.buscarPaciente(req.params.id).then((resultado) => {
-        if (resultado) {
-            switch (req.body.op) {
-                case 'updateCuil':
-                    controller.updateCuil(req, resultado.paciente);
-                    break;
-            }
-            let pacMpi: any;
-            if (resultado.db === 'mpi') {
-                pacMpi = new pacienteMpi(resultado.paciente);
-                Auth.audit(pacMpi, req);
-
-                pacMpi.save((errPatch) => {
-                    if (errPatch) {
-                        return next(errPatch);
-                    }
-                    return res.json(pacienteMpi);
-                });
-            } else {
-                return res.json({});
-            }
-        } else {
-            return next(500);
-        }
-
-    })
-        .catch((err) => {
-            return next(err);
-        });
 });
 
 router.get('/pacientes/:id/turnos', async (req, res, next) => {
