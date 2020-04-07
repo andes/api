@@ -1,4 +1,4 @@
-import { parentezcoSchema } from './parentesco';
+import { parentescoSchema } from '../parentesco.schema';
 import * as mongoose from 'mongoose';
 import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
@@ -69,7 +69,7 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     numeroIdentificacion: String,
     // --------------------
     relaciones: [{
-        relacion: parentezcoSchema,
+        relacion: parentescoSchema,
         referencia: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'paciente'
