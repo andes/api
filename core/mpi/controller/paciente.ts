@@ -73,7 +73,7 @@ export async function updatePaciente(pacienteObj, data, req) {
     if (updated) {
         andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
     } else {
-        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, pacienteObj, null);
+        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, null, 'create patient');
     }
     EventCore.emitAsync('mpi:patient:update', pacienteObj);
     return pacienteObj;
@@ -1155,3 +1155,19 @@ export async function getHistorialPaciente(req, dataPaciente) {
         return (error);
     }
 }
+
+
+EventCore.on('mpi:patient:create', async (patientCreated) => {
+    if (patientCreated.estado === 'validado') {
+        const patientRequest = {
+            user: patientCreated.createdBy,
+            ip: 'localhost',
+            connection: {
+                localAddress: ''
+            },
+            body: patientCreated
+        };
+        await actualizarGeoReferencia(patientCreated, patientRequest);
+    }
+
+});
