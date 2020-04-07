@@ -358,7 +358,7 @@ export class Documento {
                             let valorRegistro = ((registros[i].valor).replace('<p>', '')).replace('</p>', '');
                             this.informeRegistros = [...this.informeRegistros, ({
                                 concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag },
-                                valor: `<div class="nivel-${this.nivelPadre}"><p>${nombreRegistro}: <small>${valorRegistro}</small></p></div>`
+                                valor: `<div class="nivel-${this.nivelPadre}"><p>${nombreRegistro}:<br><br><small>${valorRegistro}</small></p></div>`
                             })];
                         } else if (registros[i].valor !== null) {
                             if (this.esHallazgo(registros[i].concepto.semanticTag)) {
@@ -445,6 +445,10 @@ export class Documento {
 
                 if (!config) {
                     config = await this.getPrestacionInformeComponent(prestacion.solicitud.tipoPrestacion.conceptId);
+
+                    if (!config) {
+                        config = {};
+                    }
                 }
 
                 // Se crea un objecto nuevo
@@ -807,7 +811,6 @@ export class Documento {
                     //     port: 9222, // port Chrome is listening on
                     // };
                     this.options = options || phantomPDFOptions;
-
                     await this.generarHTML(req).then(async htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();
                         await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
