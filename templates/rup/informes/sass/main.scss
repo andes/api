@@ -411,6 +411,22 @@ footer {
     font-size: .20cm !important;
 }
 
+.marca-de-agua {
+    position: absolute;
+    // width: 100%;
+    // height: 100%;
+    margin: 5cm 0 0 0;
+    padding: 0;
+    size: 5em;
+    opacity: 0.15;
+    text-align: center;
+    text-transform: uppercase;
+    -webkit-transform: rotate(-43deg);
+    -moz-transform: rotate(-43deg);
+    -ms-transform: rotate(-43deg);
+    -o-transform: rotate(-43deg);
+    transform: rotate(-43deg);
+}
 
 // Media query
 // @media screen and (min-width: 980px) {
