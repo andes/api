@@ -1,6 +1,5 @@
 import {
-    paciente,
-    pacienteMpi
+    paciente
 } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
 import debug = require('debug');
@@ -18,25 +17,25 @@ export async function elasticFix(done) {
         const connElastic = new ElasticSync();
         dbg('Elastic Fix started');
         /*
-          1-  buscar pacientes del log q estan en mpi y no en elastic
+          1-  buscar pacientes del log q estan en mongo y no en elastic
           2-  buscar con el dni de cada paciente sus indices en elastic
           3-  recorrer cada resultado y buscar con hit._id en prestaciones y  en bloques.turnos.paciente.id'
           5-  reemplazar id de paciente en prestaciones y turnos por el id del paciente en mongo
           6-  delete index en elastic (hit._id)
           */
-        let logs = await log.query('elastic:notFound:mpi', null);
+        let logs = await log.query('elastic:notFound:andes', null);
         if (logs && logs.length) {
-            dbg('Corrigiendo pacientes en mpi no existentes en elastic, cantidad:', logs.length);
+            dbg('Corrigiendo pacientes en andes que no existen en elastic, cantidad:', logs.length);
         }
         for (let logData of logs) {
 
-            let idPacienteMPI = new mongoose.Types.ObjectId((logData as any).paciente);
-            let pacMpi: any = await pacienteMpi.findOne({ _id: idPacienteMPI });
-            if (!pacMpi) { return; }
-            dbg('Paciente a modificar--->', pacMpi._id);
+            let idPaciente = new mongoose.Types.ObjectId((logData as any).paciente);
+            let pac: any = await paciente.findOne({ _id: idPaciente });
+            if (!pac) { return; }
+            dbg('Paciente a modificar--->', pac._id);
             const query = {
                 query: {
-                    term: { documento: pacMpi.documento }
+                    term: { documento: pac.documento }
                 }
             };
             let response = await connElastic.search(query);
@@ -45,10 +44,10 @@ export async function elasticFix(done) {
                 dbg('procesando1 paciente', hit);
 
                 let idElastic = new mongoose.Types.ObjectId(hit._id);
-                await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pacMpi._id);
-                await fixAgendasPrestaciones(idElastic, idPacienteMPI, hit);
+                await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pac._id);
+                await fixAgendasPrestaciones(idElastic, idPaciente, hit);
             }
-            connElastic.sync(pacMpi);
+            connElastic.sync(pac);
         }
 
         /*
@@ -68,19 +67,11 @@ export async function elasticFix(done) {
             if (!response || !response.hits || !response.hits.hits) { return; }
             if (response.hits.hits.length && response.hits.hits.length > 0) {
                 let hit = response.hits.hits[0];
-                let pacMpi: any = await pacienteMpi.findOne({ documento: hit._source.documento });
-
-                if (pacMpi) {
-                    dbg('procesando2 paciente', pacMpi._id);
-                    await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, pacMpi._id);
-                    await fixAgendasPrestaciones((logElasticData as any).paciente, pacMpi._id, hit);
-                } else {
-                    let pac = await paciente.findOne({ documento: hit._source.documento });
-                    if (pac) {
-                        dbg('procesando2 paciente', pac._id);
-                        await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pac._id);
-                        await fixAgendasPrestaciones((logElasticData as any).paciente, pac._id, hit);
-                    }
+                let pac = await paciente.findOne({ documento: hit._source.documento });
+                if (pac) {
+                    dbg('procesando2 paciente', pac._id);
+                    await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pac._id);
+                    await fixAgendasPrestaciones((logElasticData as any).paciente, pac._id, hit);
                 }
             }
         }

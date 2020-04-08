@@ -48,13 +48,6 @@ export const hosts = {
             reconnectInterval: 500,
         }
     },
-    mongoDB_mpi: {
-        host: getEnv('MONGO_MPI', 'localhost:27017/mpi'), // ?authSource=admin
-        options: {
-            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
-            reconnectInterval: 500,
-        }
-    },
     mongoDB_snomed: {
         host: getEnv('MONGO_SNOMED', 'mongodb://localhost:27017/es-edition'), // ?authSource=admin
         options: {
@@ -62,7 +55,6 @@ export const hosts = {
             reconnectInterval: 500,
         }
     },
-
     mongoDB_puco: {
         host: getEnv('MONGO_PUCO', 'mongodb://localhost:27017/padrones'),
         options: {

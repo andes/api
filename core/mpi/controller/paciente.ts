@@ -1,6 +1,6 @@
 import * as config from '../../../config';
 import * as moment from 'moment';
-import { paciente, pacienteMpi } from '../schemas/paciente';
+import { paciente } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
@@ -103,76 +103,10 @@ export async function updateTurnosPaciente(pacienteModified) {
     }
 }
 
-export function updatePacienteMpi(pacMpi, pacAndes, req) {
-    return new Promise((resolve, reject) => {
-        const pacOriginalMpi = pacMpi.toObject();
-        // Asigno el objeto completo ya que está validado que proviene de MongoDb
-        pacMpi = new pacienteMpi(pacAndes);
-        if (req) {
-            // para verificación en audit mongoose
-            pacMpi.esPacienteMpi = true;
-            Auth.audit(pacMpi, req);
-        }
-        pacMpi.save((err2) => {
-            if (err2) {
-                return reject(err2);
-            }
-            const connElastic = new ElasticSync();
-            connElastic.sync(pacMpi).then(updated => {
-                if (updated) {
-                    andesLog(req, logKeys.mpiUpdate.key, pacMpi, 'update', pacMpi, pacOriginalMpi);
-                } else {
-                    andesLog(req, logKeys.mpiInsert.key, pacMpi, 'insert', pacMpi);
-                }
-                EventCore.emitAsync('mpi:patient:update', pacMpi);
-                resolve(pacMpi);
-            }).catch(error => {
-                return reject(error);
-            });
-        });
-    });
-}
 
 /**
- * Inserta un paciente en DB MPI
- * no accesible desde una route de la api
- *
- * @export
- * @param {any} pacienteData
- * @param {any} req
- * @returns
- */
-export function postPacienteMpi(newPatientMpi, req) {
-    return new Promise((resolve, reject) => {
-        try {
-            if (req) {
-                // para verificación en audito mongoose
-                newPatientMpi.esPacienteMpi = true;
-                Auth.audit(newPatientMpi, req);
-            }
-            newPatientMpi.save((err) => {
-                if (err) {
-                    reject(err);
-                }
-                const connElastic = new ElasticSync();
-                connElastic.sync(newPatientMpi).then(() => {
-                    andesLog(req, logKeys.elasticInsert.key, newPatientMpi, 'elasticInsert', newPatientMpi);
-                    EventCore.emitAsync('mpi:patient:create', newPatientMpi);
-                    resolve(newPatientMpi);
-                }).catch((error) => {
-                    reject(error);
-                });
-            });
-
-        } catch (ex) {
-            reject(ex);
-        }
-    });
-}
-
-/**
- * Busca un paciente en ambas DBs
- * devuelve los datos del paciente e indica en que base lo encontró
+ * Busca un paciente en la colección paciente
+ * devuelve los datos del paciente
  *
  * @export
  * @param {any} id
@@ -191,26 +125,14 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
                     };
                     resolve(resultado);
                 } else {
-                    pacienteMpi.findById(id, (err2, dataMpi) => {
-                        if (err2) {
-                            reject(err2);
-                        } else if (dataMpi) {
-                            const resultado = {
-                                db: 'mpi',
-                                paciente: dataMpi
-                            };
-                            resolve(resultado);
-                        } else {
-                            reject(null);
-                        }
-                    });
+                    reject(null);
                 }
             }
         });
     });
 }
 /**
- * Busca un paciente en ambas DBs (Andes y MPI) segun su documento, sexo y estado validado
+ * Busca un paciente en Andes segun su documento, sexo y estado validado
  * devuelve los datos del paciente
  *
  * @export
@@ -218,24 +140,14 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
  * @param {string} sexo
  * @returns
  */
-export function buscarPacByDocYSexo(documento, sexo): Promise<{ db: String, paciente: any }[]> {
-
-    return new Promise((resolve, reject) => {
-        let query = {
-            documento,
-            sexo,
-            estado: 'validado' // Analizar
-        };
-        Promise.all([
-            paciente.find(query).exec(),
-            pacienteMpi.find(query).exec()
-        ]).then(values => {
-            let lista = [];
-            lista = [...values[0], ...values[1]];
-            resolve(lista);
-        });
-
-    });
+export async function buscarPacByDocYSexo(documento, sexo) {
+    const query = {
+        documento,
+        sexo,
+        estado: 'validado'
+    };
+    const lista = await paciente.find(query);
+    return lista;
 }
 
 
@@ -246,31 +158,17 @@ export function buscarPacByDocYSexo(documento, sexo): Promise<{ db: String, paci
 
 export function buscarPacienteWithcondition(condition): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
-        pacienteMpi.findOne(condition, (err, data) => {
-            if (err) {
-                reject(err);
+        paciente.findOne(condition, (err2, dataMpi) => {
+            if (err2) {
+                reject(err2);
+            } else if (dataMpi) {
+                const resultado = {
+                    db: 'andes',
+                    paciente: dataMpi
+                };
+                resolve(resultado);
             } else {
-                if (data) {
-                    const resultado = {
-                        db: 'mpi',
-                        paciente: data
-                    };
-                    resolve(resultado);
-                } else {
-                    paciente.findOne(condition, (err2, dataMpi) => {
-                        if (err2) {
-                            reject(err2);
-                        } else if (dataMpi) {
-                            const resultado = {
-                                db: 'andes',
-                                paciente: dataMpi
-                            };
-                            resolve(resultado);
-                        } else {
-                            reject(null);
-                        }
-                    });
-                }
+                reject(null);
             }
         });
     });
@@ -482,12 +380,6 @@ export async function deletePacienteAndes(objectId) {
     return patientFound;
 }
 
-// Borramos un paciente en la BD MPI - es necesario handlear posibles errores en la fn llamadora.
-export async function deletePacienteMpi(objectId) {
-    let query = { _id: objectId };
-    let pacremove = await pacienteMpi.findById(query).exec();
-    await pacremove.remove();
-}
 
 /* Funciones de operaciones PATCH */
 
@@ -637,54 +529,6 @@ export async function checkCarpeta(req, data) {
 }
 
 /* Hasta acá funciones del PATCH */
-
-
-/**
- * Busca paciente similares en MPI o ANDES. Vía mongo.
- *
- * @param {pacienteSchema} objective Paciente  buscar
- * @param {string} where Enum 'andes' | 'mpi'
- * @param {object} conditions Condiciones de busqueda
- * @param {objcet} _weights Pesos del matching
- */
-
-export function searchSimilar(objective, where: string, conditions, _weights = null): Promise<{ value: Number, paciente: any }[]> {
-    let db;
-    if (where === 'andes') {
-        db = paciente;
-    } else {
-        db = pacienteMpi;
-    }
-    const weights = _weights || config.mpi.weightsUpdater;
-    const match = new Matching();
-    return new Promise((resolve, reject) => {
-        db.find(conditions).then((pacientes) => {
-            const matchings: { value: Number, paciente: any }[] = [];
-            if (pacientes && pacientes.length) {
-                for (let i = 0; i < pacientes.length; i++) {
-
-                    const pac = pacientes[i];
-                    const valueMatch = match.matchPersonas(objective, pac, weights, config.algoritmo);
-
-                    matchings.push({
-                        paciente: pac,
-                        value: valueMatch
-                    });
-                }
-
-                const sortMatching = (a, b) => {
-                    return b.value - a.value;
-                };
-
-                matchings.sort(sortMatching);
-                return resolve(matchings);
-
-            } else {
-                return resolve(matchings);
-            }
-        }).catch(reject);
-    });
-}
 
 /**
  *

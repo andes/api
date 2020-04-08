@@ -7,7 +7,7 @@ router.get('/', (req, res, next) => {
     res.json({
         API: 'OK',
         DB: Connections.main.readyState !== 1 ? 'Error' : 'OK',
-        MPI: Connections.mpi.readyState !== 1 ? 'Error' : 'OK',
+        PUCO: Connections.puco.readyState !== 1 ? 'Error' : 'OK'
     });
 });
 

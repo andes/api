@@ -1,7 +1,7 @@
 import * as AgendarModel from '../schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { paciente as Paciente, pacienteMpi as PacienteMpi } from '../../../core/mpi/schemas/paciente';
+import { paciente as Paciente } from '../../../core/mpi/schemas/paciente';
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -44,10 +44,10 @@ const facets = {
             $group: {
                 _id: '$profesionales._id',
                 count: { $sum: 1 },
-                nombre: {$addToSet: { $concat: ['$profesionales.nombre', ' ', '$profesionales.apellido'] }}
+                nombre: { $addToSet: { $concat: ['$profesionales.nombre', ' ', '$profesionales.apellido'] } }
             }
         },
-        { $sort: { count: -1 }}
+        { $sort: { count: -1 } }
     ],
 
     profesionalesAgendas: [
@@ -56,10 +56,10 @@ const facets = {
             $group: {
                 _id: '$profesionales._id',
                 count: { $sum: 1 },
-                nombre: {$addToSet: { $concat: ['$profesionales.nombre', ' ', '$profesionales.apellido'] }}
+                nombre: { $addToSet: { $concat: ['$profesionales.nombre', ' ', '$profesionales.apellido'] } }
             }
         },
-        { $sort: { count: -1 }}
+        { $sort: { count: -1 } }
     ],
 
     administrativo: [
@@ -81,7 +81,7 @@ const facets = {
                 nombre: { $first: '$prestacionesTurnos.term' }
             }
         },
-        { $sort: { count: -1 }}
+        { $sort: { count: -1 } }
     ],
 
     prestacionAgenda: [
@@ -93,7 +93,7 @@ const facets = {
                 nombre: { $first: '$tipoPrestaciones.term' }
             }
         },
-        { $sort: { count: -1 }}
+        { $sort: { count: -1 } }
     ],
 
     estadoAgenda: [
@@ -104,9 +104,8 @@ const facets = {
                 count: { $sum: 1 }
             }
         },
-        { $sort: { count: -1 }}
+        { $sort: { count: -1 } }
     ],
-
     estadoTurno: [
         { $match: { 'turno.estado': { $ne: 'turnoDoble' } } },
         {
@@ -120,26 +119,32 @@ const facets = {
                 }
             }
         },
-        { $group: {
-            _id: '$real-state',
-            count: { $sum: 1 },
-            nombre: { $first: '$real-state' }
-        }},
-        { $sort: { count: -1 }}
+        {
+            $group: {
+                _id: '$real-state',
+                count: { $sum: 1 },
+                nombre: { $first: '$real-state' }
+            }
+        },
+        { $sort: { count: -1 } }
     ],
 
     tipoTurno: [
-        { $match: {
-            'turno.estado': 'asignado',
-            estado: { $ne: 'suspendida' },
-            'turno.tipoTurno': { $ne: null }
-        }},
-        { $group: {
-            _id: '$turno.tipoTurno',
-            count: { $sum: 1 },
-            nombre: { $first: '$turno.tipoTurno' }
-        }},
-        { $sort: { count: -1 }}
+        {
+            $match: {
+                'turno.estado': 'asignado',
+                estado: { $ne: 'suspendida' },
+                'turno.tipoTurno': { $ne: null }
+            }
+        },
+        {
+            $group: {
+                _id: '$turno.tipoTurno',
+                count: { $sum: 1 },
+                nombre: { $first: '$turno.tipoTurno' }
+            }
+        },
+        { $sort: { count: -1 } }
     ]
 };
 
@@ -269,7 +274,7 @@ function filtrosFaltantes(filtros, data) {
         filtros.prestacion.forEach((prestacion: any) => {
             let hayPrestacion = data.prestacion.find(prest => prest._id.toString() === prestacion.id);
             if (hayPrestacion === undefined) {
-                data.prestacion.push({ _id: prestacion._id, count: 0 , nombre: prestacion.nombre});
+                data.prestacion.push({ _id: prestacion._id, count: 0, nombre: prestacion.nombre });
             }
         });
     }
@@ -317,47 +322,55 @@ export async function estadisticas(filtros, permisos) {
         { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] } } },
         { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
-        { $project: {
-            turno: '$_bloques.turnos',
-            profesionales: 1,
-            prestacionesTurnos: {
-                $cond: {
-                    if: {
-                        $ne: [{
-                            $in: [{ $type: '$_bloques.turnos.tipoPrestacion' }, ['missing', 'null', 'undefined']]
-                        }, true]
-                    },
+        {
+            $project: {
+                turno: '$_bloques.turnos',
+                profesionales: 1,
+                prestacionesTurnos: {
+                    $cond: {
+                        if: {
+                            $ne: [{
+                                $in: [{ $type: '$_bloques.turnos.tipoPrestacion' }, ['missing', 'null', 'undefined']]
+                            }, true]
+                        },
 
-                    then: '$_bloques.turnos.tipoPrestacion',
-                    else: { $arrayElemAt: ['$_bloques.tipoPrestaciones', 0] }
+                        then: '$_bloques.turnos.tipoPrestacion',
+                        else: { $arrayElemAt: ['$_bloques.tipoPrestaciones', 0] }
+                    }
+                },
+                estado: '$estado'
+            }
+        },
+        {
+            $addFields: {
+                'turno.tipoTurno': {
+                    $switch: {
+                        branches: [
+                            { case: { $eq: ['$turno.emitidoPor', 'appMobile'] }, then: 'appMobile' },
+                        ],
+                        default: '$turno.tipoTurno'
+                    }
                 }
-            },
-            estado: '$estado'
-        }},
-        { $addFields: { 'turno.tipoTurno': {
-            $switch: {
-                branches: [
-                    { case: { $eq: ['$turno.emitidoPor', 'appMobile'] }, then: 'appMobile' },
-                ],
-                default: '$turno.tipoTurno'
             }
-        }}},
-        { $addFields: {
-            'turno.paciente.edad': {
-                $divide: [{
-                    $subtract: [
-                        '$turno.horaInicio',
-                        {
-                            $cond: {
-                                if: { $eq: [{ $type: '$turno.paciente.fechaNacimiento' }, 'string'] },
-                                then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
-                                else: '$turno.paciente.fechaNacimiento'
+        },
+        {
+            $addFields: {
+                'turno.paciente.edad': {
+                    $divide: [{
+                        $subtract: [
+                            '$turno.horaInicio',
+                            {
+                                $cond: {
+                                    if: { $eq: [{ $type: '$turno.paciente.fechaNacimiento' }, 'string'] },
+                                    then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
+                                    else: '$turno.paciente.fechaNacimiento'
+                                }
                             }
-                        }
-                    ]
-                }, (365 * 24 * 60 * 60 * 1000)]
+                        ]
+                    }, (365 * 24 * 60 * 60 * 1000)]
+                }
             }
-        }},
+        },
         { $match: makeSecondaryMatch(filtros, permisos) },
         { $facet: makeFacet(filtros) }
     ];
@@ -386,41 +399,48 @@ export async function filtroPorCiudad(filtros, permisos) {
         { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] } } },
         { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
-        { $project: {
-            turno: '$_bloques.turnos',
-            idPaciente: '$_bloques.turnos.paciente.id',
-            _id: 0
-        }},
-        { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
-        { $addFields: { 'turno.tipoTurno': {
-            $switch: {
-                branches: [
-                    { case: { $eq: ['$turno.emitidoPor', 'appMobile'] }, then: 'appMobile' },
-                ],
-                default: '$turno.tipoTurno'
+        {
+            $project: {
+                turno: '$_bloques.turnos',
+                idPaciente: '$_bloques.turnos.paciente.id',
+                _id: 0
             }
-        }}},
+        },
+        { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
+        {
+            $addFields: {
+                'turno.tipoTurno': {
+                    $switch: {
+                        branches: [
+                            { case: { $eq: ['$turno.emitidoPor', 'appMobile'] }, then: 'appMobile' },
+                        ],
+                        default: '$turno.tipoTurno'
+                    }
+                }
+            }
+        },
         { $match: makeSecondaryMatch(filtros, permisos) }
     ];
     const turnosAsignados = await AgendarModel.aggregate(pipelineAsignados);
     let idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
 
     const pipelineUbicacionPacientes = [
-        { $match: {
-            _id: { $in: idPacientes.map(id => new ObjectId(id)) },
-        }},
-        { $project: {
-            direccion: 1,
-            _id: 1
-        }}
+        {
+            $match: {
+                _id: { $in: idPacientes.map(id => new ObjectId(id)) },
+            }
+        },
+        {
+            $project: {
+                direccion: 1,
+                _id: 1
+            }
+        }
     ];
-    const p1 = Paciente.aggregate(pipelineUbicacionPacientes);
-    const p2 = PacienteMpi.aggregate(pipelineUbicacionPacientes);
-    const [andes, mpi] = await Promise.all([p1, p2]);
+    const andes = await Paciente.aggregate(pipelineUbicacionPacientes);
 
     const ubicacionesPaciente = {};
     andes.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion ? paciente.direccion[0] : null; });
-    mpi.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion ? paciente.direccion[0] : null; });
 
     const respuesta = {};
 

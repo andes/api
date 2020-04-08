@@ -1,13 +1,12 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { pacienteMpi, paciente } from '../schemas/paciente';
+import { paciente } from '../schemas/paciente';
 import { log } from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
-import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
@@ -16,95 +15,6 @@ import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial
 const logD = debug('paciente-controller');
 const router = express.Router();
 
-/* Consultas de estado de pacientes para el panel de información */
-router.get('/pacientes/counts/', (req, res, next) => {
-    /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
-    let filtro;
-    switch (req.query.consulta) {
-        case 'validados':
-            filtro = {
-                estado: 'validado'
-            };
-            break;
-        case 'temporales':
-            filtro = {
-                estado: 'temporal'
-            };
-            break;
-        case 'fallecidos':
-            filtro = {
-                fechaFallecimiento: {
-                    $exists: true
-                }
-            };
-            break;
-    }
-    const query = paciente.find(filtro).count();
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
-        }
-
-        const queryMPI = pacienteMpi.find(filtro).count();
-        queryMPI.exec((err1, data1) => {
-            if (err1) {
-                return next(err1);
-            }
-            const total = data + data1;
-            res.json(total);
-        });
-
-    });
-});
-
-router.get('/pacientes/dashboard/', async (req, res, next) => {
-    /**
-     * Se requiere autorización para acceder al dashboard de MPI
-     */
-    if (!Auth.check(req, 'mpi:paciente:dashboard')) {
-        return next(403);
-    }
-    const result = {
-        paciente: [],
-        pacienteMpi: [],
-        logs: []
-    };
-
-    const estadoAggregate = [{
-        $group: {
-            _id: {
-                estado: '$estado'
-            },
-            count: {
-                $sum: 1
-            }
-        }
-    }];
-
-    const logAggregate = [
-        {
-            $group: {
-                _id: {
-                    operacion: '$operacion',
-                    modulo: '$modulo'
-                },
-                count: {
-                    $sum: 1
-                }
-            }
-        },
-        {
-            $match: {
-                '_id.modulo': 'mpi'
-            }
-        }
-    ];
-
-    result.paciente = await toArray(paciente.aggregate(estadoAggregate).cursor({}).exec());
-    result.pacienteMpi = await toArray(pacienteMpi.aggregate(estadoAggregate).cursor({ batchSize: 1000 }).exec());
-    result.logs = await toArray(log.aggregate(logAggregate).cursor({ batchSize: 1000 }).exec());
-    res.json(result);
-});
 
 router.post('/pacientes/validar/', async (req, res, next) => {
     // TODO modificar permiso renaper -> validar/validacion o algo asi
@@ -166,9 +76,6 @@ router.get('/pacientes/auditoria/', (req, res, next) => {
 });
 
 router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
-    // if (!Auth.check(req, 'mpi:paciente:putAndes')) {
-    //     return next(403);
-    // }
     if (!(mongoose.Types.ObjectId.isValid(req.body.id))) {
         return next(404);
     }
@@ -195,13 +102,6 @@ router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
         } else {
             req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
-
-            // Se busca el paciente en MPI
-            let patientFountMpi: any = await pacienteMpi.findById(query).exec();
-
-            if (patientFountMpi) {
-                Auth.audit(newPatient, req);
-            }
             await newPatient.save();
             const nuevoPac = JSON.parse(JSON.stringify(newPatient));
             const connElastic = new ElasticSync();
@@ -221,16 +121,12 @@ router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
 });
 
 router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
-    let filtro = {
+    const filtro = {
         'identificadores.0': { $exists: true },
         'identificadores.entidad': 'ANDES'
     };
-    // filtro['activo'] = req.query.activo === 'true' ? true : false;
     try {
-        let resultadosAndes = paciente.find(filtro).exec();
-        let resultadosMpi = pacienteMpi.find(filtro).exec();
-        const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
-        let listado = [...pacientes[0], ...pacientes[1]];
+        let listado = await paciente.find(filtro);
         res.json(listado);
     } catch (error) {
         return next(error);
@@ -238,15 +134,11 @@ router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
 
 });
 router.get('/pacientes/inactivos/', async (req, res, next) => {
-    let filtro = {
+    const filtro = {
         activo: false
     };
-    // filtro['activo'] = req.query.activo === 'true' ? true : false;
     try {
-        let resultadosAndes = paciente.find(filtro).exec();
-        let resultadosMpi = pacienteMpi.find(filtro).exec();
-        const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
-        let listado = [...pacientes[0], ...pacientes[1]];
+        const listado = await paciente.find(filtro);
         res.json(listado);
     } catch (error) {
         return next(error);
@@ -283,7 +175,6 @@ router.get('/pacientes', (req, res, next) => {
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', async (req, res, next) => {
-    // busca en pacienteAndes y en pacienteMpi
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
@@ -470,33 +361,11 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 }
             } else {
                 pacienteModificado._id = pacienteModificado.id;
-                let newPatient = new paciente(pacienteModificado);
-
-                // verifico si el paciente ya está en MPI
-                let patientFountMpi: any = await pacienteMpi.findById(query).exec();
-                const direccionOld = patientFountMpi.direccion[0];
-
-                if (patientFountMpi) {
-                    Auth.audit(newPatient, req);
-                }
-                await newPatient.save();
-                const nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                const connElastic = new ElasticSync();
-                let updated = await connElastic.sync(newPatient);
-                if (updated) {
-                    andesLog(req, logKeys.mpiUpdate.key, pacienteModificado._id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
-                } else {
-                    andesLog(req, logKeys.mpiInsert.key, pacienteModificado._id, logKeys.mpiInsert.operacion, newPatient, null);
-                }
-                EventCore.emitAsync('mpi:patient:update', nuevoPac);
-                res.json(nuevoPac);
-                // se carga geo referencia desde api de google
-                if (direccionOld.valor !== pacienteModificado.direccion[0].valor) {
-                    controller.actualizarGeoReferencia(newPatient, req);
-                }
+                let newPatient = await controller.createPaciente(pacienteModificado, req);
+                return res.json(newPatient);
             }
         } else {
-            res.json(resultado);
+            return res.json(resultado);
         }
     } catch (error) {
         andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
