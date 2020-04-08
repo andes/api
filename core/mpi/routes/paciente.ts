@@ -1,10 +1,8 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { paciente } from '../schemas/paciente';
-import { log } from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
 import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
@@ -458,19 +456,8 @@ router.post('/pacientes/:id/identificadores', async (req, res, next) => {
                 pacienteLinkeado.paciente.activo = true;
             }
 
-            let pacienteAndesBase: any;
-            if (pacienteBase.db === 'mpi') {
-                pacienteAndesBase = new paciente(pacienteBase.paciente.toObject());
-            } else {
-                pacienteAndesBase = pacienteBase.paciente;
-            }
-
-            let pacienteAndesLinkeado: any;
-            if (pacienteLinkeado.db === 'mpi') {
-                pacienteAndesLinkeado = new paciente(pacienteLinkeado.paciente.toObject());
-            } else {
-                pacienteAndesLinkeado = pacienteLinkeado.paciente;
-            }
+            let pacienteAndesBase = pacienteBase.paciente;
+            let pacienteAndesLinkeado = pacienteLinkeado.paciente;
             // sincronizamos los cambios en el paciente de elastic
             let connElastic = new ElasticSync();
             await connElastic.sync(pacienteAndesBase);
@@ -481,7 +468,7 @@ router.post('/pacientes/:id/identificadores', async (req, res, next) => {
             Auth.audit(pacienteAndesBase, req);
             let pacienteSaved = await pacienteAndesBase.save();
 
-            Logger.log(req, 'mpi', req.body.op, { pacienteBase: pacienteBase.paciente._id, pacienteLinkeado: pacienteLinkeado.paciente._id });
+            andesLog(req, logKeys.mpiUpdate.key, pacienteBase.paciente._id, req.body.op, pacienteBase.paciente, pacienteLinkeado.paciente);
             res.json(pacienteSaved);
         } else {
             return next('Paciente no encontrado');
@@ -569,12 +556,7 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                     controller.updateCuil(req, resultado.paciente);
                     break;
             }
-            let pacienteAndes: any;
-            if (resultado.db === 'mpi') {
-                pacienteAndes = new paciente(resultado.paciente.toObject());
-            } else {
-                pacienteAndes = resultado.paciente;
-            }
+            let pacienteAndes = resultado.paciente;
             Auth.audit(pacienteAndes, req);
             let pacienteSaved = await pacienteAndes.save();
             res.json(pacienteSaved);
