@@ -260,7 +260,7 @@ export async function store(data: Partial<ICama>, req: Request) {
 
  */
 
-export async function changeTime({ organizacion, capa, ambito }: InternacionConfig, cama: ObjectId, from: Date, to: Date, internacionId: ObjectId) {
+export async function changeTime({ organizacion, capa, ambito }: InternacionConfig, cama: ObjectId, from: Date, to: Date, internacionId: ObjectId, req) {
     let start, end;
     if (from.getTime() <= to.getTime()) {
         start = from;
@@ -269,11 +269,17 @@ export async function changeTime({ organizacion, capa, ambito }: InternacionConf
         start = to;
         end = from;
     }
-    const movement = await CamasEstadosController.searchEstados({ desde: start, hasta: end, organizacion: organizacion._id, capa, ambito }, { internacion: internacionId });
+    const movements = await CamasEstadosController.searchEstados({ desde: start, hasta: end, organizacion: organizacion._id, capa, ambito }, { internacion: internacionId });
     // Porque el movimiento a cambiar de fecha va a ser encontrado
-    if (movement.length > 1) {
+    if (movements.length > 1) {
         return false;
     }
-    const valid = await CamasEstadosController.patch({ organizacion: organizacion._id, capa, ambito, cama }, from, to);
+
+    const myMov = movements[0];
+    await CamasEstadosController.remove({ organizacion: organizacion._id, capa, ambito, cama }, from);
+
+    myMov.fecha = to;
+
+    const valid = await CamasEstadosController.store({ organizacion: organizacion._id, capa, ambito, cama }, myMov, req);
     return valid;
 }

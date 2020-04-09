@@ -81,9 +81,19 @@ router.patch('/camas/changeTime/:id', Auth.authenticate(), async (req, res, next
         let fecha = new Date(req.body.fechaActualizar);
         let nuevafecha = new Date(req.body.nuevaFecha);
         let idInternacion = req.body.idInternacion;
-        const cambiaEstado = await CamasController.changeTime({
-            organizacion: { _id: organizacion._id }, capa, ambito
-        }, idCama, fecha, nuevafecha, idInternacion);
+
+        const cambiaEstado = await CamasController.changeTime(
+            {
+                organizacion: { _id: organizacion._id },
+                capa,
+                ambito
+            },
+            idCama,
+            fecha,
+            nuevafecha,
+            idInternacion,
+            req
+        );
 
         if (cambiaEstado) {
             const camaActualizada = await CamasController.findById({ organizacion, capa, ambito }, idCama, nuevafecha);

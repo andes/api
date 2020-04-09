@@ -49,7 +49,9 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                 _id: '$idCama',
                 fechaMax: {
                     $max: '$estados.fecha'
-                }
+                },
+                ambito: { $first: '$ambito' },
+                capa: { $first: '$capa' },
             }
         },
         {
@@ -360,6 +362,24 @@ export async function patch({ organizacion, ambito, capa, cama }, from: Date, to
         },
         {
             arrayFilters: [{ 'elemento.fecha': from }]
+        }
+    );
+    return result.nModified > 0 && result.ok === 1;
+}
+
+export async function remove({ organizacion, ambito, capa, cama }, date: Date, ) {
+    const result = await CamaEstados.update(
+        {
+            idOrganizacion: mongoose.Types.ObjectId(organizacion),
+            ambito,
+            capa,
+            idCama: mongoose.Types.ObjectId(cama),
+            start: { $lte: date },
+            end: { $gte: date }
+
+        },
+        {
+            $pull: { estados: { fecha: date } }
         }
     );
     return result.nModified > 0 && result.ok === 1;

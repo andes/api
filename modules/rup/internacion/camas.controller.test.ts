@@ -353,7 +353,7 @@ describe('Internacion - camas', () => {
 
 
         const fechaNuevaIngreso = moment().add(4, 'hour').toDate();
-        const mustBeNull = await changeTime({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, fechaIngreso, fechaNuevaIngreso, '57f67a7ad86d9f64130a138d');
+        const mustBeNull = await changeTime({ organizacion: { _id: '57f67a7ad86d9f64130a138d' }, capa: 'medica', ambito: 'internacion' }, cama._id, fechaIngreso, fechaNuevaIngreso, '57f67a7ad86d9f64130a138d', REQMock);
         expect(mustBeNull).toBe(false);
 
     });
