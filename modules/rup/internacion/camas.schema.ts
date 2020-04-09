@@ -31,7 +31,6 @@ const CamaSchema = new Schema({
         type: SnomedConcept,
         required: true
     },
-    equipamiento: [SnomedConcept],
 });
 
 CamaSchema.plugin(AuditPlugin);

@@ -45,6 +45,7 @@ const CamaEstadosSchema = new Schema({
             type: SnomedConcept,
             required: false
         },
+        equipamiento: [SnomedConcept],
         extras: {
             egreso: { type: Boolean, required: false },
             ingreso: { type: Boolean, required: false },
