@@ -65,13 +65,26 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                             idOrganizacion: mongoose.Types.ObjectId(organizacion),
                             ambito,
                             capa,
-                            $expr: {
-                                $and: [
-                                    { $eq: ['$idCama', '$$idCama'] },
-                                    { $lte: ['$start', '$$fechaMax'] },
-                                    { $gte: ['$end', '$$fechaMax'] }
-                                ]
-                            },
+                            $or: [
+                                {
+                                    $expr: {
+                                        $and: [
+                                            { $eq: ['$idCama', '$$idCama'] },
+                                            { $lte: ['$start', '$$fechaMax'] },
+                                            { $gte: ['$end', '$$fechaMax'] }
+                                        ]
+                                    },
+                                },
+                                {
+                                    $expr: {
+                                        $and: [
+                                            { $eq: ['$idCama', '$$idCama'] },
+                                            { $lte: ['$start', fechaSeleccionada] },
+                                            { $gte: ['$end', fechaSeleccionada] }
+                                        ]
+                                    },
+                                }
+                            ]
                         }
                     },
                     {
