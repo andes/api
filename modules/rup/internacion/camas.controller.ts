@@ -150,9 +150,11 @@ export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha
 }
 
 function determinarMovimiento(source, target) {
-    const targetHasUO = target.unidadOrganizativa && target.unidadOrganizativa.conceptId;
-    if (targetHasUO) {
-        return target.unidadOrganizativa.conceptId !== source.unidadOrganizativa.conceptId;
+    if (source.estado === 'ocupada') {
+        const targetHasUO = target.unidadOrganizativa && target.unidadOrganizativa.conceptId;
+        if (targetHasUO) {
+            return target.unidadOrganizativa.conceptId !== source.unidadOrganizativa.conceptId;
+        }
     }
     return false;
 }
