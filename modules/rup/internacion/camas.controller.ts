@@ -149,6 +149,13 @@ export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha
     return listaDeEspera;
 }
 
+function determinarMovimiento(source, target) {
+    const targetHasUO = target.unidadOrganizativa && target.unidadOrganizativa.conceptId;
+    if (targetHasUO) {
+        return target.unidadOrganizativa.conceptId !== source.unidadOrganizativa.conceptId;
+    }
+    return false;
+}
 
 /**
  * Modifica el estado de una cama (movimiento).
@@ -183,10 +190,12 @@ export async function patch(data: Partial<ICama>, req: Request) {
         }
 
         estadoCama.extras = null; // Los extras no se transfieren entre estados
-
+        // Si la cama esta ocupada, registro el movimiento como un cambio legal.
+        const registraMovimiento = data.esMovimiento || determinarMovimiento(estadoCama, data);
         const nuevoEstado = {
-            ... (data.esMovimiento ? estadoCama : {}),
-            ...data
+            ... (registraMovimiento ? estadoCama : {}),
+            ...data,
+            esMovimiento: registraMovimiento
         };
 
         const [camaEncontrada]: [any, any] = await Promise.all([

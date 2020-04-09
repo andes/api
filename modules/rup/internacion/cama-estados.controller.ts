@@ -278,7 +278,34 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
         }
     ];
 
-    return await CamaEstados.aggregate(aggregate);
+    const movimientos = await CamaEstados.aggregate(aggregate);
+
+    if (filtros.esMovimiento === undefined || filtros.esMovimiento === null) {
+        const movSorted = movimientos.sort(sortByCamaDate);
+        movSorted.forEach(rellenarMovimientos);
+        return movSorted;
+    }
+    return movimientos;
+}
+
+function sortByCamaDate(movA, movB) {
+    const idA = String(movA.idCama);
+    const idB = String(movB.idCama);
+    if (idA === idB) {
+        return movA.fecha.getTime() - movB.fecha.getTime();
+    }
+    return idA.localeCompare(idB);
+}
+
+function rellenarMovimientos(value, index, movs) {
+    if (index === 0) { return; }
+    const idPrevio = String(movs[index - 1].idCama);
+    const ID = String(value.idCama);
+    if (idPrevio !== ID) { return; }
+    if (!value.esMovimiento) {
+        movs[index] = { ...movs[index - 1], ...value };
+    }
+    return;
 }
 
 export async function store({ organizacion, ambito, capa, cama }, estado, req: Request) {

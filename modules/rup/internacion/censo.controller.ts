@@ -184,6 +184,7 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
 
     const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
 
+
     const snapshotsAgrupados = groupBy(snapshots, 'idInternacion');
     const snapshotsPorCama = groupBy(snapshots, 'idCama');
     const movimientosPorCama = groupBy(movimientos, 'idCama');
