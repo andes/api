@@ -157,15 +157,23 @@ export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha
  */
 
 export async function patch(data: Partial<ICama>, req: Request) {
+    let cambioPermitido = true;
     const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
 
-    const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
-
-    const cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado);
+    if (data.esMovimiento) {
+        const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
+        cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado);
+    } else {
+        // por las dudas borro datos que no se deben cambiar
+        delete data['idInternacion'];
+        delete data['estado'];
+        delete data['paciente'];
+    }
 
     if (cambioPermitido) {
         if ((data as any).idCama || (data as any).createdAt) {
-            // Desde la app mande todo el Objeto y no solo que quiero modifcar.
+            // La APP debería mandar solo lo que quiere modificar
+            // por las dudas limpiamos el objeto
             delete data['idCama'];
             delete data['extras'];
             delete data['createdAt'];
@@ -177,7 +185,7 @@ export async function patch(data: Partial<ICama>, req: Request) {
         estadoCama.extras = null; // Los extras no se transfieren entre estados
 
         const nuevoEstado = {
-            ...estadoCama,
+            ... (data.esMovimiento ? estadoCama : {}),
             ...data
         };
 
@@ -187,9 +195,9 @@ export async function patch(data: Partial<ICama>, req: Request) {
         ]);
 
         camaEncontrada.set(data);
-        if (data.unidadOrganizativa) {
-            camaEncontrada.unidadOrganizativaOriginal = data.unidadOrganizativa;
-        }
+        // if (data.unidadOrganizativa) {
+        //     camaEncontrada.unidadOrganizativaOriginal = data.unidadOrganizativa;
+        // }
         camaEncontrada.audit(req);
         return await camaEncontrada.save();
     }

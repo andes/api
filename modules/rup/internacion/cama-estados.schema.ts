@@ -10,12 +10,7 @@ const CamaEstadosSchema = new Schema({
     end: Date,
     estados: [{
         fecha: Date,
-        estado: {
-            type: String,
-            // enum: ['ocupada', 'desocupada', 'disponible', 'reparacion', 'bloqueada', 'inactiva'],
-            required: true,
-            default: 'desocupada'
-        },
+        estado: String,
         unidadOrganizativa: {
             type: SnomedConcept,
             required: true
@@ -26,7 +21,7 @@ const CamaEstadosSchema = new Schema({
             required: true,
             default: true
         },
-        genero: SnomedConcept,
+        genero: { type: SnomedConcept, required: false },
         /* Datos del paciente e internacion si la cama está ocupada */
         paciente: {
             id: SchemaTypes.ObjectId,
@@ -37,10 +32,7 @@ const CamaEstadosSchema = new Schema({
             apellido: String,
             fechaNacimiento: Date
         },
-        idInternacion: {
-            type: SchemaTypes.ObjectId,
-            default: null
-        },
+        idInternacion: SchemaTypes.ObjectId,
         observaciones: {
             type: String
         },
@@ -51,8 +43,7 @@ const CamaEstadosSchema = new Schema({
         },
         sugierePase: {
             type: SnomedConcept,
-            required: false,
-            default: null
+            required: false
         },
         extras: {
             egreso: { type: Boolean, required: false },

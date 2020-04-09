@@ -6,6 +6,7 @@ import { Request } from '@andes/api-tool';
 import { AuditDocument } from '@andes/mongoose-plugin-audit';
 
 export async function snapshotEstados({ fecha, organizacion, ambito, capa }, filtros) {
+    const fechaSeleccionada = moment(fecha).toDate();
     const firstMatch = {};
     const secondMatch = {};
     if (filtros.cama) {
@@ -30,7 +31,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
                 ambito,
                 capa,
-                start: { $lte: moment(fecha).toDate() },
+                start: { $lte: fechaSeleccionada },
                 ...firstMatch
             }
         },
@@ -39,7 +40,8 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         },
         {
             $match: {
-                'estados.fecha': { $lte: moment(fecha).toDate() }
+                'estados.esMovimiento': true,
+                'estados.fecha': { $lte: fechaSeleccionada }
             }
         },
         {
@@ -77,15 +79,30 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                     },
                     {
                         $match: {
-                            $expr: { $eq: ['$estados.fecha', '$$fechaMax'] }
+                            $expr: {
+                                $gte: ['$estados.fecha', '$$fechaMax'],
+                            },
+                            'estados.fecha': { $lte: fechaSeleccionada }
                         }
                     },
                     {
-                        $sort: { 'estados.createdAt': -1 }
+                        $sort: { 'estados.fecha': 1, 'estados.createdAt': 1 }
                     },
                     {
-                        $limit: 1
+                        $replaceRoot: { newRoot: '$estados' }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            mergedObject: { $mergeObjects: '$$ROOT' }
+                        }
+                    },
+                    {
+                        $replaceRoot: { newRoot: '$mergedObject' }
                     }
+                    // {
+                    //     $limit: 1
+                    // }
                 ],
                 as: 'estado'
             }
@@ -95,14 +112,14 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         },
         {
             $addFields: {
-                'estado.estados.idCama': '$_id',
-                'estado.estados.ambito': '$ambito',
-                'estado.estados.capa': '$capa',
+                'estado.idCama': '$_id',
+                'estado.ambito': '$ambito',
+                'estado.capa': '$capa',
             }
         },
         {
             $replaceRoot: {
-                newRoot: '$estado.estados'
+                newRoot: '$estado'
             }
         },
         {
