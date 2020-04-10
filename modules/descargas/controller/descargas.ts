@@ -124,6 +124,7 @@ export class Documento {
             'trastorno',
             'objeto físico',
             'medicamento clínico',
+            'fármaco de uso clínico'
         ],
 
         procedimientos: [
@@ -357,7 +358,7 @@ export class Documento {
                             let valorRegistro = ((registros[i].valor).replace('<p>', '')).replace('</p>', '');
                             this.informeRegistros = [...this.informeRegistros, ({
                                 concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag },
-                                valor: `<div class="nivel-${this.nivelPadre}"><p>${nombreRegistro}: <small>${valorRegistro}</small></p></div>`
+                                valor: `<div class="nivel-${this.nivelPadre}"><p>${nombreRegistro}:<br><br><small>${valorRegistro}</small></p></div>`
                             })];
                         } else if (registros[i].valor !== null) {
                             if (this.esHallazgo(registros[i].concepto.semanticTag)) {
@@ -444,6 +445,10 @@ export class Documento {
 
                 if (!config) {
                     config = await this.getPrestacionInformeComponent(prestacion.solicitud.tipoPrestacion.conceptId);
+
+                    if (!config) {
+                        config = {};
+                    }
                 }
 
                 // Se crea un objecto nuevo
@@ -551,7 +556,7 @@ export class Documento {
                     profesionalSolicitud += '<br>' + prestacion.solicitud.organizacion.nombre.substring(0, prestacion.solicitud.organizacion.nombre.indexOf('-'));
 
 
-                    let orgacionacionDireccionSolicitud = organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre;
+                    let organizacionDireccionSolicitud = organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre;
 
                     // HEADER
                     html = html
@@ -559,20 +564,20 @@ export class Documento {
                         .replace('<!--datosRapidosPaciente-->', datosRapidosPaciente)
                         .replace('<!--fechaNacimiento-->', fechaNacimiento)
                         .replace('<!--nroCarpeta-->', (carpeta && carpeta.nroCarpeta ? carpeta.nroCarpeta : 'sin número de carpeta'))
-                        .replace(/(<!--organizacionNombreSolicitud-->)/g, prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>'))
-                        .replace('<!--orgacionacionDireccionSolicitud-->', orgacionacionDireccionSolicitud)
+                        .replace(/(<!--organizacionNombreSolicitud-->)/g, prestacion.solicitud.organizacion.nombre.replace(' - ', '</br>'))
+                        .replace('<!--organizacionDireccionSolicitud-->', organizacionDireccionSolicitud)
                         .replace('<!--profesionalSolicitud-->', profesionalSolicitud);
 
-                    let fechaSolicitud: any = '';
+                    let fechaSolicitud: any = '<br>';
                     let fechaEjecucion: any = new Date(prestacion.estados.find(x => x.tipo === 'ejecucion').createdAt);
-                    let fechaValidacion: any = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
+                    let consultaValidada = (prestacion.estados[prestacion.estados.length - 1].tipo === 'validada');
+                    let fechaValidacion: any = (consultaValidada) ? new Date(prestacion.estados[prestacion.estados.length - 1].createdAt) : null;
 
                     // BODY
-
                     if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
                         const valor = prestacion.ejecucion.registros[0].valor;
                         fechaEjecucion = valor && valor.fechaDesde ? moment(valor.fechaDesde).format('DD/MM/YYYY') + ' hs' : null;
-                        fechaValidacion = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') + ' hs' : null;
+                        fechaValidacion = valor && valor.fechaHasta ? moment(valor.fechaHasta).format('DD/MM/YYYY') + ' hs' : '-';
                         const unidadOrganizativa = valor && valor.unidadOrganizativa ? this.ucaseFirst(valor.unidadOrganizativa.term) : null;
 
                         tituloFechaSolicitud = '';
@@ -588,7 +593,7 @@ export class Documento {
                         tituloFechaSolicitud = 'Fecha Solicitud';
                         fechaSolicitud = moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs';
                         fechaEjecucion = moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs';
-                        fechaValidacion = moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs';
+                        fechaValidacion = (consultaValidada) ? moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs' : '</br>';
                     }
 
                     html = html.replace('<!--tipoPrestacion-->', tipoPrestacion)
@@ -599,21 +604,31 @@ export class Documento {
                         .replace('<!--fechaValidacion-->', fechaValidacion)
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
                         // .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
-                        .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).concat() : this.informeRegistros);
+                        .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).concat() : this.informeRegistros)
+                        .replace('<!--marca-de-agua-->', (consultaValidada) ? '' : 'Prestación no validada por profesional');
 
 
                     // FOOTER
                     html = html
-                        .replace('<!--profesionalFirmante1-->', profesionalSolicitud)
                         .replace('<!--usuario-->', Auth.getUserName(req))
-                        .replace(/(<!--fechaActual-->)/g, moment().format('DD/MM/YYYY HH:mm') + ' hs')
-                        .replace('<!--profesionalValidacion-->', profesionalValidacion)
-                        .replace('<!--fechaValidacion-->', fechaValidacion)
-                        .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
-                        .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
+                        .replace(/(<!--fechaActualFooter-->)/g, moment().format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--fechaSolicitud-->', fechaSolicitud);
 
-                    if (firmaProfesional) {
+                    if (consultaValidada) {
+                        html = html
+                            .replace('<!--profesionalFirmante1-->', profesionalSolicitud)
+                            .replace('<!--separadorFirma-->', '<hr class="lg">')
+                            .replace(/(<!--fechaActual-->)/g, moment().format('DD/MM/YYYY HH:mm') + ' hs')
+                            .replace('<!--profesionalValidacion-->', profesionalValidacion)
+                            .replace('<!--fechaValidacion-->', fechaValidacion)
+                            .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
+                            .replace('<!--organizacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre);
+                    } else {
+                        // ocultamos procedimiento/diagnistico ppal ya que pudo ser modificado en ejecución
+                        html = html.replace('PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL', '');
+                    }
+
+                    if (firmaProfesional && consultaValidada) {
                         html = html.replace('<!--firma1-->', `<img src="data:image/png;base64,${firmaProfesional}">`);
                     }
 
@@ -806,7 +821,6 @@ export class Documento {
                     //     port: 9222, // port Chrome is listening on
                     // };
                     this.options = options || phantomPDFOptions;
-
                     await this.generarHTML(req).then(async htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();
                         await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {

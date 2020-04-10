@@ -489,23 +489,18 @@ router.post('/pacientes', async (req, res, next) => {
     try {
         let pacienteNuevo = req.body.paciente;
         let ignorarSugerencias = req.body.ignoreCheck;
+        pacienteNuevo.activo = true;
+        andesLog(req, logKeys.mpiInsert.key, null, 'postPacientes', req.body, ignorarSugerencias);
         if (pacienteNuevo.documento) {
-            // Todo loguear posible duplicado si ignora el check
-            let resultado = await controller.checkRepetido(pacienteNuevo, req.body.incluirTemporales);
+            const resultado = await controller.checkRepetido(pacienteNuevo, req.body.incluirTemporales);
             if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
-                pacienteNuevo.activo = true;
-                let pacienteObj = await controller.createPaciente(pacienteNuevo, req);
-                // se carga geo referencia desde api de google
-                res.json(pacienteObj);
-                if (pacienteNuevo.estado === 'validado') {
-                    controller.actualizarGeoReferencia(pacienteObj, req);
-                }
+                const pacienteObj = await controller.createPaciente(pacienteNuevo, req);
+                return res.json(pacienteObj);
             } else {
                 return res.json(resultado);
             }
         } else {
-            pacienteNuevo.activo = true;
-            let pacienteObjSinDocumento = await controller.createPaciente(pacienteNuevo, req);
+            const pacienteObjSinDocumento = await controller.createPaciente(pacienteNuevo, req);
             return res.json(pacienteObjSinDocumento);
         }
     } catch (error) {
