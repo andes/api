@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { model as Prestaciones } from '../schemas/prestacion';
 import { Camas } from './camas.schema';
-import { Censos } from './censos.schema';
+import { Censo } from './censos.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
@@ -23,7 +23,11 @@ const groupBy = (xs: any[], key: string) => {
  *    - internacion no presente a cierta hora pero tiene movimientos (ingresa el día de la fecha)
  */
 async function unificarMovimientos(snapshots, movimientos) {
-    const idInternacionesUnicos = [...new Set([...Object.keys(snapshots).filter(snap => snap !== 'null'), ...Object.keys(movimientos).filter(mov => mov !== 'null')])];
+    const internacionIDSFromSnapshots = Object.keys(snapshots).filter(snap => mongoose.Types.ObjectId.isValid(snap));
+    const internacionIDSFromMovimientos = Object.keys(movimientos).filter(snap => mongoose.Types.ObjectId.isValid(snap));
+    const idInternacionesUnicos = [
+        ...new Set([...internacionIDSFromSnapshots, ...internacionIDSFromMovimientos])
+    ];
     const mapping = {};
     idInternacionesUnicos.forEach(idInternacion => {
         if (snapshots[idInternacion] && movimientos[idInternacion]) {
@@ -51,6 +55,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
     let defunciones = 0;
     let pasesA = 0;
     let ingresosYEgresos = 0;
+    let diasEstada = 0;
 
     let tablaPacientes = {};
 
@@ -61,8 +66,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         const informesInternacion: any = getInformesInternacion(prestacion);
         const fechaEgreso = informesInternacion.egreso ? informesInternacion.egreso.fechaEgreso : null;
         const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
-        const primerUO = String(allMovimientos[0].unidadOrganizativa.conceptId);
-        const ultimaUO = String(ultimoMovimiento.unidadOrganizativa.conceptId);
+        const primerUO = allMovimientos[0].unidadOrganizativa.conceptId;
+        const ultimaUO = ultimoMovimiento.unidadOrganizativa.conceptId;
 
         function checkPaciente(movimiento) {
             if (!tablaPacientes[movimiento.paciente.id]) {
@@ -82,7 +87,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         }
 
         if (fechaEgreso) {
-            if ((primerUO === String(unidadOrganizativa)) && (ultimaUO === String(unidadOrganizativa))) {
+            if ((primerUO === unidadOrganizativa) && (ultimaUO === unidadOrganizativa)) {
                 if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
                     ingresosYEgresos++;
                     checkPaciente(ultimoMovimiento);
@@ -94,6 +99,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             }
             if (ultimaUO === String(unidadOrganizativa)) {
                 if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
+                    diasEstada += informesInternacion.egreso.diasDeEstada;
                     if (informesInternacion.egreso.tipoEgreso.id === 'Defuncion') {
                         defunciones++;
                     } else {
@@ -107,7 +113,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             }
         }
 
-        if (primerUO === String(unidadOrganizativa)) {
+        if (primerUO === unidadOrganizativa) {
             if (moment(fechaIngreso).isBefore(timestampStart.toDate())) {
                 existenciaALas0++;
                 checkPaciente(ultimoMovimiento);
@@ -129,8 +135,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
 
         let movimientoAnterior;
         for (const movimiento of allMovimientos) {
-            if (movimientoAnterior && String(movimientoAnterior.unidadOrganizativa.conceptId) !== String(movimiento.unidadOrganizativa.conceptId)) {
-                if (String(movimientoAnterior.unidadOrganizativa.conceptId) !== unidadOrganizativa) {
+            if (movimientoAnterior && movimientoAnterior.unidadOrganizativa.conceptId !== movimiento.unidadOrganizativa.conceptId) {
+                if (movimientoAnterior.unidadOrganizativa.conceptId !== unidadOrganizativa) {
                     pasesDe++;
                     checkPaciente(ultimoMovimiento);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
@@ -163,11 +169,15 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             existenciaALas24,
             ingresosYEgresos,
             pacientesDia: existenciaALas24 + ingresosYEgresos,
-            disponibles: 0
+            disponibles: 0,
+            diasEstada
         }
     };
 }
 
+/**
+ * Genera el censo diario para una organizacion, unidad organizativa, y fecha dada
+ */
 export async function censoDiario({ organizacion, timestamp, unidadOrganizativa }) {
     const ambito = 'internacion';
     const capa = 'estadistica';
@@ -228,9 +238,9 @@ function getInformesInternacion(prestacion) {
 
 export async function censoMensual({ organizacion, unidadOrganizativa, fechaDesde, fechaHasta }) {
     const resultado = [];
-    const bucketsCensos: any = await Censos.find({
+    const bucketsCensos: any = await Censo.find({
         idOrganizacion: mongoose.Types.ObjectId(organizacion),
-        'unidadOrganizativa.conceptId': unidadOrganizativa,
+        unidadOrganizativa,
         start: { $gte: moment(fechaDesde).startOf('month') },
         end: { $lte: moment(fechaHasta).endOf('month') }
     });
@@ -246,7 +256,7 @@ export async function censoMensual({ organizacion, unidadOrganizativa, fechaDesd
 }
 
 export async function censoMensualJob(done) {
-    let cantidadMeses = 1;
+    const cantidadMeses = 1;
 
     const camasXOrg = await Camas.aggregate([
         { $group: { _id: '$organizacion._id' } }
@@ -266,14 +276,18 @@ export async function censoMensualJob(done) {
         const timestamp = moment().subtract(i, 'days');
         for (const organizacion of organizaciones) {
             for (const unidadOrganizativa of organizacion.unidadesOrganizativas) {
-                const resultado: any = await censoDiario({ organizacion: organizacion._id, timestamp, unidadOrganizativa: unidadOrganizativa.conceptId });
+                const resultado: any = await censoDiario({
+                    organizacion: organizacion._id,
+                    timestamp,
+                    unidadOrganizativa: unidadOrganizativa.conceptId
+                });
 
-                const nuevoCenso = {
-                    fecha: timestamp.startOf('day').toDate(),
-                    censo: resultado.censo
-                };
-
-                await store({ organizacion: organizacion._id, unidadOrganizativa }, nuevoCenso);
+                await storeCenso(
+                    organizacion._id,
+                    unidadOrganizativa.conceptId,
+                    resultado.censo,
+                    timestamp.startOf('day').toDate()
+                );
             }
         }
     }
@@ -281,31 +295,32 @@ export async function censoMensualJob(done) {
     done();
 }
 
-export async function store({ organizacion, unidadOrganizativa }, censo) {
-    await Censos.update(
+export async function storeCenso(organizacion, unidadOrganizativa, censo, fecha) {
+    fecha = moment(fecha).startOf('d').toDate();
+    await Censo.update(
         {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),
-            'unidadOrganizativa.conceptId': unidadOrganizativa.conceptId,
-            start: { $lte: censo.fecha },
-            end: { $gte: censo.fecha }
+            unidadOrganizativa,
+            start: { $lte: fecha },
+            end: { $gte: fecha }
         },
         {
-            $pull: { censos: { fecha: censo.fecha } },
+            $pull: { censos: { fecha } },
         },
         {
             multi: true
         }
     );
 
-    return await Censos.update(
+    return await Censo.update(
         {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),
-            'unidadOrganizativa.conceptId': unidadOrganizativa.conceptId,
-            start: { $lte: censo.fecha },
-            end: { $gte: censo.fecha }
+            unidadOrganizativa,
+            start: { $lte: fecha },
+            end: { $gte: fecha }
         },
         {
-            $push: { censos: censo },
+            $push: { censos: { fecha, censo } },
             $setOnInsert: {
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
                 unidadOrganizativa,

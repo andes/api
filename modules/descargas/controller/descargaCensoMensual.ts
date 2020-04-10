@@ -159,7 +159,7 @@ export class DocumentoCensoMensual {
                 pdf.create(htmlPDF, DocumentoCensoMensual.options).toFile((err2, file): any => {
 
                     if (err2) {
-                        reject(err2);
+                        return reject(err2);
                     }
                     resolve(file.filename);
 

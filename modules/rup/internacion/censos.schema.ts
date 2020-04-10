@@ -1,15 +1,13 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 
-export let schema = new mongoose.Schema({
+export let CensoSchema = new mongoose.Schema({
     idOrganizacion: mongoose.Types.ObjectId,
-    unidadOrganizativa: {
-        type: SnomedConcept,
-        required: true
-    },
+    unidadOrganizativa: String,
     start: Date,
     end: Date,
     censos: [{
+        _id: false,
         fecha: Date,
         censo: {
             existenciaALas0: Number,
@@ -21,10 +19,11 @@ export let schema = new mongoose.Schema({
             existenciaALas24: Number,
             ingresosYEgresos: Number,
             pacientesDia: Number,
-            disponibles: Number
+            disponibles: Number,
+            diasEstada: Number
         }
     }]
 });
 
 
-export const Censos = mongoose.model('internacionCenso', schema, 'internacionCenso');
+export const Censo = mongoose.model('internacionCensos', CensoSchema, 'internacionCensos');
