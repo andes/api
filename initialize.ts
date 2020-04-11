@@ -11,7 +11,7 @@ import { AndesDrive } from '@andes/drive';
 import { apiOptionsMiddleware } from '@andes/api-tool';
 import { SendMessageCacheRouter, PacienteAppRouter } from './modules/mobileApp';
 
-
+const proxy = require('express-http-proxy');
 const requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
@@ -75,6 +75,13 @@ export function initAPI(app: Express) {
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').EstadosRouter);
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').CensosRouter);
 
+    if (configPrivate.hosts.BI_QUERY) {
+        app.use(
+            '/api/bi',
+            Auth.authenticate(),
+            proxy(configPrivate.hosts.BI_QUERY)
+        );
+    }
 
     /**
      * Inicializa las rutas para adjuntar archivos
