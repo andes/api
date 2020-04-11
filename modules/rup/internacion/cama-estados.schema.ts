@@ -58,5 +58,9 @@ const CamaEstadosSchema = new Schema({
     }]
 });
 
+CamaEstadosSchema.index({ ambito: 1, capa: 1, start: 1, end: 1 });
+CamaEstadosSchema.index({ ambito: 1, capa: 1, idOrganizacion: 1, start: 1, end: 1 });
+CamaEstadosSchema.index({ ambito: 1, capa: 1, idOrganizacion: 1, idCama: 1, start: 1, end: 1 });
+
 
 export const CamaEstados = model('internacionCamaEstados', CamaEstadosSchema, 'internacionCamaEstados');
