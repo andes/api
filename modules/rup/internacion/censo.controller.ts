@@ -199,7 +199,6 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
     const snapshotsPorCama = groupBy(snapshots, 'idCama');
     const movimientosPorCama = groupBy(movimientos, 'idCama');
     const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
-
     const internaciones = await unificarMovimientos(snapshotsAgrupados, movimientosAgrupados);
 
     const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, snapshotsPorCama);
@@ -209,7 +208,7 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
     let camasDisponibles = 0;
     Object.keys(camas).forEach(idCama => {
         const ultimoMov = camas[idCama][camas[idCama].length - 1];
-        const esDisponible = ultimoMov.estado === 'disponible';
+        const esDisponible = (ultimoMov.estado !== 'bloqueada' && ultimoMov.estado !== 'inactiva');
         const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
         if (esDisponible && estaUnidadOrganizativa) {
             camasDisponibles++;
