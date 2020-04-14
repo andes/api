@@ -323,8 +323,8 @@ export async function storeCenso(organizacion, unidadOrganizativa, censo, fecha)
             $setOnInsert: {
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
                 unidadOrganizativa,
-                start: moment(censo.fecha).startOf('month').toDate(),
-                end: moment(censo.fecha).endOf('month').toDate(),
+                start: moment(censo.fecha).subtract(1, 'month').startOf('month').toDate(),
+                end: moment(censo.fecha).subtract(1, 'month').endOf('month').toDate(),
             }
         },
         {
