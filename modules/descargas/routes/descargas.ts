@@ -65,35 +65,43 @@ router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
 });
 
 // envío de resumen de prestación por correo
-router.post("/send/:tipo", Auth.authenticate(), (req, res, next) => {
+router.post("/send/:tipo", Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
-    Documento.descargar(req, res, next).then(archivo => {
-        SendEmail.renderHTML('emails/email-informe.html', req.body).then((html) => {
-            const data = {
-                from: configPrivate.enviarMail.auth.user,
-                to: email,
-                subject: "Informe RUP",
-                text: '',
-                html,
-                attachments: {
-                    filename: 'informe.pdf',
-                    path: archivo
-                }
-            };
-            SendEmail.sendMail(data).then(
-                () => {
-                    res.json({
-                        mensaje: 'Ok'
-                    });
-                },
-                (err) => {
-                    res.json({
-                        mensaje: 'SERVICE UNAVAILABLE'
-                    });
-                }
-            );
+    const idOrganizacion = req.body.idOrganizacion;
+    const org: any = await Organizacion.findById(idOrganizacion);
+    if (org.configuraciones && org.configuraciones.emails.includes(email)) {
+        Documento.descargar(req, res, next).then(archivo => {
+            SendEmail.renderHTML('emails/email-informe.html', req.body).then((html) => {
+                const data = {
+                    from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
+                    to: email,
+                    subject: "Informe RUP",
+                    text: '',
+                    html,
+                    attachments: {
+                        filename: 'informe.pdf',
+                        path: archivo
+                    }
+                };
+                SendEmail.sendMail(data).then(
+                    () => {
+                        res.json({
+                            mensaje: 'Ok'
+                        });
+                    },
+                    (err) => {
+                        res.json({
+                            mensaje: 'SERVICE UNAVAILABLE'
+                        });
+                    }
+                );
+            });
         });
-    });
+    } else {
+        res.json({
+            mensaje: 'El email no se encuentra dentro de los permitidos de la organización'
+        });
+    }
 });
 
 
