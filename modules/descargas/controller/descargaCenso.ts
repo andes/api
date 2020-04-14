@@ -58,32 +58,30 @@ export class DocumentoCenso {
 
             // vamos a armar la tabla con los datos del censo
             let filas = '';
-            for (let i = 0; i < params.listadoCenso.length; i++) {
-                let censo = params.listadoCenso[i];
-                filas += `<tr><td>${censo.dataCenso.ultimoEstado.paciente.apellido} ${censo.dataCenso.ultimoEstado.paciente.nombre} |
-                             ${censo.dataCenso.ultimoEstado.paciente.documento}</td>
-                             <td>${censo.dataCenso.cama.nombre}</td>
-                             <td>${censo.esIngreso ? 'SI' : 'NO'}</td>
-                             <td>${censo.esPaseDe ? censo.esPaseDe.unidadOrganizativa.term : ''}</td>
-                             <td>${censo.egreso}</td>
-                             <td>${censo.esPaseA ? censo.esPaseA.unidadOrganizativa.term : ''}</td></tr>`;
-            }
+
+            params.listadoCenso.forEach((censoP: any, index) => {
+                filas += `<tr><td>${censoP.datos.paciente.apellido}, ${censoP.datos.paciente.nombre} |
+                ${ censoP.datos.paciente.documento} </td>
+                <td>${censoP.datos.cama.nombre}, ${censoP.datos.cama.sectores[censoP.datos.cama.sectores.length - 1].nombre}</td>
+                <td>${(censoP.ingreso) ? censoP.ingreso : ''} </td><td>${(censoP.paseDe) ? censoP.paseDe : ''} </td>
+                <td>${(censoP.egreso) ? censoP.egreso : ''} </td>
+                <td>${(censoP.paseA) ? censoP.paseA : ''} </td></tr>`;
+            });
 
             let filaResumen = '';
             if (params.resumenCenso) {
                 filaResumen = `<tr>
-                     <td>${ params.resumenCenso.existencia0}</td>
-                    <td>${ params.resumenCenso.ingresos}</td>
-                     <td>${ params.resumenCenso.pasesDe}</td>
-                     <td>${ params.resumenCenso.egresosAlta}</td>
-                    <td>${ params.resumenCenso.egresosDefuncion}</td>
-                     <td>${ params.resumenCenso.pasesA}</td>
-                     <td>${ params.resumenCenso.existencia24}</td>
-                     <td>${ params.resumenCenso.ingresoEgresoDia}</td>
-                     <td>${ params.resumenCenso.pacientesDia}</td>
-                      <td>${ params.resumenCenso.disponibles24}</td>
-                      <td>${ params.resumenCenso.diasEstada}</td>
-                 </tr>`;
+                                <td>${ params.resumenCenso.existencia0} </td>
+                                    <td> ${ params.resumenCenso.ingresos} </td>
+                                        <td> ${ params.resumenCenso.pasesDe} </td>
+                                            <td> ${ params.resumenCenso.egresosAlta} </td>
+                                                <td> ${ params.resumenCenso.egresosDefuncion} </td>
+                                                    <td> ${ params.resumenCenso.pasesA} </td>
+                                                        <td> ${ params.resumenCenso.existencia24} </td>
+                                                            <td> ${ params.resumenCenso.ingresoEgresoDia} </td>
+                                                                <td> ${ params.resumenCenso.pacientesDia} </td>
+                                                                    <td> ${ params.resumenCenso.disponibles24} </td>
+                                                                            </tr>`;
 
             }
 
