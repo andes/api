@@ -369,7 +369,7 @@ export class Documento {
                             } else if (this.esSolicitud(registros[i].concepto.semanticTag, registros[i].esSolicitud)) {
                                 this.informeRegistros = [...this.informeRegistros, ({
                                     concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag },
-                                    valor: `<div class="nivel-${this.nivelPadre}">${this.generarRegistroSolicitudHTML(registros[i], this.hallazgoTemplate)}</div>`
+                                    valor: `<div class="nivel-${this.nivelPadre}">${this.generarRegistroSolicitudHTML(registros[i], this.planTemplate)}</div>`
                                 })];
                             } else if (this.esProcedimiento(registros[i].concepto.semanticTag) && !this.esAdjunto(registros[i].concepto.conceptId)) {
                                 this.informeRegistros = [...this.informeRegistros, ({
