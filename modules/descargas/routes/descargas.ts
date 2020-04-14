@@ -65,22 +65,20 @@ router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
 });
 
 // envío de resumen de prestación por correo
-router.post("/send", (req, res, next) => {
-    const body = req.body;
-    let organizacionId = req.query.organizacion;
-    let email = req.query.email;
-    const org: any = Organizacion.findById(organizacionId);
-    req.body['organizacion'] = org.nombre;
-    // renderizacion del email
+router.post("/send/:tipo", Auth.authenticate(), (req, res, next) => {
+    const email = req.body.email;
     Documento.descargar(req, res, next).then(archivo => {
-        SendEmail.renderHTML('emails/email-informe.html', body).then((html) => {
+        SendEmail.renderHTML('emails/email-informe.html', req.body).then((html) => {
             const data = {
                 from: configPrivate.enviarMail.auth.user,
                 to: email,
                 subject: "Informe RUP",
                 text: '',
                 html,
-                attachments: archivo as string
+                attachments: {
+                    filename: 'informe.pdf',
+                    path: archivo
+                }
             };
             SendEmail.sendMail(data).then(
                 () => {
@@ -88,7 +86,7 @@ router.post("/send", (req, res, next) => {
                         mensaje: 'Ok'
                     });
                 },
-                () => {
+                (err) => {
                     res.json({
                         mensaje: 'SERVICE UNAVAILABLE'
                     });

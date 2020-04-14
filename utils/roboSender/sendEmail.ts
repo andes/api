@@ -10,7 +10,7 @@ export interface MailOptions {
     subject: string;
     text: string;
     html: string;
-    attachments: string;
+    attachments: any;
 }
 
 export function sendMail(options: MailOptions) {
