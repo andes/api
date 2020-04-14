@@ -4,7 +4,10 @@ import { Auth } from '../../../auth/auth.class';
 import { DocumentoCenso } from './../controller/descargaCenso';
 import { DocumentoCensoMensual } from './../controller/descargaCensoMensual';
 import { exportarInternaciones } from '../../../jobs/exportarInternaciones';
+import * as SendEmail from './../../../utils/roboSender/sendEmail';
+import * as configPrivate from './../../../config.private';
 import moment = require('moment');
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 const router = express.Router();
 
@@ -58,6 +61,40 @@ router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
         });
     }).catch(e => {
         return next(e);
+    });
+});
+
+// envío de resumen de prestación por correo
+router.post("/send", (req, res, next) => {
+    const body = req.body;
+    let organizacionId = req.query.organizacion;
+    let email = req.query.email;
+    const org: any = Organizacion.findById(organizacionId);
+    req.body['organizacion'] = org.nombre;
+    // renderizacion del email
+    Documento.descargar(req, res, next).then(archivo => {
+        SendEmail.renderHTML('emails/email-informe.html', body).then((html) => {
+            const data = {
+                from: configPrivate.enviarMail.auth.user,
+                to: email,
+                subject: "Informe RUP",
+                text: '',
+                html,
+                attachments: archivo as string
+            };
+            SendEmail.sendMail(data).then(
+                () => {
+                    res.json({
+                        mensaje: 'Ok'
+                    });
+                },
+                () => {
+                    res.json({
+                        mensaje: 'SERVICE UNAVAILABLE'
+                    });
+                }
+            );
+        });
     });
 });
 
