@@ -89,7 +89,7 @@ router.post("/send/:tipo", Auth.authenticate(), async (req, res, next) => {
                     text: '',
                     html,
                     attachments: {
-                        filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm')}.pdf`,
+                        filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
                         path: archivo
                     }
                 };
