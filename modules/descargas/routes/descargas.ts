@@ -1,13 +1,13 @@
 import * as express from 'express';
 import { Documento } from './../controller/descargas';
 import { Auth } from '../../../auth/auth.class';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { DocumentoCenso } from './../controller/descargaCenso';
 import { DocumentoCensoMensual } from './../controller/descargaCensoMensual';
 import { exportarInternaciones } from '../../../jobs/exportarInternaciones';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from './../../../config.private';
 import moment = require('moment');
-import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 const router = express.Router();
 
@@ -67,19 +67,29 @@ router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
 // envío de resumen de prestación por correo
 router.post("/send/:tipo", Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
+
+    const prestacion: any = await Documento.getPrestacionData(req.body.idPrestacion);
+    const handlebarsData = {
+        organizacion: prestacion.ejecucion.organizacion.nombre,
+        fechaInicio: prestacion.ejecucion.fecha,
+        tipoPrestacion: prestacion.solicitud.tipoPrestacion.term,
+        profesional: prestacion.solicitud.profesional
+    };
+
     const idOrganizacion = req.body.idOrganizacion;
     const org: any = await Organizacion.findById(idOrganizacion);
-    if (org.configuraciones && org.configuraciones.emails.includes(email)) {
+
+    if (org && org.configuraciones && org.configuraciones.emails.includes(email)) {
         Documento.descargar(req, res, next).then(archivo => {
-            SendEmail.renderHTML('emails/email-informe.html', req.body).then((html) => {
+            SendEmail.renderHTML('emails/email-informe.html', handlebarsData).then((html) => {
                 const data = {
                     from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
                     to: email,
-                    subject: "Informe RUP",
+                    subject: `Informe RUP ${moment(handlebarsData.fechaInicio).format('DD/MM/YYYY H:mm [hs]')}`,
                     text: '',
                     html,
                     attachments: {
-                        filename: 'informe.pdf',
+                        filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm')}.pdf`,
                         path: archivo
                     }
                 };
