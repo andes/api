@@ -56,7 +56,7 @@ export class Documento {
      *
      * @param idPrestacion string ObjectID válido
      */
-    private static getPrestacionData(idPrestacion) {
+    static getPrestacionData(idPrestacion) {
         return new Promise((resolve, reject) => {
             Prestacion.findById(idPrestacion, (err, prestacion: any) => {
                 if (err) {
