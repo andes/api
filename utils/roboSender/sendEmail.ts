@@ -1,8 +1,13 @@
 import { enviarMail } from '../../config.private';
 import * as fs from 'fs';
+import moment = require('moment');
 const handlebars = require('handlebars');
 const path = require('path');
 const nodemailer = require('nodemailer');
+
+handlebars.registerHelper('datetime', function (dateTime) {
+    return moment(dateTime).format('D MMM YYYY [a las] H:mm [hs]');
+});
 
 export interface MailOptions {
     from: string;
