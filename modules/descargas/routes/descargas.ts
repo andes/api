@@ -65,7 +65,7 @@ router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
 });
 
 // envío de resumen de prestación por correo
-router.post("/send/:tipo", Auth.authenticate(), async (req, res, next) => {
+router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
 
     const prestacion: any = await Documento.getPrestacionData(req.body.idPrestacion);

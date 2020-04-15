@@ -5,7 +5,7 @@ const handlebars = require('handlebars');
 const path = require('path');
 const nodemailer = require('nodemailer');
 
-handlebars.registerHelper('datetime', function (dateTime) {
+handlebars.registerHelper('datetime', dateTime => {
     return moment(dateTime).format('D MMM YYYY [a las] H:mm [hs]');
 });
 
