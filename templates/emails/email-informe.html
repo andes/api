@@ -1,85 +1,92 @@
-<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
       xmlns:o="urn:schemas-microsoft-com:office:office">
 
 <head>
-    <meta charset="utf-8">
-    <!-- utf-8 works for most cases -->
-    <meta name="viewport" content="width=device-width">
-    <!-- Forcing initial-scale shouldn't be necessary -->
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!-- Use the latest (edge) version of IE rendering engine -->
-    <meta name="x-apple-disable-message-reformatting">
-    <!-- Disable auto-scale in iOS 10 Mail entirely -->
-    <title>ANDES - Informe</title>
-    <!-- The title tag shows in email notifications, like Android 4.4. -->
+    <!--[if gte mso 9]><xml>
+   <o:OfficeDocumentSettings>
+    <o:AllowPNG/>
+    <o:PixelsPerInch>96</o:PixelsPerInch>
+   </o:OfficeDocumentSettings>
+  </xml><![endif]-->
+    <!-- fix outlook zooming on 120 DPI windows devices -->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- So that mobile will display zoomed in -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"> <!-- enable media queries for windows phone 8 -->
+    <meta name="format-detection" content="date=no"> <!-- disable auto date linking in iOS 7-9 -->
+    <meta name="format-detection" content="telephone=no"> <!-- disable auto telephone linking in iOS 7-9 -->
+    <title>Single Column</title>
 
-    <!-- CSS Reset : BEGIN -->
-    <style>
-        /* What it does: Remove spaces around the email design added by some email clients. */
-
-        /* Beware: It can remove the padding / margin and add a background color to the compose a reply window. */
-
-        html,
+    <style type="text/css">
         body {
-            margin: 0 auto !important;
-            padding: 0 !important;
-            height: 100% !important;
-            width: 100% !important;
-        }
-
-        /* What it does: Stops email clients resizing small text. */
-
-        * {
+            margin: 0;
+            padding: 0;
             -ms-text-size-adjust: 100%;
             -webkit-text-size-adjust: 100%;
         }
 
-        /* What it does: Centers email on Android 4.4 */
-
-        div[style*="margin: 16px 0"] {
-            margin: 0 !important;
+        table {
+            border-spacing: 0;
         }
 
-        /* What it does: Stops Outlook from adding extra spacing to tables. */
-
-        table,
-        td {
-            mso-table-lspace: 0pt !important;
-            mso-table-rspace: 0pt !important;
+        table td {
+            border-collapse: collapse;
         }
 
-        /* What it does: Fixes webkit padding issue. Fix for Yahoo mail table alignment bug. Applies table-layout to the first 2 tables then removes for anything nested deeper. */
+        .ExternalClass {
+            width: 100%;
+        }
+
+        .ExternalClass,
+        .ExternalClass p,
+        .ExternalClass span,
+        .ExternalClass font,
+        .ExternalClass td,
+        .ExternalClass div {
+            line-height: 100%;
+        }
+
+        .ReadMsgBody {
+            width: 100%;
+            background-color: #ebebeb;
+        }
 
         table {
-            border-spacing: 0 !important;
-            border-collapse: collapse !important;
-            table-layout: fixed !important;
-            margin: 0 auto !important;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
         }
-
-        table table table {
-            table-layout: auto;
-        }
-
-        /* What it does: Uses a better rendering method when resizing images in IE. */
 
         img {
             -ms-interpolation-mode: bicubic;
         }
 
-        /* What it does: A work-around for email clients meddling in triggered links. */
+        .yshortcuts a {
+            border-bottom: none !important;
+        }
 
-        *[x-apple-data-detectors],
-        /* iOS */
+        @media screen and (max-width: 599px) {
 
-        .x-gmail-data-detectors,
-        /* Gmail */
+            .force-row,
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
 
-        .x-gmail-data-detectors *,
-        .aBn {
-            border-bottom: 0 !important;
-            cursor: default !important;
+        @media screen and (max-width: 400px) {
+            .container-padding {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+        }
+
+        .ios-footer a {
+            color: #aaaaaa !important;
+            text-decoration: underline;
+        }
+
+        a[href^="x-apple-data-detectors:"],
+        a[x-apple-data-detectors] {
             color: inherit !important;
             text-decoration: none !important;
             font-size: inherit !important;
@@ -87,135 +94,95 @@
             font-weight: inherit !important;
             line-height: inherit !important;
         }
-
-        /* What it does: Prevents Gmail from displaying an download button on large, non-linked images. */
-
-        .a6S {
-            display: none !important;
-            opacity: 0.01 !important;
-        }
-
-        /* If the above doesn't work, add a .g-img class to any image in question. */
-
-        /* img.g-img+div {
-            display: none !important;
-        } */
-
-        /* What it does: Prevents underlining the button text in Windows 10 */
-
-        .button-link {
-            text-decoration: none !important;
-        }
-
-        /* What it does: Removes right gutter in Gmail iOS app: https://github.com/TedGoas/Cerberus/issues/89  */
-
-        /* Create one of these media queries for each additional viewport size you'd like to fix */
-
-        /* Thanks to Eric Lepetit (@ericlepetitsf) for help troubleshooting */
-
-        @media only screen and (min-device-width: 375px) and (max-device-width: 413px) {
-
-            /* iPhone 6 and 6+ */
-            .email-container {
-                min-width: 375px !important;
-            }
-        }
-    </style>
-    <!-- CSS Reset : END -->
-
-    <!-- Progressive Enhancements : BEGIN -->
-    <style>
-        /* What it does: Hover styles for buttons */
-
-        .button-td,
-        .button-a {
-            transition: all 100ms ease-in;
-        }
-
-        .button-td:hover,
-        .button-a:hover {
-            background: #043750 !important;
-            border-color: #043750 !important;
-        }
-
-        /* Media Queries */
-
-        @media screen and (max-width: 600px) {
-
-            /* What it does: Adjust typography on small screens to improve readability */
-            .email-container p {
-                font-size: 17px !important;
-                line-height: 22px !important;
-            }
-
-        }
     </style>
 </head>
 
-<body width="100%" bgcolor="#043750" style="margin: 0; mso-line-height-rule: exactly;">
-    <center style="width: 100%; background: #043750; text-align: left;">
-        <!-- Visually Hidden Preheader Text : BEGIN -->
-        <div
-             style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
-            ANDES - Resumen de prestación
-        </div>
-        <!-- Visually Hidden Preheader Text : END -->
+<body style="margin:0; padding:0;" bgcolor="#F0F0F0" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
 
-        <!--
-            Set the email width. Defined in two places:
-            1. max-width for all clients except Desktop Windows Outlook, allowing the email to squish on narrow but never go wider than 600px.
-            2. MSO tags for Desktop Windows Outlook enforce a 600px width.
-        -->
-        <div style="max-width: 600px; margin: auto;" class="email-container">
-            <!--[if mso]>
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" align="center">
-            <tr>
-            <td>
-            <![endif]-->
+    <!-- 100% background wrapper (grey background) -->
+    <table border="0" width="100%" height="100%" cellpadding="0" cellspacing="0" bgcolor="#F0F0F0">
+        <tr>
+            <td align="center" valign="top" bgcolor="#F0F0F0" style="background-color: #F0F0F0;">
 
-            <!-- Email Header : BEGIN -->
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%"
-                   style="max-width: 600px;">
-                <tr>
-                    <td style="padding: 20px 0; text-align: center">
-                        <img src="https://www.andes.gob.ar/images/andes_logo_w.png" width="100" height="100"
-                             alt="ANDES - Aplicaciones Neuquinas de Salud" border="0"
-                             style="height: auto; background: transparent; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
-                    </td>
-                </tr>
-            </table>
-            <!-- Email Header : END -->
+                <br>
 
-            <!-- Email Body : BEGIN -->
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%"
-                   style="max-width: 600px;">
+                <!-- 600px container (white background) -->
+                <table border="0" width="600" cellpadding="0" cellspacing="0" class="container"
+                       style="width:600px;max-width:600px">
+                    <tr>
+                        <td class="container-padding header" align="left" style="font-family:Helvetica, Arial, sans-serif;
+                            font-size:24px;
+                            font-weight:bold;
+                            padding-bottom:12px;
+                            color:#3b1b48;
+                            padding-top: 24px;
+                            padding-left:24px;
+                            padding-right:24px;
+                            background:#3b1b48;
+                            display: flex;
+                            justify-content: space-between;">
+                            <img src="https://www.andes.gob.ar/images/andes_logo_w.png" width="auto" height="50"
+                                 alt="ANDES - Aplicaciones Neuquinas de Salud">
+                            <b style="font-size: 24px; color: white;"></b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="container-padding content" align="left"
+                            style="padding-left:24px;padding-right:24px;padding-top:12px;padding-bottom:12px;background-color:#ffffff">
+                            <br>
 
-                <!-- 1 Column Text + Button : BEGIN -->
-                <tr>
-                    <td bgcolor="#ffffff">
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                            <tr>
-                                <td
-                                    style="text-align: left; padding: 40px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #043750;">
-                                    <br>
-                                    <br>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <!-- Clear Spacer : BEGIN -->
-                <tr>
-                    <td aria-hidden="true" height="40" style="font-size: 0; line-height: 0;">
-                        &nbsp;
-                    </td>
-                </tr>
-                <!-- Clear Spacer : END -->
-            </table>
-            <!-- Email Body : END -->
+                            <div class="title"
+                                 style="font-family:Helvetica, Arial, sans-serif;font-size:18px;font-weight:600;color:#374550">
+                                ANDES - Resumen de Prestación</div>
+                            <br>
 
-        </div>
-    </center>
+                            <div class="body-text"
+                                 style="font-family:Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;text-align:left;color:#333333">
+                                <b>{{organizacion}}</b><br>
+                                <b>Fecha:</b> {{datetime fechaInicio}}<br>
+                                <b>Tipo de Prestación:</b> {{tipoPrestacion}}<br>
+
+                                {{#with profesional}}
+                                <b>Profesional:</b> {{apellido}}, {{nombre}}
+                                {{/with}}
+                                <br><br>
+
+                                <br><br>
+                            </div>
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="container-padding footer-text" align="left"
+                            style="font-family:Helvetica, Arial, sans-serif;font-size:12px;line-height:16px;color:#aaaaaa;padding-left:24px;padding-right:24px">
+                            <br><br>
+
+                            RUP ~ Registro Universal de Prestaciones.
+                            <br><br>
+
+                            <strong>ANDES ~ Aplicaciones Neuquinas De Salud</strong><br>
+                            <span class="ios-footer">
+                                El contenido de este informe ha sido validado digitalmente siguiendo los estándares de
+                                calidad y seguridad requeridos. {{organizacion}} es responsable Inscripto en el Registro
+                                Nacional de
+                                Protección de Datos Personales bajo el N° de Registro 100000182, según lo requiere la
+                                Ley N° 25.326(art. 3° y 21 inciso 1)<br>
+                            </span>
+                            <a href="//apps.andes.gob.ar/" style="color:#aaaaaa">Aplicación Andes</a><br>
+
+                            <br><br>
+
+                        </td>
+                    </tr>
+                </table>
+                <!--/600px container -->
+
+
+            </td>
+        </tr>
+    </table>
+    <!--/100% background wrapper-->
+
 </body>
 
 </html>
