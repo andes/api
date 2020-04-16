@@ -78,8 +78,11 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
 
     const idOrganizacion = req.body.idOrganizacion;
     const org: any = await Organizacion.findById(idOrganizacion);
-
-    if (org && org.configuraciones && org.configuraciones.emails.includes(email)) {
+    let emailFiltrado = null;
+    if (org && org.configuraciones && org.configuraciones.emails) {
+        emailFiltrado = org.configuraciones.emails.filter(x => x.email === email);
+    }
+    if (emailFiltrado) {
         Documento.descargar(req, res, next).then(archivo => {
             SendEmail.renderHTML('emails/email-informe.html', handlebarsData).then((html) => {
                 const data = {
