@@ -229,7 +229,6 @@ export async function store(data: Partial<ICama>, req: Request) {
         sectores: data.sectores,
         nombre: data.nombre,
         tipoCama: data.tipoCama,
-        equipamiento: data.equipamiento,
     });
     nuevaCama.audit(req);
 
@@ -243,6 +242,7 @@ export async function store(data: Partial<ICama>, req: Request) {
         genero: data.genero,
         esCensable: data.esCensable,
         esMovimiento: data.esMovimiento,
+        equipamiento: data.equipamiento,
     };
 
     const [camaGuardada] = await Promise.all([
