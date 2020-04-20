@@ -18,7 +18,10 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
     }
 
     if (filtros.internacion) {
-        secondMatch['idInternacion'] = mongoose.Types.ObjectId(filtros.internacion);
+        secondMatch['$or'] = [
+            { idInternacion: wrapObjectId(filtros.internacion) },
+            { 'extras.idInternacion': wrapObjectId(filtros.internacion) }
+        ];
     }
 
     if (filtros.estado) {
