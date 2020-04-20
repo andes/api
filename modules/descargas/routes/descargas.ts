@@ -67,7 +67,6 @@ router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
 // envío de resumen de prestación por correo
 router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
-
     const prestacion: any = await Documento.getPrestacionData(req.body.idPrestacion);
     const handlebarsData = {
         organizacion: prestacion.ejecucion.organizacion.nombre,
@@ -75,7 +74,6 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
         tipoPrestacion: prestacion.solicitud.tipoPrestacion.term,
         profesional: prestacion.solicitud.profesional
     };
-
     const idOrganizacion = req.body.idOrganizacion;
     const org: any = await Organizacion.findById(idOrganizacion);
     let emailFiltrado = null;
@@ -83,37 +81,27 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
         emailFiltrado = org.configuraciones.emails.filter(x => x.email === email);
     }
     if (emailFiltrado) {
-        Documento.descargar(req, res, next).then(archivo => {
-            SendEmail.renderHTML('emails/email-informe.html', handlebarsData).then((html) => {
-                const data = {
-                    from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
-                    to: email,
-                    subject: `Informe RUP ${moment(handlebarsData.fechaInicio).format('DD/MM/YYYY H:mm [hs]')}`,
-                    text: '',
-                    html,
-                    attachments: {
-                        filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
-                        path: archivo
-                    }
-                };
-                SendEmail.sendMail(data).then(
-                    () => {
-                        res.json({
-                            mensaje: 'Ok'
-                        });
-                    },
-                    (err) => {
-                        res.json({
-                            mensaje: 'SERVICE UNAVAILABLE'
-                        });
-                    }
-                );
-            });
-        });
+        try {
+            const archivo = await Documento.descargar(req, res, next);
+            const html = await SendEmail.renderHTML('emails/email-informe.html', handlebarsData);
+            const data = {
+                from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
+                to: email,
+                subject: `Informe RUP ${moment(handlebarsData.fechaInicio).format('DD/MM/YYYY H:mm [hs]')}`,
+                text: '',
+                html,
+                attachments: {
+                    filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
+                    path: archivo
+                }
+            };
+            await SendEmail.sendMail(data);
+            res.json({ status: 'OK' });
+        } catch (e) {
+            next(e);
+        }
     } else {
-        res.json({
-            mensaje: 'El email no se encuentra dentro de los permitidos de la organización'
-        });
+        next('No es un correo válido para la organización');
     }
 });
 

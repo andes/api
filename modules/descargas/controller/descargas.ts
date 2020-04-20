@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
 import * as mime from 'mime-types';
-// import * as htmlPdf from 'html-pdf-chrome';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
