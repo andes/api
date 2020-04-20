@@ -44,13 +44,13 @@ export async function createPaciente(data, req) {
 
         const connElastic = new ElasticSync();
         await connElastic.create(newPatient._id.toString(), nuevoPac);
-        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, req.method + ' | ' + req.originalUrl, newPatient, null);
 
         // Código para emitir eventos
         EventCore.emitAsync('mpi:patient:create', newPatient);
         return newPatient;
     } catch (error) {
-        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, null, 'Error insertando paciente');
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, req.method + ' | ' + req.originalUrl, null, 'Error insertando paciente');
         return error;
     }
 
@@ -71,9 +71,9 @@ export async function updatePaciente(pacienteObj, data, req) {
     const connElastic = new ElasticSync();
     let updated = await connElastic.sync(pacienteObj);
     if (updated) {
-        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
+        andesLog(req, logKeys.mpiUpdate.key, req.body._id, req.method + ' | ' + req.originalUrl, pacienteObj, pacienteOriginal);
     } else {
-        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, null, 'create patient');
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, req.method + ' | ' + req.originalUrl, pacienteObj, 'create patient');
     }
     EventCore.emitAsync('mpi:patient:update', pacienteObj);
     return pacienteObj;
