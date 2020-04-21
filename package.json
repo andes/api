@@ -94,7 +94,8 @@
     "lint": "tslint --project .",
     "lint:fix": "tslint --project . --fix",
     "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js",
-    "test": "jest"
+    "test": "jest",
+    "testing": "NODE_ENV=test npm start"
   },
   "repository": {
     "type": "git",

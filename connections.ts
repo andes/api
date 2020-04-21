@@ -34,6 +34,18 @@ export class Connections {
             mongoose.set('debug', (collection, method, query, arg1, arg2, arg3) => queryLogger('%s.%s(%o) %s %s', collection, method, query, (arg2 || ''), (arg3 || '')));
         }
 
+        if (process.env.NODE_ENV === 'test') {
+            // tslint:disable-next-line:no-console
+            console.log('TESTING MODE');
+            configPrivate.hosts.mongoDB_main.host = 'mongodb://localhost:27066/andes';
+            configPrivate.hosts.mongoDB_mpi.host = 'mongodb://localhost:27066/andes';
+            configPrivate.hosts.mongoDB_snomed.host = 'mongodb://localhost:27066/andes';
+            configPrivate.hosts.mongoDB_puco.host = 'mongodb://localhost:27066/andes';
+            configPrivate.logDatabase.log.host = 'mongodb://localhost:27066/andes';
+            configPrivate.hosts.elastic_main = 'http://localhost:9266';
+        }
+
+
         // Conecta y configura conexiones
         // 1. PRINCIPAL
         mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options);
