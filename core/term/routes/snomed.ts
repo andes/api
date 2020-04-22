@@ -46,14 +46,14 @@ router.get('/snomed', async (req, res, next) => {
  * @param {String[]} secondaryConcepts  Listado de concepto secundario para mejorar el mapeo.
  */
 
-router.get('/snomed/map', (req, res, next) => {
-    if (!req.query.conceptId) {
+router.post('/snomed/map', (req, res, next) => {
+    if (!req.body.conceptId) {
         return next('Debe ingresar un concepto principal');
     }
 
-    const conceptId = req.query.conceptId;
-    const paciente = req.query.paciente;
-    const contexto = req.query.secondaryConcepts;
+    const conceptId = req.body.conceptId;
+    const paciente = req.body.paciente;
+    const contexto = req.body.secondaryConcepts;
 
     const map = new SnomedCIE10Mapping(paciente, contexto);
 
@@ -69,7 +69,7 @@ router.get('/snomed/map', (req, res, next) => {
                 return next(err);
             });
         } else {
-            res.json(null);
+            res.json([]);
         }
     }).catch(error => {
         return next(error);
