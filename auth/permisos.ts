@@ -404,6 +404,11 @@ export default [
                 title: 'Buscar prestaciones de pacientes',
                 type: 'boolean'
             },
+            {
+                key: 'emitirComprobante',
+                title: 'Emitir comprobante',
+                type: 'boolean'
+            },
         ]
     },
     {
