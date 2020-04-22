@@ -103,7 +103,6 @@ export async function liberarTurno(req, data, turno) {
         turno.reasignado = undefined;  // Esto es necesario cuando se libera un turno reasignado
         turno.updatedAt = new Date();
         turno.updatedBy = req.user.usuario || req.user;
-        turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
         let cant = 1;
 
         const turnoDoble = getTurnoSiguiente(req, data, turno._id);
@@ -123,9 +122,10 @@ export async function liberarTurno(req, data, turno) {
                 break;
             case ('programado'):
                 data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-                if (data.bloques[position.indexBloque].restantesMobile) {
+                if (this.esVirtual(turno.emitidoPor)) {
                     data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
                 }
+                turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
                 break;
             case ('profesional'):
                 data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
@@ -1489,4 +1489,13 @@ export async function verificarSolapamiento(data) {
         }
     }
     return response;
+}
+
+// Verifica si un turno fue dado por la appMobile o el totem
+export function esVirtual(turnoEmitido) {
+    if (turnoEmitido === 'appMobile' || turnoEmitido === 'totem') {
+        return true;
+    } else {
+        return false;
+    }
 }
