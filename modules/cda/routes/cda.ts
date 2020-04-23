@@ -121,6 +121,18 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
 });
 
 /**
+ * Emite un evento para generar los CDA de un paciente
+ */
+
+router.post('/paciente', (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:post')) {
+        return next(403);
+    }
+    EventCore.emitAsync('monitoreo:cda:create', req.body);
+    res.json({ status: 'ok' });
+});
+
+/**
  * Injecta un CDA ya armado al repositorio
  */
 
