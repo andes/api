@@ -105,14 +105,15 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
                     res.status(400).send('Debe ingresar al menos un parámetro');
                     return next(400);
                 }
-                query.exec((err, data) => {
-                    if (err) {
-                        return next(err);
+                if (req.query.nombreMedicamento) {
+                    try {
+                        let data;
+                        data = await formularioTerapeutico.find({ descripcion: RegExp('^.*' + req.query.nombreMedicamento + '.*$', 'i') });
+                        res.json(data);
+                    } catch (error) {
+                        return next(error);
                     }
-                    if (req.query.nombreMedicamento) { // Si es una búsqueda por nombre de medicamento
-                    }
-                    res.json(data);
-                });
+                }
             }
         }
 
@@ -120,7 +121,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
 });
 
 
-router.post('/formularioTerapeutico', Auth.authenticate(), (req, res, next) =>  {
+router.post('/formularioTerapeutico', Auth.authenticate(), (req, res, next) => {
     req.body.descripcion = req.body.concepto.term;
     let newFormTera = new formularioTerapeutico(req.body);
     Auth.audit(newFormTera, req);
@@ -133,7 +134,7 @@ router.post('/formularioTerapeutico', Auth.authenticate(), (req, res, next) =>  
 });
 
 
-router.put('/formularioTerapeutico/:id', Auth.authenticate(), (req, res, next) =>  {
+router.put('/formularioTerapeutico/:id', Auth.authenticate(), (req, res, next) => {
     let idPadre = mongoose.Types.ObjectId(req.body.idpadre);
     req.body.idpadre = idPadre;
     formularioTerapeutico.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
