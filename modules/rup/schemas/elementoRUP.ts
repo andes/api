@@ -97,7 +97,7 @@ export let schema = new mongoose.Schema({
                         if (value === null) {
                             return true;
                         } else {
-                            return Object.isObject(value);
+                            return typeof value === 'object';
                         }
                     },
                     message: '{VALUE} is not a valid object'

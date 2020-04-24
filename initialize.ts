@@ -65,6 +65,15 @@ export function initAPI(app: Express) {
         }
     }
 
+    const modulos = [
+        './modules/rup'
+    ];
+
+    modulos.forEach((moduloPath) => {
+        const m = require(moduloPath);
+        m.setup(app);
+    });
+
     const TMRouter = require('./core/tm').Routes;
     TMRouter.forEach(router => {
         app.use('/api/core/tm', router);
