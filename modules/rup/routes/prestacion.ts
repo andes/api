@@ -7,7 +7,6 @@ import * as frecuentescrl from '../controllers/frecuentesProfesional';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
-import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
@@ -16,75 +15,6 @@ import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
 const router = express.Router();
-
-/**
- * Trae todas las prestaciones con ambitoOrigen = internacion, tambien solo las prestaciones
- * internación y
- * que el paciente no tiene una cama asignada.
- */
-
-router.get('/prestaciones/sinCama', (req: any, res, next) => {
-    let query = {
-        'solicitud.organizacion.id': Types.ObjectId(Auth.getOrganization(req)),
-        'solicitud.ambitoOrigen': 'internacion',
-        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion,
-        'ejecucion.registros.valor.informeIngreso.fechaIngreso': {
-            $gte: new Date(req.query.fechaDesde),
-            $lte: new Date(req.query.fechaHasta)
-        },
-        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
-    };
-    // Buscamos prestaciones que sean del ambito de internacion.
-    Prestacion.find(query, async (err, prestaciones) => {
-        if (err) {
-            return next(err);
-        }
-        if (!prestaciones) {
-            return res.status(404).send('No se encontraron prestaciones de internacion');
-        }
-        // Ahora buscamos si se encuentra asociada la internacion a una cama
-        let listaEspera = [];
-        let prestacion: any;
-        for (prestacion of prestaciones) {
-            let enEspera = {
-                prestacion,
-                ultimoEstado: null,
-                paseDe: false,
-                esEgreso: false,
-                paseA: null,
-                fechaIngreso: null,
-            };
-            enEspera.fechaIngreso = new Date(prestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso);
-            enEspera.paseA = prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa ? prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa : null;
-
-            // Buscamos si tiene una cama ocupada con el id de la internacion.
-            let cama = await camasController.buscarCamaInternacion(Types.ObjectId(prestacion.id), 'ocupada');
-            // Loopeamos los registros de la prestacion buscando el informe de egreso.
-            let esEgreso = prestacion.ejecucion.registros.find(r => r.valor && r.valor.InformeEgreso);
-            // Si no encontramos una cama ocupada quiere decir que esa prestacion va a formar parte
-            // de nuestra lista.
-            if (cama && cama.length === 0) {
-                // Si encontramos el informe de ingreso en la prestacion entonces es
-                // un egreso. En caso de que no sea ingreso utilizamos la funcion buscarPasesCamaXInternacion.
-                if (esEgreso) {
-                    enEspera.ultimoEstado = esEgreso.concepto.term;
-                    enEspera.esEgreso = true;
-                } else {
-                    // Buscamos los pases que tiene la internacion
-                    let _camas: any = await camasController.buscarPasesCamaXInternacion(prestacion._id);
-                    if (_camas && _camas.length) {
-                        enEspera.ultimoEstado = _camas[_camas.length - 1].estados.unidadOrganizativa.term;
-                        enEspera.paseDe = _camas[_camas.length - 1].estados.unidadOrganizativa;
-                        enEspera.paseA = _camas[_camas.length - 1].estados.sugierePase;
-                    }
-                }
-                listaEspera.push(enEspera);
-            }
-        }
-        return res.json(listaEspera);
-    });
-});
-
 
 /***
  *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
