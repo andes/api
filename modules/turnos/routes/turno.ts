@@ -163,7 +163,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
     if (continues.valid) {
-        let agendaRes = await getAgenda(req.body.idAgenda);
+        let agendaRes: any = await getAgenda(req.body.idAgenda);
+        if (agendaRes.estado === 'pausada' || agendaRes.estado === 'suspendida') {
+            return next('La agenda ya no está disponible');
+        }
         try {
             let user = (req as any).user;
             if (user.organizacion) {
