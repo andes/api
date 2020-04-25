@@ -18,7 +18,7 @@ export let schema = new mongoose.Schema({
     // Tipo de elemento
     tipo: {
         type: String,
-        enum: ['atomo', 'molecula', 'formula']
+        enum: ['atomo', 'molecula', 'formula', 'prestacion']
     },
     // Calculo de formula a implementar
     formulaImplementation: {
