@@ -103,7 +103,7 @@ router.post('/v2/reenviar-codigo', (req, res, next) => {
             if (resultado2.account) {
                 const account = resultado2.account;
 
-                account.email = contacto.email;
+                account.email = contacto.email.toLowerCase();
                 account.telefono = contacto.telefono;
 
                 const passw = authController.generarCodigoVerificacion();
@@ -138,8 +138,6 @@ router.patch('/account', async (req: any, res, next) => {
     } catch (e) {
         return res.status(422).send({ error: '' });
     }
-
-
 });
 
 export = router;

@@ -18,7 +18,7 @@ const router = express.Router();
  */
 
 router.post('/login', (req, res, next) => {
-    const email = req.body.email;
+    const email = (req.body.email) ? req.body.email.toLowerCase() : null;
     const password = req.body.password;
 
     if (!email) {
@@ -83,8 +83,8 @@ router.post('/olvide-password', (req, res, next) => {
     if (!req.body.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
-
-    return pacienteApp.findOne({ email: req.body.email }, (err, datosUsuario: any) => {
+    const email = req.body.email.toLowerCase();
+    return pacienteApp.findOne({ email }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
@@ -140,8 +140,8 @@ router.post('/reestablecer-password', (req, res, next) => {
     if (!req.body.password2) {
         return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
     }
-
-    return pacienteApp.findOne({ email: req.body.email }, (err, datosUsuario: any) => {
+    const email = req.body.email.toLowerCase();
+    return pacienteApp.findOne({ email }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
