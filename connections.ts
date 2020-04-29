@@ -37,7 +37,6 @@ export class Connections {
             // tslint:disable-next-line:no-console
             console.log('TESTING MODE');
             configPrivate.hosts.mongoDB_main.host = 'mongodb://localhost:27066/andes';
-            configPrivate.hosts.mongoDB_mpi.host = 'mongodb://localhost:27066/andes';
             configPrivate.hosts.mongoDB_snomed.host = 'mongodb://localhost:27066/andes';
             configPrivate.hosts.mongoDB_puco.host = 'mongodb://localhost:27066/andes';
             configPrivate.logDatabase.log.host = 'mongodb://localhost:27066/andes';
