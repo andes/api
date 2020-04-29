@@ -428,19 +428,14 @@ export class Documento {
     }
 
     private static buscarRegistro(idRegistro, registros) {
-        let data: any = registros.find(reg => reg.id === idRegistro);
-
-        if (!data) {
-            registros.forEach(reg => {
-                if (reg.hasSections) {
-                    data = this.buscarRegistro(idRegistro, reg.registros);
-                    if (data) {
-                        return data;
-                    }
-                }
-            });
+        const primerRegistro = registros[0];
+        if (primerRegistro.hasSections) {
+            const secciones: any[] = primerRegistro.registros.map(r => r.registros);
+            const registrosInteriores = secciones.reduce((acc, item) => [...acc, ...item], []);
+            return registrosInteriores.find(reg => reg.id === idRegistro);
+        } else {
+            return registros.find(reg => reg.id === idRegistro);
         }
-        return data;
     }
 
 
