@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
 import * as mime from 'mime-types';
-// import * as htmlPdf from 'html-pdf-chrome';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
@@ -14,7 +13,6 @@ import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
 import { env } from 'process';
 import * as rupStore from '../../../modules/rup/controllers/rupStore';
-
 import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
 let phantomjs = require('phantomjs-prebuilt-that-works');
 
@@ -56,7 +54,7 @@ export class Documento {
      *
      * @param idPrestacion string ObjectID válido
      */
-    private static getPrestacionData(idPrestacion) {
+    static getPrestacionData(idPrestacion) {
         return new Promise((resolve, reject) => {
             Prestacion.findById(idPrestacion, (err, prestacion: any) => {
                 if (err) {
@@ -182,10 +180,10 @@ export class Documento {
     static generarRegistroSolicitudHTML(plan: any, template: string): any {
         return template
             .replace('<!--plan-->', this.ucaseFirst(plan.concepto.term))
-            .replace('<!--motivo-->', plan.valor.solicitudPrestacion.motivo)
-            .replace('<!--indicaciones-->', plan.valor.solicitudPrestacion.indicaciones)
-            .replace('<!--organizacionDestino-->', (plan.valor.solicitudPrestacion.organizacionDestino ? plan.valor.solicitudPrestacion.organizacionDestino.nombre : ''))
-            .replace('<!--profesionalesDestino-->', plan.valor.solicitudPrestacion.profesionalesDestino ? plan.valor.solicitudPrestacion.profesionalesDestino.map(y => y.nombreCompleto).join(' ') : '');
+            .replace('<!--motivo-->', `<small>${plan.valor.solicitudPrestacion.motivo}</small>`)
+            .replace('<!--indicaciones-->', `<small>${plan.valor.solicitudPrestacion.indicaciones}</small>`)
+            .replace('<!--organizacionDestino-->', (plan.valor.solicitudPrestacion.organizacionDestino ? `<small>${plan.valor.solicitudPrestacion.organizacionDestino.nombre}</small>` : ''))
+            .replace('<!--profesionalesDestino-->', plan.valor.solicitudPrestacion.profesionalesDestino ? `<small>${plan.valor.solicitudPrestacion.profesionalesDestino.map(y => y.nombreCompleto).join(' ')}</small>` : '');
     }
 
     // 'procedimiento' || 'entidad observable' || 'régimen/tratamiento' || 'elemento de registro'
@@ -212,20 +210,23 @@ export class Documento {
         return template
             .replace('<!--concepto-->', proc.concepto.conceptId !== '716141001' ? this.ucaseFirst(proc.nombre) : (proc.concepto.term[0].toLocaleUpperCase() + proc.concepto.term.slice(1)))
             .replace('<!--valor-->', `: <small>${valor}</small>`)
-            // .replace('<!--valor-->', (proc.valor || this.getRegistros(proc)))
             .replace('<!--motivoPrincipalDeConsulta-->', proc.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
-
     }
 
     // 'procedimiento' || 'hallazgo' || 'trastorno'
     static generarRegistroHallazgoHTML(hallazgo: any, template: string): any {
         let evo = '';
-        if (hallazgo.valor && hallazgo.valor.evolucion) {
-            evo = ((hallazgo.valor.evolucion).replace('<p>', '')).replace('</p>', '');
+        let valor = '';
+        if (hallazgo.valor) {
+            if (hallazgo.valor.evolucion) {
+                evo = ((hallazgo.valor.evolucion).replace('<p>', '')).replace('</p>', '');
+            } else if (hallazgo.valor.label) {
+                valor = ': ' + ((hallazgo.valor.label).replace('<p>', '')).replace('</p>', '');
+            }
         }
         return template
-            .replace('<!--concepto-->', hallazgo.nombre ? hallazgo.nombre : this.ucaseFirst(hallazgo.concepto.term))
-            .replace('<!--evolucion-->', (hallazgo.valor && hallazgo.valor.evolucion) ? `<p>Evolución: <small>${evo}</small></p>` : ``)
+            .replace('<!--concepto-->', hallazgo.nombre ? hallazgo.nombre + `<small>${valor}</small>` : this.ucaseFirst(hallazgo.concepto.term) + `<small>${valor}</small>`)
+            .replace('<!--evolucion-->', (evo.length) ? `<p>Evolución: <small>${evo}</small></p>` : ``)
             .replace('<!--motivoPrincipalDeConsulta-->', hallazgo.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
     }
 
@@ -369,7 +370,7 @@ export class Documento {
                             } else if (this.esSolicitud(registros[i].concepto.semanticTag, registros[i].esSolicitud)) {
                                 this.informeRegistros = [...this.informeRegistros, ({
                                     concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag },
-                                    valor: `<div class="nivel-${this.nivelPadre}">${this.generarRegistroSolicitudHTML(registros[i], this.hallazgoTemplate)}</div>`
+                                    valor: `<div class="nivel-${this.nivelPadre}">${this.generarRegistroSolicitudHTML(registros[i], this.planTemplate)}</div>`
                                 })];
                             } else if (this.esProcedimiento(registros[i].concepto.semanticTag) && !this.esAdjunto(registros[i].concepto.conceptId)) {
                                 this.informeRegistros = [...this.informeRegistros, ({
@@ -426,6 +427,18 @@ export class Documento {
         return null;
     }
 
+    private static buscarRegistro(idRegistro, registros) {
+        const primerRegistro = registros[0];
+        if (primerRegistro.hasSections) {
+            const secciones: any[] = primerRegistro.registros.map(r => r.registros);
+            const registrosInteriores = secciones.reduce((acc, item) => [...acc, ...item], []);
+            return registrosInteriores.find(reg => reg.id === idRegistro);
+        } else {
+            return registros.find(reg => reg.id === idRegistro);
+        }
+    }
+
+
     private static async generarHTML(req) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -433,7 +446,7 @@ export class Documento {
                 // Prestación
                 let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
 
-                let registro: any = req.body.idRegistro ? prestacion.ejecucion.registros.find(y => y.id === req.body.idRegistro) : null;
+                let registro: any = req.body.idRegistro ? this.buscarRegistro(req.body.idRegistro, prestacion.ejecucion.registros) : null;
 
                 // Títulos default
                 let tituloFechaSolicitud = 'Fecha Solicitud';

@@ -1,9 +1,12 @@
 import * as express from 'express';
 import { Documento } from './../controller/descargas';
 import { Auth } from '../../../auth/auth.class';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { DocumentoCenso } from './../controller/descargaCenso';
 import { DocumentoCensoMensual } from './../controller/descargaCensoMensual';
 import { exportarInternaciones } from '../../../jobs/exportarInternaciones';
+import * as SendEmail from './../../../utils/roboSender/sendEmail';
+import * as configPrivate from './../../../config.private';
 import moment = require('moment');
 
 const router = express.Router();
@@ -59,6 +62,47 @@ router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
     }).catch(e => {
         return next(e);
     });
+});
+
+// envío de resumen de prestación por correo
+router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
+    const email = req.body.email;
+    const prestacion: any = await Documento.getPrestacionData(req.body.idPrestacion);
+    const handlebarsData = {
+        organizacion: prestacion.ejecucion.organizacion.nombre,
+        fechaInicio: prestacion.ejecucion.fecha,
+        tipoPrestacion: prestacion.solicitud.tipoPrestacion.term,
+        profesional: prestacion.solicitud.profesional
+    };
+    const idOrganizacion = req.body.idOrganizacion;
+    const org: any = await Organizacion.findById(idOrganizacion);
+    let emailFiltrado = null;
+    if (org && org.configuraciones && org.configuraciones.emails) {
+        emailFiltrado = org.configuraciones.emails.filter(x => x.email === email);
+    }
+    if (emailFiltrado) {
+        try {
+            const archivo = await Documento.descargar(req, res, next);
+            const html = await SendEmail.renderHTML('emails/email-informe.html', handlebarsData);
+            const data = {
+                from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
+                to: email,
+                subject: `Informe RUP ${moment(handlebarsData.fechaInicio).format('DD/MM/YYYY H:mm [hs]')}`,
+                text: '',
+                html,
+                attachments: {
+                    filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
+                    path: archivo
+                }
+            };
+            await SendEmail.sendMail(data);
+            res.json({ status: 'OK' });
+        } catch (e) {
+            next(e);
+        }
+    } else {
+        next('No es un correo válido para la organización');
+    }
 });
 
 
