@@ -357,10 +357,6 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 if (patientFound.estado === 'validado' && direccionOld.valor !== data.direccion[0].valor) {
                     controller.actualizarGeoReferencia(pacienteUpdated, req);
                 }
-            } else {
-                pacienteModificado._id = pacienteModificado.id;
-                let newPatient = await controller.createPaciente(pacienteModificado, req);
-                return res.json(newPatient);
             }
         } else {
             return res.json(resultado);
