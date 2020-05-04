@@ -310,7 +310,8 @@ export async function storeCenso(organizacion, unidadOrganizativa, censo, fecha)
             multi: true
         }
     );
-
+    const dateStart = moment(fecha).startOf('month').toDate();
+    const dateEnd = moment(fecha).endOf('month').toDate();
     return await Censo.update(
         {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),
@@ -323,8 +324,8 @@ export async function storeCenso(organizacion, unidadOrganizativa, censo, fecha)
             $setOnInsert: {
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
                 unidadOrganizativa,
-                start: moment(censo.fecha).subtract(1, 'month').startOf('month').toDate(),
-                end: moment(censo.fecha).subtract(1, 'month').endOf('month').toDate(),
+                start: dateStart,
+                end: dateEnd,
             }
         },
         {
