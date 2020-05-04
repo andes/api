@@ -1,6 +1,5 @@
 import { parentezcoSchema } from './parentesco';
 import * as mongoose from 'mongoose';
-import { Connections } from './../../../connections';
 import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
@@ -198,14 +197,6 @@ pacienteSchema.methods.basicos = function () {
     };
 };
 
-/* Creo un indice para fulltext Search */
-// pacienteSchema.index({
-//     '$**': 'text'
-// });
-
-// Habilitar plugin de auditoría
-
 pacienteSchema.plugin(AuditPlugin);
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
-export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');

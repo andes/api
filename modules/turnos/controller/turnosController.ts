@@ -374,12 +374,7 @@ export async function actualizarCarpeta(req: any, res: any, next: any, pacienteM
         } else {
             return next('El nÚmero de carpeta ya existe');
         }
-        let pacienteAndes: any;
-        if (pacienteMPI.db === 'mpi') {
-            pacienteAndes = new pacienteModel(pacienteMPI.paciente.toObject());
-        } else {
-            pacienteAndes = pacienteMPI.paciente;
-        }
+        let pacienteAndes = pacienteMPI.paciente;
         Auth.audit(pacienteAndes, req);
         await pacienteAndes.save();
     }

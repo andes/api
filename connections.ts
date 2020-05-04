@@ -12,7 +12,6 @@ function schemaDefaults(schema) {
 
 export class Connections {
     static main: mongoose.Connection;
-    static mpi: mongoose.Connection;
     static snomed: mongoose.Connection;
     static puco: mongoose.Connection;
 
@@ -38,7 +37,6 @@ export class Connections {
             // tslint:disable-next-line:no-console
             console.log('TESTING MODE');
             configPrivate.hosts.mongoDB_main.host = 'mongodb://localhost:27066/andes';
-            configPrivate.hosts.mongoDB_mpi.host = 'mongodb://localhost:27066/andes';
             configPrivate.hosts.mongoDB_snomed.host = 'mongodb://localhost:27066/andes';
             configPrivate.hosts.mongoDB_puco.host = 'mongodb://localhost:27066/andes';
             configPrivate.logDatabase.log.host = 'mongodb://localhost:27066/andes';
@@ -51,21 +49,17 @@ export class Connections {
         mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options);
         this.main = mongoose.connection;
 
-        // 2. MPI
-        this.mpi = mongoose.createConnection(configPrivate.hosts.mongoDB_mpi.host, configPrivate.hosts.mongoDB_mpi.options);
-
-        // 3. SNOMED
+        // 2. SNOMED
         this.snomed = mongoose.createConnection(configPrivate.hosts.mongoDB_snomed.host, configPrivate.hosts.mongoDB_snomed.options);
 
-        // 4. PUCO
+        // 3. PUCO
         this.puco = mongoose.createConnection(configPrivate.hosts.mongoDB_puco.host, configPrivate.hosts.mongoDB_puco.options);
 
-        // 5. LOGGER
+        // 4. LOGGER
         loggerConnections.initialize(configPrivate.logDatabase.log.host, configPrivate.logDatabase.log.options);
 
         // Configura eventos
         this.configEvents('main', this.main);
-        this.configEvents('mpi', this.mpi);
         this.configEvents('snomed', this.snomed);
         this.configEvents('puco', this.puco);
     }

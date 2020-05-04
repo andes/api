@@ -286,14 +286,6 @@ export const logKeys = {
         key: 'mpi:paciente:buscar',
         operacion: 'Buscar paciente'
     },
-    mpiUpdaterStart: {
-        key: 'mpi:mpiUpdater:start',
-        operacion: 'MPI updater start'
-    },
-    mpiUpdaterFinish: {
-        key: 'mpi:mpiUpdater:finish',
-        operacion: 'MPI updater finish'
-    },
     mpiAuditoriaSetActivo: {
         key: 'mpi:auditoria:setActivo',
         operacion: 'Activar/desactivar paciente'
@@ -313,10 +305,6 @@ export const logKeys = {
     elasticCheck1: {
         key: 'elastic:notFound:andes',
         operacion: 'Paciente en Andes no encontrado en elastic'
-    },
-    elasticCheck2: {
-        key: 'elastic:notFound:mpi',
-        operacion: 'paciente en MPI no encontrado en elastic'
     },
     elasticCheck3: {
         key: 'andes:notFound',

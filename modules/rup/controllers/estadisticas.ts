@@ -3,12 +3,24 @@ import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 import moment = require('moment');
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
-import { paciente as Paciente, pacienteMpi as PacienteMpi } from '../../../core/mpi/schemas/paciente';
+import { paciente as Paciente } from '../../../core/mpi/schemas/paciente';
 
 const ObjectId = mongoose.Types.ObjectId;
 
 export async function estadisticaDemografica(ids) {
     ids = ids.map(ObjectId);
+    const sub = {
+        $subtract: [
+            '$solicitud.fecha',
+            {
+                $cond: {
+                    if: { $eq: [{ $type: '$paciente.fechaNacimiento' }, 'string'] },
+                    then: { $dateFromString: { dateString: '$paciente.fechaNacimiento' } },
+                    else: '$paciente.fechaNacimiento'
+                }
+            }
+        ]
+    };
     const pipeline = [
         {
             $match: {
@@ -19,19 +31,7 @@ export async function estadisticaDemografica(ids) {
             $addFields: {
                 lastState: { $arrayElemAt: ['$estados', -1] },
                 'paciente.edad': {
-                    $divide: [{
-                        $subtract: [
-                            '$solicitud.fecha',
-                            {
-                                $cond: {
-                                    if: { $eq: [{ $type: '$paciente.fechaNacimiento' }, 'string'] },
-                                    then: { $dateFromString: { dateString: '$paciente.fechaNacimiento' } },
-                                    else: '$paciente.fechaNacimiento'
-                                }
-                            }
-                        ]
-                    },
-                        (365 * 24 * 60 * 60 * 1000)]
+                    $divide: [sub, (365 * 24 * 60 * 60 * 1000)]
                 }
             }
         },
@@ -73,9 +73,8 @@ export async function estadisticaDemografica(ids) {
     const { pacientes, demografia } = data[0];
     let idPacientes = pacientes.map(paciente => ObjectId(paciente._id));
 
-    const p1 = Paciente.find({ _id: { $in: idPacientes } }, { direccion: 1 });
-    const p2 = PacienteMpi.find({ _id: { $in: idPacientes } }, { direccion: 1 });
-    const [andes, mpi] = await Promise.all([p1, p2]);
+    const andes = await Paciente.find({ _id: { $in: idPacientes } }, { direccion: 1 });
+
 
     function getLocalidad(direccion) {
         if (direccion && direccion.ubicacion && direccion.ubicacion.localidad) {
@@ -86,8 +85,6 @@ export async function estadisticaDemografica(ids) {
 
     const ubicacionesPaciente = {};
     andes.forEach((paciente: any) => { ubicacionesPaciente[paciente._id] = getLocalidad(paciente.direccion[0]); });
-    mpi.forEach((paciente: any) => { ubicacionesPaciente[paciente._id] = getLocalidad(paciente.direccion[0]); });
-
     const respuesta = {};
 
     pacientes.forEach((paciente) => {
@@ -102,6 +99,18 @@ export async function estadisticaDemografica(ids) {
 }
 
 export async function dashboard(org, prestaciones, desde, hasta) {
+    const sub = {
+        $subtract: [
+            '$solicitud.fecha',
+            {
+                $cond: {
+                    if: { $eq: [{ $type: '$paciente.fechaNacimiento' }, 'string'] },
+                    then: { $dateFromString: { dateString: '$paciente.fechaNacimiento' } },
+                    else: '$paciente.fechaNacimiento'
+                }
+            }
+        ]
+    };
     const pipeline = [
         {
             $match: {
@@ -117,19 +126,7 @@ export async function dashboard(org, prestaciones, desde, hasta) {
             $addFields: {
                 lastState: { $arrayElemAt: ['$estados', -1] },
                 'paciente.edad': {
-                    $divide: [{
-                        $subtract: [
-                            '$solicitud.fecha',
-                            {
-                                $cond: {
-                                    if: { $eq: [{ $type: '$paciente.fechaNacimiento' }, 'string'] },
-                                    then: { $dateFromString: { dateString: '$paciente.fechaNacimiento' } },
-                                    else: '$paciente.fechaNacimiento'
-                                }
-                            }
-                        ]
-                    },
-                        (365 * 24 * 60 * 60 * 1000)]
+                    $divide: [sub, (365 * 24 * 60 * 60 * 1000)]
                 }
             }
         },
