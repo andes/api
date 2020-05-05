@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import * as constantes from '../schemas/constantes';
-import { SnomedConcept } from './../../../modules/rup/schemas/snomed-concept';
-import { NombreApellidoSchema } from './../../../core/tm/schemas/nombreApellido';
+import * as constantes from '../../../core/mpi/schemas/constantes';
+import { SnomedConcept } from '../../rup/schemas/snomed-concept';
+import { NombreApellidoSchema } from '../../../core/tm/schemas/nombreApellido';
 
 let schema = new mongoose.Schema();
 schema.add({

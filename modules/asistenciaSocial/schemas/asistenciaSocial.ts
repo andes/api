@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import * as constantes from '../schemas/constantes';
-import * as direccionSchema from '../../tm/schemas/direccion';
-import { NombreApellidoSchema } from './../../../core/tm/schemas/nombreApellido';
+import * as constantes from '../../../core/mpi/schemas/constantes';
+import * as direccionSchema from '../../../core/tm/schemas/direccion';
+import { NombreApellidoSchema } from '../../../core/tm/schemas/nombreApellido';
 let asistenciaSocialSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     paciente: {
