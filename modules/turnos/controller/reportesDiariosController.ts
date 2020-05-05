@@ -12,6 +12,8 @@ export async function getResumenDiarioMensual(params: any) {
     let firstDay = new Date(y, m, 1);
     let lastDay = new Date(y, m + 1, 1);
 
+    const dividirTurno = params['dividir'];
+
     pipeline = [
         {
             $match: {
@@ -55,7 +57,32 @@ export async function getResumenDiarioMensual(params: any) {
                             86400000
                         ]
                     }
-                }
+                },
+                tag: dividirTurno ? {
+                    $switch: {
+                        branches: [
+                            {
+                                case: {
+                                    $and: [
+                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 7] },
+                                        { $lt: [{ $hour: '$ejecucion.fecha' }, 13] }
+                                    ]
+                                },
+                                then: 'mañana'
+                            },
+                            {
+                                case: {
+                                    $and: [
+                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 13] },
+                                        { $lt: [{ $hour: '$ejecucion.fecha' }, 20] }
+                                    ]
+                                },
+                                then: 'tarde'
+                            },
+                        ],
+                        default: 'noche'
+                    }
+                } : 'total'
             }
         },
         {
@@ -63,6 +90,7 @@ export async function getResumenDiarioMensual(params: any) {
                 _id: {
                     dia: '$dia',
                     sexo: '$pacienteSexo',
+                    tag: '$tag',
                     edad: {
                         $switch: {
                             branches: [
@@ -130,7 +158,7 @@ export async function getResumenDiarioMensual(params: any) {
                     }
                 },
                 total: { $sum: 1 },
-                fecha: {$first: '$fecha'},
+                fecha: { $first: '$fecha'},
             }
         },
         {
@@ -138,6 +166,7 @@ export async function getResumenDiarioMensual(params: any) {
                 _id: 0,
                 fechaISO:  '$fecha',
                 fecha: { $dateToString: { format: '%d-%m-%G', date: '$fecha' } },
+                tag: '$_id.tag',
                 sexo: '$_id.sexo',
                 edad: '$_id.edad',
                 total: '$total'
@@ -146,14 +175,24 @@ export async function getResumenDiarioMensual(params: any) {
         {
             $sort: {
                 fechaISO: 1,
-                edad: 1
+                edad: 1,
+                tag: 1,
             }
         }
     ];
 
-    let data = await prestacionModel.aggregate(pipeline);
+    const data = await prestacionModel.aggregate(pipeline);
+    // console.log("DATA", data);
+    // formateamos la data por los tres turnos disponibles o por el total
+    const tags = dividirTurno ? ['mañana', 'tarde', 'noche'] : ['total'];
+    const formatedData = [];
 
-    let formatedData = formatData(data, y, m);
+    for (const tag of tags) {
+        formatedData.push({
+            tag,
+            data: formatData(data.filter(x => x.tag === tag), y, m)
+        });
+    }
 
     return formatedData;
 }
