@@ -197,43 +197,6 @@ export function suspenderTurno(req, data, turno) {
     }
 }
 
-
-function condificarUnturno(registro, codigoCie10, codificaciones) {
-    if (registro.esDiagnosticoPrincipal) {
-        codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
-            codificacionProfesional: {
-                snomed: {
-                    conceptId: registro.concepto.conceptId,
-                    term: registro.concepto.term,
-                    fsn: registro.concepto.fsn,
-                    semanticTag: registro.concepto.semanticTag,
-                    refsetIds: registro.concepto.refsetIds
-                },
-                cie10: codigoCie10
-            },
-            primeraVez: registro.esPrimeraVez,
-        });
-
-    } else {
-        codificaciones.push({
-            codificacionProfesional: {
-                snomed: {
-                    conceptId: registro.concepto.conceptId,
-                    term: registro.concepto.term,
-                    fsn: registro.concepto.fsn,
-                    semanticTag: registro.concepto.semanticTag,
-                    refsetIds: registro.concepto.refsetIds
-                },
-                cie10: codigoCie10
-            },
-            primeraVez: registro.esPrimeraVez
-        });
-    }
-
-    return codificaciones;
-
-}
-
 // Turno
 export function codificarTurno(req, data, tid) {
     return new Promise((resolve, reject) => {
