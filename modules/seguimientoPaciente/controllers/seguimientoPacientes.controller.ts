@@ -4,7 +4,7 @@ import { toArray } from '../../../utils/utils';
 
 export function buscarRegistros(dni, sexo) {
     
-    const query = seguimientoPacientes.aggregate([
+    const query =  seguimientoPacientes.aggregate([
         {
             $match: {
                 'paciente.documento': dni,
@@ -25,5 +25,5 @@ export function buscarRegistros(dni, sexo) {
  
     ]);
 
-    return toArray(query.cursor({}).exec());
+    return query;
 }

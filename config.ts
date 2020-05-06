@@ -210,7 +210,8 @@ export const modules = {
     seguimientoPaciente: {
         active: true,
         path: './modules/seguimientoPaciente/routes',
-        route: './modules/seguimientoPaciente'
+        route: './modules/seguimientoPaciente',
+        middleware: null
     }
 };
 

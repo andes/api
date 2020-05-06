@@ -8,7 +8,7 @@ import * as seguimientoPacientesController from '../controllers/seguimientoPacie
 
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+router.get('/registros', (req, res, next) => {
     console.log("llegue");
     if (!req.params.dni && !req.params.sexo) {
         return next('Debe ingresar un parámetro de búsqueda');
@@ -21,4 +21,4 @@ router.get('/', async (req, res, next) => {
         });
 });
 
-export = router; 
+module.exports = router;
