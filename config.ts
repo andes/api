@@ -206,6 +206,11 @@ export const modules = {
         active: true,
         path: './modules/georeferencia/routes',
         route: '/modules/georeferencia',
+    },
+    seguimientoPaciente: {
+        active: true,
+        path: './modules/seguimientoPaciente/routes',
+        route: './modules/seguimientoPaciente'
     }
 };
 

@@ -37,6 +37,6 @@ let seguimientoPacientesSchema = new mongoose.Schema({
 });
 
 
-export let seguimientoPacientes = mongoose.model('seguimientoPacientes', seguimientoPacientesSchema, 'seguimientoPacientes');
+export let seguimientoPacientes = mongoose.model('seguimientoPacientes', seguimientoPacientesSchema, 'pacienteAutoregistros');
 
 
