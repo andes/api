@@ -10,6 +10,7 @@ class PacienteAppResource extends ResourceBase {
     middlewares = [Auth.authenticate()];
     searchFileds = {
         documento: MongoQuery.partialString,
+        email: MongoQuery.partialString,
         search: (value) => {
             return {
                 $or: [
