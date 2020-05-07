@@ -8,8 +8,11 @@ import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
-import { matchSisa } from '../../../utils/servicioSisa';
-import { getServicioRenaper } from '../../../utils/servicioRenaper';
+import { sisa } from '@andes/fuentes-autenticas';
+import { sisa as sisaConfig } from '../../../config.private';
+import { renaper } from '@andes/fuentes-autenticas';
+import { RenaperConfig } from '../../../modules/fuentesAutenticas/interfaces';
+import { renaper as renaConfig } from '../../../config.private';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
@@ -694,24 +697,30 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     }
     let sexoQuery = sexoPaciente === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
+    const renaperConfig: RenaperConfig = {
+        usuario: renaConfig.usuario,
+        password: renaConfig.password,
+        url: renaConfig.url,
+        server: renaConfig.serv
+    };
 
     try {
-        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
+        resRenaper = await renaper({ documento: pacienteAndes.documento, sexo: sexoPaciente }, renaperConfig);
         if (pacienteAndes.id) {
             const weights = config.mpi.weightsDefault;
             let match = new Matching();
             let matchPacienteRena = {
                 documento: pacienteAndes.documento,
-                nombre: resRenaper.datos.nombres,
-                apellido: resRenaper.datos.apellido,
-                fechaNacimiento: resRenaper.datos.fechaNacimiento,
+                nombre: resRenaper.nombres,
+                apellido: resRenaper.apellido,
+                fechaNacimiento: resRenaper.fechaNacimiento,
                 sexo: sexoQuery
             };
             let valorMatching = match.matchPersonas(pacienteAndes, matchPacienteRena, weights, config.algoritmo);
-            resRenaper.datos.matching = valorMatching;
-            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper.datos, pacienteAndes);
+            resRenaper.matching = valorMatching;
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper, pacienteAndes);
         } else {
-            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper.datos, null);
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper, null);
         }
     } catch (error) {
         andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
@@ -719,8 +728,8 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     }
     let band = true;
     // Respuesta correcta de renaper?
-    if (resRenaper && resRenaper.datos && resRenaper.datos.nroError === 0) {
-        let pacienteRenaper = resRenaper.datos;
+    if (resRenaper && resRenaper && resRenaper.nroError === 0) {
+        let pacienteRenaper = resRenaper;
 
         if (pacienteAndes.direccion.length) {
             pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
@@ -795,12 +804,12 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
 
         pacienteAndes.sexo = sexoPaciente;
-        let resSisa: any = await matchSisa(pacienteAndes);
+        let resSisa: any = await sisa({ documento: pacienteAndes.documento, sexo: sexoPaciente }, sisaConfig);
         andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resSisa);
 
-        pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
-        pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
-        pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
+        pacienteAndes.nombre = resSisa.nombre;
+        pacienteAndes.apellido = resSisa.apellido;
+        pacienteAndes.fechaNacimiento = resSisa.fechaNacimiento;
         pacienteAndes.estado = 'validado';
         if (foto) {
             pacienteAndes.foto = foto;

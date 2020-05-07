@@ -15,7 +15,7 @@ function getEnv(key, _default, type = 's') {
 
 // Configuracion servicio RENAPER
 export const renaper = {
-    Usuario: getEnv('RENAPER_USERNAME', ''),
+    usuario: getEnv('RENAPER_USERNAME', ''),
     password: getEnv('RENAPER_PASSWORD', ''),
     url: getEnv('RENAPER_URL', ''),
     serv: getEnv('RENAPER_SRV', '')

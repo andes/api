@@ -1,9 +1,13 @@
 import { userScheduler } from '../../../config.private';
 import { paciente } from '../schemas/paciente';
-import { matchSisa } from '../../../utils/servicioSisa';
 import { updatePaciente } from './paciente';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
+import { sisa } from '@andes/fuentes-autenticas';
+import { sisa as sisaConfig } from '../../../config.private';
+import * as config from '../../../config';
+import { Matching } from '@andes/match';
+import moment = require('moment');
 
 let logRequest = {
     ip: userScheduler.ip,
@@ -42,16 +46,29 @@ export async function mpiCorrector(done) {
 
 async function consultarSisa(persona: any) {
     try {
-        // realiza la consulta con sisa y devuelve los resultados del matcheo
-        const resultado = await matchSisa(persona);
-        if (resultado) {
-            const match = resultado['matcheos'].matcheo; // Valor del matcheo de sisa
-            const pacienteSisa: any = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
-            logRequest.body = { _id: persona.id };
-            if (match >= 95) {
-                // Solo lo validamos con sisa si entra por aca
-                const datosAnteriores = { nombre: persona.nombre.toString(), apellido: persona.apellido.toString() };
-                const nuevosDatos = { nombre: pacienteSisa.nombre, apellido: pacienteSisa.apellido };
+        const pacienteSisa = await sisa(persona, sisaConfig);
+
+        if (pacienteSisa) {
+            const pacSisa: any = {
+                documento: pacienteSisa.nroDocumento,
+                nombre: pacienteSisa.nombre,
+                apellido: pacienteSisa.apellido,
+                fechaNacimiento: moment(pacienteSisa.fechaNacimiento, 'YYYY-MM-DD'),
+                sexo: (pacienteSisa.sexo === 'M') ? 'masculino' : 'femenino'
+            };
+            const pacPersona: any = {
+                documento: persona.documento,
+                nombre: persona.nombre,
+                apellido: persona.apellido,
+                fechaNacimiento: moment(persona.fechaNacimiento, 'YYYY-MM-DD'),
+                sexo: persona.sexo
+            };
+            let match = new Matching();
+            const weights = config.mpi.weightsDefault;
+            const valorMatching = match.matchPersonas(pacPersona, pacSisa, weights, config.algoritmo); // Valor del matcheo de sisa
+
+            if (valorMatching >= 0.95) {
+                // Solo lo validamos con sisa si entra por aquí
                 await actualizarPaciente(persona, pacienteSisa);
                 await andesLog(logRequest, logKeys.mpiCorrector.key, persona.id, logKeys.mpiCorrector.operacion, nuevosDatos, datosAnteriores);
                 return true;
