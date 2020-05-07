@@ -301,3 +301,45 @@ export async function changeTime({ organizacion, capa, ambito }: InternacionConf
     const valid = await CamasEstadosController.store({ organizacion: organizacion._id, capa, ambito, cama }, myMov, req);
     return valid;
 }
+
+/**
+ * Chequea la integridad de los estados de las camas.
+ */
+export async function integrityCheck({ organizacion, capa, ambito }: InternacionConfig, { cama, from, to }) {
+    let res = [];
+    let start = from || moment('1900-01-01').toDate();
+    let end = to || moment().toDate();
+    if (start.getTime() > end.getTime()) {
+        const aux = start;
+        start = end;
+        end = aux;
+    }
+
+    const allMovements = await CamasEstadosController.searchEstados({ desde: start, hasta: end, organizacion: organizacion._id, capa, ambito }, { cama });
+    const groupedMovements = Object.entries(groupBy(allMovements, 'idCama'));
+    const maquinaEstado = await EstadosCtr.encontrar(organizacion._id, ambito, capa);
+
+    groupedMovements.map( async ([idCama, movementsCama]: [string, ICama[]]) => {
+        movementsCama.slice(1).map(async (movement, index) => {
+            if (movement.esMovimiento) {
+                let cambioPermitido = false;
+                if (movementsCama[index].estado !== 'ocupada' && movement.estado !== 'ocupada') {
+                    cambioPermitido = await maquinaEstado.check(movementsCama[index].estado, movement.estado);
+                }
+
+                if (!cambioPermitido) {
+                    res.push({ source: movementsCama[index], target: movement });
+                }
+            }
+        });
+    });
+
+    return res;
+}
+
+function groupBy(xs: any[], key: string) {
+    return xs.reduce((rv, x) => {
+        (rv[x[key]] = rv[x[key]] || []).push(x);
+        return rv;
+    }, {});
+}

@@ -10,6 +10,7 @@ import * as CamasEstadosController from './cama-estados.controller';
 import { EstadosCtr } from './estados.routes';
 import { Auth } from '../../../auth/auth.class';
 import { patch as patchEstados } from './cama-estados.controller';
+import { integrityCheck as checkIntegridad } from './camas.controller';
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
@@ -23,6 +24,7 @@ let organizacion: any;
 beforeAll(async () => {
     mongoServer = new MongoMemoryServer();
     const mongoUri = await mongoServer.getConnectionString();
+    // const mongoUri = 'mongodb://localhost:27017/andes';
     mongoose.connect(mongoUri);
 });
 
@@ -88,7 +90,6 @@ function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
 }
 
 describe('Internacion - camas', () => {
-
     beforeEach(async () => {
         await Camas.remove({});
         await CamaEstados.remove({});
@@ -333,6 +334,80 @@ describe('Internacion - camas', () => {
 
     });
 
+    test('Fallo de integridad en cama', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
+            ambito: 'internacion',
+            capa: 'estadistica',
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        // OCUPA LA CAMA
+        const fechaIngreso = moment().add(2, 'm').toDate();
+        await patch({
+            id: cama._id,
+            ambito: 'internacion',
+            capa: 'estadistica',
+            estado: 'ocupada',
+            fecha: fechaIngreso,
+            organizacion: {
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'HOSPITAL NEUQUEN'
+            },
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
+            },
+            idInternacion: '57f67a7ad86d9f64130a138d',
+            esMovimiento: true
+        }, REQMock);
+
+        // INACTIVA LA CAMA ANTES DE OCUPARLA
+        await patch({
+            id: cama._id,
+            ambito: 'internacion',
+            capa: 'estadistica',
+            estado: 'inactiva',
+            fecha: moment().add(1, 'm').toDate(),
+            organizacion: {
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'HOSPITAL NEUQUEN'
+            },
+            esMovimiento: true
+        }, REQMock);
+
+        const integrity = await checkIntegridad(
+            {
+                organizacion: { _id: '57f67a7ad86d9f64130a138d', nombre: 'HOSPITAL NEUQUEN' },
+                ambito: 'internacion',
+                capa: 'estadistica'
+            },
+            {
+                cama: null,
+                from: null,
+                to: moment().add(4, 'y').toDate()
+            }
+        );
+
+        expect(integrity.length).toBe(1);
+        expect(integrity[0].source.estado).toBe('inactiva');
+        expect(integrity[0].target.estado).toBe('ocupada');
+    });
 });
 
 function estadoOcupada() {
