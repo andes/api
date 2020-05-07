@@ -22,19 +22,4 @@ router.get('/organizacionesCache', (req, res, next) => {
     });
 });
 
-// router.post('/organizacionesCache', function (req, res, next) {
-
-//     let options = {
-//         ...(req.body.provincia) && { 'provincia': req.body.provincia },
-//         ...(req.body.dependencia) && { 'dependencia': req.body.dependencia },
-//         ...(req.body.origenDeFinanciamiento) && { 'origenDeFinanciamiento': req.body.origenDeFinanciamiento }
-//     };
-
-//     /**
-//      * Esto era para el scheduler, en lanin no lo necesitamos
-//      */
-//     // servicioSisa.getOrganizacionesSisa(configPrivate.sisa.username, configPrivate.sisa.password, options);
-
-// });
-
 export = router;
