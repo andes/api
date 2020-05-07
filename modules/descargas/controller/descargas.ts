@@ -503,9 +503,12 @@ export class Documento {
                             tituloInforme = '';
                         }
 
+                    } else if (registro) {
+                        const term = registro.concepto.term;
+                        tipoPrestacion = this.ucaseFirst(term);
                     } else {
                         // Si tiene un hijo directo, usamos su nombre como título de la consulta
-                        tipoPrestacion = prestacion.solicitud.tipoPrestacion.term[0].toUpperCase() + prestacion.solicitud.tipoPrestacion.term.slice(1);
+                        tipoPrestacion = this.ucaseFirst(prestacion.solicitud.tipoPrestacion.term);
                     }
 
                     // Existe configuración de PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL?
