@@ -127,4 +127,5 @@ export function initAPI(app: Express) {
 
     app.use('/api/modules/mobileApp', SendMessageCacheRouter);
     app.use('/api/modules/mobileApp', PacienteAppRouter);
+    app.use('/api/core/mpi', require('./core/mpi').ParentescoRouter);
 }
