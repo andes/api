@@ -82,6 +82,8 @@ export function initAPI(app: Express) {
             proxy(configPrivate.hosts.BI_QUERY)
         );
     }
+    app.use('/api/modules/turnos', require('./modules/turnos').InstitucionRouter);
+
 
     /**
      * Inicializa las rutas para adjuntar archivos

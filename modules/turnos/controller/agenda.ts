@@ -409,7 +409,10 @@ export function editarAgenda(req, data) {
     if (req.body.profesional) {
         data.profesionales = req.body.profesional;
     }
+    // Para que setee el atributo en null segun corresponda
     data.espacioFisico = req.body.espacioFisico;
+    data.otroEspacioFisico = req.body.otroEspacioFisico;
+
 }
 
 // Agenda
