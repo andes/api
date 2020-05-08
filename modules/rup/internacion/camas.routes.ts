@@ -6,7 +6,18 @@ import moment = require('moment');
 
 const router = express.Router();
 
-router.get('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
+const capaMiddleware = (req: Request, res: Response, next: express.NextFunction) => {
+    if (req.query?.capa && req.query.capa !== 'estadistica') {
+        req.query.capa = 'medica';
+    }
+    if (req.body?.capa && req.body.capa !== 'estadistica') {
+        req.body.capa = 'medica';
+    }
+    next();
+};
+
+
+router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -17,7 +28,7 @@ router.get('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res:
     res.json(result);
 }));
 
-router.get('/camas/historial', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+router.get('/camas/historial', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = Auth.getOrganization(req);
     const ambito = req.query.ambito;
     const capa = req.query.capa;
@@ -41,7 +52,7 @@ router.get('/lista-espera', Auth.authenticate(), asyncHandler(async (req: Reques
     return res.json(listaEspera);
 }));
 
-router.get('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+router.get('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -69,7 +80,8 @@ router.post('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res
     res.json(result);
 }));
 
-router.patch('/camas/changeTime/:id', Auth.authenticate(), async (req, res, next) => {
+// Solo estadistico por ahora!
+router.patch('/camas/changeTime/:id', Auth.authenticate(), capaMiddleware, async (req, res, next) => {
     try {
         const organizacion = {
             _id: Auth.getOrganization(req),
@@ -107,7 +119,7 @@ router.patch('/camas/changeTime/:id', Auth.authenticate(), async (req, res, next
     }
 });
 
-router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -126,6 +138,9 @@ router.patch('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request
 }));
 
 router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
+    if (req.body.capa !== 'estaditica' && req.body.capa !== 'medica') {
+        return res.json({ status: true });
+    }
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -138,7 +153,7 @@ router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Reques
 
     const result = await CamasController.patch(data, req);
 
-    res.json(result);
+    return res.json(result);
 }));
 
 export const CamasRouter = router;
