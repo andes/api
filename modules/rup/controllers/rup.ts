@@ -1,4 +1,6 @@
 import * as mongoose from 'mongoose';
+import * as moment from 'moment';
+import { model as Prestacion } from '../schemas/prestacion';
 
 /**
  * Función recursiva que permite recorrer un objeto y todas sus propiedades
@@ -79,6 +81,38 @@ export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
 
     return data;
 }
+
+export async function getPrestaciones(paciente, { estado = 'validada', desde = null, hasta = null }) {
+    const query = {
+        'paciente.id': paciente._id,
+        $where: `this.estados[this.estados.length - 1].tipo ==  "${estado}"`
+    };
+    if (desde || hasta) {
+        query['ejecucion.fecha'] = {};
+        if (desde) {
+            query['ejecucion.fecha']['$gte'] = moment(desde).startOf('day').toDate();
+        }
+        if (hasta) {
+            query['ejecucion.fecha']['$lte'] = moment(hasta).endOf('day').toDate();
+        }
+    }
+
+    return await Prestacion.find(query);
+}
+
+export function filtrarRegistros(prestaciones: any[], { semanticTags }) {
+    let registros = [];
+    prestaciones.forEach(prestacion => {
+        const regis = prestacion.ejecucion.registros.filter(registro => {
+            const semTag = registro.concepto.semanticTag;
+            return semanticTags.find(el => el === semTag);
+        });
+        registros = [...registros, ...regis];
+    });
+    return registros;
+}
+
+
 
 /**
  * Método recursivo que busca los conceptos enviados por parametro
