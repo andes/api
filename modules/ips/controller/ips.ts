@@ -42,15 +42,13 @@ export async function getPaciente(cliente: SaludDigitalClient, pacienteID) {
 export async function getDocumentReference(pacienteID) {
     const { db, paciente } = await buscarPaciente(pacienteID);
     if (paciente) {
-        const organizacion = await Organizacion.findOne({ 'codigo.sisa': 0 });
+        const organizacion = await Organizacion.findOne({ 'codigo.sisa': "0" });
         const FHIRDevice = Device.encode();
         const FHIRCustodian = Organization.encode(organizacion);
         const FHIRPatient = Patient.encode(paciente);
         const binaryURL = `${hosts.main}/api/connect/fhir/Binary/${pacienteID}`;
         const documentReferenceID = String(new Types.ObjectId());
-
         const docRefFHIR = DocumentReference.encode(documentReferenceID, FHIRDevice, FHIRCustodian, FHIRPatient, binaryURL);
-
         const BundleID = String(new Types.ObjectId());
         const FHIRBundle = Bundle.encode(BundleID, [
             createResource(docRefFHIR),

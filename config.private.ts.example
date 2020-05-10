@@ -298,7 +298,7 @@ export const mobileExpiredVersion = '100';
 export const urlDatosGestion = '';
 
 export const FHIR = {
-    domain: getEnv('FHIR_DOMAIN', `http://neuquen.gob.ar`),
+    domain: getEnv('FHIR_DOMAIN', 'http://app.andes.gob.ar'),
     ips_host: getEnv('IPS_HOST', 'https://testapp.hospitalitaliano.org.ar'),
     secret: getEnv('IPS_SECRET', ``)
 };
