@@ -39,7 +39,7 @@ export async function getPaciente(cliente: SaludDigitalClient, pacienteID) {
     }
 }
 
-export async function genDocumentReference(pacienteID) {
+export async function getDocumentReference(pacienteID) {
     const { db, paciente } = await buscarPaciente(pacienteID);
     if (paciente) {
         const organizacion = await Organizacion.findOne({ 'codigo.sisa': 0 });

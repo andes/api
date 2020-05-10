@@ -9,18 +9,19 @@ const weights = {
 };
 
 export function getVacunas(paciente) {
-    const conditions = {};
-    conditions['documento'] = paciente.documento;
+    const conditions = {
+        documento: paciente.documento
+    };
     const sort = { fechaAplicacion: -1 };
 
     return new Promise((resolve, reject) => {
 
-        vacunasApi.find(conditions).sort(sort).exec( (err, resultados)  => {
+        vacunasApi.find(conditions).sort(sort).exec((err, resultados) => {
             if (!resultados || err) {
                 return reject(err);
             }
 
-            resultados.forEach( (vacuna: any, index) => {
+            resultados.forEach((vacuna: any, index) => {
 
                 const pacienteVacuna = {
                     nombre: vacuna.nombre,

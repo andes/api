@@ -206,6 +206,11 @@ export const modules = {
         active: true,
         path: './modules/georeferencia/routes',
         route: '/modules/georeferencia',
+    },
+    ips: {
+        active: true,
+        path: './modules/ips/routes',
+        route: '/modules/ips'
     }
 };
 

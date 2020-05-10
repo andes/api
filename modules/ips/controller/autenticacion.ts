@@ -137,6 +137,7 @@ export class SaludDigitalClient {
     async solicitud({ custodian = null, fechaDesde = null, fechaHasta = null, patient, loinc }) {
         // let url = `${this.host}/fhir/DocumentReference?subject:identifier=${this.dominio}|${patient}&class=https://loinc.org/|${loinc}`;
         let url = 'https://demo5647849.mockable.io/repositorio-documentos/fhir/DocumentReference%3Fsubject:Patient.identifier=http://www.hospitalitaliano.org.ar%7C540153&class=https://loinc.org/%7C60591-5';
+
         if (custodian) {
             url += `&custodian=${custodian}`;
         }

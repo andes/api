@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export let schema = new mongoose.Schema({
+    idVacuna: Number,
     documento: String,
     apellido: String,
     nombre: String,
