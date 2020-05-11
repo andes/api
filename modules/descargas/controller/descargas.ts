@@ -427,7 +427,7 @@ export class Documento {
         return null;
     }
 
-    private static buscarRegistro(idRegistro, registros) {
+    static buscarRegistro(idRegistro, registros) {
         const primerRegistro = registros[0];
         if (primerRegistro.hasSections) {
             const secciones: any[] = primerRegistro.registros.map(r => r.registros);

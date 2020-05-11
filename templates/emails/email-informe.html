@@ -129,8 +129,7 @@
                                     width:100%;
                                     text-align:right;
                                     padding-top:12px;">
-                                <!-- [TODO] Mostrar el ambito de la prestacion (prestacion.solicitud.ambitoOrigen) -->
-                                RUP / Registro Universal de Prestaciones</span>
+                                RUP / {{procesoProcedencia}}</span>
                         </td>
                     </tr>
                     <tr>
@@ -145,19 +144,24 @@
 
                             <div class="body-text"
                                  style="font-family:Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;text-align:left;color:#333333">
-                                <b>{{organizacion}}</b><br>
-                                <b>Fecha y hora:</b> {{datetime fechaInicio}}<br>
-                                <b>Tipo de Prestación:</b> {{tipoPrestacion}}<br>
 
+                                <b>{{organizacion}}</b><br>
+
+                                <b>Fecha y hora:</b> {{datetime fechaInicio}}<br>
+                                <b>Tipo de Prestacion:</b> {{procedimiento}}<br>
                                 {{#with profesional}}
                                 <b>Profesional:</b> {{apellido}}, {{nombre}}
-                                {{/with}}
+                                {{/with}} <br>
+                                {{#with paciente}}
+                                <b>Paciente:</b> {{apellido}} {{nombre}}
+                                {{#if documento }}
+                                <b>| Documento:</b> {{documento}}
+                                {{/if}}
+                                {{/with}} <br>
                                 <br><br>
 
                                 <br><br>
 
-
-                                <!-- [TODO] agregar datos del paciente apellio nombre (documento) -->
                             </div>
 
                         </td>
