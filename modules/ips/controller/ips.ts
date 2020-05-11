@@ -46,15 +46,16 @@ export async function getDocumentReference(pacienteID) {
         const FHIRDevice = Device.encode();
         const FHIRCustodian = Organization.encode(organizacion);
         const FHIRPatient = Patient.encode(paciente);
-        const binaryURL = `${hosts.main}/api/connect/fhir/Binary/${pacienteID}`;
+        const binaryURL = `${hosts.main}/api/modules/ips/fhir/binary/${pacienteID}`;
         const documentReferenceID = String(new Types.ObjectId());
         const docRefFHIR = DocumentReference.encode(documentReferenceID, FHIRDevice, FHIRCustodian, FHIRPatient, binaryURL);
         const BundleID = String(new Types.ObjectId());
         const FHIRBundle = Bundle.encode(BundleID, [
-            createResource(docRefFHIR),
-            createResource(FHIRPatient),
-            createResource(FHIRDevice),
-            createResource(FHIRCustodian)
+            createResource(docRefFHIR)
+            // Por ahora esto no va, solo documentReference --> By Hugo Fernández
+            //  createResource(FHIRPatient),
+            //  createResource(FHIRDevice),
+            //  createResource(FHIRCustodian)
         ]);
 
         return FHIRBundle;
@@ -71,8 +72,8 @@ export async function IPS(pacienteID) {
         const semanticTags = ['trastorno', /* 'hallazgo', 'evento', 'situacion' */]; // [TODO] Revisar listado de semtags
         const registros: any = filtrarRegistros(prestaciones, { semanticTags });
         const vacunas: any = await getVacunas(paciente);
-
         // Armar documento
+
         const FHIRPatient = Patient.encode(paciente);
         const FHIRDevice = Device.encode(); // [TODO] ver que hacer
         const FHIRCustodian = Organization.encode(organizacion);

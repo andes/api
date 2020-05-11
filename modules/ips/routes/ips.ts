@@ -21,11 +21,16 @@ router.get('/fhir/documentReference/', async (req, res, next) => {
     }
 });
 
-router.get('/fhir/binary/', async (req, res, next) => {
+router.get('/fhir/Binary/:id', async (req, res, next) => {
     try {
-        // to do: Deberia generar el ips 
-        const binary = null;
-        return res.json(binary);
+        // verify token ips
+        const patientID = req.params.id;
+        if (patientID) {
+            const binary = await IPS(patientID);
+            return res.json(binary);
+        } else {
+            return null;
+        }
     } catch (err) {
         return next(err);
     }
