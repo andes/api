@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { Auth } from '../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
-import { sisa } from '@andes/fuentes-autenticas';
+import { sisa, sisaToAndes } from '@andes/fuentes-autenticas';
 import { sisa as sisaConfig } from '../../../config.private';
 
 const router = express.Router();
@@ -13,7 +13,7 @@ router.get('/sisa', async (req, res, next) => {
     if (req.query) {
         const paciente = req.query;
         try {
-            const pacienteSisa = await sisa(paciente, sisaConfig);
+            const pacienteSisa = await sisa(paciente, sisaConfig, sisaToAndes);
             res.json(pacienteSisa);
             Logger.log(req, 'fa_sisa', 'validar', {
                 resultado: pacienteSisa

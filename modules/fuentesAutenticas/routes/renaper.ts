@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { Auth } from '../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
-import { renaper } from '@andes/fuentes-autenticas';
+import { renaper, renaperToAndes } from '@andes/fuentes-autenticas';
 import { RenaperConfig } from '../interfaces';
 import { renaper as renaConfig } from '../../../config.private';
 
@@ -15,12 +15,12 @@ router.get('/renaper', async (req: any, res, next) => {
         const paciente = req.query;
         try {
             const renaperConfig: RenaperConfig = {
-                usuario: renaConfig.usuario,
+                usuario: renaConfig.Usuario,
                 password: renaConfig.password,
                 url: renaConfig.url,
                 server: renaConfig.serv
             };
-            const resultado: any = await renaper(paciente, renaperConfig);
+            const resultado: any = await renaper(paciente, renaperConfig, renaperToAndes);
             // Logueamos la operación de búsqueda en la colección.
             Logger.log(req, 'fa_renaper', 'validar', {
                 data: resultado

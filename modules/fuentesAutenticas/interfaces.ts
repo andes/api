@@ -1,6 +1,6 @@
 export interface RenaperConfig {
     url: string;
-    usuario: String;
-    password: String;
+    usuario: string;
+    password: string;
     server: string;
 }

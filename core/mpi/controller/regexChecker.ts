@@ -4,7 +4,7 @@ import { paciente } from '../schemas/paciente';
 import { userScheduler } from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
-import { sisa } from '@andes/fuentes-autenticas';
+import { sisa, sisaToAndes } from '@andes/fuentes-autenticas';
 import { sisa as sisaConfig } from '../../../config.private';
 import { log } from '@andes/log';
 import { logKeys } from './../../../config';
@@ -27,24 +27,10 @@ export async function regexChecker(done) {
         await cursor.eachAsync(async (pac: any) => {
             const pacienteOld = pac;
             countPacienteError = countPacienteError + 1;
-            let pacienteSisa: any = await sisa(pac, sisaConfig);
-            const pacSisa: any = {
-                documento: pacienteSisa.nroDocumento,
-                nombre: pacienteSisa.nombre,
-                apellido: pacienteSisa.apellido,
-                fechaNacimiento: moment(pacienteSisa.fechaNacimiento, 'YYYY-MM-DD'),
-                sexo: (pacienteSisa.sexo === 'M') ? 'masculino' : 'femenino'
-            };
-            const pacOld: any = {
-                documento: pac.documento,
-                nombre: pac.nombre,
-                apellido: pac.apellido,
-                fechaNacimiento: moment(pac.fechaNacimiento, 'YYYY-MM-DD'),
-                sexo: pac.sexo
-            };
+            let pacienteSisa: any = await sisa(pac, sisaConfig, sisaToAndes);
             let match = new Matching();
             const weights = config.mpi.weightsDefault;
-            const porcentajeMatcheo: number = match.matchPersonas(pacOld, pacSisa, weights, config.algoritmo);
+            const porcentajeMatcheo: number = match.matchPersonas(pacienteOld, pacienteSisa, weights, config.algoritmo);
 
             if (porcentajeMatcheo < 0.95) {
                 pac.estado = 'temporal';
