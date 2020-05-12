@@ -324,7 +324,7 @@ export async function integrityCheck({ organizacion, capa, ambito }: Internacion
         movementsCama.slice(1).map(async (movement, index) => {
             if (movement.esMovimiento) {
                 let cambioPermitido = false;
-                if (movementsCama[index].estado !== 'ocupada' && movement.estado !== 'ocupada') {
+                if (movementsCama[index].estado !== 'ocupada' || movement.estado !== 'ocupada') {
                     cambioPermitido = await maquinaEstado.check(movementsCama[index].estado, movement.estado);
                 }
 
