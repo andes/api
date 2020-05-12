@@ -63,7 +63,7 @@ export const modules = {
         path: './core/mpi/routes',
         route: '/core/mpi',
         // TODO activar middleware de autenticación
-        //   middleware: appMiddleware
+        middleware: appMiddleware
     },
     auditoria: {
         active: true,
@@ -87,13 +87,13 @@ export const modules = {
         active: true,
         path: './modules/rup/routes',
         route: '/modules/rup',
-        //  middleware: appMiddleware
+        middleware: appMiddleware
     },
     auditorias: { // Auditorías RUP (prestacionPaciente)
         active: true,
         path: './modules/auditorias/routes',
         route: '/modules/auditorias',
-        //    middleware: appMiddleware
+        middleware: appMiddleware
     },
     turnos_mobile_auth: {
         active: true,
@@ -129,7 +129,7 @@ export const modules = {
         active: true,
         path: './connect/fhir/routes',
         route: '/connect/fhir',
-        //    middleware: appMiddleware
+        middleware: appMiddleware
     },
     cda: {
         active: true,
@@ -194,7 +194,7 @@ export const modules = {
         active: true,
         path: './modules/vacunas/routes',
         route: '/modules/vacunas',
-        //  middleware: appMiddleware
+        middleware: appMiddleware
     },
     geonode: {
         active: true,
