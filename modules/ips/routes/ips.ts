@@ -21,7 +21,7 @@ router.get('/fhir/documentReference/', async (req, res, next) => {
     }
 });
 
-router.get('/fhir/Binary/:id', async (req, res, next) => {
+router.get('/fhir/Bundle/:id', async (req, res, next) => {
     try {
         // verify token ips
         const patientID = req.params.id;

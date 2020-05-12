@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export let schema = new mongoose.Schema({
-    idVacuna: Number,
+    idvacuna: Number,
     documento: String,
     apellido: String,
     nombre: String,

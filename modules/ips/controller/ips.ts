@@ -46,7 +46,7 @@ export async function getDocumentReference(pacienteID) {
         const FHIRDevice = Device.encode();
         const FHIRCustodian = Organization.encode(organizacion);
         const FHIRPatient = Patient.encode(paciente);
-        const binaryURL = `${hosts.main}/api/modules/ips/fhir/binary/${pacienteID}`;
+        const binaryURL = `${hosts.main}/api/modules/ips/fhir/Bundle/${pacienteID}`;
         const documentReferenceID = String(new Types.ObjectId());
         const docRefFHIR = DocumentReference.encode(documentReferenceID, FHIRDevice, FHIRCustodian, FHIRPatient, binaryURL);
         const BundleID = String(new Types.ObjectId());
