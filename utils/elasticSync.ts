@@ -14,37 +14,24 @@ export class ElasticSync {
         });
     }
 
-    public sync(paciente) {
+    public async sync(paciente) {
         const nuevoPac = JSON.parse(JSON.stringify(paciente));
         delete nuevoPac._id;
         delete nuevoPac.relaciones;
         delete nuevoPac.direccion;
-        return this._sync(paciente._id.toString(), nuevoPac);
+        return await this._sync(paciente._id.toString(), nuevoPac);
     }
 
-    private _sync(id, data) {
-        return new Promise((resolve, reject) => {
-            this.search({
-                q: '_id:' + id
-            }).then((body) => {
-                const hits = body.hits.hits;
-                if (hits.length > 0) {
-                    this.update(id, data).then(() => {
-                        resolve(true);
-                    }).catch((error) => {
-                        reject(error);
-                    });
-                } else {
-                    this.create(id, data).then(() => {
-                        resolve(false);
-                    }).catch((error) => {
-                        reject(error);
-                    });
-                }
-            }).catch((error) => {
-                reject(error);
-            });
+    private async _sync(id, data) {
+        const body = await this.search({
+            q: '_id:' + id
         });
+        const hits = body.hits.hits;
+        if (hits.length > 0) {
+            return await this.update(id, data);
+        } else {
+            return await this.create(id, data);
+        }
     }
 
     public search(query) {
@@ -93,51 +80,41 @@ export class ElasticSync {
         return this.connElastic.search(searchObj);
     }
 
-    public create(id, data) {
-        return new Promise((resolve, reject) => {
-            this.connElastic.create({
+    public async create(id, data) {
+        const created = await this.connElastic.create({
+            index: this.INDEX,
+            type: this.TYPE,
+            id,
+            body: data,
+
+        });
+        return created;
+    }
+
+
+    public async update(id, data) {
+        try {
+            return await this.connElastic.index({
                 index: this.INDEX,
                 type: this.TYPE,
                 id,
                 body: data
-            }, (error, response) => {
-                if (error) {
-                    reject(error);
-                }
-                resolve(true);
             });
-        });
+        } catch (error) {
+            // tslint:disable-next-line:no-console
+            console.error(error);
+        }
     }
 
+    public async delete(id) {
 
-    public update(id, data) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                await this.delete(id);
-                await this.create(id, data);
-                resolve();
-            } catch (error) {
-                // tslint:disable-next-line:no-console
-                console.error(error);
-                reject(error);
-            }
+        await this.connElastic.delete({
+            index: this.INDEX,
+            type: this.TYPE,
+            refresh: true,
+            id
         });
-    }
 
-    public delete(id) {
-        return new Promise((resolve, reject) => {
-            this.connElastic.delete({
-                index: this.INDEX,
-                type: this.TYPE,
-                refresh: true,
-                id
-            }, (error, response) => {
-                if (error) {
-                    reject(error);
-                }
-                resolve(true);
-            });
-        });
     }
 
     public async scroll(scrollCfg) {
