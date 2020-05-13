@@ -23,7 +23,7 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
             // chequeamos si el par dni-sexo ya existe en ANDES
-            const resultadoCheck = await controller.checkRepetido(pacienteAndes);
+            const resultadoCheck = await controller.checkRepetido(pacienteAndes, false);
             let resultado;
             if (resultadoCheck.dniRepetido) {
                 resultado = { paciente: resultadoCheck.resultadoMatching[0].paciente, existente: true };
@@ -337,7 +337,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
         // Todo loguear posible duplicado si ignora el check
         let pacienteModificado = req.body.paciente;
         let ignorarSugerencias = req.body.ignoreCheck;
-        let resultado = await controller.checkRepetido(pacienteModificado);
+        let resultado = await controller.checkRepetido(pacienteModificado, false);
 
         if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
             let patientFound: any = await paciente.findById(query).exec();
@@ -441,30 +441,7 @@ router.post('/pacientes/:id/identificadores', async (req, res, next) => {
         let pacienteBase = await controller.buscarPaciente(req.params.id);
         let pacienteLinkeado: any = await controller.buscarPaciente(req.body.dto.valor);
         if (pacienteBase && pacienteLinkeado) {
-            if (req.body.op === 'link') {
-                controller.linkIdentificadores(req, pacienteBase.paciente);
-                pacienteLinkeado.paciente.markModified('activo');
-                pacienteLinkeado.paciente.activo = false;
-            }
-            if (req.body.op === 'unlink') {
-                controller.unlinkIdentificadores(req, pacienteBase.paciente);
-                pacienteLinkeado.paciente.markModified('activo');
-                pacienteLinkeado.paciente.activo = true;
-            }
-
-            let pacienteAndesBase = pacienteBase.paciente;
-            let pacienteAndesLinkeado = pacienteLinkeado.paciente;
-            // sincronizamos los cambios en el paciente de elastic
-            let connElastic = new ElasticSync();
-            await connElastic.sync(pacienteAndesBase);
-            await connElastic.sync(pacienteAndesLinkeado);
-
-            Auth.audit(pacienteAndesLinkeado, req);
-            await pacienteAndesLinkeado.save();
-            Auth.audit(pacienteAndesBase, req);
-            let pacienteSaved = await pacienteAndesBase.save();
-
-            andesLog(req, logKeys.mpiUpdate.key, pacienteBase.paciente._id, req.body.op, pacienteBase.paciente, pacienteLinkeado.paciente);
+            const pacienteSaved = await controller.linkPacientes(req, req.body.dto, pacienteBase.paciente, pacienteLinkeado.paciente, req.body.op);
             res.json(pacienteSaved);
         } else {
             return next('Paciente no encontrado');
