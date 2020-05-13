@@ -538,13 +538,13 @@ router.patch('/agenda/:id*?', (req, res, next) => {
         }
         // return next('ObjectID Inválido');
     } else {
-        agenda.findById(req.params.id, async (err, data) => {
+        agenda.findById(req.params.id, async (err, data: any) => {
             if (err) {
                 return next(err);
             }
             // Loopear los turnos, si viene vacío, es porque viene un id solo
             const turnos = req.body.turnos || [''];
-
+            const estadoAgenda = data.estado;
             for (let y = 0; y < turnos.length; y++) {
                 let turno;
                 switch (req.body.op) {
@@ -603,20 +603,49 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         agendaCtrl.guardarNotaAgenda(req, data);
                         break;
                     case 'editarAgenda':
-                        agendaCtrl.editarAgenda(req, data);
-                        event = { object: 'agenda', accion: 'update', data };
+                        if (estadoAgenda !== 'pendienteAuditoria' && estadoAgenda !== 'auditada' && estadoAgenda !== 'pausada' && estadoAgenda !== 'suspendida') {
+                            agendaCtrl.editarAgenda(req, data);
+                            event = { object: 'agenda', accion: 'update', data };
+                        } else {
+                            return next('Operacion no exitosa');
+                        }
                         break;
                     case 'agregarSobreturno':
                         event = { object: 'turno', accion: 'asignar', data: null };
                         event.data = agendaCtrl.agregarSobreturno(req, data);
                         break;
                     case 'disponible':
+                        if (estadoAgenda !== 'planificacion') {
+                            return next('Operacion no exitosa');
+                        } else {
+                            agendaCtrl.actualizarEstado(req, data);
+                            event = { object: 'agenda', accion: 'estado', data };
+                        }
+                        break;
                     case 'publicada':
-                        agendaCtrl.actualizarEstado(req, data);
-                        event = { object: 'agenda', accion: 'estado', data };
+                        if (estadoAgenda !== 'planificacion' && estadoAgenda !== 'disponible') {
+                            return next('Operacion no exitosa');
+                        } else {
+                            agendaCtrl.actualizarEstado(req, data);
+                            event = { object: 'agenda', accion: 'estado', data };
+                        }
                         break;
                     case 'pausada':
+                        if (estadoAgenda === 'planificacion' || estadoAgenda === 'pausada' || estadoAgenda === 'suspendida' || estadoAgenda === 'auditada' || estadoAgenda === 'pendienteAuditoria') {
+                            return next('Operacion no exitosa');
+                        } else {
+                            agendaCtrl.actualizarEstado(req, data);
+                            event = { object: 'agenda', accion: 'estado', data };
+                        }
+                        break;
                     case 'prePausada':
+                        if (estadoAgenda !== 'pausada') {
+                            return next('Operacion no exitosa');
+                        } else {
+                            agendaCtrl.actualizarEstado(req, data);
+                            event = { object: 'agenda', accion: 'estado', data };
+                        }
+                        break;
                     case 'pendienteAuditoria':
                     case 'pendienteAsistencia':
                     case 'auditada':
@@ -624,15 +653,23 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         event = { object: 'agenda', accion: 'estado', data };
                         break;
                     case 'borrada':
-                        agendaCtrl.actualizarEstado(req, data);
-                        event = { object: 'agenda', accion: 'estado', data };
-                        break;
-                    case 'suspendida':
-                        if (! await agendaCtrl.poseeAsistencia(data)) {
+                        if (estadoAgenda === 'planificacion') {
                             agendaCtrl.actualizarEstado(req, data);
                             event = { object: 'agenda', accion: 'estado', data };
                         } else {
-                            return res.json({ data, mensaje: 'No se puede suspender la agenda ya que posee asistencia registrada' });
+                            return next('Operacion no exitosa');
+                        }
+                        break;
+                    case 'suspendida':
+                        if (estadoAgenda === 'disponible' || estadoAgenda === 'publicada') {
+                            if (! await agendaCtrl.poseeAsistencia(data)) {
+                                agendaCtrl.actualizarEstado(req, data);
+                                event = { object: 'agenda', accion: 'estado', data };
+                            } else {
+                                return res.json({ data, mensaje: 'No se puede suspender la agenda ya que posee asistencia registrada' });
+                            }
+                        } else {
+                            return next('Operacion no exitosa');
                         }
                         break;
                     case 'avisos':
