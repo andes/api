@@ -35,4 +35,4 @@ export let InstitucionSchema = new Schema({
 });
 
 
-export let institucion: Model<IInstitucion> = model('institucion', InstitucionSchema, 'institucion');
+export const Institucion: Model<IInstitucion> = model('institucion', InstitucionSchema, 'institucion');

@@ -1,14 +1,13 @@
-import { institucion, IInstitucion } from './institucion.schema';
+import { Institucion, IInstitucion } from './institucion.schema';
 import { MongoQuery, ResourceBase } from '@andes/core';
 
 class InstitucionResource extends ResourceBase<IInstitucion>  {
-    Model = institucion;
+    Model = Institucion;
     resourceName = 'institucion';
-    keyId = '_id';
     searchFileds = {
         nombre: MongoQuery.partialString,
-        detalle: MongoQuery.partialString,
         tipo: MongoQuery.partialString,
+        activo: MongoQuery.equalMatch,
         contacto: {
             field: 'contacto.valor',
             fn: MongoQuery.partialString
@@ -17,8 +16,7 @@ class InstitucionResource extends ResourceBase<IInstitucion>  {
             field: 'direccion.valor',
             fn: MongoQuery.partialString
         },
-        activo: MongoQuery.equalMatch,
-        search: ['_id', 'nombre', 'detalle', 'tipo', 'customFieldContacto', 'customFieldDireccion']
+        search: ['nombre']
     };
 }
 
