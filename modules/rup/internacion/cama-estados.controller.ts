@@ -274,6 +274,9 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
             }
         },
         {
+            $project: { 'cama.createdAt': 0, 'cama.createdBy': 0 }
+        },
+        {
             $replaceRoot: {
                 newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
             }
