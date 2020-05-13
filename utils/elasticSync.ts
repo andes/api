@@ -81,7 +81,7 @@ export class ElasticSync {
     }
 
     public async create(id, data) {
-        const created = await this.connElastic.create({
+        const created = await this.connElastic.index({
             index: this.INDEX,
             type: this.TYPE,
             id,

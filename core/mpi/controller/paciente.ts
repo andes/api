@@ -518,16 +518,20 @@ export async function linkPacientes(req, dataLink, pacienteBase, pacienteLinkead
 
     const connElastic = new ElasticSync();
     Auth.audit(pacienteLinkeado, req);
-    await pacienteLinkeado.save();
-    await connElastic.sync(pacienteLinkeado);
+    try {
+        await pacienteLinkeado.save();
+        await connElastic.sync(pacienteLinkeado);
 
-    Auth.audit(pacienteBase, req);
-    const pacienteSaved = await pacienteBase.save();
-    await connElastic.sync(pacienteBase);
+        Auth.audit(pacienteBase, req);
+        const pacienteSaved = await pacienteBase.save();
+        await connElastic.sync(pacienteBase);
 
-    andesLog(req, logKeys.mpiUpdate.key, pacienteBase.paciente._id, req.body.op, pacienteBase.paciente, pacienteLinkeado.paciente);
-    return pacienteSaved;
-
+        andesLog(req, logKeys.mpiUpdate.key, pacienteBase._id, op, pacienteBase, pacienteLinkeado);
+        return pacienteSaved;
+    } catch {
+        andesLog(req, logKeys.mpiUpdate.key, pacienteBase._id, op, pacienteBase, 'Error insertando paciente');
+        return null;
+    }
 }
 
 export async function checkCarpeta(req, data) {
