@@ -6,9 +6,8 @@ const router = express.Router();
 router.get('/fhir/documentReference/', async (req, res, next) => {
     try {
         // verify token IPS
-        const custodian = req.query.custodian;
         const subjIdentifier = req.query['subject:identifier'].split('|');
-        if (custodian && subjIdentifier.length > 0) {
+        if (subjIdentifier.length > 0) {
             const patientID = subjIdentifier[1];
             const documentReference = await getDocumentReference(patientID);
             return res.json(documentReference);
