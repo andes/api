@@ -23,7 +23,7 @@ export function createPayload(user, authOrg, prof) {
     const apellido = (prof && prof.apellido) || user.apellido;
     return {
         usuario: {
-            id: user._id,
+            id: String(user._id),
             nombreCompleto: nombre + ' ' + apellido,
             nombre,
             apellido,
@@ -31,11 +31,11 @@ export function createPayload(user, authOrg, prof) {
             documento: user.usuario
         },
         organizacion: {
-            _id: authOrg._id,
-            id: authOrg._id,
+            _id: String(authOrg._id),
+            id: String(authOrg._id),
             nombre: authOrg.nombre
         },
-        profesional: prof && prof._id,
+        profesional: String(prof && prof._id),
         permisos: [...user.permisosGlobales, ...authOrg.permisos]
     };
 }
