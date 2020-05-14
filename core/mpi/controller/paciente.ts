@@ -500,6 +500,40 @@ export async function actualizarFinanciador(req, next) {
     }
 }
 
+export async function linkPacientes(req, dataLink, pacienteBase, pacienteLinkeado, op) {
+    if (op === 'link') {
+        if (pacienteBase.identificadores) {
+            pacienteBase.identificadores.push(dataLink);
+        } else {
+            pacienteBase.identificadores = [dataLink]; // Primer elemento del array
+        }
+        pacienteLinkeado.activo = false;
+    }
+    if (op === 'unlink') {
+        if (pacienteBase.identificadores) {
+            pacienteBase.identificadores = pacienteBase.identificadores.filter(x => x.valor !== dataLink.valor);
+        }
+        pacienteLinkeado.activo = true;
+    }
+
+    const connElastic = new ElasticSync();
+    Auth.audit(pacienteLinkeado, req);
+    try {
+        await pacienteLinkeado.save();
+        await connElastic.sync(pacienteLinkeado);
+
+        Auth.audit(pacienteBase, req);
+        const pacienteSaved = await pacienteBase.save();
+        await connElastic.sync(pacienteBase);
+
+        andesLog(req, logKeys.mpiUpdate.key, pacienteBase._id, op, pacienteBase, pacienteLinkeado);
+        return pacienteSaved;
+    } catch {
+        andesLog(req, logKeys.mpiUpdate.key, pacienteBase._id, op, pacienteBase, 'Error insertando paciente');
+        return null;
+    }
+}
+
 export async function checkCarpeta(req, data) {
     if (req.body && req.body.carpetaEfectores) {
 
@@ -622,7 +656,7 @@ export async function checkRepetido(nuevoPaciente, incluirTemporales = true): Pr
     // Extraemos los validados de los resultados
     let similaresValidados = candidatos.filter(elem => elem.paciente.estado === 'validado');
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
-    if (nuevoPaciente.estado === 'validado' || !incluirTemporales) {
+    if (!incluirTemporales) {
         candidatos = similaresValidados;
     }
 
@@ -1005,6 +1039,20 @@ EventCore.on('mpi:patient:create', async (patientCreated) => {
             body: patientCreated
         };
         await actualizarGeoReferencia(patientCreated, patientRequest);
+        // linkea los pacientes validados con los temporales con un alto porcentaje de match
+        const resultado = await checkRepetido(patientCreated, true);
+        if (resultado.macheoAlto && resultado.resultadoMatching.length > 0) {
+            // Verifica los resultados y linkea los pacientes
+            resultado.resultadoMatching.forEach(async pacienteLink => {
+                if (pacienteLink.paciente) {
+                    const dataLink = {
+                        entidad: 'ANDES',
+                        valor: pacienteLink.paciente.id
+                    };
+                    await linkPacientes(patientRequest, dataLink, patientCreated, pacienteLink.paciente, 'link');
+                }
+            });
+        }
     }
 
 });

@@ -47,7 +47,7 @@ export async function elasticFix(done) {
                 await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pac._id);
                 await fixAgendasPrestaciones(idElastic, idPaciente, hit);
             }
-            connElastic.sync(pac);
+            await connElastic.sync(pac);
         }
 
         /*
