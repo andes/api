@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Types } from 'mongoose';
 import { SeguimientoPaciente } from '../schemas/seguimientoPaciente';
+import { Auth } from '../../../auth/auth.class';
 
 const router = Router();
 
@@ -12,10 +13,10 @@ router.get('/:id?', async (req, res, next) => {
         } else {
             const query = SeguimientoPaciente.find({});
             if (req.query.idPaciente) {
-                query.where('paciente._id').equals(req.query.idPaciente);
+                query.where('paciente._id').equals(Types.ObjectId(req.query.idPaciente));
             }
             if (req.query.idProfesional) {
-                query.where('profesional._id').equals(req.query.idProfesional);
+                query.where('profesional._id').equals(Types.ObjectId(req.query.idProfesional));
             }
             if (req.query.fechaDesde) {
                 query.where('fechaDiagnostico').gte(req.query.fechaDesde);
@@ -39,7 +40,9 @@ router.get('/:id?', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
     try {
-        const seguimiento = new SeguimientoPaciente(req.body);
+        let seguimiento = new SeguimientoPaciente(req.body);
+        Auth.audit(seguimiento, req);
+        seguimiento = await seguimiento.save();
         res.json(seguimiento);
     } catch (err) {
         next(err);

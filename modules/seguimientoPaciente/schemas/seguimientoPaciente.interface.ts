@@ -5,7 +5,6 @@ export default interface ISeguimientoPaciente {
         nombre: string,
         apellido: string,
         documento: string,
-        telefono: string,
         sexo: string,
         fechaNacimiento: Date,
     }; // Agregar interface de paciente

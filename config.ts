@@ -211,7 +211,7 @@ export const modules = {
         active: true,
         path: './modules/seguimientoPaciente/routes',
         route: '/modules/seguimientoPaciente',
-        middleware: null,
+        middleware: appMiddleware,
     }
 };
 

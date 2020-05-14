@@ -70,4 +70,4 @@ schema.add({
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(AuditPlugin);
+// schema.plugin(AuditPlugin);
