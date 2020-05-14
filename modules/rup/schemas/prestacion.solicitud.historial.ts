@@ -8,11 +8,14 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 export let PrestacionSolicitudHistorialschema = new mongoose.Schema({
     tipoPrestacion: tipoPrestacionSchema,
     turno: turnoSchema,
-    organizacion: OrganizacionSchema,
+    organizacion: {
+        id: mongoose.Schema.Types.ObjectId,
+        nombre: String
+    },
     profesional: profesionalSchema,
     accion: {
         type: String,
-        enum: ['liberacionTurno', 'asignacionProfesional']
+        enum: ['liberacionTurno', 'asignacionProfesional', 'remisionSolicitud']
     }
 });
 
