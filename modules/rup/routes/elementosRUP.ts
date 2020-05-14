@@ -6,6 +6,37 @@ import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
 const router = express.Router();
 
+/**
+ * Devueve los grupos sugeridos en la busqueda guiada por prestación.
+ */
+
+router.get('/elementosRUP/:id/guiada', async (req, res, next) => {
+    const prestacion = req.params.id;
+    const elemento: any = await elementoRUP.findOne({ 'conceptos.conceptId': prestacion });
+
+    if (elemento && elemento.busqueda_guiada && elemento.busqueda_guiada.length > 0) {
+
+        let flag = false;
+        for (const guia of elemento.busqueda_guiada) {
+            if (!guia.conceptIds.length) {
+                flag = true;
+                guia.conceptIds = await SnomedCtr.getConceptByExpression(guia.query);
+                guia.conceptIds = guia.conceptIds.map(c => c.conceptId);
+            }
+        }
+
+        res.json(elemento.busqueda_guiada);
+        if (flag) {
+            elemento.save();
+        }
+
+    } else {
+        res.json([]);
+    }
+
+});
+
+
 router.get('/elementosRUP/:id*?', (req, res, next) => {
     let query: mongoose.DocumentQuery<any, mongoose.Document>;
     if (req.params.id) {

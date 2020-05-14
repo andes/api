@@ -113,6 +113,12 @@ export let schema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed
     },
 
+    busqueda_guiada: [{
+        nombre: String,
+        conceptIds: [String],
+        query: String
+    }],
+
     inactiveAt: {
         type: mongoose.SchemaTypes.Date,
         required: false

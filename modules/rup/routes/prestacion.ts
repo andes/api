@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
+import { updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
@@ -574,20 +575,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                             data.solicitud.profesional = req.body.profesional;
                         }
 
-                        if (!data.solicitud.historial) {
-                            data.solicitud.historial = [];
-                        }
-
-                        let registroHistorial: any = {
-                            organizacion: data.solicitud.organizacion,
-                            accion: 'asignacionProfesional'
-                        };
-
-                        if (data.solicitud.profesional) {
-                            registroHistorial.profesional = data.solicitud.profesional;
-                        }
-
-                        data.solicitud.historial.push(registroHistorial);
+                        updateRegistroHistorialSolicitud(data.solicitud, 'asignacionProfesional');
                     }
                 }
                 if (req.body.registros) {
@@ -634,6 +622,16 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 if (req.body.idTurno) {
                     data.solicitud.turno = req.body.idTurno;
                 }
+                break;
+            case 'remitir':
+                updateRegistroHistorialSolicitud(data.solicitud, 'remisionSolicitud');
+                if (req.body.estado) {
+                    data.estados.push();
+                }
+
+                data.solicitud.profesional = req.body.profesional;
+                data.solicitud.organizacion = req.body.organizacion;
+                data.solicitud.tipoPrestacion = req.body.tipoPrestacion;
                 break;
             default:
                 return next(500);

@@ -19,7 +19,7 @@ export async function liberarRefTurno(turno, req) {
         } else if (prestacion.solicitud) {
             prestacion.solicitud.turno = null;
 
-            updateRegistroHistorial(prestacion, turno);
+            updateRegistroHistorialSolicitud(prestacion.solicitud, 'liberacionTurno', turno);
             Auth.audit(prestacion, req);
             return prestacion.save();
         }
@@ -28,22 +28,25 @@ export async function liberarRefTurno(turno, req) {
     }
 }
 
-function updateRegistroHistorial(prestacion, turno) {
-    if (!prestacion.solicitud.historial) {
-        prestacion.solicitud.historial = [];
+export function updateRegistroHistorialSolicitud(solicitud, accion, turno?) {
+    if (!solicitud.historial) {
+        solicitud.historial = [];
     }
 
     let registroHistorial: any = {
-        turno,
-        organizacion: prestacion.solicitud.organizacion,
-        accion: 'liberacionTurno'
+        organizacion: solicitud.organizacion,
+        accion
     };
 
-    if (prestacion.solicitud.profesional) {
-        registroHistorial.profesional = prestacion.solicitud.profesional;
+    if (turno) {
+        registroHistorial.turno = turno;
     }
 
-    prestacion.solicitud.historial.push(registroHistorial);
+    if (solicitud.profesional) {
+        registroHistorial.profesional = solicitud.profesional;
+    }
+
+    solicitud.historial.push(registroHistorial);
 }
 
 export async function enEjecucion(turno) {
