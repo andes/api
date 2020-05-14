@@ -427,26 +427,14 @@ export class Documento {
         return null;
     }
 
-    static buscarRegistro(idRegistro, registros) {
-        const primerRegistro = registros[0];
-        if (primerRegistro.hasSections) {
-            const secciones: any[] = primerRegistro.registros.map(r => r.registros);
-            const registrosInteriores = secciones.reduce((acc, item) => [...acc, ...item], []);
-            return registrosInteriores.find(reg => reg.id === idRegistro);
-        } else {
-            return registros.find(reg => reg.id === idRegistro);
-        }
-    }
-
-
     private static async generarHTML(req) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 // Prestación
-                let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
+                const prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
 
-                let registro: any = req.body.idRegistro ? this.buscarRegistro(req.body.idRegistro, prestacion.ejecucion.registros) : null;
+                const registro: any = req.body.idRegistro && prestacion.findRegistroById(req.body.idRegistro);
 
                 // Títulos default
                 let tituloFechaSolicitud = 'Fecha Solicitud';

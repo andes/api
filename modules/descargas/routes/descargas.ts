@@ -73,11 +73,10 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     let procedimiento = '';
 
     if (req.body.idRegistro) {
-        let aux = req.body.idRegistro ? Documento.buscarRegistro(req.body.idRegistro, prestacion.ejecucion.registros) : null;
-        procedimiento = aux.nombre.toUpperCase();
+        const registro = prestacion.findRegistroById(req.body.idRegistro);
+        procedimiento = registro.concepto.term.toUpperCase();
     } else {
         procedimiento = prestacion.solicitud.tipoPrestacion.term.toUpperCase();
-
     }
 
     const handlebarsData = {

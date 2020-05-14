@@ -148,16 +148,20 @@
                                 <b>{{organizacion}}</b><br>
 
                                 <b>Fecha y hora:</b> {{datetime fechaInicio}}<br>
+
                                 <b>Tipo de Prestacion:</b> {{procedimiento}}<br>
+
                                 {{#with profesional}}
                                 <b>Profesional:</b> {{apellido}}, {{nombre}}
                                 {{/with}} <br>
+
                                 {{#with paciente}}
                                 <b>Paciente:</b> {{apellido}} {{nombre}}
                                 {{#if documento }}
-                                <b>| Documento:</b> {{documento}}
+                                | {{documento}}
                                 {{/if}}
-                                {{/with}} <br>
+                                {{/with}}
+                                <br>
                                 <br><br>
 
                                 <br><br>
