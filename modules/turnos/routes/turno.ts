@@ -172,9 +172,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
             if (user.organizacion) {
                 let arrPrueba = [];
                 if (pacienteTurno.carpetaEfectores) {
-                    arrPrueba = pacienteTurno.carpetaEfectores.find((elto) => {
-                        return elto.organizacion._id === user.organizacion._id;
-                    });
+                    arrPrueba = pacienteTurno.carpetaEfectores.find(carpeta => carpeta.organizacion._id.toString() === user.organizacion._id.toString());
                 }
                 // Si el paciente no tiene carpeta en ese efector, se busca en la colección carpetaPaciente y se actualiza
                 if (!arrPrueba || arrPrueba.length === 0) {
