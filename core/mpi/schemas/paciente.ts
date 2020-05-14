@@ -11,6 +11,7 @@ import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 let ObjectId = mongoose.Types.ObjectId;
+const mongoose_fuzzy_searching = require('mongoose-fuzzy-searching');
 /*
 interface IUserModel extends mongoose.Document {
     nombre: String;
@@ -198,5 +199,24 @@ pacienteSchema.methods.basicos = function () {
 };
 
 pacienteSchema.plugin(AuditPlugin);
+pacienteSchema.plugin(mongoose_fuzzy_searching, {
+    fields: ['documento', 'nombre', 'apellido', 'alias']
+    // fields: [{
+    //     name: 'documento'
+    // },
+    // {
+    //     name: 'apellido',
+    //     weight: 5,
+    //     prefixOnly: true
+    // },
+    // {
+    //     name: 'nombre',
+    //     weight: 3,
+    //     prefixOnly: true
+    // },
+    // {
+    //     name: 'alias'
+    // }]
+});
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');

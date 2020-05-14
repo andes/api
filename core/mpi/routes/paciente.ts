@@ -145,29 +145,44 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 });
 
 // Search using elastic search
-router.get('/pacientes/search', (req, res, next) => {
+router.get('/pacientes/search', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
-    controller.matching({ type: 'search', filtros: req.query }).then(result => {
-        res.send(result);
-    }).catch(error => {
-        return next(error);
-    });
+    //  let filtros = Object.keys(req.query).map((key) => [key, req.query[key]]);
+    let filtros = req.query;
+    filtros.activo = true;
+    const limit = req.query.limit || 100;
+    const skip = req.query.skip || 0;
+    let resultado = await paciente.find(filtros).limit(limit).skip(skip);
+    // resultado = filtros.map(filtro => { return resultado.filter((result: any) => result.filtro); });
+    res.json(resultado);
 });
 
-
 // Search using elastic search
-router.get('/pacientes', (req, res, next) => {
+router.get('/pacientes', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
 
-    controller.matching(req.query).then(result => {
-        res.send(result);
-    }).catch(error => {
-        return next(error);
-    });
+    const text = req.query.cadenaInput.split(' ');
+    const limit = req.query.limit || 100;
+    const skip = req.query.skip || 0;
+    const arrayPromises: any[] = text.map(subString => { return paciente.fuzzySearch({ query: subString, minSize: 4 }, { activo: { $eq: true } }); });
+    let resultsPromises: any[] = await Promise.all(arrayPromises);
+    let resultado = resultsPromises.shift();
+    resultado = resultado.filter(elto => elto.activo);
+
+    for (let result of resultsPromises) {
+        resultado = result.filter(elto => elto.activo && resultado.some(eltoRes => eltoRes.id === elto.id));
+    }
+    // resultado = resultado.map(elto => {
+    //     const item = JSON.parse(JSON.stringify(elto));
+    //     delete item.foto;
+    //     return item;
+    // });
+
+    res.send(resultado);
 });
 
 
