@@ -35,7 +35,7 @@ export function createPayload(user, authOrg, prof) {
             id: String(authOrg._id),
             nombre: authOrg.nombre
         },
-        profesional: String(prof && prof._id),
+        profesional: prof && String(prof._id),
         permisos: [...user.permisosGlobales, ...authOrg.permisos]
     };
 }
