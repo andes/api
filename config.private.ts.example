@@ -38,17 +38,12 @@ export const ports = {
 
 // Hosts
 export const hosts = {
+    main: getEnv('MAIN_HOST', 'http://localhost:3002'),
     ldap: getEnv('LDAP_HOST', 'ldap.neuquen.gov.ar'),
     elastic_main: getEnv('ELASTIC_HOST', 'localhost:9200'),
+    BI_QUERY: getEnv('BI_QUERY_HOST', 'http://localhost:3000'),
     mongoDB_main: {
         host: getEnv('MONGO_MAIN', 'localhost:27017/andes'), // ?authSource=admin
-        options: {
-            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
-            reconnectInterval: 500,
-        }
-    },
-    mongoDB_mpi: {
-        host: getEnv('MONGO_MPI', 'localhost:27017/mpi'), // ?authSource=admin
         options: {
             reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
             reconnectInterval: 500,
@@ -61,7 +56,6 @@ export const hosts = {
             reconnectInterval: 500,
         }
     },
-
     mongoDB_puco: {
         host: getEnv('MONGO_PUCO', 'mongodb://localhost:27017/padrones'),
         options: {
@@ -119,7 +113,6 @@ export const puco = {
         password: ''
     }
 };
-
 
 export const snomed = {
     adapter: getEnv('SNOMED_ADAPTER', 'snowstorm'),
@@ -216,22 +209,6 @@ export const conSql = {
     }
 };
 
-export const conSqlHPN = {
-    auth: {
-        user: '',
-        password: ''
-    },
-    serverSql: {
-        server: '',
-        database: '',
-        port: ''
-    },
-    pool: {
-        acquireTimeoutMillis: 15000
-    }
-
-};
-
 export const CDA = {
     rootOID: '',
     dniOID: '',
@@ -248,7 +225,6 @@ export const wsSalud = {
     hellerFS: '',
     hpnWS: '',
 };
-
 
 export const consolidadoPecas = {
     auth: {
@@ -285,15 +261,6 @@ export const RedisWebSockets = {
     port: getEnv('REDIS_PORT', '6379', 'n')
 };
 
-export const sqlCarpetasJob = {
-    user: '',
-    password: '',
-    server: '',
-    database: '',
-    requestTimeout: '',
-    stream: ''
-};
-
 export const TwitterConfig = {
     consumer_key: '',
     consumer_secret: '',
@@ -305,6 +272,7 @@ export const registroProvincialData = {
     hostost: '',
     queryFechaPath: ''
 };
+
 export const Drive = {
     adapter: 'file',
     options: {}
@@ -328,3 +296,14 @@ export const mobileExpiredVersion = '100';
 
 // url de acceso a los datos para la app de gestion
 export const urlDatosGestion = '';
+
+export const FHIR = {
+    domain: getEnv('FHIR_DOMAIN', 'http://app.andes.gob.ar'),
+    ips_host: getEnv('IPS_HOST', 'https://testapp.hospitalitaliano.org.ar'),
+    secret: getEnv('IPS_SECRET', ``)
+};
+
+export const IPS = {
+    auth: getEnv('IPS_AUTH', false),
+    enabled: getEnv('IPS_ENABLED', false)
+};

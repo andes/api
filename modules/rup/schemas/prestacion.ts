@@ -6,7 +6,7 @@ import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { ObraSocialSchema } from '../../../modules/obraSocial/schemas/obraSocial';
+import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 
 
 export let schema = new mongoose.Schema({

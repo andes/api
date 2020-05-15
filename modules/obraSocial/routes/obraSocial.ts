@@ -2,8 +2,10 @@ import * as express from 'express';
 import { Puco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
 import * as pucoController from '../controller/puco';
+import * as profeController from '../controller/profe';
 import * as sumarController from '../controller/sumar';
 import * as obrasocialController from '../controller/obraSocial';
+import { Profe } from '../schemas/profe';
 const router = express.Router();
 
 /**
@@ -32,6 +34,8 @@ router.get('/obrasSociales', async (req, res, next) => {
     }
 });
 
+/**Obtiene las el listado de prepagas */
+
 router.get('/prepagas', async (req, res, next) => {
     try {
         let prepagas = await ObraSocial.find({ prepaga: true }).exec();
@@ -40,6 +44,8 @@ router.get('/prepagas', async (req, res, next) => {
         return next(error);
     }
 });
+
+/**Verifica si el paciente se encuentra en el programa SUMAR */
 
 router.get('/padronSumar', async (req, res, next) => {
     try {
@@ -56,7 +62,7 @@ router.get('/padronSumar', async (req, res, next) => {
 });
 
 /**
- * Obtiene los datos de la obra social asociada a un paciente
+ * Obtiene los datos de la obra social asociada a un paciente (Usado en busqueda por padrones)
  *
  * @param {any} dni
  * @returns
@@ -97,6 +103,8 @@ router.get('/puco', async (req, res, next) => {
     }
 });
 
+/**Obtiene las versiones del padron PUCO */
+
 router.get('/puco/padrones', async (req, res, next) => {
     try {
         let resp = await pucoController.obtenerVersiones();
@@ -106,12 +114,40 @@ router.get('/puco/padrones', async (req, res, next) => {
     }
 });
 
+/**Obtiene la obra social de un paciente (Usado en el punto de inicio de CITAS) */
+
 router.get('/obraSocial/:documento', async (req, res, next) => {
     if (req.params.documento) {
         let resp = await obrasocialController.getObraSocial(req.params);
         res.json(resp);
     } else {
         return next('Parámetros incorrectos');
+    }
+});
+
+/** Obtiene paciente que se encuentra en el padron PROFE */
+
+router.get('/profe', async (req, res, next) => {
+    try {
+        if (req.query.dni && req.query.periodo) {
+            let os = await Profe.find({ dni: Number.parseInt(req.query.dni, 10), version: req.query.periodo });
+            res.json(os);
+        } else {
+            res.status(400).json({ msg: 'Parámetros incorrectos' });
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+
+/**Obtiene los padrones del padron PROFE */
+
+router.get('/profe/padrones', async (req, res, next) => {
+    try {
+        let resp = await profeController.obtenerVersiones();
+        res.json(resp);
+    } catch (error) {
+        return next(error);
     }
 });
 
