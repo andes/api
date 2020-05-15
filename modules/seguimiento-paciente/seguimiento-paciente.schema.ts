@@ -1,8 +1,8 @@
 import { Schema, model, Document } from 'mongoose';
-import ISeguimientoPaciente from './seguimientoPaciente.interface';
-import * as registro from '../../rup/schemas/prestacion.registro';
-import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import ISeguimientoPaciente from './seguimiento-paciente.interface';
+import { profesionalSchema } from '../../core/tm/schemas/profesional';
+import * as registro from '../rup/schemas/prestacion.registro';
 
 export const seguimientoPacienteSchema = new Schema(
     {
