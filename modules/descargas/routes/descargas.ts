@@ -9,6 +9,7 @@ import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from './../../../config.private';
 import moment = require('moment');
 
+
 const router = express.Router();
 
 
@@ -30,6 +31,7 @@ router.post('/censo', (req: any, res, next) => {
         return next(e);
     });
 });
+
 
 router.post('/censoMensual', (req: any, res, next) => {
     let docCenso = new DocumentoCensoMensual();
@@ -68,11 +70,23 @@ router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
 router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
     const prestacion: any = await Documento.getPrestacionData(req.body.idPrestacion);
+    let procedimiento = '';
+
+    if (req.body.idRegistro) {
+        const registro = prestacion.findRegistroById(req.body.idRegistro);
+        procedimiento = registro.concepto.term.toUpperCase();
+    } else {
+        procedimiento = prestacion.solicitud.tipoPrestacion.term.toUpperCase();
+    }
+
     const handlebarsData = {
+        procesoProcedencia: prestacion.solicitud.ambitoOrigen.toUpperCase(),
         organizacion: prestacion.ejecucion.organizacion.nombre,
         fechaInicio: prestacion.ejecucion.fecha,
-        tipoPrestacion: prestacion.solicitud.tipoPrestacion.term,
-        profesional: prestacion.solicitud.profesional
+        procedimiento,
+        profesional: prestacion.solicitud.profesional,
+        paciente: prestacion.paciente,
+
     };
     const idOrganizacion = req.body.idOrganizacion;
     const org: any = await Organizacion.findById(idOrganizacion);
@@ -87,7 +101,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
             const data = {
                 from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
                 to: email,
-                subject: `Informe RUP ${moment(handlebarsData.fechaInicio).format('DD/MM/YYYY H:mm [hs]')}`,
+                subject: procedimiento + ' ' + `${moment(handlebarsData.fechaInicio).format('DD/MM/YYYY H:mm [hs]')}`,
                 text: '',
                 html,
                 attachments: {

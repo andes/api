@@ -190,6 +190,25 @@ schema.pre('save', function (next) {
     next();
 });
 
+function deepSearch(registros: any[], id: string | mongoose.Types.ObjectId) {
+    for (let i = 0; i < registros.length; i++) {
+        if (String(id) === String(registros[i].id)) {
+            return registros[i];
+        } else {
+            const reg = deepSearch(registros[i], id);
+            if (reg) {
+                return reg;
+            }
+        }
+    }
+    return null;
+}
+
+schema.methods.findRegistroById = function (id: string | mongoose.Types.ObjectId) {
+    const regs = this.ejecucion.registros || [];
+    return deepSearch(regs, id);
+};
+
 
 // Habilitar plugin de auditoría
 schema.plugin(AuditPlugin);

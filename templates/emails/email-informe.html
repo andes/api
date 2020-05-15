@@ -129,7 +129,7 @@
                                     width:100%;
                                     text-align:right;
                                     padding-top:12px;">
-                                RUP / Registro Universal de Prestaciones</span>
+                                RUP / {{procesoProcedencia}}</span>
                         </td>
                     </tr>
                     <tr>
@@ -144,16 +144,28 @@
 
                             <div class="body-text"
                                  style="font-family:Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;text-align:left;color:#333333">
+
                                 <b>{{organizacion}}</b><br>
+
                                 <b>Fecha y hora:</b> {{datetime fechaInicio}}<br>
-                                <b>Tipo de Prestación:</b> {{tipoPrestacion}}<br>
+
+                                <b>Tipo de Prestacion:</b> {{procedimiento}}<br>
 
                                 {{#with profesional}}
                                 <b>Profesional:</b> {{apellido}}, {{nombre}}
+                                {{/with}} <br>
+
+                                {{#with paciente}}
+                                <b>Paciente:</b> {{apellido}} {{nombre}}
+                                {{#if documento }}
+                                | {{documento}}
+                                {{/if}}
                                 {{/with}}
+                                <br>
                                 <br><br>
 
                                 <br><br>
+
                             </div>
 
                         </td>
@@ -174,7 +186,7 @@
                                 Protección de Datos Personales bajo el N° de Registro 100000182, según lo requiere la
                                 Ley N° 25.326(art. 3° y 21 inciso 1)<br>
                             </span>
-                            <a href="//apps.andes.gob.ar/" style="color:#aaaaaa">Aplicación Andes</a><br>
+                            <a href="//app.andes.gob.ar/" style="color:#aaaaaa">Aplicación Andes</a><br>
 
                             <br><br>
 

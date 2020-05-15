@@ -427,26 +427,14 @@ export class Documento {
         return null;
     }
 
-    private static buscarRegistro(idRegistro, registros) {
-        const primerRegistro = registros[0];
-        if (primerRegistro.hasSections) {
-            const secciones: any[] = primerRegistro.registros.map(r => r.registros);
-            const registrosInteriores = secciones.reduce((acc, item) => [...acc, ...item], []);
-            return registrosInteriores.find(reg => reg.id === idRegistro);
-        } else {
-            return registros.find(reg => reg.id === idRegistro);
-        }
-    }
-
-
     private static async generarHTML(req) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 // Prestación
-                let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
+                const prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
 
-                let registro: any = req.body.idRegistro ? this.buscarRegistro(req.body.idRegistro, prestacion.ejecucion.registros) : null;
+                const registro: any = req.body.idRegistro && prestacion.findRegistroById(req.body.idRegistro);
 
                 // Títulos default
                 let tituloFechaSolicitud = 'Fecha Solicitud';
@@ -503,9 +491,12 @@ export class Documento {
                             tituloInforme = '';
                         }
 
+                    } else if (registro) {
+                        const term = registro.concepto.term;
+                        tipoPrestacion = this.ucaseFirst(term);
                     } else {
                         // Si tiene un hijo directo, usamos su nombre como título de la consulta
-                        tipoPrestacion = prestacion.solicitud.tipoPrestacion.term[0].toUpperCase() + prestacion.solicitud.tipoPrestacion.term.slice(1);
+                        tipoPrestacion = this.ucaseFirst(prestacion.solicitud.tipoPrestacion.term);
                     }
 
                     // Existe configuración de PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL?
