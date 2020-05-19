@@ -1,6 +1,7 @@
 import { HTMLComponent } from '../model/html-component.class';
 import * as moment from 'moment';
 import { registroToHTML } from './utils/registro-to-html';
+import { InformeRupFirma } from './informe-firma';
 
 export class InformeRupBody extends HTMLComponent {
     template = `
@@ -43,6 +44,9 @@ export class InformeRupBody extends HTMLComponent {
                         {{{this}}}
                     {{/each}}
                 </div>
+                {{#if firmaHTML}}
+                    {{{ firmaHTML }}}
+                {{/if}}
             </section>
         </main>
     `;
@@ -54,7 +58,7 @@ export class InformeRupBody extends HTMLComponent {
     public async process() {
         const fechaSolicitud = this.prestacion.solicitud.fecha;
         const fechaEjecucion = this.getFechaEstado('ejecucion');
-        const fechaValidacion = this.getFechaEstado('ejecucion');
+        const fechaValidacion = this.getFechaEstado('validada');
 
         if (this.registroId) {
             const registro = this.prestacion.findRegistroById(this.registroId);
@@ -68,24 +72,47 @@ export class InformeRupBody extends HTMLComponent {
 
         const registros = await Promise.all(ps);
 
+        const firmaHTML = await this.getFirmaHTML();
+
         this.data = {
             fechaSolicitud: moment(fechaSolicitud).format('DD/MM/YYYY HH:mm'),
             fechaEjecucion: fechaEjecucion && moment(fechaEjecucion).format('DD/MM/YYYY HH:mm'),
             fechaValidacion: fechaValidacion && moment(fechaValidacion).format('DD/MM/YYYY HH:mm'),
             titulo: this.prestacion.solicitud.tipoPrestacion.term,
-            registros
+            registros,
+            firmaHTML
         };
     }
 
-    getFechaEstado(tipo) {
-        const estados = this.prestacion.estados;
-        for (let i = estados.length - 1; i >= 0; i--) {
-            const estado = estados[i];
-            if (estado.tipo === tipo) {
-                return estado.createdAt;
-            }
+    async getFirmaHTML() {
+        if (this.validada()) {
+            const firmaHTMLComponent = new InformeRupFirma(this.prestacion);
+            await firmaHTMLComponent.process();
+            return firmaHTMLComponent.render();
+        } else {
+            return null;
         }
-        return null;
+    }
+
+    getFechaEstado(tipo: 'validada' | 'ejecucion') {
+        const validada = this.validada();
+        switch (tipo) {
+            case 'validada':
+                if (validada) {
+                    return this.prestacion.estados[this.prestacion.estados.length - 1].createdAt;
+                }
+                return null;
+            case 'ejecucion':
+                if (validada) {
+                    return this.prestacion.estados[this.prestacion.estados.length - 2].createdAt;
+                } else {
+                    return this.prestacion.estados[this.prestacion.estados.length - 1].createdAt;
+                }
+        }
+    }
+
+    validada() {
+        return (this.prestacion.estados[this.prestacion.estados.length - 1].tipo === 'validada');
     }
 
 }

@@ -101,11 +101,10 @@ export class InformeRupHeader extends HTMLComponent {
         const fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
         const fechaPrestacion = moment(prestacion.ejecucion.fecha);
         const edad = paciente.fechaNacimiento && fechaPrestacion.diff(moment(paciente.fechaNacimiento), 'years');
-        const organizacionId = String(prestacion.ejecucion.organizacion);
+        const organizacionId = String(prestacion.ejecucion.organizacion.id);
 
         // [TODO] metodo getCarpeta en paciente
         const numeroCarpeta = paciente.carpetaEfectores.find(x => String(x.organizacion._id) === organizacionId);
-
         const consultaValidada = (prestacion.estados[prestacion.estados.length - 1].tipo === 'validada');
 
         this.data = {
@@ -116,7 +115,7 @@ export class InformeRupHeader extends HTMLComponent {
                 fechaNacimiento,
                 documento: paciente.documento,
                 edad,
-                numeroCarpeta
+                numeroCarpeta: numeroCarpeta?.nroCarpeta
             },
             organizacion: {
                 nombre: organizacion.nombre.replace(' - ', '</br>'),
