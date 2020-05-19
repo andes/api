@@ -7,6 +7,7 @@ import { DocumentoCensoMensual } from './../controller/descargaCensoMensual';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from './../../../config.private';
 import moment = require('moment');
+import { InformeRUP } from '../informe-rup/informe-rup';
 
 
 const router = express.Router();
@@ -51,18 +52,27 @@ router.post('/censoMensual', (req: any, res, next) => {
  * Se usa POST para generar la descarga porque se envían datos
  * que van a ser parte del archivo
  */
-router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
-    Documento.descargar(req, res, next).then(archivo => {
-        res.download((archivo as string), (err) => {
-            if (err) {
-                next(err);
-            } else {
-                next();
-            }
-        });
-    }).catch(e => {
-        return next(e);
-    });
+router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
+    const idPrestacion = req.body.idPrestacion;
+    const idRegistro = req.body.idRegistro;
+
+    const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+    await informe.process();
+    const fileName = await informe.informe();
+
+    return res.download(fileName);
+
+    // Documento.descargar(req, res, next).then(archivo => {
+    //     res.download((archivo as string), (err) => {
+    //         if (err) {
+    //             next(err);
+    //         } else {
+    //             next();
+    //         }
+    //     });
+    // }).catch(e => {
+    //     return next(e);
+    // });
 });
 
 // envío de resumen de prestación por correo

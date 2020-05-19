@@ -31,7 +31,7 @@ export function storeFile(base64, metadata) {
     });
 }
 
-export function readFile(id) {
+export function readFile(id): Promise<any> {
     return new Promise(async (resolve, reject) => {
         try {
             const RupFiles = makeFs();
@@ -70,5 +70,21 @@ export function readAsBase64(id) {
         } catch (e) {
             return reject(e);
         }
+    });
+}
+
+export function streamToBase64(streamData) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        streamData.on('data', (chunk) => {
+            chunks.push(chunk);
+        });
+        streamData.on('end', () => {
+            let result = Buffer.concat(chunks);
+            return resolve(result.toString('base64'));
+        });
+        streamData.on('error', (err) => {
+            return reject(err);
+        });
     });
 }
