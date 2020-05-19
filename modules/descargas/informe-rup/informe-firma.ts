@@ -2,6 +2,7 @@ import { HTMLComponent } from '../model/html-component.class';
 import * as moment from 'moment';
 import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
 import { streamToBase64 } from '../../rup/controllers/rupStore';
+import { searchMatriculas } from '../../../core/tm/controller/profesional';
 
 export class InformeRupFirma extends HTMLComponent {
     template = `
@@ -15,12 +16,10 @@ export class InformeRupFirma extends HTMLComponent {
                 <hr class="lg">
                 <h6 class="bolder">
                     {{ detalle }} <br>
-                    {{ detalle2 }}
+                    {{ detalle2 }} <br>
+                    {{{ matriculas }}}
                 </h6>
                 <h6 class="subdata-italic"> </h6>
-                <h6 class="subdata-fecha">
-                    {{ fechaActual }}
-                </h6>
             </div>
         </span>
     </footer>
@@ -33,6 +32,7 @@ export class InformeRupFirma extends HTMLComponent {
 
     async process() {
         const imagenFirma = await this.getFirma(this.prestacion.solicitud.profesional);
+        const matriculas = await this.getMatriculas();
 
         const detalle = this.prestacion.solicitud.profesional.apellido + ', ' + this.prestacion.solicitud.profesional.nombre;
         const detalle2 = this.prestacion.solicitud.organizacion.nombre.substring(0, this.prestacion.solicitud.organizacion.nombre.indexOf('-'));
@@ -42,7 +42,7 @@ export class InformeRupFirma extends HTMLComponent {
             firma: imagenFirma,
             detalle,
             detalle2,
-            fechaActual: moment().format('DD/MM/YYYY HH:mm') + ' hs'
+            matriculas
         };
     }
 
@@ -55,5 +55,15 @@ export class InformeRupFirma extends HTMLComponent {
             return base64;
         }
         return null;
+    }
+
+    private async getMatriculas() {
+        const infoMatriculas = await searchMatriculas(this.prestacion.solicitud.profesional.id);
+
+        const grado = infoMatriculas.formacionGrado.map(e => `${e.nombre} MP ${e.numero}`);
+        const posgrado = infoMatriculas.formacionPosgrado.map(e => `${e.nombre} ME ${e.numero}`);
+
+        return [...grado, ...posgrado].join('<br>');
+
     }
 }
