@@ -187,7 +187,8 @@ export class Auth {
                     usuario: payload.usuario,
                     profesional: payload.profesional,
                     permisos: payload.permisos,
-                    organizacion: payload.organizacion
+                    organizacion: payload.organizacion,
+                    feature: payload.feature
 
                 };
                 return next();
