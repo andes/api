@@ -195,7 +195,7 @@ function deepSearch(registros: any[], id: string | mongoose.Types.ObjectId) {
         if (String(id) === String(registros[i].id)) {
             return registros[i];
         } else {
-            const reg = deepSearch(registros[i], id);
+            const reg = deepSearch(registros[i].registros, id);
             if (reg) {
                 return reg;
             }
