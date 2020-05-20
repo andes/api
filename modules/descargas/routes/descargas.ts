@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { Documento } from './../controller/descargas';
+import { Documento } from '../controller/descargas-puco';
 import { Auth } from '../../../auth/auth.class';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { DocumentoCenso } from './../controller/descargaCenso';
@@ -8,7 +8,7 @@ import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from './../../../config.private';
 import moment = require('moment');
 import { InformeRUP } from '../informe-rup/informe-rup';
-
+import { model as Prestacion } from '../../rup/schemas/prestacion';
 
 const router = express.Router();
 
@@ -68,7 +68,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     const idPrestacion = req.body.idPrestacion;
     const idRegistro = req.body.idRegistro;
 
-    const prestacion: any = await Documento.getPrestacionData(idPrestacion);
+    const prestacion: any = await Prestacion.findById(idPrestacion);
     let procedimiento = '';
 
     if (idRegistro) {
