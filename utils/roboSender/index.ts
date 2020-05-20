@@ -76,3 +76,18 @@ export function removeSend(id) {
         });
     });
 }
+
+export function sendNotification(data: ISms, devices, options: any = {}) {
+    const obj = new RoboModel({
+        message: data.message,
+        device_id: devices.map(item => item.device_id),
+        from: options.from ? options.from : 'undefined',
+        email: null,
+
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        scheduledAt: options.scheduledAt ? options.scheduledAt : new Date(),
+        tries: 0,
+    });
+    return obj.save();
+}
