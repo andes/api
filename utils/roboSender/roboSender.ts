@@ -56,10 +56,7 @@ export function roboSender() {
                             await smsTools.sendSms(smsOptions);
                         }
                         if (env.device_id) {
-                            const notification = {
-                                body: env.message
-                            };
-                            new PushClient().send(env.device_id, notification);
+                            new PushClient().send(env.device_id, env.notificationData);
                         }
 
                         await changeState(env, 'success');

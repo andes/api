@@ -35,7 +35,23 @@ export let roboSchema = new mongoose.Schema({
     },
 
     // Array de dispositivos registrados en pacienteApp
-    device_id: Array,
+    device_id: {
+        type: [String],
+        required: false
+    },
+
+    // Campo para pushNotifications
+    notificationData: {
+        title: String,
+        body: String,
+        extraData: Object,
+        sound: String,
+        badge: Number,
+        icon: String,
+        contentAvailable: Boolean,
+        alert: Object,
+        required: false
+    }
 });
 
 export let RoboModel = mongoose.model('sendMessageCache', roboSchema, 'sendMessageCache');

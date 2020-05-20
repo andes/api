@@ -1,4 +1,5 @@
 import { RoboModel } from './roboSchema';
+import { INotification } from '../../modules/mobileApp/controller/PushClient';
 
 export interface ISms {
     phone: string;
@@ -77,13 +78,10 @@ export function removeSend(id) {
     });
 }
 
-export function sendNotification(data: ISms, devices, options: any = {}) {
+export function sendNotification(data: INotification, devices, options: any = {}) {
     const obj = new RoboModel({
-        message: data.message,
+        notificationData: data,
         device_id: devices.map(item => item.device_id),
-        from: options.from ? options.from : 'undefined',
-        email: null,
-
         createdAt: new Date(),
         updatedAt: new Date(),
         scheduledAt: options.scheduledAt ? options.scheduledAt : new Date(),
