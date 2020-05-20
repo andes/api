@@ -75,6 +75,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').CamasRouter);
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').EstadosRouter);
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').CensosRouter);
+    app.use('/api/modules', require('./modules/seguimiento-paciente').SeguimientoPacienteRouter);
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(
