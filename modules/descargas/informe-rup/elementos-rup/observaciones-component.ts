@@ -8,7 +8,8 @@ export class ObservacionesComponent extends HTMLComponent {
                 {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}
                 {{#if registro.valor}}:
                     <br>
-                    <small>
+                    <br>
+                    <small class="subregistro">
                         {{{ registro.valor }}}
                     </small>
                 {{/if}}

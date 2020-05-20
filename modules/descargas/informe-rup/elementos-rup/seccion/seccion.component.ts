@@ -7,7 +7,7 @@ export class SeccionComponent extends HTMLComponent {
             <p>
                 {{ registro.concepto.term }}:
                 <br><br>
-                <small>
+                <small class="subregistro">
                     {{{ registro.valor }}}
                 </small>
             </p>

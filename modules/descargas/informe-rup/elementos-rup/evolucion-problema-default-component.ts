@@ -8,10 +8,11 @@ export class EvolucionProblemaDefaultComponent extends HTMLComponent {
                 {{ registro.concepto.term }}
                 {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}
                 {{#if evolucion}}:
-                <br>
-                <small>
-                    {{{ evolucion }}}
-                </small>
+                    <br>
+                    <br>
+                    <small class="subregistro">
+                        {{{ evolucion }}}
+                    </small>
                 {{/if}}
             </p>
         </div>
