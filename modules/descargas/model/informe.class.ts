@@ -39,14 +39,12 @@ export class InformePDF extends HTMLComponent {
     stylesUrl: string[];
 
 
-    informe(options: pdf.CreateOptions = null) {
+    async informe(options: pdf.CreateOptions = null) {
         const opciones = {
             ...(options || {}),
             ...this.getDefaultOptions()
         };
-
-        this.data = this.makeData();
-        const html = this.render();
+        const html = await this.render();
         return new Promise((resolve, reject) => {
             pdf.create(html, opciones).toFile((err, file) => {
                 if (err) {
@@ -58,22 +56,22 @@ export class InformePDF extends HTMLComponent {
     }
 
 
-    private makeData() {
+    public async process() {
         const data: any = {};
         if (this.header) {
-            data.header = this.header.render();
+            data.header = await this.header.render();
         }
         if (this.footer) {
-            data.footer = this.footer.render();
+            data.footer = await this.footer.render();
         }
-        data.body = this.body.render();
+        data.body = await this.body.render();
 
         if (this.style) {
             data.css = this.style;
         } else if (this.stylesUrl?.length > 0) {
             data.css = this.renderSCSS();
         }
-        return data;
+        this.data = data;
     }
 
     private renderSCSS() {

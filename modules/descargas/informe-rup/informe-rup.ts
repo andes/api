@@ -30,7 +30,8 @@ export class InformeRUP extends InformePDF {
         this.body = new InformeRupBody(prestacion, paciente, organizacion, this.registroId);
         this.footer = new InformeRupFooter(prestacion, paciente, organizacion, this.usuario);
 
-        await this.body.process();
+        // Obligatorio por ahora llamar al proccess de la clase abstracta
+        await super.process();
     }
 
 }

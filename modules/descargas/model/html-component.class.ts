@@ -10,7 +10,8 @@ export abstract class HTMLComponent {
     public data: { [key: string]: any };
 
 
-    render() {
+    async render() {
+        await this.process();
         const templateHTML = this.getTemplate();
         const template = handlebars.compile(templateHTML);
         const html = template(this.data);

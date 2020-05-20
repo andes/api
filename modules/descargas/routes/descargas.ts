@@ -57,32 +57,22 @@ router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
     const idRegistro = req.body.idRegistro;
 
     const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
-    await informe.process();
     const fileName = await informe.informe();
 
     return res.download(fileName);
-
-    // Documento.descargar(req, res, next).then(archivo => {
-    //     res.download((archivo as string), (err) => {
-    //         if (err) {
-    //             next(err);
-    //         } else {
-    //             next();
-    //         }
-    //     });
-    // }).catch(e => {
-    //     return next(e);
-    // });
 });
 
 // envío de resumen de prestación por correo
 router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
-    const prestacion: any = await Documento.getPrestacionData(req.body.idPrestacion);
+    const idPrestacion = req.body.idPrestacion;
+    const idRegistro = req.body.idRegistro;
+
+    const prestacion: any = await Documento.getPrestacionData(idPrestacion);
     let procedimiento = '';
 
-    if (req.body.idRegistro) {
-        const registro = prestacion.findRegistroById(req.body.idRegistro);
+    if (idRegistro) {
+        const registro = prestacion.findRegistroById(idRegistro);
         procedimiento = registro.concepto.term.toUpperCase();
     } else {
         procedimiento = prestacion.solicitud.tipoPrestacion.term.toUpperCase();
@@ -105,7 +95,10 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     }
     if (emailFiltrado) {
         try {
-            const archivo = await Documento.descargar(req, res, next);
+            // const archivo = await Documento.descargar(req, res, next);
+            const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+            const fileName = await informe.informe();
+
             const html = await SendEmail.renderHTML('emails/email-informe.html', handlebarsData);
             const data = {
                 from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
@@ -115,7 +108,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
                 html,
                 attachments: {
                     filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
-                    path: archivo
+                    path: fileName
                 }
             };
             await SendEmail.sendMail(data);
