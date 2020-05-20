@@ -4,7 +4,9 @@ export class ObservacionesComponent extends HTMLComponent {
     template = `
         <div class="nivel-1">
             <p>
-                {{ registro.concepto.term }}{{#if registro.valor}}:
+                {{ registro.concepto.term }}
+                {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}
+                {{#if registro.valor}}:
                     <br>
                     <small>
                         {{{ registro.valor }}}

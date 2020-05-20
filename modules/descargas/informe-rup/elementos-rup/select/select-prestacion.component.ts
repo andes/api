@@ -4,7 +4,9 @@ export class SelectPrestacionComponent extends HTMLComponent {
     template = `
             <div class="nivel-1">
                 <p>
-                    {{ titulo }}: <small> {{{ valor }}} </small>
+                    {{ titulo }}
+                    {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}:
+                    <small> {{{ valor }}} </small>
                 </p>
             </div>
 

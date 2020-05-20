@@ -5,11 +5,14 @@ export class EvolucionProblemaDefaultComponent extends HTMLComponent {
     template = `
         <div class="nivel-1">
             <p>
-                {{ registro.concepto.term }}:
+                {{ registro.concepto.term }}
+                {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}
+                {{#if evolucion}}:
                 <br>
                 <small>
-                    {{{ registro.valor.evolucion }}}
+                    {{{ evolucion }}}
                 </small>
+                {{/if}}
             </p>
         </div>
     `;
@@ -19,7 +22,8 @@ export class EvolucionProblemaDefaultComponent extends HTMLComponent {
 
     async process() {
         this.data = {
-            registro: this.registro
+            registro: this.registro,
+            evolucion: this.registro.valor.evolucion?.replace('<p>', '')
         };
     }
 

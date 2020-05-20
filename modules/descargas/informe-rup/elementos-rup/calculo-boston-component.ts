@@ -3,7 +3,9 @@ import { HTMLComponent } from '../../model/html-component.class';
 export class CalculoDeBostonComponent extends HTMLComponent {
     template = `
             <div class="nivel-1">
-                <p> {{ registro.concepto.term }}: </p>
+                <p> {{ registro.concepto.term }}
+                {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}
+                : </p>
             </div>
             <div class="subregistro">
                 <p> CI: <small> {{ valor.ci }} </small> </p>

@@ -4,7 +4,8 @@ export class SelectPorRefsetComponent extends HTMLComponent {
     template = `
             <div class="nivel-1">
                 <p>
-                    {{ titulo }}:
+                    {{ titulo }}
+                    {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}:
                     <small>
                         {{{ valor }}}
                     </small>

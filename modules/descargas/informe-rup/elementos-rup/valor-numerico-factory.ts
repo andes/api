@@ -8,7 +8,8 @@ export function ValorNumericoFactory(unidad) {
         template = `
             <div class="nivel-1">
                 <p>
-                    {{ registro.concepto.term }}:
+                    {{ registro.concepto.term }}
+                    {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}:
                     <small>
                         {{{ registro.valor }}}{{unidad}}
                     </small>

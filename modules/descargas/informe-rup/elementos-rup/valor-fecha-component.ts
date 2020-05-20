@@ -5,7 +5,8 @@ export class ValorFechaComponent extends HTMLComponent {
     template = `
             <div class="nivel-1">
                 <p>
-                    {{ registro.concepto.term }}:
+                    {{ registro.concepto.term }}
+                    {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}:
                     <small>
                         {{{ fecha }}}
                     </small>

@@ -5,7 +5,9 @@ export class FormulaBaseComponent extends HTMLComponent {
     template = `
         <div class="nivel-1">
             <p>
-                {{ registro.concepto.term }}: <small> {{ registro.valor }} </small>
+                {{ registro.concepto.term }}
+                {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}
+                : <small> {{ registro.valor }} </small>
             </p>
         </div>
         <div class="subregistro">
