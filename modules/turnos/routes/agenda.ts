@@ -7,11 +7,9 @@ import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
 import * as prestacionCtrl from '../../rup/controllers/prestacion';
-import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { getResumenDiarioMensual, getPlanillaC1 } from '../controller/reportesDiariosController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import * as operations from './../../legacy/controller/operations';
 import { toArray } from '../../../utils/utils';
 
 import * as AgendasEstadisticas from '../controller/estadisticas';
@@ -305,12 +303,6 @@ router.post('/agenda', async (req, res, next) => {
 
             EventCore.emitAsync('citas:agenda:create', dataSaved);
             res.json(dataSaved);
-
-            // Al crear una nueva agenda la cacheo para Sips
-            operations.cacheTurnos(dataSaved).catch(error => {
-                return next(error);
-            });
-            // Fin de insert cache
         } else {
             // puede ser un mensaje de solapamiento o una excepción (Error)
             Logger.log(req, 'citas', 'insert', {
@@ -443,10 +435,6 @@ router.put('/agenda/:id', async (req, res, next) => {
                 data,
                 err: false
             });
-
-            // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-            operations.cacheTurnos(data).catch(error => { return next(error); });
-            // Fin de insert cache
             res.json(data);
 
             EventCore.emitAsync('citas:agenda:update', data);
@@ -711,21 +699,11 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     });
                 }
             });
-            operations.cacheTurnos(data).catch(error => { return next(error); });
-            // Fin de insert cache
+
             res.json(data);
 
             return;
         });
-    }
-});
-
-router.get('/integracionCitasHPN', async (req, res, next) => {
-    try {
-        await agendaHPNCacheCtrl.integracion();
-        res.json('OK');
-    } catch (ex) {
-        next(ex);
     }
 });
 

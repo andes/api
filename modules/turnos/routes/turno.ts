@@ -7,7 +7,6 @@ import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import * as operations from './../../legacy/controller/operations';
 import * as turnosController from '../controller/turnosController';
 import * as moment from 'moment';
 import * as debug from 'debug';
@@ -351,10 +350,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 EventCore.emitAsync('citas:turno:asignar', turno);
                 EventCore.emitAsync('citas:agenda:update', doc2);
 
-                // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-                // Donde doc2 es el documeto Agenda actualizado
-                operations.cacheTurnos(doc2);
-                // Fin de insert cache
                 res.json(agendaRes);
             }
         });
@@ -480,7 +475,6 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
                 }
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 // Donde doc2 es el documeto de la Agenda actualizado
-                operations.cacheTurnos(doc2);
                 // Fin de insert cache
                 res.json(doc2);
                 if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {

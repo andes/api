@@ -208,22 +208,6 @@ export const conSql = {
     }
 };
 
-export const conSqlHPN = {
-    auth: {
-        user: '',
-        password: ''
-    },
-    serverSql: {
-        server: '',
-        database: '',
-        port: ''
-    },
-    pool: {
-        acquireTimeoutMillis: 15000
-    }
-
-};
-
 export const CDA = {
     rootOID: '',
     dniOID: '',
@@ -240,7 +224,6 @@ export const wsSalud = {
     hellerFS: '',
     hpnWS: '',
 };
-
 
 export const consolidadoPecas = {
     auth: {
@@ -277,15 +260,6 @@ export const RedisWebSockets = {
     port: getEnv('REDIS_PORT', '6379', 'n')
 };
 
-export const sqlCarpetasJob = {
-    user: '',
-    password: '',
-    server: '',
-    database: '',
-    requestTimeout: '',
-    stream: ''
-};
-
 export const TwitterConfig = {
     consumer_key: '',
     consumer_secret: '',
@@ -297,6 +271,7 @@ export const registroProvincialData = {
     hostost: '',
     queryFechaPath: ''
 };
+
 export const Drive = {
     adapter: 'file',
     options: {}
