@@ -13,21 +13,26 @@ router.post('/codificacion', async (req, res, next) => {
     const idPrestacion = req.body.idPrestacion;
     const unaPrestacion = await modelPrestacion.findById(idPrestacion);
     const codificaciones = await codificarPrestacion(unaPrestacion);
-    let data = new codificacion({
-        idPrestacion,
-        paciente: (unaPrestacion as any).paciente,
-        diagnostico: {
-            codificaciones
-        }
-    });
+    if (codificaciones) {
+        let data = new codificacion({
+            idPrestacion,
+            paciente: (unaPrestacion as any).paciente,
+            ambitoPrestacion: (unaPrestacion as any).solicitud.ambitoOrigen,
+            diagnostico: {
+                codificaciones
+            }
+        });
+        Auth.audit(data, req);
+        data.save((err) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+    } else {
+        res.json({});
+    }
 
-    Auth.audit(data, req);
-    data.save((err) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
 });
 
 router.patch('/codificacion/:id', async (req, res, next) => {
@@ -65,7 +70,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
             createdAt: {
                 $gte: new Date(req.query.fechaDesde),
                 $lte: new Date(req.query.fechaHasta),
-            },
+            }
         };
 
         if (!req.query.auditadas) {

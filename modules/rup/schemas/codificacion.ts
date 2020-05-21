@@ -25,6 +25,11 @@ const codificacionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId
     },
     paciente: pacienteSchema,
+    ambitoPrestacion: {
+        type: String,
+        required: false,
+        default: 'ambulatorio'
+    },
     diagnostico: {
         codificaciones: [{
             // (ver schema) solamente obtenida de RUP o SIPS y definida por el profesional
