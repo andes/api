@@ -1,5 +1,5 @@
 
-import { censoMensualJob } from '../modules/rup/controllers/censo';
+import { censoMensualJob } from '../modules/rup/internacion/censo.controller';
 
 async function run(done) {
     censoMensualJob(done);
