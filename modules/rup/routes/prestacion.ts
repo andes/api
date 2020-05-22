@@ -587,19 +587,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
 
-                let registros = [];
-                let registrosInternos = [];
-
-                prestacion.ejecucion.registros.forEach(registro => {
-                    if (registro.hasSections) { // COLONO O EPICRISIS
-                        registro.registros.forEach(seccion => {
-                            if (seccion.isSection && !seccion.noIndex) {
-                                registrosInternos = [...registrosInternos, ...seccion.registros];
-                            }
-                        });
-                    }
-                });
-                registros = [...registros, ...registrosInternos];
+                const registros = prestacion.getRegistros();
 
                 const dto = {
                     profesional: Auth.getProfesional(req),
