@@ -66,7 +66,7 @@ export async function fueraAgendaPecas(start, end, done) {
                             { $or: orgExcluidas },
                             { createdAt: { $gte: new Date(start) } },
                             { createdAt: { $lte: new Date(end) } },
-                            { ambitoPrestacion: 'ambulatorio' }
+                            { $or: [{ ambitoPrestacion: {$exists: false} }, { ambitoPrestacion: 'ambulatorio' }]}
                         ]
                     },
                     {
@@ -74,7 +74,7 @@ export async function fueraAgendaPecas(start, end, done) {
                             { $or: orgExcluidas },
                             { updatedAt: { $gte: new Date(start) } },
                             { updatedAt: { $lte: new Date(end) } },
-                            { ambitoPrestacion: 'ambulatorio' }
+                            { $or: [{ ambitoPrestacion: {$exists: false} }, { ambitoPrestacion: 'ambulatorio' }]}
                         ]
                     }
                 ]
