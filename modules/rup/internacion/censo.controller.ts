@@ -257,7 +257,7 @@ export async function censoMensual({ organizacion, unidadOrganizativa, fechaDesd
                 && moment(censo.fecha).isSameOrBefore(fechaHasta, 'day')));
         resultado.push(...censos);
     }
-
+    resultado.sort((a, b) => (a.fecha - b.fecha));
     return resultado;
 }
 
