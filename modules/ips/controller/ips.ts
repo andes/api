@@ -42,7 +42,7 @@ export async function getPaciente(cliente: SaludDigitalClient, pacienteID) {
 export async function getDocumentReference(pacienteID) {
     const { db, paciente } = await buscarPaciente(pacienteID);
     if (paciente) {
-        const organizacion = await Organizacion.findOne({ 'codigo.sisa': "0" });
+        const organizacion = await Organizacion.findOne({ 'codigo.sisa': '0' });
         const FHIRDevice = Device.encode();
         const FHIRCustodian = Organization.encode(organizacion);
         const FHIRPatient = Patient.encode(paciente);

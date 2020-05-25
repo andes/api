@@ -3,6 +3,7 @@
 // !!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import { Auth } from './auth/auth.class';
+import { IPS } from './config.private';
 
 const appMiddleware = [
     Auth.authenticate(),
@@ -208,7 +209,7 @@ export const modules = {
         route: '/modules/georeferencia',
     },
     ips: {
-        active: true,
+        active: IPS.enabled,
         path: './modules/ips/routes',
         route: '/modules/ips'
     }

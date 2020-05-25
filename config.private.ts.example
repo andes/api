@@ -302,3 +302,9 @@ export const FHIR = {
     ips_host: getEnv('IPS_HOST', 'https://testapp.hospitalitaliano.org.ar'),
     secret: getEnv('IPS_SECRET', ``)
 };
+
+export const IPS = {
+    auth: getEnv('IPS_AUTH', false),
+    enabled: getEnv('IPS_ENABLED', false)
+};
+

@@ -59,7 +59,4 @@ router.get('/fhir/Bundle/:id', async (req, res, next) => {
 //         return next(err);
 //     }
 // });
-
-
-
 export = router;

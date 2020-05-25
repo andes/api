@@ -112,8 +112,6 @@ export function filtrarRegistros(prestaciones: any[], { semanticTags }) {
     return registros;
 }
 
-
-
 /**
  * Método recursivo que busca los conceptos enviados por parametro
  * dentro del array de registros de una prestación
