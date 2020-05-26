@@ -42,7 +42,13 @@ export async function getResumenDiarioMensual(params: any) {
             $project: {
                 _id: 0,
                 fecha: '$ejecucion.fecha',
-                dia: { $dayOfMonth: '$ejecucion.fecha' },
+                dia: {
+                    $dayOfMonth:
+                    {
+                        date: '$ejecucion.fecha',
+                        timezone: 'America/Argentina/Buenos_Aires'
+                    }
+                },
                 turnoEstado: '$estado.tipo',
                 pacienteSexo: '$paciente.sexo',
                 pacienteEdad: {
@@ -165,7 +171,7 @@ export async function getResumenDiarioMensual(params: any) {
             $project: {
                 _id: 0,
                 fechaISO:  '$fecha',
-                fecha: { $dateToString: { format: '%d-%m-%G', date: '$fecha' } },
+                fecha: { $dateToString: { format: '%d-%m-%G', date: '$fecha', timezone: 'America/Argentina/Buenos_Aires' } },
                 tag: '$_id.tag',
                 sexo: '$_id.sexo',
                 edad: '$_id.edad',
@@ -182,7 +188,6 @@ export async function getResumenDiarioMensual(params: any) {
     ];
 
     const data = await prestacionModel.aggregate(pipeline);
-    // console.log("DATA", data);
     // formateamos la data por los tres turnos disponibles o por el total
     const tags = dividirTurno ? ['mañana', 'tarde', 'noche'] : ['total'];
     const formatedData = [];
