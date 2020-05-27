@@ -10,11 +10,15 @@ import { Express, Router } from 'express';
 import { AndesDrive } from '@andes/drive';
 import { apiOptionsMiddleware } from '@andes/api-tool';
 import { SendMessageCacheRouter, PacienteAppRouter } from './modules/mobileApp';
+import { initialize as FHIRInitialize } from '@andes/fhir';
 
 const proxy = require('express-http-proxy');
 const requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
+
+    FHIRInitialize({ dominio: configPrivate.FHIR.domain });
+
     // Inicializa Mongoose
     Connections.initialize();
 

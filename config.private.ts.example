@@ -38,6 +38,7 @@ export const ports = {
 
 // Hosts
 export const hosts = {
+    main: getEnv('MAIN_HOST', 'http://localhost:3002'),
     ldap: getEnv('LDAP_HOST', 'ldap.neuquen.gov.ar'),
     elastic_main: getEnv('ELASTIC_HOST', 'localhost:9200'),
     BI_QUERY: getEnv('BI_QUERY_HOST', 'http://localhost:3000'),
@@ -295,3 +296,15 @@ export const mobileExpiredVersion = '100';
 
 // url de acceso a los datos para la app de gestion
 export const urlDatosGestion = '';
+
+export const FHIR = {
+    domain: getEnv('FHIR_DOMAIN', 'http://app.andes.gob.ar'),
+    ips_host: getEnv('IPS_HOST', 'https://testapp.hospitalitaliano.org.ar'),
+    secret: getEnv('IPS_SECRET', ``)
+};
+
+export const IPS = {
+    auth: getEnv('IPS_AUTH', false),
+    enabled: getEnv('IPS_ENABLED', false)
+};
+
