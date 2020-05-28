@@ -35,6 +35,8 @@ schema.add({
         type: Boolean,
         default: false
     },
+
+    isEmpty: Boolean,
     /**
      * Por ahora un schema sensillo para marcar un concepto como privado
      *
