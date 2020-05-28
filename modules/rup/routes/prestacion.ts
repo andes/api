@@ -196,14 +196,14 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.organizacion) {
-            if (req.query.remitidas) {
+            if (req.query.referidas) {
                 match.$and.push({
                     $or: [
                         { 'solicitud.organizacion.id': Types.ObjectId(req.query.organizacion) },
                         { 'solicitud.historial': {
                             $elemMatch: {
                                 $and: [
-                                    { accion: 'remisionSolicitud' },
+                                    { accion: 'referencia' },
                                     { 'createdBy.organizacion._id': req.query.organizacion }
                                 ]
                             }
@@ -571,8 +571,8 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     data.solicitud.turno = req.body.idTurno;
                 }
                 break;
-            case 'remitir':
-                updateRegistroHistorialSolicitud(data.solicitud, 'remisionSolicitud');
+            case 'referir':
+                updateRegistroHistorialSolicitud(data.solicitud, 'referencia');
                 if (req.body.estado) {
                     data.estados.push();
                 }

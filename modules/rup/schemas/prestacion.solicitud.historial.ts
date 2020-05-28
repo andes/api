@@ -15,7 +15,7 @@ export let PrestacionSolicitudHistorialschema = new mongoose.Schema({
     profesional: profesionalSchema,
     accion: {
         type: String,
-        enum: ['liberacionTurno', 'asignacionProfesional', 'remisionSolicitud']
+        enum: ['liberacionTurno', 'asignacionProfesional', 'referencia']
     }
 });
 
