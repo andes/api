@@ -7,10 +7,8 @@ export class ObservacionesComponent extends HTMLComponent {
                 {{ registro.concepto.term }}
                 {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}
                 {{#if registro.valor}}:
-                    <br>
-                    <br>
                     <small class="subregistro">
-                        {{{ registro.valor }}}
+                        {{{ valor }}}
                     </small>
                 {{/if}}
             </p>
@@ -22,7 +20,8 @@ export class ObservacionesComponent extends HTMLComponent {
 
     async process() {
         this.data = {
-            registro: this.registro
+            registro: this.registro,
+            valor: this.registro.valor
         };
     }
 

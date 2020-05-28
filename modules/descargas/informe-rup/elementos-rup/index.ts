@@ -1,5 +1,5 @@
 import { ObservacionesComponent } from './observaciones.component';
-import { MoleculaBaseComponent } from './molecula-base-.omponent';
+import { MoleculaBaseComponent } from './molecula-base.component';
 import { ValorNumericoComponent } from './valor-numerico.component';
 import { ValorNumericoFactory } from './valor-numerico.factory';
 import { ValorFechaComponent } from './valor-fecha.component';

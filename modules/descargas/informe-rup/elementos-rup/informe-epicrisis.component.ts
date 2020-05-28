@@ -44,7 +44,10 @@ export class InformeEpicrisisComponent extends HTMLComponent {
 
     async process() {
         const ps = this.registro.registros.map(registro => {
-            return registroToHTML(this.prestacion, registro, this.depth + 1);
+            if (this.isEmpty(registro)) {
+                return '';
+            }
+            return registroToHTML(this.prestacion, registro, 0);
         });
         const registros = await Promise.all(ps);
 
@@ -58,6 +61,14 @@ export class InformeEpicrisisComponent extends HTMLComponent {
                 fechaHasta: this.format(this.registro.valor.fechaHasta),
             }
         };
+    }
+
+    isEmpty(registro) {
+        const hasValue = !!registro.valor;
+        const hasChilds = registro.registros.length > 0;
+        const emptyChilds = (registro.registros as any[]).every(r => this.isEmpty(r));
+
+        return !hasValue && emptyChilds;
     }
 
     format(date) {

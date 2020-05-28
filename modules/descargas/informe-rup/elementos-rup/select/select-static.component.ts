@@ -24,7 +24,10 @@ export class SelectStaticComponent extends HTMLComponent {
     }
 
     getValor() {
-        const valor = this.registro.valor || {};
+        if (!this.registro.valor) {
+            return '(sin dato)';
+        }
+        const valor = this.registro.valor;
         if (Array.isArray(valor)) {
             return valor.map(v => `${v.nombre || v.nombre}`).join(', ');
         } else {
