@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { Documento } from './../controller/descargas';
+import { Documento } from '../controller/descargas-puco';
 import { Auth } from '../../../auth/auth.class';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { DocumentoCenso } from './../controller/descargaCenso';
@@ -7,7 +7,8 @@ import { DocumentoCensoMensual } from './../controller/descargaCensoMensual';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from './../../../config.private';
 import moment = require('moment');
-
+import { InformeRUP } from '../informe-rup/informe-rup';
+import { model as Prestacion } from '../../rup/schemas/prestacion';
 
 const router = express.Router();
 
@@ -51,28 +52,27 @@ router.post('/censoMensual', (req: any, res, next) => {
  * Se usa POST para generar la descarga porque se envían datos
  * que van a ser parte del archivo
  */
-router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
-    Documento.descargar(req, res, next).then(archivo => {
-        res.download((archivo as string), (err) => {
-            if (err) {
-                next(err);
-            } else {
-                next();
-            }
-        });
-    }).catch(e => {
-        return next(e);
-    });
+router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
+    const idPrestacion = req.body.idPrestacion;
+    const idRegistro = req.body.idRegistro;
+
+    const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+    const fileName = await informe.informe();
+
+    return res.download(fileName);
 });
 
 // envío de resumen de prestación por correo
 router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
-    const prestacion: any = await Documento.getPrestacionData(req.body.idPrestacion);
+    const idPrestacion = req.body.idPrestacion;
+    const idRegistro = req.body.idRegistro;
+
+    const prestacion: any = await Prestacion.findById(idPrestacion);
     let procedimiento = '';
 
-    if (req.body.idRegistro) {
-        const registro = prestacion.findRegistroById(req.body.idRegistro);
+    if (idRegistro) {
+        const registro = prestacion.findRegistroById(idRegistro);
         procedimiento = registro.concepto.term.toUpperCase();
     } else {
         procedimiento = prestacion.solicitud.tipoPrestacion.term.toUpperCase();
@@ -95,7 +95,10 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     }
     if (emailFiltrado) {
         try {
-            const archivo = await Documento.descargar(req, res, next);
+            // const archivo = await Documento.descargar(req, res, next);
+            const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+            const fileName = await informe.informe();
+
             const html = await SendEmail.renderHTML('emails/email-informe.html', handlebarsData);
             const data = {
                 from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
@@ -105,7 +108,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
                 html,
                 attachments: {
                     filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
-                    path: archivo
+                    path: fileName
                 }
             };
             await SendEmail.sendMail(data);

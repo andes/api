@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import * as moment from 'moment';
 import { profesional } from '../schemas/profesional';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
@@ -143,4 +144,18 @@ export async function search(filter, fields) {
     ];
 
     return await profesional.aggregate(aggregate);
+}
+
+export async function searchMatriculas(profesionalId) {
+    const _profesional: any = await profesional.findById(profesionalId);
+    const filterFormaciones = (e => !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date()));
+
+    return {
+        nombre: _profesional.nombre,
+        apellido: _profesional.apellido,
+        formacionGrado: _profesional.formacionGrado ?
+            _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [],
+        formacionPosgrado: _profesional.formacionPosgrado ?
+            _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : []
+    };
 }

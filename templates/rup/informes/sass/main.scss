@@ -108,6 +108,12 @@ header {
     }
 }
 
+.col-3 {
+    div {
+        width: 30%;
+    }
+}
+
 // Tipografía
 h1,
 h2,
@@ -243,6 +249,10 @@ main {
             margin-left: 0em;
         }
 
+        .subregistro {
+            margin-left: 1em;
+        }
+
         .nivel-2:not(:first-child) {
             margin-left: 1em;
             width: 100%;
@@ -271,6 +281,14 @@ main {
             small {
                 font-size: 0.25cm;
             }
+        }
+
+        .archivo-adjunto {
+            //    float: right;
+            text-align: center;
+            max-width: 5cm;
+            max-height: 5cm;
+            margin: 0 .35cm;
         }
     }
 }
