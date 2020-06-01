@@ -17,12 +17,19 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     let pac: any;
     const idPaciente = req.params.id;
     if (req.query.familiar) {
-        pac = await paciente.findOne({ _id: idPaciente });
-        if (pac) {
-            return res.json(pac);
+        pac = (await controllerPaciente.buscarPaciente(idPaciente)).paciente;
+        const resultado = await controllerPaciente.buscarPaciente(req.user.pacientes[0].id);
+        const esFamiliar = (resultado.paciente.relaciones).find(rel => rel.documento === pac.documento);
+        if (esFamiliar) {
+            if (pac) {
+                return res.json(pac);
+            } else {
+                return res.status(422).send({ message: 'Paciente no encontrado' });
+            }
         } else {
-            return res.status(422).send({ message: 'Paciente no encontrado' });
+            return res.status(422).send({ message: 'unauthorized' });
         }
+
     } else {
         const pacientes = req.user.pacientes;
         const index = pacientes.findIndex(item => item.id === idPaciente);
