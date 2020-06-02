@@ -95,7 +95,7 @@ export async function suggest(query: any) {
         });
 
         const sortScore = (a, b) => {
-            return a._score - b._score;
+            return b._score - a._score;
         };
 
         return pacientes.sort(sortScore);

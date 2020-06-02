@@ -21,6 +21,8 @@ class PacienteResource extends ResourceBase {
         nombre: MongoQuery.partialString,
         apellido: MongoQuery.partialString,
         sexo: MongoQuery.equalMatch,
+        activo: MongoQuery.equalMatch,
+        reportarError: MongoQuery.equalMatch,
         search: (value) => {
             return {
                 $or: [
@@ -58,16 +60,6 @@ PacienteRouter.post('/paciente/match', Auth.authenticate(), async (req: any, res
                 });
             }
             break;
-        case 'simplequery':
-            query = {
-                documento: req.body.documento,
-                apellido: req.body.apellido,
-                nombre: req.body.nombre,
-                sexo: req.body.sexo,
-                activo: true
-            };
-            resultado = await Paciente.find(query);
-            break;
         case 'suggest':
             query = {
                 documento: req.body.documento,
@@ -79,6 +71,12 @@ PacienteRouter.post('/paciente/match', Auth.authenticate(), async (req: any, res
             resultado = await controller.suggest(query);
             break;
     }
+    resultado = resultado.map(elto => {
+        const item = JSON.parse(JSON.stringify(elto));
+        delete item.foto;
+        item._score = elto._score;
+        return item;
+    });
     res.json(resultado);
 });
 
@@ -118,7 +116,7 @@ PacienteRouter.get('/paciente/:id/foto', Auth.authenticate(), async (req, res, n
 });
 
 
-PacienteRouter.post('/paciente', Auth.authenticate(), async (req, res, next) => {
+PacienteRouter.post('/paciente/', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
@@ -134,7 +132,7 @@ PacienteRouter.post('/paciente', Auth.authenticate(), async (req, res, next) => 
 });
 
 
-PacienteRouter.patch('paciente/:id', Auth.authenticate(), async (req, res, next) => {
+PacienteRouter.patch('/paciente', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
         return next(403);
     }
