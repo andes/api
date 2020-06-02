@@ -69,11 +69,9 @@ router.get('/padronSumar', async (req, res, next) => {
  */
 
 router.get('/puco', async (req, res, next) => {
-
     if (req.query.dni) {
         let padron;
         let rta;
-
         if (req.query.periodo) {
             padron = req.query.periodo;
         } else {
@@ -83,18 +81,20 @@ router.get('/puco', async (req, res, next) => {
             }
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
-        // realiza la busqueda por dni y el padron seteado anteriormente
         rta = await Puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
-
         if (rta.length > 0) {
             const resultOS = [];
             let unaOS;
             // genera un array con todas las obras sociales para una version de padron dada
-            for (let i = 0; i < rta.length; i++) {
-                unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
-                resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
+            try {
+                for (let i = 0; i < rta.length; i++) {
+                    unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS });
+                    resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
+                }
+                res.json(resultOS);
+            } catch (error) {
+                next(error);
             }
-            res.json(resultOS);
         } else {
             res.json([]);
         }
