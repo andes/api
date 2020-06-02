@@ -13,12 +13,36 @@ const router = express.Router();
  * Chequea que el paciente este asociado a la cuenta
  */
 
-router.get('/paciente/:id', async (req: any, res, next) => {
+router.get('/paciente/:id', (req: any, res, next) => {
+    const idPaciente = req.params.id;
+    const pacientes = req.user.pacientes;
+    const index = pacientes.findIndex(item => item.id === idPaciente);
+    if (index >= 0) {
+        return controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
+            // [TODO] Projectar datos que se pueden mostrar al paciente
+            const pac = resultado.paciente;
+            delete pac.claveBloking;
+            delete pac.entidadesValidadoras;
+            delete pac.carpetaEfectores;
+            delete pac.createdBy;
+
+            return res.json(pac);
+
+        }).catch(error => {
+            return res.status(422).send({ message: 'invalid_id' });
+        });
+    } else {
+        return res.status(422).send({ message: 'unauthorized' });
+    }
+});
+
+router.get('/paciente/:id/relaciones', async (req: any, res, next) => {
     let pac: any;
     const idPaciente = req.params.id;
-    if (req.query.familiar) {
+    if (idPaciente) {
         pac = (await controllerPaciente.buscarPaciente(idPaciente)).paciente;
         const resultado = await controllerPaciente.buscarPaciente(req.user.pacientes[0].id);
+        // Verifico nuevamente que el paciente sea familiar del usuario logueado
         const esFamiliar = (resultado.paciente.relaciones).find(rel => rel.documento === pac.documento);
         if (esFamiliar) {
             if (pac) {
@@ -29,32 +53,13 @@ router.get('/paciente/:id', async (req: any, res, next) => {
         } else {
             return res.status(422).send({ message: 'unauthorized' });
         }
-
     } else {
-        const pacientes = req.user.pacientes;
-        const index = pacientes.findIndex(item => item.id === idPaciente);
-        if (index >= 0) {
-            try {
-                const resultado = await controllerPaciente.buscarPaciente(pacientes[index].id);
-                pac = resultado.paciente;
-                // [TODO] Projectar datos que se pueden mostrar al paciente
-                delete pac.claveBloking;
-                delete pac.entidadesValidadoras;
-                delete pac.carpetaEfectores;
-                delete pac.createdBy;
-                return res.json(pac);
-
-            } catch (error) {
-                return res.status(422).send({ message: 'invalid_id' });
-            }
-        } else {
-            return res.status(422).send({ message: 'unauthorized' });
-        }
+        return res.status(422).send({ message: 'unauthorized' });
     }
 });
 
 router.get('/relaciones', async (req: any, res, next) => {
-    const relacion = await controllerPaciente.buscarRelaciones(req.query);
+    const relacion = await controllerPaciente.buscarRelaciones(req.query.id);
     return res.json(relacion);
 });
 /**

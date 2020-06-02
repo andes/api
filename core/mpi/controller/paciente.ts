@@ -153,11 +153,6 @@ export async function buscarPacByDocYSexo(documento, sexo) {
     return lista;
 }
 
-export async function buscarPacByDoc(documento) {
-    const res = await paciente.findOne(documento);
-    return res;
-}
-
 /**
  * Busca un paciente en MPI y luego en andes con cierta condición.
  * @param condition
@@ -1071,9 +1066,9 @@ EventCore.on('mpi:patient:create', async (patientCreated) => {
     }
 
 });
-export async function buscarRelaciones(documento) {
-    const pac = await this.buscarPacByDoc(documento);
-    let relaciones = pac.relaciones;
+export async function buscarRelaciones(id) {
+    const pac = await this.buscarPaciente(id);
+    let relaciones = pac.paciente.relaciones;
     let arrayRelaciones: any = [];
     if (relaciones) {
         for (let index = 0; index < relaciones.length; index++) {
@@ -1082,9 +1077,10 @@ export async function buscarRelaciones(documento) {
             objetoRelacion.apellido = relaciones[index].apellido;
             objetoRelacion.documento = relaciones[index].documento;
             objetoRelacion.relacion = relaciones[index].relacion;
-            let pacienteRelacion: any = await this.buscarPacByDoc({ documento: objetoRelacion.documento });
-            objetoRelacion.id = pacienteRelacion.id;
-            objetoRelacion.edad = calcularEdad(pacienteRelacion.fechaNacimiento);
+            objetoRelacion.referencia = relaciones[index].referencia;
+            let pacienteRelacion: any = await this.buscarPaciente(relaciones[index].referencia);
+            objetoRelacion.id = pacienteRelacion.paciente._id;
+            objetoRelacion.edad = calcularEdad(pacienteRelacion.paciente.fechaNacimiento);
             arrayRelaciones.push(objetoRelacion);
         }
     }
