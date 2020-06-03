@@ -33,6 +33,13 @@ export let schema = new mongoose.Schema({
         default: false
     },
 
+    // Indica si este elementoRUP requiere indicar diagnostico principal
+    requiereDiagnosticoPrincipal: {
+        type: Boolean,
+        required: false,
+        default: true
+    },
+
     // true si no muestra el label de motivo de consulta.
     motivoConsultaOpcional: Boolean,
 
