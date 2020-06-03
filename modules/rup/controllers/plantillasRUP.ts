@@ -41,6 +41,13 @@ export async function remove(id) {
 
 export async function find(data, req) {
     const query: any = {};
+    if (data.esSolicitud !== undefined) {
+        if (data.esSolicitud) {
+            query['esSolicitud'] = true;
+        } else {
+            query['esSolicitud'] = false;
+        }
+    }
     if (data.conceptId) {
         query['conceptos.conceptId'] = data.conceptId;
     }
@@ -62,10 +69,12 @@ export async function find(data, req) {
             ]
         });
     }
+
     return await PlantillasRUP.find(query);
 }
 
 export async function findById(id) {
+
     return await PlantillasRUP.findById(id);
 }
 
