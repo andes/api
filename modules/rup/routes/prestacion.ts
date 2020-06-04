@@ -14,6 +14,7 @@ import async = require('async');
 import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
+
 const router = express.Router();
 
 /***
@@ -586,11 +587,13 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
 
+                const registros = prestacion.getRegistros();
+
                 const dto = {
                     profesional: Auth.getProfesional(req),
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
-                    frecuentes: req.body.registros
+                    frecuentes: registros
                 };
                 frecuentescrl.actualizarFrecuentes(dto).then(() => {
                     Logger.log(req, 'rup', 'update', {

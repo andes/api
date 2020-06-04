@@ -210,6 +210,21 @@ schema.methods.findRegistroById = function (id: string | mongoose.Types.ObjectId
 };
 
 
+schema.methods.getRegistros = function () {
+    let registrosInternos = [];
+    const registros = this.ejecucion.registros;
+    registros.forEach(reg => {
+        if (reg.hasSections) {
+            reg.registros.forEach(seccion => {
+                if (seccion.isSection && !seccion.noIndex) {
+                    registrosInternos = [...registrosInternos, ...seccion.registros];
+                }
+            });
+        }
+    });
+    return [...registros, ...registrosInternos];
+};
+
 // Habilitar plugin de auditoría
 schema.plugin(AuditPlugin);
 schema.index({ 'solicitud.turno': 1 });
