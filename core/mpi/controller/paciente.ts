@@ -153,7 +153,6 @@ export async function buscarPacByDocYSexo(documento, sexo) {
     return lista;
 }
 
-
 /**
  * Busca un paciente en MPI y luego en andes con cierta condición.
  * @param condition
@@ -1067,3 +1066,82 @@ EventCore.on('mpi:patient:create', async (patientCreated) => {
     }
 
 });
+export async function buscarRelaciones(id) {
+    const pac = await this.buscarPaciente(id);
+    let relaciones = pac.paciente.relaciones;
+    let arrayRelaciones: any = [];
+    if (relaciones) {
+        for (let index = 0; index < relaciones.length; index++) {
+            let objetoRelacion: any = new Object();
+            objetoRelacion.nombre = relaciones[index].nombre;
+            objetoRelacion.apellido = relaciones[index].apellido;
+            objetoRelacion.documento = relaciones[index].documento;
+            objetoRelacion.relacion = relaciones[index].relacion;
+            objetoRelacion.referencia = relaciones[index].referencia;
+            let pacienteRelacion: any = await this.buscarPaciente(relaciones[index].referencia);
+            objetoRelacion.id = pacienteRelacion.paciente._id;
+            objetoRelacion.edad = calcularEdad(pacienteRelacion.paciente.fechaNacimiento);
+            arrayRelaciones.push(objetoRelacion);
+        }
+    }
+    return arrayRelaciones;
+}
+
+export function calcularEdad(fecha) {
+    let edad = null;
+    if (fecha) {
+        const birthDate = new Date(fecha);
+        const currentDate = new Date();
+        let years = (currentDate.getFullYear() - birthDate.getFullYear());
+        if (currentDate.getMonth() < birthDate.getMonth() ||
+            currentDate.getMonth() === birthDate.getMonth() && currentDate.getDate() < birthDate.getDate()) {
+            years--;
+        }
+        edad = years;
+    }
+    return edad;
+}
+
+export function edadReal(fecha) {
+    // Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
+    let edad: Object;
+    let fechaNac: any;
+    const fechaActual: Date = new Date();
+    let fechaAct: any;
+    let difAnios: any;
+    let difDias: any;
+    let difMeses: any;
+    let difHs: any;
+
+    fechaNac = moment(fecha, 'YYYY-MM-DD HH:mm:ss');
+    fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
+    difDias = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
+    difAnios = Math.floor(difDias / 365.25);
+    difMeses = Math.floor(difDias / 30.4375);
+    difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
+
+
+    if (difAnios !== 0) {
+        edad = {
+            valor: difAnios,
+            unidad: 'Años'
+        };
+    } else if (difMeses !== 0) {
+        edad = {
+            valor: difMeses,
+            unidad: 'Meses'
+        };
+    } else if (difDias !== 0) {
+        edad = {
+            valor: difDias,
+            unidad: 'Días'
+        };
+    } else if (difHs !== 0) {
+        edad = {
+            valor: difHs,
+            unidad: 'Horas'
+        };
+    }
+
+    return edad;
+}

@@ -3,7 +3,7 @@ import { Auth } from './../../../auth/auth.class';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
-
+import { paciente } from '../../../core/mpi/schemas/paciente';
 const router = express.Router();
 
 /**
@@ -36,6 +36,32 @@ router.get('/paciente/:id', (req: any, res, next) => {
     }
 });
 
+router.get('/paciente/:id/relaciones', async (req: any, res, next) => {
+    let pac: any;
+    const idPaciente = req.params.id;
+    if (idPaciente) {
+        pac = (await controllerPaciente.buscarPaciente(idPaciente)).paciente;
+        const resultado = await controllerPaciente.buscarPaciente(req.user.pacientes[0].id);
+        // Verifico nuevamente que el paciente sea familiar del usuario logueado
+        const esFamiliar = (resultado.paciente.relaciones).find(rel => rel.documento === pac.documento);
+        if (esFamiliar) {
+            if (pac) {
+                return res.json(pac);
+            } else {
+                return res.status(422).send({ message: 'Paciente no encontrado' });
+            }
+        } else {
+            return res.status(422).send({ message: 'unauthorized' });
+        }
+    } else {
+        return res.status(422).send({ message: 'unauthorized' });
+    }
+});
+
+router.get('/relaciones', async (req: any, res, next) => {
+    const relacion = await controllerPaciente.buscarRelaciones(req.query.id);
+    return res.json(relacion);
+});
 /**
  * Modifica datos de contacto y otros
  *
@@ -43,12 +69,14 @@ router.get('/paciente/:id', (req: any, res, next) => {
  *
  */
 
-router.put('/paciente/:id', (req: any, res, next) => {
+router.put('/paciente/:id', async (req: any, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = req.user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
+        try {
+            const resultado = await controllerPaciente.buscarPaciente(pacientes[index].id);
+            // tslint:disable-next-line: no-shadowed-variable
             const paciente = resultado.paciente;
             const data: any = {};
 
@@ -69,9 +97,9 @@ router.put('/paciente/:id', (req: any, res, next) => {
                 return next(error);
             });
 
-        }).catch(error => {
+        } catch (error) {
             return next({ message: 'invalid_id' });
-        });
+        }
     } else {
         return next({ message: 'unauthorized' });
     }
@@ -82,13 +110,14 @@ router.put('/paciente/:id', (req: any, res, next) => {
  * [No esta en uso]
  */
 
-router.patch('/pacientes/:id', (req, res, next) => {
+router.patch('/pacientes/:id', async (req, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = (req as any).user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
 
     if (index >= 0) {
-        controllerPaciente.buscarPaciente(req.params.id).then((resultado: any) => {
+        try {
+            const resultado = await controllerPaciente.buscarPaciente(req.params.id);
             if (resultado) {
                 switch (req.body.op) {
                     case 'updateFotoMobile':
@@ -108,9 +137,9 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     return res.json(resultado.paciente);
                 });
             }
-        }).catch((err) => {
+        } catch (err) {
             return next(err);
-        });
+        }
     }
 });
 
@@ -124,6 +153,7 @@ router.get('/laboratorios/(:id)', async (req, res, next) => {
     const pacientes = (req as any).user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
+        // tslint:disable-next-line: no-shadowed-variable
         let { paciente } = await controllerPaciente.buscarPaciente(idPaciente);
         if (!paciente) {
             return next({ message: 'no existe el paciente' });
