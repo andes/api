@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
     // Indica si este elemento está activo
@@ -18,7 +19,7 @@ export let schema = new mongoose.Schema({
     // Tipo de elemento
     tipo: {
         type: String,
-        enum: ['atomo', 'molecula', 'formula']
+        enum: ['atomo', 'molecula', 'formula', 'prestacion']
     },
     // Calculo de formula a implementar
     formulaImplementation: {
@@ -61,7 +62,7 @@ export let schema = new mongoose.Schema({
                 if (value === null) {
                     return true;
                 } else {
-                    return Object.isObject(value);
+                    return typeof value === 'object';
                 }
             },
             message: '{VALUE} is not a valid object'
@@ -97,7 +98,7 @@ export let schema = new mongoose.Schema({
                         if (value === null) {
                             return true;
                         } else {
-                            return Object.isObject(value);
+                            return typeof value === 'object';
                         }
                     },
                     message: '{VALUE} is not a valid object'
@@ -124,6 +125,8 @@ schema.pre('find', function (next) {
     this.populate('requeridos.elementoRUP');
     next();
 });
+
+schema.plugin(AuditPlugin);
 
 export let elementoRUP = mongoose.model('elementoRUP', schema, 'elementosRUP');
 
