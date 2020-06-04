@@ -1,9 +1,12 @@
 import { userScheduler } from '../../../config.private';
 import { paciente } from '../schemas/paciente';
-import { matchSisa } from '../../../utils/servicioSisa';
 import { updatePaciente } from './paciente';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
+import { sisa, sisaToAndes } from '@andes/fuentes-autenticas';
+import { sisa as sisaConfig } from '../../../config.private';
+import * as config from '../../../config';
+import { Matching } from '@andes/match';
 
 let logRequest = {
     ip: userScheduler.ip,
@@ -42,15 +45,16 @@ export async function mpiCorrector(done) {
 
 async function consultarSisa(persona: any) {
     try {
-        // realiza la consulta con sisa y devuelve los resultados del matcheo
-        const resultado = await matchSisa(persona);
-        if (resultado) {
-            const match = resultado['matcheos'].matcheo; // Valor del matcheo de sisa
-            const pacienteSisa: any = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
-            logRequest.body = { _id: persona.id };
-            if (match >= 95) {
-                // Solo lo validamos con sisa si entra por aca
-                const datosAnteriores = { nombre: persona.nombre.toString(), apellido: persona.apellido.toString() };
+        const pacienteSisa = await sisa(persona, sisaConfig, sisaToAndes);
+
+        if (pacienteSisa) {
+            let match = new Matching();
+            const weights = config.mpi.weightsDefault;
+            const valorMatching = match.matchPersonas(persona, pacienteSisa, weights, config.algoritmo); // Valor del matcheo de sisa
+
+            if (valorMatching >= 0.95) {
+                // Solo lo validamos con sisa si entra por aquí
+                const datosAnteriores = { nombre: persona.nombre, apellido: persona.apellido };
                 const nuevosDatos = { nombre: pacienteSisa.nombre, apellido: pacienteSisa.apellido };
                 await actualizarPaciente(persona, pacienteSisa);
                 await andesLog(logRequest, logKeys.mpiCorrector.key, persona.id, logKeys.mpiCorrector.operacion, nuevosDatos, datosAnteriores);

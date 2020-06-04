@@ -8,8 +8,11 @@ import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
-import { matchSisa } from '../../../utils/servicioSisa';
-import { getServicioRenaper } from '../../../utils/servicioRenaper';
+import { sisa, renaperToAndes, sisaToAndes } from '@andes/fuentes-autenticas';
+import { sisa as sisaConfig } from '../../../config.private';
+import { renaper } from '@andes/fuentes-autenticas';
+import { RenaperConfig } from '../../../modules/fuentesAutenticas/interfaces';
+import { renaper as renaConfig } from '../../../config.private';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
@@ -694,72 +697,63 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     }
     let sexoQuery = sexoPaciente === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
-
+    const renaperConfig: RenaperConfig = {
+        usuario: renaConfig.Usuario,
+        password: renaConfig.password,
+        url: renaConfig.url,
+        server: renaConfig.serv
+    };
     try {
-        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
+        resRenaper = await renaper({ documento: pacienteAndes.documento, sexo: sexoPaciente }, renaperConfig, renaperToAndes);
+        if (!resRenaper) {
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
+            return await validarSisa(pacienteAndes, req);
+        }
         if (pacienteAndes.id) {
             const weights = config.mpi.weightsDefault;
             let match = new Matching();
             let matchPacienteRena = {
                 documento: pacienteAndes.documento,
-                nombre: resRenaper.datos.nombres,
-                apellido: resRenaper.datos.apellido,
-                fechaNacimiento: resRenaper.datos.fechaNacimiento,
+                nombre: resRenaper.nombres,
+                apellido: resRenaper.apellido,
+                fechaNacimiento: resRenaper.fechaNacimiento,
                 sexo: sexoQuery
             };
-            let valorMatching = match.matchPersonas(pacienteAndes, matchPacienteRena, weights, config.algoritmo);
-            resRenaper.datos.matching = valorMatching;
-            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper.datos, pacienteAndes);
+            const valorMatching = match.matchPersonas(pacienteAndes, matchPacienteRena, weights, config.algoritmo);
+            resRenaper.matching = valorMatching;
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper, pacienteAndes);
         } else {
-            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper.datos, null);
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper, null);
         }
-    } catch (error) {
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
-        return await validarSisa(pacienteAndes, req);
-    }
-    let band = true;
-    // Respuesta correcta de renaper?
-    if (resRenaper && resRenaper.datos && resRenaper.datos.nroError === 0) {
-        let pacienteRenaper = resRenaper.datos;
 
-        if (pacienteAndes.direccion.length) {
-            pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
+        // Respuesta correcta de rennaper
+        resRenaper.documento = pacienteAndes.documento;
+        if (resRenaper.direccion.length) {
             // Completamos campos correspondientes a dirección legal
-            let ubicacion = await localidadController.matchUbicacion(pacienteRenaper.provincia, pacienteRenaper.ciudad);
-            pacienteAndes.direccion[1] = {
-                valor: pacienteRenaper.calle + ' ' + pacienteRenaper.numero,
-                codigoPostal: pacienteRenaper.cpostal,
-                ubicacion: {
-                    pais: (ubicacion.provincia) ? ubicacion.provincia.pais : null,
-                    provincia: (ubicacion.provincia) ? ubicacion.provincia : null,
-                    localidad: (ubicacion.localidad) ? ubicacion.localidad : null,
-                    barrio: null,
-                },
-                ranking: 0,
-                geoReferencia: null,
-                ultimaActualizacion: new Date(),
-                activo: true
+            let ubicacionRena = resRenaper.direccion[0].ubicacion;
+            const ubicacionMatched = await localidadController.matchUbicacion(ubicacionRena.provincia.nombre, ubicacionRena.localidad.nombre);
+            ubicacionRena = {
+                pais: (ubicacionMatched.provincia) ? ubicacionMatched.provincia.pais : null,
+                provincia: (ubicacionMatched.provincia) ? ubicacionMatched.provincia : null,
+                localidad: (ubicacionMatched.localidad) ? ubicacionMatched.localidad : null,
+                barrio: null,
             };
+            resRenaper.direccion[1] = resRenaper.direccion[0];
+            resRenaper.direccion[1].ubicacion = ubicacionRena;
+            resRenaper.direccion[1].geoReferencia = null;
         }
-        band = regtest.test(pacienteRenaper.nombres);
-        band = band || regtest.test(pacienteRenaper.apellido);
-        if (!band) {
-            pacienteAndes.nombre = pacienteRenaper.nombres;
-            pacienteAndes.apellido = pacienteRenaper.apellido;
-            pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
-            pacienteAndes.cuil = pacienteRenaper.cuil;
-            pacienteAndes.estado = 'validado';
-            pacienteAndes.foto = await validarTamañoFoto(pacienteRenaper.foto);
-            if (pacienteAndes.direccion.length) {
-                pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
-            }
-            return { paciente: pacienteAndes, validado: true };
-        } else {
-            return await validarSisa(pacienteAndes, req, pacienteRenaper.foto);
+        resRenaper.foto = await validarTamañoFoto(resRenaper.foto);
+        const flag = !regtest.test(resRenaper.nombre) && !regtest.test(resRenaper.apellido);
+        if (flag) {
+            resRenaper.estado = 'validado';
+            return { paciente: resRenaper, validado: true };
         }
-    } else {
+        return await validarSisa(resRenaper, req);
+
+    } catch (err) {
         return await validarSisa(pacienteAndes, req);
     }
+
 }
 
 async function validarTamañoFoto(foto) {
@@ -790,27 +784,44 @@ async function resizeFoto(foto) {
     return resizedBase64;
 }
 
-async function validarSisa(pacienteAndes: any, req: any, foto = null) {
+async function validarSisa(pacienteAndes: any, req: any) {
     try {
-        let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
-
+        const sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
         pacienteAndes.sexo = sexoPaciente;
-        let resSisa: any = await matchSisa(pacienteAndes);
+        let resSisa: any = await sisa({ documento: pacienteAndes.documento, sexo: sexoPaciente }, sisaConfig, sisaToAndes);
         andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resSisa);
-
-        pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
-        pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
-        pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
-        pacienteAndes.estado = 'validado';
-        if (foto) {
-            pacienteAndes.foto = foto;
+        if (resSisa) {
+            if (resSisa.direccion.length && resSisa.direccion[0].ubicacion) {
+                resSisa.direccion[0].ubicacion = await matchDireccion(resSisa.direccion[0].ubicacion);
+            }
+            if (pacienteAndes.id) {
+                pacienteAndes.nombre = resSisa.nombre;
+                pacienteAndes.apellido = resSisa.apellido;
+                pacienteAndes.fechaNacimiento = resSisa.fechaNacimiento;
+                pacienteAndes.estado = 'validado';
+                return { paciente: pacienteAndes, validado: true };
+            } else {
+                return { paciente: resSisa, validado: true };
+            }
         }
-        return { paciente: pacienteAndes, validado: true };
+        return { paciente: pacienteAndes, validado: false };
+
     } catch (error) {
         andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por SISA');
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }
+}
+
+export async function matchDireccion(ubicacion) {
+    const ubicacionMatched = await localidadController.matchUbicacion(ubicacion.provincia.nombre, ubicacion.localidad.nombre);
+    const ubic = {
+        pais: (ubicacionMatched.provincia) ? ubicacionMatched.provincia.pais : null,
+        provincia: (ubicacionMatched.provincia) ? ubicacionMatched.provincia : null,
+        localidad: (ubicacionMatched.localidad) ? ubicacionMatched.localidad : null,
+        barrio: null,
+    };
+    return ubic;
 }
 
 /**

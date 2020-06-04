@@ -66,12 +66,6 @@ export const modules = {
         // TODO activar middleware de autenticación
         middleware: appMiddleware
     },
-    auditoria: {
-        active: true,
-        path: './core/mpi/routes/auditoria',
-        route: '/core/mpi/auditoria',
-        middleware: appMiddleware
-    },
     turnos: {
         active: true,
         path: './modules/turnos/routes',
