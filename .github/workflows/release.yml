@@ -1,8 +1,7 @@
 name: RELEASE
 on:
-    push:
-        branches:    
-            - master
+    schedule:
+        - cron: '0 2 * * SUN'
 jobs:
     release:
         runs-on: ubuntu-latest
