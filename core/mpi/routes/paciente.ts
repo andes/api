@@ -206,8 +206,7 @@ router.get('/pacientes/:id', async (req, res, next) => {
         const { paciente: pacienteFound } = await controller.buscarPaciente(idPaciente);
         const pacienteAux = JSON.parse(JSON.stringify(pacienteFound));
 
-        delete pacienteAux.foto;
-        if (pacienteAux.relaciones?.length) {
+        if (pacienteAux.relaciones ?.length) {
             pacienteAux.relaciones.map(rel => {
                 delete rel.foto;
                 return rel;
