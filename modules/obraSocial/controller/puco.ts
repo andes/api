@@ -24,8 +24,8 @@ export async function pacientePuco(documento) {
         let unaOS;
         // genera un array con todas las obras sociales para una version de padron dada
         for (let i = 0; i < rta.length; i++) {
-            unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
-            resultOS[i] = { codigoPuco: rta[i].codigoOS, nombre: unaOS[0].nombre, financiador: unaOS[0].nombre };
+            unaOS = await ObraSocial.findOne({ codigoPuco: rta[i].codigoOS });
+            resultOS[i] = { codigoPuco: rta[i].codigoOS, nombre: unaOS?.nombre || '', financiador: unaOS?.nombre || '' };
         }
     }
     return resultOS;

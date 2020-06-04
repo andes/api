@@ -2,15 +2,17 @@ import * as express from 'express';
 import { Puco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
 import * as pucoController from '../controller/puco';
+import * as profeController from '../controller/profe';
 import * as sumarController from '../controller/sumar';
-import * as prepagaController from '../controller/prepagas';
+import * as obrasocialController from '../controller/obraSocial';
+import { Profe } from '../schemas/profe';
 const router = express.Router();
 
 /**
  * Obtiene todas las obras sociales
  * @returns array de obras sociales
  */
-router.get('/', async (req, res, next) => {
+router.get('/obrasSociales', async (req, res, next) => {
     let query;
     query = ObraSocial.find({});
     if (req.query.nombre) {
@@ -32,6 +34,8 @@ router.get('/', async (req, res, next) => {
     }
 });
 
+/**Obtiene las el listado de prepagas */
+
 router.get('/prepagas', async (req, res, next) => {
     try {
         let prepagas = await ObraSocial.find({ prepaga: true }).exec();
@@ -40,6 +44,8 @@ router.get('/prepagas', async (req, res, next) => {
         return next(error);
     }
 });
+
+/**Verifica si el paciente se encuentra en el programa SUMAR */
 
 router.get('/padronSumar', async (req, res, next) => {
     try {
@@ -56,18 +62,16 @@ router.get('/padronSumar', async (req, res, next) => {
 });
 
 /**
- * Obtiene los datos de la obra social asociada a un paciente
+ * Obtiene los datos de la obra social asociada a un paciente (Usado en busqueda por padrones)
  *
  * @param {any} dni
  * @returns
  */
 
 router.get('/puco', async (req, res, next) => {
-
     if (req.query.dni) {
         let padron;
         let rta;
-
         if (req.query.periodo) {
             padron = req.query.periodo;
         } else {
@@ -77,18 +81,20 @@ router.get('/puco', async (req, res, next) => {
             }
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
-        // realiza la busqueda por dni y el padron seteado anteriormente
         rta = await Puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
-
         if (rta.length > 0) {
             const resultOS = [];
             let unaOS;
             // genera un array con todas las obras sociales para una version de padron dada
-            for (let i = 0; i < rta.length; i++) {
-                unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
-                resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
+            try {
+                for (let i = 0; i < rta.length; i++) {
+                    unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS });
+                    resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
+                }
+                res.json(resultOS);
+            } catch (error) {
+                next(error);
             }
-            res.json(resultOS);
         } else {
             res.json([]);
         }
@@ -97,35 +103,7 @@ router.get('/puco', async (req, res, next) => {
     }
 });
 
-/**
- * Obtiene los datos de las obras sociales asociada a un paciente
- * verifica en padronPrepagas, luego en PUCO y por último en sumar
- * @param {dni, sexo}
- * @returns array de datos obra sociales
- */
-
-router.get('/paciente', async (req, res, next) => {
-    if (req.query.dni && req.query.sexo) {
-        let prepaga = await prepagaController.getPaciente(req.query.dni, req.query.sexo);
-        if (prepaga) {
-            res.json([prepaga]);
-        } else {
-            let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
-            if (arrayOSPuco.length > 0) {
-                res.json(arrayOSPuco);
-            } else {
-                let arrayOSSumar = await sumarController.getPacienteSumar(req.query.dni);
-                if (arrayOSSumar.length > 0) {
-                    res.json([{ codigoPuco: null, nombre: null, financiador: 'SUMAR' }]);
-                } else {
-                    res.json([]);
-                }
-            }
-        }
-    } else {
-        return next('Parámetros incorrectos');
-    }
-});
+/**Obtiene las versiones del padron PUCO */
 
 router.get('/puco/padrones', async (req, res, next) => {
     try {
@@ -136,21 +114,40 @@ router.get('/puco/padrones', async (req, res, next) => {
     }
 });
 
-router.get('/puco/:documento', async (req, res, next) => {
+/**Obtiene la obra social de un paciente (Usado en el punto de inicio de CITAS) */
+
+router.get('/obraSocial/:documento', async (req, res, next) => {
     if (req.params.documento) {
-        let arrayOSPuco: any = await pucoController.pacientePuco(req.params.documento);
-        if (arrayOSPuco.length > 0) {
-            res.json(arrayOSPuco);
-        } else {
-            let arrayOSSumar = await sumarController.getPacienteSumar(req.params.documento);
-            if (arrayOSSumar.length > 0) {
-                res.json([{ codigoPuco: null, nombre: null, financiador: 'SUMAR' }]);
-            } else {
-                res.json([]);
-            }
-        }
+        let resp = await obrasocialController.getObraSocial(req.params);
+        res.json(resp);
     } else {
         return next('Parámetros incorrectos');
+    }
+});
+
+/** Obtiene paciente que se encuentra en el padron PROFE */
+
+router.get('/profe', async (req, res, next) => {
+    try {
+        if (req.query.dni && req.query.periodo) {
+            let os = await Profe.find({ dni: Number.parseInt(req.query.dni, 10), version: req.query.periodo });
+            res.json(os);
+        } else {
+            res.status(400).json({ msg: 'Parámetros incorrectos' });
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+
+/**Obtiene los padrones del padron PROFE */
+
+router.get('/profe/padrones', async (req, res, next) => {
+    try {
+        let resp = await profeController.obtenerVersiones();
+        res.json(resp);
+    } catch (error) {
+        return next(error);
     }
 });
 
