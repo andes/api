@@ -10,8 +10,8 @@ class PerfilesResource extends ResourceBase {
     resourceName = 'perfiles';
     middlewares = [Auth.authenticate()];
     routesAuthorization = {
-        get: Auth.authorize('usuarios:perfiles:read'),
-        search: Auth.authorize('usuarios:perfiles:read'),
+        get: Auth.authorize('usuarios:read'),
+        search: Auth.authorize('usuarios:read'),
         post: Auth.authorize('usuarios:perfiles:write'),
         patch: Auth.authorize('usuarios:perfiles:write'),
         delete: Auth.authorize('usuarios:perfiles:write'),
