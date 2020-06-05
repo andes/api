@@ -63,6 +63,16 @@ export class InformeRupHeader extends HTMLComponent {
                             </h6>
                         </div>
                     </div>
+                    {{#if ubicacion}}
+                        <div class="contenedor-secundario">
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">
+                                    Internación
+                                </h6>
+                                {{ubicacion}}
+                            </div>
+                        </div>
+                    {{/if}}
                 </span>
 
                 <!-- Datos origen solicitud -->
@@ -93,7 +103,7 @@ export class InformeRupHeader extends HTMLComponent {
             {{/unless}}
     `;
 
-    constructor(public prestacion, public paciente, public organizacion) {
+    constructor(public prestacion, public paciente, public organizacion, public cama) {
         super();
 
         // [TODO] helpers date formats en Handlerbars
@@ -130,7 +140,8 @@ export class InformeRupHeader extends HTMLComponent {
                 adicional: loadImage('templates/rup/informes/img/logo-adicional.png'),
                 andes: loadImage('templates/rup/informes/img/logo-andes-h.png'),
                 organizacion: this.getLogoOrganizacion(organizacion)
-            }
+            },
+            ubicacion: this.ubicacionName()
         };
     }
 
@@ -142,5 +153,12 @@ export class InformeRupHeader extends HTMLComponent {
         } catch {
             return null;
         }
+    }
+
+    ubicacionName() {
+        if (this.cama) {
+            return `${this.cama.nombre}, ${this.cama.sectorName}`;
+        }
+        return null;
     }
 }

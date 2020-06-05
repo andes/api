@@ -110,6 +110,25 @@ export async function findById({ organizacion, capa, ambito }: InternacionConfig
     return null;
 }
 
+/**
+ * Devuelve la cama donde esta el paciente en un determinado horario
+ */
+export async function findByPaciente({ organizacion, capa, ambito }: InternacionConfig, idPaciente: ObjectId, timestamp: Date = null): Promise<ICama> {
+    if (!timestamp) {
+        timestamp = moment().toDate();
+    }
+    const estadoCama = await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion: wrapOrganizacion(organizacion), ambito, capa }, { paciente: idPaciente });
+    if (estadoCama.length > 0) {
+        return estadoCama[0];
+    }
+
+    return null;
+}
+
+function wrapOrganizacion(organizacion) {
+    return organizacion.id || organizacion._id || organizacion;
+}
+
 export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha: Date, organizacion: INombre, ambito: String, capa: String }) {
 
     const $match = {};

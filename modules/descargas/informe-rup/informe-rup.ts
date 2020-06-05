@@ -7,6 +7,7 @@ import { InformeRupHeader } from './informe-header';
 import { InformeRupBody } from './informe-body';
 import { InformeRupFooter } from './informe-footer';
 import { elementosRUPAsSet, fulfillPrestacion } from '../../rup/controllers/elementos-rup.controller';
+import { findByPaciente } from '../../rup/internacion/camas.controller';
 
 export class InformeRUP extends InformePDF {
 
@@ -26,12 +27,30 @@ export class InformeRUP extends InformePDF {
 
         fulfillPrestacion(prestacion, elementosRUPSet);
 
-        this.header = new InformeRupHeader(prestacion, paciente, organizacion);
+        const cama = await this.getCamaInternacion(prestacion);
+
+        this.header = new InformeRupHeader(prestacion, paciente, organizacion, cama);
         this.body = new InformeRupBody(prestacion, paciente, organizacion, this.registroId);
         this.footer = new InformeRupFooter(prestacion, paciente, organizacion, this.usuario);
 
         // Obligatorio por ahora llamar al proccess de la clase abstracta
         await super.process();
+    }
+
+    async getCamaInternacion(prestacion) {
+        if (prestacion.solicitud.ambitoOrigen === 'internacion') {
+            const org = prestacion.solicitud.organizacion;
+
+            const cama: any = await findByPaciente(
+                { organizacion: org, capa: 'medica', ambito: 'internacion' },
+                prestacion.paciente.id,
+                prestacion.ejecucion.fecha
+            );
+            const sectores = cama.sectores || [];
+            cama.sectorName = [...sectores].reverse().map(s => s.nombre).join(', ');
+            return cama;
+        }
+        return null;
     }
 
 }
