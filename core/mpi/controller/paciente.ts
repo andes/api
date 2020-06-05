@@ -15,8 +15,7 @@ import { RenaperConfig } from '../../../modules/fuentesAutenticas/interfaces';
 import { renaper as renaConfig } from '../../../config.private';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 import * as configPrivate from '../../../config.private';
-import { getServicioGeonode } from '../../../utils/servicioGeonode';
-import { getGeoreferencia } from '../../../utils/serviciosGeoreferencia';
+import { geoReferenciar, getBarrio } from '@andes/georeference';
 import * as Barrio from '../../tm/schemas/barrio';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
@@ -834,13 +833,13 @@ export async function actualizarGeoReferencia(dataPaciente, req) {
         // (valores de direccion fueron modificados): están completos?
         if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad && dataPaciente.direccion[0].ubicacion.provincia) {
             // si el paciente no fue georeferenciado
-            if (!dataPaciente.direccion[0].georeferencia) {
-                let dir = dataPaciente.direccion[0].valor + ', ' + dataPaciente.direccion[0].ubicacion.localidad.nombre + ', ' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
-                const geoRef: any = await getGeoreferencia(dir);
+            if (!dataPaciente.direccion?.georeferencia) {
+                let dir = dataPaciente.direccion?.[0]?.valor + ', ' + dataPaciente.direccion[0].ubicacion.localidad.nombre + ', ' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
+                const geoRef: any = await geoReferenciar(dir, configPrivate.geoKey);
                 // georeferencia exitosa?
                 if (geoRef && geoRef.lat) {
                     dataPaciente.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                    let nombreBarrio = await getServicioGeonode(dataPaciente.direccion[0].geoReferencia);
+                    const nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, configPrivate.geoNode.auth.user, configPrivate.geoNode.auth.password);
                     // consulta exitosa?
                     if (nombreBarrio) {
                         const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));

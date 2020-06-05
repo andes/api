@@ -163,7 +163,8 @@ export const geoNode = {
     auth: {
         user: '',
         password: ''
-    }
+    }, 
+    host: ''
 };
 
 // Endpoints envio de SMS

@@ -191,12 +191,6 @@ export const modules = {
         route: '/modules/vacunas',
         middleware: appMiddleware
     },
-    geonode: {
-        active: true,
-        path: './modules/geonode/routes',
-        route: '/modules/geonode',
-        middleware: appMiddleware
-    },
     georeferencia: {
         active: true,
         path: './modules/georeferencia/routes',
