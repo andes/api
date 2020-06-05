@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+
 import { store, findById, search, patch } from './camas.controller';
 import * as CamasEstadosController from './cama-estados.controller';
 import { model as Prestaciones } from '../schemas/prestacion';
@@ -37,9 +37,8 @@ const otraUnidadOrganizativa = {
 };
 
 beforeAll(async () => {
-    // mongoServer = new MongoMemoryServer();
-    // const mongoUri = await mongoServer.getConnectionString();
-    const mongoUri = 'mongodb://localhost:27017/andes';
+    mongoServer = new MongoMemoryServer();
+    const mongoUri = await mongoServer.getConnectionString();
     mongoose.connect(mongoUri);
 });
 
@@ -55,7 +54,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
     await mongoose.disconnect();
-    // await mongoServer.stop();
+    await mongoServer.stop();
 });
 
 function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
@@ -129,14 +128,14 @@ test('Censo diario - vacio', async () => {
 
 test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'd').toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'd').toDate();
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     const internacion = await nuevaPrestacion.save();
 
     await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
-        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 2, 'd'), REQMock);
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'd'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().subtract(1, 'd').toDate(), unidadOrganizativa });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 1,
@@ -187,9 +186,9 @@ test('Censo diario - Paciente desde 0hs tiene alta', async () => {
 test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defuncion';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defuncion';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'hour').toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
 
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     const internacion = await nuevaPrestacion.save();
@@ -197,7 +196,7 @@ test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
     await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
         estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'd'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: new Date(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 1,
@@ -345,8 +344,8 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
     nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'minute').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defuncion';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defuncion';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     const internacion = await nuevaPrestacion.save();
 
@@ -480,8 +479,8 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defun
     const nuevaPrestacion: any = new Prestaciones(prestacion());
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
     nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defuncion';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defuncion';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     const internacion = await nuevaPrestacion.save();
 
@@ -577,8 +576,8 @@ test('Censo diario - Paciente tiene paseDe y tiene defuncion', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
     nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defuncion';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defuncion';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
 
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     const internacion = await nuevaPrestacion.save();
