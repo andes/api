@@ -459,5 +459,36 @@ export default [
             { key: 'full', title: 'Acceso completo a analytics', type: 'boolean' },
         ]
     },
+    {
+        key: 'monitoreo',
+        title: 'Monitoreo',
+        child: [
+            {
+                key: 'conceptosTurneables',
+                title: 'Conceptos turneables',
+                type: 'boolean'
+            },
+            {
+                key: 'webhook',
+                title: 'Webhook',
+                type: 'boolean'
+            },
+            {
+                key: 'monitoreoActivaciones',
+                title: 'Monitoreo activaciones',
+                type: 'boolean'
+            },
+            {
+                key: 'webhookLog',
+                title: 'WebhookLog',
+                type: 'boolean'
+            },
+            {
+                key: 'regenerarCda',
+                title: 'Regenerar CDA',
+                type: 'boolean'
+            },
+        ]
+    },
 
 ];
