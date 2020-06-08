@@ -3,7 +3,6 @@ import * as mongoose from 'mongoose';
 import * as registro from './prestacion.registro';
 import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
 import * as estado from './prestacion.estado';
-import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
@@ -66,9 +65,6 @@ export let schema = new mongoose.Schema({
             semanticTag: SemanticTag,
             refsetIds: [String]
         },
-
-        // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
-        auditoria: auditoriaPrestacionPacienteSchema,
 
         // ID del turno relacionado con esta prestación
         turno: mongoose.Schema.Types.ObjectId,
@@ -238,7 +234,5 @@ schema.index({
     'ejecucion.fecha': 1,
     'solicitud.tipoPrestacion.conceptId': 1
 });
-schema.index({ 'solicitud.auditoria.auditor.documento': 1 });
-
 
 export let model = mongoose.model('prestacion', schema, 'prestaciones');

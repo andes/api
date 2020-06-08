@@ -84,12 +84,6 @@ export const modules = {
         route: '/modules/rup',
         middleware: appMiddleware
     },
-    auditorias: { // Auditorías RUP (prestacionPaciente)
-        active: true,
-        path: './modules/auditorias/routes',
-        route: '/modules/auditorias',
-        middleware: appMiddleware
-    },
     turnos_mobile_auth: {
         active: true,
         path: './modules/mobileApp/auth_routes',
