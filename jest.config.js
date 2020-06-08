@@ -1,5 +1,5 @@
 module.exports = {
-    roots: ['./modules'],
+    roots: ['./'],
     transform: {
         '^.+\\.tsx?$': 'ts-jest',
         "^.+\\.jsx?$": "babel-jest",

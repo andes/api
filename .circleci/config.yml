@@ -23,3 +23,6 @@ jobs:
       - run:
           name: tsc
           command: npm run tsc
+      - run:
+          name: test
+          command: npm run test
