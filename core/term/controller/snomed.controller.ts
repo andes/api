@@ -1,7 +1,4 @@
-import * as SnomedMongo from './snomed.mongo';
 import * as SnomedSnowstorm from './snomed.snowstorm';
-
-import { snomed } from '../../../config.private';
 
 export interface ISnomedController {
     /**
@@ -37,15 +34,4 @@ export interface ISnomedController {
     searchTerms(text: String, options: { semanticTags?: String[], languageCode?: 'es' | 'en' });
 }
 
-export let SnomedCtr: ISnomedController = null;
-
-const adapter = {
-    snowstorm: SnomedSnowstorm,
-    mongo: SnomedMongo
-};
-
-SnomedCtr = adapter[snomed.adapter.toLowerCase()];
-
-if (!SnomedCtr) {
-    throw new Error('SNOMED_ADAPTER must be mongo or snowstorm');
-}
+export const SnomedCtr: ISnomedController = SnomedSnowstorm as any;

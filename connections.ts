@@ -37,7 +37,6 @@ export class Connections {
             // tslint:disable-next-line:no-console
             console.log('TESTING MODE');
             configPrivate.hosts.mongoDB_main.host = 'mongodb://localhost:27066/andes';
-            configPrivate.hosts.mongoDB_snomed.host = 'mongodb://localhost:27066/andes';
             configPrivate.hosts.mongoDB_puco.host = 'mongodb://localhost:27066/andes';
             configPrivate.logDatabase.log.host = 'mongodb://localhost:27066/andes';
             configPrivate.hosts.elastic_main = 'http://localhost:9266';
@@ -49,18 +48,14 @@ export class Connections {
         mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options);
         this.main = mongoose.connection;
 
-        // 2. SNOMED
-        this.snomed = mongoose.createConnection(configPrivate.hosts.mongoDB_snomed.host, configPrivate.hosts.mongoDB_snomed.options);
-
-        // 3. PUCO
+        // 2. PUCO
         this.puco = mongoose.createConnection(configPrivate.hosts.mongoDB_puco.host, configPrivate.hosts.mongoDB_puco.options);
 
-        // 4. LOGGER
+        // 3. LOGGER
         loggerConnections.initialize(configPrivate.logDatabase.log.host, configPrivate.logDatabase.log.options);
 
         // Configura eventos
         this.configEvents('main', this.main);
-        this.configEvents('snomed', this.snomed);
         this.configEvents('puco', this.puco);
     }
 
