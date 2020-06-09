@@ -158,12 +158,13 @@ export const farmaciasEndpoints = {
     turnos: 'http://181.231.9.13/lawen/turnos.aspx'
 };
 
-// Auth servicio geonode para capa de barrios
+// Auth servicio geonode para georeferencia
 export const geoNode = {
     auth: {
         user: '',
         password: ''
-    }
+    },
+    host: ''
 };
 
 // Endpoints envio de SMS
