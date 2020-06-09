@@ -488,6 +488,21 @@ export default [
                 title: 'Regenerar CDA',
                 type: 'boolean'
             },
+            {
+                key: 'novedades',
+                title: 'Novedades',
+                type: 'boolean'
+            },
+            {
+                key: 'biQueries',
+                title: 'BI Queries',
+                type: 'boolean'
+            },
+            {
+                key: 'buscadorSnomed',
+                title: 'Buscador Snomed',
+                type: 'boolean'
+            },
         ]
     },
 
