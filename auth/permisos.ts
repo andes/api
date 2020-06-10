@@ -459,5 +459,52 @@ export default [
             { key: 'full', title: 'Acceso completo a analytics', type: 'boolean' },
         ]
     },
+    {
+        key: 'monitoreo',
+        title: 'Monitoreo',
+        visibility: 'restricted',
+        child: [
+            {
+                key: 'conceptosTurneables',
+                title: 'Conceptos turneables',
+                type: 'boolean'
+            },
+            {
+                key: 'webhook',
+                title: 'Webhook',
+                type: 'boolean'
+            },
+            {
+                key: 'monitoreoActivaciones',
+                title: 'Monitoreo activaciones',
+                type: 'boolean'
+            },
+            {
+                key: 'webhookLog',
+                title: 'WebhookLog',
+                type: 'boolean'
+            },
+            {
+                key: 'regenerarCda',
+                title: 'Regenerar CDA',
+                type: 'boolean'
+            },
+            {
+                key: 'novedades',
+                title: 'Novedades',
+                type: 'boolean'
+            },
+            {
+                key: 'biQueries',
+                title: 'BI Queries',
+                type: 'boolean'
+            },
+            {
+                key: 'buscadorSnomed',
+                title: 'Buscador Snomed',
+                type: 'boolean'
+            },
+        ]
+    },
 
 ];
