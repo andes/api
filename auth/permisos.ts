@@ -462,6 +462,7 @@ export default [
     {
         key: 'monitoreo',
         title: 'Monitoreo',
+        visibility: 'restricted',
         child: [
             {
                 key: 'conceptosTurneables',
