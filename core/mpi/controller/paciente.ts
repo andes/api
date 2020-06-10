@@ -693,7 +693,6 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     if (sexoPaciente === 'otro') {
         return { paciente: pacienteAndes, validado: false };
     }
-    let sexoQuery = sexoPaciente === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
     const renaperConfig: RenaperConfig = {
         usuario: renaConfig.Usuario,
@@ -707,6 +706,9 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
             return await validarSisa(pacienteAndes, req);
         }
+        // Respuesta correcta de rennaper
+        resRenaper.documento = pacienteAndes.documento;
+        resRenaper.sexo = sexoPaciente;
         if (pacienteAndes.id) {
             const weights = config.mpi.weightsDefault;
             let match = new Matching();
@@ -715,7 +717,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
                 nombre: resRenaper.nombres,
                 apellido: resRenaper.apellido,
                 fechaNacimiento: resRenaper.fechaNacimiento,
-                sexo: sexoQuery
+                sexo: sexoPaciente
             };
             const valorMatching = match.matchPersonas(pacienteAndes, matchPacienteRena, weights, config.algoritmo);
             resRenaper.matching = valorMatching;
@@ -724,8 +726,6 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, resRenaper, null);
         }
 
-        // Respuesta correcta de rennaper
-        resRenaper.documento = pacienteAndes.documento;
         if (resRenaper.direccion.length) {
             // Completamos campos correspondientes a dirección legal
             let ubicacionRena = resRenaper.direccion[0].ubicacion;
@@ -741,12 +741,17 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             resRenaper.direccion[1].geoReferencia = null;
         }
         resRenaper.foto = await validarTamañoFoto(resRenaper.foto);
+        resRenaper.estado = 'validado';
         const flag = !regtest.test(resRenaper.nombre) && !regtest.test(resRenaper.apellido);
-        if (flag) {
-            resRenaper.estado = 'validado';
-            return { paciente: resRenaper, validado: true };
+        if (!flag) {
+            // Si el apellido o nombre contiene caracteres extraños
+            const rtaSisa = await validarSisa(resRenaper, req);
+            if (rtaSisa && rtaSisa.paciente) {
+                resRenaper.apellido = rtaSisa.paciente.apellido;
+                resRenaper.nombre = rtaSisa.paciente.nombre;
+            }
         }
-        return await validarSisa(resRenaper, req);
+        return { paciente: resRenaper, validado: true };
 
     } catch (err) {
         return await validarSisa(pacienteAndes, req);
