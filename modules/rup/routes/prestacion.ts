@@ -524,6 +524,8 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                         }
 
                         updateRegistroHistorialSolicitud(data.solicitud, 'asignacionProfesional');
+                    } else if (req.body.estado.tipo === 'ejecucion' && !data.solicitud.profesional.id) { // si se ejecuta una solicitud que viene de rup sin profesional, se lo setea por defecto
+                        data.solicitud.profesional = Auth.getProfesional(req);
                     }
                 }
                 if (req.body.registros) {
