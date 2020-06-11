@@ -504,6 +504,11 @@ export default [
                 title: 'Buscador Snomed',
                 type: 'boolean'
             },
+            {
+                key: 'modulos',
+                title: 'Modulos',
+                type: 'boolean'
+            },
         ]
     },
 
