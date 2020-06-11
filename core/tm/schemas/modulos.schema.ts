@@ -17,7 +17,12 @@ export const ModuloSchema = new Schema({
         type: String,
         required: true
     },
-    permisos: [String]
+    permisos: [String],
+    activo: {
+        type: Boolean,
+        default: true
+    },
+    orden: Number
 
 });
 

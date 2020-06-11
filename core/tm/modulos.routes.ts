@@ -13,6 +13,8 @@ class ModuloResource extends ResourceBase {
         linkAcceso: MongoQuery.partialString,
         icono: MongoQuery.partialString,
         subtitulo: MongoQuery.partialString,
+        activo: MongoQuery.equalMatch,
+        orden: MongoQuery.equalMatch,
         permisos: {
             field: 'permisos',
             fn: (value) => {
