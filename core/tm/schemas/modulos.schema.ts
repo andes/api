@@ -18,7 +18,10 @@ export const ModuloSchema = new Schema({
         required: true
     },
     permisos: [String],
-    activo: Boolean,
+    activo: {
+        type: Boolean,
+        default: true
+    },
     orden: Number
 
 });
