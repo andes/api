@@ -8,7 +8,7 @@ export class SolicitudPrestacionDefaultComponent extends HTMLComponent {
                 </p>
             </div>
             <div class="subregistro">
-                <p> Motivo: <small> {{{ valor.motivo }}} </small> </p>
+                <p> Diagnóstico/Motivo: <small> {{{ valor.motivo }}} </small> </p>
                 <p> Indicaciones: <small> {{{ valor.indicaciones }}} </small> </p>
                 {{#if valor.organizacionDestino}}
                     <p> Organización destino: <small> {{{ valor.organizacionDestino }}} </small> </p>
