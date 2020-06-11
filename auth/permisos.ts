@@ -190,6 +190,7 @@ export default [
         avoidAll: true,
         child: [
             { key: 'visualizacionHuds', title: 'Visualización HUDS por paciente', type: 'boolean' },
+            { key: 'impresionHuds', title: 'Imprimir HUDS por prestación', type: 'boolean', visibility: 'restricted' },
         ]
     },
     {
