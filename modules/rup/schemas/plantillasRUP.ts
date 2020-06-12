@@ -23,6 +23,7 @@ export interface IPlantillasRUP extends Document {
 }
 
 export let PlantillasRUPSchema = new Schema({
+    esSolicitud: Boolean,
     expression: String,
     conceptos: [SnomedConcept],
     profesional: {
