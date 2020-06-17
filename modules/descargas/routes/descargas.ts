@@ -2,13 +2,12 @@ import * as express from 'express';
 import { Documento } from '../controller/descargas-puco';
 import { Auth } from '../../../auth/auth.class';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-import { DocumentoCenso } from './../controller/descargaCenso';
-import { DocumentoCensoMensual } from './../controller/descargaCensoMensual';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from './../../../config.private';
 import moment = require('moment');
 import { InformeRUP } from '../informe-rup/informe-rup';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
+import { InformeCenso } from '../informe-censo/informe-censo';
 
 const router = express.Router();
 
@@ -17,35 +16,19 @@ const router = express.Router();
  * Se usa POST para generar la descarga porque se envían datos
  * que van a ser parte del archivo
  */
-router.post('/censo', (req: any, res, next) => {
-    let docCenso = new DocumentoCenso();
-    docCenso.descargar(req, res, next).then(archivo => {
-        res.download((archivo as string), (err) => {
-            if (err) {
-                next(err);
-            } else {
-                next();
-            }
-        });
-    }).catch(e => {
-        return next(e);
-    });
+router.post('/censo', async (req: any, res, next) => {
+    let docCenso = new InformeCenso('diario', req);
+    const fileName: any = await docCenso.informe();
+
+    return res.download(fileName);
 });
 
 
-router.post('/censoMensual', (req: any, res, next) => {
-    let docCenso = new DocumentoCensoMensual();
-    docCenso.descargar(req, res, next).then(archivo => {
-        res.download((archivo as string), (err) => {
-            if (err) {
-                next(err);
-            } else {
-                next();
-            }
-        });
-    }).catch(e => {
-        return next(e);
-    });
+router.post('/censoMensual', async (req: any, res, next) => {
+    let docCenso = new InformeCenso('mensual', req);
+    const fileName: any = await docCenso.informe();
+
+    return res.download(fileName);
 });
 
 /**
