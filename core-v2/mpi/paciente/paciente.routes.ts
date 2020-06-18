@@ -23,6 +23,12 @@ class PacienteResource extends ResourceBase {
         sexo: MongoQuery.equalMatch,
         activo: MongoQuery.equalMatch,
         reportarError: MongoQuery.equalMatch,
+        identificadores: {
+            field: 'identificadores.entidad',
+            fn: (value) => {
+                return { $in: value };
+            }
+        },
         search: (value) => {
             return {
                 $or: [
