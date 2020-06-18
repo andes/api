@@ -46,9 +46,11 @@ export class InformeRUP extends InformePDF {
                 prestacion.paciente.id,
                 prestacion.ejecucion.fecha
             );
-            const sectores = cama.sectores || [];
-            cama.sectorName = [...sectores].reverse().map(s => s.nombre).join(', ');
-            return cama;
+            if (cama) {
+                const sectores = cama.sectores || [];
+                cama.sectorName = [...sectores].reverse().map(s => s.nombre).join(', ');
+                return cama;
+            }
         }
         return null;
     }
