@@ -181,11 +181,15 @@ router.get('/pacientes', (req, res, next) => {
         return next(403);
     }
 
-    controller.matching(req.query).then(result => {
+    controller.matching(req.query).then(async result => {
         result = result.map(elto => {
             delete elto.foto;
             return elto;
         });
+        if (result[0]) {
+            let financiador = await getObraSocial(result[0]);
+            result[0].financiador = financiador;
+        }
         res.send(result);
     }).catch(error => {
         return next(error);
