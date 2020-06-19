@@ -4,13 +4,12 @@ import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
 import { ObraSocialSchema } from '../../../modules/obraSocial/schemas/obraSocial';
 import * as constantes from './constantes';
-import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
-
 import * as pac from '../controller/paciente';
 
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+const mongoose_fuzzy_searching = require('mongoose-fuzzy-searching');
 
 let ObjectId = mongoose.Types.ObjectId;
 /*
@@ -150,5 +149,12 @@ pacienteSchema.methods.basicos = function () {
 };
 
 pacienteSchema.plugin(AuditPlugin);
+pacienteSchema.plugin(mongoose_fuzzy_searching, {
+    fields: [
+        {
+            name: 'documento',
+            minSize: 3
+        }]
+});
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
