@@ -66,9 +66,9 @@ export class InformeRupBody extends HTMLComponent {
             this.prestacion.ejecucion.registros = [registro];
         }
 
-        const ps = this.prestacion.ejecucion.registros.map((registro) => {
-            return registroToHTML(this.prestacion, registro, this.registroId ? 1 : 0);
-        });
+        const ps = this.prestacion.ejecucion.registros
+            .filter(r => !(r.privacy && (r.privacy.scope === 'private' || r.privacy.scope === 'termOnly'))) // filtramos los registros privados
+            .map((registro) => registroToHTML(this.prestacion, registro, this.registroId ? 1 : 0));
 
         const registros = await Promise.all(ps);
 
