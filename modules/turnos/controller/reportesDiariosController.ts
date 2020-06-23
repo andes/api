@@ -70,8 +70,8 @@ export async function getResumenDiarioMensual(params: any) {
                             {
                                 case: {
                                     $and: [
-                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 7] },
-                                        { $lt: [{ $hour: '$ejecucion.fecha' }, 13] }
+                                        { $gte: [{ $hour: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' }, 7] },
+                                        { $lt: [{ $hour: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' }, 13] }
                                     ]
                                 },
                                 then: 'mañana'
@@ -79,8 +79,8 @@ export async function getResumenDiarioMensual(params: any) {
                             {
                                 case: {
                                     $and: [
-                                        { $gte: [{ $hour: '$ejecucion.fecha' }, 13] },
-                                        { $lt: [{ $hour: '$ejecucion.fecha' }, 20] }
+                                        { $gte: [{ $hour: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' }, 13] },
+                                        { $lt: [{ $hour: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' }, 20] }
                                     ]
                                 },
                                 then: 'tarde'
@@ -335,17 +335,23 @@ export async function getPlanillaC1(params: any) {
     fechaDesde.setMilliseconds(0);
     fechaHasta = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate() + 1);
 
+    let firstMatch = {
+        $match: {
+            'ejecucion.fecha': {
+                $gte: fechaDesde,
+                $lt: fechaHasta
+            },
+            'ejecucion.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
+            'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['prestacion']),
+        }
+    };
+
+    if (params['profesional']) {
+        firstMatch.$match['solicitud.profesional.id'] = new mongoose.Types.ObjectId(params['profesional']);
+    }
+
     pipeline = [
-        {
-            $match: {
-                'ejecucion.fecha': {
-                    $gte: fechaDesde,
-                    $lt: fechaHasta
-                },
-                'ejecucion.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
-                'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['prestacion'])
-            }
-        },
+        firstMatch,
         {
             $unwind: {
                 path: '$ejecucion.registros'
@@ -357,34 +363,100 @@ export async function getPlanillaC1(params: any) {
             }
         },
         {
-            $lookup: {
-                from: 'agenda',
-                localField: 'solicitud.turno',
-                foreignField: 'bloques.turnos._id',
-                as: 'agenda'
+            $facet: {
+                turnos: [
+                    {
+                        $lookup: {
+                            from: 'agenda',
+                            localField: 'solicitud.turno',
+                            foreignField: 'bloques.turnos._id',
+                            as: 'agenda'
+                        }
+                    },
+                    {
+                        $unwind: '$agenda'
+                    },
+                    {
+                        $unwind: '$agenda.bloques'
+                    },
+                    {
+                        $unwind: '$agenda.bloques.turnos'
+                    },
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ['$agenda.bloques.turnos._id', '$solicitud.turno']
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            paciente: '$agenda.bloques.turnos.paciente',
+                            ejecucion: 1,
+                            solicitud: 1,
+                        }
+                    }
+                ],
+                sobreturnos: [
+                    {
+                        $lookup: {
+                            from: 'agenda',
+                            localField: 'solicitud.turno',
+                            foreignField: 'sobreturnos._id',
+                            as: 'agenda'
+                        }
+                    },
+                    {
+                        $unwind: '$agenda'
+                    },
+                    {
+                        $unwind: '$agenda.sobreturnos'
+                    },
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ['$agenda.sobreturnos._id', '$solicitud.turno']
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            paciente: '$agenda.sobreturnos.paciente',
+                            ejecucion: 1,
+                            solicitud: 1,
+                        }
+                    }
+                ],
+                fueraDeAgenda: [
+                    {
+                        $match: {
+                            'solicitud.turno': {
+                                $exists: false
+                            }
+                        },
+                    },
+                    {
+                        $project: {
+                            paciente: 1,
+                            ejecucion: 1,
+                            solicitud: 1,
+                        }
+                    }
+                ]
             }
         },
         {
-            $unwind: {
-                path: '$agenda'
-            }
-        },
-        {
-            $unwind: {
-                path: '$agenda.bloques'
-            }
-        },
-        {
-            $unwind: {
-                path: '$agenda.bloques.turnos'
-            }
-        },
-        {
-            $match: {
-                $expr: {
-                    $eq: ['$agenda.bloques.turnos._id', '$solicitud.turno']
+            $project: {
+                prestaciones: {
+                    $setUnion: ['$turnos', '$sobreturnos', '$fueraDeAgenda']
                 }
             }
+        },
+        {
+            $unwind: '$prestaciones'
+        },
+        {
+            $replaceRoot: { newRoot: '$prestaciones' }
         },
         {
             $project: {
@@ -404,8 +476,7 @@ export async function getPlanillaC1(params: any) {
                         ]
                     }
                 },
-                pacienteObraSocial:
-                    '$agenda.bloques.turnos.paciente.obraSocial.financiador',
+                pacienteObraSocial: '$paciente.obraSocial.financiador',
                 prestacionHora: '$ejecucion.fecha',
                 prestacionTipo: '$solicitud.tipoPrestacion.term',
                 prestacionConceptoPrincipal: '$ejecucion.registros.concepto.term',
@@ -416,12 +487,7 @@ export async function getPlanillaC1(params: any) {
         }
     ];
 
-    let data = await toArray(
-        prestacionModel
-            .aggregate(pipeline)
-            .cursor({})
-            .exec()
-    );
+    let data = await prestacionModel.aggregate(pipeline);
 
     return data;
 }
