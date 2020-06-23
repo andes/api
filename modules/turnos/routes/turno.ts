@@ -30,10 +30,14 @@ router.get('/turno/:id*?', async (req, res, next) => {
 });
 router.get('/historial', async (req, res, next) => {
     try {
-        const historial = turnosController.getHistorialPaciente(req);
-        const liberados = turnosController.getLiberadosPaciente(req);
-        const turnos = await Promise.all([historial, liberados]);
-        res.json([...turnos[0], ...turnos[1]]);
+        if (req.query.sinLiberados) {
+            res.json(await turnosController.getHistorialPaciente(req));
+        } else {
+            const historial = turnosController.getHistorialPaciente(req);
+            const liberados = turnosController.getLiberadosPaciente(req);
+            const turnos = await Promise.all([historial, liberados]);
+            res.json([...turnos[0], ...turnos[1]]);
+        }
     } catch (err) {
         return next(err);
     }
