@@ -1,7 +1,7 @@
 name: RELEASE
 on:
     schedule:
-        - cron: '0 9 * * WED'
+        - cron: '30 13 * * 3'
 jobs:
     release:
         runs-on: ubuntu-latest
