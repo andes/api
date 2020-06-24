@@ -140,7 +140,8 @@ export let schema = new mongoose.Schema({
 
     },
     // Historia de estado de la prestación
-    estados: [estado.schema]
+    estados: [estado.schema],
+    ultimoEstado: estado.schema
 }, { usePushEach: true } as any);
 
 // Valida el esquema
@@ -162,7 +163,9 @@ schema.pre('save', function (next) {
         let err = new Error('Debe seleccionar el profesional que solicita');
         return next(err);
     }
-    if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
+
+    prestacion.ultimoEstado = prestacion.estados[prestacion.estados.length - 1];
+    if (prestacion.ultimoEstado.tipo === 'ejecucion') {
         if (!prestacion.ejecucion.fecha && !prestacion.createdAt) {
             let err = new Error('Debe seleccionar la fecha en que se solicita');
             return next(err);
