@@ -103,7 +103,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
             const data = {
                 from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
                 to: email,
-                subject: procedimiento + ' ' + `${moment(handlebarsData.fechaInicio).format('DD/MM/YYYY H:mm [hs]')}`,
+                subject: handlebarsData.procesoProcedencia + ' - ' + procedimiento + ' - PACIENTE ' + handlebarsData.paciente.nombre + ' ' + handlebarsData.paciente.apellido + ' - PROFESIONAL  ' + handlebarsData.profesional.nombre + ' ' + handlebarsData.profesional.apellido,
                 text: '',
                 html,
                 attachments: {
