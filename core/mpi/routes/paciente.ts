@@ -387,7 +387,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 res.json(pacienteUpdated);
                 // si el paciente esta validado y hay cambios en la direccion
                 if (patientFound.estado === 'validado') {
-                    if (data.direccion?.length > 0 && (JSON.stringify(data.direccion[0].geoReferencia) === JSON.stringify(direccionOld.geoReferencia)) &&
+                    if (data.direccion?.length > 0 && direccionOld?.geoReferencia && (JSON.stringify(data.direccion[0].geoReferencia) === JSON.stringify(direccionOld.geoReferencia)) &&
                         data.direccion[0]?.valor !== direccionOld?.valor) {
                         controller.actualizarGeoReferencia(pacienteUpdated, req);
                     }
