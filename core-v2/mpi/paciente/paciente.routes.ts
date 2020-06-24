@@ -60,11 +60,6 @@ PacienteRouter.post('/paciente/match', Auth.authenticate(), async (req: any, res
             const words = req.body.cadenaInput.split(' ');
             const ngSize = (words.length === 1) ? words[0].length : 2;
             resultado = await Paciente.fuzzySearch({ query: req.body.cadenaInput, prefixOnly: true, minSize: ngSize }, { activo: { $eq: true } }).limit(limit).skip(skip);
-            if (words.length > 1) {
-                words.forEach(word => {
-                    resultado = resultado.filter(pac => (pac.nombreCompleto as string).toUpperCase().includes(word.toUpperCase()));
-                });
-            }
             break;
         case 'suggest':
             query = {

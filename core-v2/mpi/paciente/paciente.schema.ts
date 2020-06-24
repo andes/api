@@ -199,7 +199,7 @@ pacienteSchema.methods.basicos = function () {
 
 pacienteSchema.plugin(AuditPlugin);
 pacienteSchema.plugin(mongoose_fuzzy_searching, {
-    fields: ['documento', 'nombre', 'apellido', 'alias']
+    fields: ['documento', 'nombre', 'apellido', 'alias', 'numeroIdentificacion']
     // fields: [
     //     {
     //         name: 'documento',
