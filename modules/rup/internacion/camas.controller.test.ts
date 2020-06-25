@@ -43,7 +43,6 @@ function seedCama() {
         },
         ambito: 'internacion',
         unidadOrganizativa: {
-            refsetIds: [],
             fsn: 'servicio de adicciones (medio ambiente)',
             term: 'servicio de adicciones',
             conceptId: '4561000013106',
@@ -159,8 +158,7 @@ describe('Internacion - camas', () => {
                 fsn: 'cama saturada (objeto físico)',
                 term: 'cama saturada',
                 conceptId: '1234567890',
-                semanticTag: 'objeto físico',
-                refsetIds: []
+                semanticTag: 'objeto físico'
             }
         }, REQMock);
 
@@ -190,8 +188,7 @@ describe('Internacion - camas', () => {
                 fsn: 'cama saturada (objeto físico)',
                 term: 'cama saturada',
                 conceptId: '1234567890',
-                semanticTag: 'objeto físico',
-                refsetIds: []
+                semanticTag: 'objeto físico'
             }
         }, REQMock);
         expect(resultNull).toBeNull();
@@ -297,8 +294,7 @@ describe('Internacion - camas', () => {
                 fsn: 'cama saturada (objeto físico)',
                 term: 'cama saturada',
                 conceptId: '1234567890',
-                semanticTag: 'objeto físico',
-                refsetIds: []
+                semanticTag: 'objeto físico'
             }
         }, REQMock);
 
@@ -343,7 +339,6 @@ describe('Internacion - camas', () => {
                 nombre: 'HOSPITAL NEUQUEN'
             },
             unidadOrganizativa: {
-                refsetIds: [],
                 fsn: 'servicio de adicciones (medio ambiente)',
                 term: 'servicio de adicciones',
                 conceptId: '4561000013103',
@@ -365,7 +360,6 @@ function estadoOcupada() {
         fecha: moment().toDate(),
         estado: 'ocupada',
         unidadOrganizativa: {
-            refsetIds: [],
             fsn: 'servicio de adicciones (medio ambiente)',
             term: 'servicio de adicciones',
             conceptId: '4561000013106',
@@ -375,7 +369,6 @@ function estadoOcupada() {
         },
         especialidades: [
             {
-                refsetIds: [],
                 _id: mongoose.Types.ObjectId('5c95036cc5861a722ddd563d'),
                 fsn: 'medicina general (calificador)',
                 term: 'medicina general',
@@ -385,7 +378,6 @@ function estadoOcupada() {
         ],
         esCensable: true,
         genero: {
-            refsetIds: [],
             fsn: 'género femenino (hallazgo)',
             term: 'género femenino',
             conceptId: '703118005',
@@ -478,14 +470,12 @@ function prestacion() {
         _id: mongoose.Types.ObjectId('5d3af64ec8d7a7158e12c242'),
         solicitud: {
             tipoPrestacion: {
-                refsetIds: [],
                 fsn: 'admisión hospitalaria (procedimiento)',
                 semanticTag: 'procedimiento',
                 conceptId: '32485007',
                 term: 'internación'
             },
             tipoPrestacionOrigen: {
-                refsetIds: []
             },
             organizacion: {
                 id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
@@ -523,9 +513,6 @@ function prestacion() {
                     concepto: {
                         fsn: 'documento de solicitud de admisión (elemento de registro)',
                         semanticTag: 'elemento de registro',
-                        refsetIds: [
-                            '900000000000497000'
-                        ],
                         conceptId: '721915006',
                         term: 'documento de solicitud de admisión'
                     },
@@ -608,9 +595,6 @@ function prestacion() {
                     concepto: {
                         fsn: 'alta del paciente (procedimiento)',
                         semanticTag: 'procedimiento',
-                        refsetIds: [
-                            '900000000000497000'
-                        ],
                         conceptId: '58000006',
                         term: 'alta del paciente'
                     },

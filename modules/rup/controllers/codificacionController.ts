@@ -66,8 +66,7 @@ export function codificarPrestacion(unaPrestacion: any) {
                                         conceptId: registro.concepto.conceptId,
                                         term: registro.concepto.term,
                                         fsn: registro.concepto.fsn,
-                                        semanticTag: registro.concepto.semanticTag,
-                                        refsetIds: registro.concepto.refsetIds
+                                        semanticTag: registro.concepto.semanticTag
                                     },
                                     cie10: codigoCie10
                                 },
@@ -81,8 +80,7 @@ export function codificarPrestacion(unaPrestacion: any) {
                                         conceptId: registro.concepto.conceptId,
                                         term: registro.concepto.term,
                                         fsn: registro.concepto.fsn,
-                                        semanticTag: registro.concepto.semanticTag,
-                                        refsetIds: registro.concepto.refsetIds
+                                        semanticTag: registro.concepto.semanticTag
                                     },
                                     cie10: codigoCie10
                                 },
