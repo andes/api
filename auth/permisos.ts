@@ -351,11 +351,6 @@ export default [
                 type: 'boolean'
             },
             {
-                key: 'asignadas',
-                title: 'Mis Solicitudes',
-                type: 'boolean'
-            },
-            {
                 key: 'anular',
                 title: 'Anular Solicitudes',
                 type: 'boolean'
