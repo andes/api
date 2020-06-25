@@ -40,9 +40,6 @@ export let schema = new mongoose.Schema({
         default: true
     },
 
-    // true si no muestra el label de motivo de consulta.
-    motivoConsultaOpcional: Boolean,
-
     // Parámetros generales a la hora de iniciar la prestación
     /**
      * titulo: label parametrizado
