@@ -517,7 +517,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     if (data.estados[data.estados.length - 1].tipo === 'validada') {
                         return next('Prestación validada, no se puede volver a validar.');
                     }
-                    data['estados'].push(req.body.estado);
+                    data.estados.push(req.body.estado);
                     if (req.body.estado.tipo === 'asignada') {
                         if (req.body.profesional) {
                             data.solicitud.profesional = req.body.profesional;
@@ -582,6 +582,10 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 data.solicitud.profesional = req.body.profesional;
                 data.solicitud.organizacion = req.body.organizacion;
                 data.solicitud.tipoPrestacion = req.body.tipoPrestacion;
+                break;
+            case 'citar':
+                data.estados.push(req.body.estado);
+                data.solicitud.profesional = null;
                 break;
             default:
                 return next(500);
