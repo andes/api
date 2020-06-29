@@ -109,7 +109,6 @@ export const puco = {
 
 export const snomed = {
     snowstormHost: getEnv('SNOWSTORM_HOST', 'http://localhost:8080'),
-    snowstormElastic: getEnv('SNOWSTORM_ELASTIC', 'http://localhost:9201'),
     snowstormBranch: getEnv('SNOWSTORM_BRANCH', 'MAIN/SNOMEDCT-ES')
 };
 
