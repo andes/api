@@ -70,8 +70,8 @@ export async function getResumenDiarioMensual(params: any) {
                             {
                                 case: {
                                     $and: [
-                                        { $gte: [{ $hour: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' }, 7] },
-                                        { $lt: [{ $hour: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' }, 13] }
+                                        { $gte: [{ $hour: { date: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' } }, 7] },
+                                        { $lt: [{ $hour: { date: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' } }, 13] }
                                     ]
                                 },
                                 then: 'mañana'
@@ -79,8 +79,8 @@ export async function getResumenDiarioMensual(params: any) {
                             {
                                 case: {
                                     $and: [
-                                        { $gte: [{ $hour: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' }, 13] },
-                                        { $lt: [{ $hour: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' }, 20] }
+                                        { $gte: [{ $hour: { date: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' } }, 13] },
+                                        { $lt: [{ $hour: { date: '$ejecucion.fecha', timezone: 'America/Argentina/Buenos_Aires' } }, 20] }
                                     ]
                                 },
                                 then: 'tarde'
