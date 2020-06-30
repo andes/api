@@ -199,21 +199,16 @@ export async function matching(data) {
             }
             break;
         case 'multimatch':
-            {
+             {
+                const words = data.cadenaInput.trim().split(' ');
+                let andQuery = [];
+                words.forEach(w => {
+                    let orQuery = [];
+                    andQuery.push({ tokens: RegExp(`^${w}`) });
+                });
+                andQuery.push({ activo: { $eq: true } });
                 query = {
-                    bool: {
-                        must: {
-                            multi_match: {
-                                query: data.cadenaInput,
-                                type: 'cross_fields',
-                                fields: ['documento', 'apellido^5', 'nombre^4', 'numeroIdentificacion'],
-                                operator: 'and'
-                            }
-                        },
-                        filter: {
-                            term: { activo: 'true' }
-                        }
-                    }
+                    $and: andQuery
                 };
             }
             break;
@@ -315,26 +310,29 @@ export async function matching(data) {
             }
 
         } else {
-            // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
-            const body = {
-                size: 100,
-                from: 0,
-                query
-            };
-            // Es para los casos de multimatch y singlequery
 
-            let searchResult = await connElastic.search(body);
-            let results: Array<any> = ((searchResult.hits || {}).hits || []);
-            if (results) {
-                return results.map((hit) => {
-                    const elem = hit._source;
-                    elem['id'] = hit._id;
-                    return elem;
-                });
+            if (data.type === 'multimatch') {
+                return await paciente.aggregate(query).exec();
+            } else {
+                // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
+                const body = {
+                    size: 100,
+                    from: 0,
+                    query
+                };
+
+                let searchResult = await connElastic.search(body);
+                let results: Array<any> = ((searchResult.hits || {}).hits || []);
+
+                if (results) {
+                    return results.map((hit) => {
+                        const elem = hit._source;
+                        elem['id'] = hit._id;
+                        return elem;
+                    });
+                }
+                return [];
             }
-
-            return [];
-
         }
     } catch (err) {
         return [];
