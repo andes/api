@@ -4,6 +4,7 @@ import * as smsTools from './sendSms';
 import { RoboModel } from './roboSchema';
 
 import * as debug from 'debug';
+import { PushClient } from '../../modules/mobileApp/controller/PushClient';
 const log = debug('roboSender');
 
 export function roboSender() {
@@ -53,6 +54,9 @@ export function roboSender() {
                             };
                             log('Enviando SMS a', env.phone);
                             await smsTools.sendSms(smsOptions);
+                        }
+                        if (env.device_id) {
+                            new PushClient().send(env.device_id, env.notificationData);
                         }
 
                         await changeState(env, 'success');
