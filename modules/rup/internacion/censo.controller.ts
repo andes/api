@@ -101,12 +101,12 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                         ingreso: 'SI',
                         egreso: informesInternacion.egreso.tipoEgreso.id,
+                        diasEstada: timestampEnd.diff(moment(ultimoMovimiento.fecha), 'days') + 1,
                     });
                 }
             }
             if (ultimaUO === String(unidadOrganizativa)) {
                 if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
-                    diasEstada += informesInternacion.egreso.diasDeEstada;
                     if (informesInternacion.egreso.tipoEgreso.id === 'Defunción') {
                         defunciones++;
                     } else {
@@ -116,6 +116,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         checkPaciente(ultimoMovimiento);
                         tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                             egreso: informesInternacion.egreso.tipoEgreso.id,
+                            diasEstada: timestampEnd.diff(moment(ultimoMovimiento.fecha), 'days') + 1,
                         });
                     }
                 }
@@ -131,6 +132,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     paseDe: null,
                     egreso: null,
                     paseA: null,
+                    diasEstada: timestampEnd.diff(moment(ultimoMovimientoUO.fecha), 'days') + 1,
                 });
             } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
                 ingresos++;
@@ -138,6 +140,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     checkPaciente(ultimoMovimientoUO);
                     tablaPacientes[ultimoMovimientoUO.paciente.id].actividad.push({
                         ingreso: 'SI',
+                        diasEstada: timestampEnd.diff(moment(ultimoMovimientoUO.fecha), 'days') + 1,
                     });
                 }
             }
@@ -150,15 +153,22 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     pasesDe++;
                     checkPaciente(movimiento);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
-                        paseDe: movimientoAnterior.unidadOrganizativa.term
+                        paseDe: movimientoAnterior.unidadOrganizativa.term,
+                        diasEstada: timestampEnd.diff(moment(movimiento.fecha), 'days') + 1,
                     });
                 } else {
                     pasesA++;
                     checkPaciente(movimientoAnterior);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
-                        paseA: movimiento.unidadOrganizativa.term
+                        paseA: movimiento.unidadOrganizativa.term,
+                        diasEstada: timestampEnd.diff(moment(movimientoAnterior.fecha), 'days') + 1,
                     });
                 }
+            }
+
+            if (movimiento.esMovimiento && movimiento.unidadOrganizativa.conceptId === unidadOrganizativa) {
+                const dias = timestampEnd.diff(moment(movimiento.fecha), 'days') + 1;
+                diasEstada += dias;
             }
 
             movimientoAnterior = movimiento;
