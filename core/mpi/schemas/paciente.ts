@@ -60,7 +60,10 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     },
     fechaFallecimiento: Date,
     estadoCivil: constantes.ESTADOCIVIL,
-    foto: String,
+    foto: {
+        type: String,
+        select: true
+    },
     fotoMobile: String,
     nacionalidad: String,
     // ---------------------
@@ -156,5 +159,7 @@ pacienteSchema.plugin(mongoose_fuzzy_searching, {
             minSize: 3
         }]
 });
+
+pacienteSchema.index({ documento: 1, nombre: 1, apellido: 1, numeroIdentificacion: 1, alias: 1 });
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');

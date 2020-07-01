@@ -204,9 +204,20 @@ export async function matching(data) {
                 let andQuery = [];
                 words.forEach(w => {
                     let orQuery = [];
+<<<<<<< HEAD
                     andQuery.push({ tokens: RegExp(`^${w}`) });
                 });
                 andQuery.push({ activo: { $eq: true } });
+=======
+                    orQuery.push({ documento: regexp });
+                    orQuery.push({ numeroIdentificacion: regexp });
+                    orQuery.push({ nombre: regexp });
+                    orQuery.push({ apellido: regexp });
+                    orQuery.push({ alias: regexp });
+                    andQuery.push({ $or: orQuery });
+                    andQuery.push({ activo: { $eq: true } });
+                });
+>>>>>>> feat(mpi): add index para búsqueda
                 query = {
                     $and: andQuery
                 };
@@ -312,7 +323,7 @@ export async function matching(data) {
         } else {
 
             if (data.type === 'multimatch') {
-                return await paciente.aggregate(query).exec();
+                return await paciente.find(query).limit(30);
             } else {
                 // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
                 const body = {
