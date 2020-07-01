@@ -1,3 +1,18 @@
+# [5.2.0](https://github.com/andes/api/compare/v5.1.0...v5.2.0) (2020-07-01)
+
+
+### Bug Fixes
+
+* **mpi:** verifica campo de georeferencia ([227fc16](https://github.com/andes/api/commit/227fc16e22306ec7e6b6a99e10cebfc025dd7ea4))
+* **notification:** Se cambio interfaz de notificacion ([4b41088](https://github.com/andes/api/commit/4b4108817bf5dd43f69f2c26bf4f97a5ef5cfe92))
+
+
+### Features
+
+* **robosender:** push notifications ([5c9c6d2](https://github.com/andes/api/commit/5c9c6d28344cd95f32bbc6c776282c3d63add3ef))
+* **rup:** agrega ambito al subject del email del informe ([#1014](https://github.com/andes/api/issues/1014)) ([f3b956f](https://github.com/andes/api/commit/f3b956f269ed32356cdd19db9bb3004352922b89))
+* **TOP:** incluye operacion citar al PATCH de preestaciones ([49c40c8](https://github.com/andes/api/commit/49c40c811bd772ff983b40bf72a346cb1259eda8))
+
 # [5.1.0](https://github.com/andes/api/compare/v5.0.0...v5.1.0) (2020-06-24)
 
 
