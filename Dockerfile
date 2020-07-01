@@ -18,10 +18,9 @@ COPY . .
 
 RUN cp config.private.ts.example config.private.ts
 
-RUN npm run tsc
-
-RUN npm run parse
+RUN npm run tsc 
 
 EXPOSE 3002
+
 CMD [ "npm", "start" ]
 
