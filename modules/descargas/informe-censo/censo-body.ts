@@ -4,36 +4,6 @@ import { HTMLComponent } from '../model/html-component.class';
 
 export class CensoBody extends HTMLComponent {
     template = `
-            <!-- Header -->
-            <header id="pageHeader">
-                <!-- Cabezal logos institucionales -->
-                <section class="contenedor-logos">
-                    <span class="contenedor-logo-efector">
-                    <img class="logo-efector" src="data:image/png;base64,{{ logos.logoEfector }}">
-                    </span>
-                    <span class="contenedor-logos-secundarios">
-                        <img class="logo-adicional" src="data:image/png;base64,{{ logos.logoAdicional }}">
-                        <img class="logo-andes" src="data:image/png;base64,{{ logos.logoAndes }}">
-                    </span>
-                </section>
-                <section class="contenedor-data-origen">
-                    <!-- Datos paciente -->
-                    <span class="contenedor-principal-data">
-                        <div class="contenedor-secundario">
-                            <h4>
-                                Censo diario
-                            </h4>
-                            <h5 class="bolder">Fecha:
-                                {{ fechaCenso }}
-                            </h5>
-                            <h5 class="bolder">Unidad organizativa:
-                                {{ unidadOrganizativa }}
-                            </h5>
-                        </div>
-                    </span>
-                </section>
-            </header>
-            <!-- END Header -->
             <!-- Body -->
             <main>
                 <section class="contenedor-informe">
@@ -148,70 +118,14 @@ export class CensoBody extends HTMLComponent {
                 </section>
             </main>
             <!-- END Body -->
-            <!-- Footer -->
-            <footer id="pageFooter">
-                <!-- Firmas -->
-                <span class="contenedor-firmas"></span>
-                <hr>
-                <span class="contenedor-zocalo">
-                    <img class="logo-pdp" src="data:image/png;base64,{{ logos.logoPDP }}">
-                    <article class="contenedor-data-pdp">
-                        <h6>Nota: El contenido de este informe ha sido validado digitalmente siguiendo los estándares de
-                            calidad y seguridad
-                            requeridos. El ministerio de salud de la provincia de Neuquén es responsable inscripto en el
-                            Registro
-                            Nacional de Protección de Datos Personales, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso
-                            1).</h6>
-                    </article>
-                    <article class="contenedor-data-organizacion">
-                        <h6>
-                            {{{ organizacion.nombre }}}
-                        </h6>
-                        <h6></h6>
-                    </article>
-                    <article class="contenedor-data-impresion">
-                        <h6 class="bolder">Impreso por:</h6>
-                        <h6>
-                            {{ usuario }}
-                        </h6>
-                        <h6>
-                            {{ fechaActual }}
-                        </h6>
-                    </article>
-                    <hr>
-                    <span class="numeracion">
-                        {{{ numeracionHTML }}}
-                    </span>
-                </span>
-            </footer>
-            <!-- END Footer -->
     `;
 
-    constructor(public usuario, public fechaCenso, public organizacion, public unidadOrganizativa, public listadoCenso, public resumenCenso) {
+    constructor(public listadoCenso, public resumenCenso) {
         super();
 
-        let nombreLogo = organizacion.nombre.toLocaleLowerCase().replace(/-|\./g, '').replace(/ {2,}| /g, '-');
-        const index = organizacion.nombre.indexOf('-');
-        const nombre = organizacion.nombre.substr(0, index).trim();
-        const nombre2 = organizacion.nombre.substr(index + 1).trim();
-
         this.data = {
-            usuario,
             filas: listadoCenso,
             filaResumen: resumenCenso,
-            fechaCenso,
-            unidadOrganizativa,
-            fechaAcual: moment().format('DD/MM/YYYY HH:mm') + ' hs',
-            organizacion: {
-                nombre: organizacion.nombre.replace(' - ', '</br>'),
-            },
-            logos: {
-                logoEfector: loadImage('templates/rup/informes/img/efectores/' + nombreLogo + '.png'),
-                adicional: loadImage('templates/rup/informes/img/logo-adicional.png'),
-                andes: loadImage('templates/rup/informes/img/logo-andes-h.png'),
-                logoPDP: loadImage('templates/rup/informes/img/logo-pdp.png')
-            },
-            numeracionHTML: '<small> {{page}} </small> de <small> {{pages}} </small>'
         };
     }
 }
