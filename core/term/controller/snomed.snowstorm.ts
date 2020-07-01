@@ -1,15 +1,9 @@
-import { Client } from 'elasticsearch';
 import { snomed } from '../../../config.private';
 import { handleHttpRequest } from '../../../utils/requestHandler';
-import * as utils from '../../../utils/utils';
 
 // ID del atributo que genera una relación padre-hijo
 const IsASct = '116680003';
 const StatedSct = '900000000000010007';
-
-const snowstormClient = new Client({
-    host: snomed.snowstormElastic
-});
 
 async function httpGetSnowstorm(url: String, qs = {}, languageCode = 'es') {
     const [status, body] = await handleHttpRequest({
@@ -175,184 +169,38 @@ export async function getConceptByExpression(expression, term = null, form = 'st
     return null;
 }
 
-
 export async function searchTerms(text, { semanticTags, languageCode }, conceptIds: string[] = null) {
-    const textFold = utils.removeDiacritics(text).replace(/[\u00F1]/g, 'n');
-    const terms = textFold.split(' ');
-    const searchStrig = terms.map(i => i + '*').join(' ');
-    semanticTags = semanticTags || [];
     languageCode = languageCode || 'es';
-
-    // Buscamos todos los conceptos que tengas descripciones que matcheen con la busqueda.
-    let ids;
-    if (!conceptIds) {
-        const searchResult = await snowstormClient.search({
-            index: 'description',
-            type: 'description',
-            size: '10000',
-            body: {
-                query: {
-                    bool: {
-                        must: [
-                            { term: { languageCode: { value: languageCode, boost: 1.0 } } },
-                            branchesClause
-                        ],
-                        filter: [
-                            {
-                                simple_query_string: {
-                                    query: searchStrig,
-                                    fields: [
-                                        'termFolded^1.0'
-                                    ],
-                                    flags: -1,
-                                    default_operator: 'and',
-                                    analyze_wildcard: false,
-                                    auto_generate_synonyms_phrase_query: true,
-                                    fuzzy_prefix_length: 0,
-                                    fuzzy_max_expansions: 50,
-                                    fuzzy_transpositions: true,
-                                    boost: 1.0
-                                }
-                            }
-                        ],
-                        adjust_pure_negative: true,
-                        boost: 1.0
-                    }
-                },
-                stored_fields: ['descriptionId', 'conceptId'],
-                sort: [
-                    { termLen: { order: 'asc' } },
-                    { _score: { order: 'asc' } }
-                ]
-            }
+    const qs = {
+        semanticTags,
+        term: text,
+        active: true,
+        conceptActive: true,
+        languageCode,
+        limit: 1000
+    };
+    const response = await httpGetSnowstorm(`browser/${snomed.snowstormBranch}/descriptions`, qs, languageCode);
+    if (response) {
+        let { items } = response;
+        if (conceptIds) {
+            items = items.filter(item => conceptIds.find(c => c === item.concept.conceptId));
+        }
+        return items.map(cpt => {
+            return {
+                conceptId: cpt.concept.conceptId,
+                term: cpt.term,
+                fsn: cpt.concept.fsn.term,
+                semanticTag: getSemanticTagFromFsn(cpt.concept.fsn.term),
+            };
+        }).sort((a: any, b: any) => {
+            if (a.term.length < b.term.length) { return -1; }
+            if (a.term.length > b.term.length) { return 1; }
+            return 0;
         });
-        ids = searchResult.hits.hits.map(item => item.fields.conceptId[0]);
-    } else {
-        ids = conceptIds;
     }
 
-
-    // Verificamos si los concepts están activos o no. Filtramos solo por activos.
-    const conceptsActive = await snowstormClient.search({
-        index: 'concept',
-        type: 'concept',
-        size: '10000',
-        body: {
-            query: {
-                bool: {
-                    filter: [
-                        { terms: { active: [true], boost: 1.0 } },
-                        { terms: { conceptId: ids, boost: 1.0 } },
-                        branchesClause
-                    ],
-                    adjust_pure_negative: true,
-                    boost: 1.0
-                }
-            }
-        }
-    });
-    const idsActive = conceptsActive.hits.hits.map(item => item._source.conceptId);
-
-    // Tenemos que hacer una segunda busqueda por semantic tag porque snowstorm no tiene el semtag en cada dato.
-    const searchResult2 = await snowstormClient.search({
-        index: 'description',
-        type: 'description',
-        size: '10000',
-        body: {
-            query: {
-                bool: {
-                    must: [
-                        branchesClause,
-                        { bool: { should: semanticTags.map(value => ({ term: { tag: value } })) } },
-                        { term: { languageCode: { value: languageCode, boost: 1.0 } } },
-                        { terms: { active: [true], boost: 1.0 } },
-                        { terms: { typeId: ['900000000000003001'], boost: 1.0 } },
-                        { terms: { conceptId: idsActive, boost: 1.0 } }
-                    ],
-                    adjust_pure_negative: true,
-                    boost: 1.0
-                }
-            },
-            _source: { includes: ['conceptId', 'term', 'tag'], excludes: [] }
-        }
-    });
-
-    const realConcept = searchResult2.hits.hits.map(item => {
-        return {
-            conceptId: item._source.conceptId,
-            fsn: item._source.term,
-            semanticTag: item._source.tag
-        };
-    });
-
-    // Por ultimo teniendo el listado de conceptos por activo y semtag volvemos a buscar los terminos que matcheen.
-    const searchResult3 = await snowstormClient.search({
-        index: 'description',
-        type: 'description',
-        size: '10000',
-        body: {
-            query: {
-                bool: {
-                    must: [
-                        branchesClause,
-                        { term: { languageCode: { value: languageCode, boost: 1.0 } } },
-                    ],
-                    must_not: [
-                        { terms: { typeId: ['900000000000003001'], boost: 1.0 } }
-                    ],
-                    filter: [
-                        {
-                            simple_query_string: {
-                                query: searchStrig,
-                                fields: [
-                                    'termFolded^1.0'
-                                ],
-                                flags: -1,
-                                default_operator: 'and',
-                                analyze_wildcard: false,
-                                auto_generate_synonyms_phrase_query: true,
-                                fuzzy_prefix_length: 0,
-                                fuzzy_max_expansions: 50,
-                                fuzzy_transpositions: true,
-                                boost: 1.0
-                            }
-                        },
-                        {
-                            bool: {
-                                must: [{ terms: { conceptId: realConcept.map(i => i.conceptId), boost: 1.0 } }],
-                                adjust_pure_negative: true,
-                                boost: 1.0
-                            }
-                        },
-                        { terms: { active: [true], boost: 1.0 } },
-                    ],
-                    adjust_pure_negative: true,
-                    boost: 1.0
-                },
-            },
-            _source: {
-                includes: ['conceptId', 'term']
-            },
-            sort: [
-                { termLen: { order: 'asc' } },
-                { _score: { order: 'asc' } }
-            ],
-        }
-    });
-    const hash = {};
-    realConcept.forEach(i => hash[i.conceptId] = i);
-    return searchResult3.hits.hits.map(a => {
-        return {
-            ...hash[a._source.conceptId],
-            term: a._source.term
-        };
-    }).sort((a: any, b: any) => {
-        if (a.term.length < b.term.length) { return -1; }
-        if (a.term.length > b.term.length) { return 1; }
-        return 0;
-    });
-
 }
+
 
 function getBranches() {
     let branchName: string = snomed.snowstormBranch;
@@ -363,7 +211,6 @@ function getBranches() {
         branches.push(branch);
 
         index = branchName.indexOf('/', index + 1);
-        // branchName = branchName.substr(index + 1);
     }
     branches.push(branchName);
 
