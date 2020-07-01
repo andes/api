@@ -48,8 +48,7 @@ export async function getConcept(sctid, format = 'full') {
                 conceptId: concept.conceptId,
                 term: concept.pt.term,
                 fsn: concept.fsn.term,
-                semanticTag: getSemanticTagFromFsn(concept.fsn.term),
-                refsetIds: []
+                semanticTag: getSemanticTagFromFsn(concept.fsn.term)
             };
         }
     }
@@ -109,8 +108,7 @@ export async function getChildren(sctid, { all = false, completed = true, leaf =
                         conceptId: cpt.conceptId,
                         term: cpt.pt.term,
                         fsn: cpt.fsn.term,
-                        semanticTag: getSemanticTagFromFsn(cpt.fsn.term),
-                        refsetIds: []
+                        semanticTag: getSemanticTagFromFsn(cpt.fsn.term)
                     });
                 } else {
                     result.push(cpt.conceptId);
@@ -140,7 +138,6 @@ export async function getConcepts(conceptsIds: string[]) {
                 term: concept.pt.term,
                 fsn: concept.fsn.term,
                 semanticTag: getSemanticTagFromFsn(concept.fsn.term),
-                refsetIds: [],
                 relationships: concept.relationships
             };
         });
@@ -168,8 +165,7 @@ export async function getConceptByExpression(expression, term = null, form = 'st
                     conceptId: concept.conceptId,
                     term: concept.pt.term,
                     fsn: concept.fsn.term,
-                    semanticTag: getSemanticTagFromFsn(concept.fsn.term),
-                    refsetIds: [],
+                    semanticTag: getSemanticTagFromFsn(concept.fsn.term)
                 };
             });
             return ps;
@@ -347,8 +343,7 @@ export async function searchTerms(text, { semanticTags, languageCode }, conceptI
     return searchResult3.hits.hits.map(a => {
         return {
             ...hash[a._source.conceptId],
-            term: a._source.term,
-            refsetIds: []
+            term: a._source.term
         };
     }).sort((a: any, b: any) => {
         if (a.term.length < b.term.length) { return -1; }

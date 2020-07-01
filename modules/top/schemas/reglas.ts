@@ -29,8 +29,7 @@ let reglasSchema = new mongoose.Schema({
             conceptId: String,
             term: String,
             fsn: String,
-            semanticTag: SemanticTag,
-            refsetIds: [String]
+            semanticTag: SemanticTag
         }
     }
 });

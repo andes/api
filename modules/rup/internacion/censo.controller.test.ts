@@ -50,7 +50,6 @@ function seedCama() {
         },
         ambito: 'internacion',
         unidadOrganizativa: {
-            refsetIds: [],
             fsn: 'servicio de adicciones (medio ambiente)',
             term: 'servicio de adicciones',
             conceptId: '4561000013106',
@@ -182,7 +181,6 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
@@ -332,7 +330,6 @@ test('Censo diario - Paciente ingresa y tiene pase A', async () => {
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
@@ -371,7 +368,6 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', 
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
@@ -416,7 +412,6 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene alta'
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
@@ -463,7 +458,6 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defun
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
 
@@ -504,7 +498,6 @@ test('Censo diario - Paciente tiene paseDe y se queda', async () => {
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
@@ -546,7 +539,6 @@ test('Censo diario - Paciente tiene paseDe y tiene alta', async () => {
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
@@ -590,7 +582,6 @@ test('Censo diario - Paciente tiene paseDe y tiene defuncion', async () => {
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
@@ -629,7 +620,6 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
@@ -646,7 +636,6 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
         term: 'departamento de neuropatología',
         conceptId: '309957000',
         semanticTag: 'medio ambiente',
-        refsetIds: []
     };
     await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoPase, REQMock);
 
@@ -671,7 +660,7 @@ function estadoOcupada() {
         fecha: moment().subtract(1, 'day').toDate(),
         estado: 'ocupada',
         unidadOrganizativa: {
-            refsetIds: [],
+
             fsn: 'servicio de adicciones (medio ambiente)',
             term: 'servicio de adicciones',
             conceptId: '4561000013106',
@@ -681,7 +670,7 @@ function estadoOcupada() {
         },
         especialidades: [
             {
-                refsetIds: [],
+
                 _id: mongoose.Types.ObjectId('5c95036cc5861a722ddd563d'),
                 fsn: 'medicina general (calificador)',
                 term: 'medicina general',
@@ -691,7 +680,7 @@ function estadoOcupada() {
         ],
         esCensable: true,
         genero: {
-            refsetIds: [],
+
             fsn: 'género femenino (hallazgo)',
             term: 'género femenino',
             conceptId: '703118005',
@@ -784,14 +773,14 @@ function prestacion() {
         _id: mongoose.Types.ObjectId('5d3af64ec8d7a7158e12c242'),
         solicitud: {
             tipoPrestacion: {
-                refsetIds: [],
+
                 fsn: 'admisión hospitalaria (procedimiento)',
                 semanticTag: 'procedimiento',
                 conceptId: '32485007',
                 term: 'internación'
             },
             tipoPrestacionOrigen: {
-                refsetIds: []
+
             },
             organizacion: {
                 id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
@@ -829,9 +818,6 @@ function prestacion() {
                     concepto: {
                         fsn: 'documento de solicitud de admisión (elemento de registro)',
                         semanticTag: 'elemento de registro',
-                        refsetIds: [
-                            '900000000000497000'
-                        ],
                         conceptId: '721915006',
                         term: 'documento de solicitud de admisión'
                     },
@@ -914,9 +900,6 @@ function prestacion() {
                     concepto: {
                         fsn: 'alta del paciente (procedimiento)',
                         semanticTag: 'procedimiento',
-                        refsetIds: [
-                            '900000000000497000'
-                        ],
                         conceptId: '58000006',
                         term: 'alta del paciente'
                     },

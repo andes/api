@@ -54,7 +54,6 @@ export let schema = new mongoose.Schema({
             term: String,
             fsn: String,
             semanticTag: SemanticTag,
-            refsetIds: [String],
             noNominalizada: Boolean
         },
         tipoPrestacionOrigen: {
@@ -62,8 +61,7 @@ export let schema = new mongoose.Schema({
             conceptId: String,
             term: String,
             fsn: String,
-            semanticTag: SemanticTag,
-            refsetIds: [String]
+            semanticTag: SemanticTag
         },
 
         // ID del turno relacionado con esta prestación

@@ -52,7 +52,6 @@ router.get('/frecuentesProfesional', async (req, res, next) => {
                     conceptId: '$frecuentes.concepto.conceptId',
                     term: '$frecuentes.concepto.term',
                     fsn: '$frecuentes.concepto.fsn',
-                    refsetIds: '$frecuentes.concepto.refsetIds',
                     semanticTag: '$frecuentes.concepto.semanticTag'
                 },
                 frecuencia: { $sum: '$frecuentes.frecuencia' },
