@@ -86,7 +86,7 @@
   },
   "scripts": {
     "startNode": "tsc && gulp && concurrently \"npm run node\" ",
-    "start": "npm run parse && concurrently -r \"npm run tsc:w\" \"npm run node\" ",
+    "start": "concurrently -r \"npm run tsc:w\" \"npm run node\" ",
     "node": "nodemon -q ./index.js",
     "tsc": "tsc",
     "tsc:w": "tsc -w",
@@ -94,7 +94,6 @@
     "jobs": "tsc && node jobs/scheduler.js",
     "lint": "tslint --project .",
     "lint:fix": "tslint --project . --fix",
-    "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js",
     "test": "jest",
     "testing": "NODE_ENV=test npm start"
   },

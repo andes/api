@@ -5,6 +5,7 @@ import * as utils from '../../../utils/utils';
 
 // ID del atributo que genera una relación padre-hijo
 const IsASct = '116680003';
+const StatedSct = '900000000000010007';
 
 const snowstormClient = new Client({
     host: snomed.snowstormElastic
