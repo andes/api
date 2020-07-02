@@ -206,7 +206,7 @@ export async function matching(data) {
                             multi_match: {
                                 query: data.cadenaInput,
                                 type: 'cross_fields',
-                                fields: ['documento', 'apellido^5', 'nombre^4'],
+                                fields: ['documento', 'apellido^5', 'nombre^4', 'numeroIdentificacion'],
                                 operator: 'and'
                             }
                         },
