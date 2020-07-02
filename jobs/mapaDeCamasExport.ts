@@ -1,18 +1,5 @@
 import * as configPrivate from './../config.private';
-const request = require('request');
-
-function requestBiQueries(options) {
-    return new Promise((resolve, reject) => {
-        request(options, (error, response, _body) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(response);
-            }
-        });
-    });
-
-}
+import { handleHttpRequest } from './../utils/requestHandler';
 
 export async function exportInternacion(done) {
     let organizaciones = [
@@ -56,7 +43,7 @@ export async function exportInternacion(done) {
             }
         };
 
-        await requestBiQueries({
+        await handleHttpRequest({
             method: 'POST',
             uri: url_occupations,
             body: dataOccupations,
@@ -64,7 +51,7 @@ export async function exportInternacion(done) {
             timeout: 50000,
         });
 
-        await requestBiQueries({
+        await handleHttpRequest({
             method: 'POST',
             uri: url_checkouts,
             body: dataCheckouts,
