@@ -176,7 +176,7 @@ export async function searchTerms(text, { semanticTags, languageCode }, conceptI
         term: text,
         active: true,
         conceptActive: true,
-        languageCode,
+        language: languageCode,
         limit: 1000
     };
     const response = await httpGetSnowstorm(`browser/${snomed.snowstormBranch}/descriptions`, qs, languageCode);
