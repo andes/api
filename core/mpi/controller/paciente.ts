@@ -199,25 +199,13 @@ export async function matching(data) {
             }
             break;
         case 'multimatch':
-             {
-                const words = data.cadenaInput.trim().split(' ');
+            {
+                const words = data.cadenaInput.trim().toLowerCase().split(' ');
                 let andQuery = [];
                 words.forEach(w => {
-                    let orQuery = [];
-<<<<<<< HEAD
                     andQuery.push({ tokens: RegExp(`^${w}`) });
                 });
                 andQuery.push({ activo: { $eq: true } });
-=======
-                    orQuery.push({ documento: regexp });
-                    orQuery.push({ numeroIdentificacion: regexp });
-                    orQuery.push({ nombre: regexp });
-                    orQuery.push({ apellido: regexp });
-                    orQuery.push({ alias: regexp });
-                    andQuery.push({ $or: orQuery });
-                    andQuery.push({ activo: { $eq: true } });
-                });
->>>>>>> feat(mpi): add index para búsqueda
                 query = {
                     $and: andQuery
                 };

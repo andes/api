@@ -62,7 +62,7 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     estadoCivil: constantes.ESTADOCIVIL,
     foto: {
         type: String,
-        select: true
+        select: false
     },
     fotoMobile: String,
     nacionalidad: String,
@@ -100,11 +100,16 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         fecha: Date,
         nota: String,
         destacada: Boolean
+    }],
+    tokens: [{
+        type: String,
+        lowercase: true
     }]
 }, { versionKey: false });
 
 pacienteSchema.pre('save', function (next) {
     const user: any = this;
+    let words = [];
     if (user.isModified('nombre')) {
         user.nombre = user.nombre.toUpperCase();
     }
@@ -115,6 +120,26 @@ pacienteSchema.pre('save', function (next) {
         const match = new Matching();
         user.claveBlocking = match.crearClavesBlocking(user);
     }
+    if (user.documento) {
+        words.push(user.documento.toLowerCase());
+    }
+    if (user.nombre) {
+        user.nombre.toLowerCase().split(' ').forEach(doc => {
+            words.push(doc.toLowerCase());
+        });
+    }
+    if (user.apellido) {
+        user.apellido.toLowerCase().split(' ').forEach(doc => {
+            words.push(doc.toLowerCase());
+        });
+    }
+    if (user.alias) {
+        words.push(user.alias.toLowerCase());
+    }
+    if (user.numeroIdentificacion) {
+        words.push(user.numeroIdentificacion.toLowerCase());
+    }
+    user.tokens = words;
     next();
 
 });
@@ -160,6 +185,6 @@ pacienteSchema.plugin(mongoose_fuzzy_searching, {
         }]
 });
 
-pacienteSchema.index({ documento: 1, nombre: 1, apellido: 1, numeroIdentificacion: 1, alias: 1 });
+pacienteSchema.index({ tokens: 1 });
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
