@@ -38,6 +38,19 @@ export class InformeRupHeader extends HTMLComponent {
                         </h4>
                     </div>
                     <div class="contenedor-secundario">
+                    <div class="contenedor-bloque-texto" >
+                                 <h6>
+                                 <b>Obra Social: </b>
+
+                                    {{#if paciente.obraSocial}}
+                                   {{paciente.obraSocial}}
+                                    {{else}}
+                                    sin obra social
+                                    {{/if}}
+                                </h6>
+                    </div>
+                    </div>
+                  <div class="contenedor-secundario">
                         <div class="contenedor-bloque-texto">
                             <h6 class="bolder">
                                 Fecha de Nac.
@@ -126,10 +139,11 @@ export class InformeRupHeader extends HTMLComponent {
                 fechaNacimiento,
                 documento: paciente.documento,
                 edad,
-                numeroCarpeta: numeroCarpeta?.nroCarpeta
+                numeroCarpeta: numeroCarpeta?.nroCarpeta,
+                obraSocial: prestacion.paciente.obraSocial.financiador
             },
             organizacion: {
-                nombre: organizacion.nombre.replace(' - ', '</br>'),
+                nombre: organizacion.nombre.replace('-', '</br>'),
                 direccion: organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre
             },
             profesional: {
