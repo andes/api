@@ -182,21 +182,17 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
  * @param data
  */
 export async function matching(data) {
-
-    const connElastic = new ElasticSync();
-
     let query;
+
     switch (data.type) {
         case 'simplequery':
-            {
-                query = {
-                    simple_query_string: {
-                        query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
-                        fields: ['documento', 'apellido', 'nombre', 'sexo'],
-                        default_operator: 'and'
-                    }
-                };
-            }
+            query = {
+                documento: data.documento,
+                apellido: data.apellido,
+                nombre: data.nombre,
+                sexo: data.sexo
+            };
+
             break;
         case 'multimatch':
             {
@@ -226,115 +222,85 @@ export async function matching(data) {
         case 'search':
             {
                 query = {
-                    bool: {
-                        must: {
-                            match: data.filtros
-                        },
-                        filter: {
-                            term: { activo: 'true' }
-                        }
-                    }
+                    $and: [data.filtros],
+                    activo: 'true'
                 };
             }
             break;
     }
 
-    if (data.incluirInactivos) {
-        delete query.bool.filter;
-    }
-
     try {
         if (data.type === 'suggest') {
-            let weights = config.mpi.weightsDefault;
-
-            if (data.escaneado) {
-                weights = config.mpi.weightsScan;
-            }
-            const porcentajeMatchMax = config.mpi.cotaMatchMax;
-            const porcentajeMatchMin = config.mpi.cotaMatchMin;
-            const listaPacientesMax = [];
-            const listaPacientesMin = [];
             // @ts-ignore: fuzzySearch
             const pacientes = await paciente.fuzzySearch({ query: query.documento.toString(), minSize: 3 }, { activo: { $eq: true } }).limit(30);
-            pacientes.forEach((pac: any) => {
-                const paciente2 = pac;
-                const pacDto = {
-                    documento: data.documento ? data.documento.toString() : '',
-                    nombre: data.nombre ? data.nombre : '',
-                    apellido: data.apellido ? data.apellido : '',
-                    fechaNacimiento: data.fechaNacimiento ? moment(data.fechaNacimiento).format('YYYY-MM-DD') : '',
-                    sexo: data.sexo ? data.sexo : ''
-                };
-                const pacElastic = {
-                    documento: paciente2.documento ? paciente2.documento.toString() : '',
-                    nombre: paciente2.nombre ? paciente2.nombre : '',
-                    apellido: paciente2.apellido ? paciente2.apellido : '',
-                    fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
-                    sexo: paciente2.sexo ? paciente2.sexo : ''
-                };
-                let match = new Matching();
-                let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
+            const listaSugeridos = obtenerSugeridos(data, pacientes);
 
-                paciente2['id'] = pac._id;
-                if (valorMatching >= porcentajeMatchMax) {
-                    listaPacientesMax.push({
-                        id: pac._id,
-                        paciente: paciente2,
-                        match: valorMatching
-                    });
-                } else {
-                    if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
-                        listaPacientesMin.push({
-                            id: pac._id,
-                            paciente: paciente2,
-                            match: valorMatching
-                        });
-                    }
-                }
-            });
-
-            // if (devolverPorcentaje) {
             const sortMatching = (a, b) => {
                 return b.match - a.match;
             };
 
-            // cambiamos la condición para lograr que nos devuelva más de una sugerencia
-            // ya que la 1ra sugerencia es el mismo paciente.
-            if (listaPacientesMax.length > 0) {
-                listaPacientesMax.sort(sortMatching);
-                return (listaPacientesMax);
-            } else {
-                listaPacientesMin.sort(sortMatching);
-                return (listaPacientesMin);
-            }
+            return listaSugeridos.sort(sortMatching);
 
         } else {
-
-            if (data.type === 'multimatch') {
-                return await paciente.find(query).limit(30);
-            } else {
-                // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
-                const body = {
-                    size: 100,
-                    from: 0,
-                    query
-                };
-
-                let searchResult = await connElastic.search(body);
-                let results: Array<any> = ((searchResult.hits || {}).hits || []);
-
-                if (results) {
-                    return results.map((hit) => {
-                        const elem = hit._source;
-                        elem['id'] = hit._id;
-                        return elem;
-                    });
-                }
-                return [];
-            }
+            // multimatch, simplequery, search
+            let skip = parseInt(data.skip || 0, 10);
+            let limit = parseInt(data.limit || 30, 10);
+            return await paciente.find(query).skip(skip).limit(limit);
         }
+
     } catch (err) {
         return [];
+    }
+}
+
+function obtenerSugeridos(_paciente, pacientesSimilares) {
+    const weights = _paciente.escaneado ? config.mpi.weightsScan : config.mpi.weightsDefault;
+    const porcentajeMatchMax = config.mpi.cotaMatchMax;
+    const porcentajeMatchMin = config.mpi.cotaMatchMin;
+    const listaPacientesMax = [];
+    const listaPacientesMin = [];
+
+    pacientesSimilares.forEach((pac: any) => {
+        const sugerido = pac;
+        const pacienteDto = {
+            documento: _paciente.documento ? _paciente.documento.toString() : '',
+            nombre: _paciente.nombre ? _paciente.nombre : '',
+            apellido: _paciente.apellido ? _paciente.apellido : '',
+            fechaNacimiento: _paciente.fechaNacimiento ? moment(_paciente.fechaNacimiento).format('YYYY-MM-DD') : '',
+            sexo: _paciente.sexo ? _paciente.sexo : ''
+        };
+        const sugeridoDto = {
+            documento: sugerido.documento ? sugerido.documento.toString() : '',
+            nombre: sugerido.nombre ? sugerido.nombre : '',
+            apellido: sugerido.apellido ? sugerido.apellido : '',
+            fechaNacimiento: sugerido.fechaNacimiento ? moment(sugerido.fechaNacimiento).format('YYYY-MM-DD') : '',
+            sexo: sugerido.sexo ? sugerido.sexo : ''
+        };
+        let match = new Matching();
+        let valorMatching = match.matchPersonas(sugeridoDto, pacienteDto, weights, config.algoritmo);
+
+        sugerido['id'] = pac._id;
+        if (valorMatching >= porcentajeMatchMax) {
+            listaPacientesMax.push({
+                id: sugerido.id,
+                paciente: sugerido,
+                match: valorMatching
+            });
+        } else {
+            if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
+                listaPacientesMin.push({
+                    id: sugerido.id,
+                    paciente: sugerido,
+                    match: valorMatching
+                });
+            }
+        }
+    });
+
+    if (listaPacientesMax.length > 0) {
+        return listaPacientesMax;
+    } else {
+        return listaPacientesMin;
     }
 }
 
@@ -533,74 +499,6 @@ export async function checkCarpeta(req, data) {
 
 /* Hasta acá funciones del PATCH */
 
-/**
- *
- * @param dataPaciente
- * @param configs.operador Operador de busqueda de caves 'or' | 'and'
- * @param configs.claves Array de numeros de clave de blocking. Ver crearClaveBlockin para saber el orden de creación
- */
-
-export async function matchPaciente(dataPaciente) {
-    try {
-        const connElastic = new ElasticSync();
-        const query = {
-            multi_match: {
-                query: dataPaciente.apellido + ' ' + dataPaciente.nombre + ' ' + dataPaciente.documento,
-                type: 'cross_fields',
-                fields: ['documento^5', 'nombre', 'apellido^3'],
-            }
-        };
-        const body = {
-            size: 100,
-            from: 0,
-            query
-        };
-
-        const searchResult = await connElastic.search(body);
-        const pacientes: Array<any> = ((searchResult.hits || {}).hits || []).map((hit) => {
-            const elem = hit._source;
-            elem['id'] = hit._id;
-            return elem;
-        });
-
-        const weights = config.mpi.weightsDefault;
-        const listMatching = [];
-        for (const paciente2 of pacientes) {
-            const pacDto = {
-                documento: dataPaciente.documento ? dataPaciente.documento.toString() : '',
-                nombre: dataPaciente.nombre ? dataPaciente.nombre : '',
-                apellido: dataPaciente.apellido ? dataPaciente.apellido : '',
-                fechaNacimiento: dataPaciente.fechaNacimiento ? moment(new Date(dataPaciente.fechaNacimiento)).format('YYYY-MM-DD') : '',
-                sexo: dataPaciente.sexo ? dataPaciente.sexo : ''
-            };
-            const pacElastic = {
-                documento: paciente2.documento ? paciente2.documento.toString() : '',
-                nombre: paciente2.nombre ? paciente2.nombre : '',
-                apellido: paciente2.apellido ? paciente2.apellido : '',
-                fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
-                sexo: paciente2.sexo ? paciente2.sexo : ''
-            };
-            const match = new Matching();
-            const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
-
-            listMatching.push({
-                value: valorMatching,
-                paciente: paciente2
-            });
-
-        }
-
-        const sortMatching = (a, b) => {
-            return b.value - a.value;
-        };
-
-        listMatching.sort(sortMatching);
-        return listMatching;
-
-    } catch (e) {
-        return [];
-    }
-}
 
 /**
  *  Devuelve un array de pacientes similares al ingresado por parámetro
