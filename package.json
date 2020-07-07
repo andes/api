@@ -95,7 +95,10 @@
     "lint": "tslint --project .",
     "lint:fix": "tslint --project . --fix",
     "test": "jest",
-    "testing": "NODE_ENV=test npm start"
+    "testing": "NODE_ENV=test npm start",
+    "docker:up": "docker-compose -p andes_dev up -d ",
+    "docker:down": "docker-compose -p andes_dev down",
+    "docker:seed": "./seed.sh"
   },
   "repository": {
     "type": "git",

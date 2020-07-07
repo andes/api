@@ -50,3 +50,28 @@ docker stop andes_api
 docker exec andes_api npm install
 
 ```
+
+## Entorno de desarrollo
+
+Levantar los servicios necesarios: 
+
+```bash
+npm run docker:up
+```
+
+Rellenar las bases de datos con información mínima:
+
+```bash
+npm run docker:seed
+```
+
+Terminar los servicios:
+
+```bash
+npm run docker:down
+```
+
+En caso de querer borrar todos los datos: 
+```bash
+npm run docker:down -- -v
+```
