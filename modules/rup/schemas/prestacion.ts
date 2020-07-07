@@ -127,7 +127,12 @@ export const PrestacionSchema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
-
+        profesionales: [{
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: String
+        }],
         /**
          *  DESTINO DE SOLICITUD
          *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
