@@ -1078,6 +1078,19 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
     }
 });
 
+// Audita una agenda si es no nominalizada, si se realizo una validación de la prestación
+EventCore.on('rup:prestacion:validate', async (prestacion) => {
+    if (prestacion.solicitud.tipoPrestacion.noNominalizada) {
+        const idTurno = prestacion.solicitud.turno;
+        let agenda: any = await agendaModel.findOne({ 'bloques.turnos._id': { $eq: idTurno, $exists: true } });
+        if (agenda) {
+            agenda.estado = 'auditada';
+            Auth.audit(agenda, (userScheduler as any));
+            await saveAgenda(agenda);
+        }
+    }
+});
+
 /**
  * Actualiza el paciente embebido en el turno.
  *
