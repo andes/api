@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+
 import { store, findById, search, patch } from './camas.controller';
 import * as CamasEstadosController from './cama-estados.controller';
 import { model as Prestaciones } from '../schemas/prestacion';
@@ -20,12 +20,25 @@ const REQMock: any = {
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
 let mongoServer: any;
+const ambito = 'internacion';
+const capa = 'estadistica';
 let cama: any;
+let idCama: any;
+let organizacion: any;
+let unidadOrganizativa: any;
+const otraUnidadOrganizativa = {
+    _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
+    id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
+    fsn: 'departamento de neuropatología (medio ambiente)',
+    term: 'departamento de neuropatología',
+    conceptId: '309957000',
+    semanticTag: 'medio ambiente',
+    refsetIds: []
+};
 
 beforeAll(async () => {
     mongoServer = new MongoMemoryServer();
     const mongoUri = await mongoServer.getConnectionString();
-    // const mongoUri = 'mongodb://localhost:27017/andes';
     mongoose.connect(mongoUri);
 });
 
@@ -33,7 +46,10 @@ beforeEach(async () => {
     await Camas.remove({});
     await CamaEstados.remove({});
     await Prestaciones.remove({});
-    cama = await store(seedCama() as any, REQMock);
+    cama = await store(seedCama(1, 'y') as any, REQMock);
+    idCama = String(cama._id);
+    organizacion = cama.organizacion._id;
+    unidadOrganizativa = cama.unidadOrganizativaOriginal.conceptId;
 });
 
 afterAll(async () => {
@@ -41,42 +57,60 @@ afterAll(async () => {
     await mongoServer.stop();
 });
 
-function seedCama() {
+function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
     return {
-        fecha: moment().subtract(2, 'day'),
+        esMovimiento: true,
+        fecha: moment().subtract(cantidad, unidad).toDate(),
         organizacion: {
-            _id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-            nombre: 'HOSPITAL NEUQUEN'
+            _id: mongoose.Types.ObjectId('57e9670e52df311059bc8964'),
+            nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
         },
         ambito: 'internacion',
-        unidadOrganizativa: {
-            fsn: 'servicio de adicciones (medio ambiente)',
-            term: 'servicio de adicciones',
-            conceptId: '4561000013106',
+        unidadOrganizativa: unidadOrganizativaCama || {
+            refsetIds: [],
+            fsn: 'departamento de rayos X (medio ambiente)',
+            term: 'departamento de rayos X',
+            conceptId: '225747005',
             semanticTag: 'medio ambiente',
-            _id: mongoose.Types.ObjectId('5c8a88e2af621b10273ba23d'),
-            id: mongoose.Types.ObjectId('5c8a88e2af621b10273ba23d')
         },
-        sectores: [],
-        nombre: 'CAMA ABAJO',
+        sectores: [
+            {
+                tipoSector: {
+                    refsetIds: [],
+                    semanticTag: 'medio ambiente',
+                    conceptId: '2371000013103',
+                    term: 'ala',
+                    fsn: 'ala (medio ambiente)'
+                },
+                nombre: 'ALA A'
+            },
+            {
+                tipoSector: {
+                    refsetIds: [],
+                    semanticTag: 'medio ambiente',
+                    conceptId: '2401000013100',
+                    term: 'habitación',
+                    fsn: 'habitación (medio ambiente)'
+                },
+                nombre: 'H102'
+            }
+        ],
+        nombre: 'Cama 123',
         tipoCama: {
             fsn: 'cama (objeto físico)',
             term: 'cama',
             conceptId: '229772003',
             semanticTag: 'objeto físico'
-        },
-        equipamiento: [],
-        esCensable: true,
-        esMovimiento: true
+        }
     };
 }
 
 test('censo diario', async () => {
-    await CensoController.censoDiario({ organizacion: '5bae6b7b9677f95a425d9ee8', timestamp: moment('2019-01-04').toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    await CensoController.censoDiario({ organizacion, timestamp: moment('2019-01-04').toDate(), unidadOrganizativa });
 });
 
 test('Censo diario - vacio', async () => {
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
         ingresos: 0,
@@ -87,18 +121,21 @@ test('Censo diario - vacio', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
+        diasEstada: 0,
         disponibles: 1
     });
 });
 
 test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
-    const nuevaPrestacion = new Prestaciones(prestacion());
+    const nuevaPrestacion: any = new Prestaciones(prestacion());
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'd').toDate();
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada(), REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'd'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 1,
@@ -110,20 +147,26 @@ test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente desde 0hs tiene alta', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'minute').toDate();
 
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada(), REQMock);
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'd'), REQMock);
+
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 1,
@@ -135,22 +178,25 @@ test('Censo diario - Paciente desde 0hs tiene alta', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        disponibles: 0
+        diasEstada: 1,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defuncion';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defuncion';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'hour').toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
 
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada(), REQMock);
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'd'), REQMock);
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: new Date(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 1,
@@ -162,29 +208,29 @@ test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        disponibles: 0
+        diasEstada: 1,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
+    const cama2 = await store(seedCama(1, 'y', otraUnidadOrganizativa) as any, REQMock);
     const nuevaPrestacion: any = new Prestaciones(prestacion());
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
+
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoEstadoCama = await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, estadoOcupada(), REQMock);
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    nuevoOcupado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'day'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoDisponible(cama.unidadOrganizativaOriginal, 2, 'minute'), REQMock);
+
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: String(cama2._id) },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 1, 'minute'), REQMock);
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 1,
@@ -196,11 +242,12 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 
-    const censoMan = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
-    const censoManUO = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa: '5af19d078db89356597271fe' });
+    const censoMan = await CensoController.censoDiario({ organizacion, timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa });
+    const censoManUO = await CensoController.censoDiario({ organizacion, timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa: otraUnidadOrganizativa.conceptId });
 
     expect(censoMan.censo).toEqual({
         existenciaALas0: 0,
@@ -212,7 +259,8 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 
     expect(censoManUO.censo).toEqual({
@@ -225,21 +273,23 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente ingresa y se queda', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'minute').toDate();
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({
+        organizacion, ambito, capa,
+        cama: idCama
+    }, estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -251,22 +301,29 @@ test('Censo diario - Paciente ingresa y se queda', async () => {
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente ingresa y tiene alta', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'minute').toDate();
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({
+        organizacion, ambito, capa,
+        cama: idCama
+    }, estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 2, 'minute'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    await CamasEstadosController.store({
+        organizacion, ambito, capa,
+        cama: idCama
+    }, estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -278,24 +335,31 @@ test('Censo diario - Paciente ingresa y tiene alta', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 1,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 1,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defuncion';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defuncion';
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'minute').toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({
+        organizacion, ambito, capa,
+        cama: idCama
+    }, estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 2, 'minute'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    await CamasEstadosController.store({
+        organizacion, ambito, capa,
+        cama: idCama
+    }, estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -307,33 +371,29 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 1,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 1,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente ingresa y tiene pase A', async () => {
+    const cama2 = await store(seedCama(1, 'y', otraUnidadOrganizativa) as any, REQMock);
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
+
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 2, 'minute'), REQMock);
 
-    const nuevoEstado = estadoOcupada();
-    nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    nuevoEstado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: String(cama2._id) },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 1, 'minute'), REQMock);
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -345,38 +405,27 @@ test('Censo diario - Paciente ingresa y tiene pase A', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 4, 'minutes'), REQMock);
 
-    const nuevoEstado = estadoOcupada();
-    nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    nuevoEstado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 2, 'minutes'), REQMock);
 
-    const nuevoEstadoVuelve = estadoOcupada();
-    nuevoEstadoVuelve.fecha = moment(new Date()).add(45, 'minutes').toDate();
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'minutes'), REQMock);
 
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve, REQMock);
-
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -388,39 +437,28 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', 
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene alta', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
     nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 4, 'minutes'), REQMock);
 
-    const nuevoEstado = estadoOcupada();
-    nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    nuevoEstado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 2, 'minutes'), REQMock);
 
-    const nuevoEstadoVuelve = estadoOcupada();
-    nuevoEstadoVuelve.fecha = moment(new Date()).add(45, 'minutes').toDate();
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
 
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve, REQMock);
-
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -432,41 +470,30 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene alta'
         existenciaALas24: 0,
         ingresosYEgresos: 1,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 1,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defuncion', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
     nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defuncion';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defuncion';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 4, 'minutes'), REQMock);
 
-    const nuevoEstado = estadoOcupada();
-    nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    nuevoEstado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 2, 'minutes'), REQMock);
 
-    const nuevoEstadoVuelve = estadoOcupada();
-    nuevoEstadoVuelve.fecha = moment(new Date()).add(45, 'minutes').toDate();
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
 
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoVuelve, REQMock);
-
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -478,35 +505,26 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defun
         existenciaALas24: 0,
         ingresosYEgresos: 1,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 1,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente tiene paseDe y se queda', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
 
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    nuevoOcupado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 2, 'minutes'), REQMock);
 
-    const nuevoEstado = estadoOcupada();
-    nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'minutes'), REQMock);
 
 
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -518,36 +536,26 @@ test('Censo diario - Paciente tiene paseDe y se queda', async () => {
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente tiene paseDe y tiene alta', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
     nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
 
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    nuevoOcupado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 2, 'minutes'), REQMock);
 
-    const nuevoEstado = estadoOcupada();
-    nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'minutes'), REQMock);
 
-
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -559,38 +567,28 @@ test('Censo diario - Paciente tiene paseDe y tiene alta', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        disponibles: 0
+        diasEstada: 1,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente tiene paseDe y tiene defuncion', async () => {
     const nuevaPrestacion: any = new Prestaciones(prestacion());
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().toDate();
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
     nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defuncion';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defuncion';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
 
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    nuevoOcupado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 2, 'minutes'), REQMock);
 
-    const nuevoEstado = estadoOcupada();
-    nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 1, 'minutes'), REQMock);
 
-
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -602,44 +600,30 @@ test('Censo diario - Paciente tiene paseDe y tiene defuncion', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        disponibles: 0
+        diasEstada: 1,
+        disponibles: 1
     });
 });
 
 test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
+    const cama2 = await store(seedCama(1, 'y', otraUnidadOrganizativa) as any, REQMock);
     const nuevaPrestacion: any = new Prestaciones(prestacion());
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    await nuevaPrestacion.save();
+    const internacion = await nuevaPrestacion.save();
 
-    const nuevoOcupado = estadoOcupada();
-    nuevoOcupado.fecha = moment().toDate();
-    nuevoOcupado.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: cama2._id },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 4, 'minutes'), REQMock);
 
-    const nuevoEstado = estadoOcupada();
-    nuevoEstado.fecha = moment(new Date()).add(30, 'minutes').toDate();
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstado, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(internacion._id, cama.unidadOrganizativaOriginal, 2, 'minutes'), REQMock);
 
-    const nuevoEstadoPase = estadoOcupada();
-    nuevoEstadoPase.fecha = moment(new Date()).add(45, 'minutes').toDate();
-    nuevoEstadoPase.unidadOrganizativa = {
-        _id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        id: mongoose.Types.ObjectId('5af19d078db89356597271fe'),
-        fsn: 'departamento de neuropatología (medio ambiente)',
-        term: 'departamento de neuropatología',
-        conceptId: '309957000',
-        semanticTag: 'medio ambiente',
-    };
-    await CamasEstadosController.store({ organizacion: '57f67a7ad86d9f64130a138d', ambito: 'internacion', capa: 'estadistica', cama: String(cama._id) }, nuevoEstadoPase, REQMock);
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
+        estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minutes'), REQMock);
 
-    const resultado = await CensoController.censoDiario({ organizacion: '57f67a7ad86d9f64130a138d', timestamp: moment().toDate(), unidadOrganizativa: '5c8a88e2af621b10273ba23d' });
+    await CamasEstadosController.store({ organizacion, ambito, capa, cama: cama2._id },
+        estadoOcupada(internacion._id, otraUnidadOrganizativa, 1, 'minutes'), REQMock);
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -651,27 +635,47 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        disponibles: 0
+        diasEstada: 0,
+        disponibles: 1
     });
 });
 
-function estadoOcupada() {
+function estadoDisponible(unidadOrganizativaEstado, cantidad, unidad) {
     return {
-        fecha: moment().subtract(1, 'day').toDate(),
-        estado: 'ocupada',
-        unidadOrganizativa: {
-
-            fsn: 'servicio de adicciones (medio ambiente)',
-            term: 'servicio de adicciones',
-            conceptId: '4561000013106',
-            semanticTag: 'medio ambiente',
-            _id: mongoose.Types.ObjectId('5c8a88e2af621b10273ba23d'),
-            id: mongoose.Types.ObjectId('5c8a88e2af621b10273ba23d')
-        },
+        fecha: moment().subtract(cantidad, unidad).toDate(),
+        estado: 'disponible',
+        unidadOrganizativa: unidadOrganizativaEstado,
         especialidades: [
             {
+                refsetIds: [],
+                fsn: 'medicina general (calificador)',
+                term: 'medicina general',
+                conceptId: '394802001',
+                semanticTag: 'calificador'
+            }
+        ],
+        esCensable: true,
+        genero: {
+            refsetIds: [],
+            fsn: 'género femenino (hallazgo)',
+            term: 'género femenino',
+            conceptId: '703118005',
+            semanticTag: 'hallazgo'
+        },
+        idInternacion: null,
+        observaciones: null,
+        esMovimiento: true,
+        sugierePase: null
+    };
+}
 
-                _id: mongoose.Types.ObjectId('5c95036cc5861a722ddd563d'),
+function estadoOcupada(idInternacion, unidadOrganizativaEstado, cantidad, unidad) {
+    return {
+        fecha: moment().subtract(cantidad, unidad).toDate(),
+        estado: 'ocupada',
+        unidadOrganizativa: unidadOrganizativaEstado,
+        especialidades: [
+            {
                 fsn: 'medicina general (calificador)',
                 term: 'medicina general',
                 conceptId: '394802001',
@@ -761,7 +765,7 @@ function estadoOcupada() {
             cuil: '27406163542',
             reportarError: false
         },
-        idInternacion: mongoose.Types.ObjectId('5d3af64ec8d7a7158e12c242'),
+        idInternacion,
         observaciones: null,
         esMovimiento: true,
         sugierePase: null
@@ -782,10 +786,7 @@ function prestacion() {
             tipoPrestacionOrigen: {
 
             },
-            organizacion: {
-                id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-                nombre: 'HOSPITAL AÑELO'
-            },
+            organizacion,
             profesional: {
                 id: mongoose.Types.ObjectId('58f74fd4d03019f919ea1a4b'),
                 nombre: 'LEANDRO MARIANO JAVIER',
@@ -823,7 +824,7 @@ function prestacion() {
                     },
                     valor: {
                         informeIngreso: {
-                            fechaIngreso: moment().subtract(1, 'day').toDate(),
+                            fechaIngreso: moment().subtract(1, 'd').toDate(),
                             horaNacimiento: '2019-08-08T18:55:43.192Z',
                             edadAlIngreso: '86 año/s',
                             origen: 'Emergencia',
@@ -1039,7 +1040,6 @@ function prestacion() {
                 id: mongoose.Types.ObjectId('5bae6b7b9677f95a425d9ee8')
             }
         },
-        __v: 3.0,
         updatedAt: '2019-10-29T16:32:18.491Z',
         updatedBy: {
             id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),

@@ -14,33 +14,33 @@ it('no template throw error', () => {
     }
 });
 
-it('simple template', () => {
+it('simple template', async () => {
     class MyComponent extends HTMLComponent {
         template = '<div></div>';
         data: {};
     }
     const component = new MyComponent();
-    const html = component.render();
+    const html = await component.render();
     expect(html).toBe('<div></div>');
 
 });
 
-it('simple template with data', () => {
+it('simple template with data', async () => {
     class MyComponent extends HTMLComponent {
         template = '<div>{{nombre}}</div>';
         data = { nombre: 'JUAN' };
     }
     const component = new MyComponent();
-    const html = component.render();
+    const html = await component.render();
     expect(html).toBe('<div>JUAN</div>');
 });
 
-it('template from file with data', () => {
+it('template from file with data', async () => {
     class MyComponent extends HTMLComponent {
         templateUrl = './template-example.html';
         data = { nombre: 'JUAN' };
     }
     const component = new MyComponent();
-    const html = component.render();
+    const html = await component.render();
     expect(html).toBe('<div>JUAN</div>');
 });
