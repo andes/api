@@ -93,3 +93,12 @@ export async function enEjecucion(turno) {
     return (prestacion && prestacion.ejecucion && prestacion.ejecucion.fecha);
 }
 
+export function actualizarProfesionalesEjecucion(prestacion, profesional) {
+    if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
+        if (!prestacion.ejecucion.profesionales) {
+            prestacion.ejecucion.profesionales = [profesional];
+        } else if (!prestacion.ejecucion.profesionales.find(p => p.id.toString() === profesional.id)) {
+            prestacion.ejecucion.profesionales.push(profesional);
+        }
+    }
+}

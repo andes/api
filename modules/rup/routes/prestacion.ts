@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
-import { updateRegistroHistorialSolicitud } from '../controllers/prestacion';
+import { updateRegistroHistorialSolicitud, actualizarProfesionalesEjecucion } from '../controllers/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
@@ -493,6 +493,7 @@ router.post('/prestaciones', async (req, res, next) => {
 
     const data = new Prestacion(dto);
     Auth.audit(data, req);
+    actualizarProfesionalesEjecucion(data, Auth.getProfesional(req));
     data.save((err) => {
         if (err) {
             return next('No fue posible crear la prestación');
@@ -601,6 +602,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
         }
 
         Auth.audit(data, req);
+        actualizarProfesionalesEjecucion(data, Auth.getProfesional(req));
         data.save(async (error, prestacion: any) => {
             if (error) {
                 return next(error);
