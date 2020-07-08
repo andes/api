@@ -1,3 +1,22 @@
+# [5.3.0](https://github.com/andes/api/compare/v5.2.0...v5.3.0) (2020-07-08)
+
+
+### Bug Fixes
+
+* **Internacion:** Uso de  handleHttpRequest definido en utils ([36a5f60](https://github.com/andes/api/commit/36a5f6022f8e0f83002c64aa35f7249410ae8da0))
+* **mapa-camas:** censo filtra por camas censables ([#1001](https://github.com/andes/api/issues/1001)) ([505496a](https://github.com/andes/api/commit/505496aa0fb8dc9c74770b094a36c38bf344fb89))
+* **mitos:** evita buscar en ingles ([#1025](https://github.com/andes/api/issues/1025)) ([a41b212](https://github.com/andes/api/commit/a41b2120bb3cbc3e71ad6b35d5c733405732425d))
+* **mpi:** busqueda por nro documento extranjero ([3e4a0cb](https://github.com/andes/api/commit/3e4a0cb198148f10ee5c10fad5980a77da601232))
+* **ReportesDiarios:** timezones de los reportes y contar los sobreturnos y fuera de agenda en la planilla C1 ([5c90b47](https://github.com/andes/api/commit/5c90b4719cd71d6650902b0780a1289109070dd7))
+
+
+### Features
+
+* **Internacion:** Busca los datos de las organizaciones a exportar desde las queries de bi-queries ([2768a96](https://github.com/andes/api/commit/2768a9687825328c8752dd4c1b57b5b3402ab18e))
+* **rup:** remove refsetids from snomed schema ([#1017](https://github.com/andes/api/issues/1017)) ([5603631](https://github.com/andes/api/commit/5603631884a995936407ffe82d4e12d6fe0f7ec7))
+* **snomed:** busqueda multiple semanticTags nativa ([#1020](https://github.com/andes/api/issues/1020)) ([3c5a6d1](https://github.com/andes/api/commit/3c5a6d1584ba79d55724c3bff6c0ea00dbc2ec62))
+* **top:** reglas según permisos ([#1003](https://github.com/andes/api/issues/1003)) ([1e3c51b](https://github.com/andes/api/commit/1e3c51b5a91e3d28d5dbb2c2c947b1c6ba6887b8))
+
 # [5.2.0](https://github.com/andes/api/compare/v5.1.0...v5.2.0) (2020-07-01)
 
 
