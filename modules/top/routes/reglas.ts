@@ -3,6 +3,7 @@ import * as reglas from '../schemas/reglas';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 import * as reglasCtrl from '../controller/reglas';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 const router = express.Router();
 
@@ -28,13 +29,20 @@ router.post('/reglas', async (req, res, next) => {
     }
 });
 
-router.get('/reglas', (req, res, next) => {
+router.get('/reglas', async (req, res, next) => {
     let query = reglas.find({});
     if (req.query.organizacionOrigen) {
         query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
     }
+
     if (req.query.prestacionOrigen) {
         query.where('origen.prestaciones.prestacion.conceptId').equals(req.query.prestacionOrigen);
+    } else if (req.query.prestacionesOrigen) {
+        let prestacionesPermisos = Auth.getPermissions(req, req.query.prestacionesOrigen);
+        if (prestacionesPermisos.length && prestacionesPermisos[0] !== '*') {
+            const conceptos = await tipoPrestacion.find({}).where('_id').in(prestacionesPermisos.map(x => mongoose.Types.ObjectId(x))).exec();
+            query.where('origen.prestaciones.prestacion.conceptId').in(conceptos.map(e => e.conceptId));
+        }
     }
 
     if (req.query.organizacionDestino) {
