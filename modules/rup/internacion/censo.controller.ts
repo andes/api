@@ -89,78 +89,79 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             }
         }
 
-        if (ultimoMovimiento.esCensable) {
-            if (fechaEgreso) {
-                if ((primerUO === unidadOrganizativa) && (ultimaUO === unidadOrganizativa)) {
-                    if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
-                        ingresosYEgresos++;
-                        ingresoEgresoCargado = true;
+        if (!ultimoMovimiento.esCensable) {
+            return;
+        }
+        if (fechaEgreso) {
+            if ((primerUO === unidadOrganizativa) && (ultimaUO === unidadOrganizativa)) {
+                if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
+                    ingresosYEgresos++;
+                    ingresoEgresoCargado = true;
+                    checkPaciente(ultimoMovimiento);
+                    tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
+                        ingreso: 'SI',
+                        egreso: informesInternacion.egreso.tipoEgreso.id,
+                    });
+                }
+            }
+            if (ultimaUO === String(unidadOrganizativa)) {
+                if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
+                    diasEstada += informesInternacion.egreso.diasDeEstada;
+                    if (informesInternacion.egreso.tipoEgreso.id === 'Defunción') {
+                        defunciones++;
+                    } else {
+                        altas++;
+                    }
+                    if (!ingresoEgresoCargado) {
                         checkPaciente(ultimoMovimiento);
                         tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
-                            ingreso: 'SI',
                             egreso: informesInternacion.egreso.tipoEgreso.id,
                         });
                     }
                 }
-                if (ultimaUO === String(unidadOrganizativa)) {
-                    if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
-                        diasEstada += informesInternacion.egreso.diasDeEstada;
-                        if (informesInternacion.egreso.tipoEgreso.id === 'Defunción') {
-                            defunciones++;
-                        } else {
-                            altas++;
-                        }
-                        if (!ingresoEgresoCargado) {
-                            checkPaciente(ultimoMovimiento);
-                            tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
-                                egreso: informesInternacion.egreso.tipoEgreso.id,
-                            });
-                        }
-                    }
-                }
             }
+        }
 
-            if (primerUO === unidadOrganizativa) {
-                if (moment(fechaIngreso).isBefore(timestampStart.toDate())) {
-                    existenciaALas0++;
+        if (primerUO === unidadOrganizativa) {
+            if (moment(fechaIngreso).isBefore(timestampStart.toDate())) {
+                existenciaALas0++;
+                checkPaciente(ultimoMovimientoUO);
+                tablaPacientes[ultimoMovimientoUO.paciente.id].actividad.push({
+                    ingreso: null,
+                    paseDe: null,
+                    egreso: null,
+                    paseA: null,
+                });
+            } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
+                ingresos++;
+                if (!ingresoEgresoCargado) {
                     checkPaciente(ultimoMovimientoUO);
                     tablaPacientes[ultimoMovimientoUO.paciente.id].actividad.push({
-                        ingreso: null,
-                        paseDe: null,
-                        egreso: null,
-                        paseA: null,
+                        ingreso: 'SI',
                     });
-                } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
-                    ingresos++;
-                    if (!ingresoEgresoCargado) {
-                        checkPaciente(ultimoMovimientoUO);
-                        tablaPacientes[ultimoMovimientoUO.paciente.id].actividad.push({
-                            ingreso: 'SI',
-                        });
-                    }
+                }
+            }
+        }
+
+        let movimientoAnterior;
+        for (const movimiento of allMovimientos) {
+            if (movimientoAnterior && movimientoAnterior.unidadOrganizativa.conceptId !== movimiento.unidadOrganizativa.conceptId) {
+                if (movimientoAnterior.unidadOrganizativa.conceptId !== unidadOrganizativa) {
+                    pasesDe++;
+                    checkPaciente(movimiento);
+                    tablaPacientes[movimiento.paciente.id].actividad.push({
+                        paseDe: movimientoAnterior.unidadOrganizativa.term
+                    });
+                } else {
+                    pasesA++;
+                    checkPaciente(movimientoAnterior);
+                    tablaPacientes[movimiento.paciente.id].actividad.push({
+                        paseA: movimiento.unidadOrganizativa.term
+                    });
                 }
             }
 
-            let movimientoAnterior;
-            for (const movimiento of allMovimientos) {
-                if (movimientoAnterior && movimientoAnterior.unidadOrganizativa.conceptId !== movimiento.unidadOrganizativa.conceptId) {
-                    if (movimientoAnterior.unidadOrganizativa.conceptId !== unidadOrganizativa) {
-                        pasesDe++;
-                        checkPaciente(movimiento);
-                        tablaPacientes[movimiento.paciente.id].actividad.push({
-                            paseDe: movimientoAnterior.unidadOrganizativa.term
-                        });
-                    } else {
-                        pasesA++;
-                        checkPaciente(movimientoAnterior);
-                        tablaPacientes[movimiento.paciente.id].actividad.push({
-                            paseA: movimiento.unidadOrganizativa.term
-                        });
-                    }
-                }
-
-                movimientoAnterior = movimiento;
-            }
+            movimientoAnterior = movimiento;
         }
     });
 
