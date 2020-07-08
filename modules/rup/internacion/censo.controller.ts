@@ -89,6 +89,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             }
         }
 
+        if (!ultimoMovimiento.esCensable) {
+            return;
+        }
         if (fechaEgreso) {
             if ((primerUO === unidadOrganizativa) && (ultimaUO === unidadOrganizativa)) {
                 if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
@@ -139,7 +142,6 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                 }
             }
         }
-
 
         let movimientoAnterior;
         for (const movimiento of allMovimientos) {
@@ -217,7 +219,7 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
         const ultimoMov = camas[idCama][camas[idCama].length - 1];
         const esDisponible = (ultimoMov.estado !== 'bloqueada' && ultimoMov.estado !== 'inactiva');
         const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
-        if (esDisponible && estaUnidadOrganizativa) {
+        if (esDisponible && estaUnidadOrganizativa && ultimoMov.esCensable) {
             camasDisponibles++;
         }
     });
