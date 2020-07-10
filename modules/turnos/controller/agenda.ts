@@ -16,7 +16,7 @@ import { NotificationService } from '../../../modules/mobileApp/controller/Notif
 import * as codificacionModel from '../../rup/schemas/codificacion';
 import { Types } from 'mongoose';
 import { agendaLog } from '../citasLog';
-
+import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -1078,18 +1078,40 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
     }
 });
 
-// Audita una agenda si es no nominalizada, si se realizo una validación de la prestación
+// Marcar asistencia si la prestacion es no nominalizada
 EventCore.on('rup:prestacion:validate', async (prestacion) => {
-    if (prestacion.solicitud.tipoPrestacion.noNominalizada) {
-        const idTurno = prestacion.solicitud.turno;
-        let agenda: any = await agendaModel.findOne({ 'bloques.turnos._id': { $eq: idTurno, $exists: true } });
-        if (agenda) {
-            agenda.estado = 'auditada';
-            Auth.audit(agenda, (userScheduler as any));
-            await saveAgenda(agenda);
+    const idTurno = prestacion.solicitud.turno;
+    if (!prestacion.solicitud.tipoPrestacion.noNominalizada && idTurno) {
+        const agenda: any = await agendaModel.findOne({ 'bloques.turnos._id': { $eq: idTurno, $exists: true } });
+        const noAsistionConceptos = await getConceptosNoAsistio();
+
+        let filtroRegistros = prestacion.ejecucion.registros.filter(x => noAsistionConceptos.find(y => y.conceptId === x.concepto.conceptId));
+        let turno, event;
+        const user = Auth.getUserFromResource(prestacion);
+
+        if (filtroRegistros && filtroRegistros.length > 0) {
+            turno = marcarNoAsistio(user, agenda, idTurno);
+            event = { object: 'turno', accion: 'asistencia', data: turno };
+        } else {
+            turno = darAsistencia(user, agenda, idTurno);
+            event = { object: 'turno', accion: 'asistencia', data: turno };
+        }
+
+        Auth.audit(agenda, user as any);
+        await agenda.save();
+        EventCore.emitAsync('citas:agenda:update', agenda);
+        if (event.data) {
+            EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
         }
     }
 });
+
+async function getConceptosNoAsistio() {
+    const form = 'stated';
+    const expression = '<<281399006';
+    const languageCode = 'es';
+    return SnomedCtr.getConceptByExpression(expression, null, form, languageCode);
+}
 
 /**
  * Actualiza el paciente embebido en el turno.
