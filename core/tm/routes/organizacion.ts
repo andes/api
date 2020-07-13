@@ -5,6 +5,8 @@ import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
+import { AuthUsers } from '../../../auth/schemas/authUsers';
+
 import { validarOrganizacionSisa, obtenerOfertaPrestacional } from '../controller/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
@@ -195,9 +197,22 @@ router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
         return next(403);
     }
     try {
-        const newOrganization = new Organizacion(req.body);
+        const newOrganization: any = new Organizacion(req.body);
         Auth.audit(newOrganization, req);
         await newOrganization.save();
+
+        // Al crearse una nueva organizacion, se le asigna al usuario que la creo
+        let user: any = await AuthUsers.findById(req.user.usuario.id).exec();
+        user.organizaciones.push({
+            _id: newOrganization.id,
+            nombre: newOrganization.nombre,
+            permisos: [],
+            activo: true,
+            perfiles: []
+        });
+        Auth.audit(user, req);
+        await user.save();
+
         return res.json(newOrganization);
     } catch (err) {
         return next(err);
