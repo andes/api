@@ -489,26 +489,6 @@ router.get('/prestaciones/:id*?', async (req: any, res, next) => {
                         }
                     }
                 }
-                if (req.query.conceptId === '32485007') {
-                    if (req.query.fechaIngresoDesde) {
-                        data = data.filter(d => moment(d.ejecucion.registros[0].valor.informeIngreso.fechaIngreso).isSameOrAfter(moment(req.query.fechaIngresoDesde).startOf('day').toDate()));
-                    }
-                    if (req.query.fechaIngresoHasta) {
-                        data = data.filter(d => moment(d.ejecucion.registros[0].valor.informeIngreso.fechaIngreso).isSameOrBefore(moment(req.query.fechaIngresoHasta).endOf('day').toDate()));
-                    }
-                    if (req.query.fechaEgresoDesde) {
-                        data = data.filter(d => (
-                            d.ejecucion.registros[1] &&
-                            moment(d.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso).isSameOrAfter(moment(req.query.fechaEgresoDesde).startOf('day').toDate())
-                        ));
-                    }
-                    if (req.query.fechaEgresoHasta) {
-                        data = data.filter(d => (
-                            d.ejecucion.registros[1] &&
-                            moment(d.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso).isSameOrBefore(moment(req.query.fechaEgresoHasta).endOf('day').toDate())
-                        ));
-                    }
-                }
             }
             res.json(data);
         });
