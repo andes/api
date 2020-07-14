@@ -229,7 +229,6 @@ export default [
             {
                 key: 'perfiles', title: 'Perfiles de usuarios', avoidAll: true,
                 child: [
-                    { key: 'read', title: 'Ver perfiles de usuarios', type: 'boolean' },
                     { key: 'write', title: 'Crear/modificar perfiles de usuarios', type: 'boolean' }
                 ]
             }
