@@ -50,9 +50,18 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
             }
         }
     }
-    const pacientes = await pacienteCtr.matchPaciente(dataPaciente);
-    if (pacientes.length > 0 && pacientes[0].value >= 0.95) {
-        const realPac = await pacienteCtr.buscarPaciente(pacientes[0].paciente.id);
+
+    const suggestQuery = {
+        type: 'suggest',
+        documento: dataPaciente.documento,
+        apellido: dataPaciente.apellido,
+        nombre: dataPaciente.nombre,
+        sexo: dataPaciente.sexo
+    };
+    const pacientes = await pacienteCtr.matching(suggestQuery);
+
+    if (pacientes.length > 0 && pacientes[0].match >= 0.95) {
+        const realPac = await pacienteCtr.buscarPaciente(pacientes[0].id);
         const paciente = realPac.paciente;
 
         if (!paciente.identificadores) {
