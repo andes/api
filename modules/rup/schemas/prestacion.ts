@@ -1,8 +1,8 @@
-import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
 import * as registro from './prestacion.registro';
+import { SemanticTag } from './semantic-tag';
 import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
-import * as estado from './prestacion.estado';
+import { PrestacionEstadoSchema } from './prestacion.estado';
 import { iterate, convertToObjectId } from '../controllers/rup';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
@@ -140,8 +140,8 @@ export let schema = new mongoose.Schema({
 
     },
     // Historia de estado de la prestación
-    estados: [estado.schema],
-    ultimoEstado: estado.schema
+    estados: [PrestacionEstadoSchema],
+    estadoActual: PrestacionEstadoSchema
 }, { usePushEach: true } as any);
 
 // Valida el esquema
@@ -164,8 +164,8 @@ schema.pre('save', function (next) {
         return next(err);
     }
 
-    prestacion.ultimoEstado = prestacion.estados[prestacion.estados.length - 1];
-    if (prestacion.ultimoEstado.tipo === 'ejecucion') {
+    prestacion.estadoActual = prestacion.estados[prestacion.estados.length - 1];
+    if (prestacion.estadoActual.tipo === 'ejecucion') {
         if (!prestacion.ejecucion.fecha && !prestacion.createdAt) {
             let err = new Error('Debe seleccionar la fecha en que se solicita');
             return next(err);
