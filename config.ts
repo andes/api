@@ -280,26 +280,6 @@ export const logKeys = {
         key: 'mpi:validacion',
         operacion: 'Validar paciente'
     },
-    elasticInsert: {
-        key: 'elastic:paciente:insert',
-        operacion: 'Insert paciente ElasticSearch'
-    },
-    elasticCheck1: {
-        key: 'elastic:notFound:andes',
-        operacion: 'Paciente en Andes no encontrado en elastic'
-    },
-    elasticCheck3: {
-        key: 'andes:notFound',
-        operacion: 'paciente en elasticsearch no encontrado en ANDES/MPI'
-    },
-    elasticFix: {
-        key: 'elasticFix:error',
-        operacion: 'error en el proceso'
-    },
-    elasticFix2: {
-        key: 'elasticFix:update',
-        operacion: 'Documentos referidos al paciente modificados'
-    },
     turnosMobileUpdate: {
         key: 'citas:bloques:modificar',
         operacion: 'setea a 0 turnos disponibles para app mobile'

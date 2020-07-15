@@ -39,7 +39,6 @@ export class Connections {
             configPrivate.hosts.mongoDB_main.host = 'mongodb://localhost:27066/andes';
             configPrivate.hosts.mongoDB_puco.host = 'mongodb://localhost:27066/andes';
             configPrivate.logDatabase.log.host = 'mongodb://localhost:27066/andes';
-            configPrivate.hosts.elastic_main = 'http://localhost:9266';
         }
 
 

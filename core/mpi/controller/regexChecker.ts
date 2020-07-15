@@ -1,5 +1,4 @@
 
-import { ElasticSync } from '../../../utils/elasticSync';
 import { paciente } from '../schemas/paciente';
 import { userScheduler } from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
@@ -10,7 +9,6 @@ import { log } from '@andes/log';
 import { logKeys } from './../../../config';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
-import moment = require('moment');
 
 /**
  * Busca pacientes validados con errores de charset en nombre y apellido,
@@ -41,9 +39,6 @@ export async function regexChecker(done) {
             let pacienteAndes = new paciente(pac.toObject());
             Auth.audit(pacienteAndes, (userScheduler as any));
             await pacienteAndes.save();
-            const nuevoPac = JSON.parse(JSON.stringify(pacienteAndes));
-            const connElastic = new ElasticSync();
-            await connElastic.sync(nuevoPac);
             log(userScheduler, logKeys.regexChecker.key, pac, logKeys.regexChecker.operacion, pac, pacienteOld);
         }).catch(err => {
             log(userScheduler, logKeys.regexChecker.key, null, logKeys.regexChecker.operacion, null, null, err);

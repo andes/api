@@ -2,7 +2,7 @@ import * as express from 'express';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import * as parser from '../../fhir/controllers/parser';
 import * as validator from '../../fhir/controllers/validator';
-import * as config from '../../../../api/config';
+import * as config from '../../../config';
 import * as codes from '../../fhir/controllers/errorCodes';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
