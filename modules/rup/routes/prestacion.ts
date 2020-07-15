@@ -217,7 +217,8 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.organizacionOrigen) {
-            match.$and.push({ 'solicitud.organizacionOrigen.id': Types.ObjectId(req.query.organizacionOrigen) });
+            const organizacionesOrigen = Array.isArray(req.query.organizacionOrigen) ? req.query.organizacionOrigen : [req.query.organizacionOrigen];
+            match.$and.push({ 'solicitud.organizacionOrigen.id': { $in: organizacionesOrigen.map(id => Types.ObjectId(id)) } });
         }
 
         if (req.query.prioridad) {
