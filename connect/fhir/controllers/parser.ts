@@ -2,141 +2,123 @@
 import {
     PacienteFHIR
 } from '../../fhir/schemas/IPacienteFHIR';
-import * as controller from '../../../core/mpi/controller/paciente';
 import * as localidad from '../../../core/tm/schemas/localidad';
 
 
-export function pacientesAFHIR(ids: any[]) {
-    return new Promise((resolve: any, reject: any) => {
-        const pacientesFHIR = [];
-        const promises = [];
-        ids.forEach((id) => {
-            promises.push(
-                controller.buscarPaciente(id)
-                    .then((result: any) => {
-                        const data = result.paciente;
-                        if (data) {
-                            const identificadores = data.documento ? [{ assigner: 'DU', value: data.documento }] : [];
-                            identificadores.push({ assigner: 'andes', value: id });
-                            // Parsea contactos
-                            const contactos = data.contacto ? data.contacto.map(unContacto => {
-                                const cont = {
-                                    resourceType: 'ContactPoint',
-                                    value: unContacto.valor,
-                                    rank: unContacto.ranking,
-                                };
-                                switch (unContacto.tipo) {
-                                    case 'fijo':
-                                        cont['system'] = 'phone';
-                                        break;
-                                    case 'celular':
-                                        cont['system'] = 'phone';
-                                        break;
-                                    case 'email':
-                                        cont['system'] = 'email';
-                                        break;
-                                }
-                                return cont;
-                            }) : [];
-                            // Parsea direcciones
-                            const direcciones = data.direccion ? data.direccion.map(unaDireccion => {
-                                const direc = {
-                                    resourceType: 'Address',
-                                    postalCode: unaDireccion.codigoPostal ? unaDireccion.codigoPostal : '',
-                                    line: [unaDireccion.valor],
-                                    city: unaDireccion.ubicacion.localidad ? unaDireccion.ubicacion.localidad.nombre : '',
-                                    state: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia.nombre : '',
-                                    country: unaDireccion.ubicacion.pais ? unaDireccion.ubicacion.pais.nombre : '',
-                                };
-                                return direc;
-                            }) : [];
-                            // Parsea relaciones
-                            const relaciones = data.relaciones ? data.relaciones.map(unaRelacion => {
-                                const relacion = {
-                                    relationship: [{
-                                        text: unaRelacion.relacion.nombre
-                                    }], // The kind of relationship
-                                    name: {
-                                        resourceType: 'HumanName',
-                                        family: unaRelacion.apellido, // Family name (often called 'Surname')
-                                        given: [unaRelacion.nombre], // Given names (not always 'first'). Includes middle names
-                                    }
-                                };
-                                return relacion;
-                            }) : [];
-                            let genero;
-                            switch (data.genero) {
-                                case 'femenino':
-                                    genero = 'female';
-                                    break;
-                                case 'masculino':
-                                    genero = 'male';
-                                    break;
-                                case 'otro':
-                                    genero = 'other';
-                                    break;
-                            }
-                            const pacienteFHIR = {
-                                resourceType: 'Patient',
-                                identifier: identificadores,
-                                active: data.activo, // Whether this patient's record is in active use
-                                name: [{
-                                    resourceType: 'HumanName',
-                                    family: data.apellido, // Family name (often called 'Surname')
-                                    given: data.nombre, // Given names (not always 'first'). Includes middle names
-                                }],
-                                gender: genero, // male | female | other | unknown
-                                birthDate: data.fechaNacimiento,
-                                deceasedDateTime: data.fechaFallecimiento
-                            };
-                            if (data.estadoCivil) {
-                                let estadoCivil;
-                                switch (data.estadoCivil) {
-                                    case 'casado':
-                                        estadoCivil = 'Married';
-                                        break;
-                                    case 'divorciado':
-                                        estadoCivil = 'Divorced';
-                                        break;
-                                    case 'viudo':
-                                        estadoCivil = 'Widowed';
-                                        break;
-                                    case 'soltero':
-                                        estadoCivil = 'unmarried';
-                                        break;
-                                    default:
-                                        estadoCivil = 'unknown';
-                                        break;
-                                }
-                                pacienteFHIR['maritalStatus'] = { text: estadoCivil };
-                            }
-                            if (data.foto) { // Image of the patient
-                                pacienteFHIR['photo'] = [{ data: data.foto }];
-                            }
-                            if (contactos.length > 0) { // A contact detail for the individual
-                                pacienteFHIR['telecom'] = contactos;
-                            }
-                            if (direcciones.length > 0) { // Addresses for the individual
-                                pacienteFHIR['address'] = direcciones;
-                            }
-                            if (relaciones.length > 0) {  // A contact party (e.g. guardian, partner, friend) for the patient
-                                pacienteFHIR['contact'] = relaciones;
-                            }
-                            pacientesFHIR.push(pacienteFHIR);
-                        }
-                    })
-                    .catch((error) => {
-                        reject(error);
-                    })
-            );
-        });
+export function pacientesAFHIR(pacientes: any[]) {
+    let pacientesFHIR = [];
 
-        Promise.all(promises).then(() => {
-            resolve(pacientesFHIR);
-        });
-
-
+    pacientes.forEach(paciente => {
+        const identificadores = paciente.documento ? [{ assigner: 'DU', value: paciente.documento }] : [];
+        identificadores.push({ assigner: 'andes', value: paciente.id });
+        // Parsea contactos
+        const contactos = paciente.contacto ? paciente.contacto.map(unContacto => {
+            const cont = {
+                resourceType: 'ContactPoint',
+                value: unContacto.valor,
+                rank: unContacto.ranking,
+            };
+            switch (unContacto.tipo) {
+                case 'fijo':
+                    cont['system'] = 'phone';
+                    break;
+                case 'celular':
+                    cont['system'] = 'phone';
+                    break;
+                case 'email':
+                    cont['system'] = 'email';
+                    break;
+            }
+            return cont;
+        }) : [];
+        // Parsea direcciones
+        const direcciones = paciente.direccion ? paciente.direccion.map(unaDireccion => {
+            const direc = {
+                resourceType: 'Address',
+                postalCode: unaDireccion.codigoPostal ? unaDireccion.codigoPostal : '',
+                line: [unaDireccion.valor],
+                city: unaDireccion.ubicacion.localidad ? unaDireccion.ubicacion.localidad.nombre : '',
+                state: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia.nombre : '',
+                country: unaDireccion.ubicacion.pais ? unaDireccion.ubicacion.pais.nombre : '',
+            };
+            return direc;
+        }) : [];
+        // Parsea relaciones
+        const relaciones = paciente.relaciones ? paciente.relaciones.map(unaRelacion => {
+            const relacion = {
+                relationship: [{
+                    text: unaRelacion.relacion.nombre
+                }], // The kind of relationship
+                name: {
+                    resourceType: 'HumanName',
+                    family: unaRelacion.apellido, // Family name (often called 'Surname')
+                    given: [unaRelacion.nombre], // Given names (not always 'first'). Includes middle names
+                }
+            };
+            return relacion;
+        }) : [];
+        let genero;
+        switch (paciente.genero) {
+            case 'femenino':
+                genero = 'female';
+                break;
+            case 'masculino':
+                genero = 'male';
+                break;
+            case 'otro':
+                genero = 'other';
+                break;
+        }
+        const pacienteFHIR = {
+            resourceType: 'Patient',
+            identifier: identificadores,
+            active: paciente.activo, // Whether this patient's record is in active use
+            name: [{
+                resourceType: 'HumanName',
+                family: paciente.apellido, // Family name (often called 'Surname')
+                given: paciente.nombre, // Given names (not always 'first'). Includes middle names
+            }],
+            gender: genero, // male | female | other | unknown
+            birthDate: paciente.fechaNacimiento,
+            deceasedDateTime: paciente.fechaFallecimiento
+        };
+        if (paciente.estadoCivil) {
+            let estadoCivil;
+            switch (paciente.estadoCivil) {
+                case 'casado':
+                    estadoCivil = 'Married';
+                    break;
+                case 'divorciado':
+                    estadoCivil = 'Divorced';
+                    break;
+                case 'viudo':
+                    estadoCivil = 'Widowed';
+                    break;
+                case 'soltero':
+                    estadoCivil = 'unmarried';
+                    break;
+                default:
+                    estadoCivil = 'unknown';
+                    break;
+            }
+            pacienteFHIR['maritalStatus'] = { text: estadoCivil };
+        }
+        if (paciente.foto) { // Image of the patient
+            pacienteFHIR['photo'] = [{ paciente: paciente.foto }];
+        }
+        if (contactos.length > 0) { // A contact detail for the individual
+            pacienteFHIR['telecom'] = contactos;
+        }
+        if (direcciones.length > 0) { // Addresses for the individual
+            pacienteFHIR['address'] = direcciones;
+        }
+        if (relaciones.length > 0) {  // A contact party (e.g. guardian, partner, friend) for the patient
+            pacienteFHIR['contact'] = relaciones;
+        }
+        pacientesFHIR.push(pacienteFHIR);
     });
+
+    return pacientesFHIR;
 }
 
 function buscarLocalidad(localidadStr) {
