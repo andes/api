@@ -1,3 +1,19 @@
+# [5.4.0](https://github.com/andes/api/compare/v5.3.0...v5.4.0) (2020-07-15)
+
+
+### Bug Fixes
+
+* **mpi:** quita select de paciente ([22360e0](https://github.com/andes/api/commit/22360e0b4b56433174c16f70f7c1a03997a95239))
+
+
+### Features
+
+* **mpi:** add index para búsqueda ([953bdf5](https://github.com/andes/api/commit/953bdf551529a855a86ea001b059a0846289c825))
+* **mpi:** genera tokens por palabras ([f92570d](https://github.com/andes/api/commit/f92570d0d48e07dd1eb819527200d784454d0bfd))
+* **permisos:** se borra permiso usuarios:perfiles:read ([0182570](https://github.com/andes/api/commit/0182570142ac95315b58b40b163fecd4d97d6460))
+* **TM:** asigna organizacion a usuario autor ([13ac49b](https://github.com/andes/api/commit/13ac49bf485fa795bbab68026ab78a277163a569))
+* **TOP:** busca solicitudes por mas de una organizacion ([93c8fef](https://github.com/andes/api/commit/93c8fef15d3b5118c80d0a2432bcbfc4a85b6a91))
+
 # [5.3.0](https://github.com/andes/api/compare/v5.2.0...v5.3.0) (2020-07-08)
 
 
