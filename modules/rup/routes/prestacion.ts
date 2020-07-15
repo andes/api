@@ -196,10 +196,11 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.organizacion) {
+            const organizacionesDestino = Array.isArray(req.query.organizacion) ? req.query.organizacion : [req.query.organizacion];
             if (req.query.referidas) {
                 match.$and.push({
                     $or: [
-                        { 'solicitud.organizacion.id': Types.ObjectId(req.query.organizacion) },
+                        { 'solicitud.organizacion.id':  { $in: organizacionesDestino.map(id => Types.ObjectId(id)) } },
                         { 'solicitud.historial': {
                             $elemMatch: {
                                 $and: [
@@ -212,7 +213,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                 });
 
             } else {
-                match.$and.push({ 'solicitud.organizacion.id': Types.ObjectId(req.query.organizacion) });
+                match.$and.push({ 'solicitud.organizacion.id': { $in: organizacionesDestino.map(id => Types.ObjectId(id)) } });
             }
         }
 
