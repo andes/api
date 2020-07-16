@@ -105,7 +105,7 @@ export async function updateTurnosPaciente(pacienteModified) {
  */
 export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
-        paciente.findById(id, (err, data) => {
+        paciente.findById(id, '+foto', (err, data) => {
             if (err) {
                 reject(err);
             } else {
