@@ -295,3 +295,6 @@ export const IPS = {
     auth: getEnv('IPS_AUTH', false),
     enabled: getEnv('IPS_ENABLED', false)
 };
+
+// Variable de configuración de provincia
+export const provincia = '';
