@@ -265,6 +265,22 @@ describe('Internacion - camas', () => {
     });
 
     test('update fecha de un estado', async () => {
+        await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
         const from = moment().add(1, 'h').toDate();
         const to = moment().add(2, 'h').toDate();
 
@@ -292,6 +308,22 @@ describe('Internacion - camas', () => {
     });
 
     test('update fecha de un estado fallida', async () => {
+        await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
         const fechaIngreso = moment().add(2, 'hour').toDate();
         await patch({
             id: idCama,
@@ -337,17 +369,20 @@ describe('Internacion - camas', () => {
 
     test('Fallo de integridad en cama - Inactiva > Ocupada', async () => {
         const maquinaEstados = await EstadosCtr.create({
-            organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-            ambito: 'internacion',
-            capa: 'estadistica',
+            organizacion,
+            ambito,
+            capa,
             estados: [
                 { key: 'disponible' },
                 { key: 'ocupada' },
+                { key: 'bloqueada' },
                 { key: 'inactiva' }
             ],
             relaciones: [
                 { origen: 'disponible', destino: 'inactiva' },
                 { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
                 { origen: 'ocupada', destino: 'disponible' },
             ]
         }, REQMock);
@@ -356,52 +391,45 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // OCUPA LA CAMA
-        const fechaIngreso = moment().add(2, 'm').toDate();
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'ocupada',
-            fecha: fechaIngreso,
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            esMovimiento: true,
+            fecha: moment().add(2, 'hours').toDate(),
+            organizacion: cama.organizacion,
             paciente: {
                 id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
                 nombre: 'JUANCITO',
                 apellido: 'PEREZ',
-                documento: '38432297'
-            },
-            idInternacion: '57f67a7ad86d9f64130a138d',
-            esMovimiento: true
+                documento: '38432297',
+                sexo: ''
+            }
         }, REQMock);
 
         // INACTIVA LA CAMA ANTES DE OCUPARLA
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'inactiva',
-            fecha: moment().add(1, 'm').toDate(),
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
-            esMovimiento: true
+            esMovimiento: true,
+            fecha: moment().add(1, 'hours').toDate(),
+            organizacion: cama.organizacion,
         }, REQMock);
 
         const integrity = await checkIntegridad(
             {
-                organizacion: { _id: '57f67a7ad86d9f64130a138d', nombre: 'HOSPITAL NEUQUEN' },
-                ambito: 'internacion',
-                capa: 'estadistica'
+                organizacion: cama.organizacion,
+                ambito,
+                capa,
             },
             {
                 cama: null,
                 from: null,
-                to: moment().add(4, 'y').toDate()
+                to: moment().add(4, 'h').toDate()
             }
         );
 
@@ -412,9 +440,9 @@ describe('Internacion - camas', () => {
 
     test('Fallo de integridad en cama - Inactiva > Bloqueada', async () => {
         const maquinaEstados = await EstadosCtr.create({
-            organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-            ambito: 'internacion',
-            capa: 'estadistica',
+            organizacion,
+            ambito,
+            capa,
             estados: [
                 { key: 'disponible' },
                 { key: 'ocupada' },
@@ -423,9 +451,9 @@ describe('Internacion - camas', () => {
             ],
             relaciones: [
                 { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'disponible', destino: 'bloqueada' },
                 { origen: 'bloqueada', destino: 'disponible' },
-                { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'ocupada', destino: 'disponible' },
             ]
         }, REQMock);
@@ -436,41 +464,35 @@ describe('Internacion - camas', () => {
         // BLOQUEA CAMA
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'bloqueada',
-            fecha: moment().add(2, 'm').toDate(),
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            fecha: moment().add(2, 'hours').toDate(),
+            organizacion: cama.organizacion,
             esMovimiento: true
         }, REQMock);
 
         // INACTIVA CAMA
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'inactiva',
-            fecha: moment().add(1, 'm').toDate(),
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            fecha: moment().add(1, 'hours').toDate(),
+            organizacion: cama.organizacion,
             esMovimiento: true
         }, REQMock);
 
         const integrity = await checkIntegridad(
             {
-                organizacion: { _id: '57f67a7ad86d9f64130a138d', nombre: 'HOSPITAL NEUQUEN' },
-                ambito: 'internacion',
-                capa: 'estadistica'
+                organizacion: cama.organizacion,
+                ambito,
+                capa
             },
             {
                 cama:  null,
                 from: null,
-                to: moment().add(4, 'y').toDate()
+                to: moment().add(6, 'h').toDate()
             }
         );
 
@@ -481,17 +503,20 @@ describe('Internacion - camas', () => {
 
     test('Fallo de integridad en cama - Ocupada > Ocupada', async () => {
         const maquinaEstados = await EstadosCtr.create({
-            organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-            ambito: 'internacion',
-            capa: 'estadistica',
+            organizacion,
+            ambito,
+            capa,
             estados: [
                 { key: 'disponible' },
                 { key: 'ocupada' },
+                { key: 'bloqueada' },
                 { key: 'inactiva' }
             ],
             relaciones: [
                 { origen: 'disponible', destino: 'inactiva' },
                 { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
                 { origen: 'ocupada', destino: 'disponible' },
             ]
         }, REQMock);
@@ -500,17 +525,13 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // OCUPA LA CAMA
-        const fechaIngreso = moment().add(2, 'm').toDate();
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'ocupada',
-            fecha: fechaIngreso,
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            fecha: moment().add(2, 'hours').toDate(),
+            organizacion: cama.organizacion,
             paciente: {
                 id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
@@ -525,14 +546,11 @@ describe('Internacion - camas', () => {
         // OCUPADA CON OTRO PACIENTE
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'ocupada',
-            fecha: moment().add(1, 'm').toDate(),
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            fecha: moment().add(1, 'hours').toDate(),
+            organizacion: cama.organizacion,
             paciente: {
                 id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
@@ -546,14 +564,14 @@ describe('Internacion - camas', () => {
 
         const integrity = await checkIntegridad(
             {
-                organizacion: { _id: '57f67a7ad86d9f64130a138d', nombre: 'HOSPITAL NEUQUEN' },
-                ambito: 'internacion',
-                capa: 'estadistica'
+                organizacion: cama.organizacion,
+                ambito,
+                capa
             },
             {
                 cama: null,
                 from: null,
-                to: moment().add(4, 'y').toDate()
+                to: moment().add(4, 'h').toDate()
             }
         );
 
@@ -564,9 +582,9 @@ describe('Internacion - camas', () => {
 
     test('Fallo de integridad en cama - Bloqueada > Ocupada', async () => {
         const maquinaEstados = await EstadosCtr.create({
-            organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-            ambito: 'internacion',
-            capa: 'estadistica',
+            organizacion,
+            ambito,
+            capa,
             estados: [
                 { key: 'disponible' },
                 { key: 'ocupada' },
@@ -575,9 +593,9 @@ describe('Internacion - camas', () => {
             ],
             relaciones: [
                 { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'disponible', destino: 'bloqueada' },
                 { origen: 'bloqueada', destino: 'disponible' },
-                { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'ocupada', destino: 'disponible' },
             ]
         }, REQMock);
@@ -586,17 +604,13 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // OCUPA LA CAMA
-        const fechaIngreso = moment().add(2, 'm').toDate();
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'ocupada',
-            fecha: fechaIngreso,
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            fecha: moment().subtract(1, 'minutes').toDate(),
+            organizacion: cama.organizacion,
             paciente: {
                 id: '57f67a7ad86d9f64130a138d',
                 _id: '57f67a7ad86d9f64130a138d',
@@ -604,34 +618,30 @@ describe('Internacion - camas', () => {
                 apellido: 'PEREZ',
                 documento: '38432297'
             },
-            idInternacion: '57f67a7ad86d9f64130a138d',
             esMovimiento: true
         }, REQMock);
 
         // BLOQUEAR CAMA
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'bloqueada',
-            fecha: moment().add(1, 'm').toDate(),
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            fecha: moment().subtract(2, 'minutes').toDate(),
+            organizacion: cama.organizacion,
             esMovimiento: true
         }, REQMock);
 
         const integrity = await checkIntegridad(
             {
-                organizacion: { _id: '57f67a7ad86d9f64130a138d', nombre: 'HOSPITAL NEUQUEN' },
-                ambito: 'internacion',
-                capa: 'estadistica'
+                organizacion: cama.organizacion,
+                ambito,
+                capa
             },
             {
                 cama:  null,
                 from: null,
-                to: moment().add(4, 'y').toDate()
+                to: null
             }
         );
 
@@ -642,9 +652,9 @@ describe('Internacion - camas', () => {
 
     test('Fallo de integridad en cama - Bloqueada > Inactiva', async () => {
         const maquinaEstados = await EstadosCtr.create({
-            organizacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-            ambito: 'internacion',
-            capa: 'estadistica',
+            organizacion,
+            ambito,
+            capa,
             estados: [
                 { key: 'disponible' },
                 { key: 'ocupada' },
@@ -653,9 +663,9 @@ describe('Internacion - camas', () => {
             ],
             relaciones: [
                 { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'disponible', destino: 'bloqueada' },
                 { origen: 'bloqueada', destino: 'disponible' },
-                { origen: 'disponible', destino: 'ocupada' },
                 { origen: 'ocupada', destino: 'disponible' },
             ]
         }, REQMock);
@@ -666,41 +676,35 @@ describe('Internacion - camas', () => {
         // INACTIVAR CAMA
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'inactiva',
-            fecha: moment().add(2, 'm').toDate(),
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            fecha: moment().subtract(15, 'minutes').toDate(),
+            organizacion: cama.organizacion,
             esMovimiento: true
         }, REQMock);
 
         // BLOQUEAR CAMA
         await patch({
             id: cama._id,
-            ambito: 'internacion',
-            capa: 'estadistica',
+            ambito,
+            capa,
             estado: 'bloqueada',
-            fecha: moment().add(1, 'm').toDate(),
-            organizacion: {
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'HOSPITAL NEUQUEN'
-            },
+            fecha: moment().subtract(30, 'minutes').toDate(),
+            organizacion: cama.organizacion,
             esMovimiento: true
         }, REQMock);
 
         const integrity = await checkIntegridad(
             {
-                organizacion: { _id: '57f67a7ad86d9f64130a138d', nombre: 'HOSPITAL NEUQUEN' },
-                ambito: 'internacion',
-                capa: 'estadistica'
+                organizacion: cama.organizacion,
+                ambito,
+                capa
             },
             {
-                cama:  null,
+                cama:  cama._id,
                 from: null,
-                to: moment().add(4, 'y').toDate()
+                to: null
             }
         );
 
