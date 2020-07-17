@@ -521,10 +521,11 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     data.estados.push(req.body.estado);
                     if (req.body.estado.tipo === 'asignada') {
                         if (req.body.profesional) {
+                            updateRegistroHistorialSolicitud(data.solicitud, 'asignacionProfesional');
                             data.solicitud.profesional = req.body.profesional;
+                        } else {
+                            return next('Debe seleccionar un profesional para asignar.');
                         }
-
-                        updateRegistroHistorialSolicitud(data.solicitud, 'asignacionProfesional');
                     } else if (req.body.estado.tipo === 'ejecucion' && !data.solicitud.profesional.id) { // si se ejecuta una solicitud que viene de rup sin profesional, se lo setea por defecto
                         data.solicitud.profesional = Auth.getProfesional(req);
                     }

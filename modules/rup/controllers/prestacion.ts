@@ -34,6 +34,7 @@ export function updateRegistroHistorialSolicitud(solicitud, accion, turno?) {
     }
 
     let registroHistorial: any = {
+        tipoPrestacion: solicitud.tipoPrestacion,
         organizacion: solicitud.organizacion,
         accion
     };
