@@ -22,8 +22,9 @@ router.get('/snomed', async (req, res, next) => {
 
     const semanticTags = asArray(req.query.semanticTag);
     const search = req.query.search;
+    const expression = req.query.expression;
     if (isNaN(search)) {
-        const conceptos = await SnomedCtr.searchTerms(search, { semanticTags, languageCode: 'es' });
+        const conceptos = await SnomedCtr.searchTerms(search, { semanticTags, languageCode: 'es', expression });
         return res.json(conceptos);
     } else {
         const concepto = await SnomedCtr.getConcept(search, '');
