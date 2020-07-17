@@ -1,7 +1,6 @@
 import * as config from '../../../config';
 import * as moment from 'moment';
 import { paciente } from '../schemas/paciente';
-import { ElasticSync } from '../../../utils/elasticSync';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
@@ -25,7 +24,7 @@ import * as localidadController from '../../tm/controller/localidad';
 const sharp = require('sharp');
 
 /**
- * Crea un paciente y lo sincroniza con elastic
+ * Crea un paciente
  *
  * @param data Datos del paciente
  * @param req  request de express para poder auditar
@@ -37,13 +36,6 @@ export async function createPaciente(data, req) {
     }
     try {
         await newPatient.save();
-        const nuevoPac = JSON.parse(JSON.stringify(newPatient));
-        delete nuevoPac._id;
-        delete nuevoPac.relaciones;
-        delete nuevoPac.direccion;
-
-        const connElastic = new ElasticSync();
-        await connElastic.create(newPatient._id.toString(), nuevoPac);
         andesLog(req, logKeys.mpiInsert.key, req.body._id, req.method + ' | ' + req.originalUrl, newPatient, null);
 
         // Código para emitir eventos
@@ -53,7 +45,6 @@ export async function createPaciente(data, req) {
         andesLog(req, logKeys.mpiInsert.key, req.body._id, req.method + ' | ' + req.originalUrl, null, 'Error insertando paciente');
         return error;
     }
-
 }
 
 
@@ -64,20 +55,18 @@ export async function updatePaciente(pacienteObj, data, req) {
     }
     // Habilita auditoria y guarda
     if (req) {
-        // pacienteObj.markModified;
         Auth.audit(pacienteObj, req);
     }
-    await pacienteObj.save();
-    const connElastic = new ElasticSync();
-    let updated = await connElastic.sync(pacienteObj);
-    if (updated) {
+    try {
+        await pacienteObj.save();
         andesLog(req, logKeys.mpiUpdate.key, req.body._id, req.method + ' | ' + req.originalUrl, pacienteObj, pacienteOriginal);
-    } else {
-        andesLog(req, logKeys.mpiInsert.key, req.body._id, req.method + ' | ' + req.originalUrl, pacienteObj, 'create patient');
-    }
-    EventCore.emitAsync('mpi:patient:update', pacienteObj);
-    return pacienteObj;
 
+        EventCore.emitAsync('mpi:patient:update', pacienteObj);
+        return pacienteObj;
+    } catch (error) {
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, req.method + ' | ' + req.originalUrl, pacienteObj, 'create patient');
+        return error;
+    }
 }
 /**
  * Busca los turnos futuros asignados al paciente y actualiza los datos.
@@ -305,7 +294,7 @@ function obtenerSugeridos(_paciente, pacientesSimilares) {
 }
 
 /**
- * Delete de paciente con sincronizacion a elastic
+ * Delete de paciente
  *
  * @param objectId ---> Id del paciente a eliminar
  */
@@ -314,8 +303,7 @@ export async function deletePacienteAndes(objectId) {
     const query = { _id: objectId };
     let patientFound = await paciente.findById(query).exec();
     await patientFound.remove();
-    let connElastic = new ElasticSync();
-    await connElastic.delete(patientFound._id.toString());
+
     EventCore.emitAsync('mpi:patient:delete', patientFound);
     return patientFound;
 }
@@ -456,15 +444,12 @@ export async function linkPacientes(req, dataLink, pacienteBase, pacienteLinkead
         pacienteLinkeado.activo = true;
     }
 
-    const connElastic = new ElasticSync();
     Auth.audit(pacienteLinkeado, req);
     try {
         await pacienteLinkeado.save();
-        await connElastic.sync(pacienteLinkeado);
 
         Auth.audit(pacienteBase, req);
         const pacienteSaved = await pacienteBase.save();
-        await connElastic.sync(pacienteBase);
 
         andesLog(req, logKeys.mpiUpdate.key, pacienteBase._id, op, pacienteBase, pacienteLinkeado);
         return pacienteSaved;

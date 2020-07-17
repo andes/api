@@ -126,7 +126,6 @@ export default [
                 child: [
                     { key: 'dashboard', title: 'Dashboard', type: 'boolean' },
                     { key: 'getbyId', title: 'Detalle de un paciente', type: 'boolean' },
-                    { key: 'elasticSearch', title: 'Búsqueda de un paciente', type: 'boolean' },
                     { key: 'putMpi', title: 'Actualización de un paciente MPI', type: 'boolean' },
                     { key: 'deleteMpi', title: 'Eliminar un paciente MPI', type: 'boolean' },
                     { key: 'postAndes', title: 'Creación de un paciente', type: 'boolean' },

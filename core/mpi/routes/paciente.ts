@@ -3,7 +3,6 @@ import * as mongoose from 'mongoose';
 import { paciente } from '../schemas/paciente';
 import * as controller from '../controller/paciente';
 import { Auth } from './../../../auth/auth.class';
-import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
 import { log as andesLog } from '@andes/log';
@@ -105,16 +104,10 @@ router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
             req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
             await newPatient.save();
-            const nuevoPac = JSON.parse(JSON.stringify(newPatient));
-            const connElastic = new ElasticSync();
-            let updated = await connElastic.sync(newPatient);
-            if (updated) {
-                andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
-            } else {
-                andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
-            }
-            EventCore.emitAsync('mpi:patient:update', nuevoPac);
-            res.json(nuevoPac);
+            andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, newPatient, null);
+
+            EventCore.emitAsync('mpi:patient:update', newPatient);
+            res.json(newPatient);
         }
     } catch (error) {
         andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, null, 'Error activando/desactivando paciente');
@@ -158,16 +151,12 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 
 });
 
-// Search using elastic search
+// Search using filters
 router.get('/pacientes/search', (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
     controller.matching({ type: 'search', filtros: req.query }).then(result => {
-        result = result.map(elto => {
-            delete elto.foto;
-            return elto;
-        });
         res.send(result);
     }).catch(error => {
         return next(error);
@@ -175,17 +164,13 @@ router.get('/pacientes/search', (req, res, next) => {
 });
 
 
-// Search using elastic search
+// Search
 router.get('/pacientes', (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
 
     controller.matching(req.query).then(result => {
-        result = result.map(elto => {
-            delete elto.foto;
-            return elto;
-        });
         res.send(result);
     }).catch(error => {
         return next(error);
