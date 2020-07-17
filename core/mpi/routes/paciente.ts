@@ -67,10 +67,7 @@ router.get('/pacientes/auditoria/', (req, res, next) => {
         if (err) {
             return next(err);
         }
-        data = data.map(elto => {
-            delete elto.foto;
-            return elto;
-        });
+
         res.json(data);
     });
 
@@ -122,11 +119,6 @@ router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
     };
     try {
         let listado = await paciente.find(filtro);
-        listado = listado.map(elto => {
-            const item = JSON.parse(JSON.stringify(elto));
-            delete item.foto;
-            return item;
-        });
         res.json(listado);
     } catch (error) {
         return next(error);
@@ -139,11 +131,6 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
     };
     try {
         let listado = await paciente.find(filtro);
-        listado = listado.map(elto => {
-            const item = JSON.parse(JSON.stringify(elto));
-            delete item.foto;
-            return item;
-        });
         res.json(listado);
     } catch (error) {
         return next(error);
@@ -152,29 +139,31 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 });
 
 // Search using filters
-router.get('/pacientes/search', (req, res, next) => {
+router.get('/pacientes/search', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
-    controller.matching({ type: 'search', filtros: req.query }).then(result => {
+    try {
+        const result = await controller.matching({ type: 'search', filtros: req.query });
         res.send(result);
-    }).catch(error => {
-        return next(error);
-    });
+    } catch (err) {
+        next(err);
+    }
 });
 
 
 // Search
-router.get('/pacientes', (req, res, next) => {
+router.get('/pacientes', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
-
-    controller.matching(req.query).then(result => {
+    try {
+        const result = await controller.matching(req.query);
         res.send(result);
-    }).catch(error => {
+    } catch (error) {
         return next(error);
-    });
+    }
+
 });
 
 
@@ -189,16 +178,7 @@ router.get('/pacientes/:id', async (req, res, next) => {
     try {
         const idPaciente = req.params.id;
         const { paciente: pacienteFound } = await controller.buscarPaciente(idPaciente);
-        const pacienteAux = JSON.parse(JSON.stringify(pacienteFound));
-
-        delete pacienteAux.foto;
-        if (pacienteAux.relaciones?.length) {
-            pacienteAux.relaciones.map(rel => {
-                delete rel.foto;
-                return rel;
-            });
-        }
-        const pacienteBuscado: any = new paciente(pacienteAux);
+        const pacienteBuscado: any = new paciente(pacienteFound);
         if (pacienteBuscado && pacienteBuscado.documento) {
             let pacienteConOS = pacienteBuscado.toObject({ virtuals: true });
             pacienteConOS.id = pacienteConOS._id;

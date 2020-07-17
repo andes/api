@@ -60,7 +60,10 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     },
     fechaFallecimiento: Date,
     estadoCivil: constantes.ESTADOCIVIL,
-    foto: String,
+    foto: {
+        type: String,
+        select: false
+    },
     fotoMobile: String,
     nacionalidad: String,
     // ---------------------
