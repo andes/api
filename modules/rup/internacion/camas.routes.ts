@@ -67,6 +67,21 @@ router.get('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async
     }
 }));
 
+router.get('/integrity-check-camas', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+    const organizacion = {
+        _id: Auth.getOrganization(req),
+        nombre: Auth.getOrganization(req, 'nombre')
+    };
+    const ambito = req.query.ambito;
+    const capa = req.query.capa;
+    const cama = req.query.cama;
+    const from = req.query.desde;
+    const to = req.query.hasta;
+
+    const listaInconsistencias = await CamasController.integrityCheck({ organizacion, ambito, capa}, { cama, from, to });
+    return res.json(listaInconsistencias);
+}));
+
 router.post('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
     const organizacion = {
         _id: Auth.getOrganization(req),

@@ -6,10 +6,12 @@ import { model as Prestaciones } from '../schemas/prestacion';
 import { store, findById, search, patch, changeTime, listaEspera } from './camas.controller';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import { CamaEstados } from './cama-estados.schema';
+import { Estados } from './estados.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import { EstadosCtr } from './estados.routes';
 import { Auth } from '../../../auth/auth.class';
 import { patch as patchEstados } from './cama-estados.controller';
+import { integrityCheck as checkIntegridad } from './camas.controller';
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
@@ -23,6 +25,7 @@ let organizacion: any;
 beforeAll(async () => {
     mongoServer = new MongoMemoryServer();
     const mongoUri = await mongoServer.getConnectionString();
+    // const mongoUri = 'mongodb://localhost:27017/andes';
     mongoose.connect(mongoUri);
 });
 
@@ -88,16 +91,15 @@ function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
 }
 
 describe('Internacion - camas', () => {
-
     beforeEach(async () => {
         await Camas.remove({});
         await CamaEstados.remove({});
+        await Estados.remove({});
         await Prestaciones.remove({});
         cama = await store(seedCama(1, 'h') as any, REQMock);
         idCama = String(cama._id);
         organizacion = cama.organizacion._id;
     });
-
 
     test('create cama', async () => {
         const camaDB: any = await Camas.findById(idCama);
@@ -263,6 +265,22 @@ describe('Internacion - camas', () => {
     });
 
     test('update fecha de un estado', async () => {
+        await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
         const from = moment().add(1, 'h').toDate();
         const to = moment().add(2, 'h').toDate();
 
@@ -290,6 +308,22 @@ describe('Internacion - camas', () => {
     });
 
     test('update fecha de un estado fallida', async () => {
+        await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
         const fechaIngreso = moment().add(2, 'hour').toDate();
         await patch({
             id: idCama,
@@ -333,6 +367,351 @@ describe('Internacion - camas', () => {
 
     });
 
+    test('Fallo de integridad en cama - Inactiva > Ocupada', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'bloqueada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        // OCUPA LA CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'ocupada',
+            esMovimiento: true,
+            fecha: moment().add(2, 'hours').toDate(),
+            organizacion: cama.organizacion,
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297',
+                sexo: ''
+            }
+        }, REQMock);
+
+        // INACTIVA LA CAMA ANTES DE OCUPARLA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'inactiva',
+            esMovimiento: true,
+            fecha: moment().add(1, 'hours').toDate(),
+            organizacion: cama.organizacion,
+        }, REQMock);
+
+        const integrity = await checkIntegridad(
+            {
+                organizacion: cama.organizacion,
+                ambito,
+                capa,
+            },
+            {
+                cama: null,
+                from: null,
+                to: moment().add(4, 'h').toDate()
+            }
+        );
+
+        expect(integrity.length).toBe(1);
+        expect(integrity[0].source.estado).toBe('inactiva');
+        expect(integrity[0].target.estado).toBe('ocupada');
+    });
+
+    test('Fallo de integridad en cama - Inactiva > Bloqueada', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'bloqueada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        // BLOQUEA CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'bloqueada',
+            fecha: moment().add(2, 'hours').toDate(),
+            organizacion: cama.organizacion,
+            esMovimiento: true
+        }, REQMock);
+
+        // INACTIVA CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'inactiva',
+            fecha: moment().add(1, 'hours').toDate(),
+            organizacion: cama.organizacion,
+            esMovimiento: true
+        }, REQMock);
+
+        const integrity = await checkIntegridad(
+            {
+                organizacion: cama.organizacion,
+                ambito,
+                capa
+            },
+            {
+                cama:  null,
+                from: null,
+                to: moment().add(6, 'h').toDate()
+            }
+        );
+
+        expect(integrity.length).toBe(1);
+        expect(integrity[0].source.estado).toBe('inactiva');
+        expect(integrity[0].target.estado).toBe('bloqueada');
+    });
+
+    test('Fallo de integridad en cama - Ocupada > Ocupada', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'bloqueada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        // OCUPA LA CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'ocupada',
+            fecha: moment().add(2, 'hours').toDate(),
+            organizacion: cama.organizacion,
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
+            },
+            idInternacion: '57f67a7ad86d9f64130a138d',
+            esMovimiento: true
+        }, REQMock);
+
+        // OCUPADA CON OTRO PACIENTE
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'ocupada',
+            fecha: moment().add(1, 'hours').toDate(),
+            organizacion: cama.organizacion,
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
+            },
+            idInternacion: '57f67a7ad86d9f64130a13ac',
+            esMovimiento: true
+        }, REQMock);
+
+        const integrity = await checkIntegridad(
+            {
+                organizacion: cama.organizacion,
+                ambito,
+                capa
+            },
+            {
+                cama: null,
+                from: null,
+                to: moment().add(4, 'h').toDate()
+            }
+        );
+
+        expect(integrity.length).toBe(1);
+        expect(integrity[0].source.estado).toBe('ocupada');
+        expect(integrity[0].target.estado).toBe('ocupada');
+    });
+
+    test('Fallo de integridad en cama - Bloqueada > Ocupada', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'bloqueada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        // OCUPA LA CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'ocupada',
+            fecha: moment().subtract(1, 'minutes').toDate(),
+            organizacion: cama.organizacion,
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
+            },
+            esMovimiento: true
+        }, REQMock);
+
+        // BLOQUEAR CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'bloqueada',
+            fecha: moment().subtract(2, 'minutes').toDate(),
+            organizacion: cama.organizacion,
+            esMovimiento: true
+        }, REQMock);
+
+        const integrity = await checkIntegridad(
+            {
+                organizacion: cama.organizacion,
+                ambito,
+                capa
+            },
+            {
+                cama:  null,
+                from: null,
+                to: null
+            }
+        );
+
+        expect(integrity.length).toBe(1);
+        expect(integrity[0].source.estado).toBe('bloqueada');
+        expect(integrity[0].target.estado).toBe('ocupada');
+    });
+
+    test('Fallo de integridad en cama - Bloqueada > Inactiva', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'bloqueada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        // INACTIVAR CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'inactiva',
+            fecha: moment().subtract(15, 'minutes').toDate(),
+            organizacion: cama.organizacion,
+            esMovimiento: true
+        }, REQMock);
+
+        // BLOQUEAR CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'bloqueada',
+            fecha: moment().subtract(30, 'minutes').toDate(),
+            organizacion: cama.organizacion,
+            esMovimiento: true
+        }, REQMock);
+
+        const integrity = await checkIntegridad(
+            {
+                organizacion: cama.organizacion,
+                ambito,
+                capa
+            },
+            {
+                cama:  cama._id,
+                from: null,
+                to: null
+            }
+        );
+
+        expect(integrity.length).toBe(1);
+        expect(integrity[0].source.estado).toBe('bloqueada');
+        expect(integrity[0].target.estado).toBe('inactiva');
+    });
 });
 
 function estadoOcupada() {
