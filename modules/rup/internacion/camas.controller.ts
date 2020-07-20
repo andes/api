@@ -203,7 +203,6 @@ export async function patch(data: Partial<ICama>, req: Request) {
             // La APP debería mandar solo lo que quiere modificar
             // por las dudas limpiamos el objeto
             delete data['idCama'];
-            delete data['extras'];
             delete data['createdAt'];
             delete data['createdBy'];
             delete data['updatedAt'];
