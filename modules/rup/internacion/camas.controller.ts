@@ -329,7 +329,7 @@ export async function integrityCheck({ organizacion, capa, ambito }: Internacion
                 }
 
                 if (!cambioPermitido) {
-                    res.push({ source: movementsCama[index], target: movement });
+                    res.push({ _id: new mongoose.Types.ObjectId, source: movementsCama[index], target: movement });
                 }
             }
         });
