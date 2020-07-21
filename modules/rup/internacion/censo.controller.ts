@@ -161,8 +161,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         pasesA++;
                         checkPaciente(movimientoAnterior);
                         tablaPacientes[movimiento.paciente.id].actividad.push({
-                        paseA: movimiento.unidadOrganizativa.term,
-                        diasEstada: timestampEnd.diff(moment(movimientoAnterior.fecha), 'days') + 1,
+                            paseA: movimiento.unidadOrganizativa.term,
+                            diasEstada: timestampEnd.diff(moment(movimientoAnterior.fecha), 'days') + 1,
                         });
                     }
                 }
