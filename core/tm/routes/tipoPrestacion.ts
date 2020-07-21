@@ -2,6 +2,7 @@ import * as utils from '../../../utils/utils';
 import * as express from 'express';
 import { tipoPrestacion } from '../schemas/tipoPrestacion';
 import * as mongoose from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
@@ -51,6 +52,15 @@ router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
         }
         res.json(data);
     });
+});
+
+router.put('/tiposPrestaciones/:id', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const result = await tipoPrestacion.findByIdAndUpdate(req.params.id, req.body);
+        return res.json(result);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 export = router;
