@@ -71,11 +71,7 @@ export class InformeRupHeader extends HTMLComponent {
                                 {{/if}}
                             </h6>
                         </div>
-                        <div class="contenedor-bloque-texto">
-                            <h6>
-                                <!--obraSocial-->
-                            </h6>
-                        </div>
+
                     </div>
                     {{#if ubicacion}}
                         <div class="contenedor-secundario">
