@@ -117,10 +117,7 @@ export class InformeRupHeader extends HTMLComponent {
         // [TODO] metodo getCarpeta en paciente
         const numeroCarpeta = paciente.carpetaEfectores.find(x => String(x.organizacion._id) === organizacionId);
         const consultaValidada = (prestacion.estados[prestacion.estados.length - 1].tipo === 'validada');
-        let provincia = 'neuquen';
-        if (configPrivate.provincia) {
-            provincia = configPrivate.provincia;
-        }
+        const provincia = configPrivate.provincia || 'neuquen';
         this.data = {
             paciente: {
                 nombre: paciente.nombre,

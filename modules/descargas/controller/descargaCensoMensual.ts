@@ -3,6 +3,7 @@ import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
 import * as path from 'path';
 import * as moment from 'moment';
+import * as configPrivate from '../../../config.private';
 
 export class DocumentoCensoMensual {
 
@@ -39,8 +40,11 @@ export class DocumentoCensoMensual {
                     .replace('<!--logoOrganizacion-->', `<b class="no-logo-efector">${params.organizacion.nombre}</b>`);
             }
 
+            // consulta por provincia
+            const provincia = configPrivate.provincia || 'neuquen';
+
             // Logos comunes a todos los informes
-            let logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional.png'));
+            let logoAdicional = fs.readFileSync(path.join(__dirname, `../../../templates/rup/informes/img/logo-adicional-${provincia}.png`));
             let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h.png'));
             let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp.png'));
             let logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-h.png'));

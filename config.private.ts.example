@@ -296,5 +296,4 @@ export const IPS = {
     enabled: getEnv('IPS_ENABLED', false)
 };
 
-// Variable de configuración de provincia
-export const provincia = '';
+export const provincia = getEnv('PROVINCIA', 'neuquen');
