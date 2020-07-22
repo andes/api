@@ -136,7 +136,7 @@ export class InformeRupHeader extends HTMLComponent {
                 documento: paciente.documento,
                 edad,
                 numeroCarpeta: numeroCarpeta?.nroCarpeta,
-                obraSocial: prestacion.paciente.obraSocial.financiador
+                obraSocial: prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial.financiador : false
             },
             organizacion: {
                 nombre: organizacion.nombre.replace('-', '</br>'),
