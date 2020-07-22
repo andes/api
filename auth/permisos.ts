@@ -144,6 +144,7 @@ export default [
                 title: 'Acciones sobre una cama',
                 child: [
                     { key: 'create', title: 'Crear nueva cama', type: 'boolean' },
+                    { key: 'edit', title: 'Editar cama', type: 'boolean' },
                     { key: 'baja', title: 'Eliminar cama', type: 'boolean' }
                 ]
             },
