@@ -1,3 +1,19 @@
+# [5.5.0](https://github.com/andes/api/compare/v5.4.0...v5.5.0) (2020-07-22)
+
+
+### Bug Fixes
+
+* **mapa-camas:** persistencia de matadata en movimientos ([#1037](https://github.com/andes/api/issues/1037)) ([b2167f7](https://github.com/andes/api/commit/b2167f7c1073aba74d4e88d2d8aece6b1167cdc1))
+* **mpi:** quita la foto desde schema paciente ([#1042](https://github.com/andes/api/issues/1042)) ([09278fa](https://github.com/andes/api/commit/09278faf4e46e91c276047eb1024049713c78d69))
+
+
+### Features
+
+* **GESTOR:** Remueve permiso Mis Solicitudes ([9678b6f](https://github.com/andes/api/commit/9678b6fe4a36e38f2416fca881568ba14797363e))
+* **mapa-camas:** chequeo de inegridad de estados ([#965](https://github.com/andes/api/issues/965)) ([6dd76a4](https://github.com/andes/api/commit/6dd76a4382e44f8c7d24051430f84409249d9b32))
+* **mapa-camas:** dias de estada ([#1023](https://github.com/andes/api/issues/1023)) ([1c5f048](https://github.com/andes/api/commit/1c5f0480bbee10a87605c35949767b6cf0b0ca9f))
+* **rup:** configurar diagnostico principal dinamico ([#992](https://github.com/andes/api/issues/992)) ([262129b](https://github.com/andes/api/commit/262129b82e8b22906ae20030265176a87ff63d34))
+
 # [5.4.0](https://github.com/andes/api/compare/v5.3.0...v5.4.0) (2020-07-15)
 
 
