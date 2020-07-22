@@ -213,6 +213,20 @@ export class Auth {
         };
     }
 
+    static getUserFromResource(resource: any) {
+        const auditData = resource.updatedBy || resource.createdBy;
+        const user = {
+            usuario: auditData,
+            organizacion: auditData.organizacion,
+            ip: '0.0.0.0',
+            connection: {
+                localAddress: '0.0.0.0'
+            }
+        };
+        delete user.usuario.organizacion;
+        return { user };
+    }
+
 
     /**
      * Genera los registros de auditoría en el documento indicado
