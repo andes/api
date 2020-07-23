@@ -206,7 +206,6 @@ async function searchByExpression({ text, languageCode, expression, semanticTags
     const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts`, qs, languageCode);
     if (response) {
         let { items } = response;
-
         items = items.map(cpt => {
             return {
                 conceptId: cpt.conceptId,

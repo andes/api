@@ -16,15 +16,16 @@ function asArray(item) {
 }
 
 router.get('/snomed', async (req, res, next) => {
-    if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
+    if (!req.query.search && req.query.search !== '' && req.query.expression) {
         return next('Debe ingresar un parámetro de búsqueda');
     }
 
     const semanticTags = asArray(req.query.semanticTag);
     const search = req.query.search;
     const expression = req.query.expression;
-    if (isNaN(search)) {
-        const conceptos = await SnomedCtr.searchTerms(search, { semanticTags, languageCode: 'es', expression });
+    const languageCode = req.query.languageCode || 'es';
+    if (isNaN(search) || expression) {
+        const conceptos = await SnomedCtr.searchTerms(search, { semanticTags, languageCode, expression });
         return res.json(conceptos);
     } else {
         const concepto = await SnomedCtr.getConcept(search, '');
