@@ -21,7 +21,7 @@ const constantes = {
     },
     IDENTIFICACION: {
         type: String,
-        enum: ['documentoExtranjero', 'pasaporte']
+        enum: ['dni extranjero', 'pasaporte', null]
     }
 };
 export = constantes;
