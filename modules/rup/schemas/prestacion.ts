@@ -163,9 +163,15 @@ schema.pre('save', function (next) {
         return next(err);
     }
     if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
-        if (!prestacion.ejecucion.fecha && !prestacion.createdAt) {
-            let err = new Error('Debe seleccionar la fecha en que se solicita');
-            return next(err);
+        if (!prestacion.ejecucion.fecha) {
+            if (!prestacion.createdAt) {
+                let err = new Error('Debe seleccionar la fecha en que se solicita');
+                return next(err);
+            } else {
+                // Si la prestación ya fue creada, se trata de una ejecución de solicitud pendiente
+                // y debe asignarse la fecha de solicitud a la ejecución
+                prestacion.ejecucion.fecha = prestacion.solicitud.fecha;
+            }
         }
 
         if (!prestacion.ejecucion.organizacion && !prestacion.solicitud.organizacion.id) {
