@@ -40,7 +40,7 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
         creacion: 'Creada',
         citar: 'Paciente citado',
         rechazada: 'Contrarreferida',
-        pendiente: 'Pendiente',
+        pendiente: 'Aceptada',
         referir: 'Referida',
         asignarTurno: 'Turno asignado',
         liberarTurno: 'Turno liberado',

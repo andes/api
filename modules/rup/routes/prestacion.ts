@@ -501,8 +501,7 @@ router.get('/prestaciones/:id*?', async (req: any, res, next) => {
 router.post('/prestaciones', async (req, res, next) => {
     let dto = parseDate(JSON.stringify(req.body));
 
-    // Si viene de TOP, registramos historial de solicitud
-    if (dto.estados[0].tipo === 'auditoria' || dto.estados[0].tipo === 'pendiente') {
+    if (dto.inicio === 'top') {
         updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
     }
 
@@ -524,8 +523,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         }
         req.body = parseDate(JSON.stringify(req.body));
 
-        // Si viene de TOP, registramos historial de solicitud
-        if (data.estados[0].tipo === 'auditoria' || data.estados[0].tipo === 'pendiente') {
+        if (data.inicio === 'top') {
             updateRegistroHistorialSolicitud(data.solicitud, req.body);
         }
 
