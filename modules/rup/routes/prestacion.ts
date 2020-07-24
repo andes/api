@@ -500,6 +500,12 @@ router.get('/prestaciones/:id*?', async (req: any, res, next) => {
 
 router.post('/prestaciones', async (req, res, next) => {
     let dto = parseDate(JSON.stringify(req.body));
+
+    // Si viene de TOP, registramos historial de solicitud
+    if (dto.estados[0].tipo === 'auditoria' || dto.estados[0].tipo === 'pendiente') {
+        updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
+    }
+
     const data = new Prestacion(dto);
     Auth.audit(data, req);
     data.save((err) => {
@@ -517,6 +523,12 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             return next(err);
         }
         req.body = parseDate(JSON.stringify(req.body));
+
+        // Si viene de TOP, registramos historial de solicitud
+        if (data.estados[0].tipo === 'auditoria' || data.estados[0].tipo === 'pendiente') {
+            updateRegistroHistorialSolicitud(data.solicitud, req.body);
+        }
+
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -533,8 +545,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                         if (req.body.profesional) {
                             data.solicitud.profesional = req.body.profesional;
                         }
-
-                        updateRegistroHistorialSolicitud(data.solicitud, 'asignacionProfesional');
                     } else if (req.body.estado.tipo === 'ejecucion' && !data.solicitud.profesional.id) { // si se ejecuta una solicitud que viene de rup sin profesional, se lo setea por defecto
                         data.solicitud.profesional = Auth.getProfesional(req);
                     }
@@ -586,7 +596,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
                 break;
             case 'referir':
-                updateRegistroHistorialSolicitud(data.solicitud, 'referencia', null, req.body.observaciones);
                 if (req.body.estado) {
                     data.estados.push();
                 }
@@ -600,7 +609,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 data.solicitud.profesional = null;
                 break;
             case 'devolver':
-                updateRegistroHistorialSolicitud(data.solicitud, 'devolver', null, req.body.observaciones);
                 data.estados.push({ tipo: 'auditoria', fecha: new Date() });
                 data.solicitud.profesional = null;
                 break;
@@ -655,9 +663,9 @@ router.patch('/prestaciones/:id', (req, res, next) => {
 
                 const solicitadas = [];
 
-                async.each(req.body.planes, (plan, callback) => {
+                async.each(req.body.planes, (plan: any, callback) => {
+                    updateRegistroHistorialSolicitud(plan.solicitud, { op: 'creacion' });
                     const nuevoPlan = new Prestacion(plan);
-
                     Auth.audit(nuevoPlan, req);
                     nuevoPlan.save((errorPlan, nuevaPrestacion) => {
                         if (errorPlan) { return callback(errorPlan); }
