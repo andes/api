@@ -592,6 +592,11 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 data.estados.push(req.body.estado);
                 data.solicitud.profesional = null;
                 break;
+            case 'devolver':
+                updateRegistroHistorialSolicitud(data.solicitud, 'devolver', null, req.body.observaciones);
+                data.estados.push({ tipo: 'auditoria', fecha: new Date() });
+                data.solicitud.profesional = null;
+                break;
             default:
                 return next(500);
         }

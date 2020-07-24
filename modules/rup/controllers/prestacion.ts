@@ -28,7 +28,7 @@ export async function liberarRefTurno(turno, req) {
     }
 }
 
-export function updateRegistroHistorialSolicitud(solicitud, accion, turno?) {
+export function updateRegistroHistorialSolicitud(solicitud, accion, turno?, observaciones?) {
     if (!solicitud.historial) {
         solicitud.historial = [];
     }
@@ -44,6 +44,10 @@ export function updateRegistroHistorialSolicitud(solicitud, accion, turno?) {
 
     if (solicitud.profesional) {
         registroHistorial.profesional = solicitud.profesional;
+    }
+
+    if (observaciones) {
+        registroHistorial.observaciones = observaciones;
     }
 
     solicitud.historial.push(registroHistorial);
