@@ -948,6 +948,7 @@ async function actualizarAux(agenda: any) {
     });
 }
 
+
 /**
  * Llegado el día de ejecucion de la agenda, los turnos restantesProgramados pasan a restantesDelDia
  *
@@ -1060,25 +1061,19 @@ export function saveAgenda(nuevaAgenda) {
 }
 
 
-// Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
-EventCore.on('mpi:patient:update', async (pacienteModified) => {
-    // let req = {
-    //     query: {
-    //         estado: 'asignado',
-    //         pacienteId: pacienteModified.id,
-    //         horaInicio: moment(new Date()).startOf('day').toDate() as any
-    //     }
-    // };
-    // let turnos: any = await turnosController.getTurno(req);
-    // if (turnos.length > 0) {
-    //     turnos.forEach(element => {
-    //         try {
-    //             agendaController.updatePaciente(pacienteModified, element);
-    //         } catch (error) {
-    //             return error;
-    //         }
-    //     });
-    // }
+// Audita una agenda si es no nominalizada, si se realizo una validación de la prestación
+EventCore.on('rup:prestacion:validate', async (prestacion) => {
+    const noNominalizada = prestacion.solicitud.tipoPrestacion.noNominalizada;
+    const idTurno = prestacion.solicitud.turno;
+    if (noNominalizada && idTurno) {
+        const agenda: any = await agendaModel.findOne({ 'bloques.turnos._id': idTurno });
+        if (agenda) {
+            agenda.estado = 'auditada';
+            const user = Auth.getUserFromResource(prestacion);
+            Auth.audit(agenda, user as any);
+            await saveAgenda(agenda);
+        }
+    }
 });
 
 /**
