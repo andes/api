@@ -50,6 +50,7 @@ const CamaEstadosSchema = new Schema({
             egreso: { type: Boolean, required: false },
             ingreso: { type: Boolean, required: false },
             tipo_egreso: { type: String, required: false },
+            unidadOrganizativaOrigen: { type: SnomedConcept, required: false },
             idInternacion: { type: SchemaTypes.ObjectId, required: false }, // idInternacion al egresar
         },
         nota: { type: String, required: false },
