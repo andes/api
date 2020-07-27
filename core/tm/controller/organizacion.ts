@@ -46,3 +46,46 @@ export async function obtenerOfertaPrestacional(orgCodSisa: Number) {
     };
     return await handleHttpRequest(options);
 }
+
+export async function cambiarMapaSectores(mapaSectores, sector, eliminar = false) {
+    let newMap = [];
+    if (!eliminar) {
+        for (const itemSector of mapaSectores) {
+            const newItem = await changeItem(itemSector, sector);
+            newMap.push(newItem);
+        }
+    } else {
+        for (const itemSector of mapaSectores) {
+            const newItem = await deleteItem(itemSector, sector);
+            if (newItem) {
+                newMap.push(newItem);
+            }
+        }
+    }
+    return newMap;
+}
+
+function changeItem(itemSector, sector) {
+    if (String(itemSector._id) === sector._id) {
+        return sector;
+    } else {
+        for (let index = 0; index < itemSector.hijos.length; index++) {
+            itemSector.hijos[index] = changeItem(itemSector.hijos[index], sector);
+        }
+        return itemSector;
+    }
+}
+
+function deleteItem(itemSector, sector) {
+    if (String(itemSector._id) === sector._id) {
+        return null;
+    } else {
+        for (let index = 0; index < itemSector.hijos.length; index++) {
+            itemSector.hijos[index] = deleteItem(itemSector.hijos[index], sector);
+            if (!itemSector.hijos[index]) {
+                itemSector.hijos.splice(index, 1);
+            }
+        }
+        return itemSector;
+    }
+}

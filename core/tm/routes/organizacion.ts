@@ -6,8 +6,9 @@ import { toArray } from '../../../utils/utils';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 import { AuthUsers } from '../../../auth/schemas/authUsers';
+import * as CamasController from '../../../modules/rup/internacion/camas.controller';
 
-import { validarOrganizacionSisa, obtenerOfertaPrestacional } from '../controller/organizacion';
+import { validarOrganizacionSisa, obtenerOfertaPrestacional, cambiarMapaSectores } from '../controller/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
@@ -243,5 +244,70 @@ router.delete('/organizaciones/:id', Auth.authenticate(), async (req, res, next)
     }
 });
 
+/****************
+*** SECTORES  ***
+*****************/
+router.get('/organizaciones/:id/sectores', async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const org: any = await Organizacion.findById(id, { nombre: 1, mapaSectores: 1 });
+        return res.json({ nombre: org.nombre, mapaSectores: org.mapaSectores});
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.patch('/organizaciones/:id/sectores/:idSector?', async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const idSector = req.params.idSector;
+        const sector = req.body.sector;
+        const unidadOrganizativa = req.body.unidadOrganizativa;
+        const org: any = await Organizacion.findById(id, { mapaSectores: 1, unidadesOrganizativas: 1 });
+
+        if (idSector) {
+            org.mapaSectores = await cambiarMapaSectores(org.mapaSectores, sector);
+        } else {
+            org.mapaSectores.push(sector);
+        }
+
+        // Si no existe la UO, la inserto en la lista de UO de la organizacion
+        if (unidadOrganizativa) {
+            if (!org.unidadesOrganizativas.some(uo => uo.conceptId === unidadOrganizativa.conceptId)) {
+                org.unidadesOrganizativas.push(unidadOrganizativa);
+            }
+        }
+
+        await Organizacion.findByIdAndUpdate(id, org);
+
+        // Si se edita un sector ya creado, llama al controlador de camas para que revise los sectores de las mismas
+        if (req.body.edit) {
+            await CamasController.sectorChange(id, sector);
+        }
+
+        return res.json(org.mapaSectores);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.delete('/organizaciones/:id/sectores/:idSector', async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const idSector = req.params.idSector;
+
+        const canDelete = await CamasController.sectorDelete(id, idSector);
+        if (canDelete) {
+            const org: any = await Organizacion.findById(id, { mapaSectores: 1 });
+            org.mapaSectores = await cambiarMapaSectores(org.mapaSectores, { _id: idSector}, true);
+            await Organizacion.findByIdAndUpdate(id, org);
+            return res.json(idSector);
+        } else {
+            return res.json({});
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
 
 export = router;

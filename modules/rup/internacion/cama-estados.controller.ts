@@ -9,6 +9,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
     const fechaSeleccionada = moment(fecha).toDate();
     const firstMatch = {};
     const secondMatch = {};
+    const thirdMatch = {};
     if (filtros.cama) {
         firstMatch['idCama'] = mongoose.Types.ObjectId(filtros.cama);
     }
@@ -26,6 +27,10 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
 
     if (filtros.estado) {
         secondMatch['estado'] = filtros.estado;
+    }
+
+    if (filtros.sector) {
+        thirdMatch['sectores._id'] = mongoose.Types.ObjectId(filtros.sector);
     }
 
     const aggregate = [
@@ -156,6 +161,9 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             $replaceRoot: {
                 newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
             }
+        },
+        {
+            $match: thirdMatch
         },
         {
             $project: { cama: 0, __v: 0 }
