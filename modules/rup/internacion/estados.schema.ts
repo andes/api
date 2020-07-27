@@ -29,7 +29,8 @@ const EstadoSchema = new Schema({
             label: String,
             tipo: String,
             parametros: {
-                concepto: { type: SnomedConcept, require: false }
+                concepto: { type: SnomedConcept, require: false },
+                unidadOrganizativa: { type: [String], require: false }
             }
         }]
     }],
