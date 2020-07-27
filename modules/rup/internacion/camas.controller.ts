@@ -72,6 +72,7 @@ export interface ICama {
         fechaNacimiento?: Date;
     };
     extras: any;
+    nota: String;
 }
 
 
@@ -261,6 +262,7 @@ export async function store(data: Partial<ICama>, req: Request) {
         esCensable: data.esCensable,
         esMovimiento: data.esMovimiento,
         equipamiento: data.equipamiento,
+        nota: data.nota,
     };
 
     const [camaGuardada] = await Promise.all([

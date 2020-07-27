@@ -52,6 +52,7 @@ const CamaEstadosSchema = new Schema({
             tipo_egreso: { type: String, required: false },
             idInternacion: { type: SchemaTypes.ObjectId, required: false }, // idInternacion al egresar
         },
+        nota: { type: String, required: false },
         createdAt: { type: Date, required: false },
         createdBy: { type: SchemaTypes.Mixed, required: false },
         updatedAt: { type: Date, required: false },
