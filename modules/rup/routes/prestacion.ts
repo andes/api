@@ -14,7 +14,8 @@ import { dashboardSolicitudes } from '../controllers/estadisticas';
 import async = require('async');
 import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
-
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
+import { getTurno } from '../../turnos/controller/turnosController';
 
 const router = express.Router();
 
@@ -201,11 +202,10 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.organizacion) {
-            const organizacionesDestino = Array.isArray(req.query.organizacion) ? req.query.organizacion : [req.query.organizacion];
             if (req.query.referidas) {
                 match.$and.push({
                     $or: [
-                        { 'solicitud.organizacion.id': { $in: organizacionesDestino.map(id => Types.ObjectId(id)) } },
+                        { 'solicitud.organizacion.id': Types.ObjectId(req.query.organizacion) },
                         {
                             'solicitud.historial': {
                                 $elemMatch: {
@@ -220,7 +220,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                 });
 
             } else {
-                match.$and.push({ 'solicitud.organizacion.id': { $in: organizacionesDestino.map(id => Types.ObjectId(id)) } });
+                match.$and.push({ 'solicitud.organizacion.id': Types.ObjectId(req.query.organizacion) });
             }
         }
 
@@ -551,6 +551,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     data.solicitud.registros[0].valor.solicitudPrestacion.prioridad = req.body.prioridad;
                     data.solicitud.registros[0].markModified('valor');
                 }
+
                 break;
             case 'romperValidacion':
                 if (data.estados[data.estados.length - 1].tipo !== 'validada') {
@@ -609,6 +610,13 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         data.save(async (error, prestacion: any) => {
             if (error) {
                 return next(error);
+            }
+
+            if (data.solicitud.turno) {
+                let turnos = parseDate(await getTurno(data.solicitud.turno));
+                prestacion.paciente.obraSocial = turnos.filter(n => n.paciente).find(o => o.paciente.obraSocial).paciente.obraSocial;
+            } else {
+                prestacion.paciente.obraSocial = await getObraSocial(data.paciente);
             }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
