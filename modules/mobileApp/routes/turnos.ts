@@ -223,7 +223,7 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
                 }
                 Auth.audit(agendaObj, req);
                 return agendaObj.save((error) => {
-                    let objetoLog = {
+                    const objetoLog = {
                         accion: 'liberarTurno',
                         ruta: req.url,
                         method: req.method,
@@ -282,7 +282,7 @@ router.post('/turnos/confirmar', (req: any, res, next) => {
 
                     Auth.audit(agendaObj, req);
                     return agendaObj.save((error) => {
-                        let objetoLog = {
+                        const objetoLog = {
                             accion: 'confirmar',
                             ruta: req.url,
                             method: req.method,
@@ -344,7 +344,7 @@ router.post('/turnos/asistencia', (req: any, res, next) => {
 
                     Auth.audit(agendaObj, req);
                     return agendaObj.save((error) => {
-                        let objetoLog = {
+                        const objetoLog = {
                             accion: 'asistencia',
                             ruta: req.url,
                             method: req.method,

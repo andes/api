@@ -293,7 +293,7 @@ router.post('/agenda', async (req, res, next) => {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
         if (!mensajesSolapamiento) {
             let dataSaved = await data.save();
-            let objetoLog = {
+            const objetoLog = {
                 accion: 'Crear Agenda',
                 ruta: req.url,
                 method: req.method,
@@ -304,7 +304,7 @@ router.post('/agenda', async (req, res, next) => {
             res.json(dataSaved);
         } else {
             // puede ser un mensaje de solapamiento o una excepción (Error)
-            let objetoLog = {
+            const objetoLog = {
                 accion: 'Crear Agenda',
                 ruta: req.url,
                 method: req.method,
@@ -315,7 +315,7 @@ router.post('/agenda', async (req, res, next) => {
             return next(mensajesSolapamiento);
         }
     } catch (error) {
-        let objetoLog = {
+        const objetoLog = {
             accion: 'Crear Agenda',
             ruta: req.url,
             method: req.method,
@@ -402,7 +402,7 @@ router.post('/agenda/clonar', (req, res, next) => {
                         agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
                             // Ver si es necesario especificar que fue una agenda clonada
                             EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
-                            let objetoLog = {
+                            const objetoLog = {
                                 accion: 'Clonar Agenda',
                                 ruta: req.url,
                                 method: req.method,
@@ -429,7 +429,7 @@ router.put('/agenda/:id', async (req, res, next) => {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
         if (!mensajesSolapamiento) {
             let data = await agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            let objetoLog = {
+            const objetoLog = {
                 accion: 'Editar Agenda en estado Planificación',
                 ruta: req.url,
                 method: req.method,
@@ -443,7 +443,7 @@ router.put('/agenda/:id', async (req, res, next) => {
 
         } else {
             // puede ser un mensaje de solapamiento o una excepción (Error)
-            let objetoLog = {
+            const objetoLog = {
                 accion: 'Crear Agenda',
                 ruta: req.url,
                 method: req.method,
@@ -455,7 +455,7 @@ router.put('/agenda/:id', async (req, res, next) => {
         }
 
     } catch (error) {
-        let objetoLog = {
+        const objetoLog = {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
             method: req.method,
@@ -482,7 +482,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
                             Auth.audit(data[0], req);
                             data[0].save((error) => {
-                                let objetoLog = {
+                                const objetoLog = {
                                     accion: req.body.op,
                                     ruta: req.url,
                                     method: req.method,
@@ -507,7 +507,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             agendaCtrl.codificarTurno(req, data2, t[0]).then(() => {
                                 Auth.audit(data2[0], req);
                                 data2[0].save((error) => {
-                                    let objetoLog = {
+                                    const objetoLog = {
                                         accion: req.body.op,
                                         ruta: req.url,
                                         method: req.method,
@@ -562,7 +562,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
                         if (turno.paciente && turno.paciente.id) {
-                            let objetoLog = {
+                            const objetoLog = {
                                 paciente: turno.paciente,
                                 turno,
                                 idTurno: agendaCtrl.getBloque(data, turno)._id,
@@ -580,7 +580,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         if (agendaCtrl.getBloque(data, turno)) {
-                            let objetoLog = {
+                            const objetoLog = {
                                 paciente: (turno.paciente ? turno.paciente : null),
                                 turno,
                                 idTurno: agendaCtrl.getBloque(data, turno)._id,
@@ -589,7 +589,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             agendaLog.info('suspenderTurno', objetoLog, req);
                         } else {
                             // Caso sobreturno
-                            let objetoLog = {
+                            const objetoLog = {
                                 paciente: (turno.paciente ? turno.paciente : null),
                                 turno,
                                 idTurno: -1,
@@ -698,13 +698,13 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                 if (event.data) {
                     EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
                 }
-                let objetoLog = {
+                const objetoLog = {
                     accion: req.body.op,
                     ruta: req.url,
                     method: req.method,
                     data,
                     err: error || false
-                }
+                };
                 agendaLog.info('update', objetoLog, req);
                 if (error) {
                     return next(error);

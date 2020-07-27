@@ -723,7 +723,7 @@ export async function actualizarTiposDeTurno() {
 
         Auth.audit(agenda, (userScheduler as any));
         return saveAgenda(agenda).then(() => {
-            let objetoLog = {
+            const objetoLog = {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
@@ -940,7 +940,7 @@ export async function turnosDisponibles(prestacion, organizacion) {
 async function actualizarAux(agenda: any) {
     Auth.audit(agenda, (userScheduler as any));
     await saveAgenda(agenda);
-    let objetoLog = {
+    const objetoLog = {
         idAgenda: agenda._id,
         organizacion: agenda.organizacion,
         horaInicio: agenda.horaInicio,
@@ -979,7 +979,7 @@ export function actualizarTurnosDelDia() {
 
         Auth.audit(agenda, (userScheduler as any));
         return saveAgenda(agenda).then(() => {
-            let objetoLog = {
+            const objetoLog = {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
