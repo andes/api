@@ -15,6 +15,7 @@ let _schema = new mongoose.Schema({
     FechaAgenda: String,
     HoraAgenda: String,
     estadoAgenda: String,
+    tipoAgenda: String,
     numeroBloque: Number,
     turnosProgramados: Number,
     turnosProfesional: Number,

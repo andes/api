@@ -271,6 +271,169 @@ export async function pecasExport(start, end) {
             }
         },
         {
+            $lookup: {
+                from: 'paciente',
+                localField: '_bloques.turnos.paciente.id',
+                foreignField: '_id',
+                as: 'paciente'
+            }
+        },
+        {
+            $unwind: {
+                path: '$paciente', preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $addFields: {
+                localidad_paciente:
+                {
+                    $cond: {
+                        if: {
+                            $ne: [
+                                {
+                                    $in: [
+                                        { $type: '$paciente.direccion' },
+                                        ['missing', 'null', 'undefined']
+                                    ]
+                                },
+                                true]
+                        },
+                        then: {
+                            $cond: {
+                                if: {
+                                    $ne: [
+                                        {
+                                            $in: [
+                                                { $type: '$paciente.direccion.ubicacion.localidad' },
+                                                ['missing', 'null', 'undefined']]
+                                        }, true]
+                                },
+                                then: '$paciente.direccion.ubicacion.localidad.nombre',
+                                else: null
+                            }
+                        },
+                        else: null
+                    }
+                },
+                provincia_paciente: {
+                    $cond: {
+                        if: {
+                            $ne: [
+                                {
+                                    $in: [
+                                        { $type: '$paciente.direccion' },
+                                        ['missing', 'null', 'undefined']
+                                    ]
+                                },
+                                true]
+                        },
+                        then: {
+                            $cond: {
+                                if: {
+                                    $ne: [
+                                        {
+                                            $in: [
+                                                { $type: '$paciente.direccion.ubicacion.provincia' },
+                                                ['missing', 'null', 'undefined']]
+                                        }, true]
+                                },
+                                then: '$paciente.direccion.ubicacion.provincia.nombre',
+                                else: null
+                            }
+                        },
+                        else: null
+                    }
+                },
+                barrio_paciente: {
+                    $cond: {
+                        if: {
+                            $ne: [
+                                {
+                                    $in: [
+                                        { $type: '$paciente.direccion' },
+                                        ['missing', 'null', 'undefined']
+                                    ]
+                                },
+                                true]
+                        },
+                        then: {
+                            $cond: {
+                                if: {
+                                    $ne: [
+                                        {
+                                            $in: [
+                                                { $type: '$paciente.direccion.ubicacion.barrio' },
+                                                ['missing', 'null', 'undefined']]
+                                        }, true]
+                                },
+                                then: '$paciente.direccion.ubicacion.barrio.nombre',
+                                else: null
+                            }
+                        },
+                        else: null
+                    }
+                },
+                calle_paciente: {
+                    $cond: {
+                        if: {
+                            $ne: [
+                                {
+                                    $in: [
+                                        { $type: '$paciente.direccion' },
+                                        ['missing', 'null', 'undefined']
+                                    ]
+                                },
+                                true]
+                        },
+                        then: {
+                            $cond: {
+                                if: {
+                                    $ne: [
+                                        {
+                                            $in: [
+                                                { $type: '$paciente.direccion.valor' },
+                                                ['missing', 'null', 'undefined']]
+                                        }, true]
+                                },
+                                then: '$paciente.direccion.valor',
+                                else: null
+                            }
+                        },
+                        else: null
+                    }
+                },
+                geoReferencia_direccion: {
+                    $cond: {
+                        if: {
+                            $ne: [
+                                {
+                                    $in: [
+                                        { $type: '$paciente.direccion' },
+                                        ['missing', 'null', 'undefined']
+                                    ]
+                                },
+                                true]
+                        },
+                        then: {
+                            $cond: {
+                                if: {
+                                    $ne: [
+                                        {
+                                            $in: [
+                                                { $type: '$paciente.direccion.geoReferencia' },
+                                                ['missing', 'null', 'undefined']]
+                                        }, true]
+                                },
+                                then: '$paciente.direccion.geoReferencia',
+                                else: null
+                            }
+                        },
+                        else: null
+                    }
+                }
+            }
+        },
+        {
             $project: {
                 _id: 0,
                 idEfector: '$organizacion._id',
@@ -328,6 +491,20 @@ export async function pecasExport(start, end) {
                     }
                 },
                 estadoAgenda: '$estado',
+                tipoAgenda: {
+                    $cond: {
+                        if: { $eq: ['$dinamica', true] },
+                        then: 'DINAMICA',
+                        else:
+                        {
+                            $cond: {
+                                if: { $eq: ['$nominalizada', true] },
+                                then: 'PROGRAMADA',
+                                else: 'NO NOMINALIZADA'
+                            }
+                        }
+                    }
+                },
                 numeroBloque: '$bloqueIndex',
                 turnosProgramados: '$_bloques.accesoDirectoProgramado',
                 turnosProfesional: '$_bloques.reservadoProfesional',
@@ -764,22 +941,94 @@ export async function pecasExport(start, end) {
                     }
                 },
                 IdBarrio: null,
-                Barrio: null,
+                Barrio:
+                {
+                    $cond: {
+                        if: {
+                            $or: [
+                                { $eq: [{ $type: '$barrio_paciente' }, 'null'] },
+                                { $eq: [{ $size: '$barrio_paciente' }, 0] }
+                            ]
+                        },
+                        then: null,
+                        else: { $arrayElemAt: ['$barrio_paciente', 0] }
+                    }
+                },
                 IdLocalidad: null,
-                Localidad: null,
+                Localidad:
+                {
+                    $cond: {
+                        if: {
+                            $or: [
+                                { $eq: [{ $type: '$localidad_paciente' }, 'null'] },
+                                { $eq: [{ $size: '$localidad_paciente' }, 0] }
+                            ]
+                        },
+                        then: null,
+                        else: { $arrayElemAt: ['$localidad_paciente', 0] }
+                    }
+                },
                 IdDpto: null,
                 Departamento: null,
                 IdPcia: null,
-                Provincia: null,
+                Provincia:
+                {
+                    $cond: {
+                        if: {
+                            $or: [
+                                { $eq: [{ $type: '$provincia_paciente' }, 'null'] },
+                                { $eq: [{ $size: '$provincia_paciente' }, 0] }
+                            ]
+                        },
+                        then: null,
+                        else: { $arrayElemAt: ['$provincia_paciente', 0] }
+                    }
+                },
                 IdNacionalidad: null,
                 Nacionalidad: null,
-                Calle: null,
+                Calle:
+                {
+                    $cond: {
+                        if: {
+                            $or: [
+                                { $eq: [{ $type: '$calle_paciente' }, 'null'] },
+                                { $eq: [{ $size: '$calle_paciente' }, 0] }
+                            ]
+                        },
+                        then: null,
+                        else: { $arrayElemAt: ['$calle_paciente', 0] }
+                    }
+                },
                 Altura: null,
                 Piso: null,
                 Depto: null,
                 Manzana: null,
-                Longitud: null,
-                Latitud: null,
+                Longitud:
+                {
+                    $cond: {
+                        if: {
+                            $or: [
+                                { $eq: [{ $type: '$geoReferencia_direccion' }, 'null'] },
+                                { $eq: [{ $size: '$geoReferencia_direccion' }, 0] }
+                            ]
+                        },
+                        then: null,
+                        else: { $arrayElemAt: [{ $arrayElemAt: ['$geoReferencia_direccion', 0] }, 1] }
+                    }
+                },
+                Latitud:
+                {
+                    $cond: {
+                        if: {
+                            $or: [
+                                { $eq: [{ $type: '$geoReferencia_direccion' }, 'null'] },
+                                { $eq: [{ $size: '$geoReferencia_direccion' }, 0] }
+                            ]
+                        },
+                        then: null,
+                        else: { $arrayElemAt: [{ $arrayElemAt: ['$geoReferencia_direccion', 0] }, 0] }
+                    }
+                },
                 Peso: null,
                 Talla: null,
                 TAS: null,
@@ -1377,6 +1626,20 @@ export async function exportDinamicasSinTurnos(start, end) {
                     $dateToString: {
                         format: '%H:%M',
                         date: '$horaInicio'
+                    }
+                },
+                tipoAgenda: {
+                    $cond: {
+                        if: { $eq: ['$dinamica', true] },
+                        then: 'DINAMICA',
+                        else:
+                        {
+                            $cond: {
+                                if: { $eq: ['$nominalizada', true] },
+                                then: 'PROGRAMADA',
+                                else: 'NO NOMINALIZADA'
+                            }
+                        }
                     }
                 },
                 estadoAgenda: '$estado',
