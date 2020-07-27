@@ -9,7 +9,7 @@ import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
-import { turnosLog, agendaLog } from '../../../utils/citas.log';
+import { turnosLog, agendaLog } from '../../turnos/citasLog';
 // let async = require('async');
 
 const router = express.Router();

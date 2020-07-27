@@ -13,7 +13,7 @@ import { EventCore } from '@andes/event-bus';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 import * as controller from '../../../core/mpi/controller/paciente';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
-import { turnosLog } from '../../../utils/citas.log';
+import { turnosLog } from '../citasLog';
 
 
 const router = express.Router();

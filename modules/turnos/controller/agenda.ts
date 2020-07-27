@@ -15,7 +15,7 @@ import { EventCore } from '@andes/event-bus';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 import * as codificacionModel from '../../rup/schemas/codificacion';
 import { Types } from 'mongoose';
-import { agendaLog } from '../../../utils/citas.log';
+import { agendaLog } from '../citasLog';
 
 
 // Turno

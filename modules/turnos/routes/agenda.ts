@@ -10,11 +10,10 @@ import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { getResumenDiarioMensual, getPlanillaC1 } from '../controller/reportesDiariosController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
-import { agendaLog } from '../../../utils/citas.log';
+import { agendaLog } from '../citasLog';
 
 import * as AgendasEstadisticas from '../controller/estadisticas';
 import { EventCore } from '@andes/event-bus';
-import { from } from 'core-js/fn/array';
 
 const router = express.Router();
 
