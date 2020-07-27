@@ -3,6 +3,9 @@ import { ObraSocial } from '../schemas/obraSocial';
 
 // obtiene las versiones de todos los padrones cargados
 export async function obtenerVersiones() {
+    if (!checkConnection()) {
+        return [];
+    }
     let versiones = await Puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
     for (let i = 0; i < versiones.length; i++) {
         versiones[i] = { version: versiones[i] };
@@ -40,4 +43,9 @@ function compare(a, b) {
         return 1;
     }
     return 0;
+}
+
+// Retorna true si hay conexion con DB De padrones
+function checkConnection() {
+    return Puco.db.readyState > 0;
 }
