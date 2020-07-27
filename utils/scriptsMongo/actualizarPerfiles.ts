@@ -1,9 +1,10 @@
 import { AuthUsers } from '../../auth/schemas/authUsers';
 import { Perfiles } from '../../modules/gestor-usuarios/perfil.schema';
+import { Organization } from '@andes/fhir';
 const shiroTrie = require('shiro-trie');
 
 export const actualizarPerfiles = async (done) => {
-    let organizaciones: any = await AuthUsers.aggregate([
+    let organizaciones: any = AuthUsers.aggregate([
         {
             $project: {
                 organizaciones: 1,
@@ -13,33 +14,25 @@ export const actualizarPerfiles = async (done) => {
         {
             $unwind: '$organizaciones'
         }
-    ]);
-    for (let x = 0; x < organizaciones.length; x++) {
+    ]).cursor({});
+    const perfiles: any = await Perfiles.find({}, { permisos: 1, nombre: 1 });
+    for await (const user of organizaciones) {
         let usuarioPermisos = shiroTrie.new();
-        usuarioPermisos.add(organizaciones[x].organizaciones.permisos);
-        let perfiles: any = await Perfiles.aggregate([
-            {
-                $project: {
-                    nombre: 1,
-                    id: '$_id',
-                    permisos: 1,
-                    longitud: { $size: '$permisos' }
-                }
-            }
-        ]);
+        usuarioPermisos.add(user.organizaciones.permisos);
         for (let y = 0; y < perfiles.length; y++) {
-            for (let i = 0; i < perfiles[y].longitud; i++) {
+            let longitudPerfil = perfiles[y].permisos.length;
+            for (let i = 0; i < longitudPerfil; i++) {
                 if (usuarioPermisos.check(perfiles[y].permisos[i])) {
-                    if (i === perfiles[y].longitud - 1) {
+                    if (i === longitudPerfil - 1) {
                         let perf: any = new Object();
-                        perf._id = perfiles[y].id;
+                        perf._id = perfiles[y]._id;
                         perf.nombre = perfiles[y].nombre;
                         await AuthUsers.update(
-                            { _id: organizaciones[x].id, 'organizaciones._id': organizaciones[x].organizaciones._id },
+                            { _id: user.id, 'organizaciones._id': user.organizaciones._id },
                             { $addToSet: { 'organizaciones.$.perfiles': perf } });
                     }
                 } else {
-                    i = perfiles[y].longitud; // para que salga
+                    i = longitudPerfil; // para que salga
                 }
             }
         }
