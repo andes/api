@@ -15,7 +15,7 @@ import async = require('async');
 import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
-import { getTurno } from '../../turnos/controller/turnosController';
+import { getTurnoById } from '../../turnos/controller/turnosController';
 
 const router = express.Router();
 
@@ -607,25 +607,15 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             default:
                 return next(500);
         }
+
         Auth.audit(data, req);
         data.save(async (error, prestacion: any) => {
             if (error) {
                 return next(error);
             }
 
-            if (data.solicitud.turno) {
-                let turnos = parseDate(await getTurno(data.solicitud.turno));
-                prestacion.paciente.obraSocial = turnos.filter(n => n.paciente).find(o => o.paciente.obraSocial).paciente.obraSocial;
-            } else {
-                prestacion.paciente.obraSocial = await getObraSocial(data.paciente);
-            }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
-
-                /* Este evento habilita la facturación automática desde RUP */
-                // const origen = 'rup_rf';
-                // EventCore.emitAsync('facturacion:factura:create', (<any>Object).assign({ origen, data }));
-
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
@@ -693,17 +683,27 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-            /*
-            Logger.log(req, 'prestacionPaciente', 'update', {
-                accion: req.body.op,
-                ruta: req.url,
-                method: req.method,
-                data: data,
-                err: err || false
-            });
-            */
         });
     });
 });
 
 export = router;
+
+
+EventCore.on('rup:prestacion:validate', async (prestacion) => {
+    if (!prestacion.paciente.id || prestacion.paciente?.obraSocial?.nombre) {
+        return;
+    }
+    if (prestacion.solicitud.turno) {
+        const { turno } = await getTurnoById(prestacion.solicitud.turno);
+        if (turno) {
+            prestacion.paciente.obraSocial = turno.paciente.obraSocial;
+        }
+    } else {
+        const os = await getObraSocial(prestacion.paciente);
+        prestacion.paciente.obraSocial = os[0];
+    }
+    const user = Auth.getUserFromResource(prestacion);
+    Auth.audit(prestacion, user as any);
+    prestacion.save();
+});
