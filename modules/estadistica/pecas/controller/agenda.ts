@@ -96,6 +96,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
     let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
     let pacienteNombres = turno.Nombres ? turno.Nombres.replace('\'', '\'\'') : null;
     let pacienteObraSocial = turno.ObraSocial ? turno.ObraSocial.replace('\'', '\'\'') : null;
+    let calle = turno.Calle ? turno.Calle.replace('\'', '\'\'') : null;
     let turnosDelDia = turno.turnosDelDia ? turno.turnosDelDia : null;
     let turnosLlaves = turno.turnosLlaves ? turno.turnosLlaves : null;
     let pacienteTelefono = turno.Telefono ? turno.Telefono : null;
@@ -129,7 +130,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
         '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + pacienteObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + pacienteTelefono +
         '\',' + turno.IdBarrio + ',\'' + turno.Barrio + '\',' + turno.IdLocalidad +
         ',\'' + turno.Localidad + '\',' + turno.IdDpto + ',\'' + turno.Departamento + '\',' + turno.IdPcia + ',\'' + turno.Provincia +
-        '\',' + turno.IdNacionalidad + ',\'' + turno.Nacionalidad + '\',\'' + turno.Calle + '\',\'' + turno.Altura + '\',\'' + turno.Piso +
+        '\',' + turno.IdNacionalidad + ',\'' + turno.Nacionalidad + '\',\'' + calle + '\',\'' + turno.Altura + '\',\'' + turno.Piso +
         '\',\'' + turno.Depto + '\',\'' + turno.Manzana + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
         '\',' + turno.Peso + ',' + turno.Talla + ',\'' + turno.TAS + '\',\'' + turno.TAD + '\',\'' + turno.IMC + '\',\'' + turno.RCVG +
         // DATOS CONSULTA
