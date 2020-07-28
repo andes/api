@@ -1,4 +1,4 @@
-import { Schema, model, SchemaTypes } from 'mongoose';
+import { Schema, model, SchemaTypes, Document } from 'mongoose';
 import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
@@ -6,6 +6,7 @@ import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { tipoPrestacionSchema } from './tipoPrestacion';
+import { IOrganizacion } from '../interfaces/IOrganizacion';
 
 export let MapaSectoresSchema = new Schema({
     tipoSector: SnomedConcept,
@@ -24,7 +25,8 @@ let CodigoSchema = new Schema({
     },
     cuie: String,
     remediar: String,
-    sips: String
+    sips: String,
+    servSalud: String,
 });
 
 const _schema = new Schema({
@@ -62,4 +64,4 @@ const _schema = new Schema({
 _schema.plugin(AuditPlugin);
 
 export const OrganizacionSchema = _schema;
-export const Organizacion = model('organizacion', _schema, 'organizacion');
+export const Organizacion = model<IOrganizacion & Document>('organizacion', _schema, 'organizacion');

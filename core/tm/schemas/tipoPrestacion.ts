@@ -6,6 +6,7 @@ export interface ITipoPrestacion extends Document {
     term: String;
     fsn: String;
     semanticTag: 'procedimiento' | 'solicitud' | 'hallazgo' | 'trastorno' | 'antecedenteFamiliar' | 'régimen/tratamiento';
+    codigoServSalud?: String;
 }
 
 
@@ -22,6 +23,9 @@ export let tipoPrestacionSchema = new Schema({
         type: Boolean,
         required: false,
         default: true
+    },
+    codigoServSalud: {
+        type: String,
     }
 });
 
