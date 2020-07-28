@@ -149,7 +149,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         let movimientoAnterior;
         for (const movimiento of allMovimientos) {
             if (movimientoAnterior && movimientoAnterior.unidadOrganizativa.conceptId !== movimiento.unidadOrganizativa.conceptId) {
-                if (movimientoAnterior.unidadOrganizativa.conceptId !== unidadOrganizativa) {
+                if (movimientoAnterior.unidadOrganizativa.conceptId !== unidadOrganizativa && movimiento.unidadOrganizativa.conceptId === unidadOrganizativa) {
                     pasesDe++;
                     checkPaciente(movimiento);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
@@ -157,12 +157,14 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         diasEstada: timestampEnd.diff(moment(movimiento.fecha), 'days') + 1,
                     });
                 } else {
-                    pasesA++;
-                    checkPaciente(movimientoAnterior);
-                    tablaPacientes[movimiento.paciente.id].actividad.push({
-                        paseA: movimiento.unidadOrganizativa.term,
-                        diasEstada: timestampEnd.diff(moment(movimientoAnterior.fecha), 'days') + 1,
-                    });
+                    if (movimientoAnterior.unidadOrganizativa.conceptId === unidadOrganizativa && movimiento.unidadOrganizativa.conceptId !== unidadOrganizativa) {
+                        pasesA++;
+                        checkPaciente(movimientoAnterior);
+                        tablaPacientes[movimiento.paciente.id].actividad.push({
+                            paseA: movimiento.unidadOrganizativa.term,
+                            diasEstada: timestampEnd.diff(moment(movimientoAnterior.fecha), 'days') + 1,
+                        });
+                    }
                 }
             }
 
