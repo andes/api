@@ -98,36 +98,11 @@ export default [
         title: 'Módulo MPI',
         comment: 'Ingresar y editar datos de pacientes',
         child: [
-            { key: 'nuevoPaciente', title: 'Crear paciente', type: 'boolean' },
-            { key: 'editarPaciente', title: 'Editar paciente', type: 'boolean' },
-            {
-                key: 'bloque',
-                title: 'Bloques de pacientes similares',
-                child: [
-                    {
-                        key: 'get',
-                        title: 'Ver pacientes similares',
-                        type: 'boolean'
-                    }
-                ]
-            },
-            {
-                key: 'matching',
-                title: 'Matching de pacientes',
-                child: [
-                    { key: 'get', title: 'Obtener porcentajes de matcheo (GET)', type: 'boolean' },
-                    { key: 'patch', title: 'Modificar paciente (PATCH)', type: 'boolean' },
-                    { key: 'put', title: 'Modificar paciente (PUT)', type: 'boolean' }
-                ]
-            },
             {
                 key: 'paciente',
                 title: 'ABM de pacientes',
                 child: [
-                    { key: 'dashboard', title: 'Dashboard', type: 'boolean' },
                     { key: 'getbyId', title: 'Detalle de un paciente', type: 'boolean' },
-                    { key: 'putMpi', title: 'Actualización de un paciente MPI', type: 'boolean' },
-                    { key: 'deleteMpi', title: 'Eliminar un paciente MPI', type: 'boolean' },
                     { key: 'postAndes', title: 'Creación de un paciente', type: 'boolean' },
                     { key: 'putAndes', title: 'Actualización de un paciente', type: 'boolean' },
                     { key: 'deleteAndes', title: 'Eliminar un paciente', type: 'boolean' },
@@ -379,7 +354,6 @@ export default [
                 title: 'Edición de Pacientes Validados',
                 type: 'boolean'
             }
-
         ]
     },
     {
