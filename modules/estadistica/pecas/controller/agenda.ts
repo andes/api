@@ -96,7 +96,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
     let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
     let pacienteNombres = turno.Nombres ? turno.Nombres.replace('\'', '\'\'') : null;
     let pacienteObraSocial = turno.ObraSocial ? turno.ObraSocial.replace('\'', '\'\'') : null;
-    let calle = turno.Calle ? turno.Calle.replace('\'', '\'\'') : null;
+    let calle = turno.Calle ? turno.Calle.replace(/'/g, '\'\'') : null;
     let turnosDelDia = turno.turnosDelDia ? turno.turnosDelDia : null;
     let turnosLlaves = turno.turnosLlaves ? turno.turnosLlaves : null;
     let pacienteTelefono = turno.Telefono ? turno.Telefono : null;
