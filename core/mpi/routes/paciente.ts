@@ -268,10 +268,11 @@ router.post('/pacientes', async (req, res, next) => {
     try {
         let pacienteNuevo = req.body.paciente;
         let ignorarSugerencias = req.body.ignoreCheck;
+        let incluirTemporales = req.body.paciente.estado !== 'validado';
         pacienteNuevo.activo = true;
         andesLog(req, logKeys.mpiInsert.key, null, 'postPacientes', req.body, ignorarSugerencias);
         if (pacienteNuevo.documento) {
-            const resultado = await controller.checkRepetido(pacienteNuevo, req.body.incluirTemporales);
+            const resultado = await controller.checkRepetido(pacienteNuevo, incluirTemporales);
             if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
                 const pacienteObj = await controller.createPaciente(pacienteNuevo, req);
                 return res.json(pacienteObj);
