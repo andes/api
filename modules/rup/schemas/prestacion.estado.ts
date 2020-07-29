@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 // 'motivoRechazo' se reemplaza con 'observaciones'. Dejar temporalmente ambos campos y remover 'motivoRechazo' una vez que la implementación de 'observaciones' se
-export let schema = new mongoose.Schema({
+export const PrestacionEstadoSchema = new mongoose.Schema({
     tipo: {
         type: String,
         enum: ['anulada', 'pendiente', 'ejecucion', 'auditoria', 'aceptada', 'rechazada', 'validada', 'desvinculada', 'modificada', 'asignada'],
@@ -26,4 +26,4 @@ export let schema = new mongoose.Schema({
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(AuditPlugin);
+PrestacionEstadoSchema.plugin(AuditPlugin);
