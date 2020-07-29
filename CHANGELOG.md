@@ -1,3 +1,21 @@
+# [5.6.0](https://github.com/andes/api/compare/v5.5.0...v5.6.0) (2020-07-29)
+
+
+### Bug Fixes
+
+* **calle:** agrega control de caracteres ([#1061](https://github.com/andes/api/issues/1061)) ([f9727da](https://github.com/andes/api/commit/f9727dab9ba7f35cd9fbc6804e4b6932d9c2b0e7))
+* **mapa-camas:** controla la unidad organizativa al calcular pases ([#1045](https://github.com/andes/api/issues/1045)) ([33b6c4a](https://github.com/andes/api/commit/33b6c4aa2d405a7b452ae41af359621fa4c30fdb))
+* **pecas:** corrige todas las apariciones de comillas en el domicilio del paciente ([#1062](https://github.com/andes/api/issues/1062)) ([3638ac7](https://github.com/andes/api/commit/3638ac781182007717941708dbf7618497058beb))
+
+
+### Features
+
+* **citas:** audita agenda al validar prestacion no nominalizada ([#1029](https://github.com/andes/api/issues/1029)) ([f3fc2ba](https://github.com/andes/api/commit/f3fc2ba75650712610bda635e6226872be7a051a))
+* **mapa-camas:** registros filtros por unidad organizativa ([#1054](https://github.com/andes/api/issues/1054)) ([7786213](https://github.com/andes/api/commit/778621310d1fbb652e5113ab81c4dabe885aaa09))
+* **pecas:** se agregan y completan campos en tabla consolidado ([#914](https://github.com/andes/api/issues/914)) ([becf42e](https://github.com/andes/api/commit/becf42e0ef2959db8bb509c7d453a5f15292b839))
+* **ServSalud:** agregado codigo de ServSalud para la organizacion y para el tipo de prestacion. ([#1046](https://github.com/andes/api/issues/1046)) ([05b260b](https://github.com/andes/api/commit/05b260b89660410c20313f88702344476a3f57d4))
+* **TOP:** match de organizaciones de solicitud por array ([#1039](https://github.com/andes/api/issues/1039)) ([c0704ad](https://github.com/andes/api/commit/c0704ad5ffd405fc58abd7948d0102528c6081a7))
+
 # [5.5.0](https://github.com/andes/api/compare/v5.4.0...v5.5.0) (2020-07-22)
 
 
