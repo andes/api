@@ -4,16 +4,17 @@ import { IContacto } from './IContacto';
 import { ISnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { ISectores } from './ISectores';
 import { ITipoPrestacion } from '../schemas/tipoPrestacion';
+import { Types } from 'mongoose';
 
 export interface IOrganizacion {
-    id: string;
+    id: string | Types.ObjectId;
     codigo: {
         sisa: String,
         cuie: String,
         remediar: String,
         servSalud: String,
     };
-    nombre: String;
+    nombre: string;
     tipoEstablecimiento: ITipoEstablecimiento;
     // direccion
     direccion: IDireccion;
@@ -31,7 +32,7 @@ export interface IOrganizacion {
     fechaBaja: Date;
     servicios: [ISnomedConcept];
     mapaSectores: ISectores[];
-    unidadesOrganizativas: [ISnomedConcept];
+    unidadesOrganizativas: ISnomedConcept[];
     /**
      * "prestaciones" traidas de sisa. Se muestran en la app mobile
      * @type {[{ idSisa: number, nombre: string }]}
@@ -45,3 +46,7 @@ export interface IOrganizacion {
      */
     showMapa?: boolean;
 }
+
+export type OrganizacionRef = Pick<IOrganizacion, 'id' | 'nombre'>;
+
+export type UnidadOrganizativa = ISnomedConcept;
