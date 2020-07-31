@@ -7,8 +7,7 @@ import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 import { AuthUsers } from '../../../auth/schemas/authUsers';
 import * as CamasController from '../../../modules/rup/internacion/camas.controller';
-
-import { validarOrganizacionSisa, obtenerOfertaPrestacional, cambiarMapaSectores } from '../controller/organizacion';
+import { validarOrganizacionSisa, obtenerOfertaPrestacional, addSector, changeSector, deleteSector } from '../controller/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
@@ -250,31 +249,34 @@ router.delete('/organizaciones/:id', Auth.authenticate(), async (req, res, next)
 router.get('/organizaciones/:id/sectores', async (req, res, next) => {
     try {
         const id = req.params.id;
-        const org: any = await Organizacion.findById(id, { nombre: 1, mapaSectores: 1 });
-        return res.json({ nombre: org.nombre, mapaSectores: org.mapaSectores});
+        const org: any = await Organizacion.findById(id, { mapaSectores: 1 });
+        return res.json(org.mapaSectores || {});
     } catch (error) {
         return next(error);
     }
 });
 
-router.patch('/organizaciones/:id/sectores/:idSector?', async (req, res, next) => {
+router.post('/organizaciones/:id/sectores', async (req, res, next) => {
     try {
         const id = req.params.id;
-        const idSector = req.params.idSector;
         const sector = req.body.sector;
-        const unidadOrganizativa = req.body.unidadOrganizativa;
+        const padre = req.body.padre;
         const org: any = await Organizacion.findById(id, { mapaSectores: 1, unidadesOrganizativas: 1 });
 
-        if (idSector) {
-            org.mapaSectores = await cambiarMapaSectores(org.mapaSectores, sector);
+        if (padre) {
+            let newMap = [];
+            for (const itemSector of org.mapaSectores) {
+                newMap.push(addSector(itemSector, sector, padre));
+            }
+            org.mapaSectores = newMap;
         } else {
             org.mapaSectores.push(sector);
         }
 
         // Si no existe la UO, la inserto en la lista de UO de la organizacion
-        if (unidadOrganizativa) {
-            if (!org.unidadesOrganizativas.some(uo => uo.conceptId === unidadOrganizativa.conceptId)) {
-                org.unidadesOrganizativas.push(unidadOrganizativa);
+        if (sector.unidadConcept) {
+            if (!org.unidadesOrganizativas.some(uo => uo.conceptId === sector.unidadConcept.conceptId)) {
+                org.unidadesOrganizativas.push(sector.unidadConcept);
             }
         }
 
@@ -291,15 +293,52 @@ router.patch('/organizaciones/:id/sectores/:idSector?', async (req, res, next) =
     }
 });
 
+router.patch('/organizaciones/:id/sectores/:idSector', async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const idSector = req.params.idSector;
+        const sector = req.body.sector;
+        const org: any = await Organizacion.findById(id, { mapaSectores: 1, unidadesOrganizativas: 1 });
+
+        let newMap = [];
+        for (const itemSector of org.mapaSectores) {
+            newMap.push(changeSector(itemSector, sector));
+        }
+        org.mapaSectores = newMap;
+
+        // Si no existe la UO, la inserto en la lista de UO de la organizacion
+        if (sector.unidadConcept) {
+            if (!org.unidadesOrganizativas.some(uo => uo.conceptId === sector.unidadConcept.conceptId)) {
+                org.unidadesOrganizativas.push(sector.unidadConcept);
+            }
+        }
+
+        await Organizacion.findByIdAndUpdate(id, org);
+
+        await CamasController.sectorChange(id, sector);
+
+        return res.json(org.mapaSectores);
+    } catch (error) {
+        return next(error);
+    }
+});
+
 router.delete('/organizaciones/:id/sectores/:idSector', async (req, res, next) => {
     try {
         const id = req.params.id;
         const idSector = req.params.idSector;
 
-        const canDelete = await CamasController.sectorDelete(id, idSector);
+        const canDelete = await CamasController.checkSectorDelete(id, idSector);
         if (canDelete) {
             const org: any = await Organizacion.findById(id, { mapaSectores: 1 });
-            org.mapaSectores = await cambiarMapaSectores(org.mapaSectores, { _id: idSector}, true);
+            let newMap = [];
+            for (const itemSector of org.mapaSectores) {
+                const item = deleteSector(itemSector, { _id: idSector});
+                if (item) {
+                    newMap.push(item);
+                }
+            }
+            org.mapaSectores = newMap;
             await Organizacion.findByIdAndUpdate(id, org);
             return res.json(idSector);
         } else {

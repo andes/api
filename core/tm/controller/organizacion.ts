@@ -47,41 +47,35 @@ export async function obtenerOfertaPrestacional(orgCodSisa: Number) {
     return await handleHttpRequest(options);
 }
 
-export async function cambiarMapaSectores(mapaSectores, sector, eliminar = false) {
-    let newMap = [];
-    if (!eliminar) {
-        for (const itemSector of mapaSectores) {
-            const newItem = await changeItem(itemSector, sector);
-            newMap.push(newItem);
-        }
-    } else {
-        for (const itemSector of mapaSectores) {
-            const newItem = await deleteItem(itemSector, sector);
-            if (newItem) {
-                newMap.push(newItem);
-            }
-        }
-    }
-    return newMap;
-}
-
-function changeItem(itemSector, sector) {
-    if (String(itemSector._id) === sector._id) {
-        return sector;
+export function addSector(itemSector, sector, padre) {
+    if (String(itemSector._id) === padre) {
+        itemSector.hijos.push(sector);
+        return itemSector;
     } else {
         for (let index = 0; index < itemSector.hijos.length; index++) {
-            itemSector.hijos[index] = changeItem(itemSector.hijos[index], sector);
+            itemSector.hijos[index] = addSector(itemSector.hijos[index], sector, padre);
         }
         return itemSector;
     }
 }
 
-function deleteItem(itemSector, sector) {
+export function changeSector(itemSector, sector) {
+    if (String(itemSector._id) === sector._id) {
+        return sector;
+    } else {
+        for (let index = 0; index < itemSector.hijos.length; index++) {
+            itemSector.hijos[index] = changeSector(itemSector.hijos[index], sector);
+        }
+        return itemSector;
+    }
+}
+
+export function deleteSector(itemSector, sector) {
     if (String(itemSector._id) === sector._id) {
         return null;
     } else {
         for (let index = 0; index < itemSector.hijos.length; index++) {
-            itemSector.hijos[index] = deleteItem(itemSector.hijos[index], sector);
+            itemSector.hijos[index] = deleteSector(itemSector.hijos[index], sector);
             if (!itemSector.hijos[index]) {
                 itemSector.hijos.splice(index, 1);
             }

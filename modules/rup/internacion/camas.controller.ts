@@ -354,6 +354,7 @@ export async function sectorChange(idOrganizacion, sector) {
             $set: {
                 'sectores.$.nombre': sector.nombre,
                 'sectores.$.tipoSector': sector.tipoSector,
+                'sectores.$.unidadConcept': sector.unidadConcept,
             }
         },
         {
@@ -363,7 +364,7 @@ export async function sectorChange(idOrganizacion, sector) {
     );
 }
 
-export async function sectorDelete(idOrganizacion, idSector) {
+export async function checkSectorDelete(idOrganizacion: string, idSector: string) {
     const ambito = 'internacion';
     const capa = 'estadistica';
     const estadoCama = await CamasEstadosController.snapshotEstados({ fecha: moment().toDate(), organizacion: idOrganizacion, ambito, capa }, { sector: idSector });
