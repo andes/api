@@ -5,4 +5,3 @@ docker cp andes.gz andes_dev_mongo_1:/andes.gz
 docker exec andes_dev_mongo_1 mongorestore --gzip --archive=/andes.gz
 docker exec andes_dev_mongo_1 rm andes.gz
 rm andes.gz
-curl -XPUT 'http://localhost:9200/andes' -H "Content-Type: application/json"

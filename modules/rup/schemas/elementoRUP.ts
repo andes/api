@@ -2,7 +2,9 @@ import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-export let schema = new mongoose.Schema({
+export const ElementoRUPSchema = new mongoose.Schema({
+    // Nombre de fantasía
+    nombre: String,
     // Indica si este elemento está activo
     activo: {
         type: Boolean,
@@ -116,23 +118,13 @@ export let schema = new mongoose.Schema({
     // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales"
     frecuentes: [SnomedConcept],
 
-    informe: {
-        type: mongoose.Schema.Types.Mixed
-    },
-
     inactiveAt: {
         type: mongoose.SchemaTypes.Date,
         required: false
     }
 });
 
-// Autopopula todos los hijos
-schema.pre('find', function (next) {
-    this.populate('requeridos.elementoRUP');
-    next();
-});
+ElementoRUPSchema.plugin(AuditPlugin);
 
-schema.plugin(AuditPlugin);
-
-export let elementoRUP = mongoose.model('elementoRUP', schema, 'elementosRUP');
+export const elementoRUP = mongoose.model('elementoRUP', ElementoRUPSchema, 'elementosRUP');
 
