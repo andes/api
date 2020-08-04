@@ -250,7 +250,7 @@ router.get('/organizaciones/:id/sectores', async (req, res, next) => {
     try {
         const id = req.params.id;
         const org: any = await Organizacion.findById(id, { mapaSectores: 1 });
-        return res.json(org.mapaSectores || {});
+        return res.json(org.mapaSectores || []);
     } catch (error) {
         return next(error);
     }
@@ -342,7 +342,7 @@ router.delete('/organizaciones/:id/sectores/:idSector', async (req, res, next) =
             await Organizacion.findByIdAndUpdate(id, org);
             return res.json(idSector);
         } else {
-            return res.json({});
+            return next('No se puede eliminar este sector porque tiene camas activas.');
         }
     } catch (error) {
         return next(error);
