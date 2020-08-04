@@ -4,8 +4,6 @@ import { HTMLComponent } from '../model/html-component.class';
 
 export class CensoHeader extends HTMLComponent {
     template = `
-            <!-- Header -->
-            <header id="pageHeader">
                 <!-- Cabezal logos institucionales -->
                 <section class="contenedor-logos">
                     <span class="contenedor-logo-efector">
@@ -31,8 +29,6 @@ export class CensoHeader extends HTMLComponent {
                         </div>
                     </span>
                 </section>
-            </header>
-            <!-- END Header -->
            `;
 
     constructor(public fechaCenso, public organizacion, public unidadOrganizativa) {

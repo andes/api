@@ -4,8 +4,6 @@ import { HTMLComponent } from '../model/html-component.class';
 
 export class CensoFooter extends HTMLComponent {
     template = `
-    <!-- Footer -->
-    <footer id="pageFooter">
         <!-- Firmas -->
         <span class="contenedor-firmas"></span>
         <hr>
@@ -39,8 +37,6 @@ export class CensoFooter extends HTMLComponent {
                 {{{ numeracionHTML }}}
             </span>
         </span>
-    </footer>
-    <!-- END Footer -->
            `;
 
     constructor(public usuario, public organizacion) {
