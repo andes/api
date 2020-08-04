@@ -108,6 +108,8 @@ export let schema = new mongoose.Schema({
                     message: '{VALUE} is not a valid object'
                 }
             },
+            // Filtros de requeridos
+            sexo: { type: String, required: false }
         }
     ],
     // Elementos RUP más frecuentes para la ejecución.
