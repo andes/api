@@ -1,6 +1,7 @@
 import { HTMLComponent } from '../model/html-component.class';
 import * as moment from 'moment';
 import { loadImage } from '../model/informe.class';
+import * as configPrivate from '../../../config.private';
 
 export class InformeRupHeader extends HTMLComponent {
     template = `
@@ -116,7 +117,7 @@ export class InformeRupHeader extends HTMLComponent {
         // [TODO] metodo getCarpeta en paciente
         const numeroCarpeta = paciente.carpetaEfectores.find(x => String(x.organizacion._id) === organizacionId);
         const consultaValidada = (prestacion.estados[prestacion.estados.length - 1].tipo === 'validada');
-
+        const provincia = configPrivate.provincia || 'neuquen';
         this.data = {
             paciente: {
                 nombre: paciente.nombre,
@@ -137,7 +138,7 @@ export class InformeRupHeader extends HTMLComponent {
             },
             consultaValidada,
             logos: {
-                adicional: loadImage('templates/rup/informes/img/logo-adicional.png'),
+                adicional: loadImage(`templates/rup/informes/img/logo-adicional-${provincia}.png`),
                 andes: loadImage('templates/rup/informes/img/logo-andes-h.png'),
                 organizacion: this.getLogoOrganizacion(organizacion)
             },

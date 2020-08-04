@@ -295,3 +295,5 @@ export const IPS = {
     auth: getEnv('IPS_AUTH', false),
     enabled: getEnv('IPS_ENABLED', false)
 };
+
+export const provincia = getEnv('PROVINCIA', 'neuquen');
