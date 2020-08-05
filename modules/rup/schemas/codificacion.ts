@@ -42,12 +42,6 @@ export const CodificacionSchema = new mongoose.Schema({
             primeraVez: Boolean,
         }]
     },
-    // estadoFacturacion: IEstadoFacturacion,
-    estadoFacturacion: {
-        tipo: String,
-        estado: String,
-        numeroComprobante: String
-    },
 });
 
 CodificacionSchema.index({

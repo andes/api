@@ -614,6 +614,9 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 data.estados.push({ tipo: 'auditoria', fecha: new Date() });
                 data.solicitud.profesional = null;
                 break;
+            case 'estadoFacturacion':
+                data.estadoFacturacion = req.body.estadoFacturacion;
+                break;
             default:
                 return next(500);
         }
