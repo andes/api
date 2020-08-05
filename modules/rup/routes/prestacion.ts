@@ -174,11 +174,11 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         let match: any = { $and: [] };
 
         if (req.query.solicitudDesde) {
-            match.$and.push({ 'solicitud.fecha': { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
+            match.$and.push({ createdAt: { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
         }
 
         if (req.query.solicitudHasta) {
-            match.$and.push({ 'solicitud.fecha': { $lte: (moment(req.query.solicitudHasta).endOf('day').toDate() as any) } });
+            match.$and.push({ createdAt: { $lte: (moment(req.query.solicitudHasta).endOf('day').toDate() as any) } });
         }
 
         if (req.query.pacienteDocumento) {
@@ -200,15 +200,17 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             if (req.query.referidas) {
                 match.$and.push({
                     $or: [
-                        { 'solicitud.organizacion.id':  { $in: organizacionesDestino.map(id => Types.ObjectId(id)) } },
-                        { 'solicitud.historial': {
-                            $elemMatch: {
-                                $and: [
-                                    { accion: 'referencia' },
-                                    { 'createdBy.organizacion._id': req.query.organizacion }
-                                ]
+                        { 'solicitud.organizacion.id': { $in: organizacionesDestino.map(id => Types.ObjectId(id)) } },
+                        {
+                            'solicitud.historial': {
+                                $elemMatch: {
+                                    $and: [
+                                        { accion: 'referencia' },
+                                        { 'createdBy.organizacion._id': req.query.organizacion }
+                                    ]
+                                }
                             }
-                        }}
+                        }
                     ]
                 });
 

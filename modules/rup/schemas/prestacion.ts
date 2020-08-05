@@ -226,7 +226,7 @@ schema.methods.getRegistros = function () {
 // Habilitar plugin de auditoría
 schema.plugin(AuditPlugin);
 schema.index({ 'solicitud.turno': 1 });
-
+schema.index({ createdAt: -1 });
 schema.index({ 'solicitud.fecha': -1 });
 schema.index({ 'paciente.id': 1 });
 schema.index({
