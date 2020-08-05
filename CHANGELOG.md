@@ -1,3 +1,11 @@
+# [5.7.0](https://github.com/andes/api/compare/v5.6.0...v5.7.0) (2020-08-05)
+
+
+### Features
+
+* **pecas:** agrega idprofesional a la tabla de fuera de agenda ([#938](https://github.com/andes/api/issues/938)) ([98d8c7e](https://github.com/andes/api/commit/98d8c7e92255652d6f1763c94aefc43bd5d87540))
+* **rup:** prestacion estadoActual ([#1012](https://github.com/andes/api/issues/1012)) ([8bb11ef](https://github.com/andes/api/commit/8bb11ef4eb29740a56d45c9150da5f03e87c75ee))
+
 # [5.6.0](https://github.com/andes/api/compare/v5.5.0...v5.6.0) (2020-07-29)
 
 
