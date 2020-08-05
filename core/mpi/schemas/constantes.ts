@@ -21,6 +21,7 @@ const constantes = {
     },
     IDENTIFICACION: {
         type: String,
+        required: false,
         enum: ['dni extranjero', 'pasaporte', null]
     }
 };
