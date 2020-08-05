@@ -84,6 +84,21 @@ router.get('/check/:id', (req: any, res, next) => {
 
 
 /**
+ * Devuelve cuenta segun email
+ * @params email {string}
+ */
+
+router.get('/email/:email', async (req: any, res, next) => {
+    try {
+        const resp = await PacienteApp.find({ email: req.params.email });
+        return res.send(resp);
+    } catch (err) {
+        return res.send(err);
+    }
+});
+
+
+/**
  * Reenviar código de activación a un paciente
  *
  * @param {ObjectId} id ID del paciente
