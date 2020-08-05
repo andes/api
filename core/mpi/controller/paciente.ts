@@ -518,7 +518,7 @@ export async function checkRepetido(nuevoPaciente, incluirTemporales = true): Pr
     }
 
     let macheoAlto = (candidatos.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
-    let dniRepetido = candidatos.filter(element =>
+    let dniRepetido = similaresValidados.filter(element =>
         (element.paciente.sexo.toString() === matchingInputData.sexo.toString() && element.paciente.documento.toString() === matchingInputData.documento.toString())
     ).length > 0;
 

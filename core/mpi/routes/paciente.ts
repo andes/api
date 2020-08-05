@@ -272,7 +272,7 @@ router.post('/pacientes', async (req, res, next) => {
         pacienteNuevo.activo = true;
         andesLog(req, logKeys.mpiInsert.key, null, 'postPacientes', req.body, ignorarSugerencias);
         if (pacienteNuevo.documento) {
-            const resultado = await controller.checkRepetido(pacienteNuevo, incluirTemporales);
+            const resultado = await controller.checkRepetido(pacienteNuevo, req.body.incluirTemporales);
             if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
                 const pacienteObj = await controller.createPaciente(pacienteNuevo, req);
                 return res.json(pacienteObj);
