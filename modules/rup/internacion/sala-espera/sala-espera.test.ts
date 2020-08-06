@@ -1,7 +1,7 @@
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import * as mongoose from 'mongoose';
 import { createSalaEspera, ingresarPaciente, egresarPaciente, listarSalaEspera } from './sala-espera.controller';
-import { SalaEspera } from './sala-espera.schema';
+import { SalaEspera, SalaEsperaSnapshot } from './sala-espera.schema';
 import moment = require('moment');
 
 const REQMock: any = {
@@ -47,11 +47,13 @@ describe('Internacion - Sala Espera', () => {
         expect(sala.nombre).toBe('sala');
         expect(sala.createdBy.nombre).toBe('JUAN');
         expect(sala.createdBy.organizacion.nombre).toBe('CASTRO');
-
+        const snap = await SalaEsperaSnapshot.count({});
+        expect(snap).toBe(1);
         await SalaEspera.deleteMany({});
+        await SalaEsperaSnapshot.deleteMany({});
     });
 
-    test('ingresar paciente', async () => {
+    test('secuencia de alta baja y listado', async () => {
         const sala = await createSala();
         await ingresarPaciente(
             sala.id,
@@ -63,10 +65,6 @@ describe('Internacion - Sala Espera', () => {
             },
             REQMock
         );
-        let salaDB = await SalaEspera.findById(sala.id);
-
-        expect(salaDB.ocupacion.length).toBe(1);
-        expect(salaDB.ocupacion[0].paciente.documento).toBe('10000000');
 
         await ingresarPaciente(
             sala.id,
@@ -78,12 +76,7 @@ describe('Internacion - Sala Espera', () => {
             },
             REQMock
         );
-        salaDB = await SalaEspera.findById(sala.id);
-        expect(salaDB.ocupacion.length).toBe(2);
-    });
 
-    test('egresar paciente', async () => {
-        const sala = await SalaEspera.findOne();
         await egresarPaciente(
             sala.id,
             {
@@ -94,12 +87,6 @@ describe('Internacion - Sala Espera', () => {
             },
             REQMock
         );
-
-        let salaDB = await SalaEspera.findById(sala.id);
-        expect(salaDB.ocupacion.length).toBe(1);
-    });
-
-    test('listar paciente', async () => {
 
         const pacientes = await listarSalaEspera({ organizacion: organizacionId, fecha: new Date() });
         expect(pacientes.length).toBe(1);
@@ -114,6 +101,8 @@ describe('Internacion - Sala Espera', () => {
 
         const pacientes4 = await listarSalaEspera({ organizacion: organizacionId, fecha: moment().subtract(3, 'h').subtract(10, 'minutes').toDate() });
         expect(pacientes4.length).toBe(0);
+
+
     });
 
 });

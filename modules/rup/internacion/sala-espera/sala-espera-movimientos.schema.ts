@@ -42,6 +42,7 @@ const SalaEsperaMovimientosSchema = new Schema({
 });
 
 SalaEsperaMovimientosSchema.plugin(AuditPlugin);
+SalaEsperaMovimientosSchema.index({ idSalaEspera: 1, fecha: 1 });
 
 export const SalaEsperaMovimientos = model<SalaEsperaMovimientoDocument>('internacionSalaEsperaMovimientos', SalaEsperaMovimientosSchema, 'internacionSalaEsperaMovimientos');
 

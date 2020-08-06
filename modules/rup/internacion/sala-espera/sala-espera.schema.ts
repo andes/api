@@ -6,7 +6,21 @@ import { OrganizacionRef, UnidadOrganizativa } from '../../../../core/tm/interfa
 import { ISectores } from '../../../../core/tm/interfaces/ISectores';
 import { ObjectId } from '@andes/core';
 
+/**
+ * useful types generations
+ */
+
+export type AuditTypes = {
+    audit(user: any);
+    createdBy: any;
+    createdAt: Date;
+    updatedBy: any;
+    updatedAt: Date;
+};
 export type SalaEsperaID = ObjectId;
+export type AndesDoc<T> = T & Document;
+export type AndesDocWithAuth<T> = AndesDoc<T> & AuditTypes;
+
 
 export interface ISalaEspera {
     id: SalaEsperaID;
@@ -17,25 +31,26 @@ export interface ISalaEspera {
     unidadOrganizativas: UnidadOrganizativa[];
     sectores: ISectores[];
     estado: string;
-    ocupacion: {
-        paciente: any,
-        ambito: String,
-        idInternacion: ObjectId,
-        desde: Date,
-        createdBy: any;
-        createdAt: Date;
-        updatedBy: any;
-        updatedAt: Date;
-    }[];
 }
+export type SalaEsperaDocument = AndesDocWithAuth<ISalaEspera>;
 
-export type SalaEsperaDocument = ISalaEspera & Document & {
-    audit(user: any);
+export type SalaEsperaOcupacionItem = {
+    paciente: any,
+    ambito: String,
+    idInternacion: ObjectId,
+    desde: Date,
     createdBy: any;
     createdAt: Date;
     updatedBy: any;
     updatedAt: Date;
 };
+
+export type ISalaEsperaSnapshot = ISalaEspera & {
+    idSalaEspera: ObjectId;
+    fecha: Date;
+    ocupacion: SalaEsperaOcupacionItem[];
+};
+export type SalaEsperaSnapshotDocument = AndesDocWithAuth<ISalaEsperaSnapshot>;
 
 
 const SalaEsperaSchema = new Schema({
@@ -49,9 +64,7 @@ const SalaEsperaSchema = new Schema({
     },
     capacidad: Number,
     ambito: String,
-    unidadOrganizativas: [{
-        SnomedConcept,
-    }],
+    unidadOrganizativas: [SnomedConcept],
     sectores: [{
         tipoSector: SnomedConcept,
         unidadConcept: {
@@ -61,6 +74,14 @@ const SalaEsperaSchema = new Schema({
         nombre: String
     }],
     estado: String,
+});
+SalaEsperaSchema.plugin(AuditPlugin);
+
+
+const SalaEsperaSnapshotSchema = SalaEsperaSchema.clone();
+SalaEsperaSnapshotSchema.add({
+    idSalaEspera: SchemaTypes.ObjectId,
+    fecha: Date,
     ocupacion: [{
         paciente: {
             id: SchemaTypes.ObjectId,
@@ -74,7 +95,7 @@ const SalaEsperaSchema = new Schema({
         ambito: String,
         idInternacion: SchemaTypes.ObjectId,
         desde: Date,
-        // unidadOrganizativa (?)
+        unidadOrganizativa: [SnomedConcept],
 
         createdAt: { type: Date, required: false },
         createdBy: { type: SchemaTypes.Mixed, required: false },
@@ -82,7 +103,7 @@ const SalaEsperaSchema = new Schema({
         updatedBy: { type: SchemaTypes.Mixed, required: false },
     }]
 });
-
-SalaEsperaSchema.plugin(AuditPlugin);
+SalaEsperaSnapshotSchema.index({ idSalaEspera: 1, fecha: 1 });
 
 export const SalaEspera = model<SalaEsperaDocument>('internacionSalaEspera', SalaEsperaSchema, 'internacionSalaEspera');
+export const SalaEsperaSnapshot = model<SalaEsperaSnapshotDocument>('internacionSalaEsperaSnapshot', SalaEsperaSnapshotSchema, 'internacionSalaEsperaSnapshot');

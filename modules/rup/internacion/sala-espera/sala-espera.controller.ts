@@ -1,5 +1,6 @@
-import { SalaEspera, ISalaEspera, SalaEsperaID } from './sala-espera.schema';
+import * as moment from 'moment';
 import { Types } from 'mongoose';
+import { SalaEspera, ISalaEspera, SalaEsperaID, SalaEsperaSnapshot } from './sala-espera.schema';
 import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
 import { AuditDocument } from '@andes/mongoose-plugin-audit';
@@ -8,10 +9,20 @@ import { Auth } from '../../../../auth/auth.class';
 
 export type SalaEsperaCreate = Pick<ISalaEspera, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
 
-export function createSalaEspera(dto: SalaEsperaCreate, req: any) {
+export async function createSalaEspera(dto: SalaEsperaCreate, req: any) {
     const sala = new SalaEspera(dto);
     sala.audit(req);
-    return sala.save();
+    await sala.save();
+
+    const snapshot = new SalaEsperaSnapshot({
+        idSalaEspera: sala.id,
+        fecha: moment().startOf('year'),
+        ocupacion: [],
+        ...dto,
+    });
+    snapshot.audit(req);
+    await snapshot.save();
+    return sala;
 }
 
 export interface SalaEsperaIngreso {
@@ -21,18 +32,25 @@ export interface SalaEsperaIngreso {
     fecha: Date;
 }
 
-export function ingresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, req: Request) {
+export async function ingresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, req: Request) {
 
     const organizacion = {
         id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
-
-    // [TODO] Ver si el paciente estaba ya en esa fecha (?)
-    AuditDocument(dto, req.user);
-
-    const p1 = SalaEspera.update(
-        { _id: wrapObjectId(id) },
+    const movimiento = new SalaEsperaMovimientos({
+        tipo: 'entra',
+        idSalaEspera: id,
+        organizacion,
+        ambito: dto.ambito,
+        paciente: dto.paciente,
+        idInternacion: dto.idInternacion,
+        fecha: dto.fecha
+    });
+    movimiento.audit(req);
+    await movimiento.save();
+    await SalaEsperaSnapshot.updateMany(
+        { idSalaEspera: id, fecha: { $gte: dto.fecha } },
         {
             $push: {
                 ocupacion: {
@@ -40,60 +58,38 @@ export function ingresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, req: 
                     ambito: dto.ambito,
                     idInternacion: dto.idInternacion,
                     desde: dto.fecha,
-                    createdAt: (dto as any).createdAt,
-                    createdBy: (dto as any).createdBy,
-                    updatedAt: (dto as any).updatedAt,
-                    updatedBy: (dto as any).updatedBy,
+                    createdBy: movimiento.createdBy,
+                    createdAt: movimiento.createdAt
                 }
             }
         }
     );
-
-    const movimiento = new SalaEsperaMovimientos({
-        idSalaEspera: id,
-        organizacion,
-        ambito: dto.ambito,
-        paciente: dto.paciente,
-        tipo: 'entra',
-        idInternacion: dto.idInternacion,
-        fecha: dto.fecha
-    });
-    movimiento.audit(req);
-    const p2 = movimiento.save();
-
-    return Promise.all([p1, movimiento]);
+    return movimiento;
 
 }
 
 export async function egresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, req: Request) {
-
     const organizacion = {
         id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
-    const result = await SalaEspera.update(
-        { _id: wrapObjectId(id) },
-        {
-            $pull: { ocupacion: { idInternacion: dto.idInternacion } } // Por id de paciente es suficiente (?)
-        }
+    const movimiento = new SalaEsperaMovimientos({
+        tipo: 'sale',
+        idSalaEspera: id,
+        organizacion,
+        ambito: dto.ambito,
+        paciente: dto.paciente,
+        idInternacion: dto.idInternacion,
+        fecha: dto.fecha
+    });
+    movimiento.audit(req);
+    await movimiento.save();
+    await SalaEsperaSnapshot.updateMany(
+        { idSalaEspera: id, fecha: { $gte: dto.fecha } },
+        { $pull: { 'ocupacion.idInternacion': dto.idInternacion } }
     );
-    const done = result.nModified > 0 && result.ok === 1;
-    if (done) {
-        const movimiento = new SalaEsperaMovimientos({
-            idSalaEspera: id,
-            ambito: dto.ambito,
-            paciente: dto.paciente,
-            tipo: 'sale',
-            idInternacion: dto.idInternacion,
-            organizacion,
-            fecha: dto.fecha
-        });
-        movimiento.audit(req);
-        return movimiento.save();
-    } else {
-        throw new Error('paciente no se encontraba en la sala');
-    }
 
+    return movimiento;
 }
 
 export interface ListarOptions {
@@ -101,22 +97,59 @@ export interface ListarOptions {
     organizacion: ObjectId;
     fecha: Date;
 }
-export async function listarSalaEspera(opciones) {
-    const { organizacion, fecha } = opciones;
-    const aggr = SalaEspera.aggregate([
-        { $match: { 'organizacion.id': wrapObjectId(organizacion) } },
+
+export async function listarSalaEspera(opciones: ListarOptions) {
+    const { organizacion, fecha, id } = opciones;
+    const $match = {
+        'organizacion.id': wrapObjectId(organizacion),
+        fecha: { $lte: fecha }
+    };
+    if (id) {
+        $match['idSalaEspera'] = wrapObjectId(id);
+    }
+    const aggr = SalaEsperaSnapshot.aggregate([
+        { $match },
+        { $group: { _id: '$idSalaEspera', fecha: { $max: '$fecha' } } },
         {
             $lookup: {
-                from: 'internacionSalaEsperaMovimientos',
-                let: { idsala: '$_id' },
+                from: 'internacionSalaEsperaSnapshot',
+                let: { idSala: '$_id', fechaMax: '$fecha' },
                 pipeline: [
                     {
                         $match: {
-                            $expr: { idSalaEspera: '$$idsala' },
-                            fecha: { $gte: fecha }
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$idSalaEspera', '$$idSala'] },
+                                    { $eq: ['$fecha', '$$fechaMax'] }
+                                ]
+                            }
                         }
                     },
-                    { $sort: { fecha: -1 } }
+                    { $limit: 1 }
+                ],
+                as: 'realSnapshot'
+            }
+        },
+        { $unwind: '$realSnapshot' },
+        { $replaceRoot: { newRoot: '$realSnapshot' } },
+        {
+            $lookup: {
+                from: 'internacionSalaEsperaMovimientos',
+                let: { idsala: '$idSalaEspera', fechaMin: '$fecha' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { idSalaEspera: '$$idsala' },
+                                    { $gte: ['$fecha', '$$fechaMin'] },
+                                    { $lte: ['$fecha', fecha] },
+                                ]
+                            },
+
+                        }
+                    },
+                    { $sort: { fecha: 1 } }
                 ],
                 as: 'movimientos'
             }
@@ -128,29 +161,37 @@ export async function listarSalaEspera(opciones) {
                         input: '$movimientos',
                         initialValue: '$ocupacion',
                         in: {
-                            $cond: [
-                                { $eq: ['$$this.tipo', 'entra'] },
-                                // ENTRA ALGIEN, ASI QUE PARA ATRAS LO TENGO QUE SACAR
-                                {
-                                    $filter: {
-                                        input: '$$value',
-                                        as: 'item',
-                                        cond: { $ne: ['$$item.paciente.id', '$$this.paciente.id'] }
-                                    }
-                                },
-                                {
-                                    $concatArrays: [
-                                        '$$value',
-                                        [{
-                                            paciente: '$$this.paciente',
-                                            ambito: '$$this.ambito',
-                                            idInternacion: '$$this.idInternacion',
-                                        }]
+                            $switch: {
+                                branches: [
+                                    {
+                                        case: { $eq: ['$$this.tipo', 'entra'] },
+                                        then: {
+                                            $concatArrays: [
+                                                '$$value',
+                                                [{
+                                                    paciente: '$$this.paciente',
+                                                    ambito: '$$this.ambito',
+                                                    idInternacion: '$$this.idInternacion',
+                                                    desde: '$$this.fecha',
+                                                }]
 
-                                    ]
-                                }
-                            ]
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        case: { $eq: ['$$this.tipo', 'sale'] },
+                                        then: {
+                                            $filter: {
+                                                input: '$$value',
+                                                as: 'item',
+                                                cond: { $ne: ['$$item.idInternacion', '$$this.idInternacion'] }
+                                            }
+                                        },
+                                    },
 
+                                ],
+                                default: '$$value'
+                            }
                         }
                     }
                 }
@@ -159,7 +200,7 @@ export async function listarSalaEspera(opciones) {
         { $unwind: '$snapshot' },
         {
             $project: {
-                id: '$_id',
+                id: '$idSalaEspera',
                 nombre: 1,
                 organizacion: 1,
                 unidadOrganizativas: 1,
@@ -167,8 +208,8 @@ export async function listarSalaEspera(opciones) {
                 paciente: '$snapshot.paciente',
                 idInternacion: '$snapshot.idInternacion',
                 ambito: '$snapshot.ambito',
+                fecha: '$snapshot.desde'
             }
-
         }
     ]);
     return aggr;
