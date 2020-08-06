@@ -279,7 +279,7 @@ router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, ne
                     return res.json(firma);
                 });
             } else {
-                return res.json(null);
+                return res.json({});
             }
         }
         if (req.query.firmaAdmin) {
@@ -298,7 +298,7 @@ router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, ne
                     return res.json(firmaAdmin);
                 });
             } else {
-                return res.json(null);
+                return res.json({});
             }
         }
     } catch (ex) {
