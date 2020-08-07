@@ -5,6 +5,7 @@ import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
 import { SalaEsperaMovimientos, SalaEsperaAccion } from './sala-espera-movimientos.schema';
 import { Auth } from '../../../../auth/auth.class';
+import { ObjectID } from 'bson';
 
 export type SalaEsperaCreate = Pick<ISalaEspera, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
 
@@ -106,18 +107,27 @@ export async function egresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, 
 
 export interface ListarOptions {
     id?: SalaEsperaID;
-    organizacion: ObjectId;
+    organizacion?: ObjectId;
     fecha: Date;
 }
 
-export async function listarSalaEspera(opciones: ListarOptions) {
+export type SalaEsperaOcupacion = Pick<ISalaEspera, 'id' | 'nombre' | 'organizacion' | 'ambito' | 'sectores' | 'unidadOrganizativas'> & {
+    paciente: any;
+    idInternacion: ObjectId,
+    fecha: Date;
+};
+
+
+export async function listarSalaEspera(opciones: ListarOptions): Promise<SalaEsperaOcupacion[]> {
     const { organizacion, fecha, id } = opciones;
     const $match = {
-        'organizacion.id': wrapObjectId(organizacion),
         fecha: { $lte: fecha }
     };
     if (id) {
         $match['idSalaEspera'] = wrapObjectId(id);
+    }
+    if (organizacion) {
+        $match['organizacion.id'] = wrapObjectId(organizacion);
     }
     const aggr = SalaEsperaSnapshot.aggregate([
         { $match },

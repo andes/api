@@ -1,5 +1,5 @@
 import { SchemaTypes, Schema, model, Document, Types } from 'mongoose';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 import { SnomedConcept } from '../../schemas/snomed-concept';
 import * as nombreSchema from '../../../../core/tm/schemas/nombre';
 import { OrganizacionRef, UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
@@ -10,17 +10,7 @@ import { ObjectId } from '@andes/core';
  * useful types generations
  */
 
-export type AuditTypes = {
-    audit(user: any);
-    createdBy: any;
-    createdAt: Date;
-    updatedBy: any;
-    updatedAt: Date;
-};
 export type SalaEsperaID = ObjectId;
-export type AndesDoc<T> = T & Document;
-export type AndesDocWithAuth<T> = AndesDoc<T> & AuditTypes;
-
 
 export interface ISalaEspera {
     id: SalaEsperaID;
@@ -32,7 +22,7 @@ export interface ISalaEspera {
     sectores: ISectores[];
     estado: string;
 }
-export type SalaEsperaDocument = AndesDocWithAuth<ISalaEspera>;
+export type SalaEsperaDocument = AndesDocWithAudit<ISalaEspera>;
 
 export type SalaEsperaOcupacionItem = {
     paciente: any,
@@ -50,7 +40,7 @@ export type ISalaEsperaSnapshot = ISalaEspera & {
     fecha: Date;
     ocupacion: SalaEsperaOcupacionItem[];
 };
-export type SalaEsperaSnapshotDocument = AndesDocWithAuth<ISalaEsperaSnapshot>;
+export type SalaEsperaSnapshotDocument = AndesDocWithAudit<ISalaEsperaSnapshot>;
 
 
 const SalaEsperaSchema = new Schema({

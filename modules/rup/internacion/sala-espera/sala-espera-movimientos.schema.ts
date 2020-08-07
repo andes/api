@@ -1,6 +1,6 @@
 import { SchemaTypes, Schema, model, Types, Document } from 'mongoose';
 import * as nombreSchema from '../../../../core/tm/schemas/nombre';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 
 export enum SalaEsperaAccion {
     IN = 'IN',
@@ -17,13 +17,7 @@ export interface ISalaEsperaMovimiento {
 
 }
 
-export type SalaEsperaMovimientoDocument = ISalaEsperaMovimiento & Document & {
-    audit(user: any);
-    createdBy: any;
-    createdAt: Date;
-    updatedBy: any;
-    updatedAt: Date;
-};
+export type SalaEsperaMovimientoDocument = AndesDocWithAudit<ISalaEsperaMovimiento>;
 
 const SalaEsperaMovimientosSchema = new Schema({
     idSalaEspera: SchemaTypes.ObjectId,
@@ -52,6 +46,7 @@ const SalaEsperaMovimientosSchema = new Schema({
 
 SalaEsperaMovimientosSchema.plugin(AuditPlugin);
 SalaEsperaMovimientosSchema.index({ idSalaEspera: 1, fecha: 1 });
+SalaEsperaMovimientosSchema.index({ paciente: 1, fecha: 1 });
 
 export const SalaEsperaMovimientos = model<SalaEsperaMovimientoDocument>('internacionSalaEsperaMovimientos', SalaEsperaMovimientosSchema, 'internacionSalaEsperaMovimientos');
 

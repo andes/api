@@ -14,7 +14,7 @@
     "@andes/georeference": "^1.0.2",
     "@andes/log": "^2.0.0",
     "@andes/match": "^1.1.12",
-    "@andes/mongoose-plugin-audit": "^1.1.0",
+    "@andes/mongoose-plugin-audit": "^1.1.3",
     "@types/async": "^2.0.49",
     "@types/bcrypt-nodejs": "0.0.30",
     "@types/core-js": "^0.9.36",
