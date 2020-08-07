@@ -2,11 +2,16 @@ import { SchemaTypes, Schema, model, Types, Document } from 'mongoose';
 import * as nombreSchema from '../../../../core/tm/schemas/nombre';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
+export enum SalaEsperaAccion {
+    IN = 'IN',
+    OUT = 'OUT'
+}
+
 export interface ISalaEsperaMovimiento {
     idSalaEspera: Types.ObjectId;
     ambito: String;
     paciente: any;
-    tipo: 'entra' | 'sale';
+    accion: SalaEsperaAccion;
     idInternacion: Types.ObjectId;
     fecha: Date;
 
@@ -36,7 +41,11 @@ const SalaEsperaMovimientosSchema = new Schema({
         apellido: String,
         fechaNacimiento: Date
     },
-    tipo: { type: String, enum: ['entra', 'sale'], required: true },
+    accion: {
+        type: String,
+        enum: ['IN', 'OUT'],
+        required: true
+    },
     idInternacion: SchemaTypes.ObjectId, // TrackID del proceso
     fecha: Date
 });

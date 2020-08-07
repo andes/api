@@ -3,8 +3,7 @@ import { Types } from 'mongoose';
 import { SalaEspera, ISalaEspera, SalaEsperaID, SalaEsperaSnapshot } from './sala-espera.schema';
 import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
-import { AuditDocument } from '@andes/mongoose-plugin-audit';
-import { SalaEsperaMovimientos } from './sala-espera-movimientos.schema';
+import { SalaEsperaMovimientos, SalaEsperaAccion } from './sala-espera-movimientos.schema';
 import { Auth } from '../../../../auth/auth.class';
 
 export type SalaEsperaCreate = Pick<ISalaEspera, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
@@ -38,8 +37,9 @@ export async function ingresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso,
         id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
+
     const movimiento = new SalaEsperaMovimientos({
-        tipo: 'entra',
+        accion: SalaEsperaAccion.IN,
         idSalaEspera: id,
         organizacion,
         ambito: dto.ambito,
@@ -74,7 +74,7 @@ export async function egresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, 
         nombre: Auth.getOrganization(req, 'nombre')
     };
     const movimiento = new SalaEsperaMovimientos({
-        tipo: 'sale',
+        accion: SalaEsperaAccion.OUT,
         idSalaEspera: id,
         organizacion,
         ambito: dto.ambito,
@@ -164,7 +164,7 @@ export async function listarSalaEspera(opciones: ListarOptions) {
                             $switch: {
                                 branches: [
                                     {
-                                        case: { $eq: ['$$this.tipo', 'entra'] },
+                                        case: { $eq: ['$$this.accion', SalaEsperaAccion.IN] },
                                         then: {
                                             $concatArrays: [
                                                 '$$value',
@@ -179,7 +179,7 @@ export async function listarSalaEspera(opciones: ListarOptions) {
                                         }
                                     },
                                     {
-                                        case: { $eq: ['$$this.tipo', 'sale'] },
+                                        case: { $eq: ['$$this.accion', SalaEsperaAccion.OUT] },
                                         then: {
                                             $filter: {
                                                 input: '$$value',
