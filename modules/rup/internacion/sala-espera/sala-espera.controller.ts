@@ -24,6 +24,18 @@ export async function createSalaEspera(dto: SalaEsperaCreate, req: any) {
     return sala;
 }
 
+export async function updateSalaEspera(id: SalaEsperaID, dto: SalaEsperaCreate, req: Request) {
+    const sala = await SalaEspera.findById(id);
+    if (sala) {
+        sala.set(dto);
+        sala.audit(req);
+        await sala.save();
+        return sala;
+    } else {
+        return null;
+    }
+}
+
 export interface SalaEsperaIngreso {
     paciente: any;
     ambito: string;

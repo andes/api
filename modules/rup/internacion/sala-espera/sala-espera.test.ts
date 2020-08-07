@@ -4,6 +4,15 @@ import { createSalaEspera, ingresarPaciente, egresarPaciente, listarSalaEspera }
 import { SalaEspera, SalaEsperaSnapshot } from './sala-espera.schema';
 import moment = require('moment');
 
+export const getObjectId = (name: string): mongoose.Types.ObjectId => {
+    if (name === '') {
+        throw new Error('Name cannot be empty');
+    }
+    const sha1 = require('sha1');
+    const hash = sha1(name);
+    return new mongoose.Types.ObjectId(hash.substring(0, 24));
+};
+
 const REQMock: any = {
     user: {
         usuario: { nombre: 'JUAN' },
@@ -16,9 +25,6 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
 let paciente1 = createPaciente('10000000');
 let paciente2 = createPaciente('20000000');
-let internacion1 = new mongoose.Types.ObjectId();
-let internacion2 = new mongoose.Types.ObjectId();
-let organizacionId = new mongoose.Types.ObjectId();
 
 beforeAll(async () => {
     mongoServer = new MongoMemoryServer();
@@ -36,7 +42,7 @@ describe('Internacion - Sala Espera', () => {
         const sala = await createSalaEspera(
             {
                 nombre: 'sala',
-                organizacion: { id: organizacionId, nombre: 'castro' },
+                organizacion: { id: getObjectId('organizacion'), nombre: 'castro' },
                 ambito: 'internacion',
                 estado: 'disponible',
                 sectores: [],
@@ -60,7 +66,7 @@ describe('Internacion - Sala Espera', () => {
             {
                 paciente: paciente1,
                 ambito: 'internacion',
-                idInternacion: internacion1,
+                idInternacion: getObjectId('internacion1'),
                 fecha: moment().subtract(3, 'h').toDate()
             },
             REQMock
@@ -71,7 +77,7 @@ describe('Internacion - Sala Espera', () => {
             {
                 paciente: paciente2,
                 ambito: 'internacion',
-                idInternacion: internacion2,
+                idInternacion: getObjectId('internacion2'),
                 fecha: moment().subtract(2, 'h').toDate()
             },
             REQMock
@@ -82,24 +88,24 @@ describe('Internacion - Sala Espera', () => {
             {
                 paciente: paciente2,
                 ambito: 'internacion',
-                idInternacion: internacion2,
+                idInternacion: getObjectId('internacion2'),
                 fecha: moment().subtract(1, 'h').toDate()
             },
             REQMock
         );
 
-        const pacientes = await listarSalaEspera({ organizacion: organizacionId, fecha: new Date() });
+        const pacientes = await listarSalaEspera({ organizacion: getObjectId('organizacion'), fecha: new Date() });
         expect(pacientes.length).toBe(1);
 
 
-        const pacientes2 = await listarSalaEspera({ organizacion: organizacionId, fecha: moment().subtract(1, 'h').subtract(10, 'minutes').toDate() });
+        const pacientes2 = await listarSalaEspera({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(1, 'h').subtract(10, 'minutes').toDate() });
         expect(pacientes2.length).toBe(2);
 
-        const pacientes3 = await listarSalaEspera({ organizacion: organizacionId, fecha: moment().subtract(2, 'h').subtract(10, 'minutes').toDate() });
+        const pacientes3 = await listarSalaEspera({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(2, 'h').subtract(10, 'minutes').toDate() });
         expect(pacientes3.length).toBe(1);
 
 
-        const pacientes4 = await listarSalaEspera({ organizacion: organizacionId, fecha: moment().subtract(3, 'h').subtract(10, 'minutes').toDate() });
+        const pacientes4 = await listarSalaEspera({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(3, 'h').subtract(10, 'minutes').toDate() });
         expect(pacientes4.length).toBe(0);
 
 
@@ -111,7 +117,7 @@ async function createSala() {
     return createSalaEspera(
         {
             nombre: 'sala',
-            organizacion: { id: organizacionId, nombre: 'castro' },
+            organizacion: { id: getObjectId('organizacion'), nombre: 'castro' },
             ambito: 'internacion',
             estado: 'disponible',
             sectores: [],
