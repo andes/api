@@ -2,8 +2,8 @@ import * as express from 'express';
 import * as reglas from '../schemas/reglas';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
-import * as reglasCtrl from '../controller/reglas';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { toArray } from '../../../utils/utils';
 
 const router = express.Router();
 
@@ -30,33 +30,56 @@ router.post('/reglas', async (req, res, next) => {
 });
 
 router.get('/reglas', async (req, res, next) => {
-    let query = reglas.find({});
+    let $match = {};
+    let pipeline = [];
+    pipeline.push({ $match });
+
     if (req.query.organizacionOrigen) {
-        query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
+        $match['origen.organizacion.id'] = { $eq: (new mongoose.Types.ObjectId(req.query.organizacionOrigen)) };
     }
 
     if (req.query.prestacionOrigen) {
-        query.where('origen.prestaciones.prestacion.conceptId').equals(req.query.prestacionOrigen);
+        $match['origen.prestaciones.prestacion.conceptId'] = { $eq: req.query.prestacionOrigen };
     } else if (req.query.prestacionesOrigen) {
         let prestacionesPermisos = Auth.getPermissions(req, req.query.prestacionesOrigen);
         if (prestacionesPermisos.length && prestacionesPermisos[0] !== '*') {
             const conceptos = await tipoPrestacion.find({}).where('_id').in(prestacionesPermisos.map(x => mongoose.Types.ObjectId(x))).exec();
-            query.where('origen.prestaciones.prestacion.conceptId').in(conceptos.map(e => e.conceptId));
+            $match['origen.prestaciones.prestacion.conceptId'] = { $in: conceptos.map(e => e.conceptId) };
+
+            if (req.query.soloOrigen) {
+                pipeline.push({ $addFields: { prestacionesOrigen: '$origen.prestaciones' } });
+                pipeline.push({ $unwind: '$prestacionesOrigen' });
+                pipeline.push({ $match: { 'prestacionesOrigen.prestacion.conceptId': { $in: conceptos.map(e => e.conceptId) } } });
+                pipeline.push({
+                    $group: {
+                        _id: '$_id',
+                        origen: { $first: '$origen' },
+                        destino: { $first: '$destino' },
+                        prestacionesOrigen: { $push: '$prestacionesOrigen' }
+                    }
+                });
+                pipeline.push({
+                    $project: {
+                        _id: '$_id',
+                        origen: {
+                            organizacion: '$origen.organizacion',
+                            prestaciones: '$prestacionesOrigen'
+
+                        },
+                        destino: '$destino'
+                    }
+                });
+            }
         }
     }
 
     if (req.query.organizacionDestino) {
-        query.where('destino.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionDestino));
+        $match['destino.organizacion.id'] = { $eq: new mongoose.Types.ObjectId(req.query.organizacionDestino) };
     }
     if (req.query.prestacionDestino) {
-        query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
+        $match['destino.prestacion.conceptId'] = { $eq: new mongoose.Types.ObjectId(req.query.prestacionDestino) };
     }
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
+    res.json(await toArray(reglas.aggregate(pipeline).cursor({}).exec()));
 });
 
 router.delete('/reglas', async (req, res, next) => {
