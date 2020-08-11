@@ -1,7 +1,7 @@
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import * as mongoose from 'mongoose';
-import { createSalaEspera, ingresarPaciente, egresarPaciente, listarSalaEspera } from './sala-espera.controller';
-import { SalaEspera, SalaEsperaSnapshot } from './sala-espera.schema';
+import { createSalaComun, ingresarPaciente, egresarPaciente, listarSalaComun } from './sala-comun.controller';
+import { SalaComun, SalaComunSnapshot } from './sala-comun.schema';
 import moment = require('moment');
 
 export const getObjectId = (name: string): mongoose.Types.ObjectId => {
@@ -39,7 +39,7 @@ afterAll(async () => {
 
 describe('Internacion - Sala Espera', () => {
     test('create sala', async () => {
-        const sala = await createSalaEspera(
+        const sala = await createSalaComun(
             {
                 nombre: 'sala',
                 organizacion: { id: getObjectId('organizacion'), nombre: 'castro' },
@@ -53,10 +53,10 @@ describe('Internacion - Sala Espera', () => {
         expect(sala.nombre).toBe('sala');
         expect(sala.createdBy.nombre).toBe('JUAN');
         expect(sala.createdBy.organizacion.nombre).toBe('CASTRO');
-        const snap = await SalaEsperaSnapshot.count({});
+        const snap = await SalaComunSnapshot.count({});
         expect(snap).toBe(1);
-        await SalaEspera.deleteMany({});
-        await SalaEsperaSnapshot.deleteMany({});
+        await SalaComun.deleteMany({});
+        await SalaComunSnapshot.deleteMany({});
     });
 
     test('secuencia de alta baja y listado', async () => {
@@ -94,18 +94,18 @@ describe('Internacion - Sala Espera', () => {
             REQMock
         );
 
-        const pacientes = await listarSalaEspera({ organizacion: getObjectId('organizacion'), fecha: new Date() });
+        const pacientes = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: new Date() });
         expect(pacientes.length).toBe(1);
 
 
-        const pacientes2 = await listarSalaEspera({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(1, 'h').subtract(10, 'minutes').toDate() });
+        const pacientes2 = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(1, 'h').subtract(10, 'minutes').toDate() });
         expect(pacientes2.length).toBe(2);
 
-        const pacientes3 = await listarSalaEspera({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(2, 'h').subtract(10, 'minutes').toDate() });
+        const pacientes3 = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(2, 'h').subtract(10, 'minutes').toDate() });
         expect(pacientes3.length).toBe(1);
 
 
-        const pacientes4 = await listarSalaEspera({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(3, 'h').subtract(10, 'minutes').toDate() });
+        const pacientes4 = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(3, 'h').subtract(10, 'minutes').toDate() });
         expect(pacientes4.length).toBe(0);
 
 
@@ -114,7 +114,7 @@ describe('Internacion - Sala Espera', () => {
 });
 
 async function createSala() {
-    return createSalaEspera(
+    return createSalaComun(
         {
             nombre: 'sala',
             organizacion: { id: getObjectId('organizacion'), nombre: 'castro' },

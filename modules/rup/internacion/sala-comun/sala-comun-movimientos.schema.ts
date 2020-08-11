@@ -2,25 +2,25 @@ import { SchemaTypes, Schema, model, Types, Document } from 'mongoose';
 import * as nombreSchema from '../../../../core/tm/schemas/nombre';
 import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 
-export enum SalaEsperaAccion {
+export enum SalaComunAccion {
     IN = 'IN',
     OUT = 'OUT'
 }
 
-export interface ISalaEsperaMovimiento {
-    idSalaEspera: Types.ObjectId;
+export interface ISalaComunMovimiento {
+    idSalaComun: Types.ObjectId;
     ambito: String;
     paciente: any;
-    accion: SalaEsperaAccion;
+    accion: SalaComunAccion;
     idInternacion: Types.ObjectId;
     fecha: Date;
 
 }
 
-export type SalaEsperaMovimientoDocument = AndesDocWithAudit<ISalaEsperaMovimiento>;
+export type SalaComunMovimientoDocument = AndesDocWithAudit<ISalaComunMovimiento>;
 
-const SalaEsperaMovimientosSchema = new Schema({
-    idSalaEspera: SchemaTypes.ObjectId,
+const SalaComunMovimientosSchema = new Schema({
+    idSalaComun: SchemaTypes.ObjectId,
     organizacion: {
         type: nombreSchema,
         required: true
@@ -44,11 +44,11 @@ const SalaEsperaMovimientosSchema = new Schema({
     fecha: Date
 });
 
-SalaEsperaMovimientosSchema.plugin(AuditPlugin);
-SalaEsperaMovimientosSchema.index({ idSalaEspera: 1, fecha: 1 });
-SalaEsperaMovimientosSchema.index({ paciente: 1, fecha: 1 });
+SalaComunMovimientosSchema.plugin(AuditPlugin);
+SalaComunMovimientosSchema.index({ idSalaComun: 1, fecha: 1 });
+SalaComunMovimientosSchema.index({ paciente: 1, fecha: 1 });
 
-export const SalaEsperaMovimientos = model<SalaEsperaMovimientoDocument>('internacionSalaEsperaMovimientos', SalaEsperaMovimientosSchema, 'internacionSalaEsperaMovimientos');
+export const SalaComunMovimientos = model<SalaComunMovimientoDocument>('internacionSalaComunMovimientos', SalaComunMovimientosSchema, 'internacionSalaComunMovimientos');
 
 
 /**

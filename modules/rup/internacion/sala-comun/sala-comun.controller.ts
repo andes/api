@@ -1,21 +1,21 @@
 import * as moment from 'moment';
 import { Types } from 'mongoose';
-import { SalaEspera, ISalaEspera, SalaEsperaID, SalaEsperaSnapshot } from './sala-espera.schema';
+import { SalaComun, ISalaComun, SalaComunID, SalaComunSnapshot } from './sala-comun.schema';
 import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
-import { SalaEsperaMovimientos, SalaEsperaAccion } from './sala-espera-movimientos.schema';
+import { SalaComunMovimientos, SalaComunAccion } from './sala-comun-movimientos.schema';
 import { Auth } from '../../../../auth/auth.class';
 import { ObjectID } from 'bson';
 
-export type SalaEsperaCreate = Pick<ISalaEspera, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
+export type SalaComunCreate = Pick<ISalaComun, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
 
-export async function createSalaEspera(dto: SalaEsperaCreate, req: any) {
-    const sala = new SalaEspera(dto);
+export async function createSalaComun(dto: SalaComunCreate, req: any) {
+    const sala = new SalaComun(dto);
     sala.audit(req);
     await sala.save();
 
-    const snapshot = new SalaEsperaSnapshot({
-        idSalaEspera: sala.id,
+    const snapshot = new SalaComunSnapshot({
+        idSalaComun: sala.id,
         fecha: moment().startOf('year'),
         ocupacion: [],
         ...dto,
@@ -25,8 +25,8 @@ export async function createSalaEspera(dto: SalaEsperaCreate, req: any) {
     return sala;
 }
 
-export async function updateSalaEspera(id: SalaEsperaID, dto: SalaEsperaCreate, req: Request) {
-    const sala = await SalaEspera.findById(id);
+export async function updateSalaComun(id: SalaComunID, dto: SalaComunCreate, req: Request) {
+    const sala = await SalaComun.findById(id);
     if (sala) {
         sala.set(dto);
         sala.audit(req);
@@ -37,23 +37,23 @@ export async function updateSalaEspera(id: SalaEsperaID, dto: SalaEsperaCreate, 
     }
 }
 
-export interface SalaEsperaIngreso {
+export interface SalaComunIngreso {
     paciente: any;
     ambito: string;
     idInternacion: ObjectId;
     fecha: Date;
 }
 
-export async function ingresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, req: Request) {
+export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, req: Request) {
 
     const organizacion = {
         id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
 
-    const movimiento = new SalaEsperaMovimientos({
-        accion: SalaEsperaAccion.IN,
-        idSalaEspera: id,
+    const movimiento = new SalaComunMovimientos({
+        accion: SalaComunAccion.IN,
+        idSalaComun: id,
         organizacion,
         ambito: dto.ambito,
         paciente: dto.paciente,
@@ -62,8 +62,8 @@ export async function ingresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso,
     });
     movimiento.audit(req);
     await movimiento.save();
-    await SalaEsperaSnapshot.updateMany(
-        { idSalaEspera: id, fecha: { $gte: dto.fecha } },
+    await SalaComunSnapshot.updateMany(
+        { idSalaComun: id, fecha: { $gte: dto.fecha } },
         {
             $push: {
                 ocupacion: {
@@ -81,14 +81,14 @@ export async function ingresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso,
 
 }
 
-export async function egresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, req: Request) {
+export async function egresarPaciente(id: SalaComunID, dto: SalaComunIngreso, req: Request) {
     const organizacion = {
         id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
-    const movimiento = new SalaEsperaMovimientos({
-        accion: SalaEsperaAccion.OUT,
-        idSalaEspera: id,
+    const movimiento = new SalaComunMovimientos({
+        accion: SalaComunAccion.OUT,
+        idSalaComun: id,
         organizacion,
         ambito: dto.ambito,
         paciente: dto.paciente,
@@ -97,8 +97,8 @@ export async function egresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, 
     });
     movimiento.audit(req);
     await movimiento.save();
-    await SalaEsperaSnapshot.updateMany(
-        { idSalaEspera: id, fecha: { $gte: dto.fecha } },
+    await SalaComunSnapshot.updateMany(
+        { idSalaComun: id, fecha: { $gte: dto.fecha } },
         { $pull: { 'ocupacion.idInternacion': dto.idInternacion } }
     );
 
@@ -106,42 +106,42 @@ export async function egresarPaciente(id: SalaEsperaID, dto: SalaEsperaIngreso, 
 }
 
 export interface ListarOptions {
-    id?: SalaEsperaID;
+    id?: SalaComunID;
     organizacion?: ObjectId;
     fecha: Date;
 }
 
-export type SalaEsperaOcupacion = Pick<ISalaEspera, 'id' | 'nombre' | 'organizacion' | 'ambito' | 'sectores' | 'unidadOrganizativas'> & {
+export type SalaComunOcupacion = Pick<ISalaComun, 'id' | 'nombre' | 'organizacion' | 'ambito' | 'sectores' | 'unidadOrganizativas'> & {
     paciente: any;
     idInternacion: ObjectId,
     fecha: Date;
 };
 
 
-export async function listarSalaEspera(opciones: ListarOptions): Promise<SalaEsperaOcupacion[]> {
+export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComunOcupacion[]> {
     const { organizacion, fecha, id } = opciones;
     const $match = {
         fecha: { $lte: fecha }
     };
     if (id) {
-        $match['idSalaEspera'] = wrapObjectId(id);
+        $match['idSalaComun'] = wrapObjectId(id);
     }
     if (organizacion) {
         $match['organizacion.id'] = wrapObjectId(organizacion);
     }
-    const aggr = SalaEsperaSnapshot.aggregate([
+    const aggr = SalaComunSnapshot.aggregate([
         { $match },
-        { $group: { _id: '$idSalaEspera', fecha: { $max: '$fecha' } } },
+        { $group: { _id: '$idSalaComun', fecha: { $max: '$fecha' } } },
         {
             $lookup: {
-                from: 'internacionSalaEsperaSnapshot',
+                from: 'internacionSalaComunSnapshot',
                 let: { idSala: '$_id', fechaMax: '$fecha' },
                 pipeline: [
                     {
                         $match: {
                             $expr: {
                                 $and: [
-                                    { $eq: ['$idSalaEspera', '$$idSala'] },
+                                    { $eq: ['$idSalaComun', '$$idSala'] },
                                     { $eq: ['$fecha', '$$fechaMax'] }
                                 ]
                             }
@@ -156,14 +156,14 @@ export async function listarSalaEspera(opciones: ListarOptions): Promise<SalaEsp
         { $replaceRoot: { newRoot: '$realSnapshot' } },
         {
             $lookup: {
-                from: 'internacionSalaEsperaMovimientos',
-                let: { idsala: '$idSalaEspera', fechaMin: '$fecha' },
+                from: 'internacionSalaComunMovimientos',
+                let: { idsala: '$idSalaComun', fechaMin: '$fecha' },
                 pipeline: [
                     {
                         $match: {
                             $expr: {
                                 $and: [
-                                    { idSalaEspera: '$$idsala' },
+                                    { idSalaComun: '$$idsala' },
                                     { $gte: ['$fecha', '$$fechaMin'] },
                                     { $lte: ['$fecha', fecha] },
                                 ]
@@ -186,7 +186,7 @@ export async function listarSalaEspera(opciones: ListarOptions): Promise<SalaEsp
                             $switch: {
                                 branches: [
                                     {
-                                        case: { $eq: ['$$this.accion', SalaEsperaAccion.IN] },
+                                        case: { $eq: ['$$this.accion', SalaComunAccion.IN] },
                                         then: {
                                             $concatArrays: [
                                                 '$$value',
@@ -201,7 +201,7 @@ export async function listarSalaEspera(opciones: ListarOptions): Promise<SalaEsp
                                         }
                                     },
                                     {
-                                        case: { $eq: ['$$this.accion', SalaEsperaAccion.OUT] },
+                                        case: { $eq: ['$$this.accion', SalaComunAccion.OUT] },
                                         then: {
                                             $filter: {
                                                 input: '$$value',
@@ -222,7 +222,7 @@ export async function listarSalaEspera(opciones: ListarOptions): Promise<SalaEsp
         { $unwind: '$snapshot' },
         {
             $project: {
-                id: '$idSalaEspera',
+                id: '$idSalaComun',
                 nombre: 1,
                 organizacion: 1,
                 unidadOrganizativas: 1,

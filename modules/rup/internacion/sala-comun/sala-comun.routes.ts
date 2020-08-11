@@ -1,13 +1,13 @@
 
 import { Auth } from '../../../../auth/auth.class';
 import { ResourceBase, MongoQuery } from '@andes/core';
-import { SalaEspera } from './sala-espera.schema';
+import { SalaComun } from './sala-comun.schema';
 import { Request, asyncHandler } from '@andes/api-tool';
-import { listarSalaEspera, SalaEsperaIngreso, ingresarPaciente, egresarPaciente } from './sala-espera.controller';
+import { listarSalaComun, SalaComunIngreso, ingresarPaciente, egresarPaciente } from './sala-comun.controller';
 
-class SalaEsperaResource extends ResourceBase {
-    Model = SalaEspera;
-    resourceName = 'sala-espera';
+class SalaComunResource extends ResourceBase {
+    Model = SalaComun;
+    resourceName = 'sala-comun';
     middlewares = [Auth.authenticate()];
     searchFileds = {
         organizacion: {
@@ -22,42 +22,42 @@ class SalaEsperaResource extends ResourceBase {
     }
 }
 
-export const SalaEsperaCtr = new SalaEsperaResource({});
-export const SalaEsperaRouter = SalaEsperaCtr.makeRoutes();
+export const SalaComunCtr = new SalaComunResource({});
+export const SalaComunRouter = SalaComunCtr.makeRoutes();
 
 
-SalaEsperaRouter.get('/sala-espera/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
+SalaComunRouter.get('/sala-comun/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
     const idsala = req.params.id;
     const fecha: Date = req.query.fecha;
 
-    const ocupaciones = await listarSalaEspera({
+    const ocupaciones = await listarSalaComun({
         fecha,
         id: idsala,
     });
     res.json(ocupaciones);
 }));
 
-SalaEsperaRouter.get('/sala-espera/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
+SalaComunRouter.get('/sala-comun/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
     const organizacion = Auth.getOrganization(req);
     const fecha: Date = req.query.fecha;
 
-    const ocupaciones = await listarSalaEspera({
+    const ocupaciones = await listarSalaComun({
         fecha,
         organizacion,
     });
     res.json(ocupaciones);
 }));
 
-SalaEsperaRouter.post('/sala-espera/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
+SalaComunRouter.post('/sala-comun/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
     const idsala = req.params.id;
-    const dataIngreso: SalaEsperaIngreso = req.body;
+    const dataIngreso: SalaComunIngreso = req.body;
     const movimiento = await ingresarPaciente(idsala, dataIngreso, req);
     res.json(movimiento);
 }));
 
-SalaEsperaRouter.delete('/sala-espera/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
+SalaComunRouter.delete('/sala-comun/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
     const idsala = req.params.id;
-    const dataIngreso: SalaEsperaIngreso = req.body;
+    const dataIngreso: SalaComunIngreso = req.body;
     const movimiento = await egresarPaciente(idsala, dataIngreso, req);
     res.json(movimiento);
 }));
