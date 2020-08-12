@@ -1,3 +1,16 @@
+# [5.8.0](https://github.com/andes/api/compare/v5.7.0...v5.8.0) (2020-08-12)
+
+
+### Bug Fixes
+
+* **mpi:** fix pacienetes similares ([#1066](https://github.com/andes/api/issues/1066)) ([309102c](https://github.com/andes/api/commit/309102c089d22f3f130b95a9045b741bc4eaeffb))
+
+
+### Features
+
+* **top:** filtrado de solicitudes por createdAt y nuevo indice ([#1069](https://github.com/andes/api/issues/1069)) ([47408c7](https://github.com/andes/api/commit/47408c7a04c33d3e6a7ef73306d698efb07feb3b))
+* **TOP:** busca por mas de una prestacion destino ([#1070](https://github.com/andes/api/issues/1070)) ([129d971](https://github.com/andes/api/commit/129d9710a9ce8eb65dcaad7110c072b251ff9cdc))
+
 # [5.7.0](https://github.com/andes/api/compare/v5.6.0...v5.7.0) (2020-08-05)
 
 
