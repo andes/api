@@ -1,8 +1,9 @@
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import * as mongoose from 'mongoose';
-import { createSalaComun, ingresarPaciente, egresarPaciente, listarSalaComun } from './sala-comun.controller';
+import { ingresarPaciente, egresarPaciente, listarSalaComun } from './sala-comun.controller';
 import { SalaComun, SalaComunSnapshot } from './sala-comun.schema';
 import moment = require('moment');
+import { SalaComunCtr } from './sala-comun.routes';
 
 export const getObjectId = (name: string): mongoose.Types.ObjectId => {
     if (name === '') {
@@ -39,7 +40,7 @@ afterAll(async () => {
 
 describe('Internacion - Sala Espera', () => {
     test('create sala', async () => {
-        const sala = await createSalaComun(
+        const sala = await SalaComunCtr.create(
             {
                 nombre: 'sala',
                 organizacion: { id: getObjectId('organizacion'), nombre: 'castro' },
@@ -114,7 +115,7 @@ describe('Internacion - Sala Espera', () => {
 });
 
 async function createSala() {
-    return createSalaComun(
+    return await SalaComunCtr.create(
         {
             nombre: 'sala',
             organizacion: { id: getObjectId('organizacion'), nombre: 'castro' },

@@ -5,6 +5,7 @@ import * as nombreSchema from '../../../../core/tm/schemas/nombre';
 import { OrganizacionRef, UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
 import { ISectores } from '../../../../core/tm/interfaces/ISectores';
 import { ObjectId } from '@andes/core';
+import * as moment from 'moment';
 
 export type SalaComunID = ObjectId;
 
@@ -39,7 +40,7 @@ export type ISalaComunSnapshot = ISalaComun & {
 export type SalaComunSnapshotDocument = AndesDocWithAudit<ISalaComunSnapshot>;
 
 
-const SalaComunSchema = new Schema({
+const SalaComunBaseSchema = new Schema({
     nombre: {
         type: String,
         required: true
@@ -61,10 +62,32 @@ const SalaComunSchema = new Schema({
     }],
     estado: String,
 });
-SalaComunSchema.plugin(AuditPlugin);
+SalaComunBaseSchema.plugin(AuditPlugin);
 
+const SalaComunSchema = SalaComunBaseSchema.clone();
+SalaComunSchema.post('save', async function (this: SalaComunDocument) {
+    const sala = this;
+    if (!sala.isNew) {
+        return;
+    }
+    const { id, nombre, organizacion, capacidad, ambito, estado, sectores, unidadOrganizativas } = sala;
+    const snapshot = new SalaComunSnapshot({
+        idSalaComun: id,
+        fecha: moment().startOf('year'),
+        ocupacion: [],
+        nombre,
+        organizacion,
+        capacidad,
+        ambito,
+        estado,
+        sectores,
+        unidadOrganizativas
+    });
+    (snapshot as any).$audit = (sala as any).$audit;
+    await snapshot.save();
+});
 
-const SalaComunSnapshotSchema = SalaComunSchema.clone();
+const SalaComunSnapshotSchema = SalaComunBaseSchema.clone();
 SalaComunSnapshotSchema.add({
     idSalaComun: SchemaTypes.ObjectId,
     fecha: Date,

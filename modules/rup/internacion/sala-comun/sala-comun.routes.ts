@@ -1,11 +1,11 @@
 
 import { Auth } from '../../../../auth/auth.class';
 import { ResourceBase, MongoQuery } from '@andes/core';
-import { SalaComun } from './sala-comun.schema';
+import { SalaComun, SalaComunDocument } from './sala-comun.schema';
 import { Request, asyncHandler } from '@andes/api-tool';
 import { listarSalaComun, SalaComunIngreso, ingresarPaciente, egresarPaciente } from './sala-comun.controller';
 
-class SalaComunResource extends ResourceBase {
+class SalaComunResource extends ResourceBase<SalaComunDocument> {
     Model = SalaComun;
     resourceName = 'sala-comun';
     middlewares = [Auth.authenticate()];

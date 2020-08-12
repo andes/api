@@ -5,37 +5,8 @@ import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
 import { SalaComunMovimientos, SalaComunAccion } from './sala-comun-movimientos.schema';
 import { Auth } from '../../../../auth/auth.class';
-import { ObjectID } from 'bson';
 
 export type SalaComunCreate = Pick<ISalaComun, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
-
-export async function createSalaComun(dto: SalaComunCreate, req: any) {
-    const sala = new SalaComun(dto);
-    sala.audit(req);
-    await sala.save();
-
-    const snapshot = new SalaComunSnapshot({
-        idSalaComun: sala.id,
-        fecha: moment().startOf('year'),
-        ocupacion: [],
-        ...dto,
-    });
-    snapshot.audit(req);
-    await snapshot.save();
-    return sala;
-}
-
-export async function updateSalaComun(id: SalaComunID, dto: SalaComunCreate, req: Request) {
-    const sala = await SalaComun.findById(id);
-    if (sala) {
-        sala.set(dto);
-        sala.audit(req);
-        await sala.save();
-        return sala;
-    } else {
-        return null;
-    }
-}
 
 export interface SalaComunIngreso {
     paciente: any;
