@@ -241,7 +241,8 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.prestacionDestino) {
-            match.$and.push({ 'solicitud.tipoPrestacion.id': { $eq: Types.ObjectId(req.query.prestacionDestino) } });
+            const prestacionesDestino = Array.isArray(req.query.prestacionDestino) ? req.query.prestacionDestino : [req.query.prestacionDestino];
+            match.$and.push({ 'solicitud.tipoPrestacion.id': { $in: prestacionesDestino.map(id => Types.ObjectId(id)) } });
         }
 
         if (req.query.tipoPrestaciones) {
