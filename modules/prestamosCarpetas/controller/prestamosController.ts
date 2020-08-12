@@ -23,7 +23,7 @@ export async function getCarpetasSolicitud(req) {
     const horaFin = query.fechaHasta;
 
     const [solicitudesManuales, agendas, agendasSobreturno] = await Promise.all([
-        getSolicitudCarpetaManual({ organizacionId: organizacion, tipoPrestacionId: tipoPrestacion, espacioFisicoId: espacioFisico, profesionalId: profesional }),
+        getSolicitudCarpetaManual({ organizacionId: organizacion, tipoPrestacionId: tipoPrestacion, espacioFisicoId: espacioFisico, profesionalId: profesional, horaFin, horaInicio }),
         buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin),
         buscarAgendasSobreturnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin)
     ]);
@@ -486,6 +486,14 @@ async function getSolicitudCarpetaManual(filtros) {
         }
         if (filtros.profesionalId) {
             query.where('datosSolicitudManual.profesional._id').equals(filtros.profesionalId);
+        }
+        if (filtros.horaInicio || filtros.horaFin) {
+            if (filtros.horaInicio) {
+                query.where('fecha').gte(filtros.horaInicio);
+            }
+            if (filtros.horaFin) {
+                query.where('fecha').lte(filtros.horaInicio);
+            }
         }
         query.where('estado').equals((filtros.estadoSolicitud ? filtros.estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
     }
