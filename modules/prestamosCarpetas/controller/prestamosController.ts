@@ -489,10 +489,10 @@ async function getSolicitudCarpetaManual(filtros) {
         }
         if (filtros.horaInicio || filtros.horaFin) {
             if (filtros.horaInicio) {
-                query.where('fecha').gte(filtros.horaInicio);
+                query.where('fecha').gte(new Date(filtros.horaInicio));
             }
             if (filtros.horaFin) {
-                query.where('fecha').lte(filtros.horaInicio);
+                query.where('fecha').lte(new Date(filtros.horaFin));
             }
         }
         query.where('estado').equals((filtros.estadoSolicitud ? filtros.estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
