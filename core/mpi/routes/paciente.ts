@@ -179,7 +179,7 @@ router.get('/pacientes/:id', async (req, res, next) => {
         const idPaciente = req.params.id;
         const { paciente: pacienteFound } = await controller.buscarPaciente(idPaciente);
         const pacienteBuscado: any = new paciente(pacienteFound);
-        if (pacienteBuscado && pacienteBuscado.documento) {
+        if (pacienteBuscado) {
             let pacienteConOS = pacienteBuscado.toObject({ virtuals: true });
             pacienteConOS.id = pacienteConOS._id;
             try {
@@ -485,7 +485,6 @@ router.patch('/pacientes/:id', async (req, res, next) => {
     }
     try {
         let resultado = await controller.buscarPaciente(req.params.id);
-
         if (resultado) {
             switch (req.body.op) {
                 case 'updateContactos':
