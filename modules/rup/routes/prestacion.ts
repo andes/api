@@ -579,7 +579,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
                 break;
             case 'referir':
-                updateRegistroHistorialSolicitud(data.solicitud, 'referencia');
+                updateRegistroHistorialSolicitud(data.solicitud, 'referencia', null, req.body.observaciones);
                 if (req.body.estado) {
                     data.estados.push();
                 }
