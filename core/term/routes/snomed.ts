@@ -29,7 +29,10 @@ router.get('/snomed', async (req, res, next) => {
         return res.json(conceptos);
     } else {
         const concepto = await SnomedCtr.getConcept(search, '');
-        return res.json([concepto]);
+        if (concepto) {
+            return res.json([concepto]);
+        }
+        return res.json([]);
     }
 });
 
