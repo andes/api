@@ -1,3 +1,18 @@
+# [5.9.0](https://github.com/andes/api/compare/v5.8.0...v5.9.0) (2020-08-19)
+
+
+### Bug Fixes
+
+* **mpi:** se elimina condicion paciente.documento ([#1079](https://github.com/andes/api/issues/1079)) ([9e2ac75](https://github.com/andes/api/commit/9e2ac75d392d553dcf9a716826584d1c1424cabe))
+* **prestamo:** agrega control de fecha manual ([#1050](https://github.com/andes/api/issues/1050)) ([3fe73aa](https://github.com/andes/api/commit/3fe73aaeab58d9297e4ec29573922d410a816c6f))
+* **prestamos:**  wrong date ([#1077](https://github.com/andes/api/issues/1077)) ([6e3843f](https://github.com/andes/api/commit/6e3843fa19b795fae5cb9399192f85059fee9744))
+
+
+### Features
+
+* **mpi:** actualiza paquete fuentes-autenticas y esquema de relacion ([#1071](https://github.com/andes/api/issues/1071)) ([e16b7c1](https://github.com/andes/api/commit/e16b7c1f3e8234ee58fa11c303ecf4fa75aae2a0))
+* **TOP:** nueva operacion responder en PATCH de prestaciones ([#1052](https://github.com/andes/api/issues/1052)) ([e8ac0ef](https://github.com/andes/api/commit/e8ac0ef7bad3cb284ec66a7fcd18de101f65ca3e))
+
 # [5.8.0](https://github.com/andes/api/compare/v5.7.0...v5.8.0) (2020-08-12)
 
 
