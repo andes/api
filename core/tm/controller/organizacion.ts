@@ -46,3 +46,40 @@ export async function obtenerOfertaPrestacional(orgCodSisa: Number) {
     };
     return await handleHttpRequest(options);
 }
+
+export function addSector(itemSector, sector, padre) {
+    if (String(itemSector._id) === padre) {
+        itemSector.hijos.push(sector);
+        return itemSector;
+    } else {
+        for (let index = 0; index < itemSector.hijos.length; index++) {
+            itemSector.hijos[index] = addSector(itemSector.hijos[index], sector, padre);
+        }
+        return itemSector;
+    }
+}
+
+export function changeSector(itemSector, sector) {
+    if (String(itemSector._id) === sector._id) {
+        return sector;
+    } else {
+        for (let index = 0; index < itemSector.hijos.length; index++) {
+            itemSector.hijos[index] = changeSector(itemSector.hijos[index], sector);
+        }
+        return itemSector;
+    }
+}
+
+export function deleteSector(itemSector, sector) {
+    if (String(itemSector._id) === sector._id) {
+        return null;
+    } else {
+        for (let index = 0; index < itemSector.hijos.length; index++) {
+            itemSector.hijos[index] = deleteSector(itemSector.hijos[index], sector);
+            if (!itemSector.hijos[index]) {
+                itemSector.hijos.splice(index, 1);
+            }
+        }
+        return itemSector;
+    }
+}

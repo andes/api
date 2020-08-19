@@ -343,3 +343,34 @@ function groupBy(xs: any[], key: string) {
         return rv;
     }, {});
 }
+
+export async function sectorChange(idOrganizacion, sector) {
+    await Camas.update(
+        {
+            'organizacion._id': mongoose.Types.ObjectId(idOrganizacion),
+            sectores: { $elemMatch: { _id: mongoose.Types.ObjectId(sector._id) } }
+        },
+        {
+            $set: {
+                'sectores.$.nombre': sector.nombre,
+                'sectores.$.tipoSector': sector.tipoSector,
+                'sectores.$.unidadConcept': sector.unidadConcept,
+            }
+        },
+        {
+            upsert: false,
+            multi: true,
+        }
+    );
+}
+
+export async function checkSectorDelete(idOrganizacion: string, idSector: string) {
+    const ambito = 'internacion';
+    const capa = 'estadistica';
+    const estadoCama = await CamasEstadosController.snapshotEstados({ fecha: moment().toDate(), organizacion: idOrganizacion, ambito, capa }, { sector: idSector });
+    if (estadoCama[0] && estadoCama[0].estado !== 'inactiva') {
+        return false;
+    }
+
+    return true;
+}
