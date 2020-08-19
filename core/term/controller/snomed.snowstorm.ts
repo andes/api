@@ -141,7 +141,7 @@ export async function getConcepts(conceptsIds: string[]) {
     return null;
 }
 
-export async function getConceptByExpression(expression, term = null, form = 'stated', languageCode = 'es') {
+export async function getConceptByExpression(expression, term = null, form = 'stated', languageCode: 'es' | 'en' = 'es') {
     const qs: any = {
         limit: 10000,
         termActive: true,
@@ -169,8 +169,7 @@ export async function getConceptByExpression(expression, term = null, form = 'st
     return null;
 }
 
-export async function searchTerms(text, { semanticTags, languageCode }, conceptIds: string[] = null) {
-    languageCode = languageCode || 'es';
+async function searchByDescription({ text, semanticTags, languageCode }) {
     const qs = {
         semanticTags,
         term: text,
@@ -182,22 +181,66 @@ export async function searchTerms(text, { semanticTags, languageCode }, conceptI
     const response = await httpGetSnowstorm(`browser/${snomed.snowstormBranch}/descriptions`, qs, languageCode);
     if (response) {
         let { items } = response;
-        if (conceptIds) {
-            items = items.filter(item => conceptIds.find(c => c === item.concept.conceptId));
-        }
-        return items.map(cpt => {
+        items = items.map(cpt => {
             return {
                 conceptId: cpt.concept.conceptId,
                 term: cpt.term,
                 fsn: cpt.concept.fsn.term,
                 semanticTag: getSemanticTagFromFsn(cpt.concept.fsn.term),
             };
-        }).sort((a: any, b: any) => {
-            if (a.term.length < b.term.length) { return -1; }
-            if (a.term.length > b.term.length) { return 1; }
-            return 0;
         });
+        return items;
     }
+    return [];
+}
+
+async function searchByExpression({ text, languageCode, expression, semanticTags }) {
+    const qs = {
+        term: text,
+        activeFilter: true,
+        termActive: true,
+        language: languageCode,
+        limit: 1000,
+        ecl: expression
+    };
+    const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts`, qs, languageCode);
+    if (response) {
+        let { items } = response;
+        items = items.map(cpt => {
+            return {
+                conceptId: cpt.conceptId,
+                term: cpt.pt.term,
+                fsn: cpt.fsn.term,
+                semanticTag: getSemanticTagFromFsn(cpt.fsn.term),
+            };
+        });
+        if (semanticTags) {
+            items = items.filter(concept => semanticTags.includes(concept.semanticTag));
+        }
+        return items;
+    }
+    return [];
+}
+
+type SearchTermParams = { semanticTags?: String[], languageCode?: 'es' | 'en', expression?: string };
+export async function searchTerms(text, { semanticTags, languageCode, expression }: SearchTermParams, conceptIds: string[] = null) {
+    languageCode = languageCode || 'es';
+    let items;
+    if (expression) {
+        items = await searchByExpression({ text, languageCode, expression, semanticTags });
+    } else {
+        items = await searchByDescription({ text, semanticTags, languageCode });
+    }
+
+    if (conceptIds) {
+        items = items.filter(item => conceptIds.find(c => c === item.conceptId));
+    }
+    items = items.sort((a: any, b: any) => {
+        if (a.term.length < b.term.length) { return -1; }
+        if (a.term.length > b.term.length) { return 1; }
+        return 0;
+    });
+    return items;
 
 }
 

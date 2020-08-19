@@ -31,7 +31,7 @@ export interface ISnomedController {
      * Para el buscador de RUP.
      */
 
-    searchTerms(text: String, options: { semanticTags?: String[], languageCode?: 'es' | 'en' });
+    searchTerms(text: String, options: { semanticTags?: String[], languageCode?: 'es' | 'en', expression?: string });
 }
 
 export const SnomedCtr: ISnomedController = SnomedSnowstorm as any;
