@@ -33,7 +33,7 @@ router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) =
     const organizaciones = user.organizaciones.filter(x => x.activo === true).map((item) => {
         return mongoose.Types.ObjectId(item._id);
     });
-    const orgs = await Organizacion.find({ _id: { $in: organizaciones } }, { nombre: 1 });
+    const orgs = await Organizacion.find({ _id: { $in: organizaciones } }, { nombre: 1 }).sort({ nombre: 1 });
     return res.json(orgs);
 
 });
