@@ -65,7 +65,7 @@ const SalaComunBaseSchema = new Schema({
 SalaComunBaseSchema.plugin(AuditPlugin);
 
 const SalaComunSchema = SalaComunBaseSchema.clone();
-SalaComunSchema.post('save', async function (this: SalaComunDocument) {
+SalaComunSchema.pre('save', async function (this: SalaComunDocument) {
     const sala = this;
     if (!sala.isNew) {
         return;
