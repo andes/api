@@ -372,7 +372,7 @@ export async function dashboardSolicitudes(filtros, user) {
     }
 
     if (filtros.estados) {
-        matchEstados['ultimoEstado.tipo'] = {
+        matchFiltros['estadoActual.tipo'] = {
             $in: filtros.estados
         };
     }
@@ -382,8 +382,6 @@ export async function dashboardSolicitudes(filtros, user) {
         { $match: matchInicial },
         { $match: matchSolicitudEntrada },
         { $match: matchFiltros },
-        { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] } } },
-        { $match: matchEstados }, // Filtro por el último estado
         { $facet: makeFacet('entrada') }
     ];
     let pipelineSalida = [
@@ -391,8 +389,6 @@ export async function dashboardSolicitudes(filtros, user) {
         { $match: matchInicial },
         { $match: matchSolicitudSalida },
         { $match: matchFiltros },
-        { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] } } },
-        { $match: matchEstados }, // Filtro por el último estado
         { $facet: makeFacet('salida') }
     ];
 

@@ -11,8 +11,12 @@ import { Auth } from '../../../auth/auth.class';
  */
 export async function liberarRefTurno(turno, req) {
     try {
-        const query = Prestacion.findOne({ $where: 'this.estados[this.estados.length - 1].tipo ==  "pendiente"' });
-        query.where({ 'solicitud.turno': mongoose.Types.ObjectId(turno.id) });
+        const query = Prestacion.findOne({
+            $and: [
+                { 'estadoActual.tipo': 'pendiente' },
+                { 'solicitud.turno': mongoose.Types.ObjectId(turno.id) }
+            ]
+        });
         let prestacion: any = await query.exec();
         if (!prestacion) {
             return { err: 'No se encontro prestacion para el turno' };

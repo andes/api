@@ -38,11 +38,9 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
     try {
         // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
-        const estado = req.query.estado ? req.query.estado : 'validada';
-
         const query = {
             'paciente.id': req.params.idPaciente,
-            $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+            'estadoActual.tipo': req.query.estado ? req.query.estado : 'validada'
         };
 
         if (req.query.idPrestacion) {
@@ -84,11 +82,9 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, ne
         return res.status(404).send('Turno no encontrado');
     }
     // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
-    const estado = (req.query.estado) ? req.query.estado : 'validada';
-
     let query = {
         'paciente.id': req.params.idPaciente,
-        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+        'estadoActual.tipo': req.query.estado ? req.query.estado : 'validada'
     };
 
     if (req.query.idPrestacion) {
@@ -360,8 +356,7 @@ router.get('/prestaciones/:id*?', async (req: any, res, next) => {
         if (req.query.estado) {
             const estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
             query = Prestacion.find({
-                // $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"',
-                $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
+                'estadoActual.tipo': { $in: estados },
             });
         } else {
             query = Prestacion.find({}); // Trae todos
