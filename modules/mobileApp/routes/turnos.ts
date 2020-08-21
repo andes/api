@@ -5,11 +5,11 @@ import * as agendaCtrl from '../../turnos/controller/agenda';
 import { organizacionCache } from '../../../core/tm/schemas/organizacionCache';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
+import { turnosLog, agendaLog } from '../../turnos/citasLog';
 // let async = require('async');
 
 const router = express.Router();
@@ -223,13 +223,14 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
                 }
                 Auth.audit(agendaObj, req);
                 return agendaObj.save((error) => {
-                    Logger.log(req, 'citas', 'update', {
+                    const objetoLog = {
                         accion: 'liberarTurno',
                         ruta: req.url,
                         method: req.method,
                         data: agendaObj,
                         err: error || false
-                    });
+                    };
+                    turnosLog.info('update', objetoLog, req);
                     if (error) {
                         return next(error);
                     }
@@ -281,15 +282,14 @@ router.post('/turnos/confirmar', (req: any, res, next) => {
 
                     Auth.audit(agendaObj, req);
                     return agendaObj.save((error) => {
-                        Logger.log(req, 'citas', 'update', {
+                        const objetoLog = {
                             accion: 'confirmar',
                             ruta: req.url,
                             method: req.method,
                             data: agendaObj,
                             err: error || false
-                        });
-
-
+                        };
+                        turnosLog.info('update', objetoLog, req);
                         LoggerPaciente.logTurno(req, 'turnos:confirmar', turno.paciente, turno, bloqueId, agendaId);
 
                         if (error) {
@@ -344,15 +344,14 @@ router.post('/turnos/asistencia', (req: any, res, next) => {
 
                     Auth.audit(agendaObj, req);
                     return agendaObj.save((error) => {
-                        Logger.log(req, 'citas', 'update', {
+                        const objetoLog = {
                             accion: 'asistencia',
                             ruta: req.url,
                             method: req.method,
                             data: agendaObj,
                             err: error || false
-                        });
-
-
+                        };
+                        agendaLog.info('update', objetoLog, req);
                         LoggerPaciente.logTurno(req, 'turnos:asistencia', turno.paciente, turno, bloqueId, agendaId);
 
                         if (error) {

@@ -4,7 +4,6 @@ import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
-import { Logger } from '../../../utils/logService';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
@@ -16,6 +15,8 @@ import { EventCore } from '@andes/event-bus';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 import * as codificacionModel from '../../rup/schemas/codificacion';
 import { Types } from 'mongoose';
+import { agendaLog } from '../citasLog';
+
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -722,14 +723,14 @@ export async function actualizarTiposDeTurno() {
 
         Auth.audit(agenda, (userScheduler as any));
         return saveAgenda(agenda).then(() => {
-            Logger.log(userScheduler, 'citas', 'actualizarTiposDeTurno', {
+            const objetoLog = {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
                 updatedAt: agenda.updatedAt,
                 updatedBy: agenda.updatedBy
-
-            });
+            };
+            agendaLog.info('actualizarTiposTurnos', objetoLog);
             return Promise.resolve();
         }).catch(() => {
             return Promise.resolve();
@@ -939,13 +940,14 @@ export async function turnosDisponibles(prestacion, organizacion) {
 async function actualizarAux(agenda: any) {
     Auth.audit(agenda, (userScheduler as any));
     await saveAgenda(agenda);
-    Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
+    const objetoLog = {
         idAgenda: agenda._id,
         organizacion: agenda.organizacion,
         horaInicio: agenda.horaInicio,
         updatedAt: agenda.updatedAt,
         updatedBy: agenda.updatedBy
-    });
+    };
+    agendaLog.info('actualizarEstadoAgendas', objetoLog);
 }
 
 
@@ -977,14 +979,14 @@ export function actualizarTurnosDelDia() {
 
         Auth.audit(agenda, (userScheduler as any));
         return saveAgenda(agenda).then(() => {
-            Logger.log(userScheduler, 'citas', 'actualizarTurnosDelDia', {
+            const objetoLog = {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
                 updatedAt: agenda.updatedAt,
                 updatedBy: agenda.updatedBy
-
-            });
+            };
+            agendaLog.info('actualizarTurnosDelDia', objetoLog);
             return Promise.resolve();
         }).catch(() => {
             return Promise.resolve();
