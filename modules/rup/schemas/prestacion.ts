@@ -109,6 +109,12 @@ export let schema = new mongoose.Schema({
             ref: 'prestacion'
         },
 
+        inicioPrestacion: {
+            // requerido, seteado x defecto en middleware
+            type: String,
+            enum: ['TOP', 'AGENDA', 'FUERADEAGENDA', 'INTERNACION'],
+        },
+
         historial: [PrestacionSolicitudHistorialschema]
     },
 
