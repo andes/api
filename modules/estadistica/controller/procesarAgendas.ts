@@ -38,8 +38,8 @@ export async function procesar(parametros: any) {
     }
 
     if (parametros.prestacion) {
-        match['tipoPrestaciones._id'] = mongoose.Types.ObjectId(parametros.prestacion);
-        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }, { $eq: ['$_bloques.turnos.tipoPrestacion._id', mongoose.Types.ObjectId(parametros.prestacion)] }] };
+        match['tipoPrestaciones.conceptId'] = parametros.prestacion;
+        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }, { $eq: ['$_bloques.turnos.tipoPrestacion.conceptId', parametros.prestacion] }] };
     } else {
         matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }] };
     }

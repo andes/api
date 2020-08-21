@@ -16,14 +16,14 @@ const ObjectId = Types.ObjectId;
 export async function getCarpetasSolicitud(req) {
     const query = req.query;
     const organizacion = query.organizacion;
-    const tipoPrestacion = query.idTipoPrestacion;
+    const tipoPrestacion = query.tipoPrestacion;
     const espacioFisico = query.idEspacioFisico;
     const profesional = query.idProfesional;
     const horaInicio = query.fechaDesde;
     const horaFin = query.fechaHasta;
 
     const [solicitudesManuales, agendas, agendasSobreturno] = await Promise.all([
-        getSolicitudCarpetaManual({ organizacionId: organizacion, tipoPrestacionId: tipoPrestacion, espacioFisicoId: espacioFisico, profesionalId: profesional, horaFin, horaInicio }),
+        getSolicitudCarpetaManual({ organizacionId: organizacion, tipoPrestacion, espacioFisicoId: espacioFisico, profesionalId: profesional, horaFin, horaInicio }),
         buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin),
         buscarAgendasSobreturnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin)
     ]);
@@ -39,12 +39,12 @@ export async function getCarpetasSolicitud(req) {
 export async function getCarpetasPrestamo(req) {
     const query = req.query;
     const organizacionId = query.organizacion;
-    const tipoPrestacionId = query.idTipoPrestacion;
+    const tipoPrestacion = query.tipoPrestacion;
     const espacioFisicoId = query.idEspacioFisico;
     const profesionalId = query.idProfesional;
     const horaInicio = query.fechaDesde;
     const horaFin = query.fechaHasta;
-    const carpetas = await findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
+    const carpetas = await findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacion, espacioFisicoId, profesionalId);
 
     return carpetas;
 }
@@ -109,7 +109,6 @@ async function armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, 
 
 async function getRegistrosSolicitudCarpetas(query, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
     let mostrarPrestamos = query.mostrarPrestamos;
-
     let registrosSolicitudesAutomaticas = [];
     agendas.forEach(unaAgenda => {
         unaAgenda.forEach(_agenda => {
@@ -141,7 +140,6 @@ async function getRegistrosSolicitudCarpetas(query, unaOrganizacion, agendas, ca
                 }
             });
             let ultimoCDA = await searchByPatient(element.paciente.id, '2881000013106', { limit: 1, skip: null });
-
             return {
                 fecha: element.fecha,
                 paciente: element.paciente,
@@ -194,7 +192,7 @@ async function findCarpetasPrestamo(organizacionId: string, horaInicio: string, 
         }
     }
     if (tipoPrestacion) {
-        match['datosPrestamo.turno.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
+        match['datosPrestamo.turno.tipoPrestacion.conceptId'] = tipoPrestacion;
     }
 
     if (espacioFisico) {
@@ -232,7 +230,7 @@ async function buscarAgendasSobreturnos(organizacionId: string, tipoPrestacion: 
 
     const matchCarpeta = {};
     if (tipoPrestacion) {
-        matchCarpeta['sobreturnos.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
+        matchCarpeta['sobreturnos.tipoPrestacion.conceptId'] = tipoPrestacion;
     }
 
     if (espacioFisico) {
@@ -286,7 +284,7 @@ async function buscarAgendasTurnos(organizacionId: string, tipoPrestacion: strin
 
     const matchCarpeta = {};
     if (tipoPrestacion) {
-        matchCarpeta['bloques.turnos.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
+        matchCarpeta['bloques.turnos.tipoPrestacion.conceptId'] = tipoPrestacion;
     }
 
     if (espacioFisico) {
@@ -478,8 +476,8 @@ async function getSolicitudCarpetaManual(filtros) {
         if (filtros.organizacionId) {
             query.where('organizacion._id').equals(filtros.organizacionId);
         }
-        if (filtros.tipoPrestacionId) {
-            query.where('datosSolicitudManual.prestacion._id').equals(filtros.tipoPrestacionId);
+        if (filtros.tipoPrestacion) {
+            query.where('datosSolicitudManual.prestacion.conceptId').equals(filtros.tipoPrestacion);
         }
         if (filtros.espacioFisicoId) {
             query.where('datosSolicitudManual.espacioFisico._id').equals(filtros.espacioFisicoId);
