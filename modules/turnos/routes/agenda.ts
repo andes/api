@@ -560,15 +560,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
-                        if (turno.paciente && turno.paciente.id) {
-                            const objetoLog = {
-                                paciente: turno.paciente,
-                                turno,
-                                idTurno: agendaCtrl.getBloque(data, turno)._id,
-                                data
-                            };
-                            agendaLog.info('liberarTurno', objetoLog, req);
-                        }
+                        LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data);
                         await prestacionCtrl.liberarRefTurno(turno, req);
                         let liberado = await agendaCtrl.liberarTurno(req, data, turno);
                         if (!liberado) {
@@ -579,22 +571,10 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         if (agendaCtrl.getBloque(data, turno)) {
-                            const objetoLog = {
-                                paciente: (turno.paciente ? turno.paciente : null),
-                                turno,
-                                idTurno: agendaCtrl.getBloque(data, turno)._id,
-                                data: data._id
-                            };
-                            agendaLog.info('suspenderTurno', objetoLog, req);
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         } else {
                             // Caso sobreturno
-                            const objetoLog = {
-                                paciente: (turno.paciente ? turno.paciente : null),
-                                turno,
-                                idTurno: -1,
-                                data: data._id
-                            };
-                            agendaLog.info('suspenderTurno', objetoLog, req);
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, -1, data._id);
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         event = { object: 'turno', accion: 'suspender', data: turno };
