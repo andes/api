@@ -210,9 +210,29 @@ export async function matching(data) {
             break;
         case 'search':
             {
+                let andQuery = [];
+                if (data.filtros.cadenaInput) {
+                    // si se ingresa una cadena de texto se busca matching con tokens de paciente
+                    const words = data.filtros.cadenaInput.trim().toLowerCase().split(' ');
+                    words.forEach(w => {
+                        andQuery.push({ tokens: RegExp(`^${w}`) });
+                    });
+                    delete data.filtros.cadenaInput;
+                }
+                if (data.filtros.skip) {
+                    data.skip = data.filtros.skip;
+                    delete data.filtros.skip;
+                }
+                if (data.filtros.limit) {
+                    data.limit = data.filtros.limit;
+                    delete data.filtros.limit;
+                }
+                if (Object.keys(data.filtros).length) {
+                    // si existen, se concatenan el resto de los filtros
+                    andQuery = andQuery.concat([data.filtros]);
+                }
                 query = {
-                    $and: [data.filtros],
-                    activo: 'true'
+                    $and: andQuery
                 };
             }
             break;
