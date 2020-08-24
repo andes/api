@@ -46,7 +46,25 @@ export async function obtenerPrestaciones(organizacion, filtros) {
         {
             $match: { $or: [{ 'lastState.tipo': 'ejecucion' }, { 'lastState.tipo': 'validada' }] }
         },
-        { $project: { _v: 0, lastState: 0 } }
+        { $project: { 
+            id: '$_id', 
+            paciente: 1,
+            solicitud: 1,
+            ejecucion: 1,
+            noNominalizada: 1,
+            estados: 1,
+            createdAt: 1,
+            createdBy: 1,
+            updatedAt: 1,
+            updatedBy: 1,
+            esPrioritario: {
+                $cond: {
+                    if: { $eq: ['$registroSolicitud.valor.solicitudPrestacion.prioridad', 'prioritario'] },
+                    then: -1,
+                    else: 1
+                }
+            }
+        } }
     ]);
 
     const prestacionesInternacion = await prestaciones$.exec();
