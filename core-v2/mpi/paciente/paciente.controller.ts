@@ -1,60 +1,20 @@
 import { Paciente } from './paciente.schema';
-import { Auth } from '../../../auth/auth.class';
 import * as moment from 'moment';
+import { Types } from 'mongoose';
 import { Matching } from '@andes/match';
 import { IPacienteDoc, IPaciente } from './paciente.interface';
-import * as express from 'express';
+import { isSelected } from '@andes/core';
 import * as config from '../../../config';
-
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 
 /**
  * Crea un objeto paciente
  */
 
-export function newPaciente(body: IPaciente) {
+export function make(body: IPaciente) {
     const paciente = new Paciente();
     paciente.set(body);
     return paciente;
-}
-
-/**
- * Guarda un objecto paciente en mongo.
- *
- * @param {IPacienteDoc} body Datos del paciente
- * @param {express.Request} req Request de Express para obtener los datos del usuario
- */
-
-export async function storePaciente(paciente/*: IPacienteDoc*/, req: express.Request) {
-    const session = await Paciente.db.startSession();
-    session.startTransaction();
-    const isNew = paciente.isNew;
-    try {
-        const pacienteOriginal = paciente.original();
-        const pacienteFields = paciente.modifiedPaths();
-
-        Auth.audit(paciente, req);
-        await paciente.save({ session });
-
-        if (isNew) {
-            //     log(req, logKeys.mpiInsert.key, paciente._id, logKeys.mpiInsert.operacion, paciente, null);
-            await session.commitTransaction();
-        } else {
-            //     log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, paciente, pacienteOriginal);
-            await session.commitTransaction();
-        }
-        return paciente;
-    } catch (error) {
-        if (isNew) {
-            //          log(req, logKeys.mpiInsert.key, null, logKeys.mpiInsert.operacion, paciente, 'Error insertando paciente');
-        } else {
-            //          log(req, logKeys.mpiUpdate.key, paciente._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
-        }
-        await session.abortTransaction();
-        if (error.name === 'ValidationError') {
-            error.status = 400;
-        }
-        throw error;
-    }
 }
 
 /**
@@ -63,18 +23,42 @@ export async function storePaciente(paciente/*: IPacienteDoc*/, req: express.Req
  * @param {object} body Datos a modificar del paciente
  */
 
-export function updatePaciente(paciente/*: IPacienteDoc*/, body: any) {
+export function set(paciente: IPacienteDoc, body: any) {
     if (paciente.estado === 'validado') {
         delete body['documento'];
-        delete body['apellido'];
-        delete body['nombre'];
-        delete body['sexo'];
         delete body['fechaNacimiento'];
         delete body['estado'];
     }
     paciente.set(body);
     return paciente;
 }
+
+/**
+ * Busca un paciente por ID. Tanto en ANDES y MPI.
+ * @param {string} id ID del paciente a buscar.
+ * @param {object} options
+ * @param {string} options.fields Listado de campos para projectar
+ * @returns {IPacienteDoc}
+ */
+
+export async function findById(id: string | String | Types.ObjectId, options = null): Promise<IPacienteDoc> {
+    options = options || {};
+    const { fields } = options;
+
+    const queryFind = Paciente.findById(id);
+    if (fields) {
+        queryFind.select(fields);
+    }
+    const paciente = await queryFind;
+    if (paciente) {
+        if (isSelected(fields, 'financiador')) {
+            paciente.financiador = await getObraSocial(paciente);
+        }
+        return paciente;
+    }
+    return null;
+}
+
 
 /**
  * Busca paciente similares a partir de su documento
@@ -87,17 +71,15 @@ export function updatePaciente(paciente/*: IPacienteDoc*/, body: any) {
 
 export async function suggest(query: any) {
     if (query && query.documento) {
-        let pacientes = await Paciente.fuzzySearch({ query: query.documento, minSize: 7 }, { activo: { $eq: true } });
-
+        // @ts-ignore: fuzzySearch
+        let pacientes = await Paciente.fuzzySearch({ query: query.documento, minSize: 3 }, { activo: { $eq: true } });
         pacientes.forEach((paciente) => {
             const value = matching(paciente, query);
             paciente._score = value;
         });
-
         const sortScore = (a, b) => {
             return b._score - a._score;
         };
-
         return pacientes.sort(sortScore);
     } else {
         return [];
@@ -146,3 +128,30 @@ export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPacien
 export function isMatchingAlto(sugeridos: any[]) {
     return sugeridos.some((paciente) => paciente._score > config.mpi.cotaMatchMax);
 }
+
+/**
+ * Busca pacientes dada de una cadena de texto por documento, apellido, nombre, alias
+ * o número de identificación
+ *
+ * @param {string} searchText Condiciones a buscar
+ * @param {object} filter Condiciones a buscar
+ * @param {object} options Condiciones a buscar
+ */
+
+export async function multimatch(searchText: string, filter: any, options?: any) {
+    const words = searchText.trim().toLowerCase().split(' ');
+    let andQuery = [];
+    words.forEach(w => {
+        andQuery.push({ tokens: RegExp(`^${w}`) });
+    });
+    // Ejemplo filter { activo: { $eq: true } }
+    andQuery.push(filter);
+    const query = {
+        $and: andQuery
+    };
+    const skip = parseInt(options.skip || 0, 10);
+    const limit = parseInt(options.limit || 30, 10);
+    const pacientes = await Paciente.find(query).skip(skip).limit(limit);
+    return pacientes;
+}
+

@@ -75,6 +75,8 @@ export function initAPI(app: Express) {
     });
 
     const TMRouter = require('./core/tm').Routes;
+    const MPI = require('./core-v2/mpi');
+    // const MPI = require('@andes/mpi');
     TMRouter.forEach(router => {
         app.use('/api/core/tm', router);
     });
@@ -89,6 +91,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').EstadosRouter);
     app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').CensosRouter);
     app.use('/api/modules', require('./modules/seguimiento-paciente').SeguimientoPacienteRouter);
+    app.use('/api/core-v2/mpi', MPI.RoutingMPI);
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(
@@ -145,6 +148,4 @@ export function initAPI(app: Express) {
     app.use('/api/modules/mobileApp', SendMessageCacheRouter);
     app.use('/api/modules/mobileApp', PacienteAppRouter);
     app.use('/api/core/mpi', require('./core/mpi').ParentescoRouter);
-    // app.use('/api/core-v2/mpi', require('./core-v2/mpi').ParentescoRouter);
-    app.use('/api/core-v2/mpi', require('./core-v2/mpi').PacienteRouter);
 }

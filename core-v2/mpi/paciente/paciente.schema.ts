@@ -1,29 +1,30 @@
-import { parentescoSchema } from '../../../core/mpi/parentesco.schema';
 import * as mongoose from 'mongoose';
-import * as direccionSchema from '../../../core/tm/schemas/direccion';
-import * as contactoSchema from '../../../core/tm/schemas/contacto';
-import * as financiadorSchema from '../financiador/financiador';
-import * as constantes from '../../../core/mpi/schemas/constantes';
 import * as moment from 'moment';
-import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from '../../../core/mpi/schemas/constantes';
+import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';
+import { FinanciadorSchema } from '../financiador/financiador.schema';
+import { ParentescoSchema } from '../../../core/mpi/parentesco.schema';
+import { IPacienteDoc } from './paciente.interface';
+
 
 let ObjectId = mongoose.Types.ObjectId;
 const mongoose_fuzzy_searching = require('mongoose-fuzzy-searching');
-/*
-interface IUserModel extends mongoose.Document {
-    nombre: String;
-    apellido: String;
-    claveBlocking: string[];
-}
-*/
 
-export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
-    /*
-    * Información de los IDs de los pacientes en otros sistemas y también la información
-    * de los pacientes vinculados. La vinculación es unilateral.
-    */
+export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
+    nombre: {
+        type: String,
+        es_indexed: true
+    },
+    apellido: {
+        type: String,
+        es_indexed: true
+    },
+    fechaNacimiento: {
+        type: Date,
+        es_indexed: true
+    },
     identificadores: [{
         _id: false,
         entidad: String,
@@ -39,37 +40,31 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         es_indexed: true
     },
     activo: Boolean,
-    estado: constantes.ESTADO,
-    nombre: {
-        type: String,
-        es_indexed: true
-    },
-    apellido: {
-        type: String,
-        es_indexed: true
-    },
     alias: String,
-    contacto: [contactoSchema],
-    direccion: [direccionSchema],
-    sexo: constantes.SEXO,
-    genero: constantes.SEXO,
-    fechaNacimiento: {
-        type: Date,
-        es_indexed: true
-    },
+    estado: ESTADO,
+    contacto: [ContactoSchema],
+    direccion: [DireccionSchema],
+    sexo: SEXO,
+    genero: SEXO,
     fechaFallecimiento: Date,
-    estadoCivil: constantes.ESTADOCIVIL,
-    foto: String,
+    estadoCivil: ESTADOCIVIL,
+    foto: {
+        type: String,
+        select: false
+    },
     fotoMobile: String,
     nacionalidad: String,
     // ---------------------
     // Campos asociados a pacientes extranjeros
 
-    tipoIdentificacion: { type: constantes.IDENTIFICACION, required: false },  // pasaporte o documento extranjero
-    numeroIdentificacion: String,
+    tipoIdentificacion: { type: IDENTIFICACION, required: false },  // pasaporte o documento extranjero
+    numeroIdentificacion: {
+        type: String,
+        required: false
+    },
     // --------------------
     relaciones: [{
-        relacion: parentescoSchema,
+        relacion: ParentescoSchema,
         referencia: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'paciente'
@@ -79,28 +74,30 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         documento: String,
         foto: String
     }],
-    financiador: [financiadorSchema],
+    financiador: [FinanciadorSchema],
     claveBlocking: { type: [String], es_indexed: true },
     entidadesValidadoras: [String],
-    scan: {
-        type: String,
-        es_indexed: true
-    },
+    scan: String,
     reportarError: Boolean,
     notaError: String,
     carpetaEfectores: [{
-        organizacion: nombreSchema,
+        organizacion: NombreSchema,
         nroCarpeta: String
     }],
     notas: [{
         fecha: Date,
         nota: String,
         destacada: Boolean
+    }],
+    tokens: [{
+        type: String,
+        lowercase: true
     }]
 }, { versionKey: false });
 
-pacienteSchema.pre('save', function (next) {
+PacienteSchema.pre('save', function (next) {
     const user: any = this;
+    let words = [];
     if (user.isModified('nombre')) {
         user.nombre = user.nombre.toUpperCase();
     }
@@ -111,11 +108,31 @@ pacienteSchema.pre('save', function (next) {
         const match = new Matching();
         user.claveBlocking = match.crearClavesBlocking(user);
     }
+    if (user.documento) {
+        words.push(user.documento.toLowerCase());
+    }
+    if (user.nombre) {
+        user.nombre.toLowerCase().split(' ').forEach(doc => {
+            words.push(doc.toLowerCase());
+        });
+    }
+    if (user.apellido) {
+        user.apellido.toLowerCase().split(' ').forEach(doc => {
+            words.push(doc.toLowerCase());
+        });
+    }
+    if (user.alias) {
+        words.push(user.alias.toLowerCase());
+    }
+    if (user.numeroIdentificacion) {
+        words.push(user.numeroIdentificacion.toLowerCase());
+    }
+    user.tokens = words;
     next();
 
 });
 
-pacienteSchema.virtual('vinculos').get(function () {
+PacienteSchema.virtual('vinculos').get(function () {
     if (this.identificadores) {
         let identificadores = this.identificadores.filter(i => i.entidad === 'ANDES').map(i => ObjectId(i.valor));
         return [this._id, ...identificadores];
@@ -124,15 +141,11 @@ pacienteSchema.virtual('vinculos').get(function () {
     }
 });
 
-/* Se definen los campos virtuals */
-pacienteSchema.virtual('nombreCompleto').get(function () {
-    return this.nombre + ' ' + this.apellido;
-});
-pacienteSchema.virtual('edad').get(function () {
+export function calcularEdad(fecha, fechaFallecimiento) {
     let edad = null;
-    if (this.fechaNacimiento) {
-        const birthDate = new Date(this.fechaNacimiento);
-        const currentDate = new Date();
+    if (fecha) {
+        const birthDate = new Date(fecha);
+        const currentDate = fechaFallecimiento ? new Date(fechaFallecimiento) : new Date();
         let years = (currentDate.getFullYear() - birthDate.getFullYear());
         if (currentDate.getMonth() < birthDate.getMonth() ||
             currentDate.getMonth() === birthDate.getMonth() && currentDate.getDate() < birthDate.getDate()) {
@@ -141,25 +154,25 @@ pacienteSchema.virtual('edad').get(function () {
         edad = years;
     }
     return edad;
-});
-pacienteSchema.virtual('edadReal').get(function () {
+}
+
+export function calcularEdadReal(fecha, fechaFallecimiento) {
     // Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
     let edad: Object;
     let fechaNac: any;
-    const fechaActual: Date = new Date();
+    const fechaActual: Date = fechaFallecimiento ? new Date(fechaFallecimiento) : new Date();
     let fechaAct: any;
     let difAnios: any;
     let difDias: any;
     let difMeses: any;
     let difHs: any;
 
-    fechaNac = moment(this.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
+    fechaNac = moment(fecha, 'YYYY-MM-DD HH:mm:ss');
     fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
     difDias = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
     difAnios = Math.floor(difDias / 365.25);
     difMeses = Math.floor(difDias / 30.4375);
     difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
-
 
     if (difAnios !== 0) {
         edad = {
@@ -184,9 +197,20 @@ pacienteSchema.virtual('edadReal').get(function () {
     }
 
     return edad;
+}
+
+/* Se definen los campos virtuals */
+PacienteSchema.virtual('nombreCompleto').get(function () {
+    return this.nombre + ' ' + this.apellido;
+});
+PacienteSchema.virtual('edad').get(function () {
+    return calcularEdad(this.fechaNacimiento, this.fechaFallecimiento);
+});
+PacienteSchema.virtual('edadReal').get(function () {
+    return calcularEdadReal(this.fechaNacimiento, this.fechaFallecimiento);
 });
 
-pacienteSchema.methods.basicos = function () {
+PacienteSchema.methods.basicos = function () {
     return {
         id: this._id,
         nombre: this.nombre,
@@ -197,33 +221,28 @@ pacienteSchema.methods.basicos = function () {
     };
 };
 
-pacienteSchema.plugin(AuditPlugin);
-pacienteSchema.plugin(mongoose_fuzzy_searching, {
-    fields: ['documento', 'nombre', 'apellido', 'alias', 'numeroIdentificacion']
-    // fields: [
-    //     {
-    //         name: 'documento',
-    //         minSize: 7,
-    //         prefixOnly: true,
-    //     },
-    //     {
-    //         name: 'nombre',
-    //         minSize: 4,
-    //         weight: 3,
-    //         prefixOnly: true,
-    //     },
-    //     {
-    //         name: 'apellido',
-    //         minSize: 2,
-    //         weight: 5,
-    //         prefixOnly: true,
-    //     },
-    //     {
-    //         name: 'alias',
-    //         minSize: 2,
-    //         prefixOnly: true,
-    //     }
-    // ]
+PacienteSchema.plugin(AuditPlugin);
+PacienteSchema.plugin(mongoose_fuzzy_searching, {
+    fields: [
+        {
+            name: 'documento',
+            minSize: 3
+        }]
 });
 
-export let Paciente = mongoose.model('paciente_', pacienteSchema, 'paciente');
+PacienteSchema.index({ tokens: 1 });
+PacienteSchema.index({ documento: 1, sexo: 1 });
+
+export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
+    id: mongoose.Schema.Types.ObjectId,
+    nombre: String,
+    apellido: String,
+    documento: String,
+    alias: String,
+    fechaNacimiento: Date,
+    sexo: SEXO,
+    telefono: String
+
+});
+
+export const Paciente = mongoose.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');

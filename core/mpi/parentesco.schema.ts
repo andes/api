@@ -1,10 +1,10 @@
 
 import * as mongoose from 'mongoose';
 
-export const parentescoSchema = new mongoose.Schema({
+export const ParentescoSchema = new mongoose.Schema({
     nombre: String,
     opuesto: String
 });
 
-export const parentesco = mongoose.model('parentesco', parentescoSchema, 'parentesco');
+export const Parentesco = mongoose.model('parentesco', ParentescoSchema, 'parentesco');
 
