@@ -4,39 +4,13 @@ import { ingresarPaciente, egresarPaciente, listarSalaComun } from './sala-comun
 import { SalaComun, SalaComunSnapshot } from './sala-comun.schema';
 import moment = require('moment');
 import { SalaComunCtr } from './sala-comun.routes';
+import { getObjectId, getFakeRequest, setupUpMongo } from '@andes/unit-test';
 
-export const getObjectId = (name: string): mongoose.Types.ObjectId => {
-    if (name === '') {
-        throw new Error('Name cannot be empty');
-    }
-    const sha1 = require('sha1');
-    const hash = sha1(name);
-    return new mongoose.Types.ObjectId(hash.substring(0, 24));
-};
+const REQMock = getFakeRequest();
+const paciente1 = createPaciente('10000000');
+const paciente2 = createPaciente('20000000');
 
-const REQMock: any = {
-    user: {
-        usuario: { nombre: 'JUAN' },
-        organizacion: { nombre: 'CASTRO' }
-    }
-};
-
-let mongoServer: any;
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
-
-let paciente1 = createPaciente('10000000');
-let paciente2 = createPaciente('20000000');
-
-beforeAll(async () => {
-    mongoServer = new MongoMemoryServer();
-    const mongoUri = await mongoServer.getConnectionString();
-    mongoose.connect(mongoUri);
-});
-
-afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-});
+setupUpMongo();
 
 describe('Internacion - Sala Espera', () => {
     test('create sala', async () => {
@@ -114,7 +88,7 @@ describe('Internacion - Sala Espera', () => {
 
 });
 
-async function createSala() {
+export async function createSala() {
     return await SalaComunCtr.create(
         {
             nombre: 'sala',
@@ -128,6 +102,6 @@ async function createSala() {
     );
 }
 
-function createPaciente(documento) {
+export function createPaciente(documento) {
     return { id: new mongoose.Types.ObjectId(), documento, nombre: documento, apellido: documento };
 }

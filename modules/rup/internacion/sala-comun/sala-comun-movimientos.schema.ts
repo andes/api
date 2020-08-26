@@ -14,7 +14,6 @@ export interface ISalaComunMovimiento {
     accion: SalaComunAccion;
     idInternacion: Types.ObjectId;
     fecha: Date;
-
 }
 
 export type SalaComunMovimientoDocument = AndesDocWithAudit<ISalaComunMovimiento>;

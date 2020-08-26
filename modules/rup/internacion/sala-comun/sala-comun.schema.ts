@@ -18,6 +18,7 @@ export interface ISalaComun {
     unidadOrganizativas: UnidadOrganizativa[];
     sectores: ISectores[];
     estado: string;
+    lastSync?: Date;
 }
 export type SalaComunDocument = AndesDocWithAudit<ISalaComun>;
 
@@ -61,19 +62,23 @@ const SalaComunBaseSchema = new Schema({
         nombre: String
     }],
     estado: String,
+    lastSync: { type: Date, select: false }
 });
-SalaComunBaseSchema.plugin(AuditPlugin);
 
 const SalaComunSchema = SalaComunBaseSchema.clone();
+
+SalaComunSchema.plugin(AuditPlugin);
 SalaComunSchema.pre('save', async function (this: SalaComunDocument) {
     const sala = this;
     if (!sala.isNew) {
         return;
     }
+    sala.lastSync = moment().startOf('year').toDate();
+
     const { id, nombre, organizacion, capacidad, ambito, estado, sectores, unidadOrganizativas } = sala;
     const snapshot = new SalaComunSnapshot({
         idSalaComun: id,
-        fecha: moment().startOf('year'),
+        fecha: moment().startOf('year').toDate(),
         ocupacion: [],
         nombre,
         organizacion,
@@ -104,7 +109,7 @@ SalaComunSnapshotSchema.add({
         ambito: String,
         idInternacion: SchemaTypes.ObjectId,
         desde: Date,
-        unidadOrganizativa: [SnomedConcept],
+        unidadOrganizativas: [SnomedConcept],
 
         createdAt: { type: Date, required: false },
         createdBy: { type: SchemaTypes.Mixed, required: false },

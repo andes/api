@@ -49,7 +49,6 @@ export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, r
         }
     );
     return movimiento;
-
 }
 
 export async function egresarPaciente(id: SalaComunID, dto: SalaComunIngreso, req: Request) {
@@ -86,6 +85,10 @@ export type SalaComunOcupacion = Pick<ISalaComun, 'id' | 'nombre' | 'organizacio
     paciente: any;
     idInternacion: ObjectId,
     fecha: Date;
+    createdBy: any,
+    createdAt: Date,
+    updatedBy: any,
+    updatedAt: Date
 };
 
 
@@ -166,6 +169,10 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                                                     ambito: '$$this.ambito',
                                                     idInternacion: '$$this.idInternacion',
                                                     desde: '$$this.fecha',
+                                                    createdAt: '$$this.createdAt',
+                                                    createdBy: '$$this.createdBy',
+                                                    updatedAt: '$$this.updatedAt',
+                                                    updatedBy: '$$this.updatedBy'
                                                 }]
 
                                             ]
@@ -201,7 +208,11 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                 paciente: '$snapshot.paciente',
                 idInternacion: '$snapshot.idInternacion',
                 ambito: '$snapshot.ambito',
-                fecha: '$snapshot.desde'
+                fecha: '$snapshot.desde',
+                createdAt: '$snapshot.createdAt',
+                createdBy: '$snapshot.createdBy',
+                updatedAt: '$snapshot.updatedAt',
+                updatedBy: '$snapshot.updatedBy'
             }
         }
     ]);
