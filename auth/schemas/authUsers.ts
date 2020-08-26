@@ -37,6 +37,23 @@ export const AuthUsersSchema = new mongoose.Schema({
     },
     disclaimers: [{ createdAt: Date, _id: { type: mongoose.Schema.Types.ObjectId, ref: 'dislaimer' } }],
 });
+
+AuthUsersSchema.pre('save', function (next) {
+    const user: any = this;
+    user.organizaciones = user.organizaciones.sort(
+        (a, b) => {
+            if (a.nombre > b.nombre) {
+                return 1;
+            }
+            if (a.nombre < b.nombre) {
+                return -1;
+            }
+            return 0;
+        }
+    );
+    next();
+});
+
 AuthUsersSchema.plugin(AuditPlugin);
 
 export let AuthUsers = mongoose.model('authUsers', AuthUsersSchema, 'authUsers');
