@@ -1,3 +1,13 @@
+# [5.10.0](https://github.com/andes/api/compare/v5.9.0...v5.10.0) (2020-08-26)
+
+
+### Features
+
+* **mapas-camas:** agrega permiso para editar cama ([#1047](https://github.com/andes/api/issues/1047)) ([c3a7a4c](https://github.com/andes/api/commit/c3a7a4c3611e896f5e24b524493c888febaa0dac))
+* **mitos:** busqueda por expression ([#1051](https://github.com/andes/api/issues/1051)) ([6970ff6](https://github.com/andes/api/commit/6970ff67cdd96fed8e7f1e7c2a5bba0b78822f0c))
+* **organizacion:** agrega controles para eliminar y editar sector ([#1057](https://github.com/andes/api/issues/1057)) ([c5dde6c](https://github.com/andes/api/commit/c5dde6cf6c8de21b3e776162d94ebf77090a1093))
+* **TOP:** observaciones en referir solicitud ([#1078](https://github.com/andes/api/issues/1078)) ([7846387](https://github.com/andes/api/commit/784638743ea6920206375aafd174062c9dd48d59))
+
 # [5.9.0](https://github.com/andes/api/compare/v5.8.0...v5.9.0) (2020-08-19)
 
 
