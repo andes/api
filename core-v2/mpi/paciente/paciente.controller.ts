@@ -72,7 +72,7 @@ export async function findById(id: string | String | Types.ObjectId, options = n
 export async function suggest(query: any) {
     if (query && query.documento) {
         // @ts-ignore: fuzzySearch
-        let pacientes = await Paciente.fuzzySearch({ query: query.documento, minSize: 3 }, { activo: { $eq: true } });
+        let pacientes = await Paciente.fuzzySearch({ query: query.documento, minSize: 3 }, { activo: { $eq: true } }).limit(30);
         pacientes.forEach((paciente) => {
             const value = matching(paciente, query);
             paciente._score = value;

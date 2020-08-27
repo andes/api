@@ -86,6 +86,7 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     }],
     notas: [{
         fecha: Date,
+        titulo: String,
         nota: String,
         destacada: Boolean
     }],
