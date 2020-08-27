@@ -48,6 +48,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         },
         {
             $match: {
+                'estados.deletedAt' : { $exists : false },
                 'estados.esMovimiento': true,
                 'estados.fecha': { $lte: fechaSeleccionada }
             }
@@ -105,7 +106,6 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                             $expr: {
                                 $gte: ['$estados.fecha', '$$fechaMax'],
                             },
-                            'estados.deletedAt' : { $exists : false },
                             'estados.fecha': { $lte: fechaSeleccionada }
                         }
                     },
