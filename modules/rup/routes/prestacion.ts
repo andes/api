@@ -60,9 +60,14 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
             return res.status(404).send('Paciente no encontrado');
         }
 
+
         if (req.query.expresion) {
             const conceptos = await SnomedCtr.getConceptByExpression(req.query.expresion);
             const data = buscarEnHuds(prestaciones, conceptos);
+            if (req.query.valor) {
+                const salida = data.filter(p => p.registro.valor);
+                return res.json(salida);
+            }
             return res.json(data);
         }
     } catch (e) {
