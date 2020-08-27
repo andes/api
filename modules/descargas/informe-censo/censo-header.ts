@@ -1,6 +1,6 @@
-import * as moment from 'moment';
-import { loadImage, InformePDF, getAssetsURL } from '../model/informe.class';
+import { loadImage } from '../model/informe.class';
 import { HTMLComponent } from '../model/html-component.class';
+import * as configPrivate from '../../../config.private';
 
 export class CensoHeader extends HTMLComponent {
     template = `
@@ -36,12 +36,15 @@ export class CensoHeader extends HTMLComponent {
 
         let nombreLogo = organizacion.nombre.toLocaleLowerCase().replace(/-|\./g, '').replace(/ {2,}| /g, '-');
 
+        // consulta por provincia
+        const provincia = configPrivate.provincia || 'neuquen';
+
         this.data = {
             unidadOrganizativa,
             fechaCenso,
             logos: {
                 logoEfector: loadImage('templates/rup/informes/img/efectores/' + nombreLogo + '.png'),
-                adicional: loadImage('templates/rup/informes/img/logo-adicional.png'),
+                adicional: loadImage(`templates/rup/informes/img/logo-adicional-${provincia}.png`),
                 andes: loadImage('templates/rup/informes/img/logo-andes-h.png'),
             },
         };
