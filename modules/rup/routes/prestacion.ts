@@ -579,6 +579,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     data.solicitud.turno = req.body.idTurno;
                 }
                 break;
+            case 'desasociarTurno':
+                data.solicitud.turno = null;
+                data.estados.push({ tipo: 'anulada' });
+                break;
             case 'referir':
                 if (req.body.estado) {
                     data.estados.push();
