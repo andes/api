@@ -260,13 +260,10 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             });
         }
 
-        pipeline.push({ $match: match });
-
         if (req.query.estados) {
-            pipeline.push({ $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } });
-            pipeline.push({ $match: { 'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } } });
+            match.$and.push({ 'estadoActual.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } });
         }
-
+        pipeline.push({ $match: match });
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
         let project = {
             $project: {
@@ -276,11 +273,11 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                 ejecucion: 1,
                 noNominalizada: 1,
                 estados: 1,
+                estadoActual: 1,
                 createdAt: 1,
                 createdBy: 1,
                 updatedAt: 1,
                 updatedBy: 1,
-                lastState: 1,
                 esPrioritario: {
                     $cond: {
                         if: { $eq: ['$registroSolicitud.valor.solicitudPrestacion.prioridad', 'prioritario'] },
