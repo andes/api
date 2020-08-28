@@ -26,4 +26,4 @@ export const ModuloSchema = new Schema({
 
 });
 
-export const Modulos = model('modulos', ModuloSchema, 'modulos');
+export const Modulos = model('modulos_new2', ModuloSchema, 'modulos_new');

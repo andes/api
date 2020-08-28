@@ -4,7 +4,7 @@ import { Modulos } from './schemas/modulos.schema';
 
 class ModuloResource extends ResourceBase {
     Model = Modulos;
-    resourceName = 'modulos';
+    resourceName = 'modulos_new2';
     searchFileds = {
         search: ['nombre'],
         nombre: MongoQuery.partialString,
