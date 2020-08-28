@@ -1,10 +1,10 @@
-import { parentesco } from './parentesco.schema';
+import { Parentesco } from './parentesco.schema';
 import { MongoQuery } from '@andes/core';
 import { ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 
 class ParentescoResource extends ResourceBase {
-    Model = parentesco;
+    Model = Parentesco;
     resourceName = 'parentescos';
     middlewares = [Auth.authenticate()];
     routesAuthorization = {

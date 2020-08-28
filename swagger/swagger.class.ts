@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as swaggerJSDoc from 'swagger-jsdoc';
 import * as express from 'express';
 import * as configPrivate from '../config.private';
+import { hosts } from '../config.private';
 
 export class Swagger {
     /**
@@ -24,9 +25,9 @@ export class Swagger {
                     title: 'Swagger Andes',
                     description: 'Este es un servidor de muestra del servidor de Andes. Puede solicitar su token a info@andes.gob.ar',
                 },
-                host: '/',
+                host: '',
                 basePath: '/api',
-                schemes: ['https'],
+                schemes: [''],
                 consumes: ['application/json'],
                 produces: ['application/json'],
                 securityDefinitions: {
@@ -39,12 +40,11 @@ export class Swagger {
             },
             // path to the API docs
             apis: [
-                // TODO: verificar la documento de las APIs existentes
+                // TODO: verificar el documento de las APIs existentes
                 path.join(__dirname, './definitions.yml'),
-                // path.join(__dirname, '../core/term/routes/**/*.ts'),
+                path.join(__dirname, '../connect/fhir/api-doc.yml'),
                 path.join(__dirname, '../modules/cda/api-doc.yml'),
-                path.join(__dirname, '../fhir/api-doc.yml')
-                // path.join(__dirname, '../core/mpi/api-doc.yml')
+                path.join(__dirname, '../core-v2/mpi/api-doc.yml')
             ],
         });
 
