@@ -148,6 +148,15 @@ export default [
                     { key: 'baja', title: 'Eliminar cama', type: 'boolean' }
                 ]
             },
+            {
+                key: 'sala',
+                title: 'Acciones sobre una sala',
+                child: [
+                    { key: 'create', title: 'Crear nueva sala', type: 'boolean' },
+                    { key: 'edit', title: 'Editar sala', type: 'boolean' },
+                    { key: 'delete', title: 'Eliminar sala', type: 'boolean' }
+                ]
+            },
             { key: 'ingreso', title: 'Realizar ingreso de pacientes', type: 'boolean' },
             { key: 'movimientos', title: 'Realizar movimientos de internacion', type: 'boolean' },
             { key: 'egreso', title: 'Realizar egreso de pacientes', type: 'boolean' },
