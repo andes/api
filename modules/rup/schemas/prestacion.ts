@@ -35,10 +35,6 @@ export let schema = new mongoose.Schema({
         numero: Number,
         estado: String
     },
-    inicio: {
-        type: String,
-        enum: ['top', 'agenda', 'fuera-agenda', 'internacion'],
-    },
     // Datos de la Solicitud
     solicitud: {
 
