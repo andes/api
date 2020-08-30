@@ -178,7 +178,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         let pipeline = [];
         let match: any = { $and: [] };
 
-        match.$and.push({ 'solicitud.inicioPrestacion': { $eq: 'TOP' } });
+        match.$and.push({ 'solicitud.inicio': 'top' });
 
         if (req.query.solicitudDesde) {
             match.$and.push({ createdAt: { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
