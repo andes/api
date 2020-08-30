@@ -33,8 +33,7 @@ const schema = new mongoose.Schema({
     codigoPostal: String,
     ubicacion: { type: ubicacionSchema },
     geoReferencia: {
-        type: [Number],
-        index: '2d'
+        type: [Number]
     },
     ranking: Number,
     activo: {

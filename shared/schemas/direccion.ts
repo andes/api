@@ -13,8 +13,7 @@ export const DireccionSchema = new mongoose.Schema({
     geoReferencia: {
         // [TODO] Cambiar a objeto { lat: , lng: }
         // Orden de las coordenadas [lat, lng]
-        type: [Number],
-        index: '2d'
+        type: [Number]
     },
     ranking: Number,
     activo: {
