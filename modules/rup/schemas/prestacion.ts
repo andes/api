@@ -9,6 +9,10 @@ import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 
 
 export let schema = new mongoose.Schema({
+    inicio: {
+        type: String,
+        enum: ['top', 'agenda', 'fuera-agenda', 'internacion'],
+    },
     // Datos principales del paciente
     paciente: {
         // requirido, validar en middleware
@@ -148,6 +152,10 @@ export let schema = new mongoose.Schema({
 schema.pre('save', function (next) {
     let prestacion: any = this;
 
+    if (!prestacion.inicio) {
+        prestacion.inicio = getInicioPrestacion(prestacion);
+    }
+
     if (!prestacion.solicitud.tipoPrestacion.noNominalizada && !prestacion.paciente.id) {
         let err = new Error('Debe seleccionar el paciente');
         return next(err);
@@ -187,6 +195,23 @@ schema.pre('save', function (next) {
 
     next();
 });
+
+function getInicioPrestacion(prestacion) {
+    const estadoActual = prestacion.estados[0];
+    if (estadoActual.tipo === 'pendiente' || estadoActual.tipo === 'auditoria') {
+        return 'top';
+    } else {
+        if (prestacion.solicitud.ambitoOrigen === 'internacion') {
+            return 'internacion';
+        } else {
+            if (prestacion.solicitud.turno) {
+                return 'agenda';
+            } else {
+                return 'fuera-agenda';
+            }
+        }
+    }
+}
 
 function deepSearch(registros: any[], id: string | mongoose.Types.ObjectId) {
     for (let i = 0; i < registros.length; i++) {
