@@ -46,8 +46,8 @@ export async function obtenerPrestaciones(organizacion, filtros) {
         {
             $match: { $or: [{ 'lastState.tipo': 'ejecucion' }, { 'lastState.tipo': 'validada' }] }
         },
-        { $project: { 
-            id: '$_id', 
+        { $project: {
+            id: '$_id',
             paciente: 1,
             solicitud: 1,
             ejecucion: 1,
