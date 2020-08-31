@@ -22,18 +22,20 @@ function getInicioPrestacion(prestacion) {
 
 
 async function run(done) {
-    const prestaciones = Prestacion.find().select('estados solicitud').cursor({ batchSize: 100 });
+    const prestaciones = Prestacion.find().select('estados solicitud inicio').cursor({ batchSize: 100 });
     let i = 0;
     for await (const prestacion of prestaciones) {
         i++;
         // tslint:disable-next-line:no-console
         if (i % 1000 === 0) { console.log(i); }
-        const inicio = getInicioPrestacion(prestacion);
+        if (!prestacion.inicio) {
+            const inicio = getInicioPrestacion(prestacion);
 
-        await Prestacion.update(
-            { _id: prestacion._id },
-            { $set: { inicio } }
-        );
+            await Prestacion.update(
+                { _id: prestacion._id },
+                { $set: { inicio } }
+            );
+        }
     }
     done();
 }
