@@ -109,6 +109,7 @@ export let schema = new mongoose.Schema({
             ref: 'prestacion'
         },
 
+
         historial: [PrestacionSolicitudHistorialschema]
     },
 
@@ -151,7 +152,6 @@ export let schema = new mongoose.Schema({
 // Valida el esquema
 schema.pre('save', function (next) {
     let prestacion: any = this;
-
     if (!prestacion.inicio) {
         prestacion.inicio = getInicioPrestacion(prestacion);
     }
@@ -251,8 +251,6 @@ schema.methods.getRegistros = function () {
 // Habilitar plugin de auditoría
 schema.plugin(AuditPlugin);
 schema.index({ 'solicitud.turno': 1 });
-schema.index({ createdAt: -1 });
-schema.index({ 'solicitud.fecha': -1 });
 schema.index({ 'paciente.id': 1 });
 schema.index({
     'solicitud.organizacion.id': 1,
@@ -260,5 +258,15 @@ schema.index({
     'ejecucion.fecha': 1,
     'solicitud.tipoPrestacion.conceptId': 1
 });
+schema.index({
+    createdAt: 1,
+    'solicitud.organizacion.id': 1,
+    'solicitud.organizacionOrigen.id': 1
+}, { name: 'TOP-ENTRADA', partialFilterExpression: { inicio: 'top' } });
+schema.index({
+    createdAt: 1,
+    'solicitud.organizacionOrigen.id': 1,
+    'solicitud.organizacion.id': 1,
+}, { name: 'TOP-SALIDA', partialFilterExpression: { inicio: 'top' } });
 
 export let model = mongoose.model('prestacion', schema, 'prestaciones');

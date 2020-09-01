@@ -178,6 +178,8 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         let pipeline = [];
         let match: any = { $and: [] };
 
+        match.$and.push({ inicio: 'top' });
+
         if (req.query.solicitudDesde) {
             match.$and.push({ createdAt: { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
         }
@@ -193,8 +195,6 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         if (req.query.origen === 'top') {
             match.$and.push({ 'solicitud.prestacionOrigen': { $exists: false } });
         }
-
-        match.$and.push({ 'estados.0.tipo': { $in: ['pendiente', 'auditoria'] } });
 
         if (req.query.tieneTurno !== undefined) {
             match.$and.push({ 'solicitud.turno': req.query.tieneTurno ? { $ne: null } : { $eq: null } });

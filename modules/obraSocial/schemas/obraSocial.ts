@@ -10,7 +10,13 @@ export const ObraSocialSchema = new mongoose.Schema({
     numeroAfiliado: { type: String, required: false }
 });
 
-ObraSocialSchema.index({ codigoPuco: 1 });
+/**
+ * Desacoplo el schema de la colleccion del que se usa como subschema
+ * Mongoose te crea indices en los subschemas.
+ * Consumen espacio.
+ */
+const ObraSocialSchemaWithIndex = ObraSocialSchema.clone();
+ObraSocialSchemaWithIndex.index({ codigoPuco: 1 });
 
-export let ObraSocial: any = mongoose.model('obraSocial', ObraSocialSchema, 'obraSocial');
+export const ObraSocial: any = mongoose.model('obraSocial', ObraSocialSchemaWithIndex, 'obraSocial');
 
