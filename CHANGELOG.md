@@ -1,3 +1,20 @@
+# [5.11.0](https://github.com/andes/api/compare/v5.10.0...v5.11.0) (2020-09-02)
+
+
+### Bug Fixes
+
+* **mpi:** guarda titulo de la nota de un paciente ([#1086](https://github.com/andes/api/issues/1086)) ([6f33213](https://github.com/andes/api/commit/6f332138b1216ffa2439a5409f45ed5afa1db8eb))
+* **rup:** filtrar los valores null de los graficos ([#1073](https://github.com/andes/api/issues/1073)) ([dce7b05](https://github.com/andes/api/commit/dce7b0502f4baac31ee0d3786286e7ab37d059f9))
+
+
+### Features
+
+* **elemento-rup:** filtro por sexo en requeridos ([97dca2c](https://github.com/andes/api/commit/97dca2c5b58c474fdedd12693cde9c6fdf5d989e))
+* **elementos-rup:** remove populate de requeridos ([ba55992](https://github.com/andes/api/commit/ba559927e5eca758a2f2a7237825da7d0972bb08))
+* **rup:** asistencia del turno en background ([#1035](https://github.com/andes/api/issues/1035)) ([ca7b90c](https://github.com/andes/api/commit/ca7b90cb017888146496cac1ea4b9aa3dc7b3576))
+* **rup:** registro inicio de prestacion ([#1088](https://github.com/andes/api/issues/1088)) ([eb7a560](https://github.com/andes/api/commit/eb7a5606ef1d57bb56cedf637987c94cf165d5b4))
+* **top:** mejoras de performance ()  ([#1082](https://github.com/andes/api/issues/1082)) ([a144474](https://github.com/andes/api/commit/a144474eb86d994eb5a26af275bec0943cf6e400))
+
 # [5.10.0](https://github.com/andes/api/compare/v5.9.0...v5.10.0) (2020-08-26)
 
 
