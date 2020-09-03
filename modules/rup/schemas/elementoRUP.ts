@@ -121,6 +121,11 @@ export const ElementoRUPSchema = new mongoose.Schema({
     inactiveAt: {
         type: mongoose.SchemaTypes.Date,
         required: false
+    },
+    // Indica si este elementoRUP permite más de un registro por prestacion
+    permiteRepetidos: {
+        type: Boolean,
+        default: false
     }
 });
 
