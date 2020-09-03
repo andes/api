@@ -95,7 +95,7 @@ export class InformePDF extends HTMLComponent {
                 left: '0cm'
             },
             header: {
-                height: '5.75cm',
+                height: '7cm',
             },
             footer: {
                 height: '1cm'
