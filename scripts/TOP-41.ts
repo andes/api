@@ -2,14 +2,12 @@
 // registrado.
 import { model as Prestacion } from '../modules/rup/schemas/prestacion';
 import moment = require('moment');
-import * as mongoose from 'mongoose';
-import { ObjectId } from 'bson';
+import * as turnosController from '../modules/turnos/controller/turnosController';
 
 const descripciones = {
     creacion: 'Creada',
     citar: 'Paciente citado',
     rechazada: 'Contrarreferida',
-    // pendiente: 'Pendiente',
     pendiente: 'Aceptada',
     referir: 'Referida',
     asignarTurno: 'Turno asignado',
@@ -92,6 +90,17 @@ async function updateHistorialPrestaciones() {
             ...prestacion.estados.filter((e) => e.tipo === 'anulada'),
             ...prestacion.estados.filter((e) => e.tipo === 'pendiente'),
         ];
+        if (prestacion.solicitud.turno) {
+            const resultado = await turnosController.getTurnoById(prestacion.solicitud.turno);
+            let registro = {
+                tipo: 'asignarTurno',
+                observaciones: resultado.turno.nota,
+                createdAt: resultado.turno.fechaHoraDacion,
+                createdBy: resultado.turno.usuarioDacion
+
+            };
+            estados.push(registro);
+        }
         const ejecucion = prestacion.estados.find((e) => e.tipo === 'ejecucion');
         if (ejecucion) {
             estados.push(ejecucion);
@@ -101,15 +110,19 @@ async function updateHistorialPrestaciones() {
         if (validacion) {
             estados.push(validacion);
         }
-        console.log('estados ', estados);
 
         let crearRegistro = (estado) => {
-            let reg = {
+            let reg: any = {
                 organizacion: estado.createdBy.organizacion,
                 accion: estado.tipo,
                 createdAt: estado.createdAt,
                 createdBy: estado.createdBy,
             };
+
+            if (estado.observaciones) {
+                reg.observaciones = estado.observaciones;
+            }
+
             prestacion.solicitud.historial.push(reg);
         };
 
@@ -143,13 +156,13 @@ async function updateHistorialPrestaciones() {
 }
 
 function findSolicitudes() { // busca las prestaciones desde la fecha correspondiente cuyo inicio sea top (solicitudes)
-    // const searchParams = {
-    //     $and: [
-    //       { createdAt: { $gt: fechaPrimerHistorial } },
-    //       { inicio: 'top' }
-    //     ],
-    // };
-    const searchParams = {_id:  mongoose.Types.ObjectId('5f21fa0bcf50fc09fc3fbeb9') };
+    const searchParams = {
+        $and: [
+        { createdAt: { $gt: fechaPrimerHistorial } },
+        { inicio: 'top' }
+        ],
+    };
+    // const searchParams = {_id:  mongoose.Types.ObjectId('5f5110f75419750606bc2e59') };
 
     console.log('searchParams ', JSON.stringify(searchParams));
     return Prestacion.find(searchParams, { estados: 1, solicitud: 1 });
@@ -167,11 +180,9 @@ async function ObtenerFechaInicioScript() {
 
 async function run(done) {
     await ObtenerFechaInicioScript();
-    console.log('fechaPrimerHistorial ', fechaPrimerHistorial);
-    // await actualizarKeys();
+    await actualizarKeys();
     await updateHistorialPrestaciones();
     done();
 }
 
 export = run;
-// db.getCollection('prestaciones').find({_id:ObjectId('5f319066e4febe5b0f59a592')})

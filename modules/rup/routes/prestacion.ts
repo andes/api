@@ -211,7 +211,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                             'solicitud.historial': {
                                 $elemMatch: {
                                     $and: [
-                                        { accion: 'referencia' },
+                                        { accion: 'referir' },
                                         { 'createdBy.organizacion._id': req.query.organizacion }
                                     ]
                                 }
