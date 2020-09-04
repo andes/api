@@ -59,7 +59,7 @@ export async function createSala() {
     return await SalaComunCtr.create(
         {
             nombre: 'sala',
-            organizacion: { id: getObjectId('organizacion'), nombre: 'castro' },
+            organizacion: { id: getObjectId('5f5246dba3e1603a69f768d5'), nombre: 'castro' },
             ambito: 'internacion',
             estado: 'disponible',
             sectores: [],

@@ -4,6 +4,7 @@ import { SalaComun, ISalaComun, SalaComunID, SalaComunSnapshot } from './sala-co
 import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
 import { SalaComunMovimientos, SalaComunAccion } from './sala-comun-movimientos.schema';
+import * as mongoose from 'mongoose';
 import { Auth } from '../../../../auth/auth.class';
 
 export type SalaComunCreate = Pick<ISalaComun, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
@@ -219,6 +220,32 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
     return aggr;
 }
 
+export async function historial({ organizacion, ambito }, sala: ObjectId, internacion: ObjectId, desde: Date, hasta: Date) {
+    const firstMatch = {};
+    if (sala) {
+        firstMatch['idSalaComun'] = sala;
+    }
+
+    if (internacion) {
+        firstMatch['idInternacion'] = internacion;
+    }
+
+    const aggregate = [
+        {
+            $match: {
+                'organizacion.id': mongoose.Types.ObjectId(organizacion),
+                ambito,
+                fecha: { $gte: desde, $lte: hasta },
+                ...firstMatch,
+            }
+        },
+        {
+            $project: { __v: 0 }
+        }
+    ];
+
+    return await SalaComunMovimientos.aggregate(aggregate);
+}
 
 function wrapObjectId(objectId: ObjectId) {
     return new Types.ObjectId(objectId);
