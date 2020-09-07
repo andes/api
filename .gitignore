@@ -4,7 +4,6 @@ config.private.ts
 # Logs
 logs
 **/*.log
-**/*.log*
 
 # Javascript
 **/*.js
