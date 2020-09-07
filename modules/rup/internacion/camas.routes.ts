@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as CamasController from './camas.controller';
+import * as SalaComunController from './sala-comun/sala-comun.controller';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
@@ -23,7 +24,9 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
         nombre: Auth.getOrganization(req, 'nombre')
     };
 
-    const result = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
+    const camas = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
+    const salas = await SalaComunController.listarSalaComun({ organizacion: organizacion._id, fecha: req.query.fecha, id: req.query.idSalaComun });
+    const result = [...camas, ...salas];
 
     res.json(result);
 }));
