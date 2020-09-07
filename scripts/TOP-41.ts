@@ -31,11 +31,9 @@ async function actualizarKeys() {
     console.log('INICIO actualizarKeys');
     const solicitudes = findSolicitudes().cursor({ batchSize: 200 });
     let i = 0;
-    // for await (const prestacion of solicitudes) {
     let prestacion;
     while (prestacion = await solicitudes.next()) {
         i++;
-        console.log('i ', i);
         if (i % 1000 === 0) {
             console.log(i);
         }
@@ -73,9 +71,7 @@ async function updateHistorialPrestaciones() {
     let prestacion;
     while (prestacion = await solicitudes.next()) {
 
-    // for await (const prestacion of solicitudes) {
         i++;
-        console.log('i ', i);
         if (i % 1000 === 0) {
             console.log(i);
         }
@@ -95,8 +91,8 @@ async function updateHistorialPrestaciones() {
             let registro = {
                 tipo: 'asignarTurno',
                 observaciones: resultado.turno.nota,
-                createdAt: resultado.turno.fechaHoraDacion,
-                createdBy: resultado.turno.usuarioDacion
+                createdAt: resultado.turno.fechaHoraDacion ? resultado.turno.fechaHoraDacion : resultado.turno.updatedAt,
+                createdBy: resultado.turno.usuarioDacion ? resultado.turno.usuarioDacion : resultado.turno.updatedBy
 
             };
             estados.push(registro);
@@ -162,9 +158,6 @@ function findSolicitudes() { // busca las prestaciones desde la fecha correspond
         { inicio: 'top' }
         ],
     };
-    // const searchParams = {_id:  mongoose.Types.ObjectId('5f5110f75419750606bc2e59') };
-
-    console.log('searchParams ', JSON.stringify(searchParams));
     return Prestacion.find(searchParams, { estados: 1, solicitud: 1 });
 }
 
@@ -174,7 +167,6 @@ async function ObtenerFechaInicioScript() {
       $and: [
         { 'solicitud.historial': { $exists: true }} , { 'solicitud.historial': { $ne: [] }}, {inicio: 'top'}
       ]}).sort({ createdAt: 1 }).limit(1);
-    // fechaPrimerHistorial = moment(new Date(2020, 8, 2).setHours(0, 0, 0, 0)).format('YYYY-MM-DD HH:mm:ss');
     fechaPrimerHistorial = moment((prestaciones[0] as any).createdAt).startOf('day').toDate();
 }
 
