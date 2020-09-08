@@ -87,9 +87,6 @@ export function initAPI(app: Express) {
     app.use('/api/modules/huds', require('./modules/huds').HudsAccesoRouter);
     app.use('/api/modules/webhook', require('./modules/webhook').WebhookRouter);
     app.use('/api/modules/webhook', require('./modules/webhook/webhooklog').WebhookLogRouter);
-    app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').CamasRouter);
-    app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').EstadosRouter);
-    app.use('/api/modules/rup/internacion', require('./modules/rup/internacion').CensosRouter);
     app.use('/api/modules', require('./modules/seguimiento-paciente').SeguimientoPacienteRouter);
     app.use('/api/core-v2/mpi', MPI.RoutingMPI);
 
