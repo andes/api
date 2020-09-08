@@ -64,7 +64,7 @@ router.get('/agenda/candidatas', async (req, res, next) => {
             nominalizada: true,
             // '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
             $or: estado,
-            'tipoPrestaciones._id': turno.tipoPrestacion ? mongoose.Types.ObjectId(turno.tipoPrestacion.id) : '', // Que tengan incluída la prestación del turno
+            'tipoPrestaciones.conceptId': turno.tipoPrestacion ? turno.tipoPrestacion.conceptId : '', // Que tengan incluída la prestación del turno
             _id: { $ne: mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
         };
 
@@ -81,7 +81,7 @@ router.get('/agenda/candidatas', async (req, res, next) => {
                     b.turnos.forEach((t, indiceT) => {
                         const horaIni = moment(t.horaInicio).format('HH:mm');
                         if (
-                            b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion.id)) >= 0
+                            b.tipoPrestaciones.findIndex(x => String(x.conceptId) === String(turno.tipoPrestacion.conceptId)) >= 0
                             &&  // mismo tipo de prestacion
                             (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno))
                             &&  // turno disponible o al que se reasigno
