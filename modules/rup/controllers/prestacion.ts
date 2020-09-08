@@ -68,7 +68,7 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
     registroHistorial.accion = descripcionesAccion[_accion] === undefined ?  'indefinida' : _accion;
     registroHistorial.descripcion = descripcionesAccion[registroHistorial.accion];
 
-    let observaciones = datos.op === 'estadoPush' ? datos.estado.observaciones : datos.observaciones;
+    let observaciones = datos.op === 'estadoPush' || datos.op === 'citar' ? datos.estado.observaciones : datos.observaciones;
     if (observaciones) {
         registroHistorial.observaciones = observaciones;
     }
