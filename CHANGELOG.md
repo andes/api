@@ -1,3 +1,10 @@
+## [5.12.1](https://github.com/andes/api/compare/v5.12.0...v5.12.1) (2020-09-09)
+
+
+### Bug Fixes
+
+* **rup:** wrong index type ([8660469](https://github.com/andes/api/commit/86604690e7cb8066bfc138423da998fdbe5c0c76))
+
 # [5.12.0](https://github.com/andes/api/compare/v5.11.0...v5.12.0) (2020-09-08)
 
 
