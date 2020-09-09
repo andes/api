@@ -274,6 +274,6 @@ schema.index({
     'solicitud.ambitoOrigen': 1,
     'solicitud.tipoPrestacion.conceptId': 1,
     'ejecucion.registros.valor.informeIngreso.fechaIngreso': 1,
-}, { sparce: true });
+}, { sparse: true });
 
 export let model = mongoose.model('prestacion', schema, 'prestaciones');
