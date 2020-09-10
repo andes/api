@@ -272,7 +272,7 @@ router.post('/pacientes', async (req, res, next) => {
         pacienteNuevo.activo = true;
         andesLog(req, logKeys.mpiInsert.key, null, 'postPacientes', req.body, ignorarSugerencias);
         if (pacienteNuevo.documento) {
-            const resultado = await controller.checkRepetido(pacienteNuevo, req.body.incluirTemporales);
+            const resultado = await controller.checkRepetido(pacienteNuevo, incluirTemporales);
             if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
                 const pacienteObj = await controller.createPaciente(pacienteNuevo, req);
                 return res.json(pacienteObj);
@@ -335,7 +335,10 @@ router.put('/pacientes/:id', async (req, res, next) => {
         // Todo loguear posible duplicado si ignora el check
         let pacienteModificado = req.body.paciente;
         let ignorarSugerencias = req.body.ignoreCheck;
-        let resultado = await controller.checkRepetido(pacienteModificado, false);
+        let resultado = { resultadoMatching: [], macheoAlto: false, dniRepetido: false };
+        if (pacienteModificado.estado !== 'validado') {
+            resultado = await controller.checkRepetido(pacienteModificado, true);
+        }
 
         if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
             let patientFound: any = await paciente.findById(query).exec();
