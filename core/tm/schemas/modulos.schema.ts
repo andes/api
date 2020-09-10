@@ -12,18 +12,23 @@ export const ModuloSchema = new Schema({
     },
     subtitulo: String,
     color: String,
-    icono: String,
-    linkAcceso: {
-        type: String,
-        required: true
-    },
     permisos: [String],
     activo: {
         type: Boolean,
         default: true
     },
-    orden: Number
+    orden: Number,
+    submodulos: [
+        {
+            activo: { type: Boolean, default: true },
+            nombre: String,
+            linkAcceso: String,
+            color: String,
+            icono: String,
+            orden: Number,
+        }
+    ]
 
 });
 
-export const Modulos = model('modulos_new2', ModuloSchema, 'modulos_new');
+export const Modulos = model('modulos', ModuloSchema, 'modulos');
