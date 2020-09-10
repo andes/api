@@ -25,7 +25,14 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
     };
 
     const camas = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
-    const salas = await SalaComunController.listarSalaComun({ organizacion: organizacion._id, fecha: req.query.fecha, id: req.query.idSalaComun });
+    const salas = await SalaComunController.listarSalaComun({ organizacion: organizacion._id, fecha: moment().toDate() });
+
+    for (const sala of salas) {
+        sala['sala'] = true;
+        sala['unidadOrganizativa'] = sala.unidadOrganizativas[0];
+        sala['estado'] = 'ocupada';
+    }
+
     const result = [...camas, ...salas];
 
     res.json(result);
