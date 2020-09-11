@@ -712,7 +712,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
 router.post('/dashboard', async (req, res, next) => {
     const permisos: any = {};
-    let tipoPrestacion = Auth.getPermissions(req, 'dashboard:citas:tipoPrestacion:?');
+    let tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
     if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
         permisos.tipoPrestacion = tipoPrestacion;
     }
@@ -768,7 +768,7 @@ router.post('/dashboard/descargarCsv', async (req, res, next) => {
 
 router.post('/dashboard/localidades', async (req, res, next) => {
     const permisos: any = {};
-    let tipoPrestacion = Auth.getPermissions(req, 'dashboard:citas:tipoPrestacion:?');
+    let tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
     if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
         permisos.tipoPrestacion = tipoPrestacion;
     }
