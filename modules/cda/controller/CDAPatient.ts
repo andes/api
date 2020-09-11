@@ -1,5 +1,6 @@
-import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import { Types } from 'mongoose';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { isMatchingAlto, suggest } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { CDA } from './class/CDA';
 import { Patient } from './class/Patient';
 import { Organization } from './class/Organization';
@@ -29,40 +30,27 @@ import { Auth } from '../../../auth/auth.class';
 export async function findOrCreate(req, dataPaciente, organizacion) {
     if (dataPaciente.id) {
         if (Auth.check(req, 'cda:paciente')) {
-            const realPac = await pacienteCtr.buscarPaciente(dataPaciente.id);
-            if (realPac.paciente) {
-                return realPac.paciente;
+            const realPac = await PacienteCtr.findById(dataPaciente.id);
+            if (realPac) {
+                return realPac;
             }
         } else {
-            const identificador = {
-                entidad: String(organizacion),
-                valor: dataPaciente.id
-            };
-            try {
-                const query = await pacienteCtr.buscarPacienteWithcondition({
-                    identificadores: identificador
-                });
-                if (query) {
-                    return query.paciente;
-                }
-            } catch (e) {
-                // nothing to do here
+            const pac = await PacienteCtr.findOne({ identificador: `${String(organizacion)}|${dataPaciente.ud}` });
+            if (pac) {
+                return pac;
             }
         }
     }
 
     const suggestQuery = {
-        type: 'suggest',
         documento: dataPaciente.documento,
         apellido: dataPaciente.apellido,
         nombre: dataPaciente.nombre,
         sexo: dataPaciente.sexo
     };
-    const pacientes = await pacienteCtr.matching(suggestQuery);
-
-    if (pacientes.length > 0 && pacientes[0].match >= 0.95) {
-        const realPac = await pacienteCtr.buscarPaciente(pacientes[0].id);
-        const paciente = realPac.paciente;
+    const pacientes = await suggest(suggestQuery);
+    if (pacientes.length > 0 && isMatchingAlto(pacientes)) {
+        const paciente = await PacienteCtr.findById(pacientes[0].id);
 
         if (!paciente.identificadores) {
             paciente.identificadores = [];
@@ -73,15 +61,15 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
                 entidad: organizacion,
                 valor: dataPaciente.id
             });
-            await pacienteCtr.updatePaciente(paciente, {
-                identificadores: paciente.identificadores
-            }, req);
+            await PacienteCtr.update(paciente.id, { identificadores: paciente.identificadores }, req);
         }
         return paciente;
     } else {
         // No creamos más el paciente en MPI
-        return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
-
+        return await PacienteCtr.create(
+            dataToPac(dataPaciente, organizacion),
+            req
+        );
     }
 }
 
