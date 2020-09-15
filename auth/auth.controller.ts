@@ -1,14 +1,14 @@
 import { AndesCache, CustomError, ObjectId } from '@andes/core';
-import { RedisWebSockets, enviarMail } from '../config.private';
+import * as mongoose from 'mongoose';
+import * as sha1Hash from 'sha1';
+import * as configPrivate from '../config.private';
+import { enviarMail, RedisWebSockets } from '../config.private';
+import { handleHttpRequest } from '../utils/requestHandler';
+import { APP_DOMAIN, userScheduler } from './../config.private';
+import { Profesional } from './../core/tm/schemas/profesional';
+import { MailOptions, renderHTML, sendMail } from './../utils/roboSender/sendEmail';
 import { Auth } from './auth.class';
 import { AuthUsers } from './schemas/authUsers';
-import { userScheduler } from './../config.private';
-import { Profesional } from './../core/tm/schemas/profesional';
-import * as mongoose from 'mongoose';
-import { APP_DOMAIN } from './../config.private';
-import { sendMail, renderHTML, MailOptions } from './../utils/roboSender/sendEmail';
-const sha1Hash = require('sha1');
-
 
 export let AuthCache: AndesCache;
 
@@ -205,4 +205,39 @@ export async function reset(token, password) {
     } catch (error) {
         throw new CustomError(error, 500);
     }
+}
+
+export async function checkPassword(user, password): Promise<any> {
+    let usuario = null;
+    if (await authAlive()) {
+        const options = {
+            url: `${configPrivate.hosts.authenticationAndes}/auth`,
+            method: 'POST',
+            json: true,
+            body: { username: user.usuario, password },
+        };
+        const authResponse = await handleHttpRequest(options);
+        if (authResponse && authResponse[0] === 200) {
+            usuario = authResponse[1];
+        }
+
+    } else if (user.password === sha1Hash(password)) {
+        // PASSWORD CACHE
+        usuario = {
+            nombre: user.nombre,
+            apellido: user.apellido
+        };
+    }
+
+    return usuario;
+}
+
+async function authAlive() {
+    const url = `${configPrivate.hosts.authenticationAndes}/alive`;
+    const options = {
+        url,
+        method: 'GET',
+        json: true
+    };
+    return await handleHttpRequest(options);
 }

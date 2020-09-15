@@ -40,6 +40,7 @@ export const ports = {
 export const hosts = {
     main: getEnv('MAIN_HOST', 'http://localhost:3002'),
     ldap: getEnv('LDAP_HOST', 'ldap.neuquen.gov.ar'),
+    authenticationAndes: getEnv('AUTHANDES_HOST', 'https://authentication.andes.gob.ar'),
     BI_QUERY: getEnv('BI_QUERY_HOST', 'http://localhost:3000'),
     mongoDB_main: {
         host: getEnv('MONGO_MAIN', 'localhost:27017/andes'), // ?authSource=admin
