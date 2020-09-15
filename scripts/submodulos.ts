@@ -23,9 +23,6 @@ async function run(done) {
         return x;
     });
 
-    // Se crea la collection nueva
-    await Modulos.db.createCollection(modulosNEW);
-
     // Inserta los datos
     Modulos.db.collection(modulosNEW).insertMany(jsonRaw, async (err) => {
         if (err) {
@@ -33,14 +30,11 @@ async function run(done) {
             console.log(err);
         } else {
             // Renombra actual a AUX
-            await Modulos.db.collection(modulos).rename(modulosAUX, async () => {
-                // Renombra nueva a actual
-                await Modulos.db.collection(modulosNEW).rename(modulos, async () => {
-                    // await Modulos.db.dropCollection(modulosAUX, () => {
-                    done();
-                    // });
-                });
-            });
+            await Modulos.db.collection(modulos).rename(modulosAUX);
+            // Renombra nueva a actual
+            await Modulos.db.collection(modulosNEW).rename(modulos);
+            // await Modulos.db.dropCollection(modulosAUX);
+            done();
         }
     });
 
