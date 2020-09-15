@@ -20,42 +20,33 @@ router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
 });
 
 
-router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) => {
-
+router.post('/turnos/:tipo/:profesionalId/', async (req, res, next) => {
     // Convert date to user datetime.
-    let fechaTurno = new Date(request.body.turno.fecha);
-    if (request.body.sobreTurno) {
-        profesional.findById(request.params.profesionalId, (error, datos) => {
-            let nTurno = new turno({
+    try {
+        const fechaTurno = new Date(req.body.turno.fecha);
+        if (req.body.sobreTurno) {
+            const datos = await profesional.findById(req.params.profesionalId);
+            const nTurno = new turno({
                 fecha: fechaTurno,
-                tipo: request.body.turno.tipo,
+                tipo: req.body.turno.tipo,
+                profesional: datos
+            });
+            await nTurno.save();
+            return res.json(nTurno);
+        } else {
+            const datos = await turnoSolicitado.findById(req.params.profesionalId);
+            const nTurno = new turno({
+                fecha: fechaTurno,
+                tipo: req.body.turno.tipo,
                 profesional: datos
             });
 
-            nTurno.save((err) => {
-                if (err) {
-                    errorHandler(err);
-                }
+            await nTurno.save();
+            return res.json(nTurno);
 
-                response.json(nTurno);
-            });
-        });
-    } else {
-        turnoSolicitado.findById(request.params.profesionalId, (error, datos) => {
-            let nTurno = new turno({
-                fecha: fechaTurno,
-                tipo: request.body.turno.tipo,
-                profesional: datos
-            });
-
-            nTurno.save((err) => {
-                if (err) {
-                    errorHandler(err);
-                }
-
-                response.json(nTurno);
-            });
-        });
+        }
+    } catch (err) {
+        return next(err);
     }
 });
 
