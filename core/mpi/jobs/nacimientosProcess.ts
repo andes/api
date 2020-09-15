@@ -103,8 +103,9 @@ async function relacionar(mama, bebe) {
         relaciones: mama.relaciones
     };
 
-    // deb('UPDATE MAMA--->', updateMama);
-    let mamaUpdated = await updatePaciente(mama, updateMama, userScheduler);
+    deb('UPDATE MAMA--->', updateMama);
+    userScheduler['body'] = mama;
+    const mamaUpdated = await updatePaciente(mama, updateMama, userScheduler);
     await nacimientosLog.info('nacimiento-updated-ok', { tutor: mamaUpdated._id, bebe: bebeAndes._id }, userScheduler);
 }
 
@@ -212,7 +213,8 @@ async function procesarDataNacimientos(nacimiento) {
             // No existe en ANDES
             // --> Obtener paciente de Fuentas auténticas
             let nuevaMama = await validar(resultadoParse.mama);
-            let mamaAndes = await createPaciente(nuevaMama, userScheduler);
+            userScheduler['body'] = nuevaMama;
+            const mamaAndes = await createPaciente(nuevaMama, userScheduler);
             await relacionar(mamaAndes, resultadoParse.bebe);
         }
     } catch (error) {
@@ -221,7 +223,8 @@ async function procesarDataNacimientos(nacimiento) {
         // entonces tenemos que seguir la ejecución en este catch
         // --> Obtener paciente de Fuentas auténticas
         let nuevaMama = await validar(resultadoParse.mama);
-        let mamaAndes = await createPaciente(nuevaMama, userScheduler);
+        userScheduler['body'] = nuevaMama;
+        const mamaAndes = await createPaciente(nuevaMama, userScheduler);
         await relacionar(mamaAndes, resultadoParse.bebe);
     }
 }
