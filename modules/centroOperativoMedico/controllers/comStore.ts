@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
+import { makeFs } from '../schemas/comStore.schema';
+import * as mongoose from 'mongoose';
 import * as base64_stream from 'base64-stream';
 import * as stream from 'stream';
-import { makeFs } from '../schemas/comStore.schema';
 
 const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
@@ -11,12 +11,12 @@ export function storeFile(base64, metadata) {
     const data = match[2];
 
     return new Promise((resolve, reject) => {
-        const uniqueId = new Types.ObjectId();
+        const uniqueId = String(new mongoose.Types.ObjectId());
         const input = new stream.PassThrough();
         const decoder64 = base64_stream.decode();
-        const ComFiles = makeFs();
+        const COMFiles = makeFs();
 
-        ComFiles.writeFile({
+        COMFiles.write({
             _id: uniqueId,
             filename: uniqueId + '.' + mime.split('/')[1],
             contentType: mime,
@@ -34,16 +34,15 @@ export function storeFile(base64, metadata) {
 export function readFile(id): Promise<any> {
     return new Promise(async (resolve, reject) => {
         try {
-            const ComFiles = makeFs();
-            const idFile = Types.ObjectId(id);
-            const contexto = await ComFiles.findOne({ _id: idFile });
-            const stream2 = ComFiles.readFile({ _id: idFile });
+            const COMFiles = makeFs();
+            const contexto = await COMFiles.findById(id);
+            const stream2 = COMFiles.readById(id);
             resolve({
                 file: contexto,
                 stream: stream2
             });
-        } catch (e) {
-            return reject(e);
+        } catch (error) {
+            return reject(error);
         }
     });
 }
@@ -51,16 +50,15 @@ export function readFile(id): Promise<any> {
 export function readAsBase64(id) {
     return new Promise(async (resolve, reject) => {
         try {
-            const ComFiles = makeFs();
-            const idFile = Types.ObjectId(id);
-            const contexto = await ComFiles.findOne({ _id: idFile });
-            const stream2 = ComFiles.readFile({ _id: idFile });
+            const COMFiles = makeFs();
+            const contexto = await COMFiles.findById(id);
+            const stream2 = COMFiles.readById(id);
             resolve({
                 file: contexto,
                 stream: stream2
             });
-        } catch (e) {
-            return reject(e);
+        } catch (error) {
+            return reject(error);
         }
     });
 }
@@ -75,8 +73,8 @@ export function streamToBase64(streamData) {
             let result = Buffer.concat(chunks);
             return resolve(result.toString('base64'));
         });
-        streamData.on('error', (err) => {
-            return reject(err);
+        streamData.on('error', (error) => {
+            return reject(error);
         });
     });
 }
