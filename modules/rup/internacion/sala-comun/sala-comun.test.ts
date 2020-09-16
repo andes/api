@@ -5,6 +5,7 @@ import { SalaComun, SalaComunSnapshot } from './sala-comun.schema';
 import moment = require('moment');
 import { SalaComunCtr } from './sala-comun.routes';
 import { getObjectId, getFakeRequest, setupUpMongo } from '@andes/unit-test';
+import { createPaciente, createSala } from '../test-utils';
 
 const REQMock = getFakeRequest();
 const paciente1 = createPaciente('10000000');
@@ -88,20 +89,3 @@ describe('Internacion - Sala Espera', () => {
 
 });
 
-export async function createSala() {
-    return await SalaComunCtr.create(
-        {
-            nombre: 'sala',
-            organizacion: { id: getObjectId('organizacion'), nombre: 'castro' },
-            ambito: 'internacion',
-            estado: 'disponible',
-            sectores: [],
-            unidadOrganizativas: [],
-        },
-        REQMock
-    );
-}
-
-export function createPaciente(documento) {
-    return { id: new mongoose.Types.ObjectId(), documento, nombre: documento, apellido: documento };
-}

@@ -1,10 +1,9 @@
 import * as moment from 'moment';
-import * as mongoose from 'mongoose';
 import { ingresarPaciente } from './sala-comun.controller';
 import { getObjectId, getFakeRequest, setupUpMongo } from '@andes/unit-test';
 import { createSnapshotSalaComun } from './sala-comun-snapshot';
 import { SalaComunSnapshot } from './sala-comun.schema';
-import { SalaComunCtr } from './sala-comun.routes';
+import { createPaciente, createSala } from '../test-utils';
 
 
 setupUpMongo();
@@ -55,20 +54,3 @@ describe('Internacion - Sala Espera - Job', () => {
 
 });
 
-export async function createSala() {
-    return await SalaComunCtr.create(
-        {
-            nombre: 'sala',
-            organizacion: { id: getObjectId('5f5246dba3e1603a69f768d5'), nombre: 'castro' },
-            ambito: 'internacion',
-            estado: 'disponible',
-            sectores: [],
-            unidadOrganizativas: [],
-        },
-        REQMock
-    );
-}
-
-export function createPaciente(documento) {
-    return { id: new mongoose.Types.ObjectId(), documento, nombre: documento, apellido: documento };
-}

@@ -6,6 +6,7 @@ import { Request } from '@andes/api-tool';
 import { SalaComunMovimientos, SalaComunAccion } from './sala-comun-movimientos.schema';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../../auth/auth.class';
+import { aggregate } from 'core/tm/schemas/mapeo';
 
 export type SalaComunCreate = Pick<ISalaComun, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
 
@@ -220,33 +221,45 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
     return aggr;
 }
 
-export async function historial({ organizacion, ambito }, sala: ObjectId, internacion: ObjectId, desde: Date, hasta: Date) {
+export interface SalaComunHistorialOptions {
+    organizacion: ObjectId;
+    ambito: string;
+    sala?: ObjectId;
+    internacion?: ObjectId;
+    desde: Date;
+    hasta: Date;
+}
+
+export async function historial({ organizacion, ambito, sala, internacion, desde, hasta }: SalaComunHistorialOptions) {
     const firstMatch = {};
     if (sala) {
-        firstMatch['idSalaComun'] = sala;
+        firstMatch['idSalaComun'] = wrapObjectId(sala);
     }
 
     if (internacion) {
-        firstMatch['idInternacion'] = internacion;
+        firstMatch['idInternacion'] = wrapObjectId(internacion);
     }
 
-    const aggregate = [
-        {
-            $match: {
-                'organizacion.id': mongoose.Types.ObjectId(organizacion),
-                ambito,
-                fecha: { $gte: desde, $lte: hasta },
-                ...firstMatch,
-            }
-        },
-        {
-            $project: { __v: 0 }
-        }
-    ];
+    if (ambito) {
+        firstMatch['ambito'] = ambito;
+    }
 
-    return await SalaComunMovimientos.aggregate(aggregate);
+    const query = {
+        'organizacion.id': wrapObjectId(organizacion),
+        fecha: {
+            $gte: desde,
+            $lte: hasta
+        },
+        ...firstMatch,
+    };
+
+
+    return SalaComunMovimientos.find(query);
 }
 
+/**
+ * [TODO] Mover a Andes Core
+ */
 function wrapObjectId(objectId: ObjectId) {
     return new Types.ObjectId(objectId);
 }
