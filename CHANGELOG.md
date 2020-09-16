@@ -1,3 +1,16 @@
+# [5.13.0](https://github.com/andes/api/compare/v5.12.1...v5.13.0) (2020-09-16)
+
+
+### Bug Fixes
+
+* **mpi:** se agregan controles entre pacientes similares para incluir temporales ([#1090](https://github.com/andes/api/issues/1090)) ([6c6e78b](https://github.com/andes/api/commit/6c6e78b18d656fea2967d65d80d8466881956a29))
+* **profesionales:** control de errores ([#1104](https://github.com/andes/api/issues/1104)) ([62064ae](https://github.com/andes/api/commit/62064ae9f61894848a8754c305964f360c03aeba))
+
+
+### Features
+
+* **microservicios:** se suman identificadores a profesion para mapear a bases externas ([#1094](https://github.com/andes/api/issues/1094)) ([d4aeae1](https://github.com/andes/api/commit/d4aeae184afffe91c0108b563d00935472933037))
+
 ## [5.12.1](https://github.com/andes/api/compare/v5.12.0...v5.12.1) (2020-09-09)
 
 
