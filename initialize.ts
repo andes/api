@@ -88,6 +88,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/webhook', require('./modules/webhook').WebhookRouter);
     app.use('/api/modules/webhook', require('./modules/webhook/webhooklog').WebhookLogRouter);
     app.use('/api/modules', require('./modules/seguimiento-paciente').SeguimientoPacienteRouter);
+    app.use('/api/modules/com', require('./modules/centroOperativoMedico').DerivacionesRouter);
     app.use('/api/core-v2/mpi', MPI.RoutingMPI);
 
     if (configPrivate.hosts.BI_QUERY) {
