@@ -1,11 +1,10 @@
-import { MongoMemoryServer } from 'mongodb-memory-server-global';
-import * as mongoose from 'mongoose';
 import { ingresarPaciente, egresarPaciente, listarSalaComun } from './sala-comun.controller';
 import { SalaComun, SalaComunSnapshot } from './sala-comun.schema';
 import moment = require('moment');
 import { SalaComunCtr } from './sala-comun.routes';
 import { getObjectId, getFakeRequest, setupUpMongo } from '@andes/unit-test';
 import { createPaciente, createSala } from '../test-utils';
+import { SalaComunMovimientos } from './sala-comun-movimientos.schema';
 
 const REQMock = getFakeRequest();
 const paciente1 = createPaciente('10000000');
@@ -43,7 +42,10 @@ describe('Internacion - Sala Espera', () => {
                 paciente: paciente1,
                 ambito: 'internacion',
                 idInternacion: getObjectId('internacion1'),
-                fecha: moment().subtract(3, 'h').toDate()
+                fecha: moment().subtract(3, 'h').toDate(),
+                extras: {
+                    ingreso: true
+                }
             },
             REQMock
         );
@@ -65,13 +67,17 @@ describe('Internacion - Sala Espera', () => {
                 paciente: paciente2,
                 ambito: 'internacion',
                 idInternacion: getObjectId('internacion2'),
-                fecha: moment().subtract(1, 'h').toDate()
+                fecha: moment().subtract(1, 'h').toDate(),
+                extras: {
+                    egreso: true
+                }
             },
             REQMock
         );
 
         const pacientes = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: new Date() });
         expect(pacientes.length).toBe(1);
+        expect(pacientes[0].extras.ingreso).toBe(true);
 
 
         const pacientes2 = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(1, 'h').subtract(10, 'minutes').toDate() });
@@ -84,6 +90,11 @@ describe('Internacion - Sala Espera', () => {
         const pacientes4 = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(3, 'h').subtract(10, 'minutes').toDate() });
         expect(pacientes4.length).toBe(1);
         expect(!!pacientes4[0].paciente).toBe(false);
+
+        const extrasCheck = await SalaComunMovimientos.count({
+            accion: 'OUT', idInternacion: getObjectId('internacion2'), extras: { egreso: true }
+        });
+        expect(extrasCheck).toBe(1);
 
 
     });

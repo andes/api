@@ -1,12 +1,10 @@
-import * as moment from 'moment';
 import { Types } from 'mongoose';
-import { SalaComun, ISalaComun, SalaComunID, SalaComunSnapshot } from './sala-comun.schema';
+import { ISalaComun, SalaComunID, SalaComunSnapshot } from './sala-comun.schema';
 import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
 import { SalaComunMovimientos, SalaComunAccion } from './sala-comun-movimientos.schema';
-import * as mongoose from 'mongoose';
 import { Auth } from '../../../../auth/auth.class';
-import { aggregate } from 'core/tm/schemas/mapeo';
+import { InternacionExtras } from '../cama-estados.schema';
 
 export type SalaComunCreate = Pick<ISalaComun, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
 
@@ -15,6 +13,7 @@ export interface SalaComunIngreso {
     ambito: string;
     idInternacion: ObjectId;
     fecha: Date;
+    extras?: InternacionExtras;
 }
 
 export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, req: Request) {
@@ -31,7 +30,8 @@ export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, r
         ambito: dto.ambito,
         paciente: dto.paciente,
         idInternacion: dto.idInternacion,
-        fecha: dto.fecha
+        fecha: dto.fecha,
+        extras: dto.extras
     });
     movimiento.audit(req);
     await movimiento.save();
@@ -65,7 +65,8 @@ export async function egresarPaciente(id: SalaComunID, dto: SalaComunIngreso, re
         ambito: dto.ambito,
         paciente: dto.paciente,
         idInternacion: dto.idInternacion,
-        fecha: dto.fecha
+        fecha: dto.fecha,
+        extras: dto.extras
     });
     movimiento.audit(req);
     await movimiento.save();
@@ -87,6 +88,7 @@ export type SalaComunOcupacion = Pick<ISalaComun, 'id' | 'nombre' | 'organizacio
     paciente: any;
     idInternacion: ObjectId,
     fecha: Date;
+    extras?: InternacionExtras;
     createdBy: any,
     createdAt: Date,
     updatedBy: any,
@@ -171,6 +173,7 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                                                     ambito: '$$this.ambito',
                                                     idInternacion: '$$this.idInternacion',
                                                     desde: '$$this.fecha',
+                                                    extras: '$$this.extras',
                                                     createdAt: '$$this.createdAt',
                                                     createdBy: '$$this.createdBy',
                                                     updatedAt: '$$this.updatedAt',
@@ -211,6 +214,7 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                 idInternacion: '$snapshot.idInternacion',
                 ambito: '$snapshot.ambito',
                 fecha: '$snapshot.desde',
+                extras: '$snapshot.extras',
                 createdAt: '$snapshot.createdAt',
                 createdBy: '$snapshot.createdBy',
                 updatedAt: '$snapshot.updatedAt',

@@ -1,6 +1,7 @@
 import { SchemaTypes, Schema, model, Types, Document } from 'mongoose';
 import * as nombreSchema from '../../../../core/tm/schemas/nombre';
 import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
+import { InternacionExtrasSchema } from '../cama-estados.schema';
 
 export enum SalaComunAccion {
     IN = 'IN',
@@ -40,7 +41,8 @@ const SalaComunMovimientosSchema = new Schema({
         required: true
     },
     idInternacion: SchemaTypes.ObjectId, // TrackID del proceso
-    fecha: Date
+    fecha: Date,
+    extras: { type: InternacionExtrasSchema, required: false }
 });
 
 SalaComunMovimientosSchema.plugin(AuditPlugin);

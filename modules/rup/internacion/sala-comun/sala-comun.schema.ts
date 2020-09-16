@@ -6,6 +6,7 @@ import { OrganizacionRef, UnidadOrganizativa } from '../../../../core/tm/interfa
 import { ISectores } from '../../../../core/tm/interfaces/ISectores';
 import { ObjectId } from '@andes/core';
 import * as moment from 'moment';
+import { InternacionExtrasSchema } from '../cama-estados.schema';
 
 export type SalaComunID = ObjectId;
 
@@ -110,7 +111,7 @@ SalaComunSnapshotSchema.add({
         idInternacion: SchemaTypes.ObjectId,
         desde: Date,
         unidadOrganizativas: [SnomedConcept],
-
+        extras: { type: InternacionExtrasSchema, required: false },
         createdAt: { type: Date, required: false },
         createdBy: { type: SchemaTypes.Mixed, required: false },
         updatedAt: { type: Date, required: false },
