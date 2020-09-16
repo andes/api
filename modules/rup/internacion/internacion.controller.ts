@@ -90,7 +90,6 @@ export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: 
 
     const p2 = historialSalas({
         organizacion,
-        ambito: 'internacion',
         internacion: idInternacion,
         desde,
         hasta

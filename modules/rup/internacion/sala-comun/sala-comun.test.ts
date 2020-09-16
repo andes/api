@@ -82,7 +82,8 @@ describe('Internacion - Sala Espera', () => {
 
 
         const pacientes4 = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: moment().subtract(3, 'h').subtract(10, 'minutes').toDate() });
-        expect(pacientes4.length).toBe(0);
+        expect(pacientes4.length).toBe(1);
+        expect(!!pacientes4[0].paciente).toBe(false);
 
 
     });

@@ -1,4 +1,4 @@
-import { getObjectId, getFakeRequest, setupUpMongo } from '@andes/unit-test';
+import { getObjectId, getFakeRequest } from '@andes/unit-test';
 import { SalaComunCtr } from '../sala-comun/sala-comun.routes';
 import { Types } from 'mongoose';
 import moment = require('moment');

@@ -199,7 +199,7 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                 }
             }
         },
-        { $unwind: '$snapshot' },
+        { $unwind: { path: '$snapshot', preserveNullAndEmptyArrays: true } },
         {
             $project: {
                 id: '$idSalaComun',
@@ -223,7 +223,7 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
 
 export interface SalaComunHistorialOptions {
     organizacion: ObjectId;
-    ambito: string;
+    ambito?: string;
     sala?: ObjectId;
     internacion?: ObjectId;
     desde: Date;
