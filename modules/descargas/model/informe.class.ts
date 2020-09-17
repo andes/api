@@ -41,8 +41,8 @@ export class InformePDF extends HTMLComponent {
 
     async informe(options: pdf.CreateOptions = null) {
         const opciones = {
-            ...(options || {}),
-            ...this.getDefaultOptions()
+            ...this.getDefaultOptions(),
+            ...(options || {})
         };
         const html = await this.render();
         return new Promise((resolve, reject) => {
