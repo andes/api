@@ -246,9 +246,7 @@ function obtenerSugeridos(_paciente, pacientesSimilares) {
     const weights = _paciente.escaneado ? config.mpi.weightsScan : config.mpi.weightsDefault;
     const porcentajeMatchMax = config.mpi.cotaMatchMax;
     const porcentajeMatchMin = config.mpi.cotaMatchMin;
-    const listaPacientesMax = [];
-    const listaPacientesMin = [];
-
+    const listaPacienteSugeridos = [];
     pacientesSimilares.forEach((pac: any) => {
         const sugerido = pac;
         const pacienteDto = {
@@ -269,28 +267,17 @@ function obtenerSugeridos(_paciente, pacientesSimilares) {
         let valorMatching = match.matchPersonas(sugeridoDto, pacienteDto, weights, config.algoritmo);
 
         sugerido['id'] = pac._id;
-        if (valorMatching >= porcentajeMatchMax) {
-            listaPacientesMax.push({
+        if (valorMatching >= porcentajeMatchMin) {
+            listaPacienteSugeridos.push({
                 id: sugerido.id,
                 paciente: sugerido,
                 match: valorMatching
             });
-        } else {
-            if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
-                listaPacientesMin.push({
-                    id: sugerido.id,
-                    paciente: sugerido,
-                    match: valorMatching
-                });
-            }
         }
+
     });
 
-    if (listaPacientesMax.length > 0) {
-        return listaPacientesMax;
-    } else {
-        return listaPacientesMin;
-    }
+    return listaPacienteSugeridos;
 }
 
 /**
@@ -911,7 +898,7 @@ EventCore.on('mpi:patient:create', async (patientCreated) => {
         if (resultado.macheoAlto && resultado.resultadoMatching.length > 0) {
             // Verifica los resultados y linkea los pacientes
             resultado.resultadoMatching.forEach(async pacienteLink => {
-                if (pacienteLink.paciente) {
+                if (pacienteLink.paciente && pacienteLink.match > config.mpi.cotaMatchMax) {
                     const dataLink = {
                         entidad: 'ANDES',
                         valor: pacienteLink.paciente.id

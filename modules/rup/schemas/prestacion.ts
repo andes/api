@@ -269,4 +269,11 @@ schema.index({
     'solicitud.organizacion.id': 1,
 }, { name: 'TOP-SALIDA', partialFilterExpression: { inicio: 'top' } });
 
+schema.index({
+    'solicitud.organizacion.id': 1,
+    'solicitud.ambitoOrigen': 1,
+    'solicitud.tipoPrestacion.conceptId': 1,
+    'ejecucion.registros.valor.informeIngreso.fechaIngreso': 1,
+}, { sparse: true });
+
 export let model = mongoose.model('prestacion', schema, 'prestaciones');

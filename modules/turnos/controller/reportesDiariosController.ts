@@ -22,7 +22,7 @@ export async function getResumenDiarioMensual(params: any) {
                     $lte: lastDay
                 },
                 'solicitud.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
-                'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['prestacion']),
+                'solicitud.tipoPrestacion.conceptId': params['prestacion'],
             }
         },
         {
@@ -164,13 +164,13 @@ export async function getResumenDiarioMensual(params: any) {
                     }
                 },
                 total: { $sum: 1 },
-                fecha: { $first: '$fecha'},
+                fecha: { $first: '$fecha' },
             }
         },
         {
             $project: {
                 _id: 0,
-                fechaISO:  '$fecha',
+                fechaISO: '$fecha',
                 fecha: { $dateToString: { format: '%d-%m-%G', date: '$fecha', timezone: 'America/Argentina/Buenos_Aires' } },
                 tag: '$_id.tag',
                 sexo: '$_id.sexo',
@@ -244,7 +244,7 @@ function formatData(data: any, anio: number, mes: number) {
 
             reg.total.m = sumarTotal(currData, 'masculino');
             reg.total.f = sumarTotal(currData, 'femenino');
-            reg.total.total = currData.map(r => { return r.total ; }).reduce((a, b) => { return a + b; });
+            reg.total.total = currData.map(r => { return r.total; }).reduce((a, b) => { return a + b; });
         }
 
         res.push(reg);
@@ -321,7 +321,7 @@ function sumar(currData, sexo, edad) {
 
 function sumarTotal(currData, sexo) {
     let cantidad = currData.filter(r => r.sexo === sexo);
-    return cantidad.length > 0 ? cantidad.map(r => { return r.total ; }).reduce((a, b) => { return a + b; }) : 0;
+    return cantidad.length > 0 ? cantidad.map(r => { return r.total; }).reduce((a, b) => { return a + b; }) : 0;
 }
 
 export async function getPlanillaC1(params: any) {
@@ -342,7 +342,7 @@ export async function getPlanillaC1(params: any) {
                 $lt: fechaHasta
             },
             'ejecucion.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
-            'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['prestacion']),
+            'solicitud.tipoPrestacion.conceptId': params['prestacion'],
         }
     };
 

@@ -33,7 +33,7 @@ export async function procesar(parametros: any) {
     let match2 = {};
 
     if (parametros.prestacion) {
-        match2['prestacion.solicitud.tipoPrestacion.id'] = new mongoose.Types.ObjectId(parametros.prestacion);
+        match2['prestacion.solicitud.tipoPrestacion.conceptId'] = parametros.prestacion;
     }
     if (parametros.profesional) {
         match2['prestacion.solicitud.profesional.id'] = new mongoose.Types.ObjectId(parametros.profesional);

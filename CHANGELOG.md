@@ -1,3 +1,44 @@
+# [5.13.0](https://github.com/andes/api/compare/v5.12.1...v5.13.0) (2020-09-16)
+
+
+### Bug Fixes
+
+* **mpi:** se agregan controles entre pacientes similares para incluir temporales ([#1090](https://github.com/andes/api/issues/1090)) ([6c6e78b](https://github.com/andes/api/commit/6c6e78b18d656fea2967d65d80d8466881956a29))
+* **profesionales:** control de errores ([#1104](https://github.com/andes/api/issues/1104)) ([62064ae](https://github.com/andes/api/commit/62064ae9f61894848a8754c305964f360c03aeba))
+
+
+### Features
+
+* **microservicios:** se suman identificadores a profesion para mapear a bases externas ([#1094](https://github.com/andes/api/issues/1094)) ([d4aeae1](https://github.com/andes/api/commit/d4aeae184afffe91c0108b563d00935472933037))
+
+## [5.12.1](https://github.com/andes/api/compare/v5.12.0...v5.12.1) (2020-09-09)
+
+
+### Bug Fixes
+
+* **rup:** wrong index type ([8660469](https://github.com/andes/api/commit/86604690e7cb8066bfc138423da998fdbe5c0c76))
+
+# [5.12.0](https://github.com/andes/api/compare/v5.11.0...v5.12.0) (2020-09-08)
+
+
+### Bug Fixes
+
+* **historial TOP:** guarda observaciones al citar paciente ([#1103](https://github.com/andes/api/issues/1103)) ([1384456](https://github.com/andes/api/commit/13844563f8eb7253d9f1be74c75e042c7b4d6790))
+* **rup:** buscador filtra FSN === TERM ([#1089](https://github.com/andes/api/issues/1089)) ([e7a7bd6](https://github.com/andes/api/commit/e7a7bd6a0755206dff9554992d1e880110ddc899))
+* **script top:** agrega control en datos de asignacion de turno ([#1101](https://github.com/andes/api/issues/1101)) ([855d8f1](https://github.com/andes/api/commit/855d8f19e60c1fbcfdbdc7ef326691704235e000))
+
+
+### Features
+
+* **core:** tipoPrestacion.id por tipoPrestacion.conceptId ([#1085](https://github.com/andes/api/issues/1085)) ([3ede5c7](https://github.com/andes/api/commit/3ede5c706268824ea73824b6e14c66f7d09eedc0))
+* **log:** actualiza andes/log v2.0.0 ([#985](https://github.com/andes/api/issues/985)) ([4bbf8b0](https://github.com/andes/api/commit/4bbf8b0becd059d139ee7aafc200d45ff02af1d5))
+* **mapa-camas:** agrega nota en los estados de camas ([#1060](https://github.com/andes/api/issues/1060)) ([2a49540](https://github.com/andes/api/commit/2a49540bf8fa69c2b9cebb8ce8c69e83b77cafcf))
+* **mapa-camas:** para internacion filtra por fecha ingreso o egreso ([#1019](https://github.com/andes/api/issues/1019)) ([7d0ca19](https://github.com/andes/api/commit/7d0ca19dfdb3edb7881bc984792baee7698ac417))
+* **mobileApp:** nuevo schema y rutas de categoría ([#1063](https://github.com/andes/api/issues/1063)) ([b19e48a](https://github.com/andes/api/commit/b19e48aff6e939ad6c24b511e2430915223f8f75))
+* **rup:** agregar obra social a informe-pdf ([#1026](https://github.com/andes/api/issues/1026)) ([aed4363](https://github.com/andes/api/commit/aed43636aa1200ef9af63970044f7cabcdd0b9d3))
+* **rup:** asociar la obra social a la prestación ([#1059](https://github.com/andes/api/issues/1059)) ([f35d701](https://github.com/andes/api/commit/f35d701e4b97cedd58672d5a3105cf56c19fea7d))
+* **RUP:** get solicitudes trae estadoActual ([#1087](https://github.com/andes/api/issues/1087)) ([6b2ade1](https://github.com/andes/api/commit/6b2ade131f4c64b5a9b8ccb8ae4f32e44a67a7bd))
+
 # [5.11.0](https://github.com/andes/api/compare/v5.10.0...v5.11.0) (2020-09-02)
 
 

@@ -3,7 +3,6 @@ import * as moment from 'moment';
 import { model as Prestacion } from '../schemas/prestacion';
 import { historial as historialCamas } from './camas.controller';
 import { historial as historialSalas } from './sala-comun/sala-comun.controller';
-import { ObjectID } from 'bson';
 import { ObjectId } from '@andes/core';
 
 export async function obtenerPrestaciones(organizacion, filtros) {

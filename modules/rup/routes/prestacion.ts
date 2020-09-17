@@ -14,7 +14,8 @@ import { dashboardSolicitudes } from '../controllers/estadisticas';
 import async = require('async');
 import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
-
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
+import { getTurnoById } from '../../turnos/controller/turnosController';
 
 const router = express.Router();
 
@@ -210,7 +211,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                             'solicitud.historial': {
                                 $elemMatch: {
                                     $and: [
-                                        { accion: 'referencia' },
+                                        { accion: 'referir' },
                                         { 'createdBy.organizacion._id': req.query.organizacion }
                                     ]
                                 }
@@ -247,7 +248,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.prestacionDestino) {
             const prestacionesDestino = Array.isArray(req.query.prestacionDestino) ? req.query.prestacionDestino : [req.query.prestacionDestino];
-            match.$and.push({ 'solicitud.tipoPrestacion.id': { $in: prestacionesDestino.map(id => Types.ObjectId(id)) } });
+            match.$and.push({ 'solicitud.tipoPrestacion.conceptId': { $in: prestacionesDestino } });
         }
 
         if (req.query.tipoPrestaciones) {
@@ -259,13 +260,10 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             });
         }
 
-        pipeline.push({ $match: match });
-
         if (req.query.estados) {
-            pipeline.push({ $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } } });
-            pipeline.push({ $match: { 'lastState.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } } });
+            match.$and.push({ 'estadoActual.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } });
         }
-
+        pipeline.push({ $match: match });
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
         let project = {
             $project: {
@@ -275,11 +273,11 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                 ejecucion: 1,
                 noNominalizada: 1,
                 estados: 1,
+                estadoActual: 1,
                 createdAt: 1,
                 createdBy: 1,
                 updatedAt: 1,
                 updatedBy: 1,
-                lastState: 1,
                 esPrioritario: {
                     $cond: {
                         if: { $eq: ['$registroSolicitud.valor.solicitudPrestacion.prioridad', 'prioritario'] },
@@ -499,6 +497,11 @@ router.get('/prestaciones/:id*?', async (req: any, res, next) => {
 
 router.post('/prestaciones', async (req, res, next) => {
     let dto = parseDate(JSON.stringify(req.body));
+
+    if (dto.inicio === 'top') {
+        updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
+    }
+
     const data = new Prestacion(dto);
     Auth.audit(data, req);
     data.save((err) => {
@@ -516,6 +519,11 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             return next(err);
         }
         req.body = parseDate(JSON.stringify(req.body));
+
+        if (data.inicio === 'top') {
+            updateRegistroHistorialSolicitud(data.solicitud, req.body);
+        }
+
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -532,8 +540,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                         if (req.body.profesional) {
                             data.solicitud.profesional = req.body.profesional;
                         }
-
-                        updateRegistroHistorialSolicitud(data.solicitud, 'asignacionProfesional');
                     } else if (req.body.estado.tipo === 'ejecucion' && !data.solicitud.profesional.id) { // si se ejecuta una solicitud que viene de rup sin profesional, se lo setea por defecto
                         data.solicitud.profesional = Auth.getProfesional(req);
                     }
@@ -551,6 +557,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     data.solicitud.registros[0].valor.solicitudPrestacion.prioridad = req.body.prioridad;
                     data.solicitud.registros[0].markModified('valor');
                 }
+
                 break;
             case 'romperValidacion':
                 if (data.estados[data.estados.length - 1].tipo !== 'validada') {
@@ -584,7 +591,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
                 break;
             case 'referir':
-                updateRegistroHistorialSolicitud(data.solicitud, 'referencia', null, req.body.observaciones);
                 if (req.body.estado) {
                     data.estados.push();
                 }
@@ -598,25 +604,21 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 data.solicitud.profesional = null;
                 break;
             case 'devolver':
-                updateRegistroHistorialSolicitud(data.solicitud, 'devolver', null, req.body.observaciones);
                 data.estados.push({ tipo: 'auditoria', fecha: new Date() });
                 data.solicitud.profesional = null;
                 break;
             default:
                 return next(500);
         }
+
         Auth.audit(data, req);
         data.save(async (error, prestacion: any) => {
             if (error) {
                 return next(error);
             }
 
+
             if (req.body.estado && req.body.estado.tipo === 'validada') {
-
-                /* Este evento habilita la facturación automática desde RUP */
-                // const origen = 'rup_rf';
-                // EventCore.emitAsync('facturacion:factura:create', (<any>Object).assign({ origen, data }));
-
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
@@ -656,9 +658,9 @@ router.patch('/prestaciones/:id', (req, res, next) => {
 
                 const solicitadas = [];
 
-                async.each(req.body.planes, (plan, callback) => {
+                async.each(req.body.planes, (plan: any, callback) => {
+                    updateRegistroHistorialSolicitud(plan.solicitud, { op: 'creacion' });
                     const nuevoPlan = new Prestacion(plan);
-
                     Auth.audit(nuevoPlan, req);
                     nuevoPlan.save((errorPlan, nuevaPrestacion) => {
                         if (errorPlan) { return callback(errorPlan); }
@@ -684,17 +686,27 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-            /*
-            Logger.log(req, 'prestacionPaciente', 'update', {
-                accion: req.body.op,
-                ruta: req.url,
-                method: req.method,
-                data: data,
-                err: err || false
-            });
-            */
         });
     });
 });
 
 export = router;
+
+
+EventCore.on('rup:prestacion:validate', async (prestacion) => {
+    if (!prestacion.paciente.id || prestacion.paciente?.obraSocial?.nombre) {
+        return;
+    }
+    if (prestacion.solicitud.turno) {
+        const { turno } = await getTurnoById(prestacion.solicitud.turno);
+        if (turno) {
+            prestacion.paciente.obraSocial = turno.paciente.obraSocial;
+        }
+    } else {
+        const os = await getObraSocial(prestacion.paciente);
+        prestacion.paciente.obraSocial = os[0];
+    }
+    const user = Auth.getUserFromResource(prestacion);
+    Auth.audit(prestacion, user as any);
+    prestacion.save();
+});

@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "4.5.1",
+  "version": "5.13.0",
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
@@ -125,13 +125,13 @@
           "failComment": false
         }
       ],
-      "@semantic-release/git",
       [
         "@semantic-release/npm",
         {
           "npmPublish": false
         }
-      ]
+      ],
+      "@semantic-release/git"
     ]
   },
   "homepage": "https://github.com/andes/api#readme",

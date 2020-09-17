@@ -8,6 +8,32 @@ import * as controller from '../../../core/mpi/controller/paciente';
 import { Auth } from './../../../auth/auth.class';
 import { paciente as pacienteModel } from '../../../core/mpi/schemas/paciente';
 
+type Agenda = any;
+
+export async function getTurnoById(turnoId: string | mongoose.Types.ObjectId) {
+    const agendaEncontrada: Agenda = await agenda.findOne({
+        $or: [
+            { 'bloques.turnos._id': turnoId },
+            { 'sobreturnos._id': turnoId }
+        ]
+    });
+    if (!agendaEncontrada) {
+        return null;
+    }
+    for (const bloque of agendaEncontrada.bloques) {
+        const turno = bloque.turnos.id(turnoId);
+        if (turno) {
+            return { turno, agenda: agendaEncontrada, bloque };
+        }
+    }
+    const sobreturno = agendaEncontrada.sobreturnos.id(turnoId);
+    if (sobreturno) {
+        return { turno: sobreturno, agenda: agendaEncontrada, sobreturno: true };
+    }
+    return null;
+}
+
+
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -50,6 +76,7 @@ export function getTurno(req) {
             }];
             // ver llamado, req.query
             if (req.query && mongoose.Types.ObjectId.isValid(req.query.id)) {
+
                 const matchId = {
                     $match: {
                         'bloques.turnos._id': mongoose.Types.ObjectId(req.query.id),

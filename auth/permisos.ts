@@ -302,13 +302,7 @@ export default [
             { key: 'paciente', title: 'Setear paciente', type: 'boolean' },
         ]
     },
-    {
-        key: 'reportes',
-        title: 'Módulo Reportes',
-        comment: 'Estadística',
-        child: [
-        ]
-    },
+
     {
         key: 'descargas',
         title: 'Descarga de Documentos',
@@ -409,21 +403,38 @@ export default [
         ]
     },
     {
-        key: 'dashboard',
-        title: 'Panel de datos estadísticos en gráficos y tablas',
+        key: 'visualizacionInformacion',
+        title: 'Gestion de la visualización de información',
         child: [
             {
-                key: 'citas', title: 'Dashboard Citas', child: [
-                    { key: 'ver', title: 'Ver Dashboard Citas', type: 'boolean' },
-                    { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean' },
-                    { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' },
+                key: 'dashboard',
+                title: 'Panel de datos estadísticos en gráficos y tablas',
+                child: [
+                    {
+                        key: 'citas', title: 'Dashboard Citas', child: [
+                            { key: 'ver', title: 'Ver Dashboard Citas', type: 'boolean' },
+                            { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean' },
+                            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' },
+                        ]
+                    },
+                    {
+                        key: 'top', title: 'Dashboard TOP', child: [
+                            { key: 'ver', title: 'Ver Dashboard Top', type: 'boolean' }
+                        ]
+                    }
                 ]
             },
             {
-                key: 'top', title: 'Dashboard TOP', child: [
-                    { key: 'ver', title: 'Ver Dashboard Top', type: 'boolean' }
-                ]
-            }
+                key: 'reportes',
+                title: 'Módulo Reportes',
+                type: 'boolean'
+
+            },
+            {
+                key: 'biQueries',
+                title: 'Bi-Queries',
+                type: 'boolean'
+            },
         ]
     },
     {

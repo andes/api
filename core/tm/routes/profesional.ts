@@ -869,115 +869,113 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:postProfesional')) {
         return next(403);
     }
-    if (req.body.imagen) {
+    try {
+        if (req.body.imagen) {
 
-        const _base64 = req.body.imagen.img;
-        const decoder = base64.decode();
-        const input = new stream.PassThrough();
-        const fotoProf = makeFs();
-
-        // remove la foto vieja antes de insertar la nueva
-        fotoProf.find({
-            'metadata.idProfesional': req.body.imagen.idProfesional
-        }, (err, file) => {
-            file.forEach(recorre => {
-                fotoProf.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
+            const _base64 = req.body.imagen.img;
+            const decoder = base64.decode();
+            const input = new stream.PassThrough();
+            const fotoProf = makeFs();
+            // remove la foto vieja antes de insertar la nueva
+            fotoProf.find({
+                'metadata.idProfesional': req.body.imagen.idProfesional
+            }, (err, file) => {
+                file.forEach(recorre => {
+                    fotoProf.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
+                });
             });
-        });
-        // inserta en la bd en files y chucks
-        fotoProf.write({
-            filename: 'foto.png',
-            contentType: 'image/png',
-            metadata: {
-                idProfesional: req.body.imagen.idProfesional,
-            }
-        },
-            input.pipe(decoder),
-            (error, createdFile) => {
-                res.json(createdFile);
+            // inserta en la bd en files y chucks
+            fotoProf.write({
+                filename: 'foto.png',
+                contentType: 'image/png',
+                metadata: {
+                    idProfesional: req.body.imagen.idProfesional,
+                }
+            },
+                input.pipe(decoder),
+                (error, createdFile) => {
+                    res.json(createdFile);
+                });
+
+            input.end(_base64);
+
+        }
+        if (req.body.firma) {
+            const _base64 = req.body.firma.firmaP;
+            const decoder = base64.decode();
+            const input = new stream.PassThrough();
+            const firmaProf = makeFsFirma();
+
+            // remove la firma vieja antes de insertar la nueva
+            firmaProf.find({
+                'metadata.idProfesional': req.body.firma.idProfesional
+            }, (err, file) => {
+                file.forEach(recorre => {
+                    firmaProf.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
+                });
             });
+            // inserta en la bd en files y chucks
+            firmaProf.write({
+                filename: 'firma.png',
+                contentType: 'image/jpeg',
+                metadata: {
+                    idProfesional: req.body.firma.idProfesional,
+                }
+            },
+                input.pipe(decoder),
+                (error, createdFile) => {
+                    res.json(createdFile);
+                });
+            input.end(_base64);
 
-        input.end(_base64);
+        }
+        if (req.body.firmaAdmin) {
+            const _base64 = req.body.firmaAdmin.firma;
+            const decoder = base64.decode();
+            const input = new stream.PassThrough();
+            const firmaAdmin = makeFsFirmaAdmin();
 
-    }
-    if (req.body.firma) {
-        const _base64 = req.body.firma.firmaP;
-        const decoder = base64.decode();
-        const input = new stream.PassThrough();
-        const firmaProf = makeFsFirma();
-
-        // remove la firma vieja antes de insertar la nueva
-        firmaProf.find({
-            'metadata.idProfesional': req.body.firma.idProfesional
-        }, (err, file) => {
-            file.forEach(recorre => {
-                firmaProf.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
+            // remove la firma vieja antes de insertar la nueva
+            firmaAdmin.find({
+                'metadata.idSupervisor': req.body.firmaAdmin.idSupervisor
+            }, (err, file) => {
+                file.forEach(recorre => {
+                    firmaAdmin.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
+                });
             });
-        });
-        // inserta en la bd en files y chucks
-        firmaProf.write({
-            filename: 'firma.png',
-            contentType: 'image/jpeg',
-            metadata: {
-                idProfesional: req.body.firma.idProfesional,
-            }
-        },
-            input.pipe(decoder),
-            (error, createdFile) => {
-                res.json(createdFile);
-            });
-        input.end(_base64);
+            // inserta en la bd en files y chucks
+            firmaAdmin.write({
+                filename: 'firmaAdmin.png',
+                contentType: 'image/jpeg',
+                metadata: {
+                    idSupervisor: req.body.firmaAdmin.idSupervisor,
+                    administracion: req.body.firmaAdmin.nombreCompleto,
+                }
+            },
+                input.pipe(decoder),
+                (error, createdFile) => {
+                    res.json(createdFile);
+                });
+            input.end(_base64);
 
-    }
-    if (req.body.firmaAdmin) {
-        const _base64 = req.body.firmaAdmin.firma;
-        const decoder = base64.decode();
-        const input = new stream.PassThrough();
-        const firmaAdmin = makeFsFirmaAdmin();
+        }
+        if (req.body.profesional) {
 
-        // remove la firma vieja antes de insertar la nueva
-        firmaAdmin.find({
-            'metadata.idSupervisor': req.body.firmaAdmin.idSupervisor
-        }, (err, file) => {
-            file.forEach(recorre => {
-                firmaAdmin.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
-            });
-        });
-        // inserta en la bd en files y chucks
-        firmaAdmin.write({
-            filename: 'firmaAdmin.png',
-            contentType: 'image/jpeg',
-            metadata: {
-                idSupervisor: req.body.firmaAdmin.idSupervisor,
-                administracion: req.body.firmaAdmin.nombreCompleto,
-            }
-        },
-            input.pipe(decoder),
-            (error, createdFile) => {
-                res.json(createdFile);
-            });
-        input.end(_base64);
-
-    }
-    if (req.body.profesional) {
-        try {
             const newProfesional = new profesional(req.body.profesional);
             Auth.audit(newProfesional, req);
             newProfesional.save(async (err2) => {
-
                 if (err2) {
-                    next(err2);
+                    return next(err2);
                 }
                 EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
                 log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
                 res.json(newProfesional);
             });
-        } catch (err) {
-            next(err);
         }
 
+    } catch (err) {
+        return next(err);
     }
-
 });
 
 router.post('/profesionales/sms', (req, res, next) => {
