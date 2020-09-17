@@ -135,6 +135,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         },
         {
             $addFields: {
+                'estado.id': '$_id',
                 'estado.idCama': '$_id',
                 'estado.ambito': '$ambito',
                 'estado.capa': '$capa',
