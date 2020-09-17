@@ -5,6 +5,7 @@ import { Request } from '@andes/api-tool';
 import { SalaComunMovimientos, SalaComunAccion } from './sala-comun-movimientos.schema';
 import { Auth } from '../../../../auth/auth.class';
 import { InternacionExtras } from '../cama-estados.schema';
+import { EventCore } from '@andes/event-bus';
 
 export type SalaComunCreate = Pick<ISalaComun, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
 
@@ -50,6 +51,14 @@ export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, r
             }
         }
     );
+
+    if (dto.extras?.ingreso) {
+        EventCore.emitAsync('mapa-camas:paciente:ingreso', {
+            ...movimiento.toObject(),
+            sala: true
+        });
+    }
+
     return movimiento;
 }
 
@@ -74,6 +83,13 @@ export async function egresarPaciente(id: SalaComunID, dto: SalaComunIngreso, re
         { idSalaComun: id, fecha: { $gte: dto.fecha } },
         { $pull: { 'ocupacion.idInternacion': dto.idInternacion } }
     );
+
+    if (dto.extras?.egreso) {
+        EventCore.emitAsync('mapa-camas:paciente:egreso', {
+            ...movimiento.toObject(),
+            sala: true
+        });
+    }
 
     return movimiento;
 }

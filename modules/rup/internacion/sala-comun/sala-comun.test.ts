@@ -5,6 +5,7 @@ import { SalaComunCtr } from './sala-comun.routes';
 import { getObjectId, getFakeRequest, setupUpMongo } from '@andes/unit-test';
 import { createPaciente, createSala } from '../test-utils';
 import { SalaComunMovimientos } from './sala-comun-movimientos.schema';
+import { EventCore } from '@andes/event-bus';
 
 const REQMock = getFakeRequest();
 const paciente1 = createPaciente('10000000');
@@ -35,6 +36,7 @@ describe('Internacion - Sala Espera', () => {
     });
 
     test('secuencia de alta baja y listado', async () => {
+        const onEventSpy = jest.spyOn(EventCore, 'emitAsync');
         const sala = await createSala();
         await ingresarPaciente(
             sala.id,
@@ -61,6 +63,10 @@ describe('Internacion - Sala Espera', () => {
             REQMock
         );
 
+        expect(onEventSpy).toBeCalledTimes(1);
+        expect(onEventSpy).toBeCalledWith('mapa-camas:paciente:ingreso', expect.anything());
+        onEventSpy.mockReset();
+
         await egresarPaciente(
             sala.id,
             {
@@ -74,6 +80,9 @@ describe('Internacion - Sala Espera', () => {
             },
             REQMock
         );
+
+        expect(onEventSpy).toBeCalledTimes(1);
+        expect(onEventSpy).toBeCalledWith('mapa-camas:paciente:egreso', expect.anything());
 
         const pacientes = await listarSalaComun({ organizacion: getObjectId('organizacion'), fecha: new Date() });
         expect(pacientes.length).toBe(1);
@@ -96,7 +105,7 @@ describe('Internacion - Sala Espera', () => {
         });
         expect(extrasCheck).toBe(1);
 
-
+        onEventSpy.mockRestore();
     });
 
 });
