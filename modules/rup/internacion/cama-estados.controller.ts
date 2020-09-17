@@ -166,7 +166,12 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             $match: thirdMatch
         },
         {
-            $project: { cama: 0, __v: 0 }
+            $addFields: {
+                id: '$_id',
+            }
+        },
+        {
+            $project: { cama: 0, __v: 0, }
         }
     ];
 

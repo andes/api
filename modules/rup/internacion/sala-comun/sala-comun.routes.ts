@@ -55,7 +55,7 @@ SalaComunRouter.post('/sala-comun/:id/patients', Auth.authenticate(), asyncHandl
     res.json(movimiento);
 }));
 
-SalaComunRouter.delete('/sala-comun/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
+SalaComunRouter.patch('/sala-comun/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
     const idsala = req.params.id;
     const dataIngreso: SalaComunIngreso = req.body;
     const movimiento = await egresarPaciente(idsala, dataIngreso, req);
