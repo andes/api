@@ -2,6 +2,8 @@ import { SchemaTypes, Schema, model, Types, Document } from 'mongoose';
 import * as nombreSchema from '../../../../core/tm/schemas/nombre';
 import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 import { InternacionExtrasSchema } from '../cama-estados.schema';
+import { SnomedConcept } from '../../schemas/snomed-concept';
+import { UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
 
 export enum SalaComunAccion {
     IN = 'IN',
@@ -15,6 +17,8 @@ export interface ISalaComunMovimiento {
     accion: SalaComunAccion;
     idInternacion: Types.ObjectId;
     fecha: Date;
+    unidadOrganizativas: UnidadOrganizativa[];
+
 }
 
 export type SalaComunMovimientoDocument = AndesDocWithAudit<ISalaComunMovimiento>;
@@ -42,7 +46,8 @@ const SalaComunMovimientosSchema = new Schema({
     },
     idInternacion: SchemaTypes.ObjectId, // TrackID del proceso
     fecha: Date,
-    extras: { type: InternacionExtrasSchema, required: false }
+    extras: { type: InternacionExtrasSchema, required: false },
+    unidadOrganizativas: [SnomedConcept],
 });
 
 SalaComunMovimientosSchema.plugin(AuditPlugin);

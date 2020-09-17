@@ -14,7 +14,7 @@ import * as moment from 'moment';
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import { getFakeRequest, getObjectId, setupUpMongo } from '@andes/unit-test';
 import { EstadosCtr } from './estados.routes';
-import { createPaciente } from './test-utils';
+import { createPaciente, createUnidadOrganizativa } from './test-utils';
 
 const REQMock = getFakeRequest();
 
@@ -145,7 +145,8 @@ describe('Internacion - Controller', () => {
                 paciente: paciente1,
                 ambito: 'internacion',
                 idInternacion: internacion,
-                fecha: moment().subtract(2, 'd').toDate()
+                fecha: moment().subtract(2, 'd').toDate(),
+                unidadOrganizativa: createUnidadOrganizativa('123456789')
             },
             REQMock
         );

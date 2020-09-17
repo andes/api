@@ -6,6 +6,7 @@ import { SalaComunMovimientos, SalaComunAccion } from './sala-comun-movimientos.
 import { Auth } from '../../../../auth/auth.class';
 import { InternacionExtras } from '../cama-estados.schema';
 import { EventCore } from '@andes/event-bus';
+import { UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
 
 export type SalaComunCreate = Pick<ISalaComun, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
 
@@ -15,6 +16,7 @@ export interface SalaComunIngreso {
     idInternacion: ObjectId;
     fecha: Date;
     extras?: InternacionExtras;
+    unidadOrganizativa: UnidadOrganizativa;
 }
 
 export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, req: Request) {
@@ -32,8 +34,10 @@ export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, r
         paciente: dto.paciente,
         idInternacion: dto.idInternacion,
         fecha: dto.fecha,
-        extras: dto.extras
+        extras: dto.extras,
+        unidadOrganizativas: [dto.unidadOrganizativa]
     });
+
     movimiento.audit(req);
     await movimiento.save();
     await SalaComunSnapshot.updateMany(
@@ -75,7 +79,8 @@ export async function egresarPaciente(id: SalaComunID, dto: SalaComunIngreso, re
         paciente: dto.paciente,
         idInternacion: dto.idInternacion,
         fecha: dto.fecha,
-        extras: dto.extras
+        extras: dto.extras,
+        unidadOrganizativas: [dto.unidadOrganizativa]
     });
     movimiento.audit(req);
     await movimiento.save();
@@ -188,6 +193,7 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                                                     paciente: '$$this.paciente',
                                                     ambito: '$$this.ambito',
                                                     idInternacion: '$$this.idInternacion',
+                                                    unidadOrganizativas: '$$this.unidadOrganizativas',
                                                     desde: '$$this.fecha',
                                                     extras: '$$this.extras',
                                                     createdAt: '$$this.createdAt',
@@ -224,10 +230,10 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                 id: '$idSalaComun',
                 nombre: 1,
                 organizacion: 1,
-                unidadOrganizativas: 1,
                 sectores: 1,
                 paciente: '$snapshot.paciente',
                 idInternacion: '$snapshot.idInternacion',
+                unidadOrganizativas: { $ifNull: ['$snapshot.unidadOrganizativas', '$unidadOrganizativas'] },
                 ambito: '$snapshot.ambito',
                 fecha: '$snapshot.desde',
                 extras: '$snapshot.extras',

@@ -23,6 +23,15 @@ export function createPaciente(documento) {
 }
 
 
+export function createUnidadOrganizativa(conceptId: string) {
+    return {
+        fsn: `unidad organizativa ${conceptId} (medio ambiente)`,
+        term: `unidad organizativa ${conceptId}`,
+        conceptId,
+        semanticTag: 'medio ambiente'
+    };
+}
+
 export function createInternacionPrestacion(organizacion, fechaEgreso = null) {
     return {
         _id: Types.ObjectId('5d3af64ec8d7a7158e12c242'),

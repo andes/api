@@ -3,7 +3,7 @@ import { SalaComun, SalaComunSnapshot } from './sala-comun.schema';
 import moment = require('moment');
 import { SalaComunCtr } from './sala-comun.routes';
 import { getObjectId, getFakeRequest, setupUpMongo } from '@andes/unit-test';
-import { createPaciente, createSala } from '../test-utils';
+import { createPaciente, createSala, createUnidadOrganizativa } from '../test-utils';
 import { SalaComunMovimientos } from './sala-comun-movimientos.schema';
 import { EventCore } from '@andes/event-bus';
 
@@ -47,7 +47,8 @@ describe('Internacion - Sala Espera', () => {
                 fecha: moment().subtract(3, 'h').toDate(),
                 extras: {
                     ingreso: true
-                }
+                },
+                unidadOrganizativa: createUnidadOrganizativa('123456789')
             },
             REQMock
         );
@@ -58,7 +59,8 @@ describe('Internacion - Sala Espera', () => {
                 paciente: paciente2,
                 ambito: 'internacion',
                 idInternacion: getObjectId('internacion2'),
-                fecha: moment().subtract(2, 'h').toDate()
+                fecha: moment().subtract(2, 'h').toDate(),
+                unidadOrganizativa: createUnidadOrganizativa('123456789')
             },
             REQMock
         );
@@ -76,7 +78,8 @@ describe('Internacion - Sala Espera', () => {
                 fecha: moment().subtract(1, 'h').toDate(),
                 extras: {
                     egreso: true
-                }
+                },
+                unidadOrganizativa: createUnidadOrganizativa('123456789')
             },
             REQMock
         );

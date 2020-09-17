@@ -3,7 +3,7 @@ import { ingresarPaciente } from './sala-comun.controller';
 import { getObjectId, getFakeRequest, setupUpMongo } from '@andes/unit-test';
 import { createSnapshotSalaComun } from './sala-comun-snapshot';
 import { SalaComunSnapshot } from './sala-comun.schema';
-import { createPaciente, createSala } from '../test-utils';
+import { createPaciente, createSala, createUnidadOrganizativa } from '../test-utils';
 
 
 setupUpMongo();
@@ -23,7 +23,8 @@ describe('Internacion - Sala Espera - Job', () => {
                 paciente: paciente1,
                 ambito: 'internacion',
                 idInternacion: getObjectId('internacion1'),
-                fecha: moment().subtract(2, 'd').toDate()
+                fecha: moment().subtract(2, 'd').toDate(),
+                unidadOrganizativa: createUnidadOrganizativa('123456789')
             },
             REQMock
         );
@@ -34,7 +35,8 @@ describe('Internacion - Sala Espera - Job', () => {
                 paciente: paciente2,
                 ambito: 'internacion',
                 idInternacion: getObjectId('internacion2'),
-                fecha: moment().toDate()
+                fecha: moment().toDate(),
+                unidadOrganizativa: createUnidadOrganizativa('123456789')
             },
             REQMock
         );
