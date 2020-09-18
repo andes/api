@@ -1,9 +1,8 @@
 import { Prestacion } from '../schemas/prestacion';
-import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 import moment = require('moment');
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
-import { paciente as Paciente } from '../../../core/mpi/schemas/paciente';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -69,12 +68,14 @@ export async function estadisticaDemografica(ids) {
 
         }
     ];
-    const data = await toArray(Prestacion.aggregate(pipeline).cursor({}).exec());
+
+
+    const data = await Prestacion.aggregate(pipeline);
+
     const { pacientes, demografia } = data[0];
     let idPacientes = pacientes.map(paciente => ObjectId(paciente._id));
 
-    const andes = await Paciente.find({ _id: { $in: idPacientes } }, { direccion: 1 });
-
+    const andes = await PacienteCtr.search({ ids: idPacientes }, { fields: 'direccion' });
 
     function getLocalidad(direccion) {
         if (direccion && direccion.ubicacion && direccion.ubicacion.localidad) {
@@ -84,7 +85,7 @@ export async function estadisticaDemografica(ids) {
     }
 
     const ubicacionesPaciente = {};
-    andes.forEach((paciente: any) => { ubicacionesPaciente[paciente._id] = getLocalidad(paciente.direccion[0]); });
+    andes.forEach((paciente) => { ubicacionesPaciente[paciente._id] = getLocalidad(paciente.direccion[0]); });
     const respuesta = {};
 
     pacientes.forEach((paciente) => {
@@ -203,9 +204,7 @@ export async function dashboard(org, prestaciones, desde, hasta) {
 
         }
     ];
-
-    const aggr = Prestacion.aggregate(pipeline);
-    const data = await toArray(aggr.cursor({}).exec());
+    const data = await Prestacion.aggregate(pipeline);
     const { pacientes, registros } = data[0];
 
     // Obtengo el listado de concepto y busco su metadata

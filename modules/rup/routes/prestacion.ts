@@ -5,7 +5,6 @@ import { Auth } from './../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
 import { updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
@@ -16,6 +15,7 @@ import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial
 import { getTurnoById } from '../../turnos/controller/turnosController';
 import { asyncHandler, Request } from '@andes/api-tool';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 const router = express.Router();
 
@@ -377,7 +377,7 @@ router.get('/prestaciones', async (req: any, res, next) => {
         query.where('solicitud.profesional.id').equals(req.query.idProfesional);
     }
     if (req.query.idPaciente) {
-        let { paciente } = await buscarPaciente(req.query.idPaciente);
+        const paciente: any = await PacienteCtr.findById(req.query.idPaciente);
         if (paciente) {
             query.where('paciente.id').in(paciente.vinculos);
         }
