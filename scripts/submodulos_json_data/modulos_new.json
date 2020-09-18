@@ -197,7 +197,7 @@
         "activo": true,
         "permisos": ["huds:?"],
         "nombre": "Punto Inicio<br><b>HUDS</b>",
-        "linkAcceso": "/rup/huds",
+        "linkAcceso": "/huds",
         "color": "#bc5485",
         "icono": "mano-corazon",
         "orden": 0

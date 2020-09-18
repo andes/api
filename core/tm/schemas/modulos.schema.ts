@@ -26,6 +26,7 @@ export const ModuloSchema = new Schema({
             color: String,
             icono: String,
             orden: Number,
+            permisos: [String]
         }
     ]
 
