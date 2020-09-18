@@ -166,7 +166,7 @@ export async function getConceptByExpression(expression, term = null, form = 'st
             return ps;
         }
     }
-    return null;
+    return [];
 }
 
 async function searchByDescription({ text, semanticTags, languageCode }) {
