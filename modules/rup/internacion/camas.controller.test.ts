@@ -12,6 +12,7 @@ import { EstadosCtr } from './estados.routes';
 import { Auth } from '../../../auth/auth.class';
 import { patch as patchEstados } from './cama-estados.controller';
 import { integrityCheck as checkIntegridad } from './camas.controller';
+import { ObjectId } from 'bson';
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
@@ -711,6 +712,193 @@ describe('Internacion - camas', () => {
         expect(integrity.length).toBe(1);
         expect(integrity[0].source.estado).toBe('bloqueada');
         expect(integrity[0].target.estado).toBe('inactiva');
+    });
+
+    test('Extras de ingreso', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'bloqueada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        // OCUPA LA CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'ocupada',
+            fecha: moment().subtract(1, 'minutes').toDate(),
+            organizacion: cama.organizacion,
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
+            },
+            esMovimiento: true,
+            extras: {
+                ingreso: true
+            }
+        }, REQMock);
+
+        const camasConExtra = await search({ organizacion, capa, ambito }, { cama: cama._id });
+        expect(camasConExtra.length).toBe(1);
+        expect(camasConExtra[0].extras.ingreso).toBe(true);
+    });
+
+    test('Extras de egreso', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'bloqueada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        // OCUPA LA CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'ocupada',
+            fecha: moment().subtract(1, 'minutes').toDate(),
+            organizacion: cama.organizacion,
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
+            },
+            esMovimiento: true,
+            extras: {
+                ingreso: true
+            }
+        }, REQMock);
+
+        const idInternacion = mongoose.Types.ObjectId();
+        // LIBERA CAMA
+        await patch({
+            organizacion: cama.organizacion,
+            ambito,
+            capa,
+            id: cama._id,
+            esMovimiento: true,
+            extras: {
+                egreso: true,
+                tipo_egreso: 'Defuncion',
+                idInternacion
+            },
+            estado: 'disponible',
+            fecha: moment().subtract(30, 'seconds').toDate()
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        const camasConExtra = await search({ organizacion, capa, ambito }, { cama: cama._id });
+        expect(camasConExtra.length).toBe(1);
+        expect(camasConExtra[0].extras.egreso).toBe(true);
+        expect(camasConExtra[0].extras.tipo_egreso).toBe('Defuncion');
+        expect(String(camasConExtra[0].extras.idInternacion)).toBe(String(idInternacion));
+    });
+
+    test('Extras de movimiento', async () => {
+        const maquinaEstados = await EstadosCtr.create({
+            organizacion,
+            ambito,
+            capa,
+            estados: [
+                { key: 'disponible' },
+                { key: 'ocupada' },
+                { key: 'bloqueada' },
+                { key: 'inactiva' }
+            ],
+            relaciones: [
+                { origen: 'disponible', destino: 'inactiva' },
+                { origen: 'disponible', destino: 'ocupada' },
+                { origen: 'disponible', destino: 'bloqueada' },
+                { origen: 'bloqueada', destino: 'disponible' },
+                { origen: 'ocupada', destino: 'disponible' },
+            ]
+        }, REQMock);
+
+        // OCUPA LA CAMA
+        await patch({
+            id: cama._id,
+            ambito,
+            capa,
+            estado: 'ocupada',
+            fecha: moment().subtract(1, 'minutes').toDate(),
+            organizacion: cama.organizacion,
+            paciente: {
+                id: '57f67a7ad86d9f64130a138d',
+                _id: '57f67a7ad86d9f64130a138d',
+                nombre: 'JUANCITO',
+                apellido: 'PEREZ',
+                documento: '38432297'
+            },
+            esMovimiento: true,
+            extras: {
+                ingreso: true
+            }
+        }, REQMock);
+
+        const unidadOrganizativaOrigen = {
+            refsetIds: [],
+            fsn: 'departamento de rayos X (medio ambiente)',
+            term: 'departamento de rayos X',
+            conceptId: '225747005',
+            semanticTag: 'medio ambiente',
+        };
+        // LIBERA CAMA
+        await patch({
+            organizacion: cama.organizacion,
+            ambito,
+            capa,
+            id: cama._id,
+            esMovimiento: true,
+            extras: {
+                unidadOrganizativaOrigen
+            },
+            estado: 'disponible',
+            fecha: moment().subtract(30, 'seconds').toDate()
+        }, REQMock);
+
+        expect(maquinaEstados.createdAt).toBeDefined();
+        expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+        const camasConExtra = await search({ organizacion, capa, ambito }, { cama: cama._id });
+        expect(camasConExtra.length).toBe(1);
+        expect(camasConExtra[0].extras.unidadOrganizativaOrigen.conceptId).toBe(unidadOrganizativaOrigen.conceptId);
     });
 });
 
