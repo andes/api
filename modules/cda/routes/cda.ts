@@ -244,7 +244,7 @@ router.get('/files/:name', async (req: any, res, next) => {
             return next(403);
         }
 
-        const stream1 = await CDAFiles.readById(file._id);
+        const stream1 = await CDAFiles.readFile({ _id: file._id });
         res.contentType(file.contentType);
         stream1.pipe(res);
     }).catch(next);
@@ -308,8 +308,8 @@ router.get('/:id', async (req: any, res, next) => {
     const _base64 = req.params.id;
     const CDAFiles = makeFs();
 
-    const contexto = await CDAFiles.findById(_base64);
-    CDAFiles.readById(_base64, (err, buffer) => {
+    const contexto = await CDAFiles.findOne({ _id: _base64 });
+    CDAFiles.readFile({ _id: _base64 }, (err, buffer) => {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });
@@ -426,7 +426,7 @@ router.get('/:id/:name', async (req: any, res, next) => {
                 return next(403);
             }
 
-            const stream1 = await CDAFiles.readById(file._id);
+            const stream1 = await CDAFiles.readFile({ _id: file._id });
             res.contentType(file.contentType);
             stream1.pipe(res);
         }

@@ -1,16 +1,12 @@
 import * as mongoose from 'mongoose';
-const gridfs = require('mongoose-gridfs');
-
-/**
- * No podemos inicializar directamente el schema por un defecto del paquete mongoose-gridfs
- */
+const { createBucket } = require('mongoose-gridfs');
 
 export function makeFs() {
-    const CDAFilesSchema = gridfs({
-        collection: 'ImageStore',
-        model: 'ImageStore',
+    const CDAFilesSchema = createBucket({
+        collectionName: 'ImageStore',
+        bucketName: 'ImageStore',
         mongooseConnection: mongoose.connection
     });
 
-    return CDAFilesSchema.model;
+    return CDAFilesSchema;
 }

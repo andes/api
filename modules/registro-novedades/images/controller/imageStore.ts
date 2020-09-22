@@ -15,7 +15,7 @@ export async function storeFile(base64, metadata) {
             const input = new stream.PassThrough();
             const decoder64 = base64_stream.decode();
             const ImageFiles = makeFs();
-            ImageFiles.write(
+            ImageFiles.writeFile(
                 {
                     _id: uniqueId,
                     filename: uniqueId + '.' + mime.split('/')[1],
@@ -38,8 +38,8 @@ export async function storeFile(base64, metadata) {
 export async function readFile(id) {
     try {
         const ImageFiles = makeFs();
-        const contexto = await ImageFiles.findById(id);
-        const imageStream = ImageFiles.readById(id);
+        const contexto = await ImageFiles.findOne({ _id: id });
+        const imageStream = await ImageFiles.readFile({ _id: id });
         return {
             file: contexto,
             stream: imageStream

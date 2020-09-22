@@ -50,7 +50,7 @@ export class InformeRupFirma extends HTMLComponent {
         const FirmaSchema = makeFsFirma();
         const file = await FirmaSchema.findOne({ 'metadata.idProfesional': String(profesional.id) }, {}, { sort: { _id: -1 } });
         if (file) {
-            const stream = FirmaSchema.readById(file.id);
+            const stream = await FirmaSchema.readFile({ _id: file.id });
             const base64 = await streamToBase64(stream);
             return base64;
         }

@@ -225,7 +225,7 @@ export function storeFile({
         const CDAFiles = makeFs();
         const uniqueId = String(new mongoose.Types.ObjectId());
 
-        CDAFiles.write({
+        CDAFiles.writeFile({
             _id: uniqueId,
             filename: filename ? filename : uniqueId + '.' + extension,
             contentType: mimeType,
@@ -257,7 +257,7 @@ export function storePdfFile(pdf) {
         const input = new Stream.PassThrough();
         const mime = 'application/pdf';
         const CDAFiles = makeFs();
-        CDAFiles.write({
+        CDAFiles.writeFile({
             _id: uniqueId,
             filename: uniqueId + '.pdf',
             contentType: mime
@@ -286,7 +286,7 @@ export function storeCDA(objectID, cdaXml, metadata) {
         const input = new Stream.PassThrough();
         const CDAFiles = makeFs();
 
-        CDAFiles.write({
+        CDAFiles.writeFile({
             _id: objectID,
             filename: objectID + '.xml',
             contentType: 'application/xml',
@@ -421,7 +421,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
  */
 export function findByMetadata(conds) {
     const CDAFiles = makeFs();
-    return CDAFiles.find(conds);
+    return CDAFiles.findOne(conds);
 }
 
 /**
@@ -436,7 +436,7 @@ export async function CDAExists(id, fecha, orgId) {
         'metadata.fecha': fecha,
         'metadata.extras.organizacion': mongoose.Types.ObjectId(orgId),
     });
-    return existe.length > 0;
+    return existe;
 }
 
 
@@ -462,10 +462,10 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
             skip = 0;
         }
         try {
-            let list = await CDAFiles.find(conditions).sort({
+            let list = [];
+            for await (const item of CDAFiles.find(conditions).sort({
                 'metadata.fecha': -1
-            }).limit(limit).skip(skip);
-            list = list.map(item => {
+            }).limit(limit).skip(skip)) {
                 const data = item.metadata;
                 data.cda_id = item._id;
                 if (data.adjuntos) {
@@ -477,9 +477,8 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
                     });
 
                 }
-
-                return item.metadata;
-            });
+                list.push(item.metadata);
+            }
 
             return resolve(list);
         } catch (e) {
@@ -495,7 +494,7 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
 export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
         const CDAFiles = makeFs();
-        CDAFiles.readById(cdaID, (err, buffer) => {
+        CDAFiles.readFile({ _id: cdaID }, (err, buffer) => {
             const xml = buffer.toString('utf8');
             return resolve(xml);
         });

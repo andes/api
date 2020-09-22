@@ -10,13 +10,14 @@ import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
-import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
-import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
+import { formacionCero, matriculaCero, migrarTurnos } from '../controller/profesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
 import moment = require('moment');
+import { streamToBase64 } from '../../../modules/rup/controllers/rupStore';
+
 
 let router = express.Router();
 
@@ -234,7 +235,6 @@ router.get('/profesionales/matching', async (req, res, next) => {
     }
 });
 
-
 router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFoto')) {
         return next(403);
@@ -244,18 +244,13 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, re
     const id = req.query.id;
     const fotoProf = makeFs();
     try {
-        const file = await fotoProf.find({ 'metadata.idProfesional': id }, {}, { sort: { _id: -1 } });
-        if (file.length > 0) {
-            fotoProf.readById(file[0].id, (err2, buffer) => {
-                if (err2) {
-                    return next(err2);
-                }
-                const _img = buffer.toString('base64');
-                return res.json(_img);
-            });
-        } else {
-            return res.json(img);
+        const file = await fotoProf.findOne({ 'metadata.idProfesional': id });
+        if (file) {
+            const readStream = await fotoProf.readFile({ _id: file._id });
+            const _img = await streamToBase64(readStream);
+            return res.json(_img);
         }
+        return res.json(img);
     } catch (ex) {
         return next(ex);
     }
@@ -269,37 +264,35 @@ router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, ne
         if (req.query.id) {
             const id = req.query.id;
             const fotoProf = makeFsFirma();
-            const file = await fotoProf.find({ 'metadata.idProfesional': id }, {}, { sort: { _id: -1 } });
-            if (file && file.length > 0) {
-                fotoProf.readById(file[0].id, (err2, buffer) => {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    const firma = buffer.toString('base64');
+            const file = await fotoProf.findOne({ 'metadata.idProfesional': id });
+            if (file) {
+                const readStream = await fotoProf.readFile({ _id: file._id });
+                const firma = await streamToBase64(readStream);
+                if (firma) {
                     return res.json(firma);
-                });
-            } else {
-                return res.json({});
+                }
             }
+            return res.json({});
+
         }
         if (req.query.firmaAdmin) {
             let idAdmin = req.query.firmaAdmin;
             let fotoAdmin = makeFsFirmaAdmin();
-            const file = await fotoAdmin.find({ 'metadata.idSupervisor': idAdmin }, {}, { sort: { _id: -1 } });
-            if (file && file.length > 0) {
-                fotoAdmin.readById(file[0]._id, (err2, buffer) => {
-                    if (err2) {
-                        return next(err2);
-                    }
+            const file = await fotoAdmin.findOne({ 'metadata.idSupervisor': idAdmin });
+            if (file) {
+                const idFile = file._id;
+                const readStream = await fotoAdmin.readFile({ _id: idFile });
+                const _img = await streamToBase64(readStream);
+                if (_img) {
                     let firmaAdmin = {
-                        firma: buffer.toString('base64'),
-                        administracion: file[0].metadata.administracion
+                        firma: _img,
+                        administracion: file.metadata.administracion
                     };
                     return res.json(firmaAdmin);
-                });
-            } else {
-                return res.json({});
+                }
             }
+            return res.json({});
+
         }
     } catch (ex) {
         return next(ex);
@@ -865,27 +858,25 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
 });
 
 
-router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
+router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:postProfesional')) {
         return next(403);
     }
     try {
         if (req.body.imagen) {
-
             const _base64 = req.body.imagen.img;
             const decoder = base64.decode();
             const input = new stream.PassThrough();
             const fotoProf = makeFs();
             // remove la foto vieja antes de insertar la nueva
-            fotoProf.find({
+            const file = await fotoProf.findOne({
                 'metadata.idProfesional': req.body.imagen.idProfesional
-            }, (err, file) => {
-                file.forEach(recorre => {
-                    fotoProf.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
-                });
             });
+            if (file && file._id) {
+                await fotoProf.unlink(file._id, (error) => { });
+            }
             // inserta en la bd en files y chucks
-            fotoProf.write({
+            fotoProf.writeFile({
                 filename: 'foto.png',
                 contentType: 'image/png',
                 metadata: {
@@ -896,26 +887,22 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
                 (error, createdFile) => {
                     res.json(createdFile);
                 });
-
             input.end(_base64);
-
         }
         if (req.body.firma) {
             const _base64 = req.body.firma.firmaP;
             const decoder = base64.decode();
             const input = new stream.PassThrough();
             const firmaProf = makeFsFirma();
-
             // remove la firma vieja antes de insertar la nueva
-            firmaProf.find({
+            const fileFirma = await firmaProf.findOne({
                 'metadata.idProfesional': req.body.firma.idProfesional
-            }, (err, file) => {
-                file.forEach(recorre => {
-                    firmaProf.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
-                });
             });
+            if (fileFirma && fileFirma._id) {
+                await firmaProf.unlink(fileFirma._id, (error) => { });
+            }
             // inserta en la bd en files y chucks
-            firmaProf.write({
+            await firmaProf.writeFile({
                 filename: 'firma.png',
                 contentType: 'image/jpeg',
                 metadata: {
@@ -927,7 +914,6 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
                     res.json(createdFile);
                 });
             input.end(_base64);
-
         }
         if (req.body.firmaAdmin) {
             const _base64 = req.body.firmaAdmin.firma;
@@ -936,15 +922,14 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
             const firmaAdmin = makeFsFirmaAdmin();
 
             // remove la firma vieja antes de insertar la nueva
-            firmaAdmin.find({
+            const fileFirmaAdmin = await firmaAdmin.findOne({
                 'metadata.idSupervisor': req.body.firmaAdmin.idSupervisor
-            }, (err, file) => {
-                file.forEach(recorre => {
-                    firmaAdmin.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
-                });
             });
+            if (fileFirmaAdmin && fileFirmaAdmin._id) {
+                await firmaAdmin.unlink(fileFirmaAdmin._id, (error) => { });
+            }
             // inserta en la bd en files y chucks
-            firmaAdmin.write({
+            firmaAdmin.writeFile({
                 filename: 'firmaAdmin.png',
                 contentType: 'image/jpeg',
                 metadata: {
@@ -960,7 +945,6 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
 
         }
         if (req.body.profesional) {
-
             const newProfesional = new profesional(req.body.profesional);
             Auth.audit(newProfesional, req);
             newProfesional.save(async (err2) => {

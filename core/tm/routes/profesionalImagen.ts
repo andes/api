@@ -11,9 +11,9 @@ router.post('/profesionales/file', async (req: any, res, next) => {
     const decoder = base64.decode();
     const input = new stream.PassThrough();
     const CDAFiles = makeFs();
-    CDAFiles.write(
+    CDAFiles.writeFile(
         {
-            filename:  'hola.png' ,
+            filename: 'hola.png',
             contentType: 'image/jpeg',
         },
         input.pipe(decoder),
@@ -26,8 +26,8 @@ router.post('/profesionales/file', async (req: any, res, next) => {
 router.get('/file/:id', async (req: any, res, next) => {
     const _base64 = req.params.id;
     const CDAFiles = makeFs();
-    const contexto = await CDAFiles.findById(_base64);
-    CDAFiles.readById(_base64, (err, buffer) => {
+    const contexto = await CDAFiles.findOne({ _id: _base64 });
+    CDAFiles.readFile({ _id: _base64 }, (err, buffer) => {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });
