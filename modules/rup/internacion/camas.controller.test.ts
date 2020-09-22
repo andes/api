@@ -784,7 +784,7 @@ describe('Internacion - camas', () => {
             }
         }, REQMock);
 
-        const idInternacion = mongoose.Types.ObjectId();
+        const idInternacion = Types.ObjectId();
         // LIBERA CAMA
         await patch({
             organizacion: cama.organizacion,
