@@ -275,29 +275,6 @@ router.get('/paciente/', async (req: any, res, next) => {
 });
 
 /**
- * Listado de los CDAs de un paciente
- * API demostrativa, falta analizar como se va a buscar en el repositorio
- */
-
-router.get('/paciente/:id', async (req: any, res, next) => {
-    if (ObjectId.isValid(req.params.id)) {
-        if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
-            return next(403);
-        }
-        let pacienteID = req.params.id;
-        let prestacion = req.query.prestacion;
-        let list;
-        try {
-            list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
-        } catch (err) {
-            return next(err);
-        }
-        res.json(list);
-    }
-});
-
-
-/**
  * Devuelve el XML de un CDA según un ID
  */
 router.get('/:id', async (req: any, res, next) => {
@@ -369,19 +346,22 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
 
-    if (!Auth.check(req, 'cda:list') || req.user.type !== 'paciente-token') {
+    if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token'
+        && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
         return next(403);
     }
-    let pacienteID = req.params.id;
-    let prestacion = req.query.prestacion;
-    let { paciente } = await pacienteCtr.buscarPaciente(pacienteID);
+    if (ObjectId.isValid(req.params.id)) {
+        let pacienteID = req.params.id;
+        let prestacion = req.query.prestacion;
+        let { paciente } = await pacienteCtr.buscarPaciente(pacienteID);
 
-    if (paciente) {
-        let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
-        return res.json(list);
-    } else {
-        return next({ message: 'no existe el paciente' });
+        if (paciente) {
+            let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
+            return res.json(list);
+        }
     }
+    return next({ message: 'no existe el paciente' });
+
 });
 
 /**
