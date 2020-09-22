@@ -1,19 +1,21 @@
 import { ObjectId } from '@andes/core';
 import { SchemaTypes, Schema, model } from 'mongoose';
-import { SnomedConcept } from '../schemas/snomed-concept';
+import { ISnomedConcept, SnomedConcept } from '../schemas/snomed-concept';
 
 export interface InternacionExtras {
     egreso?: boolean;
     ingreso?: boolean;
     tipo_egreso?: string;
     idInternacion?: ObjectId;
+    unidadOrganizativaOrigen?: ISnomedConcept;
 }
 export const InternacionExtrasSchema = new Schema(
     {
         egreso: { type: Boolean, required: false },
         ingreso: { type: Boolean, required: false },
         tipo_egreso: { type: String, required: false },
-        idInternacion: { type: SchemaTypes.ObjectId, required: false }, // idInternacion al egresar
+        idInternacion: { type: SchemaTypes.ObjectId, required: false }, // idInternacion al egresar,
+        unidadOrganizativaOrigen: { type: SnomedConcept, required: false },
     },
     { _id: false }
 );
