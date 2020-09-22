@@ -290,7 +290,7 @@ router.get('/paciente/:id', async (req: any, res, next) => {
         try {
             list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
         } catch (err) {
-            return next({ message: 'no existe el paciente' });
+            return next(err);
         }
         res.json(list);
     }
