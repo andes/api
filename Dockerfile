@@ -1,4 +1,4 @@
-ARG NODE_VERSION=8-alpine
+ARG NODE_VERSION=10-alpine
 FROM node:${NODE_VERSION}
 
 ENV node_env=development
