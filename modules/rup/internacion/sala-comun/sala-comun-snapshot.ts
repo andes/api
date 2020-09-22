@@ -41,6 +41,7 @@ export async function createSnapshotSalaComun(fecha: Date) {
                     idInternacion: o.idInternacion,
                     desde: o.fecha,
                     unidadOrganizativas: o.unidadOrganizativas,
+                    extras: o.extras,
                     createdAt: o.createdAt,
                     createdBy: o.createdBy,
                     updatedAt: o.updatedAt,
@@ -50,7 +51,7 @@ export async function createSnapshotSalaComun(fecha: Date) {
 
             await snapshot.save();
             await SalaComun.update(
-                { id: sala.id },
+                { _id: sala.id },
                 { $set: { lastSync: fecha } }
             );
         }
