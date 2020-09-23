@@ -1,3 +1,15 @@
+# [5.14.0](https://github.com/andes/api/compare/v5.13.0...v5.14.0) (2020-09-23)
+
+
+### Bug Fixes
+
+* **snowstorm:** too heavy request ([#1110](https://github.com/andes/api/issues/1110)) ([8cb2595](https://github.com/andes/api/commit/8cb25953322b980ff5207af99fc3a5004064e3ea))
+
+
+### Features
+
+* **mapa-camas:** agrega UO al extra de movimientos ([#1058](https://github.com/andes/api/issues/1058)) ([9cf956d](https://github.com/andes/api/commit/9cf956d9d5fa3d6927d366940b4459add87bc96c))
+
 # [5.13.0](https://github.com/andes/api/compare/v5.12.1...v5.13.0) (2020-09-16)
 
 
