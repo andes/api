@@ -284,7 +284,6 @@ router.get('/:id', async (req: any, res, next) => {
 
     const _base64 = req.params.id;
     const CDAFiles = makeFs();
-
     const contexto = await CDAFiles.findOne({ _id: _base64 });
     CDAFiles.readFile({ _id: _base64 }, (err, buffer) => {
         res.contentType(contexto.contentType);
@@ -379,8 +378,7 @@ router.get('/:id/:name', async (req: any, res, next) => {
     const realName = req.params.name.split('.')[0];
 
     const CDAFiles = makeFs();
-
-    const cda = await CDAFiles.findById(id);
+    const cda = await CDAFiles.findOne({ _id: req.params.id });
     if (cda) {
         const adj = cda.metadata.adjuntos.find(_adj => {
             return String(_adj.id) === realName;
