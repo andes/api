@@ -12,9 +12,9 @@ class PerfilesResource extends ResourceBase {
     routesAuthorization = {
         get: Auth.authorize('usuarios:read'),
         search: Auth.authorize('usuarios:read'),
-        post: Auth.authorize('usuarios:perfiles:write'),
-        patch: Auth.authorize('usuarios:perfiles:write'),
-        delete: Auth.authorize('usuarios:perfiles:write'),
+        post: Auth.authorize('usuarios:perfiles'),
+        patch: Auth.authorize('usuarios:perfiles'),
+        delete: Auth.authorize('usuarios:perfiles'),
     };
     searchFileds = {
         // equivalente a { organizacion: { $in: [ null, value ] } }
