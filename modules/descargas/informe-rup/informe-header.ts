@@ -139,8 +139,8 @@ export class InformeRupHeader extends HTMLComponent {
                 obraSocial: prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial.financiador : false
             },
             organizacion: {
-                nombre: organizacion.nombre.replace('-', '</br>'),
-                direccion: organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre
+                nombre: organizacion ? organizacion.nombre.replace('-', '</br>') : '',
+                direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
             },
             profesional: {
                 nombre: prestacion.solicitud.profesional.nombre,
@@ -150,7 +150,7 @@ export class InformeRupHeader extends HTMLComponent {
             logos: {
                 adicional: loadImage(`templates/rup/informes/img/logo-adicional-${provincia}.png`),
                 andes: loadImage('templates/rup/informes/img/logo-andes-h.png'),
-                organizacion: this.getLogoOrganizacion(organizacion)
+                organizacion: organizacion ? this.getLogoOrganizacion(organizacion) : ''
             },
             ubicacion: this.ubicacionName()
         };
