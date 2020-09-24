@@ -1,5 +1,5 @@
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { CDA } from './class/CDA';
 import { Patient } from './class/Patient';
 import { Organization } from './class/Organization';
@@ -223,11 +223,11 @@ export function storeFile({
 }) {
     return new Promise((resolve, reject) => {
         const CDAFiles = makeFs();
-        const uniqueId = String(new mongoose.Types.ObjectId());
+        const uniqueId = new Types.ObjectId();
 
         CDAFiles.writeFile({
             _id: uniqueId,
-            filename: filename ? filename : uniqueId + '.' + extension,
+            filename: filename ? filename : String(uniqueId) + '.' + extension,
             contentType: mimeType,
             metadata
         },
@@ -253,13 +253,13 @@ export function storeFile({
 
 export function storePdfFile(pdf) {
     return new Promise((resolve, reject) => {
-        const uniqueId = String(new mongoose.Types.ObjectId());
+        const uniqueId = new Types.ObjectId();
         const input = new Stream.PassThrough();
         const mime = 'application/pdf';
         const CDAFiles = makeFs();
         CDAFiles.writeFile({
             _id: uniqueId,
-            filename: uniqueId + '.pdf',
+            filename: String(uniqueId) + '.pdf',
             contentType: mime
         },
             input.pipe(pdf),
@@ -287,8 +287,8 @@ export function storeCDA(objectID, cdaXml, metadata) {
         const CDAFiles = makeFs();
 
         CDAFiles.writeFile({
-            _id: objectID,
-            filename: objectID + '.xml',
+            _id: Types.ObjectId(objectID),
+            filename: String(objectID) + '.xml',
             contentType: 'application/xml',
             metadata
         },
@@ -434,7 +434,7 @@ export async function CDAExists(id, fecha, orgId) {
     const existe = await findByMetadata({
         'metadata.extras.id': id,
         'metadata.fecha': fecha,
-        'metadata.extras.organizacion': mongoose.Types.ObjectId(orgId),
+        'metadata.extras.organizacion': Types.ObjectId(orgId),
     });
     return existe;
 }
@@ -446,7 +446,7 @@ export async function CDAExists(id, fecha, orgId) {
 
 export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
-        let ids = Array.isArray(pacienteId) ? pacienteId : [mongoose.Types.ObjectId(pacienteId)];
+        let ids = Array.isArray(pacienteId) ? pacienteId : [Types.ObjectId(pacienteId)];
         const CDAFiles = makeFs();
         const conditions: any = {
             'metadata.paciente': { $in: ids },
@@ -494,7 +494,7 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
 export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
         const CDAFiles = makeFs();
-        CDAFiles.readFile({ _id: cdaID }, (err, buffer) => {
+        CDAFiles.readFile({ filename: String(cdaID) + '.xml' }, (err, buffer) => {
             const xml = buffer.toString('utf8');
             return resolve(xml);
         });
