@@ -1,5 +1,4 @@
 import { HTMLComponent } from '../model/html-component.class';
-import * as moment from 'moment';
 import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
 import { streamToBase64 } from '../../rup/controllers/rupStore';
 import { searchMatriculas } from '../../../core/tm/controller/profesional';
@@ -48,9 +47,10 @@ export class InformeRupFirma extends HTMLComponent {
 
     private async getFirma(profesional) {
         const FirmaSchema = makeFsFirma();
-        const file = await FirmaSchema.findOne({ 'metadata.idProfesional': String(profesional.id) }, {}, { sort: { _id: -1 } });
-        if (file) {
-            const stream = FirmaSchema.readById(file.id);
+        const idProfesional = String(profesional.id);
+        const file = await FirmaSchema.findOne({ 'metadata.idProfesional': idProfesional });
+        if (file && file._id) {
+            const stream = await FirmaSchema.readFile({ _id: file._id });
             const base64 = await streamToBase64(stream);
             return base64;
         }
