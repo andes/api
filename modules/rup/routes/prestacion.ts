@@ -16,6 +16,7 @@ import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { getTurnoById } from '../../turnos/controller/turnosController';
+import { asyncHandler } from '@andes/api-tool';
 
 const router = express.Router();
 
@@ -82,7 +83,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, ne
         return res.status(404).send('Turno no encontrado');
     }
     // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
-    let query = {
+    const query = {
         'paciente.id': req.params.idPaciente,
         'estadoActual.tipo': req.query.estado ? req.query.estado : 'validada'
     };
@@ -338,156 +339,150 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     }
 });
 
-router.get('/prestaciones/:id*?', async (req: any, res, next) => {
+router.get('/prestaciones/:id', asyncHandler(async (req: any, res, next) => {
+    const prestacion = await Prestacion.findById(req.params.id);
+    if (prestacion) {
+        return res.json(prestacion);
+    }
+    return next(404);
+}));
 
-    if (req.params.id) {
-        const query = Prestacion.findById(req.params.id);
-        query.exec((err, data) => {
-            if (err) {
-                return next(err);
-            }
-            if (!data) {
-                return next(404);
-            }
-            res.json(data);
+router.get('/prestaciones', async (req: any, res, next) => {
+    let query;
+    if (req.query.estado) {
+        const estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
+        query = Prestacion.find({
+            'estadoActual.tipo': { $in: estados },
         });
     } else {
-        let query;
-        if (req.query.estado) {
-            const estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
-            query = Prestacion.find({
-                'estadoActual.tipo': { $in: estados },
-            });
-        } else {
-            query = Prestacion.find({}); // Trae todos
-        }
+        query = Prestacion.find({}); // Trae todos
+    }
 
-        if (req.query.sinEstado) {
-            query.where('estados.tipo').ne(req.query.sinEstado);
+    if (req.query.sinEstado) {
+        query.where('estados.tipo').ne(req.query.sinEstado);
+    }
+    if (req.query.fechaDesde) {
+        // query.where('createdAt').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
+        query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
+    }
+    if (req.query.fechaHasta) {
+        // query.where('createdAt').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
+        query.where('ejecucion.fecha').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
+    }
+    if (req.query.idProfesional) {
+        query.where('solicitud.profesional.id').equals(req.query.idProfesional);
+    }
+    if (req.query.idPaciente) {
+        let { paciente } = await buscarPaciente(req.query.idPaciente);
+        if (paciente) {
+            query.where('paciente.id').in(paciente.vinculos);
         }
-        if (req.query.fechaDesde) {
-            // query.where('createdAt').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
-            query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
-        }
-        if (req.query.fechaHasta) {
-            // query.where('createdAt').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
-            query.where('ejecucion.fecha').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
-        }
-        if (req.query.idProfesional) {
-            query.where('solicitud.profesional.id').equals(req.query.idProfesional);
-        }
-        if (req.query.idPaciente) {
-            let { paciente } = await buscarPaciente(req.query.idPaciente);
-            if (paciente) {
-                query.where('paciente.id').in(paciente.vinculos);
-            }
-        }
-        if (req.query.idPrestacionOrigen) {
-            query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
-        }
-        if (req.query.conceptId) {
-            query.where('solicitud.tipoPrestacion.conceptId').equals(req.query.conceptId);
-        }
-        if (req.query.turnos) {
-            query.where('solicitud.turno').in(req.query.turnos);
-        }
+    }
+    if (req.query.idPrestacionOrigen) {
+        query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
+    }
+    if (req.query.conceptId) {
+        query.where('solicitud.tipoPrestacion.conceptId').equals(req.query.conceptId);
+    }
+    if (req.query.turnos) {
+        query.where('solicitud.turno').in(req.query.turnos);
+    }
 
-        if (req.query.conceptsIdEjecucion) {
-            query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
-        }
+    if (req.query.conceptsIdEjecucion) {
+        query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
+    }
 
-        if (req.query.solicitudDesde) {
-            query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
-        }
+    if (req.query.solicitudDesde) {
+        query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+    }
 
-        if (req.query.solicitudHasta) {
-            query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
-        }
+    if (req.query.solicitudHasta) {
+        query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+    }
 
 
-        if (req.query.tienePrestacionOrigen !== undefined) {
-            if (req.query.tienePrestacionOrigen === true) {
-                query.where('solicitud.prestacionOrigen').ne(null);
-            }
-            if (req.query.tienePrestacionOrigen === false) {
-                query.where('solicitud.prestacionOrigen').equals(null);
-            }
+    if (req.query.tienePrestacionOrigen !== undefined) {
+        if (req.query.tienePrestacionOrigen === true) {
+            query.where('solicitud.prestacionOrigen').ne(null);
         }
+        if (req.query.tienePrestacionOrigen === false) {
+            query.where('solicitud.prestacionOrigen').equals(null);
+        }
+    }
 
 
-        if (req.query.tieneTurno !== undefined) {
-            if (req.query.tieneTurno === true) {
-                query.where('solicitud.turno').ne(null);
-            }
-            if (req.query.tieneTurno === false) {
-                query.where('solicitud.turno').equals(null);
-            }
+    if (req.query.tieneTurno !== undefined) {
+        if (req.query.tieneTurno === true) {
+            query.where('solicitud.turno').ne(null);
         }
+        if (req.query.tieneTurno === false) {
+            query.where('solicitud.turno').equals(null);
+        }
+    }
 
-        if (req.query.tipoPrestaciones) {
-            query.where({ 'solicitud.tipoPrestacion.conceptId': { $in: req.query.tipoPrestaciones } });
-        }
+    if (req.query.tipoPrestaciones) {
+        query.where({ 'solicitud.tipoPrestacion.conceptId': { $in: req.query.tipoPrestaciones } });
+    }
 
-        if (req.query.organizacion) {
-            query.where('solicitud.organizacion.id').equals(req.query.organizacion);
-        }
-        if (req.query.ambitoOrigen) {
-            query.where('solicitud.ambitoOrigen').equals(req.query.ambitoOrigen);
-        }
+    if (req.query.organizacion) {
+        query.where('solicitud.organizacion.id').equals(req.query.organizacion);
+    }
+    if (req.query.ambitoOrigen) {
+        query.where('solicitud.ambitoOrigen').equals(req.query.ambitoOrigen);
+    }
 
-        // Ordenar por fecha de solicitud
-        if (req.query.ordenFecha) {
-            query.sort({ 'solicitud.fecha': -1 });
-        } else if (req.query.ordenFechaEjecucion) {
-            query.sort({ 'ejecucion.fecha': -1 });
-        }
+    // Ordenar por fecha de solicitud
+    if (req.query.ordenFecha) {
+        query.sort({ 'solicitud.fecha': -1 });
+    } else if (req.query.ordenFechaEjecucion) {
+        query.sort({ 'ejecucion.fecha': -1 });
+    }
 
-        if (req.query.limit) {
-            query.limit(parseInt(req.query.limit, 10));
-        }
+    if (req.query.limit) {
+        query.limit(parseInt(req.query.limit, 10));
+    }
 
-        if (req.query.id) {
-            query.where('_id').equals(req.query.id);
-        }
+    if (req.query.id) {
+        query.where('_id').equals(req.query.id);
+    }
 
-        query.exec((err, data) => {
-            if (err) {
-                return next(err);
-            }
-            if (req.params.id && !data) {
-                return next(404);
-            }
-            if (data) {
-                const profesional = Auth.getProfesional(req);
-                const profesionalId = profesional && profesional.id && profesional.id.toString();
-                for (let i = 0; i < data.length; i++) {
-                    let profId = false;
-                    if (data[i].solicitud.profesional && data[i].solicitud.profesional.id) {
-                        profId = data[i].solicitud.profesional.id.toString();
-                    }
-                    const registros = data[i].ejecucion.registros;
-                    if (registros) {
-                        for (let j = 0; j < registros.length; j++) {
-                            const privacy = registros[j].privacy || { scope: 'public' };
-                            if (privacy.scope !== 'public' && profesionalId !== profId) {
-                                switch (privacy.scope) {
-                                    case 'private':
-                                        registros.splice(j, 1);
-                                        j--;
-                                        break;
-                                    case 'termOnly':
-                                        registros[j].valor = 'REGISTRO PRIVADO';
-                                        registros[j].registros = [];
-                                        break;
-                                }
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        if (req.params.id && !data) {
+            return next(404);
+        }
+        if (data) {
+            const profesional = Auth.getProfesional(req);
+            const profesionalId = profesional && profesional.id && profesional.id.toString();
+            for (let i = 0; i < data.length; i++) {
+                let profId = false;
+                if (data[i].solicitud.profesional && data[i].solicitud.profesional.id) {
+                    profId = data[i].solicitud.profesional.id.toString();
+                }
+                const registros = data[i].ejecucion.registros;
+                if (registros) {
+                    for (let j = 0; j < registros.length; j++) {
+                        const privacy = registros[j].privacy || { scope: 'public' };
+                        if (privacy.scope !== 'public' && profesionalId !== profId) {
+                            switch (privacy.scope) {
+                                case 'private':
+                                    registros.splice(j, 1);
+                                    j--;
+                                    break;
+                                case 'termOnly':
+                                    registros[j].valor = 'REGISTRO PRIVADO';
+                                    registros[j].registros = [];
+                                    break;
                             }
                         }
                     }
                 }
             }
-            res.json(data);
-        });
-    }
+        }
+        res.json(data);
+    });
 });
 
 router.post('/prestaciones', async (req, res, next) => {

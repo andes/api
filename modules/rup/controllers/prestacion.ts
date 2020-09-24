@@ -69,7 +69,7 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
     /** La accion de historial es el tipo de PATCH que se realiza.
      * Si el PATCH es es un push de estado, la acción es el tipo de estado que se pushea */
     let _accion = datos.op === 'estadoPush' ? datos.estado.tipo : datos.op;
-    registroHistorial.accion = descripcionesAccion[_accion] === undefined ?  'indefinida' : _accion;
+    registroHistorial.accion = descripcionesAccion[_accion] === undefined ? 'indefinida' : _accion;
     registroHistorial.descripcion = descripcionesAccion[registroHistorial.accion];
 
     let observaciones = datos.op === 'estadoPush' || datos.op === 'citar' ? datos.estado.observaciones : datos.observaciones;

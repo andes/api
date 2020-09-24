@@ -85,7 +85,7 @@ export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
 export async function getPrestaciones(paciente, { estado = 'validada', desde = null, hasta = null }) {
     const query = {
         'paciente.id': paciente._id,
-        $where: `this.ultimoEstado.tipo ==  "${estado}"`
+        'ultimoEstado.tipo': estado,
     };
     if (desde || hasta) {
         query['ejecucion.fecha'] = {};
