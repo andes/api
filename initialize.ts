@@ -11,6 +11,7 @@ import { AndesDrive } from '@andes/drive';
 import { apiOptionsMiddleware } from '@andes/api-tool';
 import { SendMessageCacheRouter, PacienteAppRouter } from './modules/mobileApp';
 import { initialize as FHIRInitialize } from '@andes/fhir';
+import { env } from 'process';
 
 const proxy = require('express-http-proxy');
 const requireDir = require('require-dir');
@@ -25,6 +26,19 @@ export function initAPI(app: Express) {
     // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
 
+    let traba = false;
+    let error = null;
+    if (process.env.NODE_ENV !== 'production') {
+        // tslint:disable-next-line:no-console
+        process.on('unhandledRejection', r => {
+            console.log(r);
+            if (env.NODE_ENV === 'JENKINS') {
+                traba = true;
+                error = r;
+            }
+        });
+
+    }
 
     // Configura Express
     app.use(bodyParser.json({ limit: '150mb' }));
@@ -38,6 +52,10 @@ export function initAPI(app: Express) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+        if (traba) {
+            res.status(500).json({ error: JSON.stringify(error) });
+        }
 
         // Permitir que el método OPTIONS funcione sin autenticación
         if ('OPTIONS' === req.method) {

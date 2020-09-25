@@ -6,19 +6,24 @@ const IsASct = '116680003';
 const StatedSct = '900000000000010007';
 
 async function httpGetSnowstorm(url: String, qs = {}, languageCode = 'es') {
-    const [status, body] = await handleHttpRequest({
-        url: `${snomed.snowstormHost}/${url}`,
-        json: true,
-        useQuerystring: true,
-        headers: {
-            'Accept-Language': languageCode
-        },
-        qs
-    });
-    if (status === 200) {
-        return body;
+    try {
+        const [status, body] = await handleHttpRequest({
+            url: `${snomed.snowstormHost}/${url}`,
+            json: true,
+            useQuerystring: true,
+            headers: {
+                'Accept-Language': languageCode
+            },
+            qs
+        });
+        if (status === 200) {
+            return body;
+        }
+        return null;
+    } catch (e) {
+        console.error('DIO ERROR');
+        return null;
     }
-    return null;
 }
 
 function getSemanticTagFromFsn(fsn: String) {
