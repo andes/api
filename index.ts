@@ -13,3 +13,9 @@ const server = app.listen(3002, () => debug('andes')('listening on port %s', por
 
 // Inicializa Websockets
 Websockets.initialize(server);
+
+// Muestra mensaje y línea de un error dentro de una promise ;-)
+if (process.env.NODE_ENV !== 'production') {
+    // tslint:disable-next-line:no-console
+    process.on('unhandledRejection', r => console.log(r));
+}
