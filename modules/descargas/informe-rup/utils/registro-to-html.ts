@@ -4,6 +4,12 @@ import { HTMLComponent } from '../../model/html-component.class';
 export async function registroToHTML(prestacion, registro, depth: number) {
     const elementoRUP = registro.elementoRUPObject;
 
+    if (!elementoRUP) {
+        // tslint:disable-next-line:no-console
+        console.warn(`INFORME-RUP: Prestacion ${prestacion && prestacion.id}|${registro && registro.id} no tiene elemento RUP`);
+        return '';
+    }
+
     const HTMLClass = ElementosRUPHTML[elementoRUP.componente];
 
     if (HTMLClass) {
