@@ -12,7 +12,7 @@
     "@andes/fhir": "^1.2.0",
     "@andes/fuentes-autenticas": "^1.0.5",
     "@andes/georeference": "^1.0.2",
-    "@andes/log": "^2.0.0",
+    "@andes/log": "^2.0.1",
     "@andes/match": "^1.1.12",
     "@andes/mongoose-plugin-audit": "^1.1.0",
     "@types/async": "^2.0.49",
