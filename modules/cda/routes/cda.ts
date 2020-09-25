@@ -378,7 +378,8 @@ router.get('/:id/:name', async (req: any, res, next) => {
     const realName = req.params.name.split('.')[0];
 
     const CDAFiles = makeFs();
-    const cda = await CDAFiles.findOne({ _id: req.params.id });
+    const cda = await CDAFiles.findOne({ _id: id });
+
     if (cda) {
         const adj = cda.metadata.adjuntos.find(_adj => {
             return String(_adj.id) === realName;
@@ -409,6 +410,8 @@ router.get('/:id/:name', async (req: any, res, next) => {
             stream1.pipe(res);
         }
 
+    } else {
+        return next('NO EXISTE EL ARCHIVO');
     }
 });
 
