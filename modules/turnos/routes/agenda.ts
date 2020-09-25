@@ -535,140 +535,149 @@ router.patch('/agenda/:id*?', (req, res, next) => {
             if (err) {
                 return next(err);
             }
-            // Loopear los turnos, si viene vacío, es porque viene un id solo
-            const turnos = req.body.turnos || [''];
-            const estadoAgenda = data.estado;
-            for (let y = 0; y < turnos.length; y++) {
-                let turno;
-                switch (req.body.op) {
-                    case 'darAsistencia':
-                        turno = agendaCtrl.darAsistencia(req, data, turnos[y]);
-                        event = { object: 'turno', accion: 'asistencia', data: turno };
-                        break;
-                    // Agregar operacion para marcar que noAsistio
-                    case 'sacarAsistencia':
-                        turno = agendaCtrl.sacarAsistencia(req, data, turnos[y]);
-                        event = { object: 'turno', accion: 'unasistencia', data: turno }; // [TODO] Definir nombre
-                        break;
-                    case 'noAsistio':
-                        turno = agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
-                        event = { object: 'turno', accion: 'inasistencia', data: turno };
-                        break;
-                    case 'quitarTurnoDoble':
-                        agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
-                        break;
-                    case 'liberarTurno':
-                        turno = agendaCtrl.getTurno(req, data, turnos[y]);
-                        // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
-                        LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data);
-                        await prestacionCtrl.liberarRefTurno(turno, req);
-                        let liberado = await agendaCtrl.liberarTurno(req, data, turno);
-                        if (!liberado) {
-                            return next('Turno en ejecución');
-                        }
-                        event = { object: 'turno', accion: 'liberar', data: turno };
-                        break;
-                    case 'suspenderTurno':
-                        turno = agendaCtrl.getTurno(req, data, turnos[y]);
-                        if (agendaCtrl.getBloque(data, turno)) {
-                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
-                        } else {
-                            // Caso sobreturno
-                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, -1, data._id);
-                        }
-                        agendaCtrl.suspenderTurno(req, data, turno);
-                        event = { object: 'turno', accion: 'suspender', data: turno };
-                        break;
-                    case 'codificarTurno':
-                        agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
-                            return next(err2);
-                        });
-                        break;
-                    case 'guardarNotaTurno':
-                        agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
-                        break;
-                    case 'darTurnoDoble':
-                        agendaCtrl.darTurnoDoble(req, data, turnos[y]);
-                        break;
-                    case 'notaAgenda':
-                        agendaCtrl.guardarNotaAgenda(req, data);
-                        break;
-                    case 'editarAgenda':
-                        if (estadoAgenda !== 'pendienteAuditoria' && estadoAgenda !== 'auditada' && estadoAgenda !== 'pausada' && estadoAgenda !== 'suspendida') {
-                            agendaCtrl.editarAgenda(req, data);
-                            event = { object: 'agenda', accion: 'update', data };
-                        } else {
-                            return next('Operacion no exitosa');
-                        }
-                        break;
-                    case 'agregarSobreturno':
-                        event = { object: 'turno', accion: 'asignar', data: null };
-                        event.data = agendaCtrl.agregarSobreturno(req, data);
-                        break;
-                    case 'disponible':
-                        if (estadoAgenda !== 'planificacion') {
-                            return next('Operacion no exitosa');
-                        } else {
+            try {
+                // Loopear los turnos, si viene vacío, es porque viene un id solo
+                const turnos = req.body.turnos || [''];
+                const estadoAgenda = data.estado;
+                for (let y = 0; y < turnos.length; y++) {
+                    let turno;
+                    switch (req.body.op) {
+                        case 'darAsistencia':
+                            turno = agendaCtrl.darAsistencia(req, data, turnos[y]);
+                            event = { object: 'turno', accion: 'asistencia', data: turno };
+                            break;
+                        // Agregar operacion para marcar que noAsistio
+                        case 'sacarAsistencia':
+                            turno = agendaCtrl.sacarAsistencia(req, data, turnos[y]);
+                            event = { object: 'turno', accion: 'unasistencia', data: turno }; // [TODO] Definir nombre
+                            break;
+                        case 'noAsistio':
+                            turno = agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
+                            event = { object: 'turno', accion: 'inasistencia', data: turno };
+                            break;
+                        case 'quitarTurnoDoble':
+                            agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
+                            break;
+                        case 'liberarTurno':
+                            turno = agendaCtrl.getTurno(req, data, turnos[y]);
+                            LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data);
+                            await prestacionCtrl.liberarRefTurno(turno, req);
+                            let liberado = await agendaCtrl.liberarTurno(req, data, turno);
+                            if (!liberado) {
+                                return next('Turno en ejecución');
+                            }
+                            event = { object: 'turno', accion: 'liberar', data: turno };
+                            break;
+                        case 'suspenderTurno':
+                            turno = agendaCtrl.getTurno(req, data, turnos[y]);
+                            if (agendaCtrl.getBloque(data, turno)) {
+                                LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
+                            } else {
+                                // Caso sobreturno
+                                LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, -1, data._id);
+                            }
+                            agendaCtrl.suspenderTurno(req, data, turno);
+                            event = { object: 'turno', accion: 'suspender', data: turno };
+                            break;
+                        case 'codificarTurno':
+                            agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
+                                return next(err2);
+                            });
+                            break;
+                        case 'guardarNotaTurno':
+                            agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
+                            break;
+                        case 'darTurnoDoble':
+                            agendaCtrl.darTurnoDoble(req, data, turnos[y]);
+                            break;
+                        case 'notaAgenda':
+                            agendaCtrl.guardarNotaAgenda(req, data);
+                            break;
+                        case 'editarAgenda':
+                            if (estadoAgenda !== 'pendienteAuditoria' && estadoAgenda !== 'auditada' && estadoAgenda !== 'pausada' && estadoAgenda !== 'suspendida') {
+                                agendaCtrl.editarAgenda(req, data);
+                                event = { object: 'agenda', accion: 'update', data };
+                            } else {
+                                return next('Operacion no exitosa');
+                            }
+                            break;
+                        case 'agregarSobreturno':
+                            event = { object: 'turno', accion: 'asignar', data: null };
+                            event.data = agendaCtrl.agregarSobreturno(req, data);
+                            break;
+                        case 'disponible':
+                            if (estadoAgenda !== 'planificacion') {
+                                return next('Operacion no exitosa');
+                            } else {
+                                agendaCtrl.actualizarEstado(req, data);
+                                event = { object: 'agenda', accion: 'estado', data };
+                            }
+                            break;
+                        case 'publicada':
+                            if (estadoAgenda !== 'planificacion' && estadoAgenda !== 'disponible') {
+                                return next('Operacion no exitosa');
+                            } else {
+                                agendaCtrl.actualizarEstado(req, data);
+                                event = { object: 'agenda', accion: 'estado', data };
+                            }
+                            break;
+                        case 'pausada':
+                            if (estadoAgenda === 'planificacion' || estadoAgenda === 'pausada' || estadoAgenda === 'suspendida' || estadoAgenda === 'auditada' || estadoAgenda === 'pendienteAuditoria') {
+                                return next('Operacion no exitosa');
+                            } else {
+                                agendaCtrl.actualizarEstado(req, data);
+                                event = { object: 'agenda', accion: 'estado', data };
+                            }
+                            break;
+                        case 'prePausada':
+                            if (estadoAgenda !== 'pausada') {
+                                return next('Operacion no exitosa');
+                            } else {
+                                agendaCtrl.actualizarEstado(req, data);
+                                event = { object: 'agenda', accion: 'estado', data };
+                            }
+                            break;
+                        case 'pendienteAuditoria':
+                        case 'pendienteAsistencia':
+                        case 'auditada':
                             agendaCtrl.actualizarEstado(req, data);
                             event = { object: 'agenda', accion: 'estado', data };
-                        }
-                        break;
-                    case 'publicada':
-                        if (estadoAgenda !== 'planificacion' && estadoAgenda !== 'disponible') {
-                            return next('Operacion no exitosa');
-                        } else {
-                            agendaCtrl.actualizarEstado(req, data);
-                            event = { object: 'agenda', accion: 'estado', data };
-                        }
-                        break;
-                    case 'pausada':
-                        if (estadoAgenda === 'planificacion' || estadoAgenda === 'pausada' || estadoAgenda === 'suspendida' || estadoAgenda === 'auditada' || estadoAgenda === 'pendienteAuditoria') {
-                            return next('Operacion no exitosa');
-                        } else {
-                            agendaCtrl.actualizarEstado(req, data);
-                            event = { object: 'agenda', accion: 'estado', data };
-                        }
-                        break;
-                    case 'prePausada':
-                        if (estadoAgenda !== 'pausada') {
-                            return next('Operacion no exitosa');
-                        } else {
-                            agendaCtrl.actualizarEstado(req, data);
-                            event = { object: 'agenda', accion: 'estado', data };
-                        }
-                        break;
-                    case 'pendienteAuditoria':
-                    case 'pendienteAsistencia':
-                    case 'auditada':
-                        agendaCtrl.actualizarEstado(req, data);
-                        event = { object: 'agenda', accion: 'estado', data };
-                        break;
-                    case 'borrada':
-                        if (estadoAgenda === 'planificacion') {
-                            agendaCtrl.actualizarEstado(req, data);
-                            event = { object: 'agenda', accion: 'estado', data };
-                        } else {
-                            return next('Operacion no exitosa');
-                        }
-                        break;
-                    case 'suspendida':
-                        if (estadoAgenda === 'disponible' || estadoAgenda === 'publicada') {
-                            if (! await agendaCtrl.poseeAsistencia(data)) {
+                            break;
+                        case 'borrada':
+                            if (estadoAgenda === 'planificacion') {
                                 agendaCtrl.actualizarEstado(req, data);
                                 event = { object: 'agenda', accion: 'estado', data };
                             } else {
-                                return res.json({ data, mensaje: 'No se puede suspender la agenda ya que posee asistencia registrada' });
+                                return next('Operacion no exitosa');
                             }
-                        } else {
-                            return next('Operacion no exitosa');
-                        }
-                        break;
-                    case 'avisos':
-                        agendaCtrl.agregarAviso(req, data);
-                        break;
-                    default:
-                        return next('Error: No se seleccionó ninguna opción.');
+                            break;
+                        case 'suspendida':
+                            if (estadoAgenda === 'disponible' || estadoAgenda === 'publicada') {
+                                if (! await agendaCtrl.poseeAsistencia(data)) {
+                                    agendaCtrl.actualizarEstado(req, data);
+                                    event = { object: 'agenda', accion: 'estado', data };
+                                } else {
+                                    return res.json({ data, mensaje: 'No se puede suspender la agenda ya que posee asistencia registrada' });
+                                }
+                            } else {
+                                return next('Operacion no exitosa');
+                            }
+                            break;
+                        case 'avisos':
+                            agendaCtrl.agregarAviso(req, data);
+                            break;
+                        default:
+                            return next('Error: No se seleccionó ninguna opción');
+                    }
                 }
+            } catch (err) {
+                let dataLog = {
+                    operacion: req.body.op,
+                    turnos: req.body.turnos,
+                    agenda: req.params.id
+                };
+                agendaLog.error('Error editando agenda', dataLog, err, req);
+                return next('Ocurrió un error durante la operacion');
             }
             Auth.audit(data, req);
             data.save((error) => {
