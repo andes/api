@@ -1,5 +1,4 @@
 import * as express from 'express';
-import { Documento } from '../controller/descargas-puco';
 import { Auth } from '../../../auth/auth.class';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
@@ -8,6 +7,7 @@ import moment = require('moment');
 import { InformeRUP } from '../informe-rup/informe-rup';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import { InformeCenso } from '../informe-censo/informe-censo';
+import { ConstanciaPuco } from '../puco/constancia-puco';
 
 const router = express.Router();
 
@@ -105,18 +105,12 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
 });
 
 
-router.post('/constanciaPuco/:tipo?', (req: any, res, next) => {
-    Documento.descargarDocPuco(req, res, next).then(archivo => {
-        res.download((archivo as string), (err) => {
-            if (err) {
-                next(err);
-            } else {
-                next();
-            }
-        });
-    }).catch(e => {
-        return next(e);
-    });
+router.post('/constanciaPuco/:tipo?', async (req: any, res) => {
+    let docPuco = new ConstanciaPuco(req);
+    const opciones = { header: { height: '3cm' } };
+    const fileName: any = await docPuco.informe(opciones);
+
+    res.download(fileName);
 });
 
 export = router;
