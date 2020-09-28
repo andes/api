@@ -1,5 +1,5 @@
 import { makeFs } from '../schemas/rupStore';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import * as base64_stream from 'base64-stream';
 import * as stream from 'stream';
 
@@ -11,7 +11,7 @@ export function storeFile(base64, metadata) {
     const data = match[2];
 
     return new Promise((resolve, reject) => {
-        const uniqueId = String(new mongoose.Types.ObjectId());
+        const uniqueId = new Types.ObjectId();
         const input = new stream.PassThrough();
         const decoder64 = base64_stream.decode();
         const RupFiles = makeFs();
@@ -35,8 +35,9 @@ export function readFile(id): Promise<any> {
     return new Promise(async (resolve, reject) => {
         try {
             const RupFiles = makeFs();
-            const contexto = await RupFiles.findOne({ _id: id });
-            const stream2 = RupFiles.readFile({ _id: id });
+            const idFile = Types.ObjectId(id);
+            const contexto = await RupFiles.findOne({ _id: idFile });
+            const stream2 = RupFiles.readFile({ _id: idFile });
             resolve({
                 file: contexto,
                 stream: stream2
@@ -61,8 +62,9 @@ export function readAsBase64(id) {
     return new Promise(async (resolve, reject) => {
         try {
             const RupFiles = makeFs();
-            const contexto = await RupFiles.findOne({ _id: id });
-            const stream2 = RupFiles.readFile({ _id: id });
+            const idFile = Types.ObjectId(id);
+            const contexto = await RupFiles.findOne({ _id: idFile });
+            const stream2 = RupFiles.readFile({ _id: idFile });
             resolve({
                 file: contexto,
                 stream: stream2

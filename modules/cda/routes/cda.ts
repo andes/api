@@ -282,7 +282,7 @@ router.get('/:id', async (req: any, res, next) => {
     //     return next(403);
     // }
 
-    const _base64 = req.params.id;
+    const _base64 = Types.ObjectId(req.params.id);
     const CDAFiles = makeFs();
     const contexto = await CDAFiles.findOne({ _id: _base64 });
     CDAFiles.readFile({ _id: _base64 }, (err, buffer) => {
