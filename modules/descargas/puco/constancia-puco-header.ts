@@ -8,7 +8,7 @@ export class ConstanciaPucoHeader extends HTMLComponent {
         super();
 
         this.data = {
-            logo: loadImage(`templates/puco/img/header-${ (tipoFinanciador === 'Programa SUMAR' ? `sumar` : `puco`) }.jpg`)
+            logo: loadImage(`templates/puco/img/${(tipoFinanciador === 'Programa SUMAR' ? `header-sumar.png` : `header-puco.jpg`)}`)
         };
     }
 }
