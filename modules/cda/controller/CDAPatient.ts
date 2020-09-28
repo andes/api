@@ -1,5 +1,5 @@
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { CDA } from './class/CDA';
 import { Patient } from './class/Patient';
 import { Organization } from './class/Organization';
@@ -223,11 +223,11 @@ export function storeFile({
 }) {
     return new Promise((resolve, reject) => {
         const CDAFiles = makeFs();
-        const uniqueId = String(new mongoose.Types.ObjectId());
+        const uniqueId = new Types.ObjectId();
 
-        CDAFiles.write({
+        CDAFiles.writeFile({
             _id: uniqueId,
-            filename: filename ? filename : uniqueId + '.' + extension,
+            filename: filename ? filename : String(uniqueId) + '.' + extension,
             contentType: mimeType,
             metadata
         },
@@ -253,13 +253,13 @@ export function storeFile({
 
 export function storePdfFile(pdf) {
     return new Promise((resolve, reject) => {
-        const uniqueId = String(new mongoose.Types.ObjectId());
+        const uniqueId = new Types.ObjectId();
         const input = new Stream.PassThrough();
         const mime = 'application/pdf';
         const CDAFiles = makeFs();
-        CDAFiles.write({
+        CDAFiles.writeFile({
             _id: uniqueId,
-            filename: uniqueId + '.pdf',
+            filename: String(uniqueId) + '.pdf',
             contentType: mime
         },
             input.pipe(pdf),
@@ -286,9 +286,9 @@ export function storeCDA(objectID, cdaXml, metadata) {
         const input = new Stream.PassThrough();
         const CDAFiles = makeFs();
 
-        CDAFiles.write({
-            _id: objectID,
-            filename: objectID + '.xml',
+        CDAFiles.writeFile({
+            _id: Types.ObjectId(objectID),
+            filename: String(objectID) + '.xml',
             contentType: 'application/xml',
             metadata
         },
@@ -421,7 +421,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
  */
 export function findByMetadata(conds) {
     const CDAFiles = makeFs();
-    return CDAFiles.find(conds);
+    return CDAFiles.findOne(conds);
 }
 
 /**
@@ -434,9 +434,9 @@ export async function CDAExists(id, fecha, orgId) {
     const existe = await findByMetadata({
         'metadata.extras.id': id,
         'metadata.fecha': fecha,
-        'metadata.extras.organizacion': mongoose.Types.ObjectId(orgId),
+        'metadata.extras.organizacion': Types.ObjectId(orgId),
     });
-    return existe.length > 0;
+    return existe;
 }
 
 
@@ -446,7 +446,7 @@ export async function CDAExists(id, fecha, orgId) {
 
 export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
-        let ids = Array.isArray(pacienteId) ? pacienteId : [mongoose.Types.ObjectId(pacienteId)];
+        let ids = Array.isArray(pacienteId) ? pacienteId : [Types.ObjectId(pacienteId)];
         const CDAFiles = makeFs();
         const conditions: any = {
             'metadata.paciente': { $in: ids },
@@ -462,10 +462,10 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
             skip = 0;
         }
         try {
-            let list = await CDAFiles.find(conditions).sort({
+            let list = [];
+            for await (const item of CDAFiles.find(conditions).sort({
                 'metadata.fecha': -1
-            }).limit(limit).skip(skip);
-            list = list.map(item => {
+            }).limit(limit).skip(skip)) {
                 const data = item.metadata;
                 data.cda_id = item._id;
                 if (data.adjuntos) {
@@ -477,9 +477,8 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
                     });
 
                 }
-
-                return item.metadata;
-            });
+                list.push(item.metadata);
+            }
 
             return resolve(list);
         } catch (e) {
@@ -495,7 +494,7 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
 export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
         const CDAFiles = makeFs();
-        CDAFiles.readById(cdaID, (err, buffer) => {
+        CDAFiles.readFile({ filename: String(cdaID) + '.xml' }, (err, buffer) => {
             const xml = buffer.toString('utf8');
             return resolve(xml);
         });

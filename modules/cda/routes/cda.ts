@@ -244,7 +244,7 @@ router.get('/files/:name', async (req: any, res, next) => {
             return next(403);
         }
 
-        const stream1 = await CDAFiles.readById(file._id);
+        const stream1 = await CDAFiles.readFile({ _id: file._id });
         res.contentType(file.contentType);
         stream1.pipe(res);
     }).catch(next);
@@ -275,29 +275,6 @@ router.get('/paciente/', async (req: any, res, next) => {
 });
 
 /**
- * Listado de los CDAs de un paciente
- * API demostrativa, falta analizar como se va a buscar en el repositorio
- */
-
-router.get('/paciente/:id', async (req: any, res, next) => {
-    if (ObjectId.isValid(req.params.id)) {
-        if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
-            return next(403);
-        }
-        let pacienteID = req.params.id;
-        let prestacion = req.query.prestacion;
-        let list;
-        try {
-            list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
-        } catch (err) {
-            return next({ message: 'no existe el paciente' });
-        }
-        res.json(list);
-    }
-});
-
-
-/**
  * Devuelve el XML de un CDA según un ID
  */
 router.get('/:id', async (req: any, res, next) => {
@@ -307,9 +284,8 @@ router.get('/:id', async (req: any, res, next) => {
 
     const _base64 = req.params.id;
     const CDAFiles = makeFs();
-
-    const contexto = await CDAFiles.findById(_base64);
-    CDAFiles.readById(_base64, (err, buffer) => {
+    const contexto = await CDAFiles.findOne({ _id: _base64 });
+    CDAFiles.readFile({ _id: _base64 }, (err, buffer) => {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });
@@ -369,19 +345,22 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
 
-    if (!Auth.check(req, 'cda:list') || req.user.type !== 'paciente-token') {
+    if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token'
+        && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
         return next(403);
     }
-    let pacienteID = req.params.id;
-    let prestacion = req.query.prestacion;
-    let { paciente } = await pacienteCtr.buscarPaciente(pacienteID);
+    if (ObjectId.isValid(req.params.id)) {
+        let pacienteID = req.params.id;
+        let prestacion = req.query.prestacion;
+        let { paciente } = await pacienteCtr.buscarPaciente(pacienteID);
 
-    if (paciente) {
-        let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
-        return res.json(list);
-    } else {
-        return next({ message: 'no existe el paciente' });
+        if (paciente) {
+            let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
+            return res.json(list);
+        }
     }
+    return next({ message: 'no existe el paciente' });
+
 });
 
 /**
@@ -399,8 +378,8 @@ router.get('/:id/:name', async (req: any, res, next) => {
     const realName = req.params.name.split('.')[0];
 
     const CDAFiles = makeFs();
+    const cda = await CDAFiles.findOne({ _id: id });
 
-    const cda = await CDAFiles.findById(id);
     if (cda) {
         const adj = cda.metadata.adjuntos.find(_adj => {
             return String(_adj.id) === realName;
@@ -426,11 +405,13 @@ router.get('/:id/:name', async (req: any, res, next) => {
                 return next(403);
             }
 
-            const stream1 = await CDAFiles.readById(file._id);
+            const stream1 = await CDAFiles.readFile({ _id: file._id });
             res.contentType(file.contentType);
             stream1.pipe(res);
         }
 
+    } else {
+        return next('NO EXISTE EL ARCHIVO');
     }
 });
 
