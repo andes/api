@@ -44,7 +44,7 @@ export class AdjuntarDocumentoComponent extends HTMLComponent {
             .map(documento => {
                 return new Promise(async (resolve, reject) => {
                     if (documento.id) {
-                        const archivo = await rupStore.readFile({ _id: Types.ObjectId(documento.id) });
+                        const archivo = await rupStore.readFile(documento.id);
                         const base64 = await rupStore.streamToBase64(archivo.stream);
                         return resolve({ img: base64, term: documento?.descripcion?.term });
                     }
