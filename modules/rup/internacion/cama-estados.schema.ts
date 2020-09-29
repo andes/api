@@ -58,6 +58,8 @@ const CamaEstadosSchema = new Schema({
         createdBy: { type: SchemaTypes.Mixed, required: false },
         updatedAt: { type: Date, required: false },
         updatedBy: { type: SchemaTypes.Mixed, required: false },
+        deletedAt: { type: Date, required: false },
+        deletedBy: { type: SchemaTypes.Mixed, required: false },
     }]
 });
 
