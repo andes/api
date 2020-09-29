@@ -58,7 +58,9 @@ const _schema = new Schema({
     mapaSectores: [MapaSectoresSchema],
     unidadesOrganizativas: [SnomedConcept],
     configuraciones: SchemaTypes.Mixed,
-    ofertaPrestacional: [{ prestacion: tipoPrestacionSchema, detalle: String }] // "prestaciones" traidas de sisa. Se muestran en la app mobile
+    ofertaPrestacional: [{ prestacion: tipoPrestacionSchema, detalle: String }], // "prestaciones" traidas de sisa. Se muestran en la app mobile
+    aceptaDerivacion: Boolean,
+    esCOM: Boolean
 });
 
 _schema.plugin(AuditPlugin);
