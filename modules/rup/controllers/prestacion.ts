@@ -11,8 +11,12 @@ import { Auth } from '../../../auth/auth.class';
  */
 export async function liberarRefTurno(turno, req) {
     try {
-        const query = Prestacion.findOne({ $where: 'this.estados[this.estados.length - 1].tipo ==  "pendiente"' });
-        query.where({ 'solicitud.turno': mongoose.Types.ObjectId(turno.id) });
+        const query = Prestacion.findOne({
+            $and: [
+                { 'estadoActual.tipo': 'pendiente' },
+                { 'solicitud.turno': mongoose.Types.ObjectId(turno.id) }
+            ]
+        });
         let prestacion: any = await query.exec();
         if (!prestacion) {
             return { err: 'No se encontro prestacion para el turno' };
@@ -65,7 +69,7 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
     /** La accion de historial es el tipo de PATCH que se realiza.
      * Si el PATCH es es un push de estado, la acción es el tipo de estado que se pushea */
     let _accion = datos.op === 'estadoPush' ? datos.estado.tipo : datos.op;
-    registroHistorial.accion = descripcionesAccion[_accion] === undefined ?  'indefinida' : _accion;
+    registroHistorial.accion = descripcionesAccion[_accion] === undefined ? 'indefinida' : _accion;
     registroHistorial.descripcion = descripcionesAccion[registroHistorial.accion];
 
     let observaciones = datos.op === 'estadoPush' || datos.op === 'citar' ? datos.estado.observaciones : datos.observaciones;
