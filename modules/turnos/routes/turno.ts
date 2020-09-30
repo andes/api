@@ -203,14 +203,15 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
             esHoy = true;
         }
 
+        const contieneBloqueSoloGestion = agendaRes.bloques.some((bloque: any) => bloque.reservadoGestion > 0 && bloque.accesoDirectoDelDia === 0 || bloque.accesoDirectoProgramado === 0 || bloque.reservadoProfesional === 0);
         // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
         countBloques = {
-            delDia: esHoy ? (
+            delDia: esHoy && !contieneBloqueSoloGestion ? (
                 ((agendaRes as any).bloques[posBloque].restantesDelDia as number) +
                 ((agendaRes as any).bloques[posBloque].restantesProgramados as number)
             ) : (agendaRes as any).bloques[posBloque].restantesDelDia,
             programado: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProgramados,
-            gestion: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesGestion,
+            gestion: esHoy && !contieneBloqueSoloGestion ? 0 : (agendaRes as any).bloques[posBloque].restantesGestion,
             profesional: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProfesional,
             mobile: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesMobile,
         };
