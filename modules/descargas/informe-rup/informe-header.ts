@@ -87,8 +87,33 @@ export class InformeRupHeader extends HTMLComponent {
 
                 <!-- Datos origen solicitud -->
                 <span class="contenedor-principal-data">
+                {{#if origenTop}}
                     <div class="contenedor-secundario">
-                        <h6 class="volanta">Datos de origen de solicitud</h6>
+                        <h6 class="volanta">DATOS DE ORIGEN DE SOLICITUD</h6>
+                        <h4>
+                            {{{ origen.efectorOrigen }}}
+                        </h4>
+                    </div>
+
+                    <div class="contenedor-secundario">
+                        <div class="contenedor-bloque-texto">
+                            <h6 class="bolder">Profesional</h6>
+                            <h6>
+                                {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="contenedor-bloque-texto">
+                    <h6 class="bolder">
+                        Fecha Solicitud
+                    </h6>
+                    <h6>
+                        {{ origen.fechaSolicitud }}hs
+                    </h6>
+                   </div>
+                {{else}}
+                    <div class="contenedor-secundario">
+                        <h6 class="volanta">Datos de la prestación</h6>
                         <h4>
                             {{{ organizacion.nombre }}}
                         </h4>
@@ -96,6 +121,7 @@ export class InformeRupHeader extends HTMLComponent {
                             {{ organizacion.direccion }}
                         </h5>
                     </div>
+
                     <div class="contenedor-secundario">
                         <div class="contenedor-bloque-texto">
                             <h6 class="bolder">Profesional</h6>
@@ -104,6 +130,9 @@ export class InformeRupHeader extends HTMLComponent {
                             </h6>
                         </div>
                     </div>
+
+
+              {{/if}}
                 </span>
             </section>
             {{#unless consultaValidada }}
@@ -122,6 +151,9 @@ export class InformeRupHeader extends HTMLComponent {
         const fechaPrestacion = moment(prestacion.ejecucion.fecha);
         const edad = paciente.fechaNacimiento && fechaPrestacion.diff(moment(paciente.fechaNacimiento), 'years');
         const organizacionId = String(prestacion.ejecucion.organizacion.id);
+        const origenTop = (prestacion.inicio === 'top');
+        const solicitudOrigen = prestacion.solicitud;
+        const fechaSolicitud = this.prestacion.solicitud.fecha;
 
         // [TODO] metodo getCarpeta en paciente
         const numeroCarpeta = paciente.carpetaEfectores.find(x => String(x.organizacion._id) === organizacionId);
@@ -142,6 +174,14 @@ export class InformeRupHeader extends HTMLComponent {
                 nombre: organizacion ? organizacion.nombre.replace('-', '</br>') : '',
                 direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
             },
+
+            origen: {
+                efectorOrigen: solicitudOrigen.organizacionOrigen.nombre ? solicitudOrigen.organizacionOrigen.nombre.replace('-', '</br>') : '',
+                profesionalOrigenNombre: solicitudOrigen.profesionalOrigen.nombre,
+                profesionalOrigenApellido: solicitudOrigen.profesionalOrigen.apellido,
+                fechaSolicitud: moment(fechaSolicitud).format('DD/MM/YYYY HH:mm')
+            }
+            ,
             profesional: {
                 nombre: prestacion.solicitud.profesional.nombre,
                 apellido: prestacion.solicitud.profesional.apellido
@@ -152,8 +192,10 @@ export class InformeRupHeader extends HTMLComponent {
                 andes: loadImage('templates/rup/informes/img/logo-andes-h.png'),
                 organizacion: organizacion ? this.getLogoOrganizacion(organizacion) : ''
             },
-            ubicacion: this.ubicacionName()
+            ubicacion: this.ubicacionName(),
+            origenTop
         };
+
     }
 
     getLogoOrganizacion(organizacion) {
