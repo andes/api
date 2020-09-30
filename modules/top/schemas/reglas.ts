@@ -3,9 +3,11 @@ import { ISnomedConcept, SnomedConcept } from '../../rup/schemas/snomed-concept'
 import { SemanticTag } from '../../rup/schemas/semantic-tag';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObjectId } from '@andes/core';
+import { ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 export interface IReglasTOP {
     origen: {
+        estado?: String;
         organizacion: {
             id: ObjectId,
             nombre: string
@@ -20,12 +22,19 @@ export interface IReglasTOP {
             id: ObjectId,
             nombre: string
         };
-        prestacion: ISnomedConcept
+        prestacion: ISnomedConcept,
+        inicio: string,
+        servicioIntermedioId: ObjectId,
+        turneable: boolean,
+        agendas: [ITipoPrestacion],
+        informe?: 'none' | 'optional' | 'required';
+
     };
 }
 
 export const ReglasTOPSchema = new Schema({
     origen: {
+        estado: { type: String, required: false },
         organizacion: {
             nombre: String,
             id: { type: Schema.Types.ObjectId, ref: 'organizacion' }
@@ -45,12 +54,23 @@ export const ReglasTOPSchema = new Schema({
             nombre: String,
             id: { type: Schema.Types.ObjectId, ref: 'organizacion' }
         },
-        prestacion: {
-            id: Schema.Types.ObjectId,
-            conceptId: String,
-            term: String,
-            fsn: String,
-            semanticTag: SemanticTag
+        // prestacion: {
+        //     id: Schema.Types.ObjectId,
+        //     conceptId: String,
+        //     term: String,
+        //     fsn: String,
+        //     semanticTag: SemanticTag
+        // },
+        prestacion: Schema.Types.Mixed, // Puede ser una prestación o un array
+        inicio: String,
+        servicioIntermedioId: Schema.Types.ObjectId,
+        turneable: {
+            type: Boolean,
+            default: false
+        },
+        informe: {
+            type: String,
+            require: false
         }
     }
 });

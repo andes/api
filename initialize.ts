@@ -71,6 +71,8 @@ export function initAPI(app: Express) {
         }
     }
 
+    require('./modules/pacs');
+
     const modulos = [
         './modules/rup',
         './modules/huds/export-huds'

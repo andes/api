@@ -193,6 +193,10 @@ router.get('/agenda/:id?', (req, res, next) => {
             query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion);
         }
 
+        if (req.query.tipoPrestacion) {
+            query.where('tipoPrestaciones.conceptId').equals(req.query.tipoPrestacion);
+        }
+
         if (req.query.espacioFisico) {
             query.where('espacioFisico._id').equals(req.query.espacioFisico);
         }
