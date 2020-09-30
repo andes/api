@@ -88,29 +88,29 @@ export class InformeRupHeader extends HTMLComponent {
                 <!-- Datos origen solicitud -->
                 <span class="contenedor-principal-data">
                 {{#if origenTop}}
-                    <div class="contenedor-secundario">
-                        <h6 class="volanta">DATOS DE ORIGEN DE SOLICITUD</h6>
-                        <h4>
-                            {{{ origen.efectorOrigen }}}
-                        </h4>
-                    </div>
+                     <div class="contenedor-secundario">
+                         <h6 class="volanta">DATOS DE ORIGEN DE SOLICITUD</h6>
+                             <h4>
+                                 {{{ origen.efectorOrigen }}}
+                             </h4>
+                     </div>
 
-                    <div class="contenedor-secundario">
+                     <div class="contenedor-secundario">
                         <div class="contenedor-bloque-texto">
-                            <h6 class="bolder">Profesional</h6>
-                            <h6>
-                                {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
-                            </h6>
+                                <h6 class="bolder">Profesional</h6>
+                                <h6>
+                                     {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
+                                </h6>
                         </div>
                     </div>
                     <div class="contenedor-bloque-texto">
-                    <h6 class="bolder">
-                        Fecha Solicitud
-                    </h6>
-                    <h6>
-                        {{ origen.fechaSolicitud }}hs
-                    </h6>
-                   </div>
+                        <h6 class="bolder">
+                            Fecha Solicitud
+                        </h6>
+                        <h6>
+                            {{ origen.fechaSolicitud }}hs
+                        </h6>
+                    </div>
                 {{else}}
                     <div class="contenedor-secundario">
                         <h6 class="volanta">Datos de la prestación</h6>
@@ -130,9 +130,7 @@ export class InformeRupHeader extends HTMLComponent {
                             </h6>
                         </div>
                     </div>
-
-
-              {{/if}}
+               {{/if}}
                 </span>
             </section>
             {{#unless consultaValidada }}
