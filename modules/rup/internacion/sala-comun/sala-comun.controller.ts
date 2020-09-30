@@ -128,7 +128,7 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
     if (organizacion) {
         $match['organizacion.id'] = wrapObjectId(organizacion);
     }
-    const aggr = SalaComunSnapshot.aggregate([
+    const aggr = [
         { $match },
         { $group: { _id: '$idSalaComun', fecha: { $max: '$fecha' } } },
         {
@@ -162,7 +162,7 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                         $match: {
                             $expr: {
                                 $and: [
-                                    { idSalaComun: '$$idsala' },
+                                    { $eq: ['$idSalaComun', '$$idsala'] },
                                     { $gte: ['$fecha', '$$fechaMin'] },
                                     { $lte: ['$fecha', fecha] },
                                 ]
@@ -243,8 +243,8 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                 updatedBy: '$snapshot.updatedBy'
             }
         }
-    ]);
-    return aggr;
+    ];
+    return SalaComunSnapshot.aggregate(aggr);
 }
 
 export interface SalaComunHistorialOptions {
