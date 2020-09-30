@@ -206,8 +206,11 @@ export function codificarTurno(req, data, tid) {
     return new Promise((resolve, reject) => {
         const turno = getTurno(req, data[0], tid);
 
-        const query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
-        query.where('solicitud.turno').equals(tid);
+        const query = Prestacion.find({
+            'estadoActual.tipo': 'validada',
+            'solicitud.turno': tid
+        });
+
         query.exec((err, data1) => {
             if (err) {
                 return ({

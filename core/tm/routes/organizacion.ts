@@ -146,11 +146,15 @@ router.get('/organizaciones', async (req, res, next) => {
             $regex: utils.makePattern(req.query.nombre)
         };
     }
-
+    if (req.query.aceptaDerivacion) {
+        filtros['aceptaDerivacion'] = req.query.aceptaDerivacion;
+    }
+    if (req.query.esCOM) {
+        filtros['esCOM'] = req.query.esCOM;
+    }
     if (req.query.cuie) {
         filtros['codigo.cuie'] = req.query.cuie;
     }
-
     if (req.query.sisa) {
         filtros['codigo.sisa'] = req.query.sisa;
     }
@@ -333,7 +337,7 @@ router.delete('/organizaciones/:id/sectores/:idSector', async (req, res, next) =
             const org: any = await Organizacion.findById(id, { mapaSectores: 1 });
             let newMap = [];
             for (const itemSector of org.mapaSectores) {
-                const item = deleteSector(itemSector, { _id: idSector});
+                const item = deleteSector(itemSector, { _id: idSector });
                 if (item) {
                     newMap.push(item);
                 }
