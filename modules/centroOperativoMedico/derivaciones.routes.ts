@@ -25,21 +25,22 @@ class DerivacionesResource extends ResourceBase {
         paciente: (value) => {
             return {
                 $or: [
-                    { 'paciente.documento': MongoQuery.partialString(`^${value}`) },
-                    { 'paciente.nombre': MongoQuery.partialString(`^${value}`) },
-                    { 'paciente.apellido': MongoQuery.partialString(`^${value}`) }
+                    { 'paciente.documento': MongoQuery.partialString(value) },
+                    { 'paciente.nombre': MongoQuery.partialString(value) },
+                    { 'paciente.apellido': MongoQuery.partialString(value) }
                 ]
             };
         },
         profesional: (value) => {
             return {
                 $or: [
-                    { 'profesional.documento': MongoQuery.partialString(`^${value}`) },
-                    { 'profesional.nombre': MongoQuery.partialString(`^${value}`) },
-                    { 'profesional.apellido': MongoQuery.partialString(`^${value}`) }
+                    { 'profesional.documento': MongoQuery.partialString(value) },
+                    { 'profesional.nombre': MongoQuery.partialString(value) },
+                    { 'profesional.apellido': MongoQuery.partialString(value) }
                 ]
             };
-        }
+        },
+        cancelada: MongoQuery.equalMatch,
     };
 }
 

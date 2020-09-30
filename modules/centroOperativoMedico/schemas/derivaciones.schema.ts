@@ -67,7 +67,12 @@ export const DerivacionSchema = new mongoose.Schema({
     },
     detalle: String,
     adjuntos: mongoose.Schema.Types.Mixed,
-    historial: [DerivacionHistorialSchema]
+    historial: [DerivacionHistorialSchema],
+    cancelada: {
+        type: Boolean,
+        required: true,
+        default: false
+    }
 });
 
 DerivacionSchema.plugin(AuditPlugin);
