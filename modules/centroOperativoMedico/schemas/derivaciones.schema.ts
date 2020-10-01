@@ -13,7 +13,8 @@ let DerivacionHistorialSchema = new mongoose.Schema({
         id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' },
         nombre: String
     },
-    observacion: String
+    observacion: String,
+    adjuntos: mongoose.Schema.Types.Mixed
 });
 
 DerivacionHistorialSchema.plugin(AuditPlugin);
@@ -66,7 +67,12 @@ export const DerivacionSchema = new mongoose.Schema({
     },
     detalle: String,
     adjuntos: mongoose.Schema.Types.Mixed,
-    historial: [DerivacionHistorialSchema]
+    historial: [DerivacionHistorialSchema],
+    cancelada: {
+        type: Boolean,
+        required: true,
+        default: false
+    }
 });
 
 DerivacionSchema.plugin(AuditPlugin);

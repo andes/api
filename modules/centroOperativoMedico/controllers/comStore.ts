@@ -14,9 +14,9 @@ export function storeFile(base64, metadata) {
         const uniqueId = new Types.ObjectId();
         const input = new stream.PassThrough();
         const decoder64 = base64_stream.decode();
-        const ComFiles = makeFs();
+        const COMFiles = makeFs();
 
-        ComFiles.writeFile({
+        COMFiles.writeFile({
             _id: uniqueId,
             filename: uniqueId + '.' + mime.split('/')[1],
             contentType: mime,
@@ -34,10 +34,10 @@ export function storeFile(base64, metadata) {
 export function readFile(id): Promise<any> {
     return new Promise(async (resolve, reject) => {
         try {
-            const ComFiles = makeFs();
+            const COMFiles = makeFs();
             const idFile = Types.ObjectId(id);
-            const contexto = await ComFiles.findOne({ _id: idFile });
-            const stream2 = ComFiles.readFile({ _id: idFile });
+            const contexto = await COMFiles.findOne({ _id: idFile });
+            const stream2 = COMFiles.readFile({ _id: idFile });
             resolve({
                 file: contexto,
                 stream: stream2
@@ -51,10 +51,10 @@ export function readFile(id): Promise<any> {
 export function readAsBase64(id) {
     return new Promise(async (resolve, reject) => {
         try {
-            const ComFiles = makeFs();
+            const COMFiles = makeFs();
             const idFile = Types.ObjectId(id);
-            const contexto = await ComFiles.findOne({ _id: idFile });
-            const stream2 = ComFiles.readFile({ _id: idFile });
+            const contexto = await COMFiles.findOne({ _id: idFile });
+            const stream2 = COMFiles.readFile({ _id: idFile });
             resolve({
                 file: contexto,
                 stream: stream2
