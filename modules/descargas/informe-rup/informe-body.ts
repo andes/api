@@ -8,7 +8,7 @@ export class InformeRupBody extends HTMLComponent {
         <main>
             <section class="contenedor-informe">
                 <article class="cabezal-conceptos horizontal">
-                    <div class="contenedor-bloque-texto">
+                    <div class="contenedor-bloque-texto w-3/4" >
                         <div class="tipo-prestacion">
                             {{ titulo }}
                         </div>
