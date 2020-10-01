@@ -495,6 +495,12 @@ router.post('/prestaciones', async (req, res, next) => {
     if (dto.inicio === 'top') {
         updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
     }
+    if (dto.solicitud.turno) {
+        const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno });
+        if (prestacionIniciada > 0) {
+            return next('ya_iniciada');
+        }
+    }
 
     const data = new Prestacion(dto);
     Auth.audit(data, req);
