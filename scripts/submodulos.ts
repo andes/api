@@ -7,14 +7,23 @@ async function run(done) {
      * Renombra collection "modulos" a "modulos_aux"
      * Renombra collection "modulos_new" a "modulos"
      * Elimina "modulos_aux" [DESACTIVADO]
+     *
+     * Datos generados con (se omite host auth):
+     * mongoexport -h MONGO_HOST -d andes -c modulos -o modulos-new.json --jsonArray
+     *
      */
 
+    // "Módulos actual"
     const modulos = 'modulos';
-    const modulosAUX = 'modulos_aux';
+
+    // Datos nuevos de "Módulos"
     const modulosNEW = 'modulos_new2';
 
+    // Backup de "Módulos actual"
+    const modulosAUX = 'modulos_aux';
+
     // Carga los datos
-    const jsonRaw = require('./submodulos_json_data/modulos_new.json').map(x => {
+    const jsonRaw = require('./submodulos_json_data/modulos-new.json').map(x => {
         delete x._id;
         delete x.__v;
         if (x.submodulos && x.submodulos.length) {

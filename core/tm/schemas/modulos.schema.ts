@@ -11,6 +11,8 @@ export const ModuloSchema = new Schema({
         required: true
     },
     subtitulo: String,
+    icono: String,
+    linkAcceso: String,
     color: String,
     permisos: [String],
     activo: {
