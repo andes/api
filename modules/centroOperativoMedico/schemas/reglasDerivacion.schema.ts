@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-export const ESTADOS_DERIVACION = ['pendiente', 'aprobada', 'rechazada', 'asignada', 'denegada', 'aceptada', 'finalizada', 'aceptada por omision'];
+export const ESTADOS_DERIVACION = ['solicitada', 'habilitada', 'inhabilitada', 'asignada', 'rechazada', 'aceptada', 'finalizada', 'encomendada'];
 
 export const ReglasDerivacionSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
