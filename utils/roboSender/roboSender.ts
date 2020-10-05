@@ -49,6 +49,7 @@ export function roboSender() {
 
                         if (env.phone) {
                             const smsOptions: smsTools.SmsOptions = {
+                                prefijo: env.prefix ? env.prefix : '+54',
                                 telefono: env.phone,
                                 mensaje: env.message
                             };

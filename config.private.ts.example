@@ -305,4 +305,3 @@ export const AWS_CONFIG = {
     ST_AWS_SECRET_ACCESS_KEY: getEnv('ST_AWS_SECRET_ACCESS_KEY', ''),
     ST_AWS_REGION: getEnv('ST_AWS_REGION', 'sa-east-1')
 };
-}

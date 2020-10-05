@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.get('/sms', async (req, res, next) => {
     const smsOptions: SmsOptions = {
+        prefijo: req.query.prefijo,
         telefono: req.query.telefono,
         mensaje: req.query.mensaje
     };

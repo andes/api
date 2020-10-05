@@ -15,11 +15,6 @@ export async function sendSms(smsOptions: SmsOptions) {
         const argsOperador = {
             telefono: prefix + smsOptions.telefono
         };
-        config.region = AWS_CONFIG.ST_AWS_REGION;
-        config.update({
-            accessKeyId: AWS_CONFIG.ST_AWS_ACCESS_KEY,
-            secretAccessKey: AWS_CONFIG.ST_AWS_SECRET_ACCESS_KEY
-        });
         const sms: SNS = new SNS();
         config.region = AWS_CONFIG.ST_AWS_REGION;
         config.update({

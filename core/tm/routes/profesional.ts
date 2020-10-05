@@ -963,6 +963,7 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
 
 router.post('/profesionales/sms', (req, res, next) => {
     const smsOptions = {
+        prefijo: req.body.prefijo ? req.body.prefijo : '+54',
         telefono: req.body.telefono,
         mensaje: req.body.mensaje
     };
