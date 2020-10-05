@@ -1,3 +1,23 @@
+# [5.15.0](https://github.com/andes/api/compare/v5.14.0...v5.15.0) (2020-09-30)
+
+
+### Bug Fixes
+
+* **cda:** cambia string por objectId ([#1120](https://github.com/andes/api/issues/1120)) ([c4c73f6](https://github.com/andes/api/commit/c4c73f6e9b2052318ebb096e3122cb8f4758d0e2))
+* **cda:** convert to ObjectId ([#1121](https://github.com/andes/api/issues/1121)) ([ecc631b](https://github.com/andes/api/commit/ecc631b628bb442f5e332da5f83abd20115b322f))
+* **citas:** busqueda en sobreturnos ([#1118](https://github.com/andes/api/issues/1118)) ([5481262](https://github.com/andes/api/commit/5481262ee2bde0e1f76c12ff6e2e760e0ea638b6))
+* **puco:** nombre incorrecto logo sumar ([#1125](https://github.com/andes/api/issues/1125)) ([9d9efa8](https://github.com/andes/api/commit/9d9efa84ae784c46990c2ca6613795fbdaa84c95))
+* **rup:** conversión de id a objectId ([#1126](https://github.com/andes/api/issues/1126)) ([9abbf0a](https://github.com/andes/api/commit/9abbf0adbfeb38e50e3b62b2cd8219274cf2f5de))
+* **rup:** modifica parámetro de readFile ([#1127](https://github.com/andes/api/issues/1127)) ([b475137](https://github.com/andes/api/commit/b475137b001c6a33c3b7a17f182ea339e0bc195a))
+
+
+### Features
+
+* **com:** esquema y rutas de derivaciones ([#1108](https://github.com/andes/api/issues/1108)) ([bdcb1e8](https://github.com/andes/api/commit/bdcb1e8728177890b49e6bf596faaa1bee0029ec))
+* **com:** se suma a organización el atributo aceptaDerivacion ([#1114](https://github.com/andes/api/issues/1114)) ([0d0b080](https://github.com/andes/api/commit/0d0b080b45f613618a5905f5578d26dc6b6f1820))
+* **mapa-camas:** agrega borrado lógico en los estados de cama ([#1072](https://github.com/andes/api/issues/1072)) ([c428320](https://github.com/andes/api/commit/c428320f8c709d6290b558fb822f9162bf64998d))
+* **MISC:** refactor pdf PUCO ([#1111](https://github.com/andes/api/issues/1111)) ([cef8709](https://github.com/andes/api/commit/cef8709411ed31c2010f7f99cf4f97005390319c))
+
 # [5.14.0](https://github.com/andes/api/compare/v5.13.0...v5.14.0) (2020-09-23)
 
 
