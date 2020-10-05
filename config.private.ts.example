@@ -299,3 +299,8 @@ export const IPS = {
 };
 
 export const provincia = getEnv('PROVINCIA', 'neuquen');
+
+export const AWS_CONFIG = {
+    ST_AWS_ACCESS_KEY: getEnv('ST_AWS_ACCESS_KEY', ''),
+    ST_AWS_SECRET_ACCESS_KEY: getEnv('ST_AWS_SECRET_ACCESS_KEY', '')
+};
