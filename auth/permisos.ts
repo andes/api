@@ -421,8 +421,8 @@ export default [
             {
                 key: 'biQueries',
                 title: 'Bi-Queries',
-                type: 'boolean'
-            },
+                type: 'queries'
+            }
         ]
     },
     {
