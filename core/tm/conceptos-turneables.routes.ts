@@ -3,6 +3,7 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { tipoPrestacion as TipoPrestacion } from './schemas/tipoPrestacion';
 import { Auth } from '../../auth/auth.class';
 import { Request, Response } from '@andes/api-tool';
+import { ISnomedConcept } from 'modules/rup/schemas/snomed-concept';
 
 class ConceptoTurneableResource extends ResourceBase {
     Model = TipoPrestacion;
@@ -46,7 +47,7 @@ class ConceptoTurneableResource extends ResourceBase {
      * @param req Request de express
      * @param permiso String de permisos. Ej: rup:tipoPrestacion:?
      */
-    async getByPermisos(req: Request, permiso: string) {
+    async getByPermisos(req: Request, permiso: string): Promise<ISnomedConcept[]> {
         const prestacionesIDs = Auth.getPermissions(req, permiso);
         if (prestacionesIDs.length && prestacionesIDs[0] !== '*') {
             const conceptos = await this.search({ permisos: prestacionesIDs }, {}, req);

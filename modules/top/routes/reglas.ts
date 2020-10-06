@@ -2,7 +2,9 @@ import * as express from 'express';
 import { ReglasTOP } from '../schemas/reglas';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
-import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { ConceptosTurneablesCtr } from '../../../core/tm/conceptos-turneables.routes';
+import { Request } from '@andes/api-tool';
+import { ISnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
 const router = express.Router();
 
@@ -28,8 +30,9 @@ router.post('/reglas', async (req, res, next) => {
     }
 });
 
-router.get('/reglas', async (req, res, next) => {
-    let query = ReglasTOP.find({});
+router.get('/reglas', async (req: Request, res, next) => {
+    let prestacionesPermisos: ISnomedConcept[];
+    const query = ReglasTOP.find({});
     if (req.query.organizacionOrigen) {
         query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
     }
@@ -37,10 +40,9 @@ router.get('/reglas', async (req, res, next) => {
     if (req.query.prestacionOrigen) {
         query.where('origen.prestaciones.prestacion.conceptId').equals(req.query.prestacionOrigen);
     } else if (req.query.prestacionesOrigen) {
-        let prestacionesPermisos = Auth.getPermissions(req, req.query.prestacionesOrigen);
-        if (prestacionesPermisos.length && prestacionesPermisos[0] !== '*') {
-            const conceptos = await tipoPrestacion.find({}).where('_id').in(prestacionesPermisos.map(x => mongoose.Types.ObjectId(x))).exec();
-            query.where('origen.prestaciones.prestacion.conceptId').in(conceptos.map(e => e.conceptId));
+        prestacionesPermisos = await ConceptosTurneablesCtr.getByPermisos(req, req.query.prestacionesOrigen);
+        if (prestacionesPermisos) {
+            query.where('origen.prestaciones.prestacion.conceptId').in(prestacionesPermisos.map(e => e.conceptId));
         }
     }
 
@@ -50,12 +52,14 @@ router.get('/reglas', async (req, res, next) => {
     if (req.query.prestacionDestino) {
         query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
     }
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
+    const reglas = await query.exec();
+    if (prestacionesPermisos) {
+        reglas.forEach(regla => {
+            regla.origen.prestaciones = regla.origen.prestaciones.filter(p => prestacionesPermisos.find(pp => pp.conceptId === p.prestacion.conceptId));
+        });
+    }
+
+    res.json(reglas);
 });
 
 router.delete('/reglas', async (req, res, next) => {
