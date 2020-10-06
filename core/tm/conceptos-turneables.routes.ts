@@ -38,6 +38,24 @@ class ConceptoTurneableResource extends ResourceBase {
             return next();
         }
     };
+
+    /**
+     * Devuelve todas los conceptos turneables dado un permiso. Esta funcion sirve para transformar los IDS a conceptId.
+     * Si devuelve null es que se tiene todos los permisos. Sino devuelve con array.
+     *
+     * @param req Request de express
+     * @param permiso String de permisos. Ej: rup:tipoPrestacion:?
+     */
+    async getByPermisos(req: Request, permiso: string) {
+        const prestacionesIDs = Auth.getPermissions(req, permiso);
+        if (prestacionesIDs.length && prestacionesIDs[0] !== '*') {
+            const conceptos = await this.search({ permisos: prestacionesIDs }, {}, req);
+            return conceptos;
+        }
+        return null;
+    }
+
+
 }
 export const ConceptosTurneablesCtr = new ConceptoTurneableResource({});
 export const ConceptosTurneablesRouter = ConceptosTurneablesCtr.makeRoutes();

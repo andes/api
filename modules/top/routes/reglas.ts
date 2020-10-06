@@ -1,8 +1,7 @@
 import * as express from 'express';
-import * as reglas from '../schemas/reglas';
+import { ReglasTOP } from '../schemas/reglas';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
-import * as reglasCtrl from '../controller/reglas';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 const router = express.Router();
@@ -15,10 +14,10 @@ router.post('/reglas', async (req, res, next) => {
                 'destino.organizacion.id': ArrReglas[0].destino.organizacion.id,
                 'destino.prestacion.conceptId': ArrReglas[0].destino.prestacion.conceptId,
             };
-            await reglas.deleteMany(params);
+            await ReglasTOP.deleteMany(params);
         }
         let grabarReglas = ArrReglas.map(async (regla) => {
-            let unaRegla = new reglas(regla);
+            let unaRegla = new ReglasTOP(regla);
             Auth.audit(unaRegla, req);
             return unaRegla.save();
         });
@@ -30,7 +29,7 @@ router.post('/reglas', async (req, res, next) => {
 });
 
 router.get('/reglas', async (req, res, next) => {
-    let query = reglas.find({});
+    let query = ReglasTOP.find({});
     if (req.query.organizacionOrigen) {
         query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
     }
@@ -60,7 +59,7 @@ router.get('/reglas', async (req, res, next) => {
 });
 
 router.delete('/reglas', async (req, res, next) => {
-    reglas.deleteMany({
+    ReglasTOP.deleteMany({
         'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.organizacionDestino),
         'destino.prestacion.conceptId': req.query.prestacionDestino
     }).exec((err, data) => {
