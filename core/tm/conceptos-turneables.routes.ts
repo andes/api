@@ -3,7 +3,7 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { tipoPrestacion as TipoPrestacion } from './schemas/tipoPrestacion';
 import { Auth } from '../../auth/auth.class';
 import { Request, Response } from '@andes/api-tool';
-import { ISnomedConcept } from 'modules/rup/schemas/snomed-concept';
+import { ISnomedConcept } from '../../modules/rup/schemas/snomed-concept';
 
 class ConceptoTurneableResource extends ResourceBase {
     Model = TipoPrestacion;

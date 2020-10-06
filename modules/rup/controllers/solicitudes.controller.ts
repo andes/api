@@ -2,9 +2,12 @@ import { Auth } from '../../../auth/auth.class';
 import { checkRegla } from '../../top/controller/reglas';
 import { updateRegistroHistorialSolicitud } from './prestacion';
 import { Prestacion } from '../schemas/prestacion';
+import { IPrestacion, IPrestacionDoc, IPrestacionRegistro, IPrestacionRegistroDoc } from '../prestaciones.interface';
+import { Request } from '@andes/api-tool';
+import { ObjectId } from '@andes/core';
 
 
-export function crearSolicitud(prestacion, solicitud, regla, profesional) {
+export function crearSolicitud(prestacion: IPrestacion, solicitud: IPrestacionRegistroDoc, regla, profesional) {
     const prestacionOrigen = regla ?
         regla.origen.prestaciones.find(p => p.prestacion.conceptId === prestacion.solicitud.tipoPrestacion.conceptId)
         : prestacion.solicitud.tipoPrestacion;
@@ -40,7 +43,7 @@ export function crearSolicitud(prestacion, solicitud, regla, profesional) {
     return nuevaPrestacion;
 }
 
-export async function existeSolicitud(prestacion, solicitud) {
+export async function existeSolicitud(prestacion: IPrestacion, solicitud: IPrestacionRegistroDoc) {
     const existe = await Prestacion.count({
         'paciente.id': prestacion.paciente.id,
         'estadoActual.tipo': { $in: ['pendiente', 'auditoria'] },
@@ -51,7 +54,7 @@ export async function existeSolicitud(prestacion, solicitud) {
 }
 
 
-export async function buscarYCrearSolicitudes(prestacion, req) {
+export async function buscarYCrearSolicitudes(prestacion: IPrestacionDoc, req: Request) {
     const usuarioProfesional = Auth.getProfesional(req);
     const registros = prestacion.getRegistros();
 
@@ -83,7 +86,7 @@ export async function buscarYCrearSolicitudes(prestacion, req) {
  * @param planes
  * @param organizacionID
  */
-async function matchReglas(prestacion, planes, organizacionID): Promise<{ regla: any, solicitud: any }[]> {
+async function matchReglas(prestacion: IPrestacion, planes: IPrestacionRegistro[], organizacionID: ObjectId): Promise<{ regla: any, solicitud: any }[]> {
     const ps = planes.map(async (solicitud) => {
         const valorRegistro = solicitud.valor || {};
         if (valorRegistro.solicitudPrestacion?.organizacionDestino || valorRegistro.solicitudPrestacion?.autocitado) {

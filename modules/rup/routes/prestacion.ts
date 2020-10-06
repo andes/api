@@ -14,7 +14,7 @@ import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { getTurnoById } from '../../turnos/controller/turnosController';
-import { asyncHandler } from '@andes/api-tool';
+import { asyncHandler, Request } from '@andes/api-tool';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 
 const router = express.Router();
@@ -502,7 +502,7 @@ router.post('/prestaciones', async (req, res, next) => {
     });
 });
 
-router.patch('/prestaciones/:id', (req, res, next) => {
+router.patch('/prestaciones/:id', (req: Request, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
