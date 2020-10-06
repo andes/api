@@ -103,6 +103,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                     },
                     {
                         $match: {
+                            'estados.deletedAt' : { $exists : false },
                             $expr: {
                                 $gte: ['$estados.fecha', '$$fechaMax'],
                             },
@@ -416,6 +417,35 @@ export async function remove({ organizacion, ambito, capa, cama }, date: Date, )
         },
         {
             $pull: { estados: { fecha: date } }
+        }
+    );
+    return result.nModified > 0 && result.ok === 1;
+}
+
+/**
+ * Operación especial para borrar un estado logicamente
+*/
+export async function deshacerEstadoCama({ organizacion, ambito, capa, cama }, date: Date, user) {
+    const result = await CamaEstados.update(
+        {
+            idOrganizacion: wrapObjectId(organizacion),
+            ambito,
+            capa,
+            idCama: wrapObjectId(cama),
+            start: { $lte: date },
+            end: { $gte: date }
+
+        },
+        {
+            $set: {
+                'estados.$[elemento].deletedAt': moment().toDate(),
+                'estados.$[elemento].deletedBy': user,
+            }
+        },
+        {
+            arrayFilters: [{
+                'elemento.fecha': moment(date).toDate(),
+            }]
         }
     );
     return result.nModified > 0 && result.ok === 1;
