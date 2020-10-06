@@ -1,7 +1,7 @@
 import { Auth } from '../../../auth/auth.class';
 import { checkRegla } from '../../top/controller/reglas';
 import { updateRegistroHistorialSolicitud } from './prestacion';
-import { model as Prestacion } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 
 
 export function crearSolicitud(prestacion, solicitud, regla, profesional) {

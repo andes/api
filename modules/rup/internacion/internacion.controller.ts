@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { model as Prestacion } from '../schemas/prestacion';
 import { historial as historialCamas } from './camas.controller';
 import { historial as historialSalas } from './sala-comun/sala-comun.controller';
 import { ObjectId } from '@andes/core';
+import { Prestacion } from '../schemas/prestacion';
 
 export async function obtenerPrestaciones(organizacion, filtros) {
     const fechaIngresoDesde = (filtros.fechaIngresoDesde) ? moment(filtros.fechaIngresoDesde).toDate() : moment().subtract(1, 'month').toDate();

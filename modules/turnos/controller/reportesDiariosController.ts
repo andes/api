@@ -1,6 +1,5 @@
-import * as agendaModel from '../schemas/agenda';
-import { model as prestacionModel } from '../../rup/schemas/prestacion';
-import { toArray } from '../../../utils/utils';
+
+import { Prestacion } from '../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
 
 export async function getResumenDiarioMensual(params: any) {
@@ -187,7 +186,7 @@ export async function getResumenDiarioMensual(params: any) {
         }
     ];
 
-    const data = await prestacionModel.aggregate(pipeline);
+    const data = await Prestacion.aggregate(pipeline);
     // formateamos la data por los tres turnos disponibles o por el total
     const tags = dividirTurno ? ['mañana', 'tarde', 'noche'] : ['total'];
     const formatedData = [];
@@ -487,7 +486,7 @@ export async function getPlanillaC1(params: any) {
         }
     ];
 
-    let data = await prestacionModel.aggregate(pipeline);
+    let data = await Prestacion.aggregate(pipeline);
 
     return data;
 }

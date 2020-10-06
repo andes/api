@@ -1,4 +1,4 @@
-import { model as Prestacion } from '../../rup/schemas/prestacion';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 

@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
-import { model as Prestacion } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 import { updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';

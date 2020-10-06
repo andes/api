@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { InformePDF, getAssetsURL } from '../model/informe.class';
-import { model as Prestacion } from '../../rup/schemas/prestacion';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { InformeRupHeader } from './informe-header';

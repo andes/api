@@ -3,7 +3,7 @@ import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import * as moment from 'moment';
 import { EstadosCtr } from './estados.routes';
-import { model as Prestaciones } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 import { Request } from '@andes/api-tool';
 import { ObjectId } from '@andes/core';
 import { ISnomedConcept } from '../schemas/snomed-concept';
@@ -143,7 +143,7 @@ export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha
     }
 
 
-    const prestaciones$ = Prestaciones.aggregate([
+    const prestaciones$ = Prestacion.aggregate([
         {
             $match: {
                 'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion._id as any),

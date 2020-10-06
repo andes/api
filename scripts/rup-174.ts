@@ -1,5 +1,5 @@
 
-import { model as Prestacion } from '../modules/rup/schemas/prestacion';
+import { Prestacion } from '../modules/rup/schemas/prestacion';
 
 
 function getInicioPrestacion(prestacion) {
