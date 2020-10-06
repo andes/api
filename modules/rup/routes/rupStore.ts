@@ -1,27 +1,21 @@
-import { readFile, storeFile } from '../controllers/rupStore';
-
+import { readFile, storeFile } from '../../../core/tm/controller/file-storage';
 import * as express from 'express';
+import { asyncHandler } from '@andes/api-tool';
 const router = express.Router();
 
-router.get('/store/:id', (req, res, next) => {
-    readFile(req.params.id).then((data: any)  => {
-        res.contentType(data.file.contentType);
-        data.stream.on('data', (data2) => {
-            res.write(data2);
-        });
+const CollectionName = 'RupStore';
 
-        data.stream.on('end', () => {
-            res.end();
-        });
-    }).catch(next);
-});
+router.get('/store/:id', asyncHandler(async (req, res) => {
+    const fileData = await readFile(req.params.id, CollectionName);
+    res.contentType(fileData.file.contentType);
+    fileData.stream.pipe(res);
+}));
 
-router.post('/store', (req, res, next) => {
+router.post('/store', asyncHandler(async (req, res) => {
     const file = req.body.file;
     const metadata = req.body.metadata;
-    storeFile(file, metadata).then((data) => {
-        res.json(data);
-    }).catch(next);
-});
+    const data = await storeFile(file, metadata, CollectionName);
+    res.json(data);
+}));
 
 export = router;

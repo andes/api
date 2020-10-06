@@ -1,6 +1,6 @@
 import { HTMLComponent } from '../model/html-component.class';
 import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
-import { streamToBase64 } from '../../rup/controllers/rupStore';
+import { streamToBase64 } from '../../../core/tm/controller/file-storage';
 import { searchMatriculas } from '../../../core/tm/controller/profesional';
 
 export class InformeRupFirma extends HTMLComponent {

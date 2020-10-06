@@ -45,13 +45,17 @@ router.post('/anexo-dos', async (req: any, res) => {
  * que van a ser parte del archivo
  */
 router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
-    const idPrestacion = req.body.idPrestacion;
-    const idRegistro = req.body.idRegistro;
+    try {
+        const idPrestacion = req.body.idPrestacion;
+        const idRegistro = req.body.idRegistro;
 
-    const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
-    const fileName = await informe.informe();
+        const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+        const fileName = await informe.informe();
 
-    return res.download(fileName);
+        return res.download(fileName);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 // envío de resumen de prestación por correo
