@@ -8,6 +8,7 @@ import moment = require('moment');
 import { InformeRUP } from '../informe-rup/informe-rup';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import { InformeCenso } from '../informe-censo/informe-censo';
+import { DocumentoRecupero } from '../recupero-costo/recupero';
 
 const router = express.Router();
 
@@ -107,6 +108,20 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
 
 router.post('/constanciaPuco/:tipo?', (req: any, res, next) => {
     Documento.descargarDocPuco(req, res, next).then(archivo => {
+        res.download((archivo as string), (err) => {
+            if (err) {
+                next(err);
+            } else {
+                next();
+            }
+        });
+    }).catch(e => {
+        return next(e);
+    });
+});
+
+router.post('/anexoDos/:tipo?', (req: any, res, next) => {
+    DocumentoRecupero.descargarRecuperoCosto(req, res, next).then(archivo => {
         res.download((archivo as string), (err) => {
             if (err) {
                 next(err);
