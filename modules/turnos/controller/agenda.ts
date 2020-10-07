@@ -206,8 +206,11 @@ export function codificarTurno(req, data, tid) {
     return new Promise((resolve, reject) => {
         const turno = getTurno(req, data[0], tid);
 
-        const query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
-        query.where('solicitud.turno').equals(tid);
+        const query = Prestacion.find({
+            'estadoActual.tipo': 'validada',
+            'solicitud.turno': tid
+        });
+
         query.exec((err, data1) => {
             if (err) {
                 return ({
@@ -1082,26 +1085,39 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
 EventCore.on('rup:prestacion:validate', async (prestacion) => {
     const idTurno = prestacion.solicitud.turno;
     if (!prestacion.solicitud.tipoPrestacion.noNominalizada && idTurno) {
-        const agenda: any = await agendaModel.findOne({ 'bloques.turnos._id': { $eq: idTurno, $exists: true } });
-        const noAsistionConceptos = await getConceptosNoAsistio();
+        try {
+            const agenda: any = await agendaModel.findOne({ $or: [{ 'bloques.turnos._id': { $eq: idTurno, $exists: true } }, { 'sobreturnos._id': { $eq: idTurno, $exists: true } }] });
+            const noAsistionConceptos = await getConceptosNoAsistio();
 
-        let filtroRegistros = prestacion.ejecucion.registros.filter(x => noAsistionConceptos.find(y => y.conceptId === x.concepto.conceptId));
-        let turno, event;
-        const user = Auth.getUserFromResource(prestacion);
+            let filtroRegistros = prestacion.ejecucion.registros.filter(x => noAsistionConceptos.find(y => y.conceptId === x.concepto.conceptId));
+            let turno, event;
+            const user = Auth.getUserFromResource(prestacion);
 
-        if (filtroRegistros && filtroRegistros.length > 0) {
-            turno = marcarNoAsistio(user, agenda, idTurno);
-            event = { object: 'turno', accion: 'asistencia', data: turno };
-        } else {
-            turno = darAsistencia(user, agenda, idTurno);
-            event = { object: 'turno', accion: 'asistencia', data: turno };
-        }
+            if (filtroRegistros && filtroRegistros.length > 0) {
+                turno = marcarNoAsistio(user, agenda, idTurno);
+                event = { object: 'turno', accion: 'asistencia', data: turno };
+            } else {
+                turno = darAsistencia(user, agenda, idTurno);
+                event = { object: 'turno', accion: 'asistencia', data: turno };
+            }
 
-        Auth.audit(agenda, user as any);
-        await agenda.save();
-        EventCore.emitAsync('citas:agenda:update', agenda);
-        if (event.data) {
-            EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
+            Auth.audit(agenda, user as any);
+            await agenda.save();
+            EventCore.emitAsync('citas:agenda:update', agenda);
+            if (event.data) {
+                EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
+            }
+        } catch (err) {
+            let data = {
+                turno: idTurno,
+                paciente: prestacion.paciente.id,
+                prestacion: prestacion.id,
+                organizacion: {
+                    id: prestacion.solicitud.organizacion.id,
+                    nombre: prestacion.solicitud.organizacion.nombre
+                }
+            };
+            agendaLog.error('Error validando prestación', data, err, userScheduler);
         }
     }
 });

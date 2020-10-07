@@ -2,11 +2,11 @@ import * as mongoose from 'mongoose';
 const { createBucket } = require('mongoose-gridfs');
 
 export function makeFs() {
-    const CDAFilesSchema = createBucket({
-        collectionName: 'ImageStore',
-        bucketName: 'ImageStore',
+    const COMFilesSchema = createBucket({
+        collectionName: 'COMStore',
+        bucketName: 'COMStore',
         mongooseConnection: mongoose.connection
     });
 
-    return CDAFilesSchema;
+    return COMFilesSchema;
 }

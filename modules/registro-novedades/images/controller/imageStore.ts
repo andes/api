@@ -1,5 +1,5 @@
 import { makeFs } from '../schemas/imageStore';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import * as base64_stream from 'base64-stream';
 import * as stream from 'stream';
 
@@ -11,11 +11,11 @@ export async function storeFile(base64, metadata) {
         const mime = match[1];
         const data = match[2];
         let writePromise = new Promise((resolve) => {
-            const uniqueId = String(new mongoose.Types.ObjectId());
+            const uniqueId = new Types.ObjectId();
             const input = new stream.PassThrough();
             const decoder64 = base64_stream.decode();
             const ImageFiles = makeFs();
-            ImageFiles.write(
+            ImageFiles.writeFile(
                 {
                     _id: uniqueId,
                     filename: uniqueId + '.' + mime.split('/')[1],
@@ -38,8 +38,9 @@ export async function storeFile(base64, metadata) {
 export async function readFile(id) {
     try {
         const ImageFiles = makeFs();
-        const contexto = await ImageFiles.findById(id);
-        const imageStream = ImageFiles.readById(id);
+        const idFile = new Types.ObjectId(id);
+        const contexto = await ImageFiles.findOne({ _id: idFile });
+        const imageStream = await ImageFiles.readFile({ _id: idFile });
         return {
             file: contexto,
             stream: imageStream

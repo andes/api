@@ -59,8 +59,8 @@ export class InformeRupFooter extends HTMLComponent {
         this.data = {
             usuario: user.usuario,
             organizacion: {
-                nombre: organizacion.nombre.replace(' - ', '</br>'),
-                direccion: organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre
+                nombre: organizacion ? organizacion.nombre.replace(' - ', '</br>') : '',
+                direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
             },
             hora: moment().format('DD/MM/YYYY HH:mm'),
             logos: {

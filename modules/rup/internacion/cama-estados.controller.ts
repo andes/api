@@ -48,6 +48,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         },
         {
             $match: {
+                'estados.deletedAt' : { $exists : false },
                 'estados.esMovimiento': true,
                 'estados.fecha': { $lte: fechaSeleccionada }
             }
@@ -253,6 +254,7 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
         },
         {
             $match: {
+                'estados.deletedAt' : { $exists : false },
                 'estados.fecha': {
                     $lte: moment(hasta).toDate(),
                     $gte: moment(desde).toDate()
@@ -329,6 +331,8 @@ export async function store({ organizacion, ambito, capa, cama }, estado, req: R
     delete estado['createdBy'];
     delete estado['updatedAt'];
     delete estado['updatedBy'];
+    delete estado['deletedAt'];
+    delete estado['deletedBy'];
     AuditDocument(estado, req.user);
     return await CamaEstados.update(
         {

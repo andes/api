@@ -151,6 +151,7 @@ export default [
             { key: 'ingreso', title: 'Realizar ingreso de pacientes', type: 'boolean' },
             { key: 'movimientos', title: 'Realizar movimientos de internacion', type: 'boolean' },
             { key: 'egreso', title: 'Realizar egreso de pacientes', type: 'boolean' },
+            { key: 'bloqueo', title: 'Realizar bloqueo de camas', type: 'boolean' },
             { key: 'censo', title: 'Ver censo diario y mensual', type: 'boolean' },
             { key: 'inicio', title: 'Punto de inicio', type: 'boolean' },
             { key: 'mapaDeCamas', title: 'Mapa de camas', type: 'boolean' },
@@ -420,8 +421,8 @@ export default [
             {
                 key: 'biQueries',
                 title: 'Bi-Queries',
-                type: 'boolean'
-            },
+                type: 'queries'
+            }
         ]
     },
     {
@@ -487,5 +488,12 @@ export default [
             },
         ]
     },
-
+    {
+        key: 'com',
+        title: 'Centro Operativo Médico',
+        visibility: 'restricted',
+        comment: '',
+        child: [
+        ]
+    }
 ];

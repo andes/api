@@ -7,7 +7,13 @@ export class CensoHeader extends HTMLComponent {
                 <!-- Cabezal logos institucionales -->
                 <section class="contenedor-logos">
                     <span class="contenedor-logo-efector">
-                    <img class="logo-efector" src="data:image/png;base64,{{ logos.logoEfector }}">
+                        {{#if logos.logoEfector}}
+                            <img class="logo-efector" src="data:image/png;base64,{{ logos.logoEfector }}">
+                        {{else}}
+                            <b class="no-logo-efector">
+                                {{{ organizacion.nombre }}}
+                            </b>
+                        {{/if}}
                     </span>
                     <span class="contenedor-logos-secundarios">
                         <img class="logo-adicional" src="data:image/png;base64,{{ logos.logoAdicional }}">
@@ -34,19 +40,28 @@ export class CensoHeader extends HTMLComponent {
     constructor(public fechaCenso, public organizacion, public unidadOrganizativa) {
         super();
 
-        let nombreLogo = organizacion.nombre.toLocaleLowerCase().replace(/-|\./g, '').replace(/ {2,}| /g, '-');
-
         // consulta por provincia
         const provincia = configPrivate.provincia || 'neuquen';
 
         this.data = {
             unidadOrganizativa,
             fechaCenso,
+            organizacion,
             logos: {
-                logoEfector: loadImage('templates/rup/informes/img/efectores/' + nombreLogo + '.png'),
+                logoEfector: this.getLogoOrganizacion(organizacion),
                 adicional: loadImage(`templates/rup/informes/img/logo-adicional-${provincia}.png`),
                 andes: loadImage('templates/rup/informes/img/logo-andes-h.png'),
             },
         };
+    }
+
+    getLogoOrganizacion(organizacion) {
+        try {
+            const nombreLogo = organizacion.nombre.toLocaleLowerCase().replace(/-|\./g, '').replace(/ {2,}| /g, '-');
+            const realPath = `templates/rup/informes/img/efectores/${nombreLogo}.png`;
+            return loadImage(realPath);
+        } catch {
+            return null;
+        }
     }
 }
