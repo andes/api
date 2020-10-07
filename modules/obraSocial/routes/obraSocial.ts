@@ -6,6 +6,7 @@ import * as profeController from '../controller/profe';
 import * as sumarController from '../controller/sumar';
 import * as obrasocialController from '../controller/obraSocial';
 import { Profe } from '../schemas/profe';
+import { Auth } from '../../../auth/auth.class';
 const router = express.Router();
 
 /**
@@ -47,7 +48,7 @@ router.get('/prepagas', async (req, res, next) => {
 
 /**Verifica si el paciente se encuentra en el programa SUMAR */
 
-router.get('/padronSumar', async (req, res, next) => {
+router.get('/padronSumar', Auth.authenticate(), async (req, res, next) => {
     try {
         let arrayOSSumar = await sumarController.getPacienteSumar(req.query.dni);
         if (arrayOSSumar) {
@@ -68,7 +69,7 @@ router.get('/padronSumar', async (req, res, next) => {
  * @returns
  */
 
-router.get('/puco', async (req, res, next) => {
+router.get('/puco', Auth.authenticate(), async (req, res, next) => {
     if (req.query.dni) {
         let padron;
         let rta;
@@ -105,7 +106,7 @@ router.get('/puco', async (req, res, next) => {
 
 /**Obtiene las versiones del padron PUCO */
 
-router.get('/puco/padrones', async (req, res, next) => {
+router.get('/puco/padrones', Auth.authenticate(), async (req, res, next) => {
     try {
         let resp = await pucoController.obtenerVersiones();
         res.json(resp);
@@ -116,7 +117,7 @@ router.get('/puco/padrones', async (req, res, next) => {
 
 /**Obtiene la obra social de un paciente (Usado en el punto de inicio de CITAS) */
 
-router.get('/obraSocial/:documento', async (req, res, next) => {
+router.get('/obraSocial/:documento', Auth.authenticate(), async (req, res, next) => {
     if (req.params.documento) {
         let resp = await obrasocialController.getObraSocial(req.params);
         res.json(resp);
@@ -127,7 +128,7 @@ router.get('/obraSocial/:documento', async (req, res, next) => {
 
 /** Obtiene paciente que se encuentra en el padron PROFE */
 
-router.get('/profe', async (req, res, next) => {
+router.get('/profe', Auth.authenticate(), async (req, res, next) => {
     try {
         if (req.query.dni && req.query.periodo) {
             let os = await Profe.find({ dni: Number.parseInt(req.query.dni, 10), version: req.query.periodo });
@@ -142,7 +143,7 @@ router.get('/profe', async (req, res, next) => {
 
 /**Obtiene los padrones del padron PROFE */
 
-router.get('/profe/padrones', async (req, res, next) => {
+router.get('/profe/padrones', Auth.authenticate(), async (req, res, next) => {
     try {
         let resp = await profeController.obtenerVersiones();
         res.json(resp);

@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { DireccionSchema } from '../../../shared/schemas/direccion';
 
-export const ESTADOS_DERIVACION = ['pendiente', 'aprobada', 'rechazada', 'asignada', 'denegada', 'aceptada', 'finalizada', 'aceptada por omision'];
+export const ESTADOS_DERIVACION = ['solicitada', 'habilitada', 'inhabilitada', 'asignada', 'rechazada', 'aceptada', 'finalizada', 'encomendada'];
 
 let DerivacionHistorialSchema = new mongoose.Schema({
     estado: {

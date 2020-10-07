@@ -430,8 +430,8 @@ export default [
             {
                 key: 'biQueries',
                 title: 'Bi-Queries',
-                type: 'boolean'
-            },
+                type: 'queries'
+            }
         ]
     },
     {
@@ -497,5 +497,12 @@ export default [
             },
         ]
     },
-
+    {
+        key: 'com',
+        title: 'Centro Operativo Médico',
+        visibility: 'restricted',
+        comment: '',
+        child: [
+        ]
+    }
 ];
