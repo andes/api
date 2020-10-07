@@ -10,7 +10,7 @@ import { SalaComunSnapshot, SalaComun } from './sala-comun.schema';
 export async function createSnapshotSalaComun(fecha: Date) {
 
     // const salas = await SalaComunCtr.search({}, { fields: '+lastSync' }, {} as any);
-    const salas = SalaComun.find().select('+lastSync').cursor();
+    const salas: any = SalaComun.find().select('+lastSync');
 
     for await (const sala of salas) {
         const hayMovimientos = await SalaComunMovimientos.find({
