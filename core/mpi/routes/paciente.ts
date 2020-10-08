@@ -4,7 +4,6 @@ import { paciente } from '../schemas/paciente';
 import * as controller from '../controller/paciente';
 import { Auth } from './../../../auth/auth.class';
 import * as debug from 'debug';
-import { EventCore } from '@andes/event-bus';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
@@ -15,9 +14,9 @@ const router = express.Router();
 
 router.post('/pacientes/validar/', async (req, res, next) => {
     // TODO modificar permiso renaper -> validar/validacion o algo asi
-    if (!Auth.check(req, 'fa:get:renaper')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'fa:get:renaper')) {
+    //     return next(403);
+    // }
     const pacienteAndes = req.body;
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
@@ -56,9 +55,9 @@ router.post('/pacientes/federador/get', async (req, res, next) => {
 
 // Search using filters
 router.get('/pacientes/search', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'mpi:paciente:getbyId')) {
+    //     return next(403);
+    // }
     try {
         const result = await controller.matching({ type: 'search', filtros: req.query });
         res.send(result);
@@ -70,9 +69,9 @@ router.get('/pacientes/search', async (req, res, next) => {
 
 // Search
 router.get('/pacientes', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'mpi:paciente:getbyId')) {
+    //     return next(403);
+    // }
     try {
         const result = await controller.matching(req.query);
         res.send(result);
@@ -85,9 +84,9 @@ router.get('/pacientes', async (req, res, next) => {
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'mpi:paciente:getbyId')) {
+    //     return next(403);
+    // }
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
@@ -178,9 +177,9 @@ router.get('/pacientes/:id/foto/:fotoId', async (req, res, next) => {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:postAndes')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'mpi:paciente:postAndes')) {
+    //     return next(403);
+    // }
     try {
         let pacienteNuevo = req.body.paciente;
         let ignorarSugerencias = req.body.ignoreCheck;
@@ -243,9 +242,9 @@ router.post('/pacientes', async (req, res, next) => {
  */
 
 router.put('/pacientes/:id', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:putAndes')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'mpi:paciente:putAndes')) {
+    //     return next(403);
+    // }
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
@@ -318,9 +317,9 @@ router.put('/pacientes/:id', async (req, res, next) => {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/:id', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
+    //     return next(403);
+    // }
     const objectId = new mongoose.Types.ObjectId(req.params.id);
     try {
         let patientFound: any = await controller.deletePacienteAndes(objectId);
@@ -361,9 +360,9 @@ router.delete('/pacientes/:id', async (req, res, next) => {
 
 
 router.patch('/pacientes/:id', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
+    //     return next(403);
+    // }
     try {
         let resultado = await controller.buscarPaciente(req.params.id);
         if (resultado) {

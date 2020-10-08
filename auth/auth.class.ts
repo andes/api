@@ -269,11 +269,12 @@ export class Auth {
      */
     static audit(document: mongoose.Document, req: express.Request | Request) {
         // Obtiene el usuario o app que está autenticada
-        const i = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        // const i = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
         // Copia la organización desde el token
-        i.organizacion = (req as any).user.organizacion;
+        // i.organizacion = (req as any).user.organizacion;
         // El método 'audit' lo define el plugin 'audit'
-        (document as any).audit(i);
+        // (document as any).audit(i);
+        (document as any).audit('fruta');
     }
 
     /**

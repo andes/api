@@ -21,6 +21,7 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { logPaciente } from '../../log/schemas/logPaciente';
 const ObjectId = Types.ObjectId;
 import { SaludDigitalClient } from '../../../modules/ips/controller/autenticacion';
+import { Patient } from '@andes/fhir/';
 
 const sharp = require('sharp');
 
@@ -559,7 +560,11 @@ export async function getPatientFromFederador(pacienteAndes, req: any) {
     const token = await clientSD.obtenerToken(payload);
     const params = `?identifier=${uriDNI}|${pacienteAndes.documento}`;
     const patients = await clientSD.search(params, token);
-    return patients;
+    const pacientesAndes = [];
+    patients.forEach(fhirPac => {
+        pacientesAndes.push(Patient.decode(fhirPac));
+    });
+    return pacientesAndes;
 }
 
 /**

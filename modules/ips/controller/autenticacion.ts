@@ -89,9 +89,9 @@ export class SaludDigitalClient {
         return status >= 200 && status <= 299;
     }
 
+    // Search provisorio
     async search(params: any, token: any) {
         const url = `${this.host}/masterfile-federacion-service/fhir/Patient/${params}`;
-        console.log(url);
         const options = {
             url,
             method: 'GET',
