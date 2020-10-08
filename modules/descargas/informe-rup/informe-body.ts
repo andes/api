@@ -8,19 +8,12 @@ export class InformeRupBody extends HTMLComponent {
         <main>
             <section class="contenedor-informe">
                 <article class="cabezal-conceptos horizontal">
-                    <div class="contenedor-bloque-texto">
+                    <div class="contenedor-bloque-texto w-3/4" >
                         <div class="tipo-prestacion">
                             {{ titulo }}
                         </div>
                     </div>
-                    <div class="contenedor-bloque-texto">
-                        <h6 class="bolder">
-                            Fecha Solicitud
-                        </h6>
-                        <h6>
-                            {{ fechaSolicitud }}hs
-                        </h6>
-                    </div>
+
                     <div class="contenedor-bloque-texto">
                         <h6 class="bolder">
                             Fecha Ejecución
@@ -30,12 +23,18 @@ export class InformeRupBody extends HTMLComponent {
                         </h6>
                     </div>
                     <div class="contenedor-bloque-texto">
-                        <h6 class="bolder">
-                            Fecha Validación
-                        </h6>
-                        <h6>
-                            {{ fechaValidacion }}hs
-                        </h6>
+                          {{#if esValidada}}
+                             <h6 class="bolder">
+                             Fecha Validación
+                            </h6>
+                            <h6>
+                                {{ fechaValidacion }}hs
+                           </h6>
+                        {{else}}
+                            <h6 class="bolder">
+                            Sin validar
+                            </h6>
+                        {{/if}}
                     </div>
                 </article>
                 <hr>
@@ -56,9 +55,10 @@ export class InformeRupBody extends HTMLComponent {
     }
 
     public async process() {
-        const fechaSolicitud = this.prestacion.solicitud.fecha;
+
         const fechaEjecucion = this.getFechaEstado('ejecucion');
         const fechaValidacion = this.getFechaEstado('validada');
+        const esValidada = (fechaValidacion !== null);
 
         if (this.registroId) {
             const registro = this.prestacion.findRegistroById(this.registroId);
@@ -75,11 +75,12 @@ export class InformeRupBody extends HTMLComponent {
         const firmaHTML = await this.getFirmaHTML();
 
         this.data = {
-            fechaSolicitud: moment(fechaSolicitud).format('DD/MM/YYYY HH:mm'),
+
             fechaEjecucion: fechaEjecucion && moment(fechaEjecucion).format('DD/MM/YYYY HH:mm'),
             fechaValidacion: fechaValidacion && moment(fechaValidacion).format('DD/MM/YYYY HH:mm'),
             titulo: this.prestacion.solicitud.tipoPrestacion.term,
             registros,
+            esValidada,
             firmaHTML
         };
     }
