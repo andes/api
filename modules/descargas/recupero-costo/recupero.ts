@@ -46,7 +46,7 @@ export class DocumentoRecupero {
             .replace('<!--horaInicio-->', req.body.horaInicio)
             .replace('<!--tipoPrestacion-->', req.body.tipoPrestacion)
             .replace('<!--obraSocial-->', req.body.obraSocial)
-            .replace('<!--codigoOs-->', req.body.codigoOs)
+            .replace('<!--codigoOs-->', req.body.codigoOs);
 
 
         return html;
