@@ -1,3 +1,16 @@
+# [5.16.0](https://github.com/andes/api/compare/v5.15.0...v5.16.0) (2020-10-07)
+
+
+### Features
+
+* **com:** cambios en nombres de estado ([#1138](https://github.com/andes/api/issues/1138)) ([59282d3](https://github.com/andes/api/commit/59282d3232f78159ffd7000f1f0c9ea75c7c246b))
+* **com:** permisos para nuevo módulo ([#1133](https://github.com/andes/api/issues/1133)) ([4660f04](https://github.com/andes/api/commit/4660f04c4c3b010d2763da5dbabd95cc057de94b))
+* **mapa-camas:** agrega permiso para bloquear camas ([#1129](https://github.com/andes/api/issues/1129)) ([1d16e08](https://github.com/andes/api/commit/1d16e086ef25782e0a3c38db055dcdef153846c8))
+* **obra-social:** protege puco ([2cef26a](https://github.com/andes/api/commit/2cef26ae4df5e4805e863b0cf9066a8f31aecd46))
+* **permisos:** agrego type queries ([#1116](https://github.com/andes/api/issues/1116)) ([6b16125](https://github.com/andes/api/commit/6b16125a212ce57bb3aeba1d8aa7e3ba2f10af28))
+* **rup:** parámetro registrar conceptos repetidos en una prestación ([#1092](https://github.com/andes/api/issues/1092)) ([cbe84a9](https://github.com/andes/api/commit/cbe84a9af2ba9c3d31a6bf3a2f5613c751a22a70))
+* **tup:** datos de la solicitud en informe-PDF ([#1130](https://github.com/andes/api/issues/1130)) ([17a5b6f](https://github.com/andes/api/commit/17a5b6fcbfaa0d5dd898eea043b06d8451b1ce94))
+
 # [5.15.0](https://github.com/andes/api/compare/v5.14.0...v5.15.0) (2020-09-30)
 
 
