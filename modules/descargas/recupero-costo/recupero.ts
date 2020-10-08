@@ -32,9 +32,6 @@ export class DocumentoRecupero {
         let html = fs.readFileSync(path.join(__dirname, '../../../templates/recupero-costo/formulario.html'), 'utf8');
 
         // logo header
-        let headerConstancia;
-        let padron;
-        let textFooter: string;
         let fechaActual = moment(new Date());
 
         // BODY
