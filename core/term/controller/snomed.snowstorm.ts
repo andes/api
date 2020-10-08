@@ -81,10 +81,10 @@ export function filterRelationships(concept, { parent = true }) {
  * @param {Boolean} all True para devolver hijos, nietos, bisnietos... de un concepto, false solo hijos directos.
  *
  */
-export async function getChildren(sctid, { all = false, completed = true, leaf = false }) {
+export async function getChildren(sctid, { all = true, completed = true, leaf = false }) {
     let concepts;
     if (all) {
-        const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts/${sctid}/descendants`, { limit: 1000, stated: false });
+        const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts/${sctid}/descendants`, { limit: 5000, stated: false });
         if (response) {
             concepts = response.items;
         }
