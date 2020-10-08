@@ -30,6 +30,7 @@ class PacienteResource extends ResourceBase<IPacienteDoc> {
         activo: MongoQuery.equalMatch,
         reportarError: MongoQuery.equalMatch,
         estado: MongoQuery.equalMatch,
+        certificadoRenaper: MongoQuery.equalMatch,
         identificadores: {
             field: 'identificadores.entidad',
             fn: (value) => {
