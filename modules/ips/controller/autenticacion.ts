@@ -53,10 +53,7 @@ export class SaludDigitalClient {
             },
         };
         const [status, body] = await handleHttpRequest(options);
-        const response = JSON.parse(body);
-        this.token = response.accessToken;
-        return this.token;
-
+        return body;  
     }
 
     /**
@@ -92,15 +89,17 @@ export class SaludDigitalClient {
         return status >= 200 && status <= 299;
     }
 
-    async search(params: any) {
-        const url = `${this.host}/masterfile-federacion-service/fhir/Patient/`;
+    async search(params: any, token: any) {
+        const url = `${this.host}/masterfile-federacion-service/fhir/Patient/${params}`;
+        console.log(url);
         const options = {
             url,
             method: 'GET',
-            qs: params,
+            // qs: params,
             json: true,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization' : 'bearer '+token
             }
         };
         const [status, bundle] = await handleHttpRequest(options);

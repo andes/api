@@ -51,7 +51,7 @@ export const modules = {
         path: './core/log.v2/routes',
         route: '/core/log.v2',
         // Disable Auth for tests
-        middleware: null // appMiddleware
+        middleware: appMiddleware
     },
     status: {
         active: true,
@@ -94,12 +94,6 @@ export const modules = {
         path: './modules/matriculaciones/routes',
         route: '/modules/matriculaciones',
         middleware: null
-    },
-    fhir: {
-        active: true,
-        path: './connect/fhir/routes',
-        route: '/connect/fhir',
-        middleware: appMiddleware
     },
     cda: {
         active: true,
