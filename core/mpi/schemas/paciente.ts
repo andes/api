@@ -60,10 +60,8 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     },
     fechaFallecimiento: Date,
     estadoCivil: constantes.ESTADOCIVIL,
-    foto: {
-        type: String,
-        select: false
-    },
+    fotoId: mongoose.Schema.Types.ObjectId,
+    foto: { type: String, select: false },
     fotoMobile: String,
     nacionalidad: String,
     // ---------------------
@@ -83,7 +81,8 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         documento: String,
         fechaFallecimiento: Date,
         numeroIdentificacion: String,
-        foto: String
+        foto: String,
+        fotoId: mongoose.Schema.Types.ObjectId
     }],
     financiador: [ObraSocialSchema],
     claveBlocking: { type: [String], es_indexed: true },
