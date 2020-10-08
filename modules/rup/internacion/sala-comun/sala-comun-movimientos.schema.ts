@@ -1,9 +1,9 @@
-import { SchemaTypes, Schema, model, Types, Document } from 'mongoose';
-import * as nombreSchema from '../../../../core/tm/schemas/nombre';
+import { SchemaTypes, Schema, model, Types } from 'mongoose';
 import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 import { InternacionExtrasSchema } from '../cama-estados.schema';
 import { SnomedConcept } from '../../schemas/snomed-concept';
 import { UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
+import { NombreSchemaV2 } from '../../../../shared/schemas';
 
 export enum SalaComunAccion {
     IN = 'IN',
@@ -26,7 +26,7 @@ export type SalaComunMovimientoDocument = AndesDocWithAudit<ISalaComunMovimiento
 const SalaComunMovimientosSchema = new Schema({
     idSalaComun: SchemaTypes.ObjectId,
     organizacion: {
-        type: nombreSchema,
+        type: NombreSchemaV2,
         required: true
     },
     ambito: String,

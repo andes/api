@@ -1,12 +1,12 @@
 import { SchemaTypes, Schema, model } from 'mongoose';
 import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 import { SnomedConcept } from '../../schemas/snomed-concept';
-import * as nombreSchema from '../../../../core/tm/schemas/nombre';
 import { OrganizacionRef, UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
 import { ISectores } from '../../../../core/tm/interfaces/ISectores';
 import { ObjectId } from '@andes/core';
 import * as moment from 'moment';
 import { InternacionExtrasSchema } from '../cama-estados.schema';
+import { NombreSchemaV2 } from '../../../../shared/schemas';
 
 export type SalaComunID = ObjectId;
 
@@ -48,7 +48,7 @@ const SalaComunBaseSchema = new Schema({
         required: true
     },
     organizacion: {
-        type: nombreSchema,
+        type: NombreSchemaV2,
         required: true
     },
     capacidad: Number,
