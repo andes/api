@@ -186,7 +186,7 @@ router.get('/organizaciones', async (req, res, next) => {
  *
  *
  */
-router.get('/organizaciones/:id/configuracion', async (req, res, next) => {
+router.get('/organizaciones/:id/configuracion', Auth.authenticate(), async (req, res, next) => {
     try {
         const id = req.params.id;
         const org: any = await Organizacion.findById(id, { configuraciones: 1 });
@@ -196,6 +196,21 @@ router.get('/organizaciones/:id/configuracion', async (req, res, next) => {
     }
 });
 
+/**
+ * GET /organizaciones/:id/configuracion
+ * Devuelve las unidades organizativas de una organizacion.
+ *
+ *
+ */
+router.get('/organizaciones/:id/unidadesOrganizativas', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const org: any = await Organizacion.findById(id, { unidadesOrganizativas: 1 });
+        return res.json(org.unidadesOrganizativas || {});
+    } catch (error) {
+        return next(error);
+    }
+});
 router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:create')) {
         return next(403);
