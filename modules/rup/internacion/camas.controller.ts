@@ -7,6 +7,7 @@ import { model as Prestaciones } from '../schemas/prestacion';
 import { Request } from '@andes/api-tool';
 import { ObjectId } from '@andes/core';
 import { ISnomedConcept } from '../schemas/snomed-concept';
+import { EventCore } from '@andes/event-bus';
 
 interface INombre {
     _id: ObjectId;
@@ -224,10 +225,15 @@ export async function patch(data: Partial<ICama>, req: Request) {
             CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado, req),
         ]);
 
+        if (nuevoEstado.extras?.egreso) {
+            EventCore.emitAsync('mapa-camas:paciente:egreso', nuevoEstado);
+        }
+        if (nuevoEstado.extras?.ingreso) {
+            EventCore.emitAsync('mapa-camas:paciente:ingreso', nuevoEstado);
+        }
+
+
         camaEncontrada.set(data);
-        // if (data.unidadOrganizativa) {
-        //     camaEncontrada.unidadOrganizativaOriginal = data.unidadOrganizativa;
-        // }
         camaEncontrada.audit(req);
         return await camaEncontrada.save();
     }
@@ -321,7 +327,7 @@ export async function integrityCheck({ organizacion, capa, ambito }: Internacion
     const groupedMovements = Object.entries(groupBy(allMovements, 'idCama'));
     const maquinaEstado = await EstadosCtr.encontrar(organizacion._id, ambito, capa);
 
-    groupedMovements.map( async ([idCama, movementsCama]: [string, ICama[]]) => {
+    groupedMovements.map(async ([idCama, movementsCama]: [string, ICama[]]) => {
         movementsCama.slice(1).map(async (movement, index) => {
             if (movement.esMovimiento) {
                 let cambioPermitido = false;
