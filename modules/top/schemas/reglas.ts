@@ -1,13 +1,34 @@
-import * as mongoose from 'mongoose';
-import { SnomedConcept } from '../../rup/schemas/snomed-concept';
+import { Schema, Document, model } from 'mongoose';
+import { ISnomedConcept, SnomedConcept } from '../../rup/schemas/snomed-concept';
 import { SemanticTag } from '../../rup/schemas/semantic-tag';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { ObjectId } from '@andes/core';
 
-let reglasSchema = new mongoose.Schema({
+export interface IReglasTOP {
+    origen: {
+        organizacion: {
+            id: ObjectId,
+            nombre: string
+        },
+        prestaciones: {
+            prestacion: ISnomedConcept,
+            auditable: boolean,
+        }[]
+    };
+    destino: {
+        organizacion: {
+            id: ObjectId,
+            nombre: string
+        };
+        prestacion: ISnomedConcept
+    };
+}
+
+export const ReglasTOPSchema = new Schema({
     origen: {
         organizacion: {
             nombre: String,
-            id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
+            id: { type: Schema.Types.ObjectId, ref: 'organizacion' }
         },
         prestaciones: [
             {
@@ -22,10 +43,10 @@ let reglasSchema = new mongoose.Schema({
     destino: {
         organizacion: {
             nombre: String,
-            id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
+            id: { type: Schema.Types.ObjectId, ref: 'organizacion' }
         },
         prestacion: {
-            id: mongoose.Schema.Types.ObjectId,
+            id: Schema.Types.ObjectId,
             conceptId: String,
             term: String,
             fsn: String,
@@ -33,7 +54,6 @@ let reglasSchema = new mongoose.Schema({
         }
     }
 });
-// Habilitar plugin de auditoría
-reglasSchema.plugin(AuditPlugin);
-const model = mongoose.model('reglas', reglasSchema, 'reglas');
-export = model;
+
+ReglasTOPSchema.plugin(AuditPlugin);
+export const ReglasTOP = model<IReglasTOP & Document>('reglas', ReglasTOPSchema, 'reglas');

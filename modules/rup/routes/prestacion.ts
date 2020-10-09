@@ -2,21 +2,20 @@ import { Types } from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
-import { model as Prestacion } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 import { updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
-import { Logger } from '../../../utils/logService';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
-import async = require('async');
 import { removeDiacritics } from '../../../utils/utils';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { getTurnoById } from '../../turnos/controller/turnosController';
-import { asyncHandler } from '@andes/api-tool';
+import { asyncHandler, Request } from '@andes/api-tool';
+import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 
 const router = express.Router();
 
@@ -503,7 +502,7 @@ router.post('/prestaciones', async (req, res, next) => {
     });
 });
 
-router.patch('/prestaciones/:id', (req, res, next) => {
+router.patch('/prestaciones/:id', (req: Request, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
@@ -610,29 +609,22 @@ router.patch('/prestaciones/:id', (req, res, next) => {
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
                 EventCore.emitAsync('rup:prestacion:validate', data);
+                // Se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
+                buscarYCrearSolicitudes(prestacion, req);
             }
 
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
-
                 const registros = prestacion.getRegistros();
-
                 const dto = {
                     profesional: Auth.getProfesional(req),
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: registros
                 };
-                frecuentescrl.actualizarFrecuentes(dto).then(() => {
-                    Logger.log(req, 'rup', 'update', {
-                        accion: 'actualizarFrecuentes',
-                        ruta: req.url,
-                        method: req.method,
-                        data: req.body.listadoFrecuentes,
-                        err: false
-                    });
-                }).catch((errFrec) => {
-                    return next(errFrec);
+                frecuentescrl.actualizarFrecuentes(dto).catch((errFrec) => {
+                    // tslint:disable-next-line:no-console
+                    return console.error(errFrec);
                 });
 
             }
@@ -642,40 +634,9 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 EventCore.emitAsync('rup:prestacion:romperValidacion', _prestacion);
             }
 
-            if (req.body.planes) {
-                // creamos una variable falsa para cuando retorne hacer el get
-                // de todas estas prestaciones
+            res.json(prestacion);
 
-                const solicitadas = [];
 
-                async.each(req.body.planes, (plan: any, callback) => {
-                    updateRegistroHistorialSolicitud(plan.solicitud, { op: 'creacion' });
-                    const nuevoPlan = new Prestacion(plan);
-                    Auth.audit(nuevoPlan, req);
-                    nuevoPlan.save((errorPlan, nuevaPrestacion) => {
-                        if (errorPlan) { return callback(errorPlan); }
-
-                        solicitadas.push(nuevaPrestacion);
-
-                        callback();
-
-                    });
-                }, (err2) => {
-                    if (err2) {
-                        return next(err2);
-                    }
-
-                    // como el objeto de mongoose es un inmutable, no puedo agregar directamente una propiedad
-                    // para poder retornar el nuevo objeto con los planes solicitados, primero
-                    // debemos clonarlo con JSON.parse(JSON.stringify());
-                    const convertedJSON = JSON.parse(JSON.stringify(prestacion));
-                    convertedJSON.solicitadas = solicitadas;
-                    res.json(convertedJSON);
-                });
-
-            } else {
-                res.json(prestacion);
-            }
         });
     });
 });

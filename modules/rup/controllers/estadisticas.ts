@@ -1,4 +1,4 @@
-import { model as Prestacion } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 import moment = require('moment');

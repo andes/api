@@ -1,4 +1,4 @@
-import { model as Prestacion } from '../../rup/schemas/prestacion';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 
@@ -92,3 +92,4 @@ export async function enEjecucion(turno) {
     let prestacion: any = await Prestacion.findOne({ 'solicitud.turno': turno._id }).exec();
     return (prestacion && prestacion.ejecucion && prestacion.ejecucion.fecha);
 }
+

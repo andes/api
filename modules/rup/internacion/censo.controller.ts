@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { model as Prestaciones } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 import { Camas } from './camas.schema';
 import { Censo } from './censos.schema';
 import * as CamasEstadosController from './cama-estados.controller';
@@ -45,7 +45,7 @@ async function unificarMovimientos(snapshots, movimientos) {
 }
 
 async function realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, camas) {
-    const prestaciones = await Prestaciones.find({ _id: { $in: [...Object.keys(internaciones)] } });
+    const prestaciones = await Prestacion.find({ _id: { $in: [...Object.keys(internaciones)] } });
 
     let existenciaALas0 = 0;
     let existenciaALas24 = 0;

@@ -1,6 +1,6 @@
 // Script que actualiza keys de registros y genera registros de historial retroactivamente a partir de la fecha del primer histórico de prestación
 // registrado.
-import { model as Prestacion } from '../modules/rup/schemas/prestacion';
+import { Prestacion } from '../modules/rup/schemas/prestacion';
 import moment = require('moment');
 import * as turnosController from '../modules/turnos/controller/turnosController';
 
@@ -26,7 +26,7 @@ let fechaPrimerHistorial;
  * Actualiza las keys del historial
  */
 async function actualizarKeys() {
-  // tslint:disable:no-console
+    // tslint:disable:no-console
 
     console.log('INICIO actualizarKeys');
     const solicitudes = findSolicitudes().cursor({ batchSize: 200 });
@@ -56,7 +56,7 @@ async function actualizarKeys() {
             }
             h.descripcion = descripciones[h.accion];
         });
-        await Prestacion.update({ _id: prestacion._id }, { $set: { 'solicitud.historial': historial } } );
+        await Prestacion.update({ _id: prestacion._id }, { $set: { 'solicitud.historial': historial } });
     }
     console.log('FIN actualizarKeys');
 }
@@ -66,7 +66,7 @@ async function actualizarKeys() {
  */
 async function updateHistorialPrestaciones() {
     console.log('INICIO updateHistorialPrestaciones');
-    const solicitudes = findSolicitudes().cursor({batchSize: 200});
+    const solicitudes = findSolicitudes().cursor({ batchSize: 200 });
     let i = 0;
     let prestacion;
     while (prestacion = await solicitudes.next()) {
@@ -123,7 +123,7 @@ async function updateHistorialPrestaciones() {
         };
 
         // Si no existe, crea un registro de creación con el primer estado que exista
-        if ( !prestacion.solicitud.historial.length || !prestacion.solicitud.historial.find((e) => e.accion === 'creacion')) {
+        if (!prestacion.solicitud.historial.length || !prestacion.solicitud.historial.find((e) => e.accion === 'creacion')) {
             crearRegistro({
                 tipo: 'creacion',
                 createdAt: prestacion.estados[0].createdAt,
@@ -146,7 +146,7 @@ async function updateHistorialPrestaciones() {
         prestacion.solicitud.historial.forEach((h) => (h.descripcion = h.descripcion ? h.descripcion : descripciones[h.accion]));
         // Ordenamos el historial final cronologicamente
         prestacion.solicitud.historial = prestacion.solicitud.historial.sort((a, b) => moment(b.createdAt).diff(moment(a.createdAt)));
-        await Prestacion.update( { _id: prestacion._id }, { $set: { 'solicitud.historial': prestacion.solicitud.historial } });
+        await Prestacion.update({ _id: prestacion._id }, { $set: { 'solicitud.historial': prestacion.solicitud.historial } });
     }
     console.log('FIN updateHistorialPrestaciones');
 }
@@ -154,8 +154,8 @@ async function updateHistorialPrestaciones() {
 function findSolicitudes() { // busca las prestaciones desde la fecha correspondiente cuyo inicio sea top (solicitudes)
     const searchParams = {
         $and: [
-        { createdAt: { $gt: fechaPrimerHistorial } },
-        { inicio: 'top' }
+            { createdAt: { $gt: fechaPrimerHistorial } },
+            { inicio: 'top' }
         ],
     };
     return Prestacion.find(searchParams, { estados: 1, solicitud: 1 });
@@ -164,9 +164,10 @@ function findSolicitudes() { // busca las prestaciones desde la fecha correspond
 // Obtiene el primer registro en historial de solicitudes para traer la fecha desde la cual correr el script
 async function ObtenerFechaInicioScript() {
     let prestaciones = await Prestacion.find({
-      $and: [
-        { 'solicitud.historial': { $exists: true }} , { 'solicitud.historial': { $ne: [] }}, {inicio: 'top'}
-      ]}).sort({ createdAt: 1 }).limit(1);
+        $and: [
+            { 'solicitud.historial': { $exists: true } }, { 'solicitud.historial': { $ne: [] } }, { inicio: 'top' }
+        ]
+    }).sort({ createdAt: 1 }).limit(1);
     fechaPrimerHistorial = moment((prestaciones[0] as any).createdAt).startOf('day').toDate();
 }
 

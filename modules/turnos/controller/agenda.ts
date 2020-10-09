@@ -6,7 +6,7 @@ import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { log } from '@andes/log';
 import { logKeys } from '../../../config';
-import { model as Prestacion } from '../../rup/schemas/prestacion';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import * as prestacionController from '../../rup/controllers/prestacion';
 import * as request from 'request';
 import * as mongoose from 'mongoose';

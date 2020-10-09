@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { Types } from 'mongoose';
 import * as codificacion from '../schemas/codificacion';
-import { model as modelPrestacion } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 import { codificarPrestacion } from '../controllers/codificacionController';
 import { Auth } from './../../../auth/auth.class';
 import { toArray } from '../../../utils/utils';
@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.post('/codificacion', async (req, res, next) => {
     const idPrestacion = req.body.idPrestacion;
-    const unaPrestacion = await modelPrestacion.findById(idPrestacion);
+    const unaPrestacion = await Prestacion.findById(idPrestacion);
     const codificaciones = await codificarPrestacion(unaPrestacion);
     if (codificaciones) {
         let data = new codificacion({

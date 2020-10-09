@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import { Types } from 'mongoose';
-import { model as Prestaciones } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 import { store, findById, search, patch, changeTime, listaEspera } from './camas.controller';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import { CamaEstados } from './cama-estados.schema';
@@ -76,7 +76,7 @@ describe('Internacion - camas', () => {
         await Camas.remove({});
         await CamaEstados.remove({});
         await Estados.remove({});
-        await Prestaciones.remove({});
+        await Prestacion.remove({});
         cama = await store(seedCama(1, 'h') as any, REQMock);
         idCama = String(cama._id);
         organizacion = cama.organizacion._id;
@@ -221,7 +221,7 @@ describe('Internacion - camas', () => {
     });
 
     test('Cama - Lista Espera con Cama Disponible', async () => {
-        const nuevaPrestacion: any = new Prestaciones(createInternacionPrestacion(cama.organizacion));
+        const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
         await nuevaPrestacion.save();
 
@@ -235,7 +235,7 @@ describe('Internacion - camas', () => {
         const nuevoOcupado = estadoOcupada(new Date());
         await CamasEstadosController.store({ organizacion, ambito, capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
-        const nuevaPrestacion: any = new Prestaciones(createInternacionPrestacion(cama.organizacion));
+        const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
         await nuevaPrestacion.save();
 
