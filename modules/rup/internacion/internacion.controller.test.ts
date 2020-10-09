@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 import { store, patch } from './camas.controller';
 import { ingresarPaciente } from './sala-comun/sala-comun.controller';
-import { model as Prestaciones } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 import { Camas } from './camas.schema';
 import { CamaEstados } from './cama-estados.schema';
 import { SalaComun, SalaComunSnapshot } from './sala-comun/sala-comun.schema';
@@ -32,7 +32,7 @@ setupUpMongo();
 beforeEach(async () => {
     await Camas.remove({});
     await CamaEstados.remove({});
-    await Prestaciones.remove({});
+    await Prestacion.remove({});
     await SalaComun.remove({});
     await SalaComunSnapshot.remove({});
     await SalaComunMovimientos.remove({});

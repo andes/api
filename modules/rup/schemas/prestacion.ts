@@ -276,4 +276,9 @@ PrestacionSchema.index({
     'ejecucion.registros.valor.informeIngreso.fechaIngreso': 1,
 }, { sparse: true });
 
+PrestacionSchema.index({
+    'solicitud.prestacionOrigen': 1,
+    'paciente.id': 1
+}, { sparse: true });
+
 export const Prestacion = mongoose.model('prestacion', PrestacionSchema, 'prestaciones');
