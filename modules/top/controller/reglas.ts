@@ -1,45 +1,27 @@
-import * as reglas from '../schemas/reglas';
-
-/**
- *
- *
- * @export
- * @param {*} listaReglas Array de reglas creadas/modificadas para un par (organizacion, prestacion) destino
- */
-export function guardarReglas(listaReglas) {
-    let listaSave = [];
-    let listaResultados = [];
-    listaReglas.forEach((regla) => {
-        listaSave.push(saveUpdate(regla, listaResultados));
-    });
-    return ({
-        lista: listaSave,
-        resultados: listaResultados
-    });
+import { ObjectId } from '@andes/core';
+import { Types } from 'mongoose';
+import { ReglasTOP } from '../schemas/reglas';
+export interface CheckReglaParams {
+    organizacionOrigen?: ObjectId;
+    prestacionOrigen?: string;
+    organizacionDestino?: ObjectId;
+    prestacionDestino?: string;
 }
-
-function saveUpdate(regla, resultados) {
-    if (regla._id) { // Si ya existe la regla la modifica
-        return new Promise((resolve, reject) => {
-            reglas.findByIdAndUpdate(regla._id, regla, { upsert: true }, (err, data) => {
-                if (err) {
-                    reject(err);
-                }
-                resultados.push(data);
-                resolve(data);
-            });
-
-        });
-    } else { // Si no existe, crea una nueva
-        let data = new reglas(regla);
-        return new Promise((resolve, reject) => {
-            data.save((err) => {
-                if (err) {
-                    reject(err);
-                }
-                resultados.push(data);
-                resolve(data);
-            });
-        });
+export function checkRegla(params: CheckReglaParams) {
+    const query = {};
+    if (params.organizacionOrigen) {
+        query['origen.organizacion.id'] = new Types.ObjectId(params.organizacionOrigen);
     }
+
+    if (params.prestacionOrigen) {
+        query['origen.prestaciones.prestacion.conceptId'] = params.prestacionOrigen;
+    }
+
+    if (params.organizacionDestino) {
+        query['destino.organizacion.id'] = new Types.ObjectId(params.organizacionDestino);
+    }
+    if (params.prestacionDestino) {
+        query['destino.prestacion.conceptId'] = params.prestacionDestino;
+    }
+    return ReglasTOP.findOne(query);
 }

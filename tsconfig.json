@@ -20,6 +20,9 @@
             ],
             "@andes/drive/*": [
                 "./packages/drive/*"
+            ],
+            "@andes/unit-test": [
+                "./packages/unit-testing/index.ts"
             ]
         },
         "typeRoots": [

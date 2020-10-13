@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as CamasController from './camas.controller';
+import * as SalaComunController from './sala-comun/sala-comun.controller';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
@@ -22,8 +23,21 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
+    const { capa, fecha } = req.query;
 
-    const result = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
+    let salas = [];
+    if (capa !== 'estadistica') {
+        salas = await SalaComunController.listarSalaComun({ organizacion: organizacion._id, fecha: moment(fecha).toDate() });
+        for (const sala of salas) {
+            sala['sala'] = true;
+            sala['unidadOrganizativa'] = sala.unidadOrganizativas[0];
+            sala['estado'] = sala.paciente ? 'ocupada' : 'disponible';
+        }
+    }
+
+    const camas = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
+
+    const result = [...camas, ...salas];
 
     res.json(result);
 }));
@@ -78,7 +92,7 @@ router.get('/integrity-check-camas', Auth.authenticate(), asyncHandler(async (re
     const from = req.query.desde;
     const to = req.query.hasta;
 
-    const listaInconsistencias = await CamasController.integrityCheck({ organizacion, ambito, capa}, { cama, from, to });
+    const listaInconsistencias = await CamasController.integrityCheck({ organizacion, ambito, capa }, { cama, from, to });
     return res.json(listaInconsistencias);
 }));
 

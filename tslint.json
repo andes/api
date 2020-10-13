@@ -102,7 +102,10 @@
         ],
         "no-implicit-dependencies": [
             true,
-            "dev"
+            [
+                "mongodb-memory-server-global",
+                "@andes/unit-test"
+            ]
         ],
         "no-unused-expression": true,
         "no-var-keyword": true,

@@ -8,7 +8,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 
 
-export let schema = new mongoose.Schema({
+export const PrestacionSchema = new mongoose.Schema({
     inicio: {
         type: String,
         enum: ['top', 'agenda', 'fuera-agenda', 'internacion'],
@@ -150,7 +150,7 @@ export let schema = new mongoose.Schema({
 }, { usePushEach: true } as any);
 
 // Valida el esquema
-schema.pre('save', function (next) {
+PrestacionSchema.pre('save', function (next) {
     let prestacion: any = this;
     if (!prestacion.inicio) {
         prestacion.inicio = getInicioPrestacion(prestacion);
@@ -227,13 +227,13 @@ function deepSearch(registros: any[], id: string | mongoose.Types.ObjectId) {
     return null;
 }
 
-schema.methods.findRegistroById = function (id: string | mongoose.Types.ObjectId) {
+PrestacionSchema.methods.findRegistroById = function (id: string | mongoose.Types.ObjectId) {
     const regs = this.ejecucion.registros || [];
     return deepSearch(regs, id);
 };
 
 
-schema.methods.getRegistros = function () {
+PrestacionSchema.methods.getRegistros = function () {
     let registrosInternos = [];
     const registros = this.ejecucion.registros;
     registros.forEach(reg => {
@@ -249,31 +249,36 @@ schema.methods.getRegistros = function () {
 };
 
 // Habilitar plugin de auditoría
-schema.plugin(AuditPlugin);
-schema.index({ 'solicitud.turno': 1 });
-schema.index({ 'paciente.id': 1 });
-schema.index({
+PrestacionSchema.plugin(AuditPlugin);
+PrestacionSchema.index({ 'solicitud.turno': 1 });
+PrestacionSchema.index({ 'paciente.id': 1 });
+PrestacionSchema.index({
     'solicitud.organizacion.id': 1,
     'solicitud.ambitoOrigen': 1,
     'ejecucion.fecha': 1,
     'solicitud.tipoPrestacion.conceptId': 1
 });
-schema.index({
+PrestacionSchema.index({
     createdAt: 1,
     'solicitud.organizacion.id': 1,
     'solicitud.organizacionOrigen.id': 1
 }, { name: 'TOP-ENTRADA', partialFilterExpression: { inicio: 'top' } });
-schema.index({
+PrestacionSchema.index({
     createdAt: 1,
     'solicitud.organizacionOrigen.id': 1,
     'solicitud.organizacion.id': 1,
 }, { name: 'TOP-SALIDA', partialFilterExpression: { inicio: 'top' } });
 
-schema.index({
+PrestacionSchema.index({
     'solicitud.organizacion.id': 1,
     'solicitud.ambitoOrigen': 1,
     'solicitud.tipoPrestacion.conceptId': 1,
     'ejecucion.registros.valor.informeIngreso.fechaIngreso': 1,
 }, { sparse: true });
 
-export let model = mongoose.model('prestacion', schema, 'prestaciones');
+PrestacionSchema.index({
+    'solicitud.prestacionOrigen': 1,
+    'paciente.id': 1
+}, { sparse: true });
+
+export const Prestacion = mongoose.model('prestacion', PrestacionSchema, 'prestaciones');

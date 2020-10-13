@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { model as Prestacion } from '../schemas/prestacion';
+import { Prestacion } from '../schemas/prestacion';
 
 /**
  * Función recursiva que permite recorrer un objeto y todas sus propiedades

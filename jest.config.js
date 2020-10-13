@@ -7,5 +7,7 @@ module.exports = {
     testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     testEnvironment: 'node',
-    moduleNameMapper: {}
+    moduleNameMapper: {
+        '@andes/unit-test': '<rootDir>/packages/unit-testing/index.ts'
+    }
 }

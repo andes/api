@@ -5,7 +5,7 @@ import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from './../../../config.private';
 import moment = require('moment');
 import { InformeRUP } from '../informe-rup/informe-rup';
-import { model as Prestacion } from '../../rup/schemas/prestacion';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import { InformeCenso } from '../informe-censo/informe-censo';
 import { RecuperoCosto } from '../recupero-costo/recupero';
 import { ConstanciaPuco } from '../puco/constancia-puco';

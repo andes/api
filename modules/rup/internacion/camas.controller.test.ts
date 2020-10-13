@@ -1,8 +1,6 @@
-const mongoose = require('mongoose');
-
 import * as moment from 'moment';
-import { MongoMemoryServer } from 'mongodb-memory-server-global';
-import { model as Prestaciones } from '../schemas/prestacion';
+import { Types } from 'mongoose';
+import { Prestacion } from '../schemas/prestacion';
 import { store, findById, search, patch, changeTime, listaEspera } from './camas.controller';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import { CamaEstados } from './cama-estados.schema';
@@ -12,43 +10,25 @@ import { EstadosCtr } from './estados.routes';
 import { Auth } from '../../../auth/auth.class';
 import { patch as patchEstados } from './cama-estados.controller';
 import { integrityCheck as checkIntegridad } from './camas.controller';
-import { ObjectId } from 'bson';
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
+import { createInternacionPrestacion, estadoOcupada } from './test-utils';
+import { getFakeRequest, setupUpMongo } from '@andes/unit-test';
 
 const ambito = 'internacion';
 const capa = 'medica';
-let mongoServer: any;
 let cama: any;
 let idCama: any;
 let organizacion: any;
 
-beforeAll(async () => {
-    mongoServer = new MongoMemoryServer();
-    const mongoUri = await mongoServer.getConnectionString();
-    // const mongoUri = 'mongodb://localhost:27017/andes';
-    mongoose.connect(mongoUri);
-});
+const REQMock = getFakeRequest();
 
-
-afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-});
-
-
-const REQMock: any = {
-    user: {
-        usuario: { nombre: 'JUAN' }
-    }
-};
+setupUpMongo();
 
 function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
     return {
         esMovimiento: true,
         fecha: moment().subtract(cantidad, unidad).toDate(),
         organizacion: {
-            _id: mongoose.Types.ObjectId('57e9670e52df311059bc8964'),
+            _id: Types.ObjectId('57e9670e52df311059bc8964'),
             nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
         },
         ambito: 'internacion',
@@ -96,7 +76,7 @@ describe('Internacion - camas', () => {
         await Camas.remove({});
         await CamaEstados.remove({});
         await Estados.remove({});
-        await Prestaciones.remove({});
+        await Prestacion.remove({});
         cama = await store(seedCama(1, 'h') as any, REQMock);
         idCama = String(cama._id);
         organizacion = cama.organizacion._id;
@@ -241,7 +221,7 @@ describe('Internacion - camas', () => {
     });
 
     test('Cama - Lista Espera con Cama Disponible', async () => {
-        const nuevaPrestacion: any = new Prestaciones(prestacion());
+        const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
         await nuevaPrestacion.save();
 
@@ -252,10 +232,10 @@ describe('Internacion - camas', () => {
     });
 
     test('Cama - Lista Espera con Cama Ocupada', async () => {
-        const nuevoOcupado = estadoOcupada();
+        const nuevoOcupado = estadoOcupada(new Date());
         await CamasEstadosController.store({ organizacion, ambito, capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
-        const nuevaPrestacion: any = new Prestaciones(prestacion());
+        const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
         await nuevaPrestacion.save();
 
@@ -491,7 +471,7 @@ describe('Internacion - camas', () => {
                 capa
             },
             {
-                cama:  null,
+                cama: null,
                 from: null,
                 to: moment().add(6, 'h').toDate()
             }
@@ -640,7 +620,7 @@ describe('Internacion - camas', () => {
                 capa
             },
             {
-                cama:  null,
+                cama: null,
                 from: null,
                 to: null
             }
@@ -703,7 +683,7 @@ describe('Internacion - camas', () => {
                 capa
             },
             {
-                cama:  cama._id,
+                cama: cama._id,
                 from: null,
                 to: null
             }
@@ -804,7 +784,7 @@ describe('Internacion - camas', () => {
             }
         }, REQMock);
 
-        const idInternacion = mongoose.Types.ObjectId();
+        const idInternacion = Types.ObjectId();
         // LIBERA CAMA
         await patch({
             organizacion: cama.organizacion,
@@ -902,341 +882,3 @@ describe('Internacion - camas', () => {
     });
 });
 
-function estadoOcupada() {
-    return {
-        fecha: moment().toDate(),
-        estado: 'ocupada',
-        unidadOrganizativa: {
-            fsn: 'servicio de adicciones (medio ambiente)',
-            term: 'servicio de adicciones',
-            conceptId: '4561000013106',
-            semanticTag: 'medio ambiente',
-            _id: mongoose.Types.ObjectId('5c8a88e2af621b10273ba23d'),
-            id: mongoose.Types.ObjectId('5c8a88e2af621b10273ba23d')
-        },
-        especialidades: [
-            {
-                _id: mongoose.Types.ObjectId('5c95036cc5861a722ddd563d'),
-                fsn: 'medicina general (calificador)',
-                term: 'medicina general',
-                conceptId: '394802001',
-                semanticTag: 'calificador'
-            }
-        ],
-        esCensable: true,
-        genero: {
-            fsn: 'género femenino (hallazgo)',
-            term: 'género femenino',
-            conceptId: '703118005',
-            semanticTag: 'hallazgo'
-        },
-        paciente: {
-            claveBlocking: [
-                'ANSRALN',
-                'ANSRN',
-                'ALNNTN',
-                '6496566365',
-                '6496'
-            ],
-            entidadesValidadoras: [
-                'Sisa',
-                'RENAPER'
-            ],
-            _id: mongoose.Types.ObjectId('5d3af64e5086740d0f5bc6b5'),
-            identificadores: [
-                {
-                    entidad: 'SIPS',
-                    valor: '733776'
-                }
-            ],
-            contacto: [
-                {
-                    activo: true,
-                    _id: mongoose.Types.ObjectId('5cf4f5facdb7f026ed635a77'),
-                    tipo: 'celular',
-                    valor: '2995166965',
-                    ranking: 0,
-                    ultimaActualizacion: '2019-06-03T10:26:09.207Z'
-                }
-            ],
-            direccion: [],
-            relaciones: [],
-            financiador: [],
-            carpetaEfectores: [],
-            notas: [],
-            documento: '40616354',
-            estado: 'validado',
-            nombre: 'AILEN ANTONELA',
-            apellido: 'ANZORENA',
-            sexo: 'femenino',
-            genero: 'femenino',
-            fechaNacimiento: '1997-11-01T03:00:00.000Z',
-            estadoCivil: null,
-            activo: true,
-            createdAt: '2019-04-09T10:15:12.355Z',
-            createdBy: {
-                id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
-                nombreCompleto: 'Miriam Lorena Sanchez',
-                nombre: 'Miriam Lorena',
-                apellido: 'Sanchez',
-                username: 29882039,
-                documento: 29882039,
-                organizacion: cama.organizacion
-            },
-            scan: '00249041503@ANZORENA@AILN ANTONELA@F@40616354@A@01/11/1997@25/02/2014',
-            updatedAt: '2019-07-26T12:47:10.703Z',
-            updatedBy: {
-                id: mongoose.Types.ObjectId('5b5a00ae43563f10834c067c'),
-                nombreCompleto: 'MARIA RAQUEL MU�OZ',
-                nombre: 'MARIA RAQUEL',
-                apellido: 'MU�OZ',
-                username: 27932209,
-                documento: 27932209,
-                organizacion: cama.organizacion
-            },
-            cuil: '27406163542',
-            reportarError: false
-        },
-        idInternacion: mongoose.Types.ObjectId('5d3af64ec7d7a7158e23c356'),
-        observaciones: null,
-        esMovimiento: true,
-        sugierePase: null
-    };
-}
-
-function prestacion() {
-    return {
-        _id: mongoose.Types.ObjectId('5d3af64ec8d7a7158e12c242'),
-        solicitud: {
-            tipoPrestacion: {
-                fsn: 'admisión hospitalaria (procedimiento)',
-                semanticTag: 'procedimiento',
-                conceptId: '32485007',
-                term: 'internación'
-            },
-            tipoPrestacionOrigen: {
-            },
-            organizacion: {
-                _id: cama.organizacion._id,
-                nombre: cama.organizacion.nombre,
-                id: cama.organizacion._id,
-            },
-            profesional: {
-                id: mongoose.Types.ObjectId('58f74fd4d03019f919ea1a4b'),
-                nombre: 'LEANDRO MARIANO JAVIER',
-                apellido: 'DERGO',
-                documento: '26331447'
-            },
-            ambitoOrigen: 'internacion',
-            fecha: '2019-07-29T22:00:00.000Z',
-            turno: null,
-            registros: []
-        },
-        ejecucion: {
-            organizacion: cama.organizacion,
-            fecha: '2019-07-29T22:00:00.000Z',
-            registros: [
-                {
-                    privacy: {
-                        scope: 'public'
-                    },
-                    _id: mongoose.Types.ObjectId('5d4c717820cc5bcbad5987c6'),
-                    destacado: false,
-                    esSolicitud: false,
-                    esDiagnosticoPrincipal: false,
-                    relacionadoCon: [],
-                    registros: [],
-                    nombre: 'documento de solicitud de admisión',
-                    concepto: {
-                        fsn: 'documento de solicitud de admisión (elemento de registro)',
-                        semanticTag: 'elemento de registro',
-                        conceptId: '721915006',
-                        term: 'documento de solicitud de admisión'
-                    },
-                    valor: {
-                        informeIngreso: {
-                            fechaIngreso: moment().subtract(1, 'd').toDate(),
-                            horaNacimiento: '2019-08-08T18:55:43.192Z',
-                            edadAlIngreso: '86 año/s',
-                            origen: 'Emergencia',
-                            ocupacionHabitual: 'Jubilado, retirado',
-                            situacionLaboral: 'No trabaja y no busca trabajo',
-                            nivelInstruccion: 'Primario completo',
-                            especialidades: [
-                                {
-                                    conceptId: '394802001',
-                                    fsn: 'medicina general (calificador)',
-                                    semanticTag: 'calificador',
-                                    term: 'medicina general'
-                                }
-                            ],
-                            obraSocial: {
-                                nombre: 'INSTITUTO NACIONAL DE SERVICIOS SOCIALES PARA JUBILADOS Y PENSIONADOS',
-                                codigoFinanciador: 500807.0
-                            },
-                            nroCarpeta: null,
-                            motivo: 'neumonia',
-                            organizacionOrigen: null,
-                            profesional: {
-                                _id: mongoose.Types.ObjectId('58f74fd4d03019f919ea1a4b'),
-                                nombre: 'LEANDRO MARIANO JAVIER',
-                                apellido: 'DERGO',
-                                documento: '26331447',
-                                nombreCompleto: 'DERGO, LEANDRO MARIANO JAVIER',
-                                id: mongoose.Types.ObjectId('58f74fd4d03019f919ea1a4b')
-                            },
-                            PaseAunidadOrganizativa: null
-                        }
-                    },
-                    createdAt: '2019-08-08T19:01:12.952Z',
-                    createdBy: {
-                        id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
-                        nombreCompleto: 'Miriam Lorena Sanchez',
-                        nombre: 'Miriam Lorena',
-                        apellido: 'Sanchez',
-                        username: 29882039.0,
-                        documento: 29882039.0,
-                        organizacion: cama.organizacion
-                    },
-                    updatedAt: '2019-10-29T16:32:18.491Z',
-                    updatedBy: {
-                        id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),
-                        nombreCompleto: 'KATHERINE DANIELA SALINAS',
-                        nombre: 'KATHERINE DANIELA',
-                        apellido: 'SALINAS',
-                        username: 36489710.0,
-                        documento: 36489710.0,
-                        organizacion: cama.organizacion
-                    }
-                },
-                {
-                    privacy: {
-                        scope: 'public'
-                    },
-                    _id: mongoose.Types.ObjectId('5d4c720c2dbb2023a5576c35'),
-                    destacado: false,
-                    esSolicitud: false,
-                    esDiagnosticoPrincipal: true,
-                    relacionadoCon: [],
-                    registros: [],
-                    esPrimeraVez: true,
-                    nombre: 'alta del paciente',
-                    concepto: {
-                        fsn: 'alta del paciente (procedimiento)',
-                        semanticTag: 'procedimiento',
-                        conceptId: '58000006',
-                        term: 'alta del paciente'
-                    },
-                    valor: {
-                        InformeEgreso: {
-                            fechaEgreso: moment(new Date()).add(1, 'days'),
-                            nacimientos: [
-                                {
-                                    pesoAlNacer: null,
-                                    condicionAlNacer: null,
-                                    terminacion: null,
-                                    sexo: null
-                                }
-                            ],
-                            procedimientosQuirurgicos: [],
-                            causaExterna: {
-                                producidaPor: null,
-                                lugar: null,
-                                comoSeProdujo: null
-                            },
-                            diasDeEstada: 1.0,
-                            tipoEgreso: {
-                                id: 'Alta médica',
-                                nombre: 'Alta médica'
-                            },
-                            diagnosticoPrincipal: {
-                                _id: mongoose.Types.ObjectId('59bbf1ed53916746547cbdba'),
-                                idCie10: 1187.0,
-                                idNew: 3568.0,
-                                capitulo: '10',
-                                grupo: '02',
-                                causa: 'J12',
-                                subcausa: '9',
-                                codigo: 'J12.9',
-                                nombre: '(J12.9) Neumonía viral, no especificada',
-                                sinonimo: 'Neumonia viral, no especificada',
-                                descripcion: '10.Enfermedades del sistema respiratorio (J00-J99)',
-                                c2: true,
-                                reporteC2: 'Neumonia',
-                                id: mongoose.Types.ObjectId('59bbf1ed53916746547cbdba')
-                            }
-                        }
-                    },
-                    createdAt: '2019-08-08T19:03:40.224Z',
-                    createdBy: {
-                        id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
-                        nombreCompleto: 'Miriam Lorena Sanchez',
-                        nombre: 'Miriam Lorena',
-                        apellido: 'Sanchez',
-                        username: 29882039.0,
-                        documento: 29882039.0,
-                        organizacion: cama.organizacion
-                    },
-                    updatedAt: '2019-10-29T16:32:18.491Z',
-                    updatedBy: {
-                        id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),
-                        nombreCompleto: 'KATHERINE DANIELA SALINAS',
-                        nombre: 'KATHERINE DANIELA',
-                        apellido: 'SALINAS',
-                        username: 36489710.0,
-                        documento: 36489710.0,
-                        organizacion: cama.organizacion
-                    }
-                }
-            ]
-        },
-        noNominalizada: false,
-        paciente: {
-            id: mongoose.Types.ObjectId('5bf7f2b3beee2831326e6c4c'),
-            nombre: 'HERMINIA',
-            apellido: 'URRA',
-            documento: '2305918',
-            sexo: 'femenino',
-            fechaNacimiento: '1932-08-15T04:00:00.000Z'
-        },
-        estados: [
-            {
-                idOrigenModifica: null,
-                motivoRechazo: null,
-                _id: mongoose.Types.ObjectId('5d4c717820cc5bcbad5987c7'),
-                tipo: 'ejecucion',
-                createdAt: '2019-08-08T19:01:12.952Z',
-                createdBy: {
-                    id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
-                    nombreCompleto: 'Miriam Lorena Sanchez',
-                    nombre: 'Miriam Lorena',
-                    apellido: 'Sanchez',
-                    username: 29882039.0,
-                    documento: 29882039.0,
-                    organizacion: cama.organizacion
-                }
-            }
-        ],
-        createdAt: '2019-08-08T19:01:12.952Z',
-        createdBy: {
-            id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
-            nombreCompleto: 'Miriam Lorena Sanchez',
-            nombre: 'Miriam Lorena',
-            apellido: 'Sanchez',
-            username: 29882039.0,
-            documento: 29882039.0,
-            organizacion: cama.organizacion
-        },
-        __v: 3.0,
-        updatedAt: '2019-10-29T16:32:18.491Z',
-        updatedBy: {
-            id: mongoose.Types.ObjectId('5bcdf3ed3f008b2c464fe3a2'),
-            nombreCompleto: 'KATHERINE DANIELA SALINAS',
-            nombre: 'KATHERINE DANIELA',
-            apellido: 'SALINAS',
-            username: 36489710.0,
-            documento: 36489710.0,
-            organizacion: cama.organizacion
-        }
-    };
-}
