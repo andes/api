@@ -6,24 +6,24 @@ export class RecuperoCostoBody extends HTMLComponent {
     <main>
         <section class="ma-50">
             <div class="text-center">
-            <b>Anexo 2</b> 
+                <b>Anexo 2</b> 
             </div>
             <table class="egt" style="height: 180px; margin-left: auto; margin-right: auto;" width="90%">
                 <tbody>
                     <tr>
                         <td colspan="8"><label>COMPROBANTE DE ATENCION DE BENEFICIARIOS DE AGENTES DEL SEGURO SALUD</label></td>
                         <td colspan="1"><label>Fecha</label>
-                            {{ fechaActual }}
+                            <label>{{ fechaActual }}</label>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="8">
                             <label>Denominacion HPdGP</label>  
-                            {{ efector }}
+                            <label>{{ efector }}</label>                            
                         </td> 
                         <td colspan="1">
-                            <label>Codigo HPdGD-REFES</label> 
-                            {{ efectorCodigoSisa }}
+                            <label>Codigo HPdGD-REFES</label>
+                            <label>{{ efectorCodigoSisa }}</label>                            
                         </td>
                     </tr>
                     <tr class="h50">
@@ -33,12 +33,13 @@ export class RecuperoCostoBody extends HTMLComponent {
                     </tr>                  
                     <tr class="h50">
                         <td colspan="8">
-                            <label>Apellido y Nombre:</label>  
-                            {{ nombre }}
+                            <label>Apellido y Nombre:</label>
+                            <label>{{ nombre }}</label>  
+                            
                         </td>               
                         <td colspan="1">
-                            <label>DNI N:</label>     
-                            {{ dni }}
+                            <label>DNI N:</label>
+                            <label>{{ dni }}</label>                                 
                         </td>
                     </tr>                               
                 </tbody>
@@ -68,10 +69,10 @@ export class RecuperoCostoBody extends HTMLComponent {
                         <td><label for="">Hijo</label>  <input class="ml25" type="checkbox" name="" id=""></td>
                         <td><label for="">Otro</label>  <input class="ml25" type="checkbox" name="" id=""></td>
                         <td >
-                            {{ sexo }}
+                            <label>{{ sexo }}</label>
                         </td>
                         <td>
-                            {{ edad }}
+                            <label>{{ edad }}</label>                            
                         </td>
                     </tr> 
                 </tbody>
@@ -84,15 +85,15 @@ export class RecuperoCostoBody extends HTMLComponent {
                         <td width="15%"></td>
                         <td></td>                        
                         <td width="30%">
-                            <label>Fecha de Prestación</label> 
-                            {{ horaInicio }}
+                            <label>Fecha de Prestación</label>
+                            <label>{{ horaInicio }}</label>                            
                         </td>
                     </tr>
                     <tr class="h50">
                         <td rowspan="2"><label>Consulta</label> <input class="ml25" type="checkbox" name="" id=""></td>
                         <td><label for="">Especialidad</label></td>
                         <td colspan="2">
-                            {{ tipoPrestacion }}
+                            <label>{{ tipoPrestacion }}</label>                            
                         </td>
                     </tr>
                     <tr class="h50">
@@ -149,10 +150,10 @@ export class RecuperoCostoBody extends HTMLComponent {
                     </tr>
                     <tr class="h50">
                         <td colspan="3" >
-                            {{ obraSocial }}
+                            <label>{{ obraSocial }}</label>                            
                         </td>
                         <td colspan="3">
-                            {{ codigoOs }}
+                            <label>{{ codigoOs }}</label>                            
                         </td> 
                     </tr>                       
                 </tbody>
