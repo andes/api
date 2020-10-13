@@ -32,6 +32,14 @@ router.post('/censoMensual', async (req: any, res, next) => {
     return res.download(fileName);
 });
 
+router.post('/anexo-dos', async (req: any, res) => {
+    let docRecupero = new RecuperoCosto(req);
+    const opciones = { header: { height: '3cm' } };
+    const fileName: any = await docRecupero.informe(opciones);
+
+    res.download(fileName);
+});
+
 /**
  * Se usa POST para generar la descarga porque se envían datos
  * que van a ser parte del archivo
@@ -114,12 +122,5 @@ router.post('/constanciaPuco/:tipo?', async (req: any, res) => {
     res.download(fileName);
 });
 
-router.post('/anexoDos/:tipo?', async (req: any, res) => {
-    let docRecupero = new RecuperoCosto(req);
-    const opciones = { header: { height: '3cm' } };
-    const fileName: any = await docRecupero.informe(opciones);
-
-    res.download(fileName);
-});
 
 export = router;
