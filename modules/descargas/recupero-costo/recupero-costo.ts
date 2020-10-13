@@ -2,7 +2,7 @@ import { InformePDF, getAssetsURL } from '../model/informe.class';
 import { RecuperoCostoBody } from './recupero-costo-body';
 import { RecuperoCostoHeader } from './recupero-costo-header';
 
-export class ConstanciaPuco extends InformePDF {
+export class RecuperoCosto extends InformePDF {
     constructor(public req) {
         super();
     }

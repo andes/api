@@ -7,7 +7,7 @@ import moment = require('moment');
 import { InformeRUP } from '../informe-rup/informe-rup';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { InformeCenso } from '../informe-censo/informe-censo';
-import { RecuperoCosto } from '../recupero-costo/recupero';
+import { RecuperoCosto } from '../recupero-costo/recupero-costo';
 import { ConstanciaPuco } from '../puco/constancia-puco';
 
 const router = express.Router();
