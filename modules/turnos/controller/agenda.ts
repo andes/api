@@ -1248,7 +1248,10 @@ export function getConsultaDiagnostico(params) {
         const pipeline2 = [
             {
                 $match: {
+                    createdAt: { $lte: new Date(params.horaFin), $gte: new Date(params.horaInicio) },
                     'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+                    // No es lo correcto pero es un fix tentativo
+                    'createdBy.organizacion.id': String(params.organizacion)
                 }
             },
             {
