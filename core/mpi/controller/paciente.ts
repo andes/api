@@ -185,10 +185,13 @@ export async function matching(data) {
             break;
         case 'multimatch':
             {
-                const words = data.cadenaInput.trim().toLowerCase().split(' ');
+                let words = data.cadenaInput.replace(/([-_()\[\]{}+?*.$\^|¨`´~,:#<>¡!\\])/g, '');
+                words = words.trim().toLowerCase().split(' ');
                 let andQuery = [];
                 words.forEach(w => {
-                    andQuery.push({ tokens: RegExp(`^${w}`) });
+                    if (w.length) {
+                        andQuery.push({ tokens: RegExp(`^${w}`) });
+                    }
                 });
                 andQuery.push({ activo: { $eq: true } });
                 query = {
