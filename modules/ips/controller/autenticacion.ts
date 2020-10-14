@@ -2,17 +2,19 @@ import * as jwt from 'jsonwebtoken';
 import { handleHttpRequest } from '../../../utils/requestHandler';
 
 export class SaludDigitalClient {
-    static SystemPatient = 'https://federador.msal.gob.ar/patient-id';
+    // static SystemPatient = 'https://federador.msal.gob.ar/patient-id';
 
     private expiresIn = 60 * 15 * 1000;  /* 15 min */
     private token: string;
     private host: string;
+    private hostBus: string;
     private dominio: string;
     private secret: string;
 
     constructor(dominio, host, secret) {
         this.dominio = dominio;
         this.host = host;
+        this.hostBus = 'http://mhd.sisa.msal.gov.ar/fhir';
         this.secret = secret;
     }
 
@@ -134,45 +136,60 @@ export class SaludDigitalClient {
     }
 
     async solicitud({ custodian = null, fechaDesde = null, fechaHasta = null, patient, loinc }) {
-        // let url = `${this.host}/fhir/DocumentReference?subject:identifier=${this.dominio}|${patient}&class=https://loinc.org/|${loinc}`;
-        let url = 'https://demo5647849.mockable.io/repositorio-documentos/fhir/DocumentReference%3Fsubject:Patient.identifier=http://www.hospitalitaliano.org.ar%7C540153&class=https://loinc.org/%7C60591-5';
-
-        if (custodian) {
-            url += `&custodian=${custodian}`;
-        }
-        if (fechaDesde) {
-            url += `&date=ge${fechaDesde}`;
-        }
-        if (fechaHasta) {
-            url += `&date=le${fechaHasta}`;
-        }
-        const options = {
-            url,
-            method: 'GET',
-            headers: {
-                Authorization: ''
+        // mokeable
+        // let url = 'https://demo5647849.mockable.io/repositorio-documentos/fhir/DocumentReference%3Fsubject:Patient.identifier=http://www.hospitalitaliano.org.ar%7C540153&class=https://loinc.org/%7C60591-5';
+        try {
+            let url = 'http://demo7712638.mockable.io/hashDelDocumento';
+            // let url = `${this.hostBus}/DocumentReference?subject:identifier=${this.dominio}|${patient}&type=https://loinc.org|${loinc}`;
+            
+            // VOLVER A HABILITAR EL CUSTODIAN
+            // if (custodian) {
+            //     url += `&custodian=${custodian}`;
+            // }
+            if (fechaDesde) {
+                url += `&date=ge${fechaDesde}`;
             }
-        };
-
-        const [status, body] = await handleHttpRequest(options);
-        if (status >= 200 && status <= 399) {
-            const bundle = JSON.parse(body);
-            if (bundle.total > 0) {
-                const resp = bundle.entry.map((r) => {
-                    return {
-                        id: r.resource.id,
-                        identifier: r.resource.identifier,
-                        custodian: r.custodian,
-                        urlBinary: r.content[0].attachment.url
-                    };
-                });
-
-                return resp;
+            if (fechaHasta) {
+                url += `&date=le${fechaHasta}`;
             }
+            const options = {
+                url,
+                method: 'GET',
+                headers: {
+                    Authorization: 'Bearer TOKEN'  // Queda pendiente el token
+                }
+            };
+            const [status, body] = await handleHttpRequest(options);
+            if (status >= 200 && status <= 399) {
+                const bundle = JSON.parse(body);
+                if (bundle.entry.length > 0) {
+                    const resp = bundle.entry.map((r) => {
+                        // provisorio del mock
+                        return {
+                            id: r.resource.id,
+                            identifier: r.resource.identifier,
+                            title: r.resource.title,
+                            custodian: r.resource.custodian,
+                            section: r.resource.section
+                        }
+                        // return {
+                        //     id: r.resource.id,
+                        //     identifier: r.resource.identifier,
+                        //     custodian: r.custodian,
+                        //     urlBinary: r.content[0].attachment.url
+                        // };
+                    });
+                    return resp;
+                }
+            } else {
+                return [];
         }
-        return [];
 
-    }
+        } catch(err) {
+                return err
+        }
+}
+
     async getBinary(urlBinary) {
         const url = `${urlBinary}`;
         const options = {
@@ -188,25 +205,4 @@ export class SaludDigitalClient {
         }
     }
 }
-/**
- * IPS
- *
- * # Autenticacion
- *  - [OK] Generar token
- *  - [OK] Login
- *  - [OK] Verificar token
- *
- * # Profesional
- *  - [OK] Login
- *  - Consulta si el paciente esta federado:
- *      - NO: federa el paciente y guarda el id en identifier
- *      - SI: nada
- *  - [OK] Consulta dominios
- *  - [OK]Consulta DocumentReference
- *  - [OK]Descarga archivo Binary
- *  - Visualización
- *
- *  # BUS DE INTEROPERABILIDAD
- *   - Consulta DocumentReference por paciente
- *   - Responder con un IPS Generado
- */
+

@@ -8,7 +8,7 @@ import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import { Agenda } from '../../../modules/turnos/schemas/agenda';
 import { sisa, renaperToAndes, sisaToAndes, renaperv3 } from '@andes/fuentes-autenticas';
-import { sisa as sisaConfig } from '../../../config.private';
+import { sisa as sisaConfig, FHIR as FhirConfig } from '../../../config.private';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 import * as configPrivate from '../../../config.private';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
@@ -544,8 +544,9 @@ export async function getPatientFromFederador(pacienteAndes, req: any) {
     if (sexoPaciente === 'otro') {
         return { paciente: pacienteAndes, found: false };
     }
-    // HARDCODEAMOS LOS DATOS POR EL MOMENTOS PARA HACERLO RAPIDO
-    const clientSD = new SaludDigitalClient('https://app.andes.gob.ar', 'https://testapp.hospitalitaliano.org.ar', 'federar');
+
+    // HARDCODEAMOS LOS DATOS POR EL MOMENTOS PARA HACERLO RAPIDO (esto debera ser una funcionalidad adicional del microservicio)
+    const clientSD = new SaludDigitalClient(FhirConfig.domain, FhirConfig.ips_host, FhirConfig.secret);
     const NAME = 'Andes';
     const ROLE = 'federador';
     const IDENT = 'IPS_IDENT';
