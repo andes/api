@@ -153,10 +153,22 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         {
             $lookup: {
                 from: 'internacionCamas',
-                localField: 'idCama',
-                foreignField: '_id',
+                let: {
+                    id: '$idCama',
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$_id', '$$id'] },
+                                ]
+                            }
+                        }
+                    },
+                    { $project: { createdAt: 0, createdBy: 0 }}
+                ],
                 as: 'cama'
-
             }
         },
         {
