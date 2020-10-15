@@ -41,13 +41,6 @@ export async function validar(documento: string, sexo: string) {
         if (ciudadanoRenaper.direccion.length) {
             // Completamos campos correspondientes a dirección legal
             let ubicacionRena = ciudadanoRenaper.direccion[0].ubicacion;
-            const ubicacionMatched = await ciudadanoRenaper.matchUbicacion(ubicacionRena.provincia.nombre, ubicacionRena.localidad.nombre);
-            ubicacionRena = {
-                pais: (ubicacionMatched.provincia) ? ubicacionMatched.provincia.pais : null,
-                provincia: (ubicacionMatched.provincia) ? ubicacionMatched.provincia : null,
-                localidad: (ubicacionMatched.localidad) ? ubicacionMatched.localidad : null,
-                barrio: null,
-            };
             ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
             ciudadanoRenaper.direccion[1].ubicacion = ubicacionRena;
             ciudadanoRenaper.direccion[1].geoReferencia = null;
