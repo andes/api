@@ -172,7 +172,7 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
  */
 export async function matching(data) {
     let query;
-
+    const ExpRegFilter = /([-_()\[\]{}+?*.$\^|¨`´~,:#<>¡!\\])/g;
     switch (data.type) {
         case 'simplequery':
             query = {
@@ -185,11 +185,11 @@ export async function matching(data) {
             break;
         case 'multimatch':
             {
-                let words = data.cadenaInput.replace(/([-_()\[\]{}+?*.$\^|¨`´~,:#<>¡!\\])/g, '');
+                let words = data.cadenaInput.replace(ExpRegFilter, '');
                 words = words.trim().toLowerCase().split(' ');
                 let andQuery = [];
                 words.forEach(w => {
-                    if (w.length) {
+                    if (w.length > 0) {
                         andQuery.push({ tokens: RegExp(`^${w}`) });
                     }
                 });
@@ -216,9 +216,12 @@ export async function matching(data) {
                 let andQuery = [];
                 if (data.filtros.cadenaInput) {
                     // si se ingresa una cadena de texto se busca matching con tokens de paciente
-                    const words = data.filtros.cadenaInput.trim().toLowerCase().split(' ');
+                    let words = data.filtros.cadenaInput.replace(ExpRegFilter, '');
+                    words = words.trim().toLowerCase().split(' ');
                     words.forEach(w => {
-                        andQuery.push({ tokens: RegExp(`^${w}`) });
+                        if (w.length > 0) {
+                            andQuery.push({ tokens: RegExp(`^${w}`) });
+                        }
                     });
                     delete data.filtros.cadenaInput;
                 }
