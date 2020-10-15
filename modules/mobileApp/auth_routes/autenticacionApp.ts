@@ -49,7 +49,7 @@ router.post('/login', (req, res, next) => {
                     } else {
                         user.password = req.body.new_password;
                         user.activacionApp = true;
-                        user.save();
+                        await authController.updateAccount(user, { lastLogin: new Date() });
                     }
 
                 }
@@ -63,7 +63,6 @@ router.post('/login', (req, res, next) => {
                 let resultado = await buscarPaciente(user.pacientes[0].id);
                 if (resultado.paciente) {
                     user.pacientes[0] = resultado.paciente.basicos();
-                    authController.updateAccount(user, { lastLogin: new Date() });
                     EventCore.emitAsync('mobile:patient:login', user);
                 }
                 return;
