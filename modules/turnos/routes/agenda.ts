@@ -580,9 +580,11 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         event = { object: 'turno', accion: 'suspender', data: turno };
                         break;
                     case 'codificarTurno':
-                        agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
+                        try {
+                            await agendaCtrl.codificarTurno(req, data, turnos[y]);
+                        } catch (err2) {
                             return next(err2);
-                        });
+                        }
                         break;
                     case 'guardarNotaTurno':
                         agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
