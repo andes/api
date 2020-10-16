@@ -18,7 +18,7 @@ export async function getTurnoById(turnoId: string | mongoose.Types.ObjectId) {
         ]
     });
     if (!agendaEncontrada) {
-        return null;
+        return {};
     }
     for (const bloque of agendaEncontrada.bloques) {
         const turno = bloque.turnos.id(turnoId);
@@ -30,7 +30,7 @@ export async function getTurnoById(turnoId: string | mongoose.Types.ObjectId) {
     if (sobreturno) {
         return { turno: sobreturno, agenda: agendaEncontrada, sobreturno: true };
     }
-    return null;
+    return {};
 }
 
 
