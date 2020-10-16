@@ -272,10 +272,6 @@ export const logKeys = {
         key: 'mpi:auditoria:setActivo',
         operacion: 'Activar/desactivar paciente'
     },
-    mpiCorrector: {
-        key: 'mpi:mpiCorrector:update',
-        operacion: 'Corrige nombre y apellido del paciente'
-    },
     validacionPaciente: {
         key: 'mpi:validacion',
         operacion: 'Validar paciente'
