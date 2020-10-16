@@ -25,19 +25,11 @@ class UsuariosResource extends ResourceBase {
         apellido: MongoQuery.partialString,
         nombre: MongoQuery.partialString,
         documento: MongoQuery.partialString,
-        search: (value) => {
-            return {
-                $or: [
-                    { documento: MongoQuery.partialString(value) },
-                    { apellido: MongoQuery.partialString(value) },
-                    { nombre: MongoQuery.partialString(value) }
-                ]
-            };
-        },
         organizacion: {
             field: 'organizaciones._id',
             fn: (value) => mongoose.Types.ObjectId(value)
-        }
+        },
+        search: ['documento', 'nombre', 'apellido']
     };
     extrasRoutes = [
         {

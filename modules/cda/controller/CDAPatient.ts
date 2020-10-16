@@ -570,7 +570,7 @@ export function validateMiddleware(req, res, next) {
  */
 
 export function validateSchemaCDA(xmlRaw) {
-    const libxmljs = require('libxmljs');
+    const libxmljs = require('libxmljs2');
     let schemaXML = null;
     function loadSchema() {
         return new Promise((resolve, reject) => {

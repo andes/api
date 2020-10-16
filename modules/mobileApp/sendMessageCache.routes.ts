@@ -10,14 +10,7 @@ class SendMessageCacheResource extends ResourceBase {
     searchFileds = {
         email: MongoQuery.partialString,
         phone: MongoQuery.partialString,
-        search: (value) => {
-            return {
-                $or: [
-                    { email: MongoQuery.partialString(value) },
-                    { phone: MongoQuery.partialString(value) }
-                ]
-            };
-        }
+        search: ['email', 'phone']
     };
 }
 

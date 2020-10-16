@@ -32,23 +32,23 @@ class PacienteResource extends ResourceBase {
                 return { $in: value };
             }
         },
-        relaciones: (value, query) => {
+        relaciones: (value) => {
             return MongoQuery.queryArray('relaciones', value, 'relacion.nombre', 'referencia');
         },
         barrio: {
-            filed: 'direccion.ubicacion.barrio.nombre',
+            field: 'direccion.ubicacion.barrio.nombre',
             fn: MongoQuery.partialString
         },
         localidad: {
-            filed: 'direccion.ubicacion.localidad.nombre',
+            field: 'direccion.ubicacion.localidad.nombre',
             fn: MongoQuery.partialString
         },
         provincia: {
-            filed: 'direccion.ubicacion.provincia.nombre',
+            field: 'direccion.ubicacion.provincia.nombre',
             fn: MongoQuery.partialString
         },
         pais: {
-            filed: 'direccion.ubicacion.pais.nombre',
+            field: 'direccion.ubicacion.pais.nombre',
             fn: MongoQuery.partialString
         },
         nacionalidad: MongoQuery.partialString,
@@ -65,16 +65,7 @@ class PacienteResource extends ResourceBase {
             field: 'updatedAt',
             fn: (value) => (MongoQuery.matchDate(value))
         },
-        search: (value) => {
-            return {
-                $or: [
-                    { documento: MongoQuery.partialString(value) },
-                    { nombre: MongoQuery.partialString(value) },
-                    { apellido: MongoQuery.partialString(value) },
-                    { sexo: MongoQuery.equalMatch(value) }
-                ]
-            };
-        }
+        search: ['documento', 'nombre', 'apellido', 'sexo']
     };
 }
 

@@ -11,13 +11,7 @@ class PacienteAppResource extends ResourceBase {
     searchFileds = {
         documento: MongoQuery.partialString,
         email: MongoQuery.partialString,
-        search: (value) => {
-            return {
-                $or: [
-                    { documento: MongoQuery.partialString(value) }
-                ]
-            };
-        }
+        search: ['documento']
     };
 }
 

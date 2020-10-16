@@ -22,17 +22,18 @@ export async function logAcceso(req, paciente, matricula, motivo, idTurno, idPre
 
 async function execLog(req, paciente, matricula, motivoAcceso, turno, prestacion, bucketNumber) {
     const now = new Date();
-    return HudsAcceso.updateOne(
+    const start = moment(now).startOf('year') as unknown as number;
+    return HudsAcceso.update(
         {
             paciente,
-            start: moment(now).startOf('year'),
+            start,
             bucketNumber
         },
         {
             $inc: { cantidadAccesos: 1 },
             $setOnInsert: {
                 paciente,
-                start: moment(now).startOf('year'),
+                start,
                 bucketNumber
             },
             $push: {
@@ -51,9 +52,8 @@ async function execLog(req, paciente, matricula, motivoAcceso, turno, prestacion
                 }
             }
         },
-        {
-            upsert: true
-        });
+        { upsert: true }
+    );
 }
 
 function user(request) {

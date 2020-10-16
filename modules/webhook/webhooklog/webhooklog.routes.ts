@@ -14,15 +14,7 @@ class WebhookLogResource extends ResourceBase {
             field: 'updatedAt',
             fn: (value) => (MongoQuery.matchDate(value))
         },
-        search: (s) => {
-            let res = {
-                $or: [
-                    { url: MongoQuery.partialString(s) },
-                    { event: MongoQuery.partialString(s) }
-                ]
-            };
-            return res;
-        }
+        search: ['url', 'event']
     };
 }
 
