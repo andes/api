@@ -16,12 +16,28 @@ let logRequest = {
 
 
 export async function exportEspecialidad(done) {
+    const params = {
+        fecha: new Date()
+    };
+    let delete_especialidades = configPrivate.hosts.BI_QUERY + '/queries/profesionales-especialidad/delete';
+    try {
+        await handleHttpRequest({
+            method: 'POST',
+            uri: delete_especialidades,
+            body: { params },
+            json: true,
+            timeout: 50000,
+        });
+    } catch (error) {
+        await andesLog(logRequest, 'andes:profesionalesEspecialidad:bi', null, 'delete', null, null, 'Error eliminando especialidad de profesionales');
+        return (done(error));
+    }
     let url_especialidades = configPrivate.hosts.BI_QUERY + '/queries/profesionales-especialidad/export';
     try {
         await handleHttpRequest({
             method: 'POST',
             uri: url_especialidades,
-            body: {},
+            body: { params },
             json: true,
             timeout: 50000,
         });
@@ -31,3 +47,4 @@ export async function exportEspecialidad(done) {
     }
     done();
 }
+
