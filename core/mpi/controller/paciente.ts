@@ -538,6 +538,62 @@ export async function checkRepetido(nuevoPaciente, incluirTemporales = true): Pr
 }
 
 
+// Función para crear el $match de pacientes con los parámetros correspondientes
+function  createMatchPatient(patient, cantidad) {
+    const uriDNI: any = 'http://www.renaper.gob.ar/dni';
+    let gender;
+    switch (patient.sexo) {
+        case 'femenino':
+            gender = 'female';
+            break;
+        case 'masculino':
+            gender = 'male';
+            break;
+        case 'otro':
+            gender = 'other';
+            break;
+    }
+    return {
+        resourceType: 'Parameters',
+        id: patient.id,
+        parameter: [
+            {
+                name: 'resource',
+                resource:
+                {
+                    resourceType: 'Patient',
+                    identifier: [
+                        {
+                            use: 'usual',
+                            system: uriDNI,
+                            value: patient.documento
+                        }
+                    ],
+                    name: [
+                        {
+                            _family: {
+                                extension: [
+                                    {
+                                        url: 'http://hl7.org/fhir/StructureDefinition/humanname-fathers-family',
+                                        valueString: patient.apellido
+                                    }
+                                ]
+                            },
+                            given: patient.nombre
+                        }
+                    ],
+                    birthDate: patient.fechaNacimiento,
+                    gender
+                }
+            },
+            {
+                name: 'count',
+                valueInteger: cantidad
+            }
+        ]
+    };
+}
+
 // este metodo debería meterlo en las fuentes autenticas!!!!
 export async function getPatientFromFederador(pacienteAndes, req: any) {
     let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
@@ -557,9 +613,9 @@ export async function getPatientFromFederador(pacienteAndes, req: any) {
         ident: IDENT,
         sub: SUB
     };
-    const uriDNI: any = 'http://www.renaper.gob.ar/dni';
+
     const token = await clientSD.obtenerToken(payload);
-    const params = `?identifier=${uriDNI}|${pacienteAndes.documento}`;
+    const params = createMatchPatient(pacienteAndes, 5);
     const patients = await clientSD.search(params, token);
     const pacientesAndes = [];
     patients.forEach(fhirPac => {

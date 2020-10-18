@@ -93,11 +93,12 @@ export class SaludDigitalClient {
 
     // Search provisorio
     async search(params: any, token: any) {
-        const url = `${this.host}/masterfile-federacion-service/fhir/Patient/${params}`;
+        const url = `${this.host}/masterfile-federacion-service/fhir/Patient/$match`;
         const options = {
             url,
-            method: 'GET',
+            method: 'POST',
             // qs: params,
+            body: params,
             json: true,
             headers: {
                 'Content-Type': 'application/json',
