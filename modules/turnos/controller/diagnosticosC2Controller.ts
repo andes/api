@@ -217,6 +217,11 @@ export function getDiagnosticos(params) {
                     'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
                     'diagnostico.codificaciones.codificacionAuditoria.c2': true,
                     'diagnostico.codificaciones.primeraVez': true,
+                    'createdBy.organizacion._id': String(params.organizacion),
+                    createdAt: {
+                        $lte: new Date(params.horaFin),
+                        $gte: new Date(params.horaInicio)
+                    }
                 }
             },
             {
@@ -239,10 +244,6 @@ export function getDiagnosticos(params) {
                     'diagnostico.codificaciones.codificacionAuditoria.c2': true,
                     'diagnostico.codificaciones.primeraVez': true,
                     'prestacion.solicitud.organizacion.id': { $eq: mongoose.Types.ObjectId(params.organizacion) },
-                    $and: [
-                        { 'prestacion.solicitud.fecha': { $lte: new Date(params.horaFin) } },
-                        { 'prestacion.solicitud.fecha': { $gte: new Date(params.horaInicio) } }
-                    ]
                 }
             },
             {
