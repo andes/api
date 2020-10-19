@@ -12,6 +12,9 @@ const capaMiddleware = (req: Request, res: Response, next: express.NextFunction)
     if (req.params?.capa && req.params.capa !== 'estadistica') {
         req.params.capa = 'medica';
     }
+    if (req.body?.capa && req.body.capa !== 'estadistica') {
+        req.body.capa = 'medica';
+    }
     next();
 };
 
@@ -32,7 +35,7 @@ router.get('/:capa/:idInternacion/historial', capaMiddleware, async (req: Reques
     return res.json(historialInternacion);
 });
 
-router.patch('/deshacer', async (req: Request, res: Response, next) => {
+router.patch('/deshacer', capaMiddleware, async (req: Request, res: Response, next) => {
     const cama = req.body;
     const organizacionId = Auth.getOrganization(req);
 

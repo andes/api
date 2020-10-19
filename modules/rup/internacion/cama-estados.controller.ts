@@ -48,7 +48,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         },
         {
             $match: {
-                'estados.deletedAt' : { $exists : false },
+                'estados.deletedAt': { $exists: false },
                 'estados.esMovimiento': true,
                 'estados.fecha': { $lte: fechaSeleccionada }
             }
@@ -103,7 +103,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                     },
                     {
                         $match: {
-                            'estados.deletedAt' : { $exists : false },
+                            'estados.deletedAt': { $exists: false },
                             $expr: {
                                 $gte: ['$estados.fecha', '$$fechaMax'],
                             },
@@ -273,7 +273,7 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
         },
         {
             $match: {
-                'estados.deletedAt' : { $exists : false },
+                'estados.deletedAt': { $exists: false },
                 'estados.fecha': {
                     $lte: moment(hasta).toDate(),
                     $gte: moment(desde).toDate()
@@ -404,7 +404,7 @@ export async function patch({ organizacion, ambito, capa, cama }, from: Date, to
     return result.nModified > 0 && result.ok === 1;
 }
 
-export async function remove({ organizacion, ambito, capa, cama }, date: Date, ) {
+export async function remove({ organizacion, ambito, capa, cama }, date: Date) {
     const result = await CamaEstados.update(
         {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),
@@ -426,6 +426,7 @@ export async function remove({ organizacion, ambito, capa, cama }, date: Date, )
  * Operación especial para borrar un estado logicamente
 */
 export async function deshacerEstadoCama({ organizacion, ambito, capa, cama }, date: Date, user) {
+    date = moment(date).toDate();
     const result = await CamaEstados.update(
         {
             idOrganizacion: wrapObjectId(organizacion),
@@ -444,7 +445,7 @@ export async function deshacerEstadoCama({ organizacion, ambito, capa, cama }, d
         },
         {
             arrayFilters: [{
-                'elemento.fecha': moment(date).toDate(),
+                'elemento.fecha': date,
             }]
         }
     );
