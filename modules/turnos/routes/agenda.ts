@@ -574,7 +574,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         } else {
                             // Caso sobreturno
-                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, -1, data._id);
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, null, data._id);
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         event = { object: 'turno', accion: 'suspender', data: turno };
