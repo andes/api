@@ -431,7 +431,9 @@ export default [
                 key: 'biQueries',
                 title: 'Bi-Queries',
                 type: 'queries'
-            }
+            },
+            { key: 'exportarHuds', title: 'Exportar HUDS de un paciente', type: 'boolean', visibility: 'restricted' },
+
         ]
     },
     {

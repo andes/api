@@ -1,5 +1,6 @@
 import { RoboModel } from './roboSchema';
 import { INotification } from '../../modules/mobileApp/controller/PushClient';
+import { ExportHudsModel } from '../exportHuds/exportHudsSchema';
 
 export interface ISms {
     phone: string;
@@ -87,5 +88,24 @@ export function sendNotification(data: INotification, devices, options: any = {}
         scheduledAt: options.scheduledAt ? options.scheduledAt : new Date(),
         tries: 0,
     });
+    return obj.save();
+}
+
+export function exportHuds(data, user) {
+    const obj = new ExportHudsModel({
+        fechaDesde: data.hudsCompleta ? null : data.fechaDesde,
+        fechaHasta: data.hudsCompleta ? null : data.fechaHasta,
+        pacienteId: data.pacienteId,
+        pacienteNombre: data.pacienteNombre,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        tipoPrestacion: data.tipoPrestacion ? data.tipoPrestacion : null,
+        user
+    });
+    new RoboModel({
+        idExportHuds: obj._id,
+        scheduledAt: new Date(),
+        tries: 0
+    }).save();
     return obj.save();
 }

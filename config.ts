@@ -120,6 +120,12 @@ export const modules = {
         route: '/modules/descargas',
         middleware: null
     },
+    exportHuds: {
+        active: true,
+        path: './modules/descargas/export-huds/routes',
+        route: '/modules/descargas/export-huds',
+        middleware: null
+    },
     obraSocial: {
         active: true,
         path: './modules/obraSocial/routes',

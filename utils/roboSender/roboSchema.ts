@@ -51,7 +51,10 @@ export const RoboSchema = new mongoose.Schema({
         contentAvailable: Boolean,
         alert: Object,
         required: false
-    }
+    },
+
+    // Para exportar HUDS
+    idExportHuds: mongoose.Schema.Types.ObjectId
 });
 
 RoboSchema.index({
