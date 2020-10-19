@@ -7,6 +7,9 @@ import * as sumarController from '../controller/sumar';
 import * as obrasocialController from '../controller/obraSocial';
 import { Profe } from '../schemas/profe';
 import { Auth } from '../../../auth/auth.class';
+import { obraSocialLog } from '../../../modules/obraSocial/obraSocialLog';
+import { userScheduler } from '../../../config.private';
+
 const router = express.Router();
 
 /**
@@ -90,7 +93,12 @@ router.get('/puco', Auth.authenticate(), async (req, res, next) => {
             try {
                 for (let i = 0; i < rta.length; i++) {
                     unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS });
-                    resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
+                    if (unaOS?.length) {
+                        resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
+                    } else {
+                        // si la OS de puco, no se encuentra en la colección de obrasSociales
+                        obraSocialLog.error('find', { codigoPuco: rta[i].codigoOS }, null, userScheduler);
+                    }
                 }
                 res.json(resultOS);
             } catch (error) {
