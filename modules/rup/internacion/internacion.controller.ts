@@ -4,6 +4,9 @@ import { historial as historialCamas } from './camas.controller';
 import { historial as historialSalas } from './sala-comun/sala-comun.controller';
 import { ObjectId } from '@andes/core';
 import { Prestacion } from '../schemas/prestacion';
+import * as CamasEstadosController from './cama-estados.controller';
+import { Request } from '@andes/api-tool';
+import { Auth } from '../../../auth/auth.class';
 
 export async function obtenerPrestaciones(organizacion, filtros) {
     const fechaIngresoDesde = (filtros.fechaIngresoDesde) ? moment(filtros.fechaIngresoDesde).toDate() : moment().subtract(1, 'month').toDate();
@@ -98,4 +101,26 @@ export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: 
 
     const historialInternacion = [...histCamas, ...histSalas];
     return historialInternacion;
+}
+
+export async function deshacerInternacion(organizacion, capa, ambito, cama, req: Request) {
+    delete cama['createdAt'];
+    delete cama['createdBy'];
+    delete cama['updatedAt'];
+    delete cama['updatedBy'];
+    delete cama['deletedAt'];
+    delete cama['deletedBy'];
+    const usuario = Auth.getAuditUser(req);
+
+    let result;
+
+    // control pensando en sala-comun
+    if (cama.idCama) {
+        const movimientos = await CamasEstadosController.searchEstados({ desde: cama.fecha, hasta: cama.fecha, organizacion, capa, ambito }, { cama: cama.idCama, esMovimiento: true });
+        if (movimientos.length <= 1) {
+            result = await CamasEstadosController.deshacerEstadoCama({ organizacion, ambito, capa, cama: cama.idCama }, cama.fecha, usuario);
+        }
+    }
+
+    return result;
 }

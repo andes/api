@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-import { store, patch } from './camas.controller';
+import { store, patch, findById } from './camas.controller';
 import { ingresarPaciente } from './sala-comun/sala-comun.controller';
 import { Prestacion } from '../schemas/prestacion';
 import { Camas } from './camas.schema';
@@ -11,7 +11,6 @@ import * as InternacionController from './internacion.controller';
 import { SalaComunCtr } from './sala-comun/sala-comun.routes';
 
 import * as moment from 'moment';
-import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import { getFakeRequest, getObjectId, setupUpMongo } from '@andes/unit-test';
 import { EstadosCtr } from './estados.routes';
 import { createPaciente, createUnidadOrganizativa } from './test-utils';
@@ -26,6 +25,8 @@ let cama: any;
 let internacion = getObjectId('internacion');
 let organizacion: any;
 const paciente1 = createPaciente('10000000');
+let idCama;
+let unidadOrganizativa;
 
 setupUpMongo();
 
@@ -41,6 +42,8 @@ beforeEach(async () => {
     (REQMock as any).user.organizacion['nombre'] = 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON9670e52df311059bc8964';
     cama = await store(seedCama(1, 'y') as any, REQMock);
     organizacion = cama.organizacion._id;
+    idCama = String(cama._id);
+    unidadOrganizativa = cama.unidadOrganizativaOriginal.conceptId;
 });
 
 function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
@@ -153,4 +156,57 @@ describe('Internacion - Controller', () => {
         const historialInternacion = await InternacionController.obtenerHistorialInternacion(organizacion, capa, internacion, moment().subtract(4, 'month').toDate(), moment().toDate());
         expect(historialInternacion.length).toBe(2);
     });
+});
+
+test('Deshacer Internacion', async () => {
+    const maquinaEstados = await EstadosCtr.create({
+        organizacion,
+        ambito,
+        capa,
+        estados: [
+            { key: 'disponible' },
+            { key: 'ocupada' },
+            { key: 'bloqueada' },
+            { key: 'inactiva' }
+        ],
+        relaciones: [
+            { origen: 'disponible', destino: 'inactiva' },
+            { origen: 'disponible', destino: 'ocupada' },
+            { origen: 'disponible', destino: 'bloqueada' },
+            { origen: 'bloqueada', destino: 'disponible' },
+            { origen: 'ocupada', destino: 'disponible' },
+        ]
+    }, REQMock);
+
+    expect(maquinaEstados.createdAt).toBeDefined();
+    expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+
+    // OCUPA LA CAMA
+    await patch({
+        id: cama._id,
+        ambito,
+        capa,
+        estado: 'ocupada',
+        esMovimiento: true,
+        fecha: moment().subtract(2, 'hours').toDate(),
+        organizacion: cama.organizacion,
+        extras: { ingreso: true },
+        idInternacion: mongoose.Types.ObjectId('57f67a7ad86d9f64130a136e'),
+        paciente: {
+            id: '57f67a7ad86d9f64130a138d',
+            _id: '57f67a7ad86d9f64130a138d',
+            nombre: 'JUANCITO',
+            apellido: 'PEREZ',
+            documento: '38432297',
+            sexo: ''
+        }
+    }, REQMock);
+
+    let camaEncontrada = await findById({ organizacion, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
+    expect(camaEncontrada.estado).toBe('ocupada');
+
+    await InternacionController.deshacerInternacion(camaEncontrada.organizacion._id, capa, ambito, camaEncontrada, REQMock);
+
+    camaEncontrada = await findById({ organizacion, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
+    expect(camaEncontrada.estado).toBe('disponible');
 });
