@@ -235,7 +235,7 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                 idInternacion: '$snapshot.idInternacion',
                 unidadOrganizativas: { $ifNull: ['$snapshot.unidadOrganizativas', '$unidadOrganizativas'] },
                 ambito: '$snapshot.ambito',
-                fecha: '$snapshot.desde',
+                fecha: { $ifNull: ['$snapshot.desde', '$fecha'] },
                 extras: '$snapshot.extras',
                 createdAt: '$snapshot.createdAt',
                 createdBy: '$snapshot.createdBy',
