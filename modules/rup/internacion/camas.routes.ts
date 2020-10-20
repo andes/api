@@ -4,6 +4,7 @@ import * as SalaComunController from './sala-comun/sala-comun.controller';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
+import { ObjectID } from 'bson';
 
 const router = express.Router();
 
@@ -17,7 +18,6 @@ const capaMiddleware = (req: Request, res: Response, next: express.NextFunction)
     next();
 };
 
-
 router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
@@ -28,11 +28,7 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
     let salas = [];
     if (capa !== 'estadistica') {
         salas = await SalaComunController.listarSalaComun({ organizacion: organizacion._id, fecha: moment(fecha).toDate() });
-        for (const sala of salas) {
-            sala['sala'] = true;
-            sala['unidadOrganizativa'] = sala.unidadOrganizativas[0];
-            sala['estado'] = sala.paciente ? 'ocupada' : 'disponible';
-        }
+        salas = populateSalaComun(salas);
     }
 
     const camas = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
@@ -186,3 +182,33 @@ router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Reques
 }));
 
 export const CamasRouter = router;
+
+/**
+ * Agrega un item extra por sala para que se visualize la sala como desocupada.
+ */
+function populateSalaComun(salas: any[]) {
+    const salasID = salas.reduce((acc, current) => {
+        if (!current.paciente) { return acc; }
+        return { ...acc, [String(current.id)]: current };
+    }, {});
+    const salasDisponibles = Object.keys(salasID).map(key => {
+        const sala = salasID[key];
+        return {
+            ...sala,
+            paciente: null,
+            idInternacion: null,
+            extras: null,
+            fecha: new Date()
+        };
+    });
+    const allSalas = [...salasDisponibles, ...salas].map(sala => {
+        return {
+            ...sala,
+            sala: true,
+            unidadOrganizativa: sala.unidadOrganizativas[0],
+            estado: sala.paciente ? 'ocupada' : 'disponible'
+        };
+    });
+    return allSalas;
+
+}
