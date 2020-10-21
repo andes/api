@@ -357,6 +357,20 @@ export class Auth {
         }
     }
 
+    /**
+     * Obtiene datos del profesional
+     *
+     * @static
+     * @param {express.Request} req Corresponde al request actual
+     * @returns {any} usuario auditado.
+     *
+     * @memberOf Auth
+     */
+    static getAuditUser(req: express.Request): any {
+        const i = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        i.organizacion = (req as any).user.organizacion;
+        return i;
+    }
 
     /**
      * Version dos del token. Con menos datos.

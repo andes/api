@@ -48,7 +48,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         },
         {
             $match: {
-                'estados.deletedAt' : { $exists : false },
+                'estados.deletedAt': { $exists: false },
                 'estados.esMovimiento': true,
                 'estados.fecha': { $lte: fechaSeleccionada }
             }
@@ -103,6 +103,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                     },
                     {
                         $match: {
+                            'estados.deletedAt': { $exists: false },
                             $expr: {
                                 $gte: ['$estados.fecha', '$$fechaMax'],
                             },
@@ -153,10 +154,22 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         {
             $lookup: {
                 from: 'internacionCamas',
-                localField: 'idCama',
-                foreignField: '_id',
+                let: {
+                    id: '$idCama',
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$_id', '$$id'] },
+                                ]
+                            }
+                        }
+                    },
+                    { $project: { createdAt: 0, createdBy: 0 }}
+                ],
                 as: 'cama'
-
             }
         },
         {
@@ -260,7 +273,7 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
         },
         {
             $match: {
-                'estados.deletedAt' : { $exists : false },
+                'estados.deletedAt': { $exists: false },
                 'estados.fecha': {
                     $lte: moment(hasta).toDate(),
                     $gte: moment(desde).toDate()
@@ -391,7 +404,7 @@ export async function patch({ organizacion, ambito, capa, cama }, from: Date, to
     return result.nModified > 0 && result.ok === 1;
 }
 
-export async function remove({ organizacion, ambito, capa, cama }, date: Date, ) {
+export async function remove({ organizacion, ambito, capa, cama }, date: Date) {
     const result = await CamaEstados.update(
         {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),
@@ -404,6 +417,36 @@ export async function remove({ organizacion, ambito, capa, cama }, date: Date, )
         },
         {
             $pull: { estados: { fecha: date } }
+        }
+    );
+    return result.nModified > 0 && result.ok === 1;
+}
+
+/**
+ * Operación especial para borrar un estado logicamente
+*/
+export async function deshacerEstadoCama({ organizacion, ambito, capa, cama }, date: Date, user) {
+    date = moment(date).toDate();
+    const result = await CamaEstados.update(
+        {
+            idOrganizacion: wrapObjectId(organizacion),
+            ambito,
+            capa,
+            idCama: wrapObjectId(cama),
+            start: { $lte: date },
+            end: { $gte: date }
+
+        },
+        {
+            $set: {
+                'estados.$[elemento].deletedAt': moment().toDate(),
+                'estados.$[elemento].deletedBy': user,
+            }
+        },
+        {
+            arrayFilters: [{
+                'elemento.fecha': date,
+            }]
         }
     );
     return result.nModified > 0 && result.ok === 1;

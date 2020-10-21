@@ -1,3 +1,18 @@
+# [5.17.0](https://github.com/andes/api/compare/v5.16.0...v5.17.0) (2020-10-14)
+
+
+### Bug Fixes
+
+* **mapa-camas:** middleware para obtener historial en la capa enfermeria ([#1147](https://github.com/andes/api/issues/1147)) ([a7f5eda](https://github.com/andes/api/commit/a7f5eda2cc8e85bbb514a4035ed67f2198aeeed8))
+* **reportes:** optimiza mejoras consulta diagnistico ([#1148](https://github.com/andes/api/issues/1148)) ([4a93dc0](https://github.com/andes/api/commit/4a93dc04adeb4e5a183f55443282306dcdc1022e))
+
+
+### Features
+
+* **gestor-usuario:** permisos unidad organizativa  ([#1109](https://github.com/andes/api/issues/1109)) ([47977b6](https://github.com/andes/api/commit/47977b6ac8cb322e06244e763930b9a3d5eb2873))
+* **mapa-camas:** sala común ([#1117](https://github.com/andes/api/issues/1117)) ([5625b69](https://github.com/andes/api/commit/5625b691654c70a4561d5dd8a22dba82005cefbc))
+* **rup:** crear solicitudes en background ([#1140](https://github.com/andes/api/issues/1140)) ([c3fa969](https://github.com/andes/api/commit/c3fa96913fa4a8a8598a5ca0a9b516a55589f48a))
+
 # [5.16.0](https://github.com/andes/api/compare/v5.15.0...v5.16.0) (2020-10-07)
 
 

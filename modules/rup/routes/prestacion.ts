@@ -651,7 +651,8 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
     if (prestacion.solicitud.turno) {
         const { turno } = await getTurnoById(prestacion.solicitud.turno);
         if (turno) {
-            prestacion.paciente.obraSocial = turno.paciente.obraSocial;
+            const os = Array.isArray(turno.paciente.obraSocial) ? turno.paciente.obraSocial[0] : turno.paciente.obraSocial;
+            prestacion.paciente.obraSocial = os;
         }
     } else {
         const os = await getObraSocial(prestacion.paciente);

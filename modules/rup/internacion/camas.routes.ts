@@ -167,7 +167,7 @@ router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(asy
 }));
 
 router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
-    if (req.body.capa !== 'estaditica' && req.body.capa !== 'medica') {
+    if (req.body.capa !== 'estadistica' && req.body.capa !== 'medica') {
         return res.json({ status: true });
     }
     const organizacion = {

@@ -172,7 +172,7 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
  */
 export async function matching(data) {
     let query;
-
+    const ExpRegFilter = /([-_()\[\]{}+?*.$\^|¨`´~,:#<>¡!\\])/g;
     switch (data.type) {
         case 'simplequery':
             query = {
@@ -185,10 +185,13 @@ export async function matching(data) {
             break;
         case 'multimatch':
             {
-                const words = data.cadenaInput.trim().toLowerCase().split(' ');
+                let words = data.cadenaInput.replace(ExpRegFilter, '');
+                words = words.trim().toLowerCase().split(' ');
                 let andQuery = [];
                 words.forEach(w => {
-                    andQuery.push({ tokens: RegExp(`^${w}`) });
+                    if (w.length > 0) {
+                        andQuery.push({ tokens: RegExp(`^${w}`) });
+                    }
                 });
                 andQuery.push({ activo: { $eq: true } });
                 query = {
@@ -213,9 +216,12 @@ export async function matching(data) {
                 let andQuery = [];
                 if (data.filtros.cadenaInput) {
                     // si se ingresa una cadena de texto se busca matching con tokens de paciente
-                    const words = data.filtros.cadenaInput.trim().toLowerCase().split(' ');
+                    let words = data.filtros.cadenaInput.replace(ExpRegFilter, '');
+                    words = words.trim().toLowerCase().split(' ');
                     words.forEach(w => {
-                        andQuery.push({ tokens: RegExp(`^${w}`) });
+                        if (w.length > 0) {
+                            andQuery.push({ tokens: RegExp(`^${w}`) });
+                        }
                     });
                     delete data.filtros.cadenaInput;
                 }
@@ -605,6 +611,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
         }
         resRenaper.foto = await validarTamañoFoto(resRenaper.foto);
         resRenaper.estado = 'validado';
+        resRenaper.validateAt = new Date();
         const flag = !regtest.test(resRenaper.nombre) && !regtest.test(resRenaper.apellido);
         if (!flag) {
             // Si el apellido o nombre contiene caracteres extraños
@@ -657,6 +664,7 @@ async function validarSisa(pacienteAndes: any, req: any) {
         let resSisa: any = await sisa({ documento: pacienteAndes.documento, sexo: sexoPaciente }, sisaConfig, sisaToAndes);
         andesLog(req, logKeys.validacionPaciente.key, pacienteAndes._id, logKeys.validacionPaciente.operacion, resSisa);
         if (resSisa) {
+            resSisa.validateAt = new Date();
             if (resSisa.direccion.length && resSisa.direccion[0].ubicacion) {
                 resSisa.direccion[0].ubicacion = await matchDireccion(resSisa.direccion[0].ubicacion);
             }

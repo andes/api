@@ -25,6 +25,7 @@ class PacienteResource extends ResourceBase {
         sexo: MongoQuery.equalMatch,
         activo: MongoQuery.equalMatch,
         reportarError: MongoQuery.equalMatch,
+        estado: MongoQuery.equalMatch,
         identificadores: {
             field: 'identificadores.entidad',
             fn: (value) => {
@@ -59,6 +60,10 @@ class PacienteResource extends ResourceBase {
         },
         fijo: (value) => {
             return MongoQuery.queryArray('contacto', [`fijo|${value}`], 'tipo', 'valor');
+        },
+        fechaUpdate: {
+            field: 'updatedAt',
+            fn: (value) => (MongoQuery.matchDate(value))
         },
         search: (value) => {
             return {

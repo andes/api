@@ -93,7 +93,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     tokens: [{
         type: String,
         lowercase: true
-    }]
+    }],
+    validateAt: Date
 }, { versionKey: false });
 
 PacienteSchema.pre('save', function (next) {
@@ -233,6 +234,7 @@ PacienteSchema.plugin(mongoose_fuzzy_searching, {
 
 PacienteSchema.index({ tokens: 1 });
 PacienteSchema.index({ documento: 1, sexo: 1 });
+PacienteSchema.index({ estado: 1, activo: 1, updateAt: 1 });
 
 export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
