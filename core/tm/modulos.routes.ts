@@ -10,8 +10,6 @@ class ModuloResource extends ResourceBase {
         nombre: MongoQuery.partialString,
         descripcion: MongoQuery.partialString,
         color: MongoQuery.partialString,
-        linkAcceso: MongoQuery.partialString,
-        icono: MongoQuery.partialString,
         subtitulo: MongoQuery.partialString,
         activo: MongoQuery.equalMatch,
         orden: MongoQuery.equalMatch,

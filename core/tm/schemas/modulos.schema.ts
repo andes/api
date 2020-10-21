@@ -11,18 +11,26 @@ export const ModuloSchema = new Schema({
         required: true
     },
     subtitulo: String,
-    color: String,
     icono: String,
-    linkAcceso: {
-        type: String,
-        required: true
-    },
+    linkAcceso: String,
+    color: String,
     permisos: [String],
     activo: {
         type: Boolean,
         default: true
     },
-    orden: Number
+    orden: Number,
+    submodulos: [
+        {
+            activo: { type: Boolean, default: true },
+            nombre: String,
+            linkAcceso: String,
+            color: String,
+            icono: String,
+            orden: Number,
+            permisos: [String]
+        }
+    ]
 
 });
 
