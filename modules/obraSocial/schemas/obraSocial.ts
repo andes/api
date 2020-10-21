@@ -1,3 +1,4 @@
+import { AndesDoc } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 
 export const ObraSocialSchema = new mongoose.Schema({
@@ -10,6 +11,17 @@ export const ObraSocialSchema = new mongoose.Schema({
     numeroAfiliado: { type: String, required: false }
 });
 
+export interface IObraSocial {
+    codigoPuco: number;
+    nombre: string;
+    financiador: string;
+    prepaga?: boolean;
+    idObraSocial?: number;
+    numeroAfiliado?: string;
+}
+
+export type IObraSocialDocument = AndesDoc<IObraSocial>;
+
 /**
  * Desacoplo el schema de la colleccion del que se usa como subschema
  * Mongoose te crea indices en los subschemas.
@@ -18,5 +30,5 @@ export const ObraSocialSchema = new mongoose.Schema({
 const ObraSocialSchemaWithIndex = ObraSocialSchema.clone();
 ObraSocialSchemaWithIndex.index({ codigoPuco: 1 });
 
-export const ObraSocial: any = mongoose.model('obraSocial', ObraSocialSchemaWithIndex, 'obraSocial');
+export const ObraSocial = mongoose.model<IObraSocialDocument>('obraSocial', ObraSocialSchemaWithIndex, 'obraSocial');
 

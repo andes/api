@@ -8,7 +8,6 @@ import * as obrasocialController from '../controller/obraSocial';
 import { Profe } from '../schemas/profe';
 import { Auth } from '../../../auth/auth.class';
 import { obraSocialLog } from '../../../modules/obraSocial/obraSocialLog';
-import { userScheduler } from '../../../config.private';
 
 const router = express.Router();
 
@@ -75,7 +74,6 @@ router.get('/padronSumar', Auth.authenticate(), async (req, res, next) => {
 router.get('/puco', Auth.authenticate(), async (req, res, next) => {
     if (req.query.dni) {
         let padron;
-        let rta;
         if (req.query.periodo) {
             padron = req.query.periodo;
         } else {
@@ -85,24 +83,31 @@ router.get('/puco', Auth.authenticate(), async (req, res, next) => {
             }
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
-        rta = await Puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
+        const documento = Number.parseInt(req.query.dni, 10) || 0;
+        const rta = await Puco.find({ dni: documento, version: padron }).exec();
         if (rta.length > 0) {
             const resultOS = [];
-            let unaOS;
-            // genera un array con todas las obras sociales para una version de padron dada
             try {
                 for (let i = 0; i < rta.length; i++) {
-                    unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS });
-                    if (unaOS?.length) {
-                        resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
+                    const obraSocial = await ObraSocial.findOne({ codigoPuco: rta[i].codigoOS });
+                    if (obraSocial) {
+                        resultOS[i] = {
+                            tipoDocumento: rta[i].tipoDoc,
+                            dni: rta[i].dni,
+                            transmite: rta[i].transmite,
+                            nombre: rta[i].nombre,
+                            codigoFinanciador: rta[i].codigoOS,
+                            idFinanciador: obraSocial._id,
+                            financiador: obraSocial.nombre,
+                            version: rta[i].version
+                        };
                     } else {
-                        // si la OS de puco, no se encuentra en la colección de obrasSociales
-                        obraSocialLog.error('find', { codigoPuco: rta[i].codigoOS }, null, userScheduler);
+                        obraSocialLog.error('find', { codigoPuco: rta[i].codigoOS }, null, req);
                     }
                 }
                 res.json(resultOS);
             } catch (error) {
-                next(error);
+                return next(error);
             }
         } else {
             res.json([]);
