@@ -1,0 +1,84 @@
+@page {
+    size: portrait;
+}
+nav,
+footer,
+.btn {
+    display: none;
+}
+body {
+    padding: 0;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+}
+
+.content {
+    margin-top: 0!important;
+}
+
+.login-header {
+    height: 60px;
+    margin-left: 50px;
+    .logo-gobierno {
+        width: 140px;
+        float: left;
+        height: 100%;
+        background-repeat: no-repeat;
+        background-size: 140px;
+        background-position: center left;
+    }
+    .logo-gobierno-salud {
+        width: 150px;
+        float: left;
+        margin-left: 10px;
+        height: 100%;
+        background-repeat: no-repeat;
+        background-size: 150px;
+        background-position: center left;
+    }
+}
+
+.egt, .egt th, .egt td {
+border: 1px solid black;
+border-collapse: collapse;
+}
+
+hr {
+margin: 1px 0;
+}
+th {
+font-size: 1rem;
+}
+
+td{
+padding-left: 10px;
+}
+
+.text-bottom {
+vertical-align: bottom;
+}
+.text-center {
+text-align: center;
+}
+.h90{
+    height: 90px;
+}
+.h110{
+    height: 110px;
+}
+.h50 {
+    height: 50px;
+}
+.font14{
+    font-size: 14px;
+}
+input[type=checkbox] {
+transform: scale(1.5);
+}
+.ml25{  
+margin-left: 25px;
+padding-left: 25px;
+}
+label{
+margin-top: 5px;
+}

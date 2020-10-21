@@ -7,6 +7,7 @@ import moment = require('moment');
 import { InformeRUP } from '../informe-rup/informe-rup';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { InformeCenso } from '../informe-censo/informe-censo';
+import { RecuperoCosto } from '../recupero-costo/recupero-costo';
 import { ConstanciaPuco } from '../puco/constancia-puco';
 
 const router = express.Router();
@@ -29,6 +30,14 @@ router.post('/censoMensual', async (req: any, res, next) => {
     const fileName: any = await docCenso.informe();
 
     return res.download(fileName);
+});
+
+router.post('/anexo-dos', async (req: any, res) => {
+    let docRecupero = new RecuperoCosto(req);
+    const opciones = { header: { height: '3cm' } };
+    const fileName: any = await docRecupero.informe(opciones);
+
+    res.download(fileName);
 });
 
 /**
@@ -112,5 +121,6 @@ router.post('/constanciaPuco/:tipo?', async (req: any, res) => {
 
     res.download(fileName);
 });
+
 
 export = router;
