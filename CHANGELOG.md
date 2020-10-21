@@ -1,3 +1,23 @@
+# [5.18.0](https://github.com/andes/api/compare/v5.17.0...v5.18.0) (2020-10-21)
+
+
+### Bug Fixes
+
+* **citas:** log suspender sobreturno ([#1159](https://github.com/andes/api/issues/1159)) ([85d3fc2](https://github.com/andes/api/commit/85d3fc251149160798002d09a9c03c2b81c5d888))
+* **codificaciones:** cambia de posición los filtros de busqueda ([#1157](https://github.com/andes/api/issues/1157)) ([52f5f24](https://github.com/andes/api/commit/52f5f24b05ea6b8004e568c03dd4daf95b8ba27d))
+* **mobile:** parallel save error ([#1152](https://github.com/andes/api/issues/1152)) ([fc83fe1](https://github.com/andes/api/commit/fc83fe1f0c23355cb24ecfeefe95b3c15d2ceeef))
+* **rup:** error en prestaciones al desestructurar turno ([#1153](https://github.com/andes/api/issues/1153)) ([7353944](https://github.com/andes/api/commit/7353944b94605cb7093e224f901f41de4dc5ce44))
+
+
+### Features
+
+* **CITAS:** Habilita turnos de gestion en agendas del dia ([#1131](https://github.com/andes/api/issues/1131)) ([83dc4ed](https://github.com/andes/api/commit/83dc4edbf0bc12cdba01d5b3b59146c6c1b9d19a))
+* **mapa-camas:** columnas dinámicas ([#1151](https://github.com/andes/api/issues/1151)) ([234897e](https://github.com/andes/api/commit/234897e501e9a033996d24049a723ceac4d82312))
+* **mapa-camas:** deshacer internación ([#1141](https://github.com/andes/api/issues/1141)) ([4a526ba](https://github.com/andes/api/commit/4a526baeaabedda8632aee9134b0b4c330d6aeb1))
+* **mpi:** script para actualizar foto de pacientes ([#1146](https://github.com/andes/api/issues/1146)) ([edcfefd](https://github.com/andes/api/commit/edcfefd688441143fd095c76da2ef5b2af0a813e))
+* **obra-social:** chequea si existe la obra social ([#1158](https://github.com/andes/api/issues/1158)) ([b39130f](https://github.com/andes/api/commit/b39130f5bf7f6413cfa2e567231195ae643f3bc0))
+* **recupero:** descarga pdf de anexo 2 ([#1142](https://github.com/andes/api/issues/1142)) ([37b7edc](https://github.com/andes/api/commit/37b7edc096d86e0f62807efa4674312cce61e89c))
+
 # [5.17.0](https://github.com/andes/api/compare/v5.16.0...v5.17.0) (2020-10-14)
 
 
