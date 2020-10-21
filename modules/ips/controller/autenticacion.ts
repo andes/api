@@ -118,7 +118,6 @@ export class SaludDigitalClient {
                 Authorization: ''
             }
         };
-        // https://bus.msal.gov.ar/dominios
         const [status, body] = await handleHttpRequest(options);
         if (status >= 200 && status <= 399) {
             const bundle = JSON.parse(body);
@@ -137,16 +136,9 @@ export class SaludDigitalClient {
     }
 
     async solicitud({ custodian = null, fechaDesde = null, fechaHasta = null, patient, loinc }) {
-        // mokeable
-        // let url = 'https://demo5647849.mockable.io/repositorio-documentos/fhir/DocumentReference%3Fsubject:Patient.identifier=http://www.hospitalitaliano.org.ar%7C540153&class=https://loinc.org/%7C60591-5';
         try {
-            let url = 'http://demo7712638.mockable.io/hashDelDocumento';
-            // let url = `${this.hostBus}/DocumentReference?subject:identifier=${this.dominio}|${patient}&type=https://loinc.org|${loinc}`;
-            
-            // VOLVER A HABILITAR EL CUSTODIAN
-            // if (custodian) {
-            //     url += `&custodian=${custodian}`;
-            // }
+           // this.hostBus = 'http://fhir.neuquen.ngrok.io/4_0_0'
+            let url = `${this.hostBus}/DocumentReference?subject:identifier=${this.dominio}|${patient}&custodian=${custodian}&type=https://loinc.org|${loinc}`;
             if (fechaDesde) {
                 url += `&date=ge${fechaDesde}`;
             }
@@ -165,20 +157,12 @@ export class SaludDigitalClient {
                 const bundle = JSON.parse(body);
                 if (bundle.entry.length > 0) {
                     const resp = bundle.entry.map((r) => {
-                        // provisorio del mock
                         return {
                             id: r.resource.id,
                             identifier: r.resource.identifier,
-                            title: r.resource.title,
-                            custodian: r.resource.custodian,
-                            section: r.resource.section
-                        }
-                        // return {
-                        //     id: r.resource.id,
-                        //     identifier: r.resource.identifier,
-                        //     custodian: r.custodian,
-                        //     urlBinary: r.content[0].attachment.url
-                        // };
+                            custodian,
+                            urlBinary: r.resource.content[0].attachment.url
+                        };
                     });
                     return resp;
                 }
@@ -192,12 +176,13 @@ export class SaludDigitalClient {
 }
 
     async getBinary(urlBinary) {
-        const url = `${urlBinary}`;
+        // this.hostBus = 'http://fhir.neuquen.ngrok.io/4_0_0';
+        const url = `${this.hostBus}${urlBinary}`;
         const options = {
             url,
             method: 'GET',
             headers: {
-                Authorization: ''
+                Authorization: 'Bearer TOKEN'
             }
         };
         const [status, body] = await handleHttpRequest(options);

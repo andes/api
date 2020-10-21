@@ -46,7 +46,6 @@ router.post('/pacientes/federador/get', async (req, res, next) => {
             const resultado = await controller.getPatientFromFederador(pacienteAndes, req);
             res.json(resultado);
         } catch (err) {
-            console.log('palo:', err);
             return next(err);
         }
     } else {

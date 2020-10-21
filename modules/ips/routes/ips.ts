@@ -24,17 +24,21 @@ router.get('/getDocuments', async (req, res, next) => {
         if (custodian && idPaciente) {
             const sdClient = new SaludDigitalClient(fhirConf.domain, fhirConf.ips_host, fhirConf.secret);
             // Le dejo posiblidad de filtrar por fechas
-            const ips = await sdClient.solicitud({custodian,fechaDesde: null, fechaHasta: null, patient: idPaciente, loinc:'60591-5'});
-            // para mi lo anterior debería ser un docReg e ir a buscar cada IPS
-            // const ipss = docRef.map(async (doc) => {
-            //     const ips = await sdClient.getBinary(doc.urlBinary);
-            //     return ips
-            // });
-            res.json(ips);
+            const docRef = await sdClient.solicitud({custodian,fechaDesde: null, fechaHasta: null, patient: idPaciente, loinc:'60591-5'});
+            if (docRef && docRef.length > 0) {
+                for (let d of docRef) {
+                    const ips = await sdClient.getBinary(d.urlBinary);
+                    res.json(ips)
+                }
+            } else {
+                res.send([]);
+            }
+        
+        } else {
+            res.send([]);
         }
-        return []
     } catch (err) {
-        return next(err);
+        return next(err)
     }
 
 })
