@@ -2,22 +2,38 @@ import * as express from 'express';
 import { Logger } from '../../../utils/logService';
 import { log } from '../schemas/log';
 import { Auth } from '../../../auth/auth.class';
+import { SystemLog } from '../system.log';
+import { asyncHandler } from '@andes/api-tool';
+import * as crypto from 'crypto';
 
 const router = express.Router();
 
-router.post('/operaciones/:module/:op', (req, res, next) => {
+router.post('/error', asyncHandler(async (req, res, next) => {
+    const error = req.body;
+    const message = error.message || '';
+    const stack = error.stack || '';
+    // Para identificar errores iguales
+    const id = crypto.createHash('md5').update(message).digest('hex');
+    const data = {
+        message,
+        stack,
+        _id: id,
+        url: req.headers.referer, // Desde que URL de la APP llega el error
+    };
+    await SystemLog.error('angular-error', data, null, req);
+    res.json({ status: 'ok' });
+
+}));
+
+router.post('/operaciones/:module/:op', asyncHandler(async (req, res, next) => {
     if (!Auth.check(req, 'log:post')) {
         return next(403);
     }
-    Logger.log(req, req.params.module, req.params.op, req.body.data, (err) => {
-        if (err) {
-            return next(err);
-        }
-        res.json({ status: 'ok' });
-    });
-});
+    await Logger.log(req, req.params.module, req.params.op, req.body.data);
+    res.json({ status: 'ok' });
+}));
 
-router.get('/operaciones/:module?', (req, res, next) => {
+router.get('/operaciones/:module?', asyncHandler(async (req, res, next) => {
     if (!Auth.check(req, 'log:get')) {
         return next(403);
     }
@@ -43,12 +59,8 @@ router.get('/operaciones/:module?', (req, res, next) => {
     if (req.query.count) {
         query.count();
     }
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
-});
+    const data = await query.exec();
+    res.json(data);
+}));
 
 module.exports = router;
