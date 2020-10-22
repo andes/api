@@ -197,7 +197,7 @@ router.get('/pacientes/:id', async (req, res, next) => {
 
 });
 
-router.get('/pacientes/:id/foto', async (req, res, next) => {
+router.get('/pacientes/:id/foto/:fotoId', async (req, res, next) => {
     const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
@@ -205,9 +205,9 @@ router.get('/pacientes/:id/foto', async (req, res, next) => {
     }
     try {
         const idPaciente = req.params.id;
-        const { paciente: pacienteBuscado } = await controller.buscarPaciente(idPaciente);
+        const pacienteBuscado: any = await paciente.findById(idPaciente, '+foto');
         if (pacienteBuscado) {
-            if (!pacienteBuscado.foto) {
+            if (!pacienteBuscado.fotoId) {
                 res.writeHead(200, {
                     'Content-Type': 'image/svg+xml'
                 });

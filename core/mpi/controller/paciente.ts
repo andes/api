@@ -20,6 +20,8 @@ import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
 import * as mongoose from 'mongoose';
 import * as localidadController from '../../tm/controller/localidad';
+import { Types } from 'mongoose';
+const ObjectId = Types.ObjectId;
 
 const sharp = require('sharp');
 
@@ -30,7 +32,10 @@ const sharp = require('sharp');
  * @param req  request de express para poder auditar
  */
 export async function createPaciente(data, req) {
-    const newPatient = new paciente(data);
+    const newPatient: any = new paciente(data);
+    if (newPatient.foto && !newPatient.fotoId) {
+        newPatient.fotoId = new ObjectId();
+    }
     if (req) {
         Auth.audit(newPatient, req);
     }
@@ -52,6 +57,9 @@ export async function updatePaciente(pacienteObj, data, req) {
     const pacienteOriginal = pacienteObj.toObject();
     for (const key in data) {
         pacienteObj[key] = data[key];
+    }
+    if (pacienteObj.foto && !pacienteObj.fotoId) {
+        pacienteObj.fotoId = new ObjectId();
     }
     // Habilita auditoria y guarda
     if (req) {
@@ -105,7 +113,7 @@ export async function updateTurnosPaciente(pacienteModified) {
  */
 export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
-        paciente.findById(id, '+foto', (err, data) => {
+        paciente.findById(id, (err, data) => {
             if (err) {
                 reject(err);
             } else {
