@@ -358,7 +358,12 @@ router.get('/prestaciones', async (req: any, res, next) => {
     }
 
     if (req.query.sinEstado) {
-        query.where('estados.tipo').ne(req.query.sinEstado);
+        if (Array.isArray(req.query.sinEstado)) {
+            query.where('estados.tipo').nin(req.query.sinEstado);
+
+        } else {
+            query.where('estados.tipo').ne(req.query.sinEstado);
+        }
     }
     if (req.query.fechaDesde) {
         // query.where('createdAt').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
@@ -578,6 +583,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 if (req.body.idTurno) {
                     data.solicitud.turno = req.body.idTurno;
                 }
+                break;
+            case 'desasociarTurno':
+                data.solicitud.turno = null;
+                data.estados.push({ tipo: 'anulada' });
                 break;
             case 'referir':
                 if (req.body.estado) {
