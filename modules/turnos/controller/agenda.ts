@@ -13,7 +13,7 @@ import * as mongoose from 'mongoose';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
-import * as codificacionModel from '../../rup/schemas/codificacion';
+import { Codificacion } from '../../rup/schemas/codificacion';
 import { Types } from 'mongoose';
 import { agendaLog } from '../citasLog';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
@@ -1293,7 +1293,7 @@ export function getConsultaDiagnostico(params) {
         ];
 
         const p1 = toArray(Agenda.aggregate(pipeline).cursor({}).exec());
-        const p2 = toArray(codificacionModel.aggregate(pipeline2).cursor({}).exec());
+        const p2 = toArray(Codificacion.aggregate(pipeline2).cursor({}).exec());
 
         let [diagnosticosTurnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2]);
 

@@ -1,5 +1,5 @@
-import * as codificacionModel from '../../rup/schemas/codificacion';
 import * as mongoose from 'mongoose';
+import { Codificacion } from '../../rup/schemas/codificacion';
 
 /**
  * @export Devuelve las prestaciones fuera de agenda que cumplen con los filtros
@@ -72,7 +72,7 @@ export async function procesar(parametros: any) {
     ];
 
     try {
-        const prestaciones = codificacionModel.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
+        const prestaciones = Codificacion.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
         const resultado = [];
         let os = parametros.financiador ? parametros.financiador : 'todos';
         let filtroEstado = parametros.estado ? parametros.estado : 'todos';

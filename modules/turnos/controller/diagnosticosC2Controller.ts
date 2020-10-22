@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { Agenda } from '../schemas/agenda';
 import { toArray } from '../../../utils/utils';
-import * as codificacionModel from '../../rup/schemas/codificacion';
+import { Codificacion } from '../../rup/schemas/codificacion';
 
 /*
 function getAge(dateString) {
@@ -260,7 +260,7 @@ export function getDiagnosticos(params) {
 
         let p1 = toArray(Agenda.aggregate(pipeline).cursor({}).exec());
         let p2 = toArray(Agenda.aggregate(pipeline1).cursor({}).exec());
-        let p3 = toArray(codificacionModel.aggregate(pipeline2).cursor({}).exec());
+        let p3 = toArray(Codificacion.aggregate(pipeline2).cursor({}).exec());
 
         let [diagnosticosTurnos, diagnosticosSobreturnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2, p3]);
 

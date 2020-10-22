@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { Types } from 'mongoose';
-import * as codificacion from '../schemas/codificacion';
+import { Codificacion } from '../schemas/codificacion';
 import { Prestacion } from '../schemas/prestacion';
 import { codificarPrestacion } from '../controllers/codificacionController';
 import { Auth } from './../../../auth/auth.class';
@@ -14,7 +14,7 @@ router.post('/codificacion', async (req, res, next) => {
     const unaPrestacion = await Prestacion.findById(idPrestacion);
     const codificaciones = await codificarPrestacion(unaPrestacion);
     if (codificaciones) {
-        let data = new codificacion({
+        let data = new Codificacion({
             idPrestacion,
             paciente: (unaPrestacion as any).paciente,
             ambitoPrestacion: (unaPrestacion as any).solicitud.ambitoOrigen,
@@ -36,9 +36,9 @@ router.post('/codificacion', async (req, res, next) => {
 });
 
 router.patch('/codificacion/:id', async (req, res, next) => {
-    const unaCodificacion = await codificacion.findById(req.params.id);
+    const unaCodificacion = await Codificacion.findById(req.params.id);
     (unaCodificacion as any).diagnostico.codificaciones = req.body.codificaciones;
-    let data = new codificacion(unaCodificacion);
+    let data = new Codificacion(unaCodificacion);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
@@ -50,7 +50,7 @@ router.patch('/codificacion/:id', async (req, res, next) => {
 
 router.patch('/codificacion/estadoFacturacion/:idPrestacion', async (req, res, next) => {
     try {
-        const data = await codificacion.findOneAndUpdate(
+        const data = await Codificacion.findOneAndUpdate(
             { idPrestacion: Types.ObjectId(req.params.idPrestacion) },
             { $set: { estadoFacturacion: req.body.estadoFacturacion } });
 
@@ -62,7 +62,7 @@ router.patch('/codificacion/estadoFacturacion/:idPrestacion', async (req, res, n
 
 router.get('/codificacion/:id?', async (req: any, res, next) => {
     if (Types.ObjectId.isValid(req.params.id)) {
-        const unaCodificacion = await codificacion.findById(req.params.id);
+        const unaCodificacion = await Codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {
         let filtros = {
@@ -105,7 +105,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
                 }
             }];
         try {
-            const data = await toArray(codificacion.aggregate(pipeline).cursor({}).exec());
+            const data = await toArray(Codificacion.aggregate(pipeline).cursor({}).exec());
             res.json(data);
         } catch (err) {
             return next(err);

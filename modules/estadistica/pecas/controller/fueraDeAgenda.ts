@@ -1,5 +1,5 @@
 import * as configPrivate from '../../../../config.private';
-import * as codificacionModel from '../../../rup/schemas/codificacion';
+import { Codificacion } from '../../../rup/schemas/codificacion';
 import * as sql from 'mssql';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
@@ -65,7 +65,7 @@ export async function fueraAgendaPecas(start, end, done) {
                             { $or: orgExcluidas },
                             { createdAt: { $gte: new Date(start) } },
                             { createdAt: { $lte: new Date(end) } },
-                            { $or: [{ ambitoPrestacion: {$exists: false} }, { ambitoPrestacion: 'ambulatorio' }]}
+                            { $or: [{ ambitoPrestacion: { $exists: false } }, { ambitoPrestacion: 'ambulatorio' }] }
                         ]
                     },
                     {
@@ -73,7 +73,7 @@ export async function fueraAgendaPecas(start, end, done) {
                             { $or: orgExcluidas },
                             { updatedAt: { $gte: new Date(start) } },
                             { updatedAt: { $lte: new Date(end) } },
-                            { $or: [{ ambitoPrestacion: {$exists: false} }, { ambitoPrestacion: 'ambulatorio' }]}
+                            { $or: [{ ambitoPrestacion: { $exists: false } }, { ambitoPrestacion: 'ambulatorio' }] }
                         ]
                     }
                 ]
@@ -94,7 +94,7 @@ export async function fueraAgendaPecas(start, end, done) {
 
 
     try {
-        const prestaciones = codificacionModel.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
+        const prestaciones = Codificacion.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
         await prestaciones.eachAsync(async (prestacion, error) => {
             if (error) {
                 return error;
