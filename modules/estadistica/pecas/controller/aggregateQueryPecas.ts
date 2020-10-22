@@ -1,4 +1,4 @@
-import * as Agenda from '../../../../modules/turnos/schemas/agenda';
+import { Agenda } from '../../../../modules/turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import { Pecas } from '../schemas/pecas';
 

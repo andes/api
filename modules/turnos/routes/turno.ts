@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as express from 'express';
-import * as agenda from '../schemas/agenda';
+import { Agenda } from '../schemas/agenda';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
@@ -14,6 +14,7 @@ import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 import * as controller from '../../../core/mpi/controller/paciente';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
 import { turnosLog } from '../citasLog';
+import { update } from '../../carpetas/schemas/carpetaPaciente';
 
 
 const router = express.Router();
@@ -52,7 +53,7 @@ function getTipoPrestacion(idTipoPrestacion) {
     return tipoPrestacion.findById(idTipoPrestacion).exec();
 }
 function getAgenda(idAgenda) {
-    return agenda.findById(idAgenda).exec();
+    return Agenda.findById(idAgenda).exec();
 }
 function getCarpeta(nroDocumento, idOrganizacion) {
     return carpetaPaciente.find({ documento: nroDocumento, 'carpetaEfectores.organizacion._id': idOrganizacion }).exec();
@@ -113,7 +114,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             };
         }
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
+        Agenda.findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
             if (err4) {
                 return next(err4);
             }
@@ -314,7 +315,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         query[etiquetaEstado] = 'disponible';
 
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, async function actualizarAgenda(err4, doc2: any, writeOpResult) {
+        Agenda.findOneAndUpdate(query, { $set: update }, { new: true }, async function actualizarAgenda(err4, doc2: any, writeOpResult) {
             if (err4) {
                 return next(err4);
             }
@@ -407,7 +408,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     };
     dbgTurno('query --->', query);
 
-    agenda.update(query, { $set: update }, (error, data) => {
+    Agenda.update(query, { $set: update }, (error, data) => {
         if (error) {
             return next(error);
         }
@@ -463,8 +464,8 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
 
         update[etiquetaTurno] = req.body.turno;
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        (agenda as any).findOneAndUpdate(query, update, { new: true },
-            function actualizarAgenda(err2, doc2, writeOpResult) {
+        Agenda.findOneAndUpdate(query, update, { new: true },
+            function actualizarAgenda(err2, doc2: any, writeOpResult) {
                 if (err2) {
                     return next(err2);
                 }

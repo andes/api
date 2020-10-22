@@ -1,5 +1,5 @@
 import { recordatorio } from '../schemas/recordatorio';
-import * as agendaModel from '../../turnos/schemas/agenda';
+import { Agenda } from '../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { profesional } from '../../../core/tm/schemas/profesional';
@@ -40,7 +40,7 @@ export function buscarTurnosARecordar(dayOffset) {
             { $unwind: '$bloques.turnos' },
             { $match: matchTurno }
         ];
-        const data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        const data = await toArray(Agenda.aggregate(pipeline).cursor({}).exec());
 
         const turnos = [];
         data.forEach((elem: any) => {
@@ -147,7 +147,7 @@ export function agendaRecordatorioQuery(dayOffset) {
             }
         ];
 
-        const query = agendaModel.aggregate(pipeline).cursor({}).exec();
+        const query = Agenda.aggregate(pipeline).cursor({}).exec();
         const data = await toArray(query);
         return resolve(data);
     });

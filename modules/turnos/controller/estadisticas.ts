@@ -1,4 +1,4 @@
-import * as AgendarModel from '../schemas/agenda';
+import { Agenda } from '../schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { paciente as Paciente } from '../../../core/mpi/schemas/paciente';
@@ -381,7 +381,7 @@ export async function estadisticas(filtros, permisos) {
         pipeline = pipelineAgendas;
     }
 
-    const datos = await AgendarModel.aggregate(pipeline);
+    const datos = await Agenda.aggregate(pipeline);
     filtrosFaltantes(filtros, datos[0]);
     return datos[0];
 }
@@ -421,7 +421,7 @@ export async function filtroPorCiudad(filtros, permisos) {
         },
         { $match: makeSecondaryMatch(filtros, permisos) }
     ];
-    const turnosAsignados = await AgendarModel.aggregate(pipelineAsignados);
+    const turnosAsignados = await Agenda.aggregate(pipelineAsignados);
     let idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
 
     const pipelineUbicacionPacientes = [

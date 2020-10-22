@@ -1,6 +1,5 @@
-// import * as auth from './../../../auth/auth.class';
 import { Auth } from './../../../auth/auth.class';
-import * as agenda from '../../../modules/turnos/schemas/agenda';
+import { Agenda } from '../../../modules/turnos/schemas/agenda';
 import * as agendaCtrl from '../../../modules/turnos/controller/agenda';
 import { Prestamo, IPrestamo } from '../../../modules/prestamosCarpetas/schemas/prestamo';
 import { SolicitudCarpetaManual } from '../../../modules/prestamosCarpetas/schemas/solicitudCarpetaManual';
@@ -277,7 +276,7 @@ async function buscarAgendasSobreturnos(organizacionId: string, tipoPrestacion: 
         }
     ];
 
-    return await toArray(agenda.aggregate(pipelineCarpeta).allowDiskUse(true).cursor({}).exec());
+    return await toArray(Agenda.aggregate(pipelineCarpeta).allowDiskUse(true).cursor({}).exec());
 }
 
 async function buscarAgendasTurnos(organizacionId: string, tipoPrestacion: string, espacioFisico: string, profesional: string, horaInicio: string, horaFin: string) {
@@ -332,7 +331,7 @@ async function buscarAgendasTurnos(organizacionId: string, tipoPrestacion: strin
             }
         }];
 
-    return await toArray(agenda.aggregate(pipelineCarpeta).allowDiskUse(true).cursor({}).exec());
+    return await toArray(Agenda.aggregate(pipelineCarpeta).allowDiskUse(true).cursor({}).exec());
 }
 
 export async function prestarCarpeta(req) {
@@ -376,7 +375,7 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta): Promise<IPres
         if (datosCarpeta.datosPrestamo.agendaId) {
             const agendaId = datosCarpeta.datosPrestamo.agendaId;
             const turnoId = datosCarpeta.datosPrestamo.turno.id;
-            const data = await agenda.findById(agendaId);
+            const data = await Agenda.findById(agendaId);
             const turno = agendaCtrl.getTurno(null, data, turnoId);
             pacienteSeleccionado = turno.paciente;
         } else {

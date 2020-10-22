@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as agenda from '../../turnos/schemas/agenda';
+import { Agenda } from '../../turnos/schemas/agenda';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as moment from 'moment';
 import { getDistanceBetweenPoints } from '../../../utils/utilCoordenadas';
@@ -40,7 +40,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     });
 
     try {
-        let agendasResultado = await agenda.aggregate(pipelineAgendas);
+        let agendasResultado = await Agenda.aggregate(pipelineAgendas);
 
         if (req.query.userLocation) {
             const userLocation = JSON.parse(req.query.userLocation);

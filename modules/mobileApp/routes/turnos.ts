@@ -1,8 +1,7 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import * as agenda from '../../turnos/schemas/agenda';
+import { Agenda } from '../../turnos/schemas/agenda';
 import * as agendaCtrl from '../../turnos/controller/agenda';
-import { organizacionCache } from '../../../core/tm/schemas/organizacionCache';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { Auth } from './../../../auth/auth.class';
 import * as recordatorioController from '../controller/RecordatorioController';
@@ -10,7 +9,6 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import { turnosLog, agendaLog } from '../../turnos/citasLog';
-// let async = require('async');
 
 const router = express.Router();
 
@@ -111,7 +109,7 @@ router.get('/turnos', async (req: any, res, next) => {
     pipelineTurno.push({ $unwind: '$bloques.turnos' });
     pipelineTurno.push({ $sort: { 'bloques.turnos.horaInicio': 1 } });
 
-    const data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+    const data2 = await toArray(Agenda.aggregate(pipelineTurno).cursor({}).exec());
 
     const promisesStack = [];
     data2.forEach(elem => {
@@ -134,7 +132,7 @@ router.get('/turnos', async (req: any, res, next) => {
         if (turno.reasignado && turno.reasignado.anterior) {
             const promise = new Promise((resolve, reject) => {
                 const datos = turno.reasignado.anterior;
-                agenda.findById(datos.idAgenda, (err, ag: any) => {
+                Agenda.findById(datos.idAgenda, (err, ag: any) => {
                     if (err) {
                         resolve();
                     }
@@ -209,7 +207,7 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(agendaId)) {
         return next('ObjectID Inválido');
     }
-    agenda.findById(agendaId, async (err, agendaObj) => {
+    Agenda.findById(agendaId, async (err, agendaObj) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
@@ -267,7 +265,7 @@ router.post('/turnos/confirmar', (req: any, res, next) => {
         return next('ObjectID Inválido');
     }
 
-    agenda.findById(agendaId, (err, agendaObj) => {
+    Agenda.findById(agendaId, (err, agendaObj) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
@@ -329,7 +327,7 @@ router.post('/turnos/asistencia', (req: any, res, next) => {
         return next('ObjectID Inválido');
     }
 
-    agenda.findById(agendaId, (err, agendaObj) => {
+    Agenda.findById(agendaId, (err, agendaObj) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }

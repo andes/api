@@ -8,7 +8,7 @@ import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { InstitucionSchema } from '../institucion.schema';
 
-const schema = new mongoose.Schema({
+export const AgendaSchema = new mongoose.Schema({
     organizacion: {
         type: nombreSchema,
         required: true
@@ -73,7 +73,7 @@ const schema = new mongoose.Schema({
 }, { versionKey: false });
 
 // Defino Virtuals
-schema.virtual('turnosDisponibles').get(function () {
+AgendaSchema.virtual('turnosDisponibles').get(function () {
     let turnosDisponibles = 0;
     const hrFn = this.horaFin;
     this.bloques.forEach((bloque) => {
@@ -86,7 +86,7 @@ schema.virtual('turnosDisponibles').get(function () {
     return turnosDisponibles;
 });
 
-schema.virtual('turnosRestantesDelDia').get(function () {
+AgendaSchema.virtual('turnosRestantesDelDia').get(function () {
     let restantesDelDia = 0;
     this.bloques.forEach((bloque) => {
         if (bloque.restantesDelDia > 0) {
@@ -96,7 +96,7 @@ schema.virtual('turnosRestantesDelDia').get(function () {
     return restantesDelDia;
 });
 
-schema.virtual('turnosRestantesProgramados').get(function () {
+AgendaSchema.virtual('turnosRestantesProgramados').get(function () {
     let restantesProgramados = 0;
     this.bloques.forEach((bloque) => {
         if (bloque.restantesProgramados > 0) {
@@ -106,7 +106,7 @@ schema.virtual('turnosRestantesProgramados').get(function () {
     return restantesProgramados;
 });
 
-schema.virtual('turnosRestantesGestion').get(function () {
+AgendaSchema.virtual('turnosRestantesGestion').get(function () {
     let restantesGestion = 0;
     this.bloques.forEach((bloque) => {
         if (bloque.restantesGestion > 0) {
@@ -116,7 +116,7 @@ schema.virtual('turnosRestantesGestion').get(function () {
     return restantesGestion;
 });
 
-schema.virtual('turnosRestantesProfesional').get(function () {
+AgendaSchema.virtual('turnosRestantesProfesional').get(function () {
     let restantesProfesional = 0;
     this.bloques.forEach((bloque) => {
         if (bloque.restantesProfesional > 0) {
@@ -127,55 +127,57 @@ schema.virtual('turnosRestantesProfesional').get(function () {
 });
 
 
-schema.virtual('estadosAgendas').get(function () {
-    return this.schema.path('estado').enumValues;
-});
-
-
 // Validaciones
-schema.pre('save', function (next) {
+AgendaSchema.pre('save', function (next) {
     // Intercalar
     const agenda: any = this;
     if (!/true|false/i.test(agenda.intercalar)) {
         return next(new Error('invalido'));
-        // TODO: loopear bloques y definir si horaInicio/Fin son required
-        // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)
-        // TODO: si citarPorBloque, tiene que haber cantidadBloque (> 0)
     }
-    // Continuar con la respuesta del servidor
     next();
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(AuditPlugin);
+AgendaSchema.plugin(AuditPlugin);
 
-schema.index({
+AgendaSchema.index({
     horaInicio: 1,
     horaFin: 1,
     'organizacion._id': 1
 });
 
-schema.index({
+AgendaSchema.index({
     estado: 1
 });
 
-schema.index({
+AgendaSchema.index({
     'sobreturnos.paciente.id': 1,
     estado: 1
 });
 
-schema.index({
+AgendaSchema.index({
     'bloques.turnos._id': 1
 });
 
-schema.index({
+AgendaSchema.index({
     'bloques.turnos.paciente.id': 1
 });
 
-schema.index({
+AgendaSchema.index({
     'sobreturnos._id': 1
 });
-// Exportar modelo
-const model = mongoose.model('agenda', schema, 'agenda');
 
-export = model;
+AgendaSchema.index({
+    horaInicio: 1,
+    'bloques.restantesMobile': 1,
+    'bloques.restantesProgramados': 1
+}, { name: 'agendas-disponibles', partialFilterExpression: { estado: 'publicada', dinamica: false } });
+
+AgendaSchema.index({
+    'organizacion._id': 1,
+    'tipoPrestaciones.conceptId': 1,
+    horaInicio: 1
+});
+
+// Exportar modelo
+export const Agenda = mongoose.model('agenda', AgendaSchema, 'agenda');

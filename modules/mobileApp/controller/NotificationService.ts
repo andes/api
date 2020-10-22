@@ -1,6 +1,6 @@
 import { PushClient } from './PushClient';
 import { PacienteApp } from '../schemas/pacienteApp';
-import * as agenda from '../../turnos/schemas/agenda';
+import { Agenda } from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
@@ -66,7 +66,7 @@ export class NotificationService {
 
     private static findTurno(datosTurno) {
         return new Promise((resolve, reject) => {
-            agenda.findById(datosTurno.idAgenda, (err, ag: any) => {
+            Agenda.findById(datosTurno.idAgenda, (err, ag: any) => {
                 if (err) {
                     reject();
                 }
