@@ -1,7 +1,7 @@
-import { pacienteApp } from '../schemas/pacienteApp';
+import { PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { deviceModel } from '../schemas/device';
+import { DeviceModel } from '../schemas/device';
 const router = express.Router();
 
 /**
@@ -15,7 +15,7 @@ const router = express.Router();
 router.post('/devices/register', (req: any, res, next) => {
     const token: string = req.headers.authorization.substring(4);
     const user_id = req.user.account_id;
-    pacienteApp.findById(user_id, (errFind, user: any) => {
+    PacienteApp.findById(user_id, (errFind, user: any) => {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
@@ -26,7 +26,7 @@ router.post('/devices/register', (req: any, res, next) => {
             app_version: req.body.app_version,
             session_id: token
         };
-        const device = new deviceModel(device_data);
+        const device = new DeviceModel(device_data);
         user.devices.push(device);
         return user.save((errSave, u) => {
             if (errSave) {
@@ -38,7 +38,7 @@ router.post('/devices/register', (req: any, res, next) => {
 });
 
 /**
- * Update device specification of pacienteApp
+ * Update device specification of PacienteApp
  * @param device {Object} {
  *      @param id {ObjectId}
  *      @param device_id {String}
@@ -50,7 +50,7 @@ router.post('/devices/register', (req: any, res, next) => {
 router.post('/devices/update', (req: any, res, next) => {
     const token: string = req.headers.authorization.substring(4);
     const user_id = req.user.account_id;
-    pacienteApp.findById(user_id, (errFind, user: any) => {
+    PacienteApp.findById(user_id, (errFind, user: any) => {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
@@ -80,7 +80,7 @@ router.post('/devices/delete', (req: any, res, next) => {
     // let token: string = req.headers.authorization.substring(4);
     const user_id = req.user.account_id;
 
-    pacienteApp.findById(user_id, (errFind, user: any) => {
+    PacienteApp.findById(user_id, (errFind, user: any) => {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }

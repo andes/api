@@ -1,10 +1,10 @@
 
-import { pacienteApp } from './schemas/pacienteApp';
+import { PacienteApp } from './schemas/pacienteApp';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 
 class PacienteAppResource extends ResourceBase {
-    Model = pacienteApp;
+    Model = PacienteApp;
     resourceName = 'pacienteApp';
     keyId = '_id';
     middlewares = [Auth.authenticate()];

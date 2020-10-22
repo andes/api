@@ -1,4 +1,4 @@
-import { pacienteApp as PacienteApp } from '../schemas/pacienteApp';
+import { PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as authController from '../controller/AuthController';
@@ -17,7 +17,7 @@ const router = express.Router();
 
 router.put('/account', (req: any, res, next) => {
     const id = req.user.account_id;
-    PacienteApp.findById(mongoose.Types.ObjectId(id), (err, account: any) => {
+    PacienteApp.findById(mongoose.Types.ObjectId(id), (err, account) => {
         if (!account) {
             return res.status(422).send({ error: '' });
         }

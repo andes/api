@@ -1,9 +1,43 @@
 import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcrypt-nodejs';
+import { DeviceSchema } from './device';
+import { ObjectId } from '@andes/core';
+import { AndesDoc } from '@andes/mongoose-plugin-audit';
 
-import { deviceSchema } from './device';
+export interface IPacienteApp {
+    nombre: string;
+    apellido: string;
+    email: string;
+    usuario: string;
+    documento: string;
+    nacionalidad: string;
+    sexo: string;
+    genero: string;
+    fechaNacimiento: Date;
+    telefono: string;
+    password: string;
+    lastLogin: Date;
+    pacientes?: {
+        id: ObjectId;
+        relacion: 'principal' | 'pariente';
+        addAt: Date;
+    }[];
+    profesionalId: ObjectId;
+    activacionApp: boolean;
+    permisos: string[];
+    restablecerPassword?: {
+        codigo: string;
+        fechaExpiracion: Date;
+    };
+    devices: any[];
+}
 
-export let pacienteAppSchema = new mongoose.Schema({
+export type IPacienteAppDoc = AndesDoc<IPacienteApp> & {
+    comparePassword(password: string, cb: Function)
+};
+
+
+export const PacienteAppSchema = new mongoose.Schema({
 
     nombre: {
         type: String,
@@ -69,10 +103,20 @@ export let pacienteAppSchema = new mongoose.Schema({
         codigo: String,
         fechaExpiracion: Date
     },
-    devices: [deviceSchema],
+    devices: [DeviceSchema],
 }, { timestamps: true });
 
-pacienteAppSchema.pre('save', function (next) {
+PacienteAppSchema.index({
+    'pacientes.id': 1
+});
+PacienteAppSchema.index({
+    email: 1
+});
+PacienteAppSchema.index({
+    profesionalId: 1
+});
+
+PacienteAppSchema.pre('save', function (next) {
 
     const user: any = this;
     const SALT_FACTOR = 5;
@@ -106,7 +150,7 @@ pacienteAppSchema.pre('save', function (next) {
 
 });
 
-pacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
+PacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
 
     bcrypt.compare(passwordAttempt, this.password, (err, isMatch) => {
 
@@ -118,4 +162,4 @@ pacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
     });
 };
 
-export let pacienteApp = mongoose.model('pacienteApp', pacienteAppSchema, 'pacienteApp');
+export const PacienteApp = mongoose.model<IPacienteAppDoc>('pacienteApp', PacienteAppSchema, 'pacienteApp');
