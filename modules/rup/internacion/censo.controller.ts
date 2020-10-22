@@ -60,6 +60,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
     let tablaPacientes = {};
 
     Object.keys(internaciones).map(async idInter => {
+        if (!internaciones) {
+            return;
+        }
         const allMovimientos = internaciones[idInter];
         const ultimoMovimiento = allMovimientos[allMovimientos.length - 1];
         // ultimo movimiento en la unidad organizativa que se esta filtrando
@@ -74,14 +77,13 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
 
         function checkPaciente(movimiento) {
             if (!tablaPacientes[movimiento.paciente.id]) {
-                const cama = camas[String(movimiento.idCama)][0];
                 tablaPacientes[movimiento.paciente.id] = {
                     datos: {
                         paciente: movimiento.paciente,
                         cama: {
-                            nombre: cama.nombre,
-                            tipoCama: cama.tipoCama,
-                            sectores: cama.sectores
+                            nombre: movimiento.nombre,
+                            tipoCama: movimiento.tipoCama,
+                            sectores: movimiento.sectores
                         },
                     },
                     actividad: []
