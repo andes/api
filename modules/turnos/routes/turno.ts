@@ -14,7 +14,6 @@ import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 import * as controller from '../../../core/mpi/controller/paciente';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
 import { turnosLog } from '../citasLog';
-import { update } from '../../carpetas/schemas/carpetaPaciente';
 
 
 const router = express.Router();

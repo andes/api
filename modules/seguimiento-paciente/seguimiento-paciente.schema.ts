@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import ISeguimientoPaciente from './seguimiento-paciente.interface';
-import { profesionalSchema } from '../../core/tm/schemas/profesional';
+import { ProfesionalSchema } from '../../core/tm/schemas/profesional';
 import * as registro from '../rup/schemas/prestacion.registro';
 
 export const seguimientoPacienteSchema = new Schema(
@@ -14,7 +14,7 @@ export const seguimientoPacienteSchema = new Schema(
             sexo: String,
             fechaNacimiento: Date,
         },
-        profesional: profesionalSchema,
+        profesional: ProfesionalSchema,
         registro,
         fechaDiagnostico: {
             type: Date,

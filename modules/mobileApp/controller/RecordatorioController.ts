@@ -2,7 +2,7 @@ import { recordatorio } from '../schemas/recordatorio';
 import { Agenda } from '../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { profesional } from '../../../core/tm/schemas/profesional';
+import { Profesional } from '../../../core/tm/schemas/profesional';
 import { NotificationService } from './NotificationService';
 import { sendSms, ISms } from '../../../utils/roboSender';
 
@@ -182,7 +182,7 @@ export function enviarAgendaNotificacion() {
     recordatorio.find({ tipoRecordatorio: 'agenda', estadoEnvio: false }, (err, recordatiorios: any) => {
         recordatiorios.forEach((item) => {
             Promise.all([
-                profesional.findById(item.dataAgenda.profesionalId),
+                Profesional.findById(item.dataAgenda.profesionalId),
                 PacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
             ]).then(datos => {
                 if (datos[0] && datos[1]) {

@@ -17,7 +17,7 @@ const matriculacionSchema = new mongoose.Schema({
     fin: Date,
     revalidacionNumero: Number
 });
-export let profesionalSchema = new mongoose.Schema({
+export const ProfesionalSchema = new mongoose.Schema({
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
     apellido: { type: String, required: false },
@@ -122,16 +122,21 @@ export let profesionalSchema = new mongoose.Schema({
 
 
 // Virtuals
-profesionalSchema.virtual('nombreCompleto').get(function () {
+ProfesionalSchema.virtual('nombreCompleto').get(function () {
     return this.apellido + ', ' + this.nombre;
 
 });
-profesionalSchema.virtual('fallecido').get(function () {
+ProfesionalSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
 
-profesionalSchema.plugin(AuditPlugin);
+ProfesionalSchema.plugin(AuditPlugin);
 
-profesionalSchema.index({ documento: 1 });
+ProfesionalSchema.index({ documento: 1 });
 
-export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');
+ProfesionalSchema.index({
+    apellido: 1,
+    nombre: 1
+});
+
+export const Profesional = mongoose.model('profesional', ProfesionalSchema, 'profesional');
