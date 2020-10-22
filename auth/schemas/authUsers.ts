@@ -1,5 +1,36 @@
 import * as mongoose from 'mongoose';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { AndesDocWithAudit, AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { ObjectId } from '@andes/core';
+
+export interface IAuthUsers {
+    usuario: number;
+    activo: boolean;
+    nombre: string;
+    apellido: string;
+    documento: string;
+    password: string;
+    foto: string;
+    authMethod?: string;
+    permisosGlobales: string[];
+    organizaciones: {
+        _id: ObjectId;
+        nombre: string;
+        permisos: string[];
+        activo: boolean;
+        perfiles: {
+            _id: ObjectId;
+            nombre: string;
+        }[];
+    }[];
+    lastLogin: Date;
+    configuracion?: { [key: string]: any };
+    disclaimers?: {
+        _id: ObjectId;
+        createdAt: Date;
+    }[];
+}
+
+export type IAuthUsersDoc = AndesDocWithAudit<IAuthUsers>;
 
 export const AuthUsersSchema = new mongoose.Schema({
     usuario: Number,
@@ -56,4 +87,9 @@ AuthUsersSchema.pre('save', function (next) {
 
 AuthUsersSchema.plugin(AuditPlugin);
 
-export let AuthUsers = mongoose.model('authUsers', AuthUsersSchema, 'authUsers');
+AuthUsersSchema.index({
+    usuario: 1,
+    'organizaciones._id': 1,
+});
+
+export const AuthUsers = mongoose.model<IAuthUsersDoc>('authUsers', AuthUsersSchema, 'authUsers');
