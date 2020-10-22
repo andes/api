@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let roboSchema = new mongoose.Schema({
+export const RoboSchema = new mongoose.Schema({
     // SMS Options
     message: String,
     phone: String,
@@ -54,5 +54,10 @@ export let roboSchema = new mongoose.Schema({
     }
 });
 
-export let RoboModel = mongoose.model('sendMessageCache', roboSchema, 'sendMessageCache');
+RoboSchema.index({
+    status: 1,
+    scheduledAt: 1
+});
+
+export const RoboModel = mongoose.model('sendMessageCache', RoboSchema, 'sendMessageCache');
 
