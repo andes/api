@@ -2,7 +2,7 @@ import { Schema, Model, model, Document } from 'mongoose';
 import { NombreApellidoSchema } from '../../../core/tm/schemas/nombreApellido';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacionSchema, ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-import { espacioFisicoSchema, IEspacioFisico } from '../../../modules/turnos/schemas/espacioFisico';
+import { EspacioFisicoSchema, IEspacioFisico } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as constantes from './constantes';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
@@ -41,7 +41,7 @@ export const SolicitudCarpetaManualSchema = new Schema({
         required: true
     },
     datosSolicitudManual: {
-        espacioFisico: espacioFisicoSchema,
+        espacioFisico: EspacioFisicoSchema,
         prestacion: tipoPrestacionSchema,
         profesional: NombreApellidoSchema,
         responsable: NombreApellidoSchema,

@@ -19,7 +19,7 @@ export interface IEspacioFisico extends Document {
     };
 }
 
-export let espacioFisicoSchema = new Schema({
+export const EspacioFisicoSchema = new Schema({
     nombre: String,
     detalle: String,
     descripcion: String,
@@ -36,4 +36,8 @@ export let espacioFisicoSchema = new Schema({
     }
 });
 
-export let espacioFisico: Model<IEspacioFisico> = model('espacioFisico', espacioFisicoSchema, 'espacioFisico');
+EspacioFisicoSchema.index({
+    nombre: 1
+});
+
+export const EspacioFisico: Model<IEspacioFisico> = model('espacioFisico', EspacioFisicoSchema, 'espacioFisico');

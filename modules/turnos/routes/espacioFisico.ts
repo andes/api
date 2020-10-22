@@ -1,14 +1,14 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { removeDiacritics } from '../../../utils/utils';
-import { espacioFisico } from '../schemas/espacioFisico';
+import { EspacioFisico } from '../schemas/espacioFisico';
 import { defaultLimit, maxLimit } from './../../../config';
 
 const router = express.Router();
 
 router.get('/espacioFisico/:_id*?', (req, res, next) => {
     if (req.params._id) {
-        espacioFisico.findById(req.params._id, (err, data) => {
+        EspacioFisico.findById(req.params._id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -19,7 +19,7 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
         const radix = 10;
         const skip: number = parseInt(req.query.skip || 0, radix);
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-        const query = espacioFisico.find({});
+        const query = EspacioFisico.find({});
         // .skip(skip).limit(limit);
         const nombres = [];
 
@@ -100,7 +100,7 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
 
 router.get('/espacioFisico/:idOrganizacion', (req, res, next) => {
 
-    espacioFisico.find(req.params.idOrganizacion, (err, data) => {
+    EspacioFisico.find(req.params.idOrganizacion, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -110,7 +110,7 @@ router.get('/espacioFisico/:idOrganizacion', (req, res, next) => {
 });
 
 router.post('/espacioFisico', (req, res, next) => {
-    const newEspacioFisico = new espacioFisico(req.body);
+    const newEspacioFisico = new EspacioFisico(req.body);
     newEspacioFisico.save((err) => {
         if (err) {
             return next(err);
@@ -120,7 +120,7 @@ router.post('/espacioFisico', (req, res, next) => {
 });
 
 router.put('/espacioFisico/:id', (req, res, next) => {
-    espacioFisico.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
+    EspacioFisico.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -129,7 +129,7 @@ router.put('/espacioFisico/:id', (req, res, next) => {
 });
 
 router.delete('/espacioFisico/:id', (req, res, next) => {
-    espacioFisico.findByIdAndRemove(req.params.id, (err, data) => {
+    EspacioFisico.findByIdAndRemove(req.params.id, (err, data) => {
         if (err) {
             return next(err);
         }
