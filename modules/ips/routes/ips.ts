@@ -38,7 +38,7 @@ router.get('/getDocuments', async (req, res, next) => {
             res.send([]);
         }
     } catch (err) {
-        return next(err)
+       return next(err)
     }
 
 })

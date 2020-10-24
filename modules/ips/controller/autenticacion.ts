@@ -137,7 +137,6 @@ export class SaludDigitalClient {
 
     async solicitud({ custodian = null, fechaDesde = null, fechaHasta = null, patient, loinc }) {
         try {
-           // this.hostBus = 'http://fhir.neuquen.ngrok.io/4_0_0'
             let url = `${this.hostBus}/DocumentReference?subject:identifier=${this.dominio}|${patient}&custodian=${custodian}&type=https://loinc.org|${loinc}`;
             if (fechaDesde) {
                 url += `&date=ge${fechaDesde}`;
@@ -176,7 +175,6 @@ export class SaludDigitalClient {
 }
 
     async getBinary(urlBinary) {
-        // this.hostBus = 'http://fhir.neuquen.ngrok.io/4_0_0';
         const url = `${this.hostBus}${urlBinary}`;
         const options = {
             url,
