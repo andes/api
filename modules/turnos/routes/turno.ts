@@ -203,7 +203,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
             esHoy = true;
         }
 
-        const contieneBloqueSoloGestion = agendaRes.bloques.some((bloque: any) => bloque.reservadoGestion > 0 && bloque.accesoDirectoDelDia === 0 || bloque.accesoDirectoProgramado === 0 || bloque.reservadoProfesional === 0);
+        const contieneBloqueSoloGestion = agendaRes.bloques.some((bloque: any) => bloque.reservadoGestion > 0 && bloque.accesoDirectoDelDia === 0 && bloque.accesoDirectoProgramado === 0 && bloque.reservadoProfesional === 0);
         // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
         countBloques = {
             delDia: esHoy && !contieneBloqueSoloGestion ? (
@@ -215,7 +215,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
             profesional: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProfesional,
             mobile: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesMobile,
         };
-
         posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(item => item._id.toString() === req.body.idTurno.toString());
 
         const turnoSeleccionado = (agendaRes as any).bloques[posBloque].turnos[posTurno];
