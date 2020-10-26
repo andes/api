@@ -14,7 +14,7 @@ export interface ISalaComunMovimiento {
     idSalaComun: Types.ObjectId;
     ambito: String;
     paciente: any;
-    accion: SalaComunAccion;
+    accion: 'IN' | 'OUT';
     idInternacion: Types.ObjectId;
     fecha: Date;
     unidadOrganizativas: UnidadOrganizativa[];

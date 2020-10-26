@@ -3,7 +3,7 @@ import * as debug from 'debug';
 import * as utils from '../utils';
 const log = debug('sendSMS');
 const soap = require('soap');
-const libxmljs = require('libxmljs');
+const libxmljs = require('libxmljs2');
 
 export interface SmsOptions {
     telefono: number;

@@ -1,12 +1,12 @@
 import { Document, Schema, Model, model } from 'mongoose';
 
 export interface ITipoPrestacion extends Document {
-    nombre?: String;
-    conceptId: String;
-    term: String;
-    fsn: String;
+    nombre?: string;
+    conceptId: string;
+    term: string;
+    fsn: string;
     semanticTag: 'procedimiento' | 'solicitud' | 'hallazgo' | 'trastorno' | 'antecedenteFamiliar' | 'régimen/tratamiento';
-    codigoServSalud?: String;
+    codigoServSalud?: string;
 }
 
 

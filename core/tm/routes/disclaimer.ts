@@ -8,16 +8,7 @@ class DisclaimerResource extends ResourceBase {
     keyId = '_id';
     searchFileds = {
         activo: MongoQuery.matchString,
-        version: MongoQuery.partialString,
-        search: (value) => {
-            return {
-                $or: [
-                    {
-                        version: MongoQuery.partialString(value)
-                    }
-                ]
-            };
-        }
+        version: MongoQuery.partialString
     };
 }
 export const DisclaimerCtr = new DisclaimerResource({});

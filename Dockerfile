@@ -1,18 +1,16 @@
-ARG NODE_VERSION=10-alpine
+ARG NODE_VERSION=14-alpine
 FROM node:${NODE_VERSION}
 
 ENV node_env=development
 
 RUN apk update && apk upgrade && apk add --no-cache git
 
-RUN npm i -g npm@latest
-
 WORKDIR /usr/src/api
 
 COPY package.json package-lock.json ./
 COPY packages ./packages
 
-RUN npm install
+RUN MONGOMS_DISABLE_POSTINSTALL=1 npm install
 
 COPY . .
 

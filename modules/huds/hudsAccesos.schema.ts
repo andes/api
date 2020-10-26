@@ -46,17 +46,18 @@ export const HudsAccesoSchema = new Schema({
 
 export interface IHudsAccesos extends Document {
     paciente: Types.ObjectId;
-    start: Number;
-    cantidadAccesos: Number;
+    start: number;
+    cantidadAccesos: number;
     accesos: [{
         fecha: Date;
         usuario: any;
-        matricula: String;
-        motivo: String;
+        matricula: string;
+        motivoAcceso: string;
         turno: Types.ObjectId;
         prestacion: Types.ObjectId;
         organizacion: any;
-        profesional: Schema.Types.Mixed;
+        // profesional: Schema.Types.Mixed;
+        cliente: any;
 
     }];
     cliente: {

@@ -7,11 +7,7 @@ class WebhookResource extends ResourceBase {
     keyId = '_id';
     searchFileds = {
         nombre: MongoQuery.partialString,
-        search: (value) => {
-            return {
-                nombre: MongoQuery.partialString(value)
-            };
-        },
+        search: ['nombre']
     };
 }
 

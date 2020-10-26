@@ -30,8 +30,8 @@ export type SalaComunOcupacionItem = {
     desde: Date,
     createdBy: any;
     createdAt: Date;
-    updatedBy: any;
-    updatedAt: Date;
+    updatedBy?: any;
+    updatedAt?: Date;
 };
 
 export type ISalaComunSnapshot = ISalaComun & {
