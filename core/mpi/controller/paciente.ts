@@ -6,7 +6,7 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
-import * as agenda from '../../../modules/turnos/schemas/agenda';
+import { Agenda } from '../../../modules/turnos/schemas/agenda';
 import { sisa, renaperToAndes, sisaToAndes } from '@andes/fuentes-autenticas';
 import { sisa as sisaConfig } from '../../../config.private';
 import { renaper } from '@andes/fuentes-autenticas';
@@ -908,8 +908,8 @@ export async function getHistorialPaciente(req, dataPaciente) {
             }
 
         );
-        let resultado = await agenda.aggregate(pipelineTurno).exec();
-        const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
+        let resultado = await Agenda.aggregate(pipelineTurno).exec();
+        const sobreturnos = await Agenda.aggregate(pipelineSobreturno).exec();
         resultado = resultado.concat(sobreturnos);
         return (resultado);
     } catch (error) {

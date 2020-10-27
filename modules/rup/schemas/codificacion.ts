@@ -20,7 +20,7 @@ const pacienteSchema = new mongoose.Schema({
     obraSocial: { type: ObraSocialSchema }
 });
 
-const codificacionSchema = new mongoose.Schema({
+export const CodificacionSchema = new mongoose.Schema({
     idPrestacion: {
         type: mongoose.Schema.Types.ObjectId
     },
@@ -49,6 +49,16 @@ const codificacionSchema = new mongoose.Schema({
         numeroComprobante: String
     },
 });
-codificacionSchema.plugin(AuditPlugin);
-let codificacion = mongoose.model('codificacion', codificacionSchema, 'codificacion');
-export = codificacion;
+
+CodificacionSchema.index({
+    createdAt: 1,
+    'createdBy.organizacion.id': 1
+});
+
+CodificacionSchema.index({
+    idPrestacion: 1
+});
+
+CodificacionSchema.plugin(AuditPlugin);
+export const Codificacion = mongoose.model('codificacion', CodificacionSchema, 'codificacion');
+

@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { profesional } from '../schemas/profesional';
+import { Profesional } from '../schemas/profesional';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
 import { userScheduler } from '../../../config.private';
@@ -11,7 +11,7 @@ import { Auth } from './../../../auth/auth.class';
  */
 export async function vencimientoMatriculaGrado(done) {
     // let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
-    let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.fin': { $lte: new Date() }, 'formacionGrado.matriculado': true, profesionalMatriculado: true });
+    let profesionales: any = await Profesional.find({ 'formacionGrado.matriculacion.fin': { $lte: new Date() }, 'formacionGrado.matriculado': true, profesionalMatriculado: true });
 
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
@@ -34,7 +34,7 @@ export async function vencimientoMatriculaGrado(done) {
 }
 
 export async function vencimientoMatriculaPosgrado(done) {
-    let profesionales: any = await profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true, 'formacionPosgrado.tieneVencimiento': true }, (data: any) => { return data; });
+    let profesionales: any = await Profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true, 'formacionPosgrado.tieneVencimiento': true }, (data: any) => { return data; });
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             if (profesionales[_n].formacionPosgrado) {
@@ -65,7 +65,7 @@ async function actualizar(unProfesional) {
 }
 
 export async function migrarTurnos() {
-    let profesionales: any = await profesional.find({ turno: { $gte: new Date() } }, (data: any) => { return data; });
+    let profesionales: any = await Profesional.find({ turno: { $gte: new Date() } }, (data: any) => { return data; });
     profesionales.forEach(unProfesional => {
         let tipoDeTurno;
         let turnoSolicitud = {
@@ -105,7 +105,7 @@ export async function migrarTurnos() {
 }
 
 export async function matriculaCero() {
-    let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; });
+    let profesionales: any = await Profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; });
     profesionales.forEach((unProfesional, i) => {
         let formacionGrado = unProfesional.formacionGrado;
         formacionGrado.forEach((element, n) => {
@@ -113,13 +113,13 @@ export async function matriculaCero() {
                 unProfesional.formacionGrado[n].matriculacion = null;
             }
         });
-        profesional.findByIdAndUpdate(unProfesional.id, unProfesional, (err, resultado: any) => { });
+        Profesional.findByIdAndUpdate(unProfesional.id, unProfesional, (err, resultado: any) => { });
     });
 }
 
 
 export async function formacionCero() {
-    let profesionales: any = await profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; });
+    let profesionales: any = await Profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; });
     return profesionales;
 }
 
@@ -143,11 +143,11 @@ export async function search(filter, fields) {
 
     ];
 
-    return await profesional.aggregate(aggregate);
+    return await Profesional.aggregate(aggregate);
 }
 
 export async function searchMatriculas(profesionalId) {
-    const _profesional: any = await profesional.findById(profesionalId);
+    const _profesional: any = await Profesional.findById(profesionalId);
     const filterFormaciones = (e => !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date()));
 
     return {

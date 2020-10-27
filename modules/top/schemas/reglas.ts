@@ -56,4 +56,10 @@ export const ReglasTOPSchema = new Schema({
 });
 
 ReglasTOPSchema.plugin(AuditPlugin);
+ReglasTOPSchema.index({
+    'origen.organizacion.id': 1,
+    'origen.prestaciones.prestacion.conceptId': 1,
+    'destino.prestacion.conceptId': 1,
+    'destino.organizacion.id': 1
+}, { name: 'reglas-top' });
 export const ReglasTOP = model<IReglasTOP & Document>('reglas', ReglasTOPSchema, 'reglas');

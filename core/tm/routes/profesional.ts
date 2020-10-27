@@ -1,6 +1,6 @@
 import { defaultLimit, maxLimit } from './../../../config';
 import * as express from 'express';
-import { profesional } from '../schemas/profesional';
+import { Profesional } from '../schemas/profesional';
 import { profesion } from '../schemas/profesion_model';
 import * as utils from '../../../utils/utils';
 import * as fs from 'fs';
@@ -25,16 +25,16 @@ router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
     let query = [{ $unwind: '$formacionPosgrado' },
     { $unwind: '$formacionPosgrado.matriculacion' },
     { $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 } }, { $limit: 1 }];
-    let data = await toArray(profesional.aggregate(query).cursor({}).exec());
+    let data = await toArray(Profesional.aggregate(query).cursor({}).exec());
     let ultimoNumero = data[0].formacionPosgrado.matriculacion.matriculaNumero;
     res.json(ultimoNumero);
 });
 
 router.get('/profesionales/estadisticas', async (req, res, next) => {
     let estadisticas = {};
-    let total = profesional.count({ profesionalMatriculado: true });
-    let totalMatriculados = profesional.count({ rematriculado: 0, profesionalMatriculado: true });
-    let totalRematriculados = profesional.count({ rematriculado: 1, profesionalMatriculado: true });
+    let total = Profesional.count({ profesionalMatriculado: true });
+    let totalMatriculados = Profesional.count({ rematriculado: 0, profesionalMatriculado: true });
+    let totalRematriculados = Profesional.count({ rematriculado: 1, profesionalMatriculado: true });
     Promise.all([total, totalMatriculados, totalRematriculados]).then(values => {
         estadisticas['total'] = values[0];
         estadisticas['totalMatriculados'] = values[1];
@@ -51,7 +51,7 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
     const fechaHasta = req.query.fechaHasta;
     let profesionaleSisaTotal = [];
 
-    let datos = await profesional.aggregate(
+    let datos = await Profesional.aggregate(
         [
             {
                 $match: {
@@ -181,7 +181,7 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['formacionGrado.matriculacion'] = { $ne: null };
         opciones['profesionalMatriculado'] = true;
 
-        let datosGuia: any = await profesional.find(opciones);
+        let datosGuia: any = await Profesional.find(opciones);
         let resultado = [];
 
         if (datosGuia.length > 0) {
@@ -212,7 +212,7 @@ router.get('/profesionales/matching', async (req, res, next) => {
 
     if (Object.keys(opciones).length !== 0) {
         opciones['profesionalMatriculado'] = true;
-        let profEncontrados: any = await profesional.find(opciones);
+        let profEncontrados: any = await Profesional.find(opciones);
         let arrayProf = [];
         let resultado;
         if (profEncontrados) {
@@ -306,7 +306,7 @@ router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
         firmaProfesional: null,
         firmaSupervisor: null
     };
-    profesional.findById(req.params.id).exec((err, prof: any) => {
+    Profesional.findById(req.params.id).exec((err, prof: any) => {
         if (err) {
             return errHandler(err);
         }
@@ -510,14 +510,14 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         pipeline.push({ $limit: limit });
     }
     if (!req.query.exportarPlanillaCalculo) {
-        const data = await profesional.aggregate(pipeline);
+        const data = await Profesional.aggregate(pipeline);
         try {
             res.json(data);
         } catch (error) {
             return next(error);
         }
     } else {
-        const matriculas = await toArray(profesional.aggregate(pipeline).cursor({}).exec());
+        const matriculas = await toArray(Profesional.aggregate(pipeline).cursor({}).exec());
         let responseArray = createResponseArray(matriculas, req);
         res.status(201).json(responseArray);
     }
@@ -531,7 +531,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     const opciones = {};
     let query;
     if (req.params.id) {
-        profesional.findById(req.params.id, (err, data) => {
+        Profesional.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -640,15 +640,15 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 }
             }];
             let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
-            query = profesional.find(q).
+            query = Profesional.find(q).
                 sort({
                     apellido: 1,
                     nombre: 1
                 });
         } else if (!req.query.exportarPlanillaCalculo) {
-            query = profesional.find(opciones).skip(skip).limit(limit);
+            query = Profesional.find(opciones).skip(skip).limit(limit);
         } else {
-            query = profesional.find(opciones);
+            query = Profesional.find(opciones);
         }
 
         if (req.query.fields) {
@@ -945,7 +945,7 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
 
         }
         if (req.body.profesional) {
-            const newProfesional = new profesional(req.body.profesional);
+            const newProfesional = new Profesional(req.body.profesional);
             Auth.audit(newProfesional, req);
             newProfesional.save(async (err2) => {
                 if (err2) {
@@ -1031,7 +1031,7 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
     }
     try {
         if (req.body.id) {
-            let resultado: any = await profesional.findById(req.body.id);
+            let resultado: any = await Profesional.findById(req.body.id);
 
 
             const profesionalOriginal = resultado.toObject();
@@ -1086,7 +1086,7 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:deleteProfesional')) {
         return next(403);
     }
-    profesional.findByIdAndRemove(req.params.id, (err, data) => {
+    Profesional.findByIdAndRemove(req.params.id, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -1097,7 +1097,7 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
 router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
     try {
         let profesionalOriginal;
-        let resultado: any = await profesional.findById(req.params.id);
+        let resultado: any = await Profesional.findById(req.params.id);
         profesionalOriginal = resultado.toObject();
         if (resultado) {
             switch (req.body.op) {
@@ -1167,7 +1167,7 @@ router.get('/resumen', (req, res, next) => {
         opciones['documento'] = req.query.documento;
     }
     opciones['profesionalMatriculado'] = true;
-    query = profesional.find(opciones);
+    query = Profesional.find(opciones);
     query.exec((err, data) => {
         if (err) {
             return next(err);

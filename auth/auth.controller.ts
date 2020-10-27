@@ -2,7 +2,7 @@ import { AndesCache, ObjectId } from '@andes/core';
 import { RedisWebSockets } from '../config.private';
 import { Auth } from './auth.class';
 import { AuthUsers } from './schemas/authUsers';
-import { profesional } from './../core/tm/schemas/profesional';
+import { Profesional } from './../core/tm/schemas/profesional';
 
 
 export let AuthCache: AndesCache;
@@ -44,9 +44,9 @@ export function createPayload(user, authOrg, prof) {
 /**
  * Busca las collecciones necesarias para generar el payload de session.
  */
-export async function findTokenData(username: string, organizacion: ObjectId) {
+export async function findTokenData(username: number, organizacion: ObjectId) {
     const pAuth = AuthUsers.findOne({ usuario: username, 'organizaciones._id': organizacion });
-    const pProfesional = profesional.findOne({ documento: username }, { nombre: true, apellido: true });
+    const pProfesional = Profesional.findOne({ documento: username }, { nombre: true, apellido: true });
     const [auth, prof]: [any, any] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
         const authOrganizacion = auth.organizaciones.find(item => String(item._id) === String(organizacion));
@@ -99,7 +99,7 @@ export async function getTokenPayload(token, userData) {
 
 export async function findUser(username) {
     const pAuth = AuthUsers.findOne({ usuario: username });
-    const pProfesional = profesional.findOne({ documento: username }, { matriculas: true, especialidad: true });
+    const pProfesional = Profesional.findOne({ documento: username }, { matriculas: true, especialidad: true });
     const [auth, prof] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
         return {
@@ -124,7 +124,7 @@ export const checkMobile = (profesionalId) => {
         const authMobile = require('../modules/mobileApp/controller/AuthController');
         authMobile.getAccountByProfesional(profesionalId).then((account) => {
             if (!account) {
-                profesional.findById(profesionalId).then(prof => {
+                Profesional.findById(profesionalId).then(prof => {
                     if (!prof) {
                         return reject();
                     }

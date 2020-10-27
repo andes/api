@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as codes from '../../fhir/controllers/errorCodes';
 import { Auth } from '../../../auth/auth.class';
 import * as utils from '../../../utils/utils';
-import { profesional } from '../../../core/tm/schemas/profesional';
+import { Profesional } from '../../../core/tm/schemas/profesional';
 import { Practitioner } from '@andes/fhir';
 // Schemas
 const router = express.Router();
@@ -28,7 +28,7 @@ router.get('/practitioner/([\$])match', async (req, res, next) => {
     }
 
     const profesionalesFHIR = [];
-    const profesionalesAndes = await profesional.find(opciones).cursor({ batchSize: 100 });
+    const profesionalesAndes = await Profesional.find(opciones).cursor({ batchSize: 100 });
     await profesionalesAndes.eachAsync(async (unProf) => {
         const datosFhir = Practitioner.encode(unProf);
         profesionalesFHIR.push(datosFhir);

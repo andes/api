@@ -1,6 +1,6 @@
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
-import * as agendaModel from '../../turnos/schemas/agenda';
+import { Agenda } from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
@@ -13,7 +13,7 @@ import * as mongoose from 'mongoose';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
-import * as codificacionModel from '../../rup/schemas/codificacion';
+import { Codificacion } from '../../rup/schemas/codificacion';
 import { Types } from 'mongoose';
 import { agendaLog } from '../citasLog';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
@@ -706,7 +706,7 @@ export async function actualizarTiposDeTurno() {
         }
     };
 
-    const cursor = agendaModel.find(condicion).cursor();
+    const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(doc => {
         const agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
@@ -761,7 +761,7 @@ export function actualizarEstadoAgendas(start, end) {
             { horaInicio: { $lte: end } }
         ]
     };
-    const cursor = agendaModel.find(condicion).cursor();
+    const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(doc => {
         const agenda: any = doc;
         let turnos = [];
@@ -862,7 +862,7 @@ export async function prestacionesDisponibles(params) {
         }
 
     ];
-    let prestaciones = await agendaModel.aggregate(pipelinePrestaciones);
+    let prestaciones = await Agenda.aggregate(pipelinePrestaciones);
     return prestaciones;
 }
 
@@ -935,7 +935,7 @@ export async function turnosDisponibles(prestacion, organizacion) {
             }
         }
     ];
-    let agendas = await agendaModel.aggregate(pipelineAgendas);
+    let agendas = await Agenda.aggregate(pipelineAgendas);
     return agendas;
 
 }
@@ -970,7 +970,7 @@ export function actualizarTurnosDelDia() {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
-    const cursor = agendaModel.find(condicion).cursor();
+    const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(doc => {
         const agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
@@ -1015,7 +1015,7 @@ export function actualizarTurnosMobile() {
         },
         'bloques.restantesMobile': { $gt: 0 }
     };
-    const cursor = agendaModel.find(condicion).cursor();
+    const cursor = Agenda.find(condicion).cursor();
     let logRequest = {
         user: {
             usuario: { nombre: 'actualizarTurnosMobileJob', apellido: 'actualizarTurnosMobileJob' },
@@ -1071,7 +1071,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
     const noNominalizada = prestacion.solicitud.tipoPrestacion.noNominalizada;
     const idTurno = prestacion.solicitud.turno;
     if (noNominalizada && idTurno) {
-        const agenda: any = await agendaModel.findOne({ 'bloques.turnos._id': idTurno });
+        const agenda: any = await Agenda.findOne({ 'bloques.turnos._id': idTurno });
         if (agenda) {
             agenda.estado = 'auditada';
             const user = Auth.getUserFromResource(prestacion);
@@ -1086,7 +1086,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
     const idTurno = prestacion.solicitud.turno;
     if (!prestacion.solicitud.tipoPrestacion.noNominalizada && idTurno) {
         try {
-            const agenda: any = await agendaModel.findOne({ $or: [{ 'bloques.turnos._id': { $eq: idTurno, $exists: true } }, { 'sobreturnos._id': { $eq: idTurno, $exists: true } }] });
+            const agenda: any = await Agenda.findOne({ $or: [{ 'bloques.turnos._id': { $eq: idTurno, $exists: true } }, { 'sobreturnos._id': { $eq: idTurno, $exists: true } }] });
             const noAsistionConceptos = await getConceptosNoAsistio();
 
             let filtroRegistros = prestacion.ejecucion.registros.filter(x => noAsistionConceptos.find(y => y.conceptId === x.concepto.conceptId));
@@ -1137,7 +1137,7 @@ async function getConceptosNoAsistio() {
  * @param {any} turno
  */
 export function updatePaciente(pacienteModified, turno) {
-    agendaModel.findById(turno.agenda_id, (err, data, next) => {
+    Agenda.findById(turno.agenda_id, (err, data, next) => {
         if (err) {
             return next(err);
         }
@@ -1292,8 +1292,8 @@ export function getConsultaDiagnostico(params) {
             }
         ];
 
-        const p1 = toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
-        const p2 = toArray(codificacionModel.aggregate(pipeline2).cursor({}).exec());
+        const p1 = toArray(Agenda.aggregate(pipeline).cursor({}).exec());
+        const p2 = toArray(Codificacion.aggregate(pipeline2).cursor({}).exec());
 
         let [diagnosticosTurnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2]);
 
@@ -1328,7 +1328,7 @@ export async function getDatosTurnos(idTurno) {
         { $project: { _id: 0, idAgenda: '$_id', idBloque: '$bloques._id' } }
     ];
 
-    let data = await agendaModel.aggregate(pipeline);
+    let data = await Agenda.aggregate(pipeline);
     return data;
 
 }
@@ -1394,7 +1394,7 @@ export function getCantidadConsultaXPrestacion(params) {
 
         ];
 
-        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        let data = await toArray(Agenda.aggregate(pipeline).cursor({}).exec());
 
         function removeDuplicates(arr) {
             const unique_array = [];
@@ -1477,7 +1477,7 @@ export async function verificarSolapamiento(data) {
 
         $match.$and.push({ $or });
         try {
-            const resultados = await agendaModel.aggregate([{ $match }]);
+            const resultados = await Agenda.aggregate([{ $match }]);
             if (resultados.length > 0) {
                 response = 'La agenda no se pudo guardar:';
                 if (resultados.some(a => a.espacioFisico && a.espacioFisico._id === espacioFisicoId)) {

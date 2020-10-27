@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as turno from '../schemas/turno';
-import { profesional } from '../../../core/tm/schemas/profesional';
+import { Profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
@@ -25,7 +25,7 @@ router.post('/turnos/:tipo/:profesionalId/', async (req, res, next) => {
     try {
         const fechaTurno = new Date(req.body.turno.fecha);
         if (req.body.sobreTurno) {
-            const datos = await profesional.findById(req.params.profesionalId);
+            const datos = await Profesional.findById(req.params.profesionalId);
             const nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: req.body.turno.tipo,

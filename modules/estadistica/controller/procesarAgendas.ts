@@ -1,7 +1,5 @@
-import * as agenda from '../../turnos/schemas/agenda';
-import * as prestaciones from '../../../modules/rup/schemas/prestacion';
+import { Agenda } from '../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
-import { toArray } from '../../../utils/utils';
 
 /**
  * @export Devuelve los turnos con paciente asignado que cumplen con los filtros
@@ -189,6 +187,6 @@ export async function procesar(parametros: any) {
         }
     ];
 
-    const turnosAsignados = await agenda.aggregate(pipelineBuscador);
+    const turnosAsignados = await Agenda.aggregate(pipelineBuscador);
     return turnosAsignados;
 }

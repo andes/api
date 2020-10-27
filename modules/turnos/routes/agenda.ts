@@ -1,6 +1,6 @@
 
 import * as express from 'express';
-import * as agenda from '../schemas/agenda';
+import { Agenda } from '../schemas/agenda';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 import * as moment from 'moment';
@@ -21,7 +21,7 @@ const router = express.Router();
 router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
 
     if (req.params.idPaciente) {
-        agenda
+        Agenda
             .find({ 'bloques.turnos.paciente.id': req.params.idPaciente })
             .limit(10)
             .sort({ horaInicio: -1 })
@@ -37,7 +37,7 @@ router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
 
 // devuelve las agendas candidatas para la operacion clonar agenda
 router.get('/agenda/candidatas', async (req, res, next) => {
-    agenda.findById(req.query.idAgenda, async (err, data) => {
+    Agenda.findById(req.query.idAgenda, async (err, data) => {
         if (err) {
             return next(err);
         }
@@ -72,7 +72,7 @@ router.get('/agenda/candidatas', async (req, res, next) => {
             match['bloques.duracionTurno'] = bloque.duracionTurno;
         }
         try {
-            const data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
+            const data1 = await toArray(Agenda.aggregate([{ $match: match }]).cursor({}).exec());
 
             const out = [];
             // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
@@ -166,15 +166,14 @@ router.get('/agenda/:id?', (req, res, next) => {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
 
-        agenda.findById(req.params.id, (err, data) => {
+        Agenda.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
             res.json(data);
         });
     } else {
-        let query;
-        query = agenda.find({});
+        let query = Agenda.find({});
 
         query.where('estado').ne('borrada'); // No devuelve agendas borradas
 
@@ -286,7 +285,7 @@ router.get('/agenda/:id?', (req, res, next) => {
 });
 
 router.post('/agenda', async (req, res, next) => {
-    const data: any = new agenda(req.body);
+    const data: any = new Agenda(req.body);
     Auth.audit(data, req);
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
@@ -333,7 +332,7 @@ router.post('/agenda/clonar', (req, res, next) => {
     const listaSaveAgenda = [];
 
     if (idagenda) {
-        agenda.findById(idagenda, (err, data) => {
+        Agenda.findById(idagenda, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -342,7 +341,7 @@ router.post('/agenda/clonar', (req, res, next) => {
                 if (clon) {
                     data._id = mongoose.Types.ObjectId();
                     data.isNew = true;
-                    const nueva: any = new agenda(data.toObject());
+                    const nueva: any = new Agenda(data.toObject());
                     nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
                     nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
                     nueva['updatedBy'] = undefined;
@@ -427,7 +426,7 @@ router.put('/agenda/:id', async (req, res, next) => {
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
         if (!mensajesSolapamiento) {
-            let data = await agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            let data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
             const objetoLog = {
                 accion: 'Editar Agenda en estado Planificación',
                 ruta: req.url,
@@ -472,7 +471,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         const t = req.body.turnos;
         if (t.length > 0) {
-            agenda.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(t[0]) }, (err, data) => {
+            Agenda.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(t[0]) }, (err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -498,7 +497,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         }).catch(err2 => { return next(err2); });
                     }
                 } else {
-                    agenda.find({ 'sobreturnos._id': mongoose.Types.ObjectId(t[0]) }, (err2, data2) => {
+                    Agenda.find({ 'sobreturnos._id': mongoose.Types.ObjectId(t[0]) }, (err2, data2) => {
                         if (err2) {
                             return next(err2);
                         }
@@ -531,7 +530,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
         }
         // return next('ObjectID Inválido');
     } else {
-        agenda.findById(req.params.id, async (err, data: any) => {
+        Agenda.findById(req.params.id, async (err, data: any) => {
             if (err) {
                 return next(err);
             }

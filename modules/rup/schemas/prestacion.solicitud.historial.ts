@@ -1,13 +1,12 @@
 import { tipoPrestacionSchema } from './../../../core/tm/schemas/tipoPrestacion';
-import { profesionalSchema } from './../../../core/tm/schemas/profesional';
-import * as turnoSchema from '../../../modules/turnos/schemas/turno';
+import { ProfesionalSchema } from './../../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let PrestacionSolicitudHistorialschema = new mongoose.Schema({
     accion: String,
     descripcion: String,
-    profesional: profesionalSchema,
+    profesional: ProfesionalSchema,
     tipoPrestacion: tipoPrestacionSchema,
     turno: mongoose.Schema.Types.ObjectId,
     organizacion: {

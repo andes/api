@@ -263,6 +263,7 @@ PrestacionSchema.index({
     'solicitud.organizacion.id': 1,
     'solicitud.organizacionOrigen.id': 1
 }, { name: 'TOP-ENTRADA', partialFilterExpression: { inicio: 'top' } });
+
 PrestacionSchema.index({
     createdAt: 1,
     'solicitud.organizacionOrigen.id': 1,
@@ -274,11 +275,16 @@ PrestacionSchema.index({
     'solicitud.ambitoOrigen': 1,
     'solicitud.tipoPrestacion.conceptId': 1,
     'ejecucion.registros.valor.informeIngreso.fechaIngreso': 1,
-}, { sparse: true });
+}, { sparse: true, name: 'LISTADO-INTERNACIONES' });
 
 PrestacionSchema.index({
     'solicitud.prestacionOrigen': 1,
     'paciente.id': 1
 }, { sparse: true });
+
+PrestacionSchema.index({
+    'solicitud.organizacionOrigen.id': 1,
+    'solicitud.profesionalOrigen.id': 1
+}, { name: 'TOP-PROFESIONAL', partialFilterExpression: { inicio: 'top' } });
 
 export const Prestacion = mongoose.model('prestacion', PrestacionSchema, 'prestaciones');

@@ -1,14 +1,14 @@
 import { recordatorio } from '../schemas/recordatorio';
-import * as agendaModel from '../../turnos/schemas/agenda';
+import { Agenda } from '../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { profesional } from '../../../core/tm/schemas/profesional';
-import { pacienteApp } from '../schemas/pacienteApp';
+import { Profesional } from '../../../core/tm/schemas/profesional';
 import { NotificationService } from './NotificationService';
 import { sendSms, ISms } from '../../../utils/roboSender';
 
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
+import { PacienteApp } from '../schemas/pacienteApp';
 
 const log = debug('RecordatorioController');
 
@@ -40,7 +40,7 @@ export function buscarTurnosARecordar(dayOffset) {
             { $unwind: '$bloques.turnos' },
             { $match: matchTurno }
         ];
-        const data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        const data = await toArray(Agenda.aggregate(pipeline).cursor({}).exec());
 
         const turnos = [];
         data.forEach((elem: any) => {
@@ -147,7 +147,7 @@ export function agendaRecordatorioQuery(dayOffset) {
             }
         ];
 
-        const query = agendaModel.aggregate(pipeline).cursor({}).exec();
+        const query = Agenda.aggregate(pipeline).cursor({}).exec();
         const data = await toArray(query);
         return resolve(data);
     });
@@ -182,8 +182,8 @@ export function enviarAgendaNotificacion() {
     recordatorio.find({ tipoRecordatorio: 'agenda', estadoEnvio: false }, (err, recordatiorios: any) => {
         recordatiorios.forEach((item) => {
             Promise.all([
-                profesional.findById(item.dataAgenda.profesionalId),
-                pacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
+                Profesional.findById(item.dataAgenda.profesionalId),
+                PacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
             ]).then(datos => {
                 if (datos[0] && datos[1]) {
                     const notificacion = {

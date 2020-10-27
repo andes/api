@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import * as agenda from '../../../modules/turnos/schemas/agenda';
+import { Agenda } from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
@@ -11,7 +11,7 @@ import { paciente as pacienteModel } from '../../../core/mpi/schemas/paciente';
 type Agenda = any;
 
 export async function getTurnoById(turnoId: string | mongoose.Types.ObjectId) {
-    const agendaEncontrada: Agenda = await agenda.findOne({
+    const agendaEncontrada: Agenda = await Agenda.findOne({
         $or: [
             { 'bloques.turnos._id': turnoId },
             { 'sobreturnos._id': turnoId }
@@ -85,7 +85,7 @@ export function getTurno(req) {
                 pipelineTurno[0] = matchId;
                 pipelineTurno[3] = matchId;
 
-                const data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+                const data = await toArray(Agenda.aggregate(pipelineTurno).cursor({}).exec());
                 if (data.length > 0 && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
                     resolve(data[0].bloques.turnos[0]);
                 } else {
@@ -145,7 +145,7 @@ export function getTurno(req) {
                         $match: { pacientes_docs: { $ne: [] } }
                     };
                 }
-                const data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+                const data2 = await toArray(Agenda.aggregate(pipelineTurno).cursor({}).exec());
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
                     turno.id = turno._id;
@@ -314,8 +314,8 @@ export async function getHistorialPaciente(req) {
                 }
 
             );
-            let data2 = await agenda.aggregate(pipelineTurno).exec();
-            const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
+            let data2 = await Agenda.aggregate(pipelineTurno).exec();
+            const sobreturnos = await Agenda.aggregate(pipelineSobreturno).exec();
             data2 = data2.concat(sobreturnos);
             data2.forEach(elem => {
                 turno = elem.turno;

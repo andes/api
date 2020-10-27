@@ -1,4 +1,4 @@
-import { pacienteApp } from '../schemas/pacienteApp';
+import { PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
@@ -28,7 +28,7 @@ function getAccount(code, email) {
         return Promise.reject('email invalido');
     }
 
-    return pacienteApp.findOne({ codigoVerificacion: code }).then((datosUsuario: any) => {
+    return PacienteApp.findOne({ codigoVerificacion: code }).then((datosUsuario: any) => {
         if (!datosUsuario) {
             return Promise.reject('no existe la cuenta');
         }
@@ -39,7 +39,7 @@ function getAccount(code, email) {
             } else if (!datosUsuario.email) {
                 // el usuario puede elegir el email. Cuando se envia el codigo de forma automatia
                 // chequemos que el emial que eligio el usuario no exista
-                return pacienteApp.findOne({ email }).then(existsEmail => {
+                return PacienteApp.findOne({ email }).then(existsEmail => {
                     if (!existsEmail) {
                         datosUsuario.email = email;
                         return Promise.resolve(datosUsuario);

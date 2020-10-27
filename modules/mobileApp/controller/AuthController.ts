@@ -1,4 +1,4 @@
-import { pacienteApp as PacienteApp } from '../schemas/pacienteApp';
+import { IPacienteAppDoc, PacienteApp } from '../schemas/pacienteApp';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
 import * as mongoose from 'mongoose';
@@ -233,7 +233,7 @@ export function createUserFromPaciente(pacienteData, contacto) {
  * @param data {object} password, email, telefono
  */
 
-export function updateAccount(account, data) {
+export function updateAccount(account: IPacienteAppDoc, data) {
     return new Promise((resolve, reject) => {
 
         let promise: any = Promise.resolve();
