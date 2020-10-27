@@ -11,11 +11,11 @@ class DerivacionesResource extends ResourceBase {
         fecha: MongoQuery.equalMatch,
         estado: MongoQuery.equalMatch,
         organizacionOrigen: {
-            field: 'organizacionOrigen._id',
+            field: 'organizacionOrigen.id',
             fn: MongoQuery.equalMatch
         },
         organizacionDestino: {
-            field: 'organizacionDestino._id',
+            field: 'organizacionDestino.id',
             fn: MongoQuery.equalMatch
         },
         profesionalSolicitante: {
