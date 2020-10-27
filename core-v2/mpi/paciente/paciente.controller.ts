@@ -6,6 +6,7 @@ import { IPacienteDoc, IPaciente } from './paciente.interface';
 import { isSelected } from '@andes/core';
 import * as config from '../../../config';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
+import { PacienteCtr } from './paciente.routes';
 
 /**
  * Crea un objeto paciente
@@ -155,3 +156,21 @@ export async function multimatch(searchText: string, filter: any, options?: any)
     return pacientes;
 }
 
+/**
+ * Busca pacientes dado el documento, nombre, apellido, sexo y fecha de Nacimento
+ *
+ * @param {object} query Condiciones a buscar
+ */
+
+export async function findOrCreate(query: any, req) {
+    const sugeridos = await suggest(query);
+    if (sugeridos.lenght > 0 && isMatchingAlto(sugeridos)) {
+        return sugeridos[0];
+    }
+    query.activo = true; // Todo paciente esta activo por defecto
+    query.genero = query.genero || query.sexo;
+    query.estado = query.estado || 'temporal';
+    const paciente = make(query);
+    const pacienteCreado = await PacienteCtr.create(paciente, req);
+    return pacienteCreado;
+}
