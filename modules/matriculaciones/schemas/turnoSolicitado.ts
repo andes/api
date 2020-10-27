@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import * as constantes from '../../../core/tm/schemas/constantes';
 // import * as direccionSchema from '../../../core/tm/schemas/direccion';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
-import { ObjSIISASchema } from '../../../core/tm/schemas/siisa';
+import { EspecialidadSIISASchema, ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
 const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -88,7 +88,7 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
     formacionPosgrado: [{
         profesion: { type: ObjSIISASchema, required: false },
         institucionFormadora: { type: ObjSIISASchema, required: false },
-        especialidad: { type: ObjSIISASchema, required: false },
+        especialidad: { type: EspecialidadSIISASchema, required: false },
         fechaIngreso: { type: Date, required: false },
         fechaEgreso: { type: Date, required: false },
         observacion: String,
@@ -114,7 +114,7 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
         fecha: { type: Date, required: false },
         vencimiento: { type: Date, required: false }
     }],
-    notas: { type: String, required: false },
+    notas: [{ type: String, required: false }],
     rematriculado: { type: Boolean, default: false },
     agenteMatriculador: { type: String, required: false },
     OtrosDatos: [{
