@@ -1,3 +1,20 @@
+# [5.19.0](https://github.com/andes/api/compare/v5.18.0...v5.19.0) (2020-10-28)
+
+
+### Bug Fixes
+
+* **mapa-camas:** corrige dos errores en los censos ([#1164](https://github.com/andes/api/issues/1164)) ([c77b5e7](https://github.com/andes/api/commit/c77b5e7c4d3ac4ae90c7b155c89b3a833dfa0147))
+* **turnos:** corrige logica en bloques de solo gestion ([#1166](https://github.com/andes/api/issues/1166)) ([f9980b1](https://github.com/andes/api/commit/f9980b12a9a1a60a1e57915f5a7caec4cedc4462))
+* **turnoSolcitado:** cambia tipo de datos ([#1168](https://github.com/andes/api/issues/1168)) ([4414d7c](https://github.com/andes/api/commit/4414d7cd639af6219cdf60102bc3b2c80cca3012))
+
+
+### Features
+
+* **core:** logging de errores de angular ([#1154](https://github.com/andes/api/issues/1154)) ([530aaa3](https://github.com/andes/api/commit/530aaa3540c75a897329d6579bbca9cd5005df10))
+* **mapa-camas:** sala comun debe aparecer como disponible ([#1160](https://github.com/andes/api/issues/1160)) ([c698a8d](https://github.com/andes/api/commit/c698a8d3279c7821632549b16cb4020f95a6e09a))
+* **mpi:** nuevo campo fotoId en esquema de paciente ([#1143](https://github.com/andes/api/issues/1143)) ([2eca57c](https://github.com/andes/api/commit/2eca57c4a05c8ce5600e7cc8d6e644b82601f0cd))
+* **rup:** anular prestación ([#1128](https://github.com/andes/api/issues/1128)) ([311ab1c](https://github.com/andes/api/commit/311ab1c9dbc095257d5dc50efd76ce6edbf44200))
+
 # [5.18.0](https://github.com/andes/api/compare/v5.17.0...v5.18.0) (2020-10-21)
 
 
