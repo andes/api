@@ -1,0 +1,53 @@
+paths:
+  /modules/webhook/notification:
+    post:
+      tags:
+        - "webhook"
+      description: Notificación a pacientes  
+      summary: Búsqueda y notificación de un paciente a partir de campos básicos
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: nombre
+          in: query
+          description: Nombre del paciente
+          type: string
+          required: true
+        - name: apellido
+          in: query
+          description: Apellido del paciente
+          type: string
+          required: true
+        - name: documento
+          in: query
+          description: Documento del paciente
+          type: string
+          required: true
+        - name: sexo
+          in: query
+          description: Sexo del paciente (femenino | masculino)
+          type: string
+          required: true
+        - name: fechaNacimiento
+          in: query
+          description: Fecha de Nacimiento del paciente (DD/MM/YYYY)
+          type: string
+          required: true
+        - name: Teléfono
+          in: query
+          description: Número de teléfono del paciente
+          type: string
+          required: false
+      responses:
+        '200':
+          description: Devuelve el paciente 
+        '401':
+          description: No Autorizado
+        '400':
+          description: Paciente No encontrado
+        '500':
+          description: Error en parámetros

@@ -5,9 +5,11 @@ import { Paciente } from './paciente.schema';
 import { suggest, isMatchingAlto, multimatch, make, findById, set } from './paciente.controller';
 import * as mongoose from 'mongoose';
 import { PatientDuplicate, PatientNotFound } from './paciente.error';
+import { EventCore } from '@andes/event-bus';
 
 class PacienteResource extends ResourceBase {
     Model = Paciente;
+    resourceModule = 'mpi';
     resourceName = 'pacientes';
     middlewares = [Auth.authenticate()];
     routesAuthorization = {
@@ -67,6 +69,7 @@ class PacienteResource extends ResourceBase {
         },
         search: ['documento', 'nombre', 'apellido', 'sexo']
     };
+    eventBus = EventCore;
 }
 
 export const PacienteCtr = new PacienteResource({});

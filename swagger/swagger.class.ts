@@ -44,7 +44,8 @@ export class Swagger {
                 path.join(__dirname, './definitions.yml'),
                 path.join(__dirname, '../connect/fhir/api-doc.yml'),
                 path.join(__dirname, '../modules/cda/api-doc.yml'),
-                path.join(__dirname, '../core-v2/mpi/api-doc.yml')
+                path.join(__dirname, '../core-v2/mpi/api-doc.yml'),
+                path.join(__dirname, '../modules/webhook/api-doc.yml')
             ],
         });
 
