@@ -164,7 +164,7 @@ export async function multimatch(searchText: string, filter: any, options?: any)
 
 export async function findOrCreate(query: any, req) {
     const sugeridos = await suggest(query);
-    if (sugeridos.lenght > 0 && isMatchingAlto(sugeridos)) {
+    if (sugeridos.length > 0 && isMatchingAlto(sugeridos)) {
         return sugeridos[0];
     }
     query.activo = true; // Todo paciente esta activo por defecto

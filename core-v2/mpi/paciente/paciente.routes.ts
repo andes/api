@@ -9,6 +9,7 @@ import { EventCore } from '@andes/event-bus';
 
 class PacienteResource extends ResourceBase {
     Model = Paciente;
+    resourceModule = 'mpi';
     resourceName = 'pacientes';
     middlewares = [Auth.authenticate()];
     routesAuthorization = {
