@@ -24,23 +24,22 @@ router.get('/getDocuments', async (req, res, next) => {
         if (custodian && idPaciente) {
             const sdClient = new SaludDigitalClient(fhirConf.domain, fhirConf.ips_host, fhirConf.secret);
             // Le dejo posiblidad de filtrar por fechas
-            const docRef = await sdClient.solicitud({custodian,fechaDesde: null, fechaHasta: null, patient: idPaciente, loinc:'60591-5'});
+            const docRef = await sdClient.solicitud({custodian, fechaDesde: null, fechaHasta: null, patient: idPaciente, loinc: '60591-5'});
             if (docRef && docRef.length > 0) {
                 for (let d of docRef) {
                     const ips = await sdClient.getBinary(d.urlBinary);
-                    res.json(ips)
+                    res.json(ips);
                 }
             } else {
                 res.send([]);
             }
-        
         } else {
             res.send([]);
         }
     } catch (err) {
-       return next(err)
+        return next(err);
     }
 
-})
+});
 
 export = router;

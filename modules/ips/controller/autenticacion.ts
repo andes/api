@@ -55,7 +55,7 @@ export class SaludDigitalClient {
             },
         };
         const [status, body] = await handleHttpRequest(options);
-        return body;  
+        return body;
     }
 
     /**
@@ -102,7 +102,7 @@ export class SaludDigitalClient {
             json: true,
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization' : 'bearer '+token
+                Authorization : 'bearer ' + token
             }
         };
         const [status, bundle] = await handleHttpRequest(options);
@@ -167,12 +167,12 @@ export class SaludDigitalClient {
                 }
             } else {
                 return [];
-        }
+            }
 
-        } catch(err) {
-                return err
+        } catch (err) {
+            return err;
         }
-}
+    }
 
     async getBinary(urlBinary) {
         const url = `${this.hostBus}${urlBinary}`;

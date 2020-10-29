@@ -539,10 +539,10 @@ export async function checkRepetido(nuevoPaciente, incluirTemporales = true): Pr
 
 
 // Función para crear el $match de pacientes con los parámetros correspondientes
-function  createMatchPatient(patient, cantidad) {
+function createMatchPatient(patient , cantidad) {
     const uriDNI: any = 'http://www.renaper.gob.ar/dni';
-    let gender;
-    switch (patient.sexo) {
+    let gender = patient.sexo.id ? patient.sexo.id : patient.sexo;
+    switch (gender) {
         case 'femenino':
             gender = 'female';
             break;
@@ -562,13 +562,11 @@ function  createMatchPatient(patient, cantidad) {
                 resource:
                 {
                     resourceType: 'Patient',
-                    identifier: [
-                        {
-                            use: 'usual',
-                            system: uriDNI,
-                            value: patient.documento
-                        }
-                    ],
+                    identifier: [{
+                        use: 'usual',
+                        system: uriDNI,
+                        value: patient.documento
+                    }],
                     name: [
                         {
                             _family: {
@@ -590,8 +588,7 @@ function  createMatchPatient(patient, cantidad) {
                 name: 'count',
                 valueInteger: cantidad
             }
-        ]
-    };
+        ]};
 }
 
 // este metodo debería meterlo en las fuentes autenticas!!!!
