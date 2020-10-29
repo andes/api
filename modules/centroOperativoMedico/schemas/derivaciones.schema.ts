@@ -16,7 +16,8 @@ let DerivacionHistorialSchema = new mongoose.Schema({
         nombre: String
     },
     observacion: String,
-    adjuntos: mongoose.Schema.Types.Mixed
+    adjuntos: mongoose.Schema.Types.Mixed,
+    eliminado: Boolean
 });
 
 DerivacionHistorialSchema.plugin(AuditPlugin);
