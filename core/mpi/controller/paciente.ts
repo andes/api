@@ -21,6 +21,8 @@ import { logKeys } from '../../../config';
 import * as mongoose from 'mongoose';
 import * as localidadController from '../../tm/controller/localidad';
 import { Types } from 'mongoose';
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import { logPaciente } from '../../log/schemas/logPaciente';
 const ObjectId = Types.ObjectId;
 
 const sharp = require('sharp');
@@ -943,9 +945,33 @@ EventCore.on('mpi:patient:create', async (patientCreated) => {
                 }
             });
         }
+        // si el paciente tiene algun reporte de error, verificamos que sea nuevo
+        if (patientCreated.reportarError) {
+            LoggerPaciente.logReporteError(patientRequest, 'error:reportar', patientCreated, patientCreated.notaError);
+        }
     }
-
 });
+
+EventCore.on('mpi:patient:update', async (patientUpdated) => {
+    const patientRequest = {
+        user: patientUpdated.updatedBy,
+        ip: 'localhost',
+        connection: {
+            localAddress: ''
+        },
+        body: patientUpdated
+    };
+    if (patientUpdated.estado === 'validado') {
+        // si el paciente tiene algun reporte de error, verificamos que sea nuevo
+        if (patientUpdated.reportarError) {
+            const reportes = await logPaciente.find({ paciente: patientUpdated.id, operacion: 'error:reportar' });
+            if (!reportes.some((rep: any) => rep.error === patientUpdated.notaError)) {
+                LoggerPaciente.logReporteError(patientRequest, 'error:reportar', patientUpdated, patientUpdated.notaError);
+            }
+        }
+    }
+});
+
 export async function buscarRelaciones(id) {
     const pac = await this.buscarPaciente(id);
     let relaciones = pac.paciente.relaciones;

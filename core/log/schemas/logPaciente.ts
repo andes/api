@@ -21,7 +21,8 @@ export let logPacienteSchema = new mongoose.Schema({
             'turnos:confirmar',
             'notificacion:sms',
             'notificacion:email',
-            'notificacion:push'
+            'notificacion:push',
+            'error:reportar'
         ]
     },
     dataTurno: {
@@ -30,6 +31,10 @@ export let logPacienteSchema = new mongoose.Schema({
         tipoPrestacion: tipoPrestacionSchema,
         idBloque: mongoose.Schema.Types.ObjectId,
         idAgenda: mongoose.Schema.Types.ObjectId
+    },
+    error: {
+        type: String,
+        required: false
     },
     notificacion: {
         texto: String,
