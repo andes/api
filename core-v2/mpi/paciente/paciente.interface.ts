@@ -46,6 +46,7 @@ export interface IPaciente {
     fechaFallecimiento?: Date | moment.Moment;
     estadoCivil?: String;
     foto?: String;
+    fotoId?: Schema.Types.ObjectId;
     fotoMobile?: String;
     nacionalidad?: String;
     tipoIdentificacion?: String;

@@ -1,11 +1,15 @@
 import { paciente } from '../schemas/paciente';
-import moment = require('moment');
-import { buscarPacienteWithcondition, matching, createPaciente, updatePaciente, validarPaciente } from '../controller/paciente';
-import { Types } from 'mongoose';
-import debug = require('debug');
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { validar } from '../../../core-v2/mpi/validacion';
 import { registroProvincialData, userScheduler } from '../../../config.private';
 import { mpiNacimientosLog } from '../mpi.log';
 import { handleHttpRequest } from '../../../utils/requestHandler';
+import { IPaciente } from '../../../core-v2/mpi/paciente/paciente.interface';
+import moment = require('moment');
+import debug = require('debug');
+import { ParentescoCtr } from '../parentesco.routes';
+import { Types } from 'mongoose';
+
 const nacimientosLog = mpiNacimientosLog.startTrace();
 const deb = debug('nacimientosJob');
 
@@ -19,94 +23,83 @@ let fechaPrueba;
  * @param {string} fecha
  * @returns Promise<{}>
  */
-async function getInfoNacimientos() {
-    let today = moment().format('YYYY-MM-DD');
-    if (fechaPrueba) {
-        today = fechaPrueba;
+async function getInfoPacientes(queryPath = '') {
+    if (!queryPath) {
+        return [];
     }
-    let queryFechaPath = registroProvincialData.queryFechaPath + today;
-    let dataNacimientos = await handleHttpRequest(queryFechaPath);
-    deb('Response query Nacimientos -->', dataNacimientos[0]);
-    deb('INFO NACIMIENTOS-->', dataNacimientos[1]);
+    try {
+        let dataNacimientos = await handleHttpRequest(queryPath);
 
-    // Transformamos la respuesta en un array JSON correcto
-    let lastChar = dataNacimientos[1].lastIndexOf(',');
-    dataNacimientos[1] = dataNacimientos[1].substring(0, lastChar);
-    dataNacimientos[1] = '[' + dataNacimientos[1] + ']';
-    dataNacimientos[1] = JSON.parse(dataNacimientos[1]);
-    return (dataNacimientos[1]);
+        // Transformamos la respuesta en un array JSON correcto
+        const lastChar = dataNacimientos[1].lastIndexOf(',');
+        dataNacimientos[1] = dataNacimientos[1].substring(0, lastChar);
+        dataNacimientos[1] = '[' + dataNacimientos[1] + ']';
+        return JSON.parse(dataNacimientos[1]);
+    } catch (error) {
+        return error;
+    }
 }
 
-
 async function relacionar(mama, bebe) {
-    // Buscamos si el bebe fué previamente registrado como temporal
-    let bebeSimilitudes = await matching({
-        type: 'suggest',
-        nombre: bebe.nombre,
-        apellido: bebe.apellido,
-        fechaNacimiento: bebe.fechaNacimiento,
-        documento: bebe.documento ? bebe.documento : ''
-    });
-
-    if (bebeSimilitudes.length && bebeSimilitudes[0].match >= 0.94) {
-        if (bebe.documento?.length && !bebeSimilitudes[0].paciente.documento?.length) {
-            // Actualizamos documento de bebe existente en caso de ser necesario
-            bebeSimilitudes[0].paciente.documento = bebe.documento;
-            bebe = bebeSimilitudes[0].paciente;
+    // Buscamos si el paciente bebe fué previamente registrado como temporal
+    const token = `^${bebe.nombre} ${bebe.apellido} ${bebe.documento || ''}`;
+    let fechaNacimiento = moment(bebe.fechaNacimiento).format('YYYY-MM-DD');
+    const bebeSimilitudes = await PacienteCtr.search({ tokens: token, fechaNacimiento, activo: true }, {}, userScheduler as any);
+    if (bebeSimilitudes.length > 0) {
+        // buscamos entre las relaciones de bebeSimilares a la mamá, si la encontramos nos quedamos con ese bebé
+        // (debería encontrar a 1, salvo que no se haya cargado a la mamá cuando nació)
+        const bebes = bebeSimilitudes.filter(pac =>
+            pac.relaciones.find(rel => rel.referencia.toString() === mama._id.toString())
+        );
+        if (bebes.length > 0) {
+            bebe = bebes[0];
+        } else {
+            bebe = bebeSimilitudes[0];
         }
     }
-
+    // Buscar el parentesco asociado
+    const progenitor = await ParentescoCtr.search({ nombre: '^progenitor' }, {}, userScheduler as any);
     // Incluimos a la mamá en las relaciones del bebe en caso de no estarlo
-    if (!bebe.relaciones?.length || !bebe.relaciones.some(rel => rel.referencia === mama._id)) {
+    const rela = bebe.relaciones.some(rel => rel.referencia.toString() === mama.id.toString());
+    if (!bebe.relaciones?.length || !rela) {
         let mamaRelacion = {
-            relacion: {
-                _id: new Types.ObjectId('59247be21ebf0273353b23bf'),
-                nombre: 'progenitor/a',
-                opuesto: 'hijo/a'
-            },
+            relacion: progenitor,
             referencia: mama._id,
             nombre: mama.nombre,
             apellido: mama.apellido,
             documento: mama.documento ? mama.documento : null,
             numeroIdentificacion: mama.numeroIdentificacion ? mama.numeroIdentificacion : null,
-            foto: mama.foto ? mama.foto : null,
+            fotoId: mama.fotoId ? mama.fotoId : null,
             fechaFallecimiento: mama.fechaFallecimiento ? mama.fechaFallecimiento : null
         };
-        bebe.relaciones?.length ? bebe.relaciones.push(mamaRelacion) : bebe.relaciones = [mamaRelacion];
+        bebe.relaciones.push(mamaRelacion);
     }
-
     // Insertamos/actualizamos al bebé
-    let bebeAndes: any = bebe._id ? await createPaciente(bebe, userScheduler) : await updatePaciente(bebeSimilitudes[0].paciente, bebe, userScheduler);
-
+    let bebeAndes: IPaciente;
+    if (bebeSimilitudes.length > 0) {
+        bebeAndes = await PacienteCtr.update(bebe.id, bebe, userScheduler as any);
+    } else {
+        bebeAndes = await PacienteCtr.create(bebe, userScheduler as any);
+    }
+    const hijo = await ParentescoCtr.search({ nombre: '^hijo' }, {}, userScheduler as any);
     // Incluimos al bebe en las relaciones de la mamá en caso de no estarlo
-    if (!mama.relaciones?.length || !mama.relaciones.some(rel => rel.referencia === bebe.id)) {
+    if (!mama.relaciones?.length || !mama.relaciones.some(rel => rel.referencia.toString() === bebe.id.toString())) {
         let bebeRelacion = {
-            relacion: {
-                _id: new Types.ObjectId('59247c391ebf0273353b23c0'),
-                nombre: 'hijo/a',
-                opuesto: 'progenitor/a'
-            },
-            referencia: bebeAndes._id,
+            relacion: hijo,
+            referencia: bebeAndes['id'],
             nombre: bebeAndes.nombre,
             apellido: bebeAndes.apellido,
             documento: bebeAndes.documento ? bebeAndes.documento : null,
             numeroIdentificacion: bebeAndes.numeroIdentificacion ? bebeAndes.numeroIdentificacion : null,
-            foto: bebeAndes.foto ? bebeAndes.foto : null,
+            fotoId: bebeAndes.fotoId ? bebeAndes.fotoId : null,
             fechaFallecimiento: bebeAndes.fechaFallecimiento ? bebeAndes.fechaFallecimiento : null
         };
         mama.relaciones?.length ? mama.relaciones.push(bebeRelacion) : mama.relaciones = [bebeRelacion];
     }
 
-    let updateMama = {
-        estado: mama.estado,
-        foto: mama.foto ? mama.foto : '',
-        relaciones: mama.relaciones
-    };
-
-    deb('UPDATE MAMA--->', updateMama);
-    userScheduler['body'] = mama;
-    const mamaUpdated = await updatePaciente(mama, updateMama, userScheduler);
-    await nacimientosLog.info('nacimiento-updated-ok', { tutor: mamaUpdated._id, bebe: bebeAndes._id }, userScheduler);
+    deb('UPDATE MAMA--->', mama.apellido);
+    const mamaUpdated = await PacienteCtr.update(mama.id, mama, userScheduler as any);
+    await nacimientosLog.info('nacimiento-updated', { tutor: mamaUpdated.id, bebe: bebeAndes['id'] }, userScheduler);
 }
 
 
@@ -123,7 +116,8 @@ function parsearPacientes(importedData) {
             sexo: (importedData.ntiposexo === '1' ? 'masculino' : 'femenino'),
             genero: (importedData.ntiposexo === '1' ? 'masculino' : 'femenino'),
             contacto: [],
-            direccion: []
+            direccion: [],
+            activo: true
         },
         mama: {
             estado: 'temporal',
@@ -134,7 +128,8 @@ function parsearPacientes(importedData) {
             sexo: 'femenino',
             genero: 'femenino',
             contacto: [],
-            direccion: []
+            direccion: [],
+            activo: true
         }
     };
 
@@ -152,46 +147,44 @@ function parsearPacientes(importedData) {
     }
     if (importedData.telefono.trim() !== '') {
         parsedData.mama.contacto.push({
-            tipo: 'fijo',
+            tipo: 'celular',
             valor: importedData.telefono.trim(),
             ultimaActualizacion: moment()
         });
         parsedData.bebe.contacto.push({
-            tipo: 'fijo',
+            tipo: 'celular',
             valor: importedData.telefono.trim(),
             ultimaActualizacion: moment()
         });
     }
 
-    parsedData.mama.direccion = parsedData.bebe.direccion = null;
     let bebe = new paciente(parsedData.bebe);
     let mama = new paciente(parsedData.mama);
     return { bebe, mama };
 }
 
-async function validar(dataPaciente) {
-    let resultado: any = await validarPaciente(dataPaciente, userScheduler);
+async function validarPaciente(dataPaciente) {
+
+    const resultado: any = await validar(dataPaciente.documento, dataPaciente.sexo);
     // Actualizamos datos
-    dataPaciente.nombre = resultado.paciente.nombre;
-    dataPaciente.apellido = resultado.paciente.apellido;
-    dataPaciente.estado = resultado.paciente.estado;
-    dataPaciente.fechaNacimiento = moment(resultado.paciente.fechaNacimiento).add(4, 'h').toDate(); // mas mers alert
-    dataPaciente.foto = resultado.paciente.foto;
-    if (resultado.paciente.fechaFallecimiento) {
-        dataPaciente.fechaFallecimiento = moment(resultado.paciente.fechaFallecimiento).add(4, 'h').toDate();
+    if (!resultado || !resultado.estado) {
+        return dataPaciente;
     }
+    dataPaciente.nombre = resultado.nombre;
+    dataPaciente.apellido = resultado.apellido;
+    dataPaciente.estado = resultado.estado;
+    dataPaciente.fechaNacimiento = resultado.fechaNacimiento;
+    dataPaciente.foto = resultado.foto;
+    dataPaciente.fotoId = resultado.foto ? new Types.ObjectId() : null;
+    dataPaciente.fechaFallecimiento = resultado.fechaFallecimiento;
+    dataPaciente.cuil = !dataPaciente.cuil && resultado.cuil ? resultado.cuil : '';
+
     //  Se completan datos FALTANTES
-    if (!this.pacienteModel.direccion[0].valor && resultado.paciente.direccion && resultado.paciente.direccion[0].valor) {
-        dataPaciente.direccion[0].valor = resultado.paciente.direccion[0].valor;
+    if (!dataPaciente.direccion?.[0] && resultado.direccion && resultado.direccion[0]) {
+        dataPaciente.direccion = resultado.direccion;
     }
-    if (!this.pacienteModel.direccion[0].codigoPostal && resultado.paciente.cpostal) {
-        dataPaciente.direccion[0].codigoPostal = resultado.paciente.cpostal;
-    }
-    if (resultado.paciente.direccion[1]) {  // direccion legal
-        dataPaciente.direccion[1] = resultado.paciente.direccion[1];
-    }
-    if (!this.pacienteModel.cuil && resultado.paciente.cuil) {
-        dataPaciente.cuil = resultado.paciente.cuil;
+    if (resultado.direccion?.[1]) {  // direccion legal
+        dataPaciente.direccion[1] = resultado.direccion[1];
     }
     return dataPaciente;
 }
@@ -201,46 +194,105 @@ async function procesarDataNacimientos(nacimiento) {
     let resultadoParse: any = parsearPacientes(nacimiento);
     deb('PARSER RESULT--->', resultadoParse);
     try {
-        let resultadoBusqueda = await buscarPacienteWithcondition({ documento: resultadoParse.mama.documento, sexo: 'femenino' });
+        let mama = resultadoParse.mama;
+        const pacientesFound = await PacienteCtr.search({ documento: resultadoParse.mama.documento, sexo: 'femenino', activo: true, }, { limit: 1 }, userScheduler as any);
         // Existe en ANDES?
-        deb('Resultado Busqueda --> ', resultadoBusqueda.db);
-        if (resultadoBusqueda) {
-            if (resultadoBusqueda.paciente.estado === 'temporal') {
-                resultadoBusqueda.paciente = validar(resultadoBusqueda.paciente);
-            }
-            await relacionar(resultadoBusqueda.paciente, resultadoParse.bebe);
-        } else {
-            // No existe en ANDES
-            // --> Obtener paciente de Fuentas auténticas
-            let nuevaMama = await validar(resultadoParse.mama);
-            userScheduler['body'] = nuevaMama;
-            const mamaAndes = await createPaciente(nuevaMama, userScheduler);
-            await relacionar(mamaAndes, resultadoParse.bebe);
+        if (pacientesFound?.length > 0) {
+            mama = pacientesFound[0];
         }
+        if (mama.estado === 'temporal' && mama.documento && mama.documento !== '') {
+            mama = await validarPaciente(mama);
+            if (pacientesFound?.length > 0) {
+                mama = await PacienteCtr.update(mama.id, mama, userScheduler as any);
+            } else {
+                mama = await PacienteCtr.create(mama, userScheduler as any);
+            }
+        }
+        await relacionar(mama, resultadoParse.bebe);
     } catch (error) {
-
-        // No existe en ANDES,  la función buscarPacienteWithcondition hace un reject cuando no encuentra al paciente
-        // entonces tenemos que seguir la ejecución en este catch
-        // --> Obtener paciente de Fuentas auténticas
-        let nuevaMama = await validar(resultadoParse.mama);
-        userScheduler['body'] = nuevaMama;
-        const mamaAndes = await createPaciente(nuevaMama, userScheduler);
-        await relacionar(mamaAndes, resultadoParse.bebe);
+        return error;
     }
 }
 
-export async function importarNacimientos(done, fecha: string = null) {
-    fechaPrueba = fecha;
-    let infoNacimientosArray = await getInfoNacimientos();
+export async function importarNacimientos(done) {
+    let fecha = fechaPrueba || moment().format('YYYY-MM-DD');
+    let queryFechaPath = registroProvincialData.queryFechaPath + fecha;
+    const infoNacimientosArray = await getInfoPacientes(queryFechaPath);
     for (let nacimiento of infoNacimientosArray) {
         deb('Elemento ----->', nacimiento);
         try {
             await procesarDataNacimientos(nacimiento);
         } catch (err) {
             let sexoTutor = nacimiento.ntiposexo === '1' ? 'masculino' : 'femenino';
-            await nacimientosLog.error('nacimiento-updated-error', { dniTutor: nacimiento.nrodoc, sexo: sexoTutor }, err, userScheduler);
+            await nacimientosLog.error('nacimiento-updated', { dniTutor: nacimiento.nrodoc, sexo: sexoTutor }, err, userScheduler);
         }
     }
-    deb('Proceso Finalizado');
+    deb('Proceso Importar Nacimientos Finalizado');
     done();
+}
+
+/**
+ * se actualizan los datos de todos los pacientes con dni = '' que contengan certificadoRenaper
+ */
+export async function importarDocumentosAsignados(done) {
+    try {
+        // Buscamos en andes los bebes que aún no tienen documento
+        let resultadoBusqueda: any = await PacienteCtr.search({ documento: '', certificadoRenaper: { $exists: true }, activo: true }, {}, userScheduler as any);
+        for (let pacienteBebe of resultadoBusqueda) {
+            const certificadoFechaPath = registroProvincialData.queryNacidoByCertificado + pacienteBebe.certificadoRenaper;
+            let bebe = await getInfoPacientes(certificadoFechaPath);
+            await updateDatosPaciente(bebe[0], pacienteBebe);
+        }
+    } catch (error) {
+        await nacimientosLog.error('nacimiento-updated', null, error, userScheduler);
+        return error;
+    }
+    deb('Proceso Agregar documentos Faltantes Finalizado');
+    done();
+}
+
+/**
+ * Se actualizan todos los pacientes que fueron modificados desde una "fecha" determinada
+ * si no recibe fecha utiliza la fecha actual
+ * @param fecha
+ */
+export async function obtenerModificaciones(fecha: string = null) {
+    if (!fecha) {
+        fecha = fechaPrueba || moment().format('YYYY-MM-DD');
+    }
+    try {
+        // importamos todos los bebes que fueron modificados desde la "fecha" requerida
+        const queryPath = registroProvincialData.queryNacidoByFechaModificacion + fecha;
+        const resultadoBusqueda = await getInfoPacientes(queryPath);
+
+        for (let bebeMod of resultadoBusqueda) {
+            const pacientes = await PacienteCtr.search({ certificadoRenaper: bebeMod.nrocertificado, activo: true, estado: 'temporal' }, { limit: 1 }, userScheduler as any);
+            if (pacientes.length && pacientes[0]._id) {
+                let bebe = pacientes[0];
+                bebe.id = bebe._id;
+                await updateDatosPaciente(bebeMod, bebe);
+            }
+        }
+    } catch (error) {
+        await nacimientosLog.error('nacimiento-updated', null, error, userScheduler);
+        return error;
+    }
+    deb('Proceso Obtener Modificaciones del día Finalizado');
+}
+
+/**
+ * Se actualizan los datos del pacienteAndes con los datos exportados desde el Registro Civil
+ * y se validan con fuentes Auténticas
+ * @param pacienteExport paciente exportado desde Registro Civil
+ * @param pacienteAndes paciente de Andes
+ */
+async function updateDatosPaciente(pacienteExport = null, pacienteAndes = null) {
+    if (pacienteExport && pacienteAndes && pacienteExport.nnrodoc !== '0') {
+        pacienteAndes.documento = pacienteExport.nnrodoc.replace(/-|\./g, '');
+        // validamos el paciente para actualizar datos y foto
+        if (pacienteAndes.documento && pacienteAndes.documento !== '') {
+            const bebeValidado = await validarPaciente(pacienteAndes);
+            await PacienteCtr.update(pacienteAndes.id, bebeValidado, userScheduler as any);
+        }
+    }
 }
