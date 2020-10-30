@@ -2,13 +2,14 @@ import * as express from 'express';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { model as Cie10 } from '../../../core/term/schemas/cie10';
 import { makeFs } from '../schemas/CDAFiles';
-import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
 import { Types } from 'mongoose';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import { AndesDrive } from '@andes/drive';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+// import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 const ObjectId = Types.ObjectId;
 
@@ -259,9 +260,13 @@ router.get('/paciente/', async (req: any, res, next) => {
         return next(403);
     }
 
-    let lista = [];
-    let list = [];
-    pacienteCtr.buscarPacByDocYSexo(req.query.documento, req.query.sexo).then(async resultado => {
+    try {
+        let lista = [];
+        let list = [];
+        const documento = req.query.documento;
+        const sexo = req.query.sexo;
+        const resultado = await PacienteCtr.search({ documento, sexo }, {}, req);
+
         for (let i = 0; i < resultado.length; i++) {
             let pac: any = resultado[i];
             let pacienteID = pac._id;
@@ -269,9 +274,10 @@ router.get('/paciente/', async (req: any, res, next) => {
             lista.push(list);
         }
         res.json(lista);
-    }).catch(() => {
+
+    } catch {
         return res.send({ error: 'paciente_error' });
-    });
+    }
 });
 
 /**
@@ -349,10 +355,11 @@ router.get('/paciente/:id', async (req: any, res, next) => {
         && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
         return next(403);
     }
+
     if (ObjectId.isValid(req.params.id)) {
         let pacienteID = req.params.id;
         let prestacion = req.query.prestacion;
-        let { paciente } = await pacienteCtr.buscarPaciente(pacienteID);
+        let paciente: any = await PacienteCtr.findById(pacienteID, {});
 
         if (paciente) {
             let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
