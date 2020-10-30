@@ -31,6 +31,7 @@ class PacienteResource extends ResourceBase<IPacienteDoc> {
         reportarError: MongoQuery.equalMatch,
         estado: MongoQuery.equalMatch,
         certificadoRenaper: MongoQuery.equalMatch,
+        tokens: MongoQuery.partialString,
         identificadores: {
             field: 'identificadores.entidad',
             fn: (value) => {
@@ -73,7 +74,11 @@ class PacienteResource extends ResourceBase<IPacienteDoc> {
             field: 'updatedAt',
             fn: (value) => (MongoQuery.matchDate(value))
         },
-        search: ['documento', 'nombre', 'apellido', 'sexo']
+        fechaNacimiento: {
+            field: 'fechaNacimiento',
+            fn: (value) => (MongoQuery.matchDate(value))
+        },
+        search: ['documento', 'nombre', 'apellido', 'sexo', 'certificadoRenaper']
     };
     eventBus = EventCore;
 }
