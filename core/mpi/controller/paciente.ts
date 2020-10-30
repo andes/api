@@ -539,7 +539,7 @@ export async function checkRepetido(nuevoPaciente, incluirTemporales = true): Pr
 
 
 // Función para crear el $match de pacientes con los parámetros correspondientes
-function createMatchPatient(patient, cantidad) {
+function createMatchPatient(patient) {
     const uriDNI: any = 'http://www.renaper.gob.ar/dni';
     let gender = patient.sexo.id ? patient.sexo.id : patient.sexo;
     switch (gender) {
@@ -585,8 +585,7 @@ function createMatchPatient(patient, cantidad) {
                 }
             },
             {
-                name: 'count',
-                valueInteger: cantidad
+                name: 'count'
             }
         ]
     };
@@ -613,14 +612,17 @@ export async function getPatientFromFederador(pacienteAndes, req: any) {
     };
 
     const token = await clientSD.obtenerToken(payload);
-    const params = createMatchPatient(pacienteAndes, 5);
+    const params = createMatchPatient(pacienteAndes);
     const patients = await clientSD.search(params, token);
     const pacientesAndes = [];
     patients.forEach(fhirPac => {
         const pacienteDecode: any = Patient.decode(fhirPac);
         const percent = this.matchPatient(pacienteAndes, pacienteDecode);
-        pacienteDecode.percent = percent;
-        pacientesAndes.push(pacienteDecode);
+        if (percent > 0.84) {
+            pacienteDecode.percent = percent;
+            pacienteDecode.idFederador = fhirPac.id;
+            pacientesAndes.push(pacienteDecode);
+        }
     });
     return pacientesAndes;
 }
