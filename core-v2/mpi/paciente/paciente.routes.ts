@@ -6,8 +6,9 @@ import { suggest, isMatchingAlto, multimatch, make, findById, set } from './paci
 import * as mongoose from 'mongoose';
 import { PatientDuplicate, PatientNotFound } from './paciente.error';
 import { EventCore } from '@andes/event-bus';
+import { IPacienteDoc } from './paciente.interface';
 
-class PacienteResource extends ResourceBase {
+class PacienteResource extends ResourceBase<IPacienteDoc> {
     Model = Paciente;
     resourceModule = 'mpi';
     resourceName = 'pacientes';
@@ -21,6 +22,7 @@ class PacienteResource extends ResourceBase {
         delete: Auth.authorize('mpi:paciente:deleteAndes')
     };
     searchFileds = {
+        ids: MongoQuery.inArray.withField('_id'),
         documento: MongoQuery.partialString,
         nombre: MongoQuery.partialString,
         apellido: MongoQuery.partialString,

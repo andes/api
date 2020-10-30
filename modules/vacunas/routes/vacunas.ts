@@ -1,6 +1,8 @@
 import * as express from 'express';
 import * as pacienteCtr from './../../../core/mpi/controller/paciente';
 import * as vacunaCtr from '../controller/VacunaController';
+import { asyncHandler } from '@andes/api-tool';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 const router = express.Router();
 
@@ -8,13 +10,11 @@ const router = express.Router();
  * Obtenemos las vacunas del Paciente
  */
 
-router.get('/paciente/:id', (req: any, res, next) => {
+router.get('/paciente/:id', asyncHandler(async (req: any, res, next) => {
     const pacienteId = req.params.id;
-    pacienteCtr.buscarPaciente(pacienteId).then(async data => {
-        const pacienteMPI = data.paciente;
-        const resultados = await vacunaCtr.getVacunas(pacienteMPI);
-        res.json(resultados);
-    });
-});
+    const paciente = await PacienteCtr.findById(pacienteId);
+    const vacunas = await vacunaCtr.getVacunas(paciente);
+    res.json(vacunas);
+}));
 
 export = router;
