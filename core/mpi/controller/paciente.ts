@@ -555,7 +555,6 @@ function createMatchPatient(patient) {
     }
     return {
         resourceType: 'Parameters',
-        id: patient.id,
         parameter: [
             {
                 name: 'resource',
@@ -615,14 +614,11 @@ export async function getPatientFromFederador(pacienteAndes, req: any) {
     const params = createMatchPatient(pacienteAndes);
     const patients = await clientSD.search(params, token);
     const pacientesAndes = [];
-    patients.forEach(fhirPac => {
-        const pacienteDecode: any = Patient.decode(fhirPac);
-        const percent = this.matchPatient(pacienteAndes, pacienteDecode);
-        if (percent > 0.84) {
-            pacienteDecode.percent = percent;
-            pacienteDecode.idFederador = fhirPac.id;
-            pacientesAndes.push(pacienteDecode);
-        }
+    patients.forEach(bundleEntry => {
+        const pacienteDecode: any = Patient.decode(bundleEntry.resource); // Acá envio el paciente q es el recurso
+        pacienteDecode.percent = bundleEntry.search.score;
+        pacienteDecode.idFederador = bundleEntry.resource.id;
+        pacientesAndes.push(pacienteDecode);
     });
     return pacientesAndes;
 }

@@ -106,7 +106,7 @@ export class SaludDigitalClient {
             }
         };
         const [status, bundle] = await handleHttpRequest(options);
-        return (bundle.total > 0 ? bundle.entry.map(e => e.resource) : []);
+        return (bundle.total > 0 ? bundle.entry.map(e => e) : []);
     }
 
     async getDominios(idPaciente) {
