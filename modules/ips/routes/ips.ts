@@ -1,42 +1,8 @@
 import * as express from 'express';
-import { getDocumentReference, IPS } from '../controller/ips';
 
 const router = express.Router();
 
-router.get('/fhir/documentReference/', async (req, res, next) => {
-    try {
-        // verify token IPS
-        const subjIdentifier = req.query['subject:identifier'].split('|');
-        if (subjIdentifier.length > 0) {
-            const patientID = subjIdentifier[1];
-            const documentReference = await getDocumentReference(patientID);
-            return res.json(documentReference);
-
-        } else {
-            return null;
-        }
-    } catch (err) {
-        return next(err);
-    }
-});
-
-router.get('/fhir/Bundle/:id', async (req, res, next) => {
-    try {
-        // verify token ips
-        const patientID = req.params.id;
-        if (patientID) {
-            const binary = await IPS(patientID);
-            return res.json(binary);
-        } else {
-            return null;
-        }
-    } catch (err) {
-        return next(err);
-    }
-});
-
-
-// ESTE CODIGO ESTA DEPRECADO Y HAY Q REVISAR
+// ESTE CODIGO ESTA DEPRECADO Y YA FUE MODIFICADO EN OTRO BRANCH
 
 // router.get('/document/:id', async (req, res, next) => {
 //     try {
