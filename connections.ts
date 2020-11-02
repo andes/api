@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import * as configPrivate from './config.private';
 import * as debug from 'debug';
 import { Connections as loggerConnections } from '@andes/log';
+import { AndesCache } from '@andes/core';
 
 function schemaDefaults(schema) {
     schema.set('toJSON', {
@@ -70,4 +71,12 @@ export class Connections {
         connection.on('reconnected', () => connectionLog('reconnected'));
         connection.on('disconnected', () => connectionLog('disconnected'));
     }
+}
+
+export let AppCache: AndesCache;
+
+if (configPrivate.RedisWebSockets.active) {
+    AppCache = new AndesCache({ adapter: 'redis', port: configPrivate.RedisWebSockets.port, host: configPrivate.RedisWebSockets.host });
+} else {
+    AppCache = new AndesCache({ adapter: 'memory' });
 }
