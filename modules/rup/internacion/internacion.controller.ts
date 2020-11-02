@@ -7,6 +7,7 @@ import { Prestacion } from '../schemas/prestacion';
 import * as CamasEstadosController from './cama-estados.controller';
 import { Request } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 
 export async function obtenerPrestaciones(organizacion, filtros) {
     const fechaIngresoDesde = (filtros.fechaIngresoDesde) ? moment(filtros.fechaIngresoDesde).toDate() : moment().subtract(1, 'month').toDate();
@@ -119,6 +120,10 @@ export async function deshacerInternacion(organizacion, capa, ambito, cama, req:
         const movimientos = await CamasEstadosController.searchEstados({ desde: cama.fecha, hasta: cama.fecha, organizacion, capa, ambito }, { cama: cama.idCama, esMovimiento: true });
         if (movimientos.length <= 1) {
             result = await CamasEstadosController.deshacerEstadoCama({ organizacion, ambito, capa, cama: cama.idCama }, cama.fecha, usuario);
+            EventCore.emitAsync('mapa-camas:paciente:undo', {
+                fecha: cama.fecha,
+                idInternacion: cama.idInternacion
+            });
         }
     }
 

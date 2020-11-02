@@ -1,4 +1,4 @@
-import * as mongoose from 'mongoose';
+import { SchemaTypes, Schema, model, Types } from 'mongoose';
 import * as registro from './prestacion.registro';
 import { SemanticTag } from './semantic-tag';
 import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
@@ -8,7 +8,8 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 
 
-export const PrestacionSchema = new mongoose.Schema({
+export const PrestacionSchema = new Schema({
+    trackId: { required: false, type: Schema.Types.ObjectId },
     inicio: {
         type: String,
         enum: ['top', 'agenda', 'fuera-agenda', 'internacion'],
@@ -16,7 +17,7 @@ export const PrestacionSchema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
         // requirido, validar en middleware
-        id: mongoose.Schema.Types.ObjectId,
+        id: Schema.Types.ObjectId,
         nombre: String,
         apellido: String,
         documento: String,
@@ -53,7 +54,7 @@ export const PrestacionSchema = new mongoose.Schema({
 
         // Tipo de Prestación a ejecutarse (destino)
         tipoPrestacion: {
-            id: mongoose.Schema.Types.ObjectId,
+            id: Schema.Types.ObjectId,
             conceptId: String,
             term: String,
             fsn: String,
@@ -61,7 +62,7 @@ export const PrestacionSchema = new mongoose.Schema({
             noNominalizada: Boolean
         },
         tipoPrestacionOrigen: {
-            id: mongoose.Schema.Types.ObjectId,
+            id: Schema.Types.ObjectId,
             conceptId: String,
             term: String,
             fsn: String,
@@ -69,7 +70,7 @@ export const PrestacionSchema = new mongoose.Schema({
         },
 
         // ID del turno relacionado con esta prestación
-        turno: mongoose.Schema.Types.ObjectId,
+        turno: Schema.Types.ObjectId,
 
         // Registros de la solicitud ... para los planes o prestaciones futuras
         registros: [registro.schema],
@@ -77,19 +78,19 @@ export const PrestacionSchema = new mongoose.Schema({
         // Organización Destino de la solicitud.
         organizacion: {
             // requirido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
+            id: Schema.Types.ObjectId,
             nombre: String
         },
 
         organizacionOrigen: {
-            id: mongoose.Schema.Types.ObjectId,
+            id: Schema.Types.ObjectId,
             nombre: String
         },
 
         // Profesional Destino
         profesional: {
             // requerido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
+            id: Schema.Types.ObjectId,
             nombre: String,
             apellido: String,
             documento: String
@@ -97,7 +98,7 @@ export const PrestacionSchema = new mongoose.Schema({
 
         profesionalOrigen: {
             // requerido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
+            id: Schema.Types.ObjectId,
             nombre: String,
             apellido: String,
             documento: String
@@ -105,7 +106,7 @@ export const PrestacionSchema = new mongoose.Schema({
 
         // ID de la Prestación desde la que se generó esta Solicitud
         prestacionOrigen: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: 'prestacion'
         },
 
@@ -124,7 +125,7 @@ export const PrestacionSchema = new mongoose.Schema({
         // Lugar donde se realiza
         organizacion: {
             // requirido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
+            id: Schema.Types.ObjectId,
             nombre: String
         },
 
@@ -141,7 +142,7 @@ export const PrestacionSchema = new mongoose.Schema({
         // Registros de la ejecución
         registros: [registro.schema],
 
-        elementoRUP: mongoose.SchemaTypes.ObjectId
+        elementoRUP: SchemaTypes.ObjectId
 
     },
     // Historia de estado de la prestación
@@ -213,7 +214,7 @@ function getInicioPrestacion(prestacion) {
     }
 }
 
-function deepSearch(registros: any[], id: string | mongoose.Types.ObjectId) {
+function deepSearch(registros: any[], id: string | Types.ObjectId) {
     for (let i = 0; i < registros.length; i++) {
         if (String(id) === String(registros[i].id)) {
             return registros[i];
@@ -227,7 +228,7 @@ function deepSearch(registros: any[], id: string | mongoose.Types.ObjectId) {
     return null;
 }
 
-PrestacionSchema.methods.findRegistroById = function (id: string | mongoose.Types.ObjectId) {
+PrestacionSchema.methods.findRegistroById = function (id: string | Types.ObjectId) {
     const regs = this.ejecucion.registros || [];
     return deepSearch(regs, id);
 };
@@ -287,4 +288,4 @@ PrestacionSchema.index({
     'solicitud.profesionalOrigen.id': 1
 }, { name: 'TOP-PROFESIONAL', partialFilterExpression: { inicio: 'top' } });
 
-export const Prestacion = mongoose.model('prestacion', PrestacionSchema, 'prestaciones');
+export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');
