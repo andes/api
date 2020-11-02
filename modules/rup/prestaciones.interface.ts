@@ -21,6 +21,7 @@ export interface IPrestacion {
     estadoFacturacion?: {
         tipo: String,
         numero: Number,
+        numeroComprobante: string,
         estado: String
     };
     estadoActual: IPrestacionEstado;
