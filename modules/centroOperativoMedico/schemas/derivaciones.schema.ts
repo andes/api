@@ -1,6 +1,8 @@
+import { ObraSocial } from './../../obraSocial/schemas/obraSocial';
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { DireccionSchema } from '../../../shared/schemas/direccion';
+import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 
 export const ESTADOS_DERIVACION = ['solicitada', 'habilitada', 'inhabilitada', 'asignada', 'rechazada', 'aceptada', 'finalizada', 'encomendada'];
 
@@ -57,7 +59,8 @@ export const DerivacionSchema = new mongoose.Schema({
             genero: String,
             nombre: String,
             apellido: String,
-            fechaNacimiento: Date
+            fechaNacimiento: Date,
+            ObraSocial: { type: obraSocialSchema }
         },
         required: true
     },
