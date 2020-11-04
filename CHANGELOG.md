@@ -1,3 +1,15 @@
+# [5.20.0](https://github.com/andes/api/compare/v5.19.0...v5.20.0) (2020-11-04)
+
+
+### Features
+
+* **com:** eliminado en historial derivaciones ([#1172](https://github.com/andes/api/issues/1172)) ([2830d69](https://github.com/andes/api/commit/2830d690c6f519c3abb8ebc2758592e86f74454a))
+* **com:** guardar obra social del paciente ([#1170](https://github.com/andes/api/issues/1170)) ([b58a65c](https://github.com/andes/api/commit/b58a65c9001882fc933de900493e18b79af674b8))
+* **com:** indices y corrección en routes ([#1169](https://github.com/andes/api/issues/1169)) ([45fb9be](https://github.com/andes/api/commit/45fb9be8d991945614c0e22fd5c8657943d391e7))
+* **facturacion:** cambio de codificacion a prestacion ([#1065](https://github.com/andes/api/issues/1065)) ([8b6d939](https://github.com/andes/api/commit/8b6d93908ef96902850b286874da9658b60bbe6f))
+* **mapa-camas:** trackId en prestaciones ([#1173](https://github.com/andes/api/issues/1173)) ([e1885df](https://github.com/andes/api/commit/e1885df69c499b835c53df8ea1ee36156ffe3cc1))
+* **webhook:** agrega ruta para notificación ([#1167](https://github.com/andes/api/issues/1167)) ([dffcd06](https://github.com/andes/api/commit/dffcd06adda111a962b8cd77589e5224743aa0eb))
+
 # [5.19.0](https://github.com/andes/api/compare/v5.18.0...v5.19.0) (2020-10-28)
 
 
