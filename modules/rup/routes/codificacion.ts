@@ -52,7 +52,13 @@ router.patch('/codificacion/estadoFacturacion/:idPrestacion', async (req, res, n
     try {
         const data = await Codificacion.findOneAndUpdate(
             { idPrestacion: Types.ObjectId(req.params.idPrestacion) },
-            { $set: { estadoFacturacion: req.body.estadoFacturacion } });
+            { $set: { estadoFacturacion: req.body.estadoFacturacion } }
+        );
+
+        await Prestacion.updateOne(
+            { _id: Types.ObjectId(req.params.idPrestacion) },
+            { $set: { estadoFacturacion: req.body.estadoFacturacion } }
+        );
 
         res.json(data);
     } catch (err) {

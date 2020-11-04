@@ -34,6 +34,7 @@ export const PrestacionSchema = new Schema({
     estadoFacturacion: {
         tipo: String,
         numero: Number,
+        numeroComprobante: String,
         estado: String
     },
     // Datos de la Solicitud
