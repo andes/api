@@ -96,12 +96,6 @@ export const modules = {
         route: '/modules/turnero'
         // middleware: appMiddleware
     },
-    fuentesAutenticas: {
-        active: true,
-        path: './modules/fuentesAutenticas/routes',
-        route: '/modules/fuentesAutenticas',
-        middleware: appMiddleware
-    },
     matriculaciones: {
         active: true,
         path: './modules/matriculaciones/routes',
