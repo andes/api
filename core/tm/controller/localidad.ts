@@ -22,10 +22,10 @@ export async function matchUbicacion(searchProvincia: string, searchLocalidad: s
     });
     const localidades: any = await localidad.find({ 'provincia._id': matchProvincia[1]._id });
     match = 0;
-
+    const loc = searchLocalidad.toLocaleLowerCase().replace(/_|\./g, '');
     // seleccionamos localidad con matching mas alto
     localidades.forEach(unaLoc => {
-        match = alg.levenshtein(searchLocalidad, unaLoc.nombre);
+        match = alg.levenshtein(loc, unaLoc.nombre);
         matchLocalidad = (match > matchLocalidad[0]) ? [match, unaLoc] : matchLocalidad;
     });
     return { provincia: matchProvincia[1], localidad: matchLocalidad[1] };

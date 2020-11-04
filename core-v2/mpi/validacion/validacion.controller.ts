@@ -1,8 +1,10 @@
-import { Paciente } from '../paciente/paciente.schema';
 import { renaper, sisa, renaperToAndes, sisaToAndes } from '@andes/fuentes-autenticas';
 import { RenaperConfig } from './validacion.interfaces';
 import { renaper as renaConfig } from '../../../config.private';
 import { sisa as sisaConfig } from '../../../config.private';
+import { matchUbicacion } from '../../../core/tm/controller/localidad';
+import { IDireccion } from '../../../shared/interface';
+
 const sharp = require('sharp');
 
 function caracteresInvalidos(texto) {
@@ -38,24 +40,21 @@ export async function validar(documento: string, sexo: string) {
         // Valida el tamaño de la foto
         ciudadanoRenaper.foto = await validarTamañoFoto(ciudadanoRenaper.foto);
         ciudadanoRenaper.estado = 'validado';
-        if (ciudadanoRenaper.direccion.length) {
-            // Completamos campos correspondientes a dirección legal
-            let ubicacionRena = ciudadanoRenaper.direccion[0].ubicacion;
-            ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
-            ciudadanoRenaper.direccion[1].ubicacion = ubicacionRena;
-            ciudadanoRenaper.direccion[1].geoReferencia = null;
-            ciudadanoRenaper.validateAt = new Date();
-        }
+        ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
+        ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
+        ciudadanoRenaper.validateAt = new Date();
         if (identidadSinAcentos(ciudadanoRenaper)) {
             return ciudadanoRenaper;
         }
     }
     const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
+    ciudadanoSisa.direccion[0] = await matchDireccion(ciudadanoSisa);
+    ciudadanoSisa.direccion[1] = ciudadanoSisa.direccion[0];
+    ciudadanoSisa.validateAt = new Date();
     if (ciudadanoSisa) {
         if (ciudadanoRenaper) {
             ciudadanoSisa.foto = ciudadanoRenaper.foto;
             ciudadanoSisa.direccion = ciudadanoRenaper.direccion;
-            ciudadanoSisa.validateAt = new Date();
         }
         return ciudadanoSisa;
     }
@@ -89,4 +88,24 @@ async function resizeFoto(foto) {
     let resizedImageData = semiTransparentRedPng.toString('base64');
     let resizedBase64 = `data:${mimType};base64,${resizedImageData}`;
     return resizedBase64;
+}
+
+async function matchDireccion(persona) {
+    let direccion: IDireccion;
+    if (persona.direccion.length > 0) {
+        // Se realiza el matcheo de la dirección
+        // Completamos campos correspondientes a dirección legal
+        direccion = persona.direccion[0];
+        let ubicacionRena = persona.direccion[0].ubicacion;
+        const ubicacionMatched = await matchUbicacion(ubicacionRena.provincia.nombre, ubicacionRena.localidad.nombre);
+        ubicacionRena = {
+            pais: (ubicacionMatched.provincia) ? ubicacionMatched.provincia.pais : null,
+            provincia: (ubicacionMatched.provincia) ? ubicacionMatched.provincia : null,
+            localidad: (ubicacionMatched.localidad) ? ubicacionMatched.localidad : null,
+            barrio: null,
+        };
+        direccion.ubicacion = ubicacionRena;
+        direccion.geoReferencia = null;
+    }
+    return direccion;
 }
