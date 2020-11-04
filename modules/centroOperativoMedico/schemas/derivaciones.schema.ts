@@ -79,5 +79,10 @@ export const DerivacionSchema = new mongoose.Schema({
 });
 
 DerivacionSchema.plugin(AuditPlugin);
-
+DerivacionSchema.index({
+    cancelada: 1,
+    estado: 1,
+    'organizacionDestino.id': 1,
+    'organizacionOrigen.id': 1
+});
 export let Derivaciones = mongoose.model('derivaciones', DerivacionSchema, 'derivaciones');
