@@ -207,7 +207,7 @@ router.get('/pacientes/:id/foto/:fotoId', async (req, res, next) => {
         const idPaciente = req.params.id;
         const pacienteBuscado: any = await paciente.findById(idPaciente, '+foto');
         if (pacienteBuscado) {
-            if (!pacienteBuscado.fotoId) {
+            if (!pacienteBuscado.fotoId || !pacienteBuscado.foto || pacienteBuscado.foto == null) {
                 res.writeHead(200, {
                     'Content-Type': 'image/svg+xml'
                 });
@@ -229,7 +229,7 @@ router.get('/pacientes/:id/foto/:fotoId', async (req, res, next) => {
         }
 
     } catch (err) {
-        return next('Paciente no encontrado');
+        return next(err);
     }
 
 });
