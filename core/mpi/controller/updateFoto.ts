@@ -1,5 +1,5 @@
 import { paciente } from '../../mpi/schemas/paciente';
-import { updatePaciente } from './paciente';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Types } from 'mongoose';
 import { userScheduler } from '../../../config.private';
 const ObjectId = Types.ObjectId;
@@ -14,7 +14,7 @@ export const updateFoto = async (done) => {
             if (pac.foto?.length) {
                 // insertamos nuevo campo fotoId
                 let fotoIdPac = new ObjectId();
-                await updatePaciente(pac, { fotoId: fotoIdPac }, dataLog);
+                await PacienteCtr.update(pac.id, { fotoId: fotoIdPac }, dataLog);
 
                 /* Recorremos las relaciones de este paciente. Por cada relacion obtenemos el paciente relacionado
                     e iteramos dentro de sus relaciones buscando este paciente (pac) para reemplazar el campo 'foto'
@@ -26,7 +26,7 @@ export const updateFoto = async (done) => {
                             if (relacionado.relaciones && relacionado.relaciones.length > 0) {
                                 relacionado.relaciones.map((unaRel: any) => { return agregarFotoId(unaRel, fotoIdPac, pac.id); }); // este paciente ('pac' en su relacion opuesta)
                             }
-                            await updatePaciente(relacionado, { relaciones: relacionado.relaciones }, dataLog);
+                            await PacienteCtr.update(relacionado.id, { relaciones: relacionado.relaciones }, dataLog);
                         }
                     }
                 }
