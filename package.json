@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "@agm/core": "^1.0.0-beta.5",
-    "@andes/api-tool": "^2.0.0",
+    "@andes/api-tool": "^2.1.0",
     "@andes/core": "^1.7.0",
     "@andes/drive": "file:packages/drive",
     "@andes/event-bus": "file:packages/event-bus",
