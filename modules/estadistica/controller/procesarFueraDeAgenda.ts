@@ -89,7 +89,8 @@ export async function procesar(parametros: any) {
                 idBloque: null,
                 turno: null,
                 idPrestacion: prestacion.idPrestacion,
-                estadoFacturacion: prestacion.estadoFacturacion
+                estadoFacturacion: prestacion.estadoFacturacion,
+                ambito: prestacion.prestacion.solicitud.ambitoOrigen
             };
 
             if (prestacion.paciente && prestacion.paciente.obraSocial === os || os === 'todos') {
