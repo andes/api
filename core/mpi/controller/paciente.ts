@@ -360,27 +360,6 @@ export function updateCarpetaEfectores(req, data) {
     data.carpetaEfectores = req.body.carpetaEfectores;
 }
 
-export function linkIdentificadores(req, data) {
-    data.markModified('identificadores');
-    if (data.identificadores) {
-        data.identificadores.push(req.body.dto);
-    } else {
-        data.identificadores = [req.body.dto]; // Primer elemento del array
-    }
-}
-
-export function unlinkIdentificadores(req, data) {
-    data.markModified('identificadores');
-    if (data.identificadores) {
-        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto.valor);
-    }
-}
-
-export function updateActivo(req, data) {
-    data.markModified('activo');
-    data.activo = req.body.activo;
-}
-
 export function updateRelacion(nuevaRelacion, data) {
     if (data) {
         // verifico si el paciente tiene relaciones
