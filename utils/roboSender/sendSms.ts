@@ -12,6 +12,7 @@ export interface SmsOptions {
 
 export function sendSms(smsOptions: SmsOptions) {
     return new Promise((resolve, reject) => {
+        return reject('sin servicio de sms');
         log('Enviando SMS a ', smsOptions.telefono);
         const argsOperador = {
             telefono: smsOptions.telefono
