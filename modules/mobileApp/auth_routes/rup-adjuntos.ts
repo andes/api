@@ -6,7 +6,7 @@ import { Auth } from './../../../auth/auth.class';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { model as PrestacionAdjunto } from '../../rup/schemas/prestacion-adjuntos';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
-import { storeFile } from '../../rup/controllers/rupStore';
+import { storeFile } from '../../../core/tm/controller/file-storage';
 
 const router = express.Router();
 
@@ -129,7 +129,7 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
                     registro: doc.registro,
                     prestacion: doc.prestacion
                 };
-                const data: any = await storeFile(file.plain64, metadata);
+                const data: any = await storeFile(file.plain64, metadata, 'RupStore');
                 files.push({ id: data._id, ext: file.ext });
             } else {
                 files.push(file);

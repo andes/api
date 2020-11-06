@@ -16,8 +16,7 @@ import { toArray } from '../../../utils/utils';
 import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
 import moment = require('moment');
-import { streamToBase64 } from '../../../modules/rup/controllers/rupStore';
-
+import { streamToBase64 } from '../controller/file-storage';
 
 let router = express.Router();
 

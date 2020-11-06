@@ -1,7 +1,6 @@
 import { HTMLComponent } from '../../model/html-component.class';
 import * as mime from 'mime-types';
-import * as rupStore from '../../../rup/controllers/rupStore';
-import { Types } from 'mongoose';
+import { streamToBase64, readFile } from '../../../../core/tm/controller/file-storage';
 
 
 export class AdjuntarDocumentoComponent extends HTMLComponent {
@@ -44,8 +43,8 @@ export class AdjuntarDocumentoComponent extends HTMLComponent {
             .map(documento => {
                 return new Promise(async (resolve, reject) => {
                     if (documento.id) {
-                        const archivo = await rupStore.readFile(documento.id);
-                        const base64 = await rupStore.streamToBase64(archivo.stream);
+                        const archivo = await readFile(documento.id, 'RupStore');
+                        const base64 = await streamToBase64(archivo.stream);
                         return resolve({ img: base64, term: documento?.descripcion?.term });
                     }
                     return;
