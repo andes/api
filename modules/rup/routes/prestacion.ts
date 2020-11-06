@@ -495,8 +495,9 @@ router.post('/prestaciones', async (req, res, next) => {
     if (dto.inicio === 'top') {
         updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
     }
-    if (dto.solicitud.turno) {
-        const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno });
+    const estado = dto.estados[dto.estados.length - 1].tipo;
+    if (dto.solicitud.turno && estado !== 'modificada') {
+        const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno, 'estadoActual.tipo': { $ne: 'modificada' } });
         if (prestacionIniciada > 0) {
             return next('ya_iniciada');
         }
