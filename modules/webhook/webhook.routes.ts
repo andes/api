@@ -23,7 +23,7 @@ export const WebhookRouter = WebhookCtr.makeRoutes();
 WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
     const query: any = req.body;
     // Fecha utilizada por el SIL
-    query.fechaNacimiento = moment(query.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') || null;
+    query.fechaNacimiento = moment(query.fechaNacimiento, 'DD/MM/YYYY').startOf('day').toDate() || null;
     if (query.documento) {
         const paciente = await findOrCreate(query, req);
         // Verifica los datos de contacto
@@ -38,8 +38,8 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
                     ultimaActualizacion: new Date()
                 };
                 paciente.contacto.push(nuevoContacto);
-                await PacienteCtr.update(paciente.id, paciente, req as any);
             }
+            await PacienteCtr.update(paciente.id, paciente, req as any);
         }
         return res.json(paciente);
     }
