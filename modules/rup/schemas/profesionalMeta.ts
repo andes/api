@@ -26,6 +26,7 @@ export interface IProfesionalMeta extends mongoose.Document {
         concepto: ISnomedConcept;
         esSolicitud: Boolean;
         frecuencia: number;
+        lastUse: Date;
     }];
 }
 
@@ -46,8 +47,9 @@ export let ProfesionalMetaSchema = new mongoose.Schema({
         // tipo de prestacion desde la cual se solicita
         concepto: SnomedConcept,
         esSolicitud: Boolean,
-        frecuencia: Number
+        frecuencia: Number,
+        lastUse: Date
     }]
 });
 
-export let ProfesionalMeta: mongoose.Model<IProfesionalMeta> = mongoose.model<IProfesionalMeta>('profesionalMeta', ProfesionalMetaSchema, 'profesionalMeta');
+export const ProfesionalMeta: mongoose.Model<IProfesionalMeta> = mongoose.model<IProfesionalMeta>('profesionalMeta', ProfesionalMetaSchema, 'profesionalMeta');

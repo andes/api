@@ -3,17 +3,17 @@ import { ProfesionalMeta } from '../schemas/profesionalMeta';
 export async function actualizarFrecuentes(data) {
 
     const query = {
-            // profesional
+        // profesional
         ...(data.profesional) && { 'profesional.id': data.profesional.id },
-            // organizacion
+        // organizacion
         ...(data.organizacion.id) && { 'organizacion.id': data.organizacion.id },
-            // tipoPrestacion
+        // tipoPrestacion
         ...(data.tipoPrestacion.conceptId) && { 'tipoPrestacion.conceptId': data.tipoPrestacion.conceptId }
     };
 
     const resultado = await ProfesionalMeta.findOne(query);
 
-            // si no existe agregamos el nuevo frecuente
+    // si no existe agregamos el nuevo frecuente
     if (!resultado) {
         const frecuente = new ProfesionalMeta(data);
         await frecuente.save();
@@ -27,7 +27,8 @@ export async function actualizarFrecuentes(data) {
                     resultado.frecuentes.push({
                         concepto: frecuente.concepto,
                         esSolicitud: frecuente.esSolicitud,
-                        frecuencia: 1
+                        frecuencia: 1,
+                        lastUse: new Date()
                     });
                 } else {
 
@@ -36,6 +37,7 @@ export async function actualizarFrecuentes(data) {
                     } else {
                         resultado.frecuentes[indexConcepto].frecuencia = 1;
                     }
+                    resultado.frecuentes[indexConcepto].lastUse = new Date();
                 }
             });
         }
