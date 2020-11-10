@@ -167,7 +167,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                             }
                         }
                     },
-                    { $project: { createdAt: 0, createdBy: 0 }}
+                    { $project: { createdAt: 0, createdBy: 0 } }
                 ],
                 as: 'cama'
             }
@@ -177,12 +177,25 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                 newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
             }
         },
+
         {
             $match: thirdMatch
         },
         {
+            $lookup: {
+                from: 'internacionPacienteResumen',
+                localField: 'idInternacion',
+                foreignField: '_id',
+                as: 'estado_internacion'
+            }
+        },
+        { $unwind: { path: '$estado_internacion', preserveNullAndEmptyArrays: true } },
+        {
             $addFields: {
                 id: '$_id',
+                metadata: '$estado_internacion.metadata',
+                fechaIngreso: '$estado_internacion.fechaIngreso',
+                prioridad: '$estado_internacion.prioridad',
             }
         },
         {

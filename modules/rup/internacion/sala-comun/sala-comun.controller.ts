@@ -20,7 +20,6 @@ export interface SalaComunIngreso {
 }
 
 export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, req: Request) {
-
     const organizacion = {
         id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -59,7 +58,8 @@ export async function ingresarPaciente(id: SalaComunID, dto: SalaComunIngreso, r
     if (dto.extras?.ingreso) {
         EventCore.emitAsync('mapa-camas:paciente:ingreso', {
             ...movimiento.toObject(),
-            sala: true
+            sala: true,
+            metadata: dto['metadata']
         });
     }
 
@@ -242,7 +242,23 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                 updatedAt: '$snapshot.updatedAt',
                 updatedBy: '$snapshot.updatedBy'
             }
-        }
+        },
+        {
+            $lookup: {
+                from: 'internacionPacienteResumen',
+                localField: 'idInternacion',
+                foreignField: '_id',
+                as: 'estado_internacion'
+            }
+        },
+        { $unwind: { path: '$estado_internacion', preserveNullAndEmptyArrays: true } },
+        {
+            $addFields: {
+                metadata: '$estado_internacion.metadata',
+                fechaIngreso: '$estado_internacion.fechaIngreso',
+                prioridad: '$estado_internacion.prioridad',
+            }
+        },
     ];
     return SalaComunSnapshot.aggregate(aggr);
 }

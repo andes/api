@@ -198,6 +198,7 @@ function populateSalaComun(salas: any[]) {
             paciente: null,
             idInternacion: null,
             extras: null,
+            prioridad: null,
             fecha: new Date()
         };
     });
