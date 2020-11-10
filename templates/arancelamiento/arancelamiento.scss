@@ -1,0 +1,327 @@
+@import 'sass/variables/formales';
+@import 'sass/variables/cromaticas';
+
+html {
+    display: inline-block; // height: 100vh;
+    padding: 0 2rem;
+    font-family: sans-serif;
+}
+
+body {  
+    margin: 0; //Override
+
+    .contenedor {
+        display: inline-block;
+        border-bottom: $borderBottom;
+        width: 100%;
+
+        .contenedor-principal-data {
+            display: inline-block;
+            margin-top: 0.25cm;
+            margin-bottom: 0.25cm;
+            width: 33%;
+
+            &:nth-of-type(2) {
+                // display: inline-block;
+                float: right;
+            }
+        }
+    }
+
+    .firma {
+        margin-top: 10px;
+        border-bottom: none;
+        text-align: center !important;
+
+        * {
+            margin: 0 auto;
+
+        }
+        .contenedor-principal-data {
+            text-align: center !important;
+            width: 50%;
+            * {
+                position: relative;
+                bottom:0px;
+                margin: 0 auto ;
+            }
+            h6.paciente {
+                position:absolute;
+                bottom:10px;
+                left:25%;
+            }
+        }
+    }
+}
+
+// Cabezal
+header {
+    .contenedor-logos {
+        display: inline-block;
+        height: 1cm;
+        width: 100%; // padding: 0.5cm 0 0 0;
+        border-bottom: $borderBottom;
+
+        .contenedor-logo-efector {
+            margin-top: .05cm;
+            display: inline-block;
+            height: 60px;
+            width: 40%;
+
+            .logo-efector {
+                height: .75cm;
+                width: auto;
+                max-width: 7cm;
+            }
+
+            .no-logo-efector {
+                font-size: .20cm;
+            }
+        }
+
+        .contenedor-logos-secundarios {
+            margin-top: .15cm;
+            float: right; // display: inline-block; // width: 300px;
+            width: 40%;
+
+            .logo-adicional {
+                filter: grayscale(100%);
+                -webkit-filter: grayscale(1);
+                height: .55cm;
+                width: auto;
+            }
+
+            .logo-andes {
+                float: right; // display: inline-block; // width: 300px;
+                height: .55cm;
+                width: auto; // margin-left: 2cm; // float: right;
+            }
+        }
+    }
+
+    .contenedor {
+        display: inline-block;
+        border-bottom: $borderBottom;
+        width: 100%;
+
+        .contenedor-principal-data {
+            display: inline-block;
+            margin-top: 0.25cm;
+            margin-bottom: 0.25cm;
+            width: 33.3%;
+
+            &:nth-of-type(2) {
+                // display: inline-block;
+                float: right;
+            }
+        }
+    }
+}
+
+// Globales
+.contenedor-secundario {
+    display: block;
+
+    &.horizontal {
+        float: right;
+        margin-bottom: .25cm;
+
+        hr {
+            margin: 0 0;
+        }
+    }
+
+    &.vertical {
+        margin-bottom: .25cm;
+    }
+
+    font-size: .25cm;
+}
+
+.w-3\/4 {
+    width: 60%;
+}
+
+// Tipografía
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0.1cm 0;
+
+    &.bolder {
+        font-weight: 900;
+    }
+}
+
+h3 {
+    font-size: .325cm;
+}
+
+h4 {
+    font-size: .275cm;
+}
+
+h5,
+h6 {
+    font-size: .20cm;
+}
+
+h6 {
+    font-weight: lighter;
+}
+
+p {
+    font-size: 0.25cm;
+}
+
+hr {
+    // border: $borderBottom;
+    margin: 5px 0 5px 0;
+    width: 100%;
+
+    &.sm {
+        width: 15px;
+    }
+
+    &.lg {
+        width: 100%;
+    }
+}
+
+.volanta {
+    color: $andes-gris;
+    font-weight: bolder;
+    text-transform: uppercase;
+}
+
+.subdata-italic {
+    font-style: italic;
+}
+
+.txt-right {
+    text-align: right;
+}
+
+// Cuerpo
+main {
+
+    small {
+        font-weight: 400;
+    }
+
+    // padding: 1rem 0;
+    .contenedor-concepto {
+        display: inline-block;
+        padding: 1rem 0; // max-height: 10cm;
+    }
+}
+
+.contenedor-firmas {
+    display: inline;
+    // float: right;
+    // margin-top: 2cm;
+    // margin-bottom: 0.5cm;
+    text-align: center;
+
+    img {
+        width: 3.5cm;
+        height: auto;
+        max-height: 2.5cm;
+    }
+
+    h6 {
+        line-height: 0.5cm;
+    }
+}
+
+.contenedor-zocalo {
+    display: inline-block; // padding-bottom: 0.5cm;
+
+    // h6 {
+    //     font-size: 10px;
+    // }
+    img {
+        float: left; // margin-right: 1rem;
+
+        &.logo-pdp {
+            height: 1cm;
+            width: auto;
+            filter: grayscale(100%);
+            -webkit-filter: grayscale(1);
+        }
+    }
+
+    hr {
+        margin: 5px 0 5px 0;
+    }
+
+    .contenedor-pdp {
+        width: 40%;
+        display: inline-block;
+        margin-left: 0.5cm;
+        text-align: justify;
+    }
+
+    .contenedor-impresion,
+    .contenedor-footer,
+    .contenedor-organizacion {
+        float: right;
+    }
+
+    .contenedor-footer {
+        width: 40%;
+    }
+
+    .contenedor-organizacion {
+        text-align: left;
+    }
+
+    .numeracion {
+        // display: inline-block;
+        float: ri1ght;
+        width: auto;
+        height: auto;
+        font-size: .2cm;
+    }
+}
+
+.table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    page-break-inside: auto
+}
+
+.table tr {
+    margin: 0cm !important;
+    padding: 0cm;
+    page-break-inside: avoid;
+    page-break-after: auto
+}
+
+.table thead {
+    display: table-header-group;
+}
+
+
+
+.table thead tr th {
+    border: 0.03cm solid lightgray;
+    font-size: .275cm;
+    padding: 0.05cm;
+    margin: 0cm !important;
+    border-spacing: 0;
+
+}
+
+.table tbody tr td {
+    border: 0.03cm solid lightgray;
+    font-size: 0.25cm;
+    padding: 0.08cm;
+    margin: 0cm !important;
+    border-spacing: 0;
+    page-break-inside: avoid;
+    page-break-after: auto
+}

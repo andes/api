@@ -1,5 +1,7 @@
 import { sisa } from '../../../config.private';
 import { handleHttpRequest } from '../../../utils/requestHandler';
+import { Organizacion } from '../schemas/organizacion';
+
 export async function validarOrganizacionSisa(orgCodSisa: Number) {
     const data = {
         usuario: sisa.username,
@@ -82,4 +84,9 @@ export function deleteSector(itemSector, sector) {
         }
         return itemSector;
     }
+}
+
+export async function getConfiguracion(id) {
+    const org: any = await Organizacion.findById(id, { configuraciones: 1 });
+    return org.configuraciones || {};
 }

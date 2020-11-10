@@ -24,18 +24,16 @@ export class InformeRupFirma extends HTMLComponent {
     </footer>
     `;
 
-    constructor(public prestacion) {
+    constructor(public profesional, public organizacion) {
         super();
-
     }
 
     async process() {
-        const imagenFirma = await this.getFirma(this.prestacion.solicitud.profesional);
+        const imagenFirma = await this.getFirma(this.profesional);
         const matriculas = await this.getMatriculas();
 
-        const detalle = this.prestacion.solicitud.profesional.apellido + ', ' + this.prestacion.solicitud.profesional.nombre;
-        const detalle2 = this.prestacion.solicitud.organizacion.nombre.substring(0, this.prestacion.solicitud.organizacion.nombre.indexOf('-'));
-
+        const detalle = this.profesional.apellido + ', ' + this.profesional.nombre;
+        const detalle2 = this.organizacion.nombre.substring(0, this.organizacion.nombre.indexOf('-'));
 
         this.data = {
             firma: imagenFirma,
@@ -58,7 +56,7 @@ export class InformeRupFirma extends HTMLComponent {
     }
 
     private async getMatriculas() {
-        const infoMatriculas = await searchMatriculas(this.prestacion.solicitud.profesional.id);
+        const infoMatriculas = await searchMatriculas(this.profesional.id);
 
         const grado = infoMatriculas.formacionGrado.map(e => `${e.nombre} MP ${e.numero}`);
         const posgrado = infoMatriculas.formacionPosgrado.map(e => `${e.nombre} ME ${e.numero}`);
