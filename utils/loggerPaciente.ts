@@ -36,5 +36,15 @@ export class LoggerPaciente {
         return newLogNotificacion;
     }
 
-
+    public static logReporteError(req, op, paciente, err): any {
+        const newLogReporteError = new logPaciente({
+            paciente: paciente.id,
+            operacion: op,
+            error: err,
+            createdAt: new Date(),
+            createdBy: req.user.usuario || req.user
+        });
+        newLogReporteError.save();
+        return newLogReporteError;
+    }
 }
