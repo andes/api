@@ -7,6 +7,9 @@ import * as mongoose from 'mongoose';
 import { PatientDuplicate, PatientNotFound } from './paciente.error';
 import { EventCore } from '@andes/event-bus';
 import { IPacienteDoc } from './paciente.interface';
+import { geoReferenciar, getBarrio } from '@andes/georeference';
+import * as Barrio from '../../../core/tm/schemas/barrio';
+import * as configPrivate from '../../../config.private';
 
 class PacienteResource extends ResourceBase<IPacienteDoc> {
     Model = Paciente;
@@ -165,7 +168,44 @@ export const getFoto = async (req: Request, res: Response, next) => {
     }
 
     throw new PatientNotFound();
+};
 
+
+/**
+ * * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
+ * @param data debe contener direccion y localidad.
+ */
+
+export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
+    try {
+        let direccion: any = paciente.direccion;
+        // (valores de direccion fueron modificados): están completos?
+        if (direccion[0].valor && direccion[0].ubicacion.localidad && direccion[0].ubicacion.provincia) {
+            let dir = direccion[0].valor + ', ' + direccion[0].ubicacion.localidad.nombre + ', ' + direccion[0].ubicacion.provincia.nombre;
+            const geoRef: any = await geoReferenciar(dir, configPrivate.geoKey);
+            // georeferencia exitosa?
+            if (geoRef && Object.keys(geoRef).length) {
+                direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                let nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, configPrivate.geoNode.auth.user, configPrivate.geoNode.auth.password);
+                // consulta exitosa?
+                if (nombreBarrio) {
+                    const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));
+                    if (barrioPaciente) {
+                        direccion[0].ubicacion.barrio = barrioPaciente;
+                    }
+                }
+            } else {
+                direccion[0].geoReferencia = null;
+                direccion[0].ubicacion.barrio = null;
+            }
+        }
+        if (direccion[0].georeferencia) {
+            paciente = set(paciente, direccion);
+            PacienteCtr.update(paciente.id, paciente, configPrivate.userScheduler as any);
+        }
+    } catch (err) {
+        return (err);
+    }
 };
 
 /**
@@ -217,7 +257,7 @@ export const patch = async (req: Request, res: Response) => {
     let paciente = await findById(id);
     if (paciente) {
         paciente = set(paciente, body);
-        const updated = await PacienteCtr.update(id, paciente, req);
+        const updated = await PacienteCtr.update(id, body, req);
         return res.json(updated);
     }
     throw new PatientNotFound();
