@@ -5,7 +5,7 @@ import { ValidacionFailed } from './validacion.error';
 import { asyncHandler } from '@andes/api-tool';
 
 /**
- * @api {get} /validacion/ Requiere datos de un paciente
+ * @api {post} /validacion/ Requiere datos de un paciente
  * @apiName validacion
  * @apiGroup MPI
  *

@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as controller from './../../../core/mpi/controller/paciente';
+import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 import * as vacunasCtr from '../controller/VacunasController';
 import { Auth } from '../../../auth/auth.class';
 import * as HttpStatus from 'http-status-codes';
@@ -10,14 +10,12 @@ const router = express.Router();
  * Obtenemos las vacunas del Paciente App
  */
 
-router.get('/vacunas', (req: any, res, next) => {
+router.get('/vacunas', async (req: any, res, next) => {
     try {
         const pacienteId = req.user.pacientes[0].id;
-        controller.buscarPaciente(pacienteId).then(async data => {
-            const pacienteMPI = data.paciente;
-            const resultados = await vacunasCtr.getVacunas(pacienteMPI);
-            return res.json(resultados);
-        });
+        const pacienteMPI = await findById(pacienteId);
+        const resultados = await vacunasCtr.getVacunas(pacienteMPI);
+        return res.json(resultados);
     } catch (err) {
         // TODO agregar andesLog
         return next(err);
@@ -32,10 +30,9 @@ router.get('/vacunas', (req: any, res, next) => {
 router.get('/vacunas/count', async (req: any, res, next) => {
     try {
         const pacienteId = req.user.pacientes[0].id;
-        controller.buscarPaciente(pacienteId).then(async data => {
-            const count = await vacunasCtr.getCount(data.paciente);
-            return res.json(count);
-        });
+        const paciente = await findById(pacienteId);
+        const count = await vacunasCtr.getCount(paciente);
+        return res.json(count);
     } catch (err) {
         // TODO agregar andesLog
         return next(err);
