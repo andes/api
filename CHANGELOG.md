@@ -1,3 +1,22 @@
+# [5.21.0](https://github.com/andes/api/compare/v5.20.0...v5.21.0) (2020-11-11)
+
+
+### Bug Fixes
+
+* **mpi:** match ubicacion en validacion ([#1177](https://github.com/andes/api/issues/1177)) ([30a3acd](https://github.com/andes/api/commit/30a3acd7de4813b8b1252ddbda694c50ff7cc743))
+* **mpi:** script para pacientes con fotoId pero sin foto ([#1175](https://github.com/andes/api/issues/1175)) ([be02997](https://github.com/andes/api/commit/be0299755fd3b3a2ec3337452308050aa364420d))
+* **rup:** prestación iniciada por otro profesional ([#1132](https://github.com/andes/api/issues/1132)) ([4cb5ea9](https://github.com/andes/api/commit/4cb5ea9ab5183cc8392f34f3c6b423a40f13f000))
+* **rup:** romper validacion check ([#1185](https://github.com/andes/api/issues/1185)) ([8f18fa4](https://github.com/andes/api/commit/8f18fa444ee048fe077a5255330edcfcf043c665))
+* **webhook:** fix fecha de nacimiento ([#1186](https://github.com/andes/api/issues/1186)) ([017f578](https://github.com/andes/api/commit/017f5785f93279037eba7b3946bf228c868889ea))
+
+
+### Features
+
+* **misc:** unificación de makeFs ([#1139](https://github.com/andes/api/issues/1139)) ([bc74e2d](https://github.com/andes/api/commit/bc74e2d675e566cb0e57cf699cd591267d8075a6))
+* **mpi:** logueo de reporte de errores en datos de pacientes ([#1171](https://github.com/andes/api/issues/1171)) ([9896051](https://github.com/andes/api/commit/989605156f0528ba362ef762852828e06f6b8fb9))
+* **rup:** agrega cache redis para frecuentes ([#1176](https://github.com/andes/api/issues/1176)) ([ecd179a](https://github.com/andes/api/commit/ecd179a8d1a03527b0b199a38d57d6abb78b099d))
+* **turnos-prestaciones:** columnas dinamicas ([#1162](https://github.com/andes/api/issues/1162)) ([5b1bb5f](https://github.com/andes/api/commit/5b1bb5f209aafd9650fc1299d2cbc4f14676a55e))
+
 # [5.20.0](https://github.com/andes/api/compare/v5.19.0...v5.20.0) (2020-11-04)
 
 
