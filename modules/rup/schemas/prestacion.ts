@@ -234,20 +234,40 @@ PrestacionSchema.methods.findRegistroById = function (id: string | Types.ObjectI
     return deepSearch(regs, id);
 };
 
-
-PrestacionSchema.methods.getRegistros = function () {
-    let registrosInternos = [];
-    const registros = this.ejecucion.registros;
-    registros.forEach(reg => {
-        if (reg.hasSections) {
-            reg.registros.forEach(seccion => {
-                if (seccion.isSection && !seccion.noIndex) {
-                    registrosInternos = [...registrosInternos, ...seccion.registros];
-                }
-            });
+function getAll(registros: any[]) {
+    let resultado = [];
+    for (let i = 0; i < registros.length; i++) {
+        const reg = registros[i];
+        resultado = [...resultado, reg];
+        if (reg.registros?.length) {
+            const rs = getAll(reg.registros);
+            resultado = [...resultado, ...rs];
         }
-    });
-    return [...registros, ...registrosInternos];
+    }
+    return resultado;
+}
+
+/**
+ * Recorre la prestacion y devuelve los registros.
+ * @param all devuelve solo los registros base o todos los registros internos.
+ */
+PrestacionSchema.methods.getRegistros = function (all = false) {
+    const registros = this.ejecucion.registros;
+    if (all) {
+        return getAll(registros);
+    } else {
+        let registrosInternos = [];
+        registros.forEach(reg => {
+            if (reg.hasSections) {
+                reg.registros.forEach(seccion => {
+                    if (seccion.isSection && !seccion.noIndex) {
+                        registrosInternos = [...registrosInternos, ...seccion.registros];
+                    }
+                });
+            }
+        });
+        return [...registros, ...registrosInternos];
+    }
 };
 
 // Habilitar plugin de auditoría

@@ -1,12 +1,26 @@
-import { elementoRUP } from '../schemas/elementoRUP';
+import { ElementoRUP, IElementoRUPDoc } from '../schemas/elementoRUP';
 import { Types } from 'mongoose';
+import { AppCache } from '../../../connections';
 
-export type ElementoRUP = any;
+export type IElementoRUPDocExt = IElementoRUPDoc & { requeridosMap: { [key: string]: any } };
 
 export type ElementoRUPSet = {
-    getByID(id: string | Types.ObjectId): ElementoRUP;
-    getByConcept(concepto, esSolicitud?: Boolean): ElementoRUP;
+    getByID(id: string | Types.ObjectId): IElementoRUPDocExt;
+    getByConcept(concepto, esSolicitud?: Boolean): IElementoRUPDocExt;
 };
+
+export async function getElementosRUP(): Promise<IElementoRUPDoc[]> {
+
+    const key = `elementos-rup`;
+    const elementosRUPCache = await AppCache.get(key);
+    if (elementosRUPCache) {
+        return elementosRUPCache;
+    }
+    const elementosRUP = await ElementoRUP.find();
+    AppCache.set(key, elementosRUP, 60 * 60 * 2);
+
+    return elementosRUP;
+}
 
 export async function elementosRUPAsSet(): Promise<ElementoRUPSet> {
     const cacheByID = {};
@@ -16,7 +30,7 @@ export async function elementosRUPAsSet(): Promise<ElementoRUPSet> {
     const defaultsParaSolicitud = {};
 
 
-    const elementosRUP = await elementoRUP.find();
+    const elementosRUP = await getElementosRUP();
 
     elementosRUP.forEach((elemento: any) => {
         const id = String(elemento._id);
@@ -75,7 +89,7 @@ export async function elementosRUPAsSet(): Promise<ElementoRUPSet> {
 
 export async function fulfillPrestacion(prestacion, elementosRUPSet: ElementoRUPSet) {
 
-    function traverseRegistros(registros, rootElemento: ElementoRUP) {
+    function traverseRegistros(registros, rootElemento: IElementoRUPDocExt) {
         registros.forEach((registro) => {
             const requerido = rootElemento.requeridosMap[registro.concepto.conceptId];
             registro.elementoRUPObject = elementosRUPSet.getByID(registro.elementoRUP);
