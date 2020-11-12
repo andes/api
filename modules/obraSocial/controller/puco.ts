@@ -1,10 +1,11 @@
 import { Puco, IPuco } from '../schemas/puco';
-import { ObraSocial } from '../schemas/obraSocial';
+import { IObraSocial, ObraSocial } from '../schemas/obraSocial';
 import { sisa } from './../../../config.private';
 import { EventCore } from '@andes/event-bus';
 import moment = require('moment');
 import { handleHttpRequest } from '../../../utils/requestHandler';
 import { obraSocialLog } from '../../../modules/obraSocial/obraSocialLog';
+import { createObraSocial } from '../controller/obraSocial';
 
 // obtiene las versiones de todos los padrones cargados
 export async function obtenerVersiones() {
@@ -50,7 +51,7 @@ export async function getOSPuco(documento, periodo = null) {
         // varificamos si hay conexion con puco
         return [];
     }
-    const lastVersion = moment().add(-1, 'month').startOf('month').format('YYYY-MM-DD'); // primer día del mes anterior
+    const lastVersion = moment().startOf('month').format('YYYY-MM-DD'); // última version de la BD
     const dni = Number.parseInt(documento, 10) || 0;
     let osPatientPuco: IPuco[] = [];
     let padron: any = lastVersion; // contiene el periodo de la os a retornar
@@ -59,7 +60,7 @@ export async function getOSPuco(documento, periodo = null) {
         padron = periodo;
         osPatientPuco = await Puco.find({ dni, version: padron });
     } else {
-        // si periodo no trae datos utilizamos el ultimo padron cargado al paciente
+        // si periodo no trae datos nos quedamos con el ultimo padron cargado al paciente
         const osVersiones: IPuco[] = await Puco.find({ dni });
         if (osVersiones.length) {
             osVersiones.sort((a, b) => compare(a.version, b.version));
@@ -70,7 +71,8 @@ export async function getOSPuco(documento, periodo = null) {
     }
     const lastPeriodo = (p: any) => (compare(p, lastVersion) === 0);
 
-    // si se consulto por la ultima version y paciente no está en la BD de puco, con la ultima version lo actualizamos
+    // si se consultó por la ultima version y el paciente no está en puco con esa version,
+    //  entonces lo actualizamos con sisa
     if (lastPeriodo(padron) && (!osPatientPuco.length ||
         (osPatientPuco.length && !lastPeriodo(lastVersionPuco)))) {
         // obtenemos de sisa
@@ -88,13 +90,26 @@ EventCore.on('os:puco:create', async (documento) => {
             return index === respSisa.findIndex(osFind => (osFind.codigoOS === os.codigoOS));
         });
         respSisa.forEach(async (osPuco: IPuco) => {
-            await createPatientPuco(osPuco);
+            if (osPuco.coberturaSocial) {
+                let obraSocial: IObraSocial = await ObraSocial.findOne({ codigoPuco: osPuco.codigoOS });
+                if (!obraSocial) {
+                    // si la OS no existe en la colección de ObraSocial => la insertamos
+                    obraSocial = {
+                        codigoPuco: osPuco.codigoOS,
+                        nombre: osPuco.coberturaSocial
+                    };
+                    await createObraSocial(obraSocial);
+                }
+            }
+            // insertamos la os del paciente en puco
+            await createPuco(osPuco);
         });
     }
 });
 
 
-export async function createPatientPuco(data) {
+export async function createPuco(data) {
+    delete data.coberturaSocial; // no se guarda el campo coberturaSocial en la coleccion de puco
     const patientPuco: any = new Puco(data);
     try {
         await patientPuco.save();
@@ -130,13 +145,14 @@ export async function sisaPuco(documento) {
                 const { resultado, puco } = resp;
                 if (resultado === 'OK') {
                     respPuco = puco.map(osPatient => {
-                        const version = moment().add(-1, 'month').startOf('month').format('YYYY-MM-DD');
+                        const version = moment().startOf('month').format('YYYY-MM-DD');
                         return {
                             tipoDoc: osPatient.tipodoc,
                             dni: Number.parseInt(osPatient.nrodoc, 10),
                             codigoOS: Number.parseInt(osPatient.rnos, 10),
                             transmite: 'N',
                             nombre: osPatient.denominacion,
+                            coberturaSocial: osPatient.coberturaSocial || '',
                             version
                         };
 
