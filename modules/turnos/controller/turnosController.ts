@@ -3,10 +3,11 @@ import * as moment from 'moment';
 import { Agenda } from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
+// import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as controller from '../../../core/mpi/controller/paciente';
 import { Auth } from './../../../auth/auth.class';
-import { paciente as pacienteModel } from '../../../core/mpi/schemas/paciente';
+// import { paciente as pacienteModel } from '../../../core/mpi/schemas/paciente';
+import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 type Agenda = any;
 
@@ -124,7 +125,7 @@ export function getTurno(req) {
 
                 if (req.query && req.query.pacienteId) {
                     const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
-                    let { paciente } = await buscarPaciente(idPaciente);
+                    const paciente: any = await findById(idPaciente);
                     matchTurno['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
                 }
 
@@ -174,7 +175,7 @@ export async function getHistorialPaciente(req) {
     // console.warn('Deprecation warning: getHistorialPaciente is deprecated. Use getHistorialPaciente in core/mpi/controller/paciente');
     if (req.query && req.query.pacienteId) {
         const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
-        let { paciente } = await buscarPaciente(idPaciente);
+        const paciente: any = await findById(idPaciente);
         try {
             let pipelineTurno = [];
             let pipelineSobreturno = [];
@@ -343,7 +344,7 @@ export async function getLiberadosPaciente(req) {
     if (req.query && req.query.pacienteId) {
         try {
             const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
-            let { paciente } = await buscarPaciente(idPaciente);
+            const paciente: any = await findById(idPaciente);
             const resultado: any = await logPaciente.find(
                 {
                     paciente: { $in: paciente.vinculos },

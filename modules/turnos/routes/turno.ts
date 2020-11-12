@@ -11,10 +11,10 @@ import * as moment from 'moment';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
-import * as controller from '../../../core/mpi/controller/paciente';
+// import * as controller from '../../../core/mpi/controller/paciente';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
 import { turnosLog } from '../citasLog';
-
+import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -180,7 +180,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 }
                 // Si el paciente no tiene carpeta en ese efector, se busca en la colección carpetaPaciente y se actualiza
                 if (!arrPrueba || arrPrueba.length === 0) {
-                    const pacienteMPI = await controller.buscarPaciente(req.body.paciente.id) as any;
+                    const pacienteMPI = await findById(req.body.paciente.id);
                     const carpetas = await getCarpeta(req.body.paciente.documento, user.organizacion._id);
                     await turnosController.actualizarCarpeta(req, res, next, pacienteMPI, carpetas);
                     pacienteTurno.carpetaEfectores = req.body.carpetaEfectores;
