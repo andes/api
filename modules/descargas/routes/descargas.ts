@@ -9,9 +9,16 @@ import { Prestacion } from '../../rup/schemas/prestacion';
 import { InformeCenso } from '../informe-censo/informe-censo';
 import { RecuperoCosto } from '../recupero-costo/recupero-costo';
 import { ConstanciaPuco } from '../puco/constancia-puco';
+import { Derivacion } from '../com/derivacion';
 
 const router = express.Router();
 
+router.post('/comprobanteDerivacion', async (req: any, res) => {
+    let derivacion = new Derivacion(req);
+    const opciones = { header: { height: '3cm' } };
+    const fileName: any = await derivacion.informe(opciones);
+    res.download(fileName);
+});
 
 /**
  * Se usa POST para generar la descarga porque se envían datos
@@ -125,6 +132,5 @@ router.post('/constanciaPuco/:tipo?', async (req: any, res) => {
 
     res.download(fileName);
 });
-
 
 export = router;
