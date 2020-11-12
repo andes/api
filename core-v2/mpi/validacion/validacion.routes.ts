@@ -3,6 +3,10 @@ import { Auth } from '../../../auth/auth.class';
 import { validar as validarPaciente } from './validacion.controller';
 import { ValidacionFailed } from './validacion.error';
 import { asyncHandler } from '@andes/api-tool';
+import { status, checkStatus } from '@andes/fuentes-autenticas';
+import { RenaperConfig } from './validacion.interfaces';
+import { renaper as renaConfig } from '../../../config.private';
+import { sisa as sisaConfig } from '../../../config.private';
 
 /**
  * @api {post} /validacion/ Requiere datos de un paciente
@@ -24,12 +28,34 @@ export const postValidar = async (req: Request, res: Response) => {
     throw new ValidacionFailed();
 };
 
+export const renaperStatus = async (req: Request, res: Response) => {
+    const renaperConfig: RenaperConfig = {
+        usuario: renaConfig.Usuario,
+        password: renaConfig.password,
+        url: renaConfig.url,
+        server: renaConfig.serv
+    };
+    const response = await status(renaperConfig);
+    return (response) ? res.json(200) : res.json(500);
+};
+
+export const sisaStatus = async (req: Request, res: Response) => {
+    try {
+        const url = `${sisaConfig.url}&usuario=${sisaConfig.username}&clave=${sisaConfig.password}`;
+        const response = await checkStatus(url);
+        return res.json(response);
+    } catch (error) {
+        return res.json(500);
+    }
+};
 const router = Router();
 router.use(Auth.authenticate());
 /**
  * [TODO] Ver tema de permisos
  */
 router.post('/validacion', Auth.authorize('fa:get:renaper'), asyncHandler(postValidar));
+router.get('/renaper/status', Auth.authorize('fa:get:renaper'), asyncHandler(renaperStatus));
+router.get('/sisa/status', Auth.authorize('fa:get:sisa'), asyncHandler(sisaStatus));
 
 
 export const Routing = router;
