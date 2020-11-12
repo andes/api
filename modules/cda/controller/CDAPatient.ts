@@ -35,7 +35,7 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
                 return realPac;
             }
         } else {
-            const pac = await PacienteCtr.findOne({ identificador: `${String(organizacion)}|${dataPaciente.ud}` });
+            const pac = await PacienteCtr.findOne({ identificador: `${String(organizacion)}|${dataPaciente.id}` });
             if (pac) {
                 return pac;
             }

@@ -39,7 +39,7 @@ class PacienteResource extends ResourceBase<IPacienteDoc> {
             }
         },
         identificador: (value) => {
-            return MongoQuery.queryArray('contacto', value, 'entidad', 'valor');
+            return MongoQuery.queryArray('identificadores', value, 'entidad', 'valor');
         },
         relaciones: (value) => {
             return MongoQuery.queryArray('relaciones', value, 'relacion.nombre', 'referencia');
