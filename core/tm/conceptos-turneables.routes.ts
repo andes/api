@@ -21,7 +21,8 @@ class ConceptoTurneableResource extends ResourceBase {
             fn: (value) => {
                 return { $in: value };
             }
-        }
+        },
+        ids: MongoQuery.inArray.withField('_id')
     };
     middlewares = [Auth.authenticate()];
     routesAuthorization = {
