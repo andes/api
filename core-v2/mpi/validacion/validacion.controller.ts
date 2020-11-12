@@ -4,6 +4,7 @@ import { renaper as renaConfig } from '../../../config.private';
 import { sisa as sisaConfig } from '../../../config.private';
 import { matchUbicacion } from '../../../core/tm/controller/localidad';
 import { IDireccion } from '../../../shared/interface';
+import { Types } from 'mongoose';
 
 const sharp = require('sharp');
 
@@ -39,6 +40,7 @@ export async function validar(documento: string, sexo: string) {
     if (ciudadanoRenaper) {
         // Valida el tamaño de la foto
         ciudadanoRenaper.foto = await validarTamañoFoto(ciudadanoRenaper.foto);
+        ciudadanoRenaper.fotoId = ciudadanoRenaper.foto && ciudadanoRenaper.foto.length > 0 ? new Types.ObjectId() : null;
         ciudadanoRenaper.estado = 'validado';
         ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
         ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];

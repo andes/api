@@ -175,7 +175,7 @@ async function validarPaciente(dataPaciente) {
     dataPaciente.estado = resultado.estado;
     dataPaciente.fechaNacimiento = resultado.fechaNacimiento;
     dataPaciente.foto = resultado.foto;
-    dataPaciente.fotoId = resultado.foto ? new Types.ObjectId() : null;
+    dataPaciente.fotoId = !resultado.fotoId && resultado.foto.length > 0 ? new Types.ObjectId() : null;
     dataPaciente.fechaFallecimiento = resultado.fechaFallecimiento;
     dataPaciente.cuil = !dataPaciente.cuil && resultado.cuil ? resultado.cuil : '';
 
