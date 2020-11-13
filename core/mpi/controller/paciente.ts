@@ -620,6 +620,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             resRenaper.direccion[1].geoReferencia = null;
         }
         resRenaper.foto = await validarTamañoFoto(resRenaper.foto);
+        resRenaper.fotoId = resRenaper.foto && resRenaper.foto.length > 0 ? new Types.ObjectId() : null;
         resRenaper.estado = 'validado';
         resRenaper.validateAt = new Date();
         const flag = !regtest.test(resRenaper.nombre) && !regtest.test(resRenaper.apellido);
