@@ -193,6 +193,7 @@ export async function matching(data) {
         case 'multimatch':
             {
                 let words = data.cadenaInput.replace(ExpRegFilter, '');
+                words = replaceChars(words);
                 words = words.trim().toLowerCase().split(' ');
                 let andQuery = [];
                 words.forEach(w => {
@@ -224,6 +225,7 @@ export async function matching(data) {
                 if (data.filtros.cadenaInput) {
                     // si se ingresa una cadena de texto se busca matching con tokens de paciente
                     let words = data.filtros.cadenaInput.replace(ExpRegFilter, '');
+                    words = replaceChars(words);
                     words = words.trim().toLowerCase().split(' ');
                     words.forEach(w => {
                         if (w.length > 0) {
@@ -273,6 +275,17 @@ export async function matching(data) {
     } catch (err) {
         return [];
     }
+}
+
+function replaceChars(text: string) {
+    text = text.replace(/á/gi, 'a');
+    text = text.replace(/é/gi, 'e');
+    text = text.replace(/í/gi, 'i');
+    text = text.replace(/ó/gi, 'o');
+    text = text.replace(/ú/gi, 'u');
+    text = text.replace(/ü/gi, 'u');
+    text = text.replace(/ñ/gi, 'n');
+    return text;
 }
 
 function obtenerSugeridos(_paciente, pacientesSimilares) {

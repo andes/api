@@ -142,10 +142,22 @@ pacienteSchema.pre('save', function (next) {
     if (user.numeroIdentificacion) {
         words.push(user.numeroIdentificacion.toLowerCase());
     }
+    words = words.map(w => { return replaceChars(w); });
     user.tokens = words;
     next();
 
 });
+
+function replaceChars(text: string) {
+    text = text.replace(/á/gi, 'a');
+    text = text.replace(/é/gi, 'e');
+    text = text.replace(/í/gi, 'i');
+    text = text.replace(/ó/gi, 'o');
+    text = text.replace(/ú/gi, 'u');
+    text = text.replace(/ü/gi, 'u');
+    text = text.replace(/ñ/gi, 'n');
+    return text;
+}
 
 pacienteSchema.virtual('vinculos').get(function () {
     if (this.identificadores) {
