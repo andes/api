@@ -12,7 +12,8 @@ export const ReglasDerivacionSchema = new mongoose.Schema({
         enum: ESTADOS_DERIVACION
     },
     soloCom: Boolean,
-    modificaDestino: Boolean
+    modificaDestino: Boolean,
+    defineGravedad: Boolean
 });
 
 export let ReglasDerivacion = mongoose.model('reglasDerivacion', ReglasDerivacionSchema, 'reglasDerivacion');

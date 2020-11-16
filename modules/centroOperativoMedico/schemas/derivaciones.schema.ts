@@ -76,7 +76,11 @@ export const DerivacionSchema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: false
-    }
+    },
+    gravedad: {
+        type: String,
+        enum: ['baja', 'media', 'alta']
+    },
 });
 
 DerivacionSchema.plugin(AuditPlugin);
