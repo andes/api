@@ -14,6 +14,7 @@ import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 import * as controller from '../../../core/mpi/controller/paciente';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
 import { turnosLog } from '../citasLog';
+import { getHistorial } from '../controller/historialCitasController/historialCitasController';
 
 
 const router = express.Router();
@@ -31,14 +32,7 @@ router.get('/turno/:id*?', async (req, res, next) => {
 });
 router.get('/historial', async (req, res, next) => {
     try {
-        if (req.query.sinLiberados) {
-            res.json(await turnosController.getHistorialPaciente(req));
-        } else {
-            const historial = turnosController.getHistorialPaciente(req);
-            const liberados = turnosController.getLiberadosPaciente(req);
-            const turnos = await Promise.all([historial, liberados]);
-            res.json([...turnos[0], ...turnos[1]]);
-        }
+        res.json(await getHistorial(req));
     } catch (err) {
         return next(err);
     }

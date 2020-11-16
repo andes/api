@@ -93,3 +93,6 @@ export async function enEjecucion(turno) {
     return (prestacion && prestacion.ejecucion && prestacion.ejecucion.fecha);
 }
 
+export async function search(params) {
+    return await Prestacion.find(params);
+}
