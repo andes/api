@@ -126,7 +126,8 @@ export const ElementoRUPSchema = new mongoose.Schema({
     permiteRepetidos: {
         type: Boolean,
         default: false
-    }
+    },
+    rules: [mongoose.SchemaTypes.Mixed]
 });
 
 ElementoRUPSchema.plugin(AuditPlugin);
