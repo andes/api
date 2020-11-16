@@ -50,10 +50,10 @@ export async function validar(documento: string, sexo: string) {
         }
     }
     const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
-    ciudadanoSisa.direccion[0] = await matchDireccion(ciudadanoSisa);
-    ciudadanoSisa.direccion[1] = ciudadanoSisa.direccion[0];
-    ciudadanoSisa.validateAt = new Date();
     if (ciudadanoSisa) {
+        ciudadanoSisa.direccion[0] = await matchDireccion(ciudadanoSisa);
+        ciudadanoSisa.direccion[1] = ciudadanoSisa.direccion[0];
+        ciudadanoSisa.validateAt = new Date();
         if (ciudadanoRenaper) {
             ciudadanoSisa.foto = ciudadanoRenaper.foto;
             ciudadanoSisa.direccion = ciudadanoRenaper.direccion;
