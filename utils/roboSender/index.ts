@@ -1,6 +1,6 @@
 import { RoboModel } from './roboSchema';
 import { INotification } from '../../modules/mobileApp/controller/PushClient';
-import { ExportHudsModel } from '../exportHuds/exportHudsSchema';
+import { ExportHudsModel } from '../../modules/huds/export-huds/exportHuds.schema';
 
 export interface ISms {
     phone: string;

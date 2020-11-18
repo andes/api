@@ -1,5 +1,7 @@
 import * as mongoose from 'mongoose';
 
+// [TODO] Interfaces
+
 export const ExportHudsSchema = new mongoose.Schema({
     fechaDesde: Date,
     fechaHasta: Date,

@@ -1,9 +1,9 @@
-import { Prestacion } from '../../modules/rup/schemas/prestacion';
-import { getHUDSExportarModel } from '../exportHuds/hudsFiles';
-import { exportHudsLog } from '../exportHuds/exportHudsLog';
-import { ExportHudsModel } from '../exportHuds/exportHudsSchema';
+import { Prestacion } from '../../rup/schemas/prestacion';
+import { getHUDSExportarModel } from './hudsFiles';
+import { exportHudsLog } from './exportHuds.log';
+import { ExportHudsModel } from './exportHuds.schema';
 import * as archiver from 'archiver';
-import { InformeRUP } from '../../modules/descargas/informe-rup/informe-rup';
+import { InformeRUP } from '../../descargas/informe-rup/informe-rup';
 
 import moment = require('moment');
 

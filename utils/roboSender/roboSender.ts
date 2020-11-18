@@ -4,8 +4,9 @@ import * as smsTools from './sendSms';
 import { RoboModel } from './roboSchema';
 import * as debug from 'debug';
 import { PushClient } from '../../modules/mobileApp/controller/PushClient';
+import { createFile } from '../../modules/huds/export-huds/exportHuds.controller';
+
 const log = debug('roboSender');
-import { createFile } from '../exportHuds/exportHudsController';
 
 export function roboSender() {
     log('Running roboSender');

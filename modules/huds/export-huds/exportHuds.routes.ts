@@ -1,14 +1,14 @@
 import * as express from 'express';
-import { Auth } from '../../../../auth/auth.class';
-import { exportHuds } from '../../../../utils/roboSender/index';
-import { ExportHudsModel } from '../../../../utils/exportHuds/exportHudsSchema';
-import { getHUDSExportarModel, readFile } from '../../../../utils/exportHuds/hudsFiles';
+import { Auth } from '../../../auth/auth.class';
+import { exportHuds } from '../../../utils/roboSender';
+import { ExportHudsModel } from './exportHuds.schema';
+import { getHUDSExportarModel, readFile } from './hudsFiles';
 import { Types } from 'mongoose';
 
-const router = express.Router();
-router.use(Auth.authenticate());
+export const ExportHudsRouter = express.Router();
+ExportHudsRouter.use(Auth.authenticate());
 
-router.get('/exportHuds', async (req, res, next) => {
+ExportHudsRouter.get('/export', async (req, res, next) => {
     const query = {
         'user.usuario.id': req.query.id,
         status: { $in: ['pending', 'completed'] }
@@ -17,14 +17,14 @@ router.get('/exportHuds', async (req, res, next) => {
     res.json(pending);
 });
 
-router.post('/exportHuds', async (req: any, res, next) => {
+ExportHudsRouter.post('/export', async (req: any, res, next) => {
     // Caso para exportar HUDS
     if (req.body.pacienteId) {
         const obj = await exportHuds(req.body, req.user);
         res.json(obj);
     }
 });
-router.post('/exportHuds/:id', async (req, res, next) => {
+ExportHudsRouter.post('/export/:id', async (req, res, next) => {
     const hudsFiles = getHUDSExportarModel();
     try {
         const archivo = await readFile(req.params.id);
@@ -42,6 +42,4 @@ router.post('/exportHuds/:id', async (req, res, next) => {
     const file = await hudsFiles.findOne({ _id: idFile });
     hudsFiles.unlink(file._id, () => { });
 });
-
-export = router;
 
