@@ -1,3 +1,18 @@
+# [5.22.0](https://github.com/andes/api/compare/v5.21.0...v5.22.0) (2020-11-18)
+
+
+### Bug Fixes
+
+* **mpi:** busqueda de identificadores ([#1191](https://github.com/andes/api/issues/1191)) ([823d320](https://github.com/andes/api/commit/823d320d04640aa0c684445bdb9a5cd15158ca26))
+
+
+### Features
+
+* **CIT:** incluye fuera de agendas a historial de citas ([#1155](https://github.com/andes/api/issues/1155)) ([4fe326f](https://github.com/andes/api/commit/4fe326f8ff30a107dd150a37bfe3504ad4ba1038))
+* **com:** impresión de comprobante ([#1192](https://github.com/andes/api/issues/1192)) ([32b9763](https://github.com/andes/api/commit/32b976357bef311f2b2d144b2dd052606c25280e))
+* **com:** sumar gravedad al habilitar una derivación desde el com ([#1182](https://github.com/andes/api/issues/1182)) ([bb0dbd9](https://github.com/andes/api/commit/bb0dbd92de55dd9f2d1977f94dee46335db29162))
+* **rup:** impresión receta médica ([#1188](https://github.com/andes/api/issues/1188)) ([bb34343](https://github.com/andes/api/commit/bb343433e1396c6cb9e543e51681a14f25f2761a))
+
 # [5.21.0](https://github.com/andes/api/compare/v5.20.0...v5.21.0) (2020-11-11)
 
 
