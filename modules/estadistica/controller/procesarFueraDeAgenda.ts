@@ -9,12 +9,13 @@ import * as mongoose from 'mongoose';
 export async function procesar(parametros: any) {
 
     let match: any = {
-        $and: [
-            { createdAt: { $gte: new Date(parametros.fechaDesde) } },
-            { createdAt: { $lte: new Date(parametros.fechaHasta) } }
-        ],
-        'solicitud.turno': { $exists : false },
-        'createdBy.organizacion._id': String(parametros.organizacion)
+        'ejecucion.fecha': {
+            $gte: new Date(parametros.fechaDesde),
+            $lte: new Date(parametros.fechaHasta)
+        },
+        'estadoActual.tipo': 'validada',
+        'solicitud.turno': { $exists: false },
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(parametros.organizacion)
     };
 
     if (parametros.documento) {
@@ -30,8 +31,9 @@ export async function procesar(parametros: any) {
     }
 
     if (parametros.prestacion) {
-        match['solicitud.tipoPrestacion.id'] = new mongoose.Types.ObjectId(parametros.prestacion);
+        match['solicitud.tipoPrestacion.conceptId'] = parametros.prestacion;
     }
+
     if (parametros.profesional) {
         match['solicitud.profesional.id'] = new mongoose.Types.ObjectId(parametros.profesional);
     }
@@ -57,9 +59,9 @@ export async function procesar(parametros: any) {
                 idAgenda: null,
                 idBloque: null,
                 turno: null,
-                idPrestacion: prestacion.idPrestacion,
+                idPrestacion: prestacion._id,
                 estadoFacturacion: prestacion.estadoFacturacion,
-                ambito: prestacion.prestacion.solicitud.ambitoOrigen
+                ambito: prestacion.solicitud.ambitoOrigen
             };
 
             if (prestacion.paciente && prestacion.paciente.obraSocial === os || os === 'todos') {
