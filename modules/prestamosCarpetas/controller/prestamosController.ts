@@ -7,7 +7,7 @@ import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
 import { searchByPatient } from '../../cda/controller/CDAPatient';
 import { Types } from 'mongoose';
-import { buscarPacienteWithcondition } from '../../../core/mpi/controller/paciente';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 const ObjectId = Types.ObjectId;
 
@@ -425,7 +425,7 @@ export async function getHistorial(req) {
     const nroCarpeta = req.query.numero;
     const organizacionId = req.query.organizacion;
 
-    const queryPaciente = await buscarPacienteWithcondition({
+    const queryPaciente = await PacienteCtr.findOne({
         carpetaEfectores: {
             $elemMatch:
             {
@@ -441,7 +441,7 @@ export async function getHistorial(req) {
             numero: nroCarpeta
         };
         const queryHistorial = await Prestamo.find(filter).sort('-createdAt');
-        return { historial: queryHistorial, paciente: queryPaciente.paciente };
+        return { historial: queryHistorial, paciente: queryPaciente };
     } else {
         return {};
     }
