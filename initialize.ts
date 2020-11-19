@@ -66,7 +66,8 @@ export function initAPI(app: Express) {
     }
 
     const modulos = [
-        './modules/rup'
+        './modules/rup',
+        './modules/huds/export-huds',
     ];
 
     modulos.forEach((moduloPath) => {

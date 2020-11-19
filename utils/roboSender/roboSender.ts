@@ -2,9 +2,10 @@ import * as configPrivate from '../../config.private';
 import * as mailTools from './sendEmail';
 import * as smsTools from './sendSms';
 import { RoboModel } from './roboSchema';
-
 import * as debug from 'debug';
 import { PushClient } from '../../modules/mobileApp/controller/PushClient';
+import { createFile } from '../../modules/huds/export-huds/exportHuds.controller';
+
 const log = debug('roboSender');
 
 export function roboSender() {
@@ -58,8 +59,15 @@ export function roboSender() {
                         if (env.device_id) {
                             new PushClient().send(env.device_id, env.notificationData);
                         }
-
-                        await changeState(env, 'success');
+                        // Exportar HUDS
+                        if (env.idExportHuds) {
+                            await createFile(env.idExportHuds);
+                            await changeState(env, 'success');
+                        }
+                        counter++;
+                        if (finEjecucion(counter, enviosPendientes.length)) {
+                            return resolve();
+                        }
 
                     } catch (errorSending) {
                         log('Error enviando mensaje');
@@ -68,11 +76,6 @@ export function roboSender() {
                         } else {
                             await changeState(env, 'pending');
                         }
-                    }
-                    counter++;
-                    if (counter === enviosPendientes.length) {
-                        log('Termina la ejecución');
-                        return resolve();
                     }
                 });
             } else {
@@ -84,17 +87,16 @@ export function roboSender() {
             log('Termina la ejecución', err);
             return reject();
         });
+
     });
 }
 
 
 function changeState(env, newState) {
     return new Promise((resolve, reject) => {
-
         env.status = newState;
         env.tries += 1;
         env.updatedAt = new Date();
-
         env.save((err, datos) => {
             if (err) {
                 return reject();
@@ -102,4 +104,13 @@ function changeState(env, newState) {
             return resolve();
         });
     });
+}
+
+function finEjecucion(counter, enviosPendientes) {
+    if (counter === enviosPendientes) {
+        return true;
+    } else {
+        return false;
+    }
+
 }
