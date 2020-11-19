@@ -67,9 +67,12 @@ export interface IPaciente {
 export interface IPacienteDoc extends Document, IPaciente {
     contacto?: Types.DocumentArray<IContactoDoc>;
     direccion?: Types.DocumentArray<IDireccionDoc>;
-    createdBy?: Types.DocumentArray<any>;
-    updatedBy?: Types.DocumentArray<any>;
-
+    nombre: string;
+    apellido: string;
+    tokens?: string[];
+    fotoId?: Schema.Types.ObjectId;
+    createdBy: any;
+    updatedBy?: any;
     /**
      * Devuelve los campos originales antes de haber sufrido alguna modificacion.
      */
