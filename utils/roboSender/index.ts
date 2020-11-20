@@ -95,11 +95,12 @@ export function exportHuds(data, user) {
     const obj = new ExportHudsModel({
         fechaDesde: data.hudsCompleta ? null : data.fechaDesde,
         fechaHasta: data.hudsCompleta ? null : data.fechaHasta,
-        pacienteId: data.pacienteId,
-        pacienteNombre: data.pacienteNombre,
+        pacienteId: data.pacienteId ? data.pacienteId : null,
+        pacienteNombre: data.pacienteNombre ? data.pacienteNombre : null,
         createdAt: new Date(),
         updatedAt: new Date(),
         tipoPrestacion: data.tipoPrestacion ? data.tipoPrestacion : null,
+        prestaciones: data.arrayPrestaciones ? data.arrayPrestaciones : null,
         user
     });
     new RoboModel({
