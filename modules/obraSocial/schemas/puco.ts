@@ -9,6 +9,7 @@ export interface IPuco {
     codigoOS: number;
     transmite: string;
     nombre: string;
+    coberturaSocial?: string;
     version: Date;
 }
 

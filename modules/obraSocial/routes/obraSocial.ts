@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { Puco } from '../schemas/puco';
+import { IPuco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
 import * as pucoController from '../controller/puco';
 import * as profeController from '../controller/profe';
@@ -73,36 +73,26 @@ router.get('/padronSumar', Auth.authenticate(), async (req, res, next) => {
 
 router.get('/puco', Auth.authenticate(), async (req, res, next) => {
     if (req.query.dni) {
-        let padron;
-        if (req.query.periodo) {
-            padron = req.query.periodo;
-        } else {
-            padron = await pucoController.obtenerVersiones();   // trae las distintas versiones de los padrones
-            if (padron.length === 0) {
-                return res.json([]);
-            }
-            padron = padron[0].version; // asigna el ultimo padron actualizado
-        }
-        const documento = Number.parseInt(req.query.dni, 10) || 0;
-        const rta = await Puco.find({ dni: documento, version: padron }).exec();
-        if (rta.length > 0) {
+        const padron = req.query.periodo ? req.query.periodo : null;
+        const respOSPuco: IPuco[] = await pucoController.getOSPuco(req.query.dni, padron);
+        if (respOSPuco.length > 0) {
             const resultOS = [];
             try {
-                for (let i = 0; i < rta.length; i++) {
-                    const obraSocial = await ObraSocial.findOne({ codigoPuco: rta[i].codigoOS });
+                for (let i = 0; i < respOSPuco.length; i++) {
+                    const obraSocial = await ObraSocial.findOne({ codigoPuco: respOSPuco[i].codigoOS });
                     if (obraSocial) {
                         resultOS[i] = {
-                            tipoDocumento: rta[i].tipoDoc,
-                            dni: rta[i].dni,
-                            transmite: rta[i].transmite,
-                            nombre: rta[i].nombre,
-                            codigoFinanciador: rta[i].codigoOS,
+                            tipoDocumento: respOSPuco[i].tipoDoc,
+                            dni: respOSPuco[i].dni,
+                            transmite: respOSPuco[i].transmite,
+                            nombre: respOSPuco[i].nombre,
+                            codigoFinanciador: respOSPuco[i].codigoOS,
                             idFinanciador: obraSocial._id,
                             financiador: obraSocial.nombre,
-                            version: rta[i].version
+                            version: respOSPuco[i].version
                         };
                     } else {
-                        obraSocialLog.error('find', { codigoPuco: rta[i].codigoOS }, null, req);
+                        obraSocialLog.error('find', { codigoPuco: respOSPuco[i].codigoOS }, null, req);
                     }
                 }
                 res.json(resultOS);

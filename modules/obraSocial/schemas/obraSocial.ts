@@ -5,7 +5,7 @@ export const ObraSocialSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     codigoPuco: Number,
     nombre: String,
-    financiador: String,
+    financiador: { type: String, required: false },
     prepaga: { type: Boolean, required: false },
     idObraSocial: { type: Number, required: false },
     numeroAfiliado: { type: String, required: false }
@@ -14,7 +14,7 @@ export const ObraSocialSchema = new mongoose.Schema({
 export interface IObraSocial {
     codigoPuco: number;
     nombre: string;
-    financiador: string;
+    financiador?: string;
     prepaga?: boolean;
     idObraSocial?: number;
     numeroAfiliado?: string;

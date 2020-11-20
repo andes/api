@@ -1,5 +1,11 @@
-import { Puco } from '../schemas/puco';
-import { ObraSocial } from '../schemas/obraSocial';
+import { Puco, IPuco } from '../schemas/puco';
+import { IObraSocial, ObraSocial } from '../schemas/obraSocial';
+import { sisa } from './../../../config.private';
+import { EventCore } from '@andes/event-bus';
+import moment = require('moment');
+import { handleHttpRequest } from '../../../utils/requestHandler';
+import { obraSocialLog } from '../../../modules/obraSocial/obraSocialLog';
+import { createObraSocial } from '../controller/obraSocial';
 
 // obtiene las versiones de todos los padrones cargados
 export async function obtenerVersiones() {
@@ -15,34 +21,158 @@ export async function obtenerVersiones() {
 }
 
 export async function pacientePuco(documento) {
-    let padron = await this.obtenerVersiones();   // trae las distintas versiones de los padrones
-    if (padron.length === 0) {
-        return [];
-    }
-    padron = padron[0].version; // asigna el ultimo padron actualizado
-    // realiza la busqueda por dni y el padron seteado anteriormente
     let resultOS = [];
-    let rta: any = await Puco.find({ dni: Number.parseInt(documento, 10), version: padron }).exec();
-    if (rta.length > 0) {
-        let unaOS;
+    const osPuco = await getOSPuco(documento);
+    if (osPuco.length > 0) {
         // genera un array con todas las obras sociales para una version de padron dada
-        for (let i = 0; i < rta.length; i++) {
-            unaOS = await ObraSocial.findOne({ codigoPuco: rta[i].codigoOS });
-            resultOS[i] = { codigoPuco: rta[i].codigoOS, nombre: unaOS?.nombre || '', financiador: unaOS?.nombre || '' };
+        for (let i = 0; i < osPuco.length; i++) {
+            const obraSocial = await ObraSocial.findOne({ codigoPuco: osPuco[i].codigoOS });
+            if (!obraSocial) {
+                obraSocialLog.error('find', { codigoPuco: osPuco[i].codigoOS }, null);
+            }
+            resultOS[i] = {
+                codigoPuco: osPuco[i].codigoOS,
+                nombre: obraSocial?.nombre || '',
+                financiador: obraSocial?.nombre || ''
+            };
         }
     }
     return resultOS;
 }
 
+
+/**
+ * obtenemos el paciente de la coleccion de puco
+ * periodo es optativo, si no se envía se considera el ultimo periodo que contenga el paciente
+ * si el último periodo que contiene el paciente no está actualizado, entonces se lo actualiza con sisa
+ */
+export async function getOSPuco(documento, periodo = null) {
+    if (!checkConnection()) {
+        // varificamos si hay conexion con puco
+        return [];
+    }
+    const lastVersion = moment().startOf('month').format('YYYY-MM-DD'); // última version de la BD
+    const dni = Number.parseInt(documento, 10) || 0;
+    let osPatientPuco: IPuco[] = [];
+    let padron: any = lastVersion; // contiene el periodo de la os a retornar
+    let lastVersionPuco;
+    if (periodo) {
+        padron = periodo;
+        osPatientPuco = await Puco.find({ dni, version: padron });
+    } else {
+        // si periodo no trae datos nos quedamos con el ultimo padron cargado al paciente
+        const osVersiones: IPuco[] = await Puco.find({ dni });
+        if (osVersiones.length) {
+            osVersiones.sort((a, b) => compare(a.version, b.version));
+            lastVersionPuco = osVersiones[0].version; // ultima actualizacion que contiene el paciente en puco
+            osPatientPuco = osVersiones.filter(os => compare(os.version, lastVersionPuco) === 0);
+
+        }
+    }
+    const lastPeriodo = (p: any) => (compare(p, lastVersion) === 0);
+
+    // si se consultó por la ultima version y el paciente no está en puco con esa version,
+    //  entonces lo actualizamos con sisa
+    if (lastPeriodo(padron) && (!osPatientPuco.length ||
+        (osPatientPuco.length && !lastPeriodo(lastVersionPuco)))) {
+        // obtenemos de sisa
+        EventCore.emitAsync('os:puco:create', dni);
+
+    }
+    return osPatientPuco;
+}
+
+EventCore.on('os:puco:create', async (documento) => {
+    let respSisa: IPuco[] = await sisaPuco(documento); // consultamos a sisa el padron de Puco
+    if (respSisa.length) {
+        // filtramos objetos repetidos (solo cambia en la obra social: codigoOS)
+        respSisa = respSisa.filter((os: IPuco, index) => {
+            return index === respSisa.findIndex(osFind => (osFind.codigoOS === os.codigoOS));
+        });
+        respSisa.forEach(async (osPuco: IPuco) => {
+            if (osPuco.coberturaSocial) {
+                let obraSocial: IObraSocial = await ObraSocial.findOne({ codigoPuco: osPuco.codigoOS });
+                if (!obraSocial) {
+                    // si la OS no existe en la colección de ObraSocial => la insertamos
+                    obraSocial = {
+                        codigoPuco: osPuco.codigoOS,
+                        nombre: osPuco.coberturaSocial
+                    };
+                    await createObraSocial(obraSocial);
+                }
+            }
+            // insertamos la os del paciente en puco
+            await createPuco(osPuco);
+        });
+    }
+});
+
+
+export async function createPuco(data) {
+    delete data.coberturaSocial; // no se guarda el campo coberturaSocial en la coleccion de puco
+    const patientPuco: any = new Puco(data);
+    try {
+        await patientPuco.save();
+        return patientPuco;
+    } catch (error) {
+        return error;
+    }
+}
+
+/**
+ * Busca en SISA las obras sociales de un ciudadano según Documento (exportados de PUCO Nación)
+ *  Parámetros de la llamada
+    Usuario: usuario
+    Clave: clave
+    Número de documento: nrodoc
+ */
+export async function sisaPuco(documento) {
+    let respPuco: IPuco[] = [];
+    try {
+        if (documento) {
+            const url = ` https://${sisa.host}/sisa/services/rest/puco/${documento}`;
+            const params = { usuario: sisa.username, clave: sisa.password };
+            const options = {
+                method: 'POST',
+                uri: url,
+                body: params,
+                json: true,
+                timeout: 50000,
+            };
+            const response = await handleHttpRequest(options);
+            if (response[0] >= 200 && response[0] < 400) {
+                const resp = JSON.parse(JSON.stringify(response[1]));
+                const { resultado, puco } = resp;
+                if (resultado === 'OK') {
+                    respPuco = puco.map(osPatient => {
+                        const version = moment().startOf('month').format('YYYY-MM-DD');
+                        return {
+                            tipoDoc: osPatient.tipodoc,
+                            dni: Number.parseInt(osPatient.nrodoc, 10),
+                            codigoOS: Number.parseInt(osPatient.rnos, 10),
+                            transmite: 'N',
+                            nombre: osPatient.denominacion,
+                            coberturaSocial: osPatient.coberturaSocial || '',
+                            version
+                        };
+
+                    });
+                    return respPuco;
+                }
+            }
+        }
+    } catch (error) {
+        return error;
+    }
+    return respPuco;
+}
+
+
 // Compara fechas. Junto con el sort ordena los elementos de mayor a menor.
 function compare(a, b) {
-    if (new Date(a) > new Date(b)) {
-        return -1;
-    }
-    if (new Date(a) < new Date(b)) {
-        return 1;
-    }
-    return 0;
+    const dateA = new Date(a);
+    const dateB = new Date(b);
+    return (dateA > dateB) ? -1 : (dateA < dateB) ? 1 : 0;
 }
 
 // Retorna true si hay conexion con DB De padrones
