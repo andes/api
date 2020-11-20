@@ -62,12 +62,10 @@ export function roboSender() {
                         // Exportar HUDS
                         if (env.idExportHuds) {
                             await createFile(env.idExportHuds);
-                            await changeState(env, 'success');
                         }
-                        counter++;
-                        if (finEjecucion(counter, enviosPendientes.length)) {
-                            return resolve();
-                        }
+
+                        await changeState(env, 'success');
+
 
                     } catch (errorSending) {
                         log('Error enviando mensaje');
@@ -76,6 +74,11 @@ export function roboSender() {
                         } else {
                             await changeState(env, 'pending');
                         }
+                    }
+
+                    counter++;
+                    if (finEjecucion(counter, enviosPendientes.length)) {
+                        return resolve();
                     }
                 });
             } else {
