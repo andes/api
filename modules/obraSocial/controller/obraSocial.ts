@@ -6,7 +6,7 @@ import { IObraSocial, ObraSocial } from '../schemas/obraSocial';
 export async function getObraSocial(paciente) {
     if (!paciente.documento) { return []; }
 
-    let arrayOSPuco: any = await pacientePuco(paciente.documento);
+    let arrayOSPuco: any = await pacientePuco(paciente.documento, paciente.sexo);
     if (arrayOSPuco.length > 0) {
         return arrayOSPuco;
     } else {

@@ -106,6 +106,15 @@ export const puco = {
     }
 };
 
+// Configuración BUS INTEROPERABILIDAD
+export const busInteroperabilidad = {
+    host: getEnv('HOSTBUS', ''),
+    usuario: getEnv('BUS_USERNAME', ''),
+    clave: getEnv('BUS_PASS', ''),
+    dominio: getEnv('BUS_DOMINIO', '')
+
+};
+
 export const snomed = {
     snowstormHost: getEnv('SNOWSTORM_HOST', 'http://localhost:8080'),
     snowstormBranch: getEnv('SNOWSTORM_BRANCH', 'MAIN/SNOMEDCT-ES')

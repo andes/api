@@ -1,11 +1,11 @@
 import { Puco, IPuco } from '../schemas/puco';
 import { IObraSocial, ObraSocial } from '../schemas/obraSocial';
-import { sisa } from './../../../config.private';
+import { busInteroperabilidad } from './../../../config.private';
 import { EventCore } from '@andes/event-bus';
-import moment = require('moment');
 import { handleHttpRequest } from '../../../utils/requestHandler';
 import { obraSocialLog } from '../../../modules/obraSocial/obraSocialLog';
 import { createObraSocial } from '../controller/obraSocial';
+import moment = require('moment');
 
 // obtiene las versiones de todos los padrones cargados
 export async function obtenerVersiones() {
@@ -20,9 +20,9 @@ export async function obtenerVersiones() {
     return versiones;
 }
 
-export async function pacientePuco(documento) {
+export async function pacientePuco(documento, sexo) {
     let resultOS = [];
-    const osPuco = await getOSPuco(documento);
+    const osPuco = await getOSPuco(documento, sexo);
     if (osPuco.length > 0) {
         // genera un array con todas las obras sociales para una version de padron dada
         for (let i = 0; i < osPuco.length; i++) {
@@ -46,7 +46,7 @@ export async function pacientePuco(documento) {
  * periodo es optativo, si no se envía se considera el ultimo periodo que contenga el paciente
  * si el último periodo que contiene el paciente no está actualizado, entonces se lo actualiza con sisa
  */
-export async function getOSPuco(documento, periodo = null) {
+export async function getOSPuco(documento, sexo, periodo = null) {
     if (!checkConnection()) {
         // varificamos si hay conexion con puco
         return [];
@@ -76,20 +76,20 @@ export async function getOSPuco(documento, periodo = null) {
     if (lastPeriodo(padron) && (!osPatientPuco.length ||
         (osPatientPuco.length && !lastPeriodo(lastVersionPuco)))) {
         // obtenemos de sisa
-        EventCore.emitAsync('os:puco:create', dni);
+        EventCore.emitAsync('os:puco:create', dni, sexo);
 
     }
     return osPatientPuco;
 }
 
-EventCore.on('os:puco:create', async (documento) => {
-    let respSisa: IPuco[] = await sisaPuco(documento); // consultamos a sisa el padron de Puco
-    if (respSisa.length) {
+EventCore.on('os:puco:create', async (documento, sexo) => {
+    let obrasSociales: IPuco[] = await coberturaSalud(documento, sexo); // consultamos a sisa el padron de Puco
+    if (obrasSociales.length > 0) {
         // filtramos objetos repetidos (solo cambia en la obra social: codigoOS)
-        respSisa = respSisa.filter((os: IPuco, index) => {
-            return index === respSisa.findIndex(osFind => (osFind.codigoOS === os.codigoOS));
+        obrasSociales = obrasSociales.filter((os: IPuco, index) => {
+            return index === obrasSociales.findIndex(osFind => (osFind.codigoOS === os.codigoOS));
         });
-        respSisa.forEach(async (osPuco: IPuco) => {
+        obrasSociales.forEach(async (osPuco: IPuco) => {
             if (osPuco.coberturaSocial) {
                 let obraSocial: IObraSocial = await ObraSocial.findOne({ codigoPuco: osPuco.codigoOS });
                 if (!obraSocial) {
@@ -126,33 +126,36 @@ export async function createPuco(data) {
     Clave: clave
     Número de documento: nrodoc
  */
-export async function sisaPuco(documento) {
+export async function coberturaSalud(documento, sexo) {
     let respPuco: IPuco[] = [];
     try {
+        const idSexo = sexo === 'femenino' ? 1 : 2;
         if (documento) {
-            const url = ` https://${sisa.host}/sisa/services/rest/puco/${documento}`;
-            const params = { usuario: sisa.username, clave: sisa.password };
-            const options = {
-                method: 'POST',
-                uri: url,
-                body: params,
-                json: true,
-                timeout: 50000,
-            };
-            const response = await handleHttpRequest(options);
-            if (response[0] >= 200 && response[0] < 400) {
-                const resp = JSON.parse(JSON.stringify(response[1]));
-                const { resultado, puco } = resp;
-                if (resultado === 'OK') {
-                    respPuco = puco.map(osPatient => {
+            const token = await loginFederador();
+            if (token) {
+                const url = `${busInteroperabilidad.host}/personas/cobertura?nroDocumento=${documento}&idSexo=${idSexo}`;
+                const options = {
+                    url,
+                    method: 'GET',
+                    json: true,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        token,
+                        codDominio: busInteroperabilidad.dominio
+                    }
+                };
+                const [status, res] = await handleHttpRequest(options);
+                if (status === 200) {
+                    const obrasSociales = res;
+                    respPuco = obrasSociales.map(osPatient => {
                         const version = moment().startOf('month').format('YYYY-MM-DD');
                         return {
-                            tipoDoc: osPatient.tipodoc,
-                            dni: Number.parseInt(osPatient.nrodoc, 10),
+                            tipoDoc: 'DNI',
+                            dni: Number.parseInt(documento, 10),
                             codigoOS: Number.parseInt(osPatient.rnos, 10),
                             transmite: 'N',
-                            nombre: osPatient.denominacion,
-                            coberturaSocial: osPatient.coberturaSocial || '',
+                            nombre: '',
+                            coberturaSocial: osPatient.cobertura || '',
                             version
                         };
 
@@ -178,4 +181,27 @@ function compare(a, b) {
 // Retorna true si hay conexion con DB De padrones
 function checkConnection() {
     return Puco.db.readyState > 0;
+}
+
+/**
+ * Obtiene el token de usuarios
+ */
+
+async function loginFederador() {
+    const url = `${busInteroperabilidad.host}/usuarios/aplicacion/login`;
+    const options = {
+        url,
+        method: 'POST',
+        json: true,
+        body: {
+            nombre: busInteroperabilidad.usuario,
+            clave: busInteroperabilidad.clave,
+            codDominio: busInteroperabilidad.dominio
+        },
+    };
+    const [status, body] = await handleHttpRequest(options);
+    if (status === 200) {
+        return body.token;
+    }
+    return null;
 }
