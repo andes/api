@@ -22,7 +22,7 @@ class DerivacionesResource extends ResourceBase {
             field: 'profesionalSolicitante._id',
             fn: MongoQuery.equalMatch
         },
-        gravedad: MongoQuery.equalMatch,
+        prioridad: MongoQuery.equalMatch,
         paciente: (value) => {
             return {
                 $or: [

@@ -77,7 +77,7 @@ export const DerivacionSchema = new mongoose.Schema({
         required: true,
         default: false
     },
-    gravedad: {
+    prioridad: {
         type: String,
         enum: ['baja', 'media', 'alta']
     },
