@@ -1,3 +1,16 @@
+# [5.23.0](https://github.com/andes/api/compare/v5.22.0...v5.23.0) (2020-11-25)
+
+
+### Bug Fixes
+
+* **robosender:** no se estan marcando como succes ([#1205](https://github.com/andes/api/issues/1205)) ([5d1dceb](https://github.com/andes/api/commit/5d1dcebe54df092743b6717e02658ae0dc0da739))
+
+
+### Features
+
+* **core:** actualización de andes/core ([#1195](https://github.com/andes/api/issues/1195)) ([4900617](https://github.com/andes/api/commit/4900617f67f885206c6910079271b92c9809f445))
+* **mpi:** script para eliminar foto de relaciones ([#1184](https://github.com/andes/api/issues/1184)) ([80edf8f](https://github.com/andes/api/commit/80edf8f64584649c0e7c506d2b770055590e2174))
+
 # [5.22.0](https://github.com/andes/api/compare/v5.21.0...v5.22.0) (2020-11-18)
 
 
