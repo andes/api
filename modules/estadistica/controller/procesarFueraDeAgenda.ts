@@ -7,14 +7,14 @@ import * as mongoose from 'mongoose';
  * @returns {object} {fecha, paciente, financiador, prestacion, profesionales, estado, idAgenda:null, idBloque:null, turno:null, idPrestacion}
  */
 export async function procesar(parametros: any) {
-
-    let match: any = {
+    const match: any = {
         'ejecucion.fecha': {
             $gte: new Date(parametros.fechaDesde),
             $lte: new Date(parametros.fechaHasta)
         },
         'estadoActual.tipo': 'validada',
-        'solicitud.turno': { $exists: false },
+        'solicitud.tipoPrestacion.noNominalizada': { $ne: true },
+        'solicitud.turno': null,
         'solicitud.organizacion.id': mongoose.Types.ObjectId(parametros.organizacion)
     };
 
@@ -38,7 +38,7 @@ export async function procesar(parametros: any) {
         match['solicitud.profesional.id'] = new mongoose.Types.ObjectId(parametros.profesional);
     }
     if (parametros.ambito) {
-        match2['prestacion.solicitud.ambitoOrigen'] = parametros.ambito;
+        match['solicitud.ambitoOrigen'] = parametros.ambito;
     }
 
 
