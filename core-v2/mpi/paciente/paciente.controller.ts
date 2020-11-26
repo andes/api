@@ -174,3 +174,50 @@ export async function findOrCreate(query: any, req) {
     const pacienteCreado = await PacienteCtr.create(paciente, req);
     return pacienteCreado;
 }
+
+/**
+ * Vincula pacientes
+ *
+ * @param {string} op tipo de operación
+ * @param {object} pacienteBase paciente que se vinculará con otros
+ * @param {object} pacienteLinkeado paciente a linkear
+ */
+
+export async function linkPaciente(req, op, pacienteBase, pacienteLinkeado) {
+    const dataLink = {
+        entidad: 'ANDES',
+        valor: pacienteLinkeado.id
+    };
+    if (op === 'link') {
+        if (pacienteBase.identificadores) {
+            pacienteBase.identificadores.push(dataLink);
+        } else {
+            pacienteBase.identificadores = [dataLink]; // Primer elemento del array
+        }
+        pacienteLinkeado.activo = false;
+    }
+    if (op === 'unlink') {
+        if (pacienteBase.identificadores) {
+            pacienteBase.identificadores = pacienteBase.identificadores.filter(x => x.valor !== dataLink.valor);
+        }
+        pacienteLinkeado.activo = true;
+    }
+
+    await PacienteCtr.update(pacienteBase.id, pacienteBase, req);
+    await PacienteCtr.update(pacienteLinkeado.id, pacienteLinkeado, req);
+}
+
+
+export async function linkPacientesDuplicados(req, paciente) {
+    // linkea los pacientes validados con los temporales con un alto porcentaje de match
+    const resultado = await suggest(paciente);
+    if (resultado.length > 0) {
+        // Verifica los resultados y linkea los pacientes
+        resultado.forEach(async pacienteLink => {
+            if (pacienteLink._score > config.mpi.cotaMatchMax && paciente.id !== pacienteLink.id) {
+                await linkPaciente(req, 'link', paciente, pacienteLink);
+            }
+        });
+    }
+}
+
