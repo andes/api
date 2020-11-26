@@ -1,7 +1,8 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Derivaciones } from './schemas/derivaciones.schema';
 import { Auth } from '../../auth/auth.class';
-import { readFile, storeFile } from './controllers/comStore';
+import { readFile } from './controllers/comStore';
+import { AndesDrive } from '@andes/drive';
 
 class DerivacionesResource extends ResourceBase {
     Model = Derivaciones;
@@ -50,23 +51,20 @@ class DerivacionesResource extends ResourceBase {
 export const DerivacionesCtr = new DerivacionesResource({});
 export const DerivacionesRouter = DerivacionesCtr.makeRoutes();
 
-DerivacionesRouter.get('/store/:id', (req, res, next) => {
-    readFile(req.params.id).then((data: any) => {
+DerivacionesRouter.get('/store/:id', async (req, res, next) => {
+    const fileDrive = await AndesDrive.find(req.params.id);
+    if (fileDrive) {
+        const stream1 = await AndesDrive.read(fileDrive);
+        res.contentType(fileDrive.mimetype);
+        stream1.pipe(res);
+    } else {
+        const data = await readFile(req.params.id);
         res.contentType(data.file.contentType);
         data.stream.on('data', (data2) => {
             res.write(data2);
         });
-
         data.stream.on('end', () => {
             res.end();
         });
-    }).catch(next);
-});
-
-DerivacionesRouter.post('/store', (req, res, next) => {
-    const file = req.body.file;
-    const metadata = req.body.metadata;
-    storeFile(file, metadata).then((data) => {
-        res.json(data);
-    }).catch(next);
+    }
 });

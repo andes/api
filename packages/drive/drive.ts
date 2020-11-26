@@ -39,7 +39,10 @@ export class AndesDrive {
                     extension,
                     mimetype: file.mimetype
                 };
-                const fd = await FileDescriptor.create(data);
+                if (req.body.origen) {
+                    data.origin = req.body.origen;
+                }
+                const fd = await FileDescriptor.create(data, req);
                 if (fd) {
                     return res.send({ id: fd._id });
                 }
@@ -63,6 +66,23 @@ export class AndesDrive {
                 return next(404);
             }
         });
+
+        router.delete('/:uuid', async (req: any, res, next) => {
+            try {
+                const uuid = req.params.uuid;
+                const fd = await FileDescriptor.find(uuid);
+                if (fd) {
+                    await this.adapter.delete(fd.real_id);
+                    await FileDescriptor.delete(fd._id);
+                    return res.send({ id: fd._id });
+                } else {
+                    return next(404);
+                }
+            } catch (err) {
+                return next(err);
+            }
+        });
+
         return router;
     }
 

@@ -4,12 +4,12 @@ export class SeaweedAdapter implements IAdapter {
     public name = 'seaweed-adapter';
     private seaweedfs;
 
-    constructor ({ server, port }) {
+    constructor({ server, port }) {
         let weedClient = require('node-seaweedfs');
-        this.seaweedfs = new weedClient({server, port });
+        this.seaweedfs = new weedClient({ server, port });
     }
 
-    write (stream: NodeJS.WriteStream): Promise<string> {
+    write(stream: NodeJS.WriteStream): Promise<string> {
         return this.seaweedfs.write(stream, { headers: { 'transfer-encoding': 'chunked' } }).then((fileInfo) => {
             return fileInfo.fid;
         });
@@ -24,7 +24,7 @@ export class SeaweedAdapter implements IAdapter {
         });
     }
 
-    delete (uuid: string): Promise<void> {
-        return  this.seaweedfs.remove(uuid);
+    delete(uuid: string): Promise<void> {
+        return this.seaweedfs.remove(uuid);
     }
 }
