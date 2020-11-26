@@ -72,9 +72,11 @@ router.get('/padronSumar', Auth.authenticate(), async (req, res, next) => {
  */
 
 router.get('/puco', Auth.authenticate(), async (req, res, next) => {
-    if (req.query.dni) {
+    const dni = req.query.dni;
+    if (dni) {
         const padron = req.query.periodo ? req.query.periodo : null;
-        const respOSPuco: IPuco[] = await pucoController.getOSPuco(req.query.dni, padron);
+        const sexo = req.query.sexo || 0;
+        const respOSPuco: IPuco[] = await pucoController.getOSPuco(dni, sexo, padron);
         if (respOSPuco.length > 0) {
             const resultOS = [];
             try {
