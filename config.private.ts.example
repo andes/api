@@ -97,6 +97,19 @@ export const sintys = {
     port: getEnv('SINTYS_PORT', 443, 'n'),
     path: getEnv('SINTYS_PATH', '')
 };
+// Configuración del servidor Xroad de Salud
+export const XRoadConfig = {
+    securityServer: getEnv('XROAD_SERVER', ''),
+    client:
+    {
+        xRoadInstance: getEnv('XROAD_INSTANCE', ''),
+        memberClass: getEnv('XROAD_CLASS', ''),
+        memberCode: getEnv('XROAD_CODE', ''),
+        subsystemCode: getEnv('XROAD_SUBSYSTEM', '')
+    }
+
+};
+
 // Configuración para PUCO
 export const puco = {
     database: 'puco',

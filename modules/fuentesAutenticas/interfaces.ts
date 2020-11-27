@@ -1,6 +1,10 @@
-export interface RenaperConfig {
-    url: string;
-    usuario: string;
-    password: string;
-    server: string;
+export interface IXRoadConfig {
+    securityServer: string;
+    client:
+    {
+        xRoadInstance: string,
+        memberClass: string,
+        memberCode: string,
+        subsystemCode: string
+    };
 }

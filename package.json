@@ -10,7 +10,7 @@
     "@andes/drive": "file:packages/drive",
     "@andes/event-bus": "file:packages/event-bus",
     "@andes/fhir": "^1.4.2",
-    "@andes/fuentes-autenticas": "^1.0.5",
+    "@andes/fuentes-autenticas": "^1.0.6",
     "@andes/georeference": "^1.0.2",
     "@andes/log": "^2.2.2",
     "@andes/match": "^1.1.12",
