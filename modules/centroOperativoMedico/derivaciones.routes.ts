@@ -28,7 +28,8 @@ class DerivacionesResource extends ResourceBase {
                 $or: [
                     { 'paciente.documento': MongoQuery.partialString(value) },
                     { 'paciente.nombre': MongoQuery.partialString(value) },
-                    { 'paciente.apellido': MongoQuery.partialString(value) }
+                    { 'paciente.apellido': MongoQuery.partialString(value) },
+                    { 'paciente.id': MongoQuery.equalMatch(value) }
                 ]
             };
         },
@@ -37,7 +38,8 @@ class DerivacionesResource extends ResourceBase {
                 $or: [
                     { 'profesional.documento': MongoQuery.partialString(value) },
                     { 'profesional.nombre': MongoQuery.partialString(value) },
-                    { 'profesional.apellido': MongoQuery.partialString(value) }
+                    { 'profesional.apellido': MongoQuery.partialString(value) },
+                    { 'profesional.id': MongoQuery.equalMatch(value) }
                 ]
             };
         },
