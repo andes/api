@@ -7,11 +7,8 @@ import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import { Agenda } from '../../../modules/turnos/schemas/agenda';
-import { sisa, renaperToAndes, sisaToAndes } from '@andes/fuentes-autenticas';
+import { sisa, renaperToAndes, sisaToAndes, renaperv3 } from '@andes/fuentes-autenticas';
 import { sisa as sisaConfig } from '../../../config.private';
-import { renaper } from '@andes/fuentes-autenticas';
-import { RenaperConfig } from '../../../modules/fuentesAutenticas/interfaces';
-import { renaper as renaConfig } from '../../../config.private';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 import * as configPrivate from '../../../config.private';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
@@ -552,14 +549,8 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
         return { paciente: pacienteAndes, validado: false };
     }
     let resRenaper: any;
-    const renaperConfig: RenaperConfig = {
-        usuario: renaConfig.Usuario,
-        password: renaConfig.password,
-        url: renaConfig.url,
-        server: renaConfig.serv
-    };
     try {
-        resRenaper = await renaper({ documento: pacienteAndes.documento, sexo: sexoPaciente }, renaperConfig, renaperToAndes);
+        resRenaper = await renaperv3({ documento: pacienteAndes.documento, sexo: sexoPaciente }, configPrivate.busInteroperabilidad, renaperToAndes);
         if (!resRenaper) {
             andesLog(req, logKeys.validacionPaciente.key, pacienteAndes.id, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
             return await validarSisa(pacienteAndes, req);
