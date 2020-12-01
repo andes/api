@@ -28,6 +28,7 @@ export interface IRelacion {
     apellido: String;
     documento: String;
     foto: String;
+    fotoId?: Schema.Types.ObjectId;
 }
 
 export interface IPaciente {

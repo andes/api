@@ -7,7 +7,7 @@ import { Auth } from './../../../auth/auth.class';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
-import * as controllerPaciente from '../../../core/mpi/controller/paciente';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { turnosLog, agendaLog } from '../../turnos/citasLog';
 
 const router = express.Router();
@@ -41,7 +41,7 @@ router.get('/turnos', async (req: any, res, next) => {
     } else {
         pacienteId = req.user.pacientes[0].id;
     }
-    let { paciente } = await controllerPaciente.buscarPaciente(pacienteId);
+    let paciente: any = await PacienteCtr.findById(pacienteId);
     if (!paciente) {
         return next({ message: 'no existe el paciente' });
     }

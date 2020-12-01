@@ -1,9 +1,10 @@
 import * as express from 'express';
-import { Auth } from './../../../auth/auth.class';
-import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
-import { paciente } from '../../../core/mpi/schemas/paciente';
+import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { EventCore } from '@andes/event-bus';
+import { calcularEdadReal } from '../../../core-v2/mpi/paciente/paciente.schema';
 const router = express.Router();
 
 /**
@@ -13,54 +14,59 @@ const router = express.Router();
  * Chequea que el paciente este asociado a la cuenta
  */
 
-router.get('/paciente/:id', (req: any, res, next) => {
+router.get('/paciente/:id', async (req: any, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = req.user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        return controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
-            // [TODO] Projectar datos que se pueden mostrar al paciente
-            const pac = resultado.paciente;
-            delete pac.claveBloking;
-            delete pac.entidadesValidadoras;
-            delete pac.carpetaEfectores;
-            delete pac.createdBy;
-
-            return res.json(pac);
-
-        }).catch(error => {
-            return res.status(422).send({ message: 'invalid_id' });
-        });
+        const resultado: any = await findById(pacientes[index].id, { fields: '-claveBlocking -entidadesValidadoras -carpetaEfectores -createdBy' });
+        if (resultado) {
+            return res.json(resultado);
+        }
+        return res.status(422).send({ message: 'invalid_id' });
     } else {
         return res.status(422).send({ message: 'unauthorized' });
     }
 });
 
 router.get('/paciente/:id/relaciones', async (req: any, res, next) => {
-    let pac: any;
-    const idPaciente = req.params.id;
-    if (idPaciente) {
-        pac = (await controllerPaciente.buscarPaciente(idPaciente)).paciente;
-        const resultado = await controllerPaciente.buscarPaciente(req.user.pacientes[0].id);
-        // Verifico nuevamente que el paciente sea familiar del usuario logueado
-        const esFamiliar = (resultado.paciente.relaciones).find(rel => rel.documento === pac.documento);
+    try {
+        const paciente = await findById(req.params.id);
+        if (!paciente) {
+            return res.status(422).send({ message: 'Paciente no encontrado' });
+        }
+        const resultado = await findById(req.user.pacientes[0].id);
+        // Verifico que el paciente sea familiar del usuario logueado
+        const esFamiliar = (resultado.relaciones).find(rel => rel.documento === paciente.documento);
         if (esFamiliar) {
-            if (pac) {
-                return res.json(pac);
-            } else {
-                return res.status(422).send({ message: 'Paciente no encontrado' });
-            }
+            return res.json(paciente);
         } else {
             return res.status(422).send({ message: 'unauthorized' });
         }
-    } else {
-        return res.status(422).send({ message: 'unauthorized' });
+    } catch (err) {
+        return next(err);
     }
 });
 
 router.get('/relaciones', async (req: any, res, next) => {
-    const relacion = await controllerPaciente.buscarRelaciones(req.query.id);
-    return res.json(relacion);
+    try {
+        const paciente: any = await findById(req.query.id);
+        let arrayRelaciones = [];
+        let pacienteRel;
+        for (let rel of paciente.relaciones) {
+            if (rel.relacion) {
+                let objRelacion = rel.toObject();
+                pacienteRel = await findById(rel.referencia as any);
+                pacienteRel = pacienteRel.toObject({ virtuals: true });
+                objRelacion.id = pacienteRel.id;
+                objRelacion.edad = pacienteRel.edad;
+                arrayRelaciones.push(objRelacion);
+            }
+        }
+        res.json(arrayRelaciones);
+    } catch (err) {
+        return next(err);
+    }
 });
 /**
  * Modifica datos de contacto y otros
@@ -75,30 +81,13 @@ router.put('/paciente/:id', async (req: any, res, next) => {
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
         try {
-            const resultado = await controllerPaciente.buscarPaciente(pacientes[index].id);
-            // tslint:disable-next-line: no-shadowed-variable
-            const paciente = resultado.paciente;
-            const data: any = {};
-
-            if (req.body.reportarError) {
-                data.reportarError = req.body.reportarError;
-                data.notaError = req.body.notas;
-            }
-
-            if (req.body.direccion) {
-                data.direccion = req.body.direccion;
-            }
-            if (req.body.contacto) {
-                data.contacto = req.body.contacto;
-            }
-            return controllerPaciente.updatePaciente(paciente, data, req).then(p => {
+            let paciente = await findById(pacientes[index].id);
+            if (paciente) {
+                const updated = await PacienteCtr.update(paciente.id, req.body, req);
                 return res.send({ status: 'OK' });
-            }).catch(error => {
-                return next(error);
-            });
-
+            }
         } catch (error) {
-            return next({ message: 'invalid_id' });
+            return next(error);
         }
     } else {
         return next({ message: 'unauthorized' });
@@ -110,32 +99,17 @@ router.put('/paciente/:id', async (req: any, res, next) => {
  * [No esta en uso]
  */
 
-router.patch('/pacientes/:id', async (req, res, next) => {
+router.patch('/pacientes/:id', async (req: any, res, next) => {
     const idPaciente = req.params.id;
     const pacientes = (req as any).user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
 
     if (index >= 0) {
         try {
-            const resultado = await controllerPaciente.buscarPaciente(req.params.id);
-            if (resultado) {
-                switch (req.body.op) {
-                    case 'updateFotoMobile':
-                        controllerPaciente.updateFotoMobile(req, resultado.paciente);
-                        break;
-                    case 'updateDireccion':
-                        controllerPaciente.updateDireccion(req, resultado.paciente);
-                        break;
-                }
-
-                Auth.audit(resultado.paciente, req);
-
-                resultado.paciente.save((errPatch) => {
-                    if (errPatch) {
-                        return next(errPatch);
-                    }
-                    return res.json(resultado.paciente);
-                });
+            let paciente = await findById(req.params.id);
+            if (paciente) {
+                const updated = await PacienteCtr.update(paciente.id, req.body, req);
+                return res.json(updated);
             }
         } catch (err) {
             return next(err);
@@ -154,7 +128,7 @@ router.get('/laboratorios/(:id)', async (req, res, next) => {
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
         // tslint:disable-next-line: no-shadowed-variable
-        let { paciente } = await controllerPaciente.buscarPaciente(idPaciente);
+        let paciente: any = await findById(idPaciente);
         if (!paciente) {
             return next({ message: 'no existe el paciente' });
         }
