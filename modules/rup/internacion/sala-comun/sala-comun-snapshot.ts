@@ -35,7 +35,7 @@ export async function createSnapshotSalaComun(fecha: Date) {
                 estado,
                 sectores,
                 unidadOrganizativas,
-                ocupacion: ocupacion.map(o => ({
+                ocupacion: ocupacion.filter(item => item.paciente && item.idInternacion).map(o => ({
                     paciente: o.paciente,
                     ambito: o.ambito,
                     idInternacion: o.idInternacion,

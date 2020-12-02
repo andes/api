@@ -169,6 +169,55 @@ export default [
         ]
 
     },
+
+
+    {
+        key: 'guardia',
+        title: 'Módulo Guardia',
+        comment: '',
+        avoidAll: true,
+        visibility: 'restricted',
+        child: [
+            {
+                key: 'rol',
+                title: 'Rol del usuario',
+                avoidAll: true,
+                child: [
+                    { key: 'medica', title: 'Médico', type: 'boolean' },
+                    { key: 'enfermeria', title: 'Enfermero', type: 'boolean' },
+                    { key: 'administrativa', title: 'Administrativo', type: 'boolean' },
+                ]
+            },
+            {
+                key: 'cama',
+                title: 'Acciones sobre una cama',
+                child: [
+                    { key: 'create', title: 'Crear nueva cama', type: 'boolean' },
+                    { key: 'edit', title: 'Editar cama', type: 'boolean' },
+                    { key: 'baja', title: 'Eliminar cama', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'sala',
+                title: 'Acciones sobre una sala',
+                child: [
+                    { key: 'create', title: 'Crear nueva sala', type: 'boolean' },
+                    { key: 'edit', title: 'Editar sala', type: 'boolean' },
+                    { key: 'delete', title: 'Eliminar sala', type: 'boolean' }
+                ]
+            },
+            { key: 'ingreso', title: 'Realizar ingreso de pacientes', type: 'boolean' },
+            { key: 'movimientos', title: 'Realizar movimientos de internacion', type: 'boolean' },
+            { key: 'egreso', title: 'Realizar egreso de pacientes', type: 'boolean' },
+            { key: 'bloqueo', title: 'Realizar bloqueo de camas', type: 'boolean' },
+            { key: 'censo', title: 'Ver censo diario y mensual', type: 'boolean' },
+            { key: 'mapaDeCamas', title: 'Mapa de camas', type: 'boolean' },
+            { key: 'descargarListado', title: 'Descargar listado internación', type: 'boolean' },
+        ]
+
+    },
+
+
     {
         key: 'huds',
         title: 'Módulo HUDS',

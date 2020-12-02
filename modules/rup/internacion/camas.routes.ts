@@ -27,7 +27,11 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
 
     let salas = [];
     if (capa !== 'estadistica') {
-        salas = await SalaComunController.listarSalaComun({ organizacion: organizacion._id, fecha: moment(fecha).toDate() });
+        salas = await SalaComunController.listarSalaComun({
+            organizacion: organizacion._id,
+            fecha: moment(fecha).toDate(),
+            ambito: req.query.ambito
+        });
         salas = populateSalaComun(salas);
     }
 
@@ -191,6 +195,7 @@ function populateSalaComun(salas: any[]) {
         if (!current.paciente) { return acc; }
         return { ...acc, [String(current.id)]: current };
     }, {});
+
     const salasDisponibles = Object.keys(salasID).map(key => {
         const sala = salasID[key];
         return {
@@ -199,7 +204,9 @@ function populateSalaComun(salas: any[]) {
             idInternacion: null,
             extras: null,
             prioridad: null,
-            fecha: new Date()
+            fecha: new Date(),
+            fechaIngreso: undefined,
+            fechaAtencion: undefined,
         };
     });
     const allSalas = [...salasDisponibles, ...salas].map(sala => {

@@ -688,6 +688,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
 
     for (const reg of registros) {
 
+
         if (reg.elementoRUP) {
 
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);

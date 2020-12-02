@@ -19,13 +19,13 @@ class InternacionResumenController extends ResourceBase<IInternacionResumenDoc> 
         if (concepto) {
             switch (concepto.valor.conceptId) {
                 case '394848005':
-                    data.prioridad = { id: 1, label: 'VERDE', type: 'success' };
+                    data.prioridad = { id: 1, label: 'BAJA', type: 'success' };
                     break;
                 case '1331000246106':
-                    data.prioridad = { id: 50, label: 'AMARILLO', type: 'warning' };
+                    data.prioridad = { id: 50, label: 'MEDIA', type: 'warning' };
                     break;
                 case '394849002':
-                    data.prioridad = { id: 100, label: 'ROJO', type: 'danger' };
+                    data.prioridad = { id: 100, label: 'ALTA', type: 'danger' };
                     break;
             }
         }

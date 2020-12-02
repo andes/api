@@ -103,6 +103,7 @@ export interface ListarOptions {
     id?: SalaComunID;
     organizacion?: ObjectId;
     fecha: Date;
+    ambito?: string;
 }
 
 export type SalaComunOcupacion = Pick<ISalaComun, 'id' | 'nombre' | 'organizacion' | 'ambito' | 'sectores' | 'unidadOrganizativas'> & {
@@ -118,7 +119,7 @@ export type SalaComunOcupacion = Pick<ISalaComun, 'id' | 'nombre' | 'organizacio
 
 
 export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComunOcupacion[]> {
-    const { organizacion, fecha, id } = opciones;
+    const { organizacion, fecha, id, ambito } = opciones;
     const $match = {
         fecha: { $lte: fecha }
     };
@@ -128,7 +129,10 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
     if (organizacion) {
         $match['organizacion.id'] = wrapObjectId(organizacion);
     }
-    const aggr = [
+    if (ambito) {
+        $match['ambito'] = ambito;
+    }
+    const aggr: any[] = [
         { $match },
         { $group: { _id: '$idSalaComun', fecha: { $max: '$fecha' } } },
         {
@@ -242,24 +246,27 @@ export async function listarSalaComun(opciones: ListarOptions): Promise<SalaComu
                 updatedAt: '$snapshot.updatedAt',
                 updatedBy: '$snapshot.updatedBy'
             }
-        },
-        {
+        }
+    ];
+    if (ambito === 'guardia') {
+        aggr.push({
             $lookup: {
                 from: 'internacionPacienteResumen',
                 localField: 'idInternacion',
                 foreignField: '_id',
                 as: 'estado_internacion'
             }
-        },
-        { $unwind: { path: '$estado_internacion', preserveNullAndEmptyArrays: true } },
-        {
+        });
+        aggr.push({ $unwind: { path: '$estado_internacion', preserveNullAndEmptyArrays: true } });
+        aggr.push({
             $addFields: {
-                metadata: '$estado_internacion.metadata',
                 fechaIngreso: '$estado_internacion.fechaIngreso',
+                fechaAtencion: '$estado_internacion.fechaAtencion',
                 prioridad: '$estado_internacion.prioridad',
             }
-        },
-    ];
+        });
+    }
+
     return SalaComunSnapshot.aggregate(aggr);
 }
 

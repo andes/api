@@ -20,6 +20,7 @@ export interface IInternacionResumen {
     };
     fechaIngreso?: Date;
     fechaEgreso?: Date;
+    fechaAtencion?: Date;
     tipo_egreso?: string;
     deletedAt?: Date;
 
@@ -53,6 +54,7 @@ export const InternacionResumenSchema = new Schema({
     },
     fechaIngreso: Date,
     fechaEgreso: Date,
+    fechaAtencion: Date,
     tipo_egreso: { type: String, required: false },
     deletedAt: { type: Date, required: false },
 
@@ -63,8 +65,11 @@ export const InternacionResumenSchema = new Schema({
     }, { _id: false }),
 
     ingreso: {
-        elementoRUP: SchemaTypes.ObjectId,
-        registros: [SchemaTypes.Mixed]
+        type: {
+            elementoRUP: SchemaTypes.ObjectId,
+            registros: [SchemaTypes.Mixed]
+        },
+        required: false
     }
 
 });
