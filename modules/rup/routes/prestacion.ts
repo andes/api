@@ -16,6 +16,8 @@ import { getTurnoById } from '../../turnos/controller/turnosController';
 import { asyncHandler, Request } from '@andes/api-tool';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
+import { IPrestacionDoc } from '../prestaciones.interface';
 
 const router = express.Router();
 
@@ -677,4 +679,23 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
     const user = Auth.getUserFromResource(prestacion);
     Auth.audit(prestacion, user as any);
     prestacion.save();
+});
+
+EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
+    const elementosRUPSet = await elementosRUPAsSet();
+
+    const registros = prestacion.getRegistros(true);
+
+    for (const reg of registros) {
+
+        if (reg.elementoRUP) {
+
+            const elemento = elementosRUPSet.getByID(reg.elementoRUP);
+            if (elemento && elemento.dispatch) {
+                elemento.dispatch.forEach(hook => {
+                    EventCore.emitAsync(hook.event, { prestacion, registro: reg });
+                });
+            }
+        }
+    }
 });

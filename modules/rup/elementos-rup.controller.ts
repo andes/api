@@ -1,10 +1,10 @@
 
-import { elementoRUP } from './schemas/elementoRUP';
+import { ElementoRUP } from './schemas/elementoRUP';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 
 class ElementoRUPResource extends ResourceBase {
-    Model = elementoRUP;
+    Model = ElementoRUP;
     resourceName = 'elementos-rup';
     middlewares = [Auth.authenticate()];
     searchFileds = {

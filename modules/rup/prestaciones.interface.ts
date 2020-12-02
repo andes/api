@@ -49,6 +49,7 @@ export interface IPrestacionEstado {
 
 export interface IPrestacionRegistro {
     nombre: string;
+    elementoRUP: ObjectId;
     concepto: ISnomedConcept;
     destacado?: boolean;
     esSolicitud: boolean;
@@ -95,8 +96,17 @@ export interface IPrestacionSolicitud {
 }
 
 export type IPrestacionDoc = IPrestacion & Document & {
+    /**
+     * Busca un registro por ID
+     * @param id
+     */
     findRegistroById(id: ObjectId): IPrestacionRegistro[];
-    getRegistros(): IPrestacionRegistro[];
+
+    /**
+     * Devuelve los registro de la prestacion
+     * @param all Si es true devuelve todos los registros interno, sino solo los conceptos que agrego el profesional.
+     */
+    getRegistros(all?: boolean): IPrestacionRegistro[];
 };
 
 export type IPrestacionRegistroDoc = IPrestacionRegistro & Document;

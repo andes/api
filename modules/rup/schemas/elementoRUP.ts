@@ -1,6 +1,35 @@
 import * as mongoose from 'mongoose';
-import { SnomedConcept } from './snomed-concept';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { ISnomedConcept, SnomedConcept } from './snomed-concept';
+import { AndesDoc, AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { ObjectId } from '@andes/core';
+
+export interface IElementoRUP {
+    nombre: string;
+    activo: boolean;
+    componente: string;
+    defaultFor?: string;
+    tipo: string;
+    formulaImplementation?: string;
+    esSolicitud: boolean;
+    requiereDiagnosticoPrincipal?: boolean;
+    params: any;
+    conceptos: ISnomedConcept[];
+    requeridos: {
+        elementoRUP: ObjectId;
+        concepto: ISnomedConcept;
+        parms: any;
+        style: any;
+        sexo?: string;
+    }[];
+    frecuentes: ISnomedConcept[];
+    inactiveAt?: Date;
+    permiteRepetidos?: boolean;
+    dispatch?: {
+        event: string;
+    }[];
+}
+
+export type IElementoRUPDoc = AndesDoc<IElementoRUP>;
 
 export const ElementoRUPSchema = new mongoose.Schema({
     // Nombre de fantasía
@@ -127,10 +156,13 @@ export const ElementoRUPSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    rules: [mongoose.SchemaTypes.Mixed]
+    rules: [mongoose.SchemaTypes.Mixed],
+    dispatch: [{
+        event: String
+    }]
 });
 
 ElementoRUPSchema.plugin(AuditPlugin);
 
-export const elementoRUP = mongoose.model('elementoRUP', ElementoRUPSchema, 'elementosRUP');
+export const ElementoRUP = mongoose.model<IElementoRUPDoc>('elementoRUP', ElementoRUPSchema, 'elementosRUP');
 
