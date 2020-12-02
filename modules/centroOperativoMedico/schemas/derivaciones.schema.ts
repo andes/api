@@ -1,4 +1,3 @@
-import { ObraSocial } from './../../obraSocial/schemas/obraSocial';
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { DireccionSchema } from '../../../shared/schemas/direccion';
@@ -79,7 +78,7 @@ export const DerivacionSchema = new mongoose.Schema({
     },
     prioridad: {
         type: String,
-        enum: ['baja', 'media', 'alta']
+        enum: ['baja', 'media', 'alta', 'especial']
     },
 });
 
