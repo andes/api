@@ -1,3 +1,21 @@
+# [5.24.0](https://github.com/andes/api/compare/v5.23.0...v5.24.0) (2020-12-02)
+
+
+### Bug Fixes
+
+* **mapa-camas:** informe censo logo ([#1210](https://github.com/andes/api/issues/1210)) ([5fba92e](https://github.com/andes/api/commit/5fba92e66a150da52406241b53c39ae841f1d781))
+* **puco:** cambia uso de sisa por federador ([#1207](https://github.com/andes/api/issues/1207)) ([0920ef8](https://github.com/andes/api/commit/0920ef893ea45cbde1398c0651a140f6d107b52c))
+
+
+### Features
+
+* **com:** permitir busqueda por id de paciente ([#1201](https://github.com/andes/api/issues/1201)) ([6fdeac4](https://github.com/andes/api/commit/6fdeac4eb2f2cd479f30ca53b7a6c5841d7b5875))
+* **elementos-rup:** add rules ([#1209](https://github.com/andes/api/issues/1209)) ([25bacec](https://github.com/andes/api/commit/25bacecf28c88955a7d5bd067ed18c3f599a9a5c))
+* **mpi:** servicio de renaper por federador ([#1213](https://github.com/andes/api/issues/1213)) ([14bb752](https://github.com/andes/api/commit/14bb7523727da96e4a0b6d072c56d6b5a1fd4d04))
+* **mpi:** verifica que la foto traida de renaper sea una imagen ([#1198](https://github.com/andes/api/issues/1198)) ([77d5a4a](https://github.com/andes/api/commit/77d5a4a800ac1054e00ce987d161f51fb6a484e1))
+* **rup:** elementos rup hooks ([#1189](https://github.com/andes/api/issues/1189)) ([f006d13](https://github.com/andes/api/commit/f006d13061fd51de60ff074a87c81859f7d62a42))
+* **tm:** busqueda por ids en conceptos turneables ([#1194](https://github.com/andes/api/issues/1194)) ([2e4e835](https://github.com/andes/api/commit/2e4e8351b4a5ea2b3b9efa3601f13d6c1b9a0b84))
+
 # [5.23.0](https://github.com/andes/api/compare/v5.22.0...v5.23.0) (2020-11-25)
 
 
