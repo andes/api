@@ -1,6 +1,6 @@
 import { Schema, Model, model, Document } from 'mongoose';
 import { NombreApellidoSchema } from '../../../core/tm/schemas/nombreApellido';
-import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
+import { PacienteSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { tipoPrestacionSchema, ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { EspacioFisicoSchema, IEspacioFisico } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
@@ -29,7 +29,7 @@ export interface ISolicitudManual extends Document {
 
 export const SolicitudCarpetaManualSchema = new Schema({
     fecha: Date,
-    paciente: pacienteSchema,
+    paciente: PacienteSchema,
     numero: String,
     estado: {
         type: String,
