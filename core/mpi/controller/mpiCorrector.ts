@@ -1,6 +1,5 @@
 import { userScheduler } from '../../../config.private';
-import { paciente } from '../schemas/paciente';
-import { updatePaciente } from './paciente';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { mpiCorrectorLog } from '../mpi.log';
 import { sisa, sisaToAndes } from '@andes/fuentes-autenticas';
 import { sisa as sisaConfig } from '../../../config.private';
@@ -20,7 +19,7 @@ export async function mpiCorrector(done) {
         reportarError: true
     };
     try {
-        const pacientesReportados = await paciente.find(condicion);
+        const pacientesReportados = await PacienteCtr.search(condicion);
         let doc: any;
         for (doc of pacientesReportados) {
             await consultarSisa(doc);
@@ -49,7 +48,7 @@ async function consultarSisa(persona: any) {
                 const data = {
                     reportarError: 'false',
                 };
-                await updatePaciente(persona, data, userScheduler);
+                await PacienteCtr.update(persona.id, data, userScheduler as any);
                 await logMpiCorrector.info('bajo matching' + match, datosAnteriores, userScheduler);
             }
         }
@@ -73,6 +72,6 @@ function actualizarPaciente(pacienteMpi: any, pacienteSisa: any) {
         entidadesValidadoras: pacienteMpi.entidadesValidadoras
     };
     // PUT de paciente en MPI
-    return updatePaciente(pacienteMpi, data, userScheduler);
+    return PacienteCtr.update(pacienteMpi.id, data, userScheduler as any);
 }
 

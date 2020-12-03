@@ -1,14 +1,16 @@
-import { paciente } from '../../mpi/schemas/paciente';
+import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { userScheduler } from '../../../config.private';
 
 export const updateFuzzy = async (done, attrs) => {
-    const cursor = paciente.find({}).cursor({ batchSize: 100 });
+    const cursor = Paciente.find({}).cursor({ batchSize: 100 });
     const updateToDatabase = async (data) => {
         try {
             if (attrs && attrs.length) {
                 const obj = attrs.reduce((acc, attr) => ({ ...acc, [attr]: data[attr] }), {});
-                return await paciente.findByIdAndUpdate(data._id, obj);
+                return await PacienteCtr.update(data._id, obj, userScheduler as any);
             }
-            return await paciente.findByIdAndUpdate(data._id, data).exec();
+            return await PacienteCtr.update(data._id, data, userScheduler as any);
         } catch (err) {
             return (err);
         }
@@ -22,7 +24,7 @@ export const updateFuzzy = async (done, attrs) => {
 
 
 export const generateTokensPatient = async (done) => {
-    const cursor = paciente.find({ tokens: { $exists: false } }).cursor({ batchSize: 100 });
+    const cursor = Paciente.find({ tokens: { $exists: false } }).cursor({ batchSize: 100 });
     const updatePatient = async (data) => {
         try {
             let words = [];
@@ -49,7 +51,7 @@ export const generateTokensPatient = async (done) => {
             }
             data.tokens = words;
 
-            await paciente.findByIdAndUpdate(data._id, data);
+            await PacienteCtr.update(data._id, data, userScheduler as any);
         } catch (err) {
             return (err);
         }
