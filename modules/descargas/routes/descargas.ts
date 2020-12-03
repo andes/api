@@ -135,10 +135,16 @@ router.post('/constanciaPuco/:tipo?', Auth.authenticate(), async (req: any, res)
 });
 
 router.post('/arancelamiento/:tipo?', Auth.authenticate(), async (req: any, res) => {
-    let docPuco = new Arancelamiento(req);
+    const provincia = configPrivate.provincia || 'neuquen';
     const opciones = { header: { height: '3cm' } };
-    const fileName: any = await docPuco.informe(opciones);
-
+    let fileName: any;
+    if (provincia === 'neuquen') {
+        const docPuco = new Arancelamiento(req);
+        fileName = await docPuco.informe(opciones);
+    } else {
+        const docRecupero = new RecuperoCosto(req);
+        fileName = await docRecupero.informe(opciones);
+    }
     res.download(fileName);
 });
 
