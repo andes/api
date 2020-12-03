@@ -19,7 +19,7 @@ ExportHudsRouter.get('/export', async (req, res, next) => {
 
 ExportHudsRouter.post('/export', async (req: any, res, next) => {
     // Caso para exportar HUDS
-    if (req.body.pacienteId || req.body.arrayPrestaciones) {
+    if (req.body.pacienteId) {
         const obj = await exportHuds(req.body, req.user);
         res.json(obj);
     }
@@ -42,4 +42,3 @@ ExportHudsRouter.post('/export/:id', async (req, res, next) => {
     const file = await hudsFiles.findOne({ _id: idFile });
     hudsFiles.unlink(file._id, () => { });
 });
-

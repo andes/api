@@ -10,7 +10,6 @@ export const ExportHudsSchema = new mongoose.Schema({
     tipoPrestacion: String,
     idHudsFiles: mongoose.Schema.Types.ObjectId,
     user: Object,
-    prestaciones: [mongoose.Schema.Types.ObjectId], // Para el pedido desde el buscador de turnos y prestaciones
     createdAt: Date,
     updatedAt: Date,
     status: {

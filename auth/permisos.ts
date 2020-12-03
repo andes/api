@@ -432,6 +432,11 @@ export default [
                 key: 'biQueries',
                 title: 'Bi-Queries',
                 type: 'queries'
+            },
+            {
+                key: 'totalOrganizaciones',
+                title: 'Todas las organizaciones',
+                type: 'boolean'
             }
         ]
     },
