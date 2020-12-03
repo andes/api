@@ -164,3 +164,19 @@ export async function searchMatriculas(profesionalId) {
         formacionPosgrado
     };
 }
+
+export async function saveTituloFormacionGrado(data) {
+    const _profesional: any = await Profesional.findById(data.profesionalId);
+    let formacionGrado: any = _profesional.formacionGrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
+
+    formacionGrado.tituloFileId = data.fileId;
+    return await actualizar(_profesional);
+}
+
+export async function saveTituloFormacionPosgrado(data) {
+    const _profesional: any = await Profesional.findById(data.profesionalId);
+    let formacionPosgrado: any = _profesional.formacionPosgrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
+
+    formacionPosgrado.tituloFileId = data.fileId;
+    return await actualizar(_profesional);
+}

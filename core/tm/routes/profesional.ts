@@ -10,13 +10,15 @@ import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
-import { formacionCero, matriculaCero, migrarTurnos } from '../controller/profesional';
+import { formacionCero, matriculaCero, migrarTurnos, saveTituloFormacionGrado, saveTituloFormacionPosgrado } from '../controller/profesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
 import moment = require('moment');
 import { streamToBase64 } from '../controller/file-storage';
+import { AndesDrive } from '@andes/drive';
+import { Types } from 'mongoose';
 
 let router = express.Router();
 
@@ -1202,6 +1204,16 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
     let ress = await formacionCero();
     res.json(ress);
 
+});
+
+router.post('/profesionales/formacionGrado/titulo', async (req, res, next) => {
+    await saveTituloFormacionGrado(req.body);
+    res.json('OK');
+});
+
+router.post('/profesionales/formacionPosgrado/titulo', async (req, res, next) => {
+    await saveTituloFormacionPosgrado(req.body);
+    res.json('OK');
 });
 
 // router.post('/profesionales/vencimientoPosGrado', async (req, res, next) => {

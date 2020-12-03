@@ -44,6 +44,7 @@ export const ProfesionalSchema = new mongoose.Schema({
         profesion: { type: ObjSIISASchema, required: false },
         entidadFormadora: { type: ObjSIISASchema, required: false },
         titulo: { type: String, required: false },
+        tituloFileId: { type: String, required: false },
         fechaTitulo: { type: Date, required: false },
         fechaEgreso: { type: Date, required: false },
         renovacion: { type: Boolean, default: false },
@@ -59,6 +60,7 @@ export const ProfesionalSchema = new mongoose.Schema({
         especialidad: { type: EspecialidadSIISASchema, required: false },
         fechaIngreso: { type: Date, required: false },
         fechaEgreso: { type: Date, required: false },
+        tituloFileId: { type: String, required: false },
         observacion: String,
         certificacion: {
             fecha: { type: Date, required: false },
