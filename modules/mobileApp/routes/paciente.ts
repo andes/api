@@ -53,14 +53,16 @@ router.get('/relaciones', async (req: any, res, next) => {
         const paciente: any = await findById(req.query.id);
         let arrayRelaciones = [];
         let pacienteRel;
-        for (let rel of paciente.relaciones) {
-            if (rel.relacion) {
-                let objRelacion = rel.toObject();
-                pacienteRel = await findById(rel.referencia as any);
-                pacienteRel = pacienteRel.toObject({ virtuals: true });
-                objRelacion.id = pacienteRel.id;
-                objRelacion.edad = pacienteRel.edad;
-                arrayRelaciones.push(objRelacion);
+        if (paciente.relaciones) {
+            for (let rel of paciente.relaciones) {
+                if (rel.relacion) {
+                    let objRelacion = rel.toObject();
+                    pacienteRel = await findById(rel.referencia as any);
+                    pacienteRel = pacienteRel.toObject({ virtuals: true });
+                    objRelacion.id = pacienteRel.id;
+                    objRelacion.edad = pacienteRel.edad;
+                    arrayRelaciones.push(objRelacion);
+                }
             }
         }
         res.json(arrayRelaciones);
