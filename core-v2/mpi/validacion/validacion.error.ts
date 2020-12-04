@@ -1,4 +1,4 @@
 export class ValidacionFailed extends Error {
-    status = 400;
-    message = 'ciudadano inexistente';
+    status = 200;
+    message = 'ciudadano no encontrado';
 }
