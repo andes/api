@@ -7,7 +7,7 @@ import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 import { AuthUsers } from '../../../auth/schemas/authUsers';
 import * as CamasController from '../../../modules/rup/internacion/camas.controller';
-import { validarOrganizacionSisa, obtenerOfertaPrestacional, addSector, changeSector, deleteSector } from '../controller/organizacion';
+import { validarOrganizacionSisa, obtenerOfertaPrestacional, addSector, changeSector, deleteSector, getConfiguracion } from '../controller/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
@@ -188,9 +188,7 @@ router.get('/organizaciones', async (req, res, next) => {
  */
 router.get('/organizaciones/:id/configuracion', Auth.authenticate(), async (req, res, next) => {
     try {
-        const id = req.params.id;
-        const org: any = await Organizacion.findById(id, { configuraciones: 1 });
-        return res.json(org.configuraciones || {});
+        return res.json(await getConfiguracion(req.params.id));
     } catch (error) {
         return next(error);
     }

@@ -148,14 +148,19 @@ export async function search(filter, fields) {
 
 export async function searchMatriculas(profesionalId) {
     const _profesional: any = await Profesional.findById(profesionalId);
-    const filterFormaciones = (e => !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date()));
+    const filterFormaciones = (e) => {
+        return e.matriculacion && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
+    };
+
+    const formacionGrado = _profesional.formacionGrado ?
+             _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+    const formacionPosgrado = _profesional.formacionPosgrado ?
+            _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
 
     return {
         nombre: _profesional.nombre,
         apellido: _profesional.apellido,
-        formacionGrado: _profesional.formacionGrado ?
-            _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [],
-        formacionPosgrado: _profesional.formacionPosgrado ?
-            _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : []
+        formacionGrado,
+        formacionPosgrado
     };
 }

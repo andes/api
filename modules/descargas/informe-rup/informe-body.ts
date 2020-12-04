@@ -87,7 +87,7 @@ export class InformeRupBody extends HTMLComponent {
 
     async getFirmaHTML() {
         if (this.validada()) {
-            const firmaHTMLComponent = new InformeRupFirma(this.prestacion);
+            const firmaHTMLComponent = new InformeRupFirma(this.prestacion.solicitud.prestacion, this.prestacion.solicitud.profesional);
             await firmaHTMLComponent.process();
             return firmaHTMLComponent.render();
         } else {
