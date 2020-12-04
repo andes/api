@@ -7,7 +7,7 @@ import { isSelected } from '@andes/core';
 import * as config from '../../../config';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { PacienteCtr } from './paciente.routes';
-
+const ObjectId = Types.ObjectId;
 /**
  * Crea un objeto paciente
  */
@@ -29,6 +29,9 @@ export function set(paciente: IPacienteDoc, body: any) {
         delete body['documento'];
         delete body['fechaNacimiento'];
         delete body['estado'];
+    }
+    if (paciente.foto && !paciente.fotoId) {
+        (paciente as any).fotoId = new ObjectId();
     }
     paciente.set(body);
     return paciente;
@@ -72,16 +75,24 @@ export async function findById(id: string | String | Types.ObjectId, options = n
 
 export async function suggest(query: any) {
     if (query && query.documento) {
+        const documento = query.documento.toString();
         // @ts-ignore: fuzzySearch
-        let pacientes = await Paciente.fuzzySearch({ query: query.documento, minSize: 3 }, { activo: { $eq: true } }).limit(30);
+        let pacientes = await Paciente.fuzzySearch({ query: documento, minSize: 3 }, { activo: { $eq: true } }).limit(30);
+        let suggested = [];
         pacientes.forEach((paciente) => {
             const value = matching(paciente, query);
-            paciente._score = value;
+            if (value > config.mpi.cotaMatchMin) {
+                suggested.push({
+                    id: paciente.id,
+                    paciente,
+                    _score: value
+                });
+            }
         });
         const sortScore = (a, b) => {
             return b._score - a._score;
         };
-        return pacientes.sort(sortScore);
+        return suggested.sort(sortScore);
     } else {
         return [];
     }
@@ -140,12 +151,14 @@ export function isMatchingAlto(sugeridos: any[]) {
  */
 
 export async function multimatch(searchText: string, filter: any, options?: any) {
-    const words = searchText.trim().toLowerCase().split(' ');
+    const ExpRegFilter = /([-_()\[\]{}+?*.$\^|¨`´~,:#<>¡!\\])/g;
+    let words: any = searchText.replace(ExpRegFilter, '');
+    words = searchText.trim().toLowerCase().split(' ');
     let andQuery = [];
     words.forEach(w => {
         andQuery.push({ tokens: RegExp(`^${w}`) });
     });
-    // Ejemplo filter { activo: { $eq: true } }
+    filter.activo = { $eq: true };
     andQuery.push(filter);
     const query = {
         $and: andQuery

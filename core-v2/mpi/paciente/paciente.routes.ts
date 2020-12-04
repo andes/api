@@ -1,5 +1,5 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { Request, Response, asyncHandler } from '@andes/api-tool';
+import { Request, Response, asyncHandler, Router } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import { Paciente } from './paciente.schema';
 import { suggest, isMatchingAlto, multimatch, make, findById, set } from './paciente.controller';
@@ -88,7 +88,7 @@ class PacienteResource extends ResourceBase<IPacienteDoc> {
 }
 
 export const PacienteCtr = new PacienteResource({});
-export const PacienteRouter = PacienteCtr.makeRoutes();
+export const PacienteRouter = Router();
 
 /**
  * @api {get} /pacientes/:id Requiere datos de un paciente
@@ -121,8 +121,9 @@ export const find = async (req: Request, res: Response) => {
 export const get = async (req: Request, res: Response) => {
     const options = req.apiOptions();
     if (req.query.search) {
-        let conditions = req.query;
+        let conditions = { ...req.query };
         delete conditions.search;
+        Object.keys(options).map(opt => delete conditions[opt]);
         const pacientes = await multimatch(req.query.search, conditions, options);
         res.json(pacientes);
     } else {
@@ -142,14 +143,17 @@ export const get = async (req: Request, res: Response) => {
 
 
 export const getFoto = async (req: Request, res: Response, next) => {
+    /**
+     * TODO: Ver check de permisos para esta ruta porque no los esta tomando
+     */
     const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
-    const pacienteBuscado: any = await Paciente.findById(req.params.id);
+    const pacienteBuscado: any = await Paciente.findById(req.params.id, '+foto');
     if (pacienteBuscado) {
-        if (!pacienteBuscado.foto) {
+        if (!pacienteBuscado.fotoId || !pacienteBuscado.foto || pacienteBuscado.foto == null) {
             res.writeHead(200, {
                 'Content-Type': 'image/svg+xml'
             });
@@ -220,10 +224,9 @@ export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
 export const post = async (req: Request, res: Response) => {
     const body = req.body;
     const sugeridos = await suggest(body);
-    if (isMatchingAlto(sugeridos)) {
-        throw new PatientDuplicate();
+    if (sugeridos.length && !body.ignoreCheck) {
+        return res.json({ sugeridos });
     }
-
     body.activo = true; // Todo paciente esta activo por defecto
     const paciente = make(body);
     if (paciente.scan) {
@@ -233,7 +236,7 @@ export const post = async (req: Request, res: Response) => {
         paciente.identificadores = valor ? [{ entidad: 'RENAPER', valor }] : null;
     }
     const pacienteCreado = await PacienteCtr.create(paciente, req);
-    res.json(pacienteCreado);
+    return res.json(pacienteCreado);
 };
 
 /**
@@ -273,7 +276,7 @@ export const patch = async (req: Request, res: Response) => {
 PacienteRouter.use(Auth.authenticate());
 PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:search'), asyncHandler(get));
 PacienteRouter.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(find));
-PacienteRouter.get('/pacientes/:id/foto', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(getFoto));
+PacienteRouter.get('/pacientes/:id/foto/:fotoId', asyncHandler(getFoto));
 PacienteRouter.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(post));
 PacienteRouter.post('/pacientes/match', Auth.authorize('mpi:paciente:search'), asyncHandler(match));
 PacienteRouter.patch('/pacientes/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(patch));
