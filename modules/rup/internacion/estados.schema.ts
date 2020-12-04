@@ -12,6 +12,7 @@ export interface IEstados {
     estados: { key: IEstadoKey, label: String, color: String, icon: String }[];
     relaciones: { origen: IEstadoKey, destino: IEstadoKey }[];
     historialMedico: boolean;
+    configPases: { sala: Types.ObjectId, allowCama: boolean };
 }
 
 export interface IEstadosDocument extends Document, IEstados { }
