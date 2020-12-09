@@ -1,3 +1,10 @@
+## [5.24.1](https://github.com/andes/api/compare/v5.24.0...v5.24.1) (2020-12-09)
+
+
+### Bug Fixes
+
+* **RUP:** Corrige los parametros para obtener la firma del profesional en el informe ([2f90963](https://github.com/andes/api/commit/2f9096322931d07b5fd463c5288a457096216b94))
+
 # [5.24.0](https://github.com/andes/api/compare/v5.23.0...v5.24.0) (2020-12-02)
 
 
