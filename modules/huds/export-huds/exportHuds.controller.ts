@@ -9,15 +9,11 @@ import moment = require('moment');
 
 export async function createFile(idExportHuds) {
     return new Promise(async (resolve, reject) => {
-
         const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
         let fechaCondicion = null;
         let prestaciones: any[] = [];
-        if (peticionExport.prestaciones) {
-            const prestacionesId: any[] = peticionExport.prestaciones;
-            for (let index = 0; index < prestacionesId.length; index++) {
-                prestaciones.push(await Prestacion.findById(prestacionesId[index]));
-            }
+        if (peticionExport.prestaciones.length) {
+            prestaciones = await Prestacion.find({ _id: { $in: peticionExport.prestaciones } });
         } else {
             let query = {
                 'paciente.id': peticionExport.pacienteId,
@@ -83,13 +79,12 @@ export async function createFile(idExportHuds) {
                 try {
                     let informe = new InformeRUP(prestacion.id, null, peticionExport.user);
                     let archivo = await informe.informe();
-                    const nombreArchivo = peticionExport.prestaciones ? prestacion.paciente.documento : prestacion.solicitud.tipoPrestacion.term;
+                    const nombreArchivo = peticionExport.prestaciones.length ? prestacion.paciente.documento : prestacion.solicitud.tipoPrestacion.term;
                     const fechaArchivo = moment(prestacion.solicitud.fecha).format('YYYY-MM-DD');
                     archive.file(`${archivo}`, { name: `${fechaArchivo} - ${nombreArchivo}.pdf` });
                 } catch (error) {
                     exportHudsLog.error('Crear pdf', objectLog, error);
                 }
-
             }));
         };
         // Primero obtengo los pdf y luego cierro el archivo
