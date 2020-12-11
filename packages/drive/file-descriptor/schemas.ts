@@ -1,4 +1,5 @@
 import { Types, Model, model, Document, Schema } from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export interface IFileDescriptor {
     adapter?: string;
@@ -6,16 +7,19 @@ export interface IFileDescriptor {
     mimetype: string;
     originalname: string;
     extension: string;
+    origin?: string;
 }
 
-export interface FileDescriptorDocument extends Document, IFileDescriptor {}
+export interface FileDescriptorDocument extends Document, IFileDescriptor { }
 
 export let FileDescriptorSchema: Schema = new Schema({
     adapter: String,
     real_id: String,
     mimetype: String,
     extension: String,
-    originalname: String
+    originalname: String,
+    origin: String
 });
 
+FileDescriptorSchema.plugin(AuditPlugin);
 export let FileDescriptorModel: Model<FileDescriptorDocument> = model('AndesDriveMetadata', FileDescriptorSchema, 'AndesDriveMetadata');
