@@ -100,7 +100,7 @@ export function exportHuds(data, user) {
         createdAt: new Date(),
         updatedAt: new Date(),
         tipoPrestacion: data.tipoPrestacion,
-        prestaciones: data.arrayPrestaciones,
+        prestaciones: data.prestaciones,
         user
     });
     new RoboModel({
