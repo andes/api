@@ -4,8 +4,7 @@ import { validar as validarPaciente } from './validacion.controller';
 import { ValidacionFailed } from './validacion.error';
 import { asyncHandler } from '@andes/api-tool';
 import { status, checkStatus } from '@andes/fuentes-autenticas';
-import { RenaperConfig } from './validacion.interfaces';
-import { renaper as renaConfig } from '../../../config.private';
+import { busInteroperabilidad } from '../../../config.private';
 import { sisa as sisaConfig } from '../../../config.private';
 
 /**
@@ -29,13 +28,7 @@ export const postValidar = async (req: Request, res: Response) => {
 };
 
 export const renaperStatus = async (req: Request, res: Response) => {
-    const renaperConfig: RenaperConfig = {
-        usuario: renaConfig.Usuario,
-        password: renaConfig.password,
-        url: renaConfig.url,
-        server: renaConfig.serv
-    };
-    const response = await status(renaperConfig);
+    const response = await status(busInteroperabilidad);
     return (response) ? res.json(200) : res.json(500);
 };
 
