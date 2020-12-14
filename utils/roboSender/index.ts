@@ -93,13 +93,14 @@ export function sendNotification(data: INotification, devices, options: any = {}
 
 export function exportHuds(data, user) {
     const obj = new ExportHudsModel({
-        fechaDesde: data.hudsCompleta ? null : data.fechaDesde,
-        fechaHasta: data.hudsCompleta ? null : data.fechaHasta,
+        fechaDesde: data.fechaDesde,
+        fechaHasta: data.fechaHasta,
         pacienteId: data.pacienteId,
         pacienteNombre: data.pacienteNombre,
         createdAt: new Date(),
         updatedAt: new Date(),
-        tipoPrestacion: data.tipoPrestacion ? data.tipoPrestacion : null,
+        tipoPrestacion: data.tipoPrestacion,
+        prestaciones: data.prestaciones,
         user
     });
     new RoboModel({
