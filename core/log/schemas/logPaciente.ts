@@ -25,6 +25,10 @@ export let logPacienteSchema = new mongoose.Schema({
             'error:reportar'
         ]
     },
+    observaciones: {
+        type: String,
+        required: false
+    },
     dataTurno: {
         turno: turnoSchema,
         profesionales: [NombreApellidoSchema],

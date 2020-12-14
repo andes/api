@@ -3,7 +3,7 @@ import { logPaciente } from '../core/log/schemas/logPaciente';
 export class LoggerPaciente {
 
     public static logTurno(req, op, paciente, turno, bloque, agenda, callback?): any {
-        const newLogPaciente = new logPaciente({
+        let model: any = {
             operacion: op,
             paciente: (paciente && paciente.id) ? paciente.id : null, // Un turno puede tener o no tener paciente
             createdAt: new Date(),
@@ -14,8 +14,12 @@ export class LoggerPaciente {
                 profesionales: agenda.profesionales
             },
             createdBy: req.user.usuario || req.user
+        };
 
-        });
+        if (req.body.observaciones) {
+            model.observaciones = req.body.observaciones;
+        }
+        const newLogPaciente = new logPaciente(model);
         newLogPaciente.save(callback);
         return newLogPaciente;
 
