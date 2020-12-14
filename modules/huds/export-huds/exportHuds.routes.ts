@@ -42,4 +42,3 @@ ExportHudsRouter.post('/export/:id', async (req, res, next) => {
     const file = await hudsFiles.findOne({ _id: idFile });
     hudsFiles.unlink(file._id, () => { });
 });
-
