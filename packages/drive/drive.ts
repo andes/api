@@ -94,4 +94,20 @@ export class AndesDrive {
         return await this.adapter.read(file.real_id);
     }
 
+    public static async writeFile(archivo, req) {
+        let realid = await this.adapter.write(archivo.stream);
+        const extension = archivo.file.filename.split('.').pop();
+        const data: any = {
+            _id: archivo.file._id,
+            real_id: realid,
+            adapter: archivo.file.adapter,
+            originalname: archivo.file.filename,
+            extension,
+            mimetype: archivo.file.contentType,
+            origin: 'com'
+        };
+        const fd = await FileDescriptor.create(data, req);
+        return fd;
+    }
+
 }
