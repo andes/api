@@ -4,8 +4,7 @@ import { validar as validarPaciente } from './validacion.controller';
 import { ValidacionFailed } from './validacion.error';
 import { asyncHandler } from '@andes/api-tool';
 import { status, checkStatus } from '@andes/fuentes-autenticas';
-import { busInteroperabilidad } from '../../../config.private';
-import { sisa as sisaConfig } from '../../../config.private';
+import { sisa as sisaConfig, busInteroperabilidad } from '../../../config.private';
 
 /**
  * @api {post} /validacion/ Requiere datos de un paciente
@@ -28,7 +27,7 @@ export const postValidar = async (req: Request, res: Response) => {
 };
 
 export const renaperStatus = async (req: Request, res: Response) => {
-    const response = await status(busInteroperabilidad);
+    const response = await status(busInteroperabilidad as any);
     return (response) ? res.json(200) : res.json(500);
 };
 
