@@ -501,6 +501,11 @@ export default [
                 title: 'Modulos',
                 type: 'boolean'
             },
+            {
+                key: 'rupers',
+                title: 'Rupers',
+                type: 'boolean'
+            }
         ]
     },
     {
