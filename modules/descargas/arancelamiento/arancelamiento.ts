@@ -26,6 +26,7 @@ export class Arancelamiento extends InformePDF {
             turno: dataTurno.turno,
             organizacionNombre: Auth.getOrganization(this.req, 'nombre'),
             config: await getConfiguracion(organizacionId),
+            profesional: dataTurno.agenda.profesionales[0],
             firmaHTML: await this.getFirmaHTML(dataTurno.agenda.profesionales[0], dataTurno.agenda.organizacion),
             resultadoFA: (await getConfigFacturacionAutomatica({ idPrestacionTurneable: dataTurno.turno.tipoPrestacion.conceptId }))[0]
         };
