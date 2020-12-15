@@ -226,6 +226,12 @@ export const post = async (req: Request, res: Response) => {
 
     body.activo = true; // Todo paciente esta activo por defecto
     const paciente = make(body);
+    if (paciente.scan) {
+        // obtengo el numero de tramite del documento que contiene el scan del paciente
+        const numTramite = Number(paciente.scan.split('@')[0]);
+        const valor = numTramite ? numTramite.toString() : '';
+        paciente.identificadores = valor ? [{ entidad: 'RENAPER', valor }] : null;
+    }
     const pacienteCreado = await PacienteCtr.create(paciente, req);
     res.json(pacienteCreado);
 };

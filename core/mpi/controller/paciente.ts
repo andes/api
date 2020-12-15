@@ -654,6 +654,7 @@ async function validarSisa(pacienteAndes: any, req: any) {
                 pacienteAndes.apellido = resSisa.apellido;
                 pacienteAndes.fechaNacimiento = resSisa.fechaNacimiento;
                 pacienteAndes.estado = 'validado';
+                pacienteAndes.identificadores = resSisa.identificadores;
                 return { paciente: pacienteAndes, validado: true };
             } else {
                 return { paciente: resSisa, validado: true };

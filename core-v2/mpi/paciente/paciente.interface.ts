@@ -62,6 +62,7 @@ export interface IPaciente {
     relaciones?: IRelacion[];
     contacto?: IContacto[];
     direccion?: IDireccion[];
+    scan?: String;
 }
 
 export interface IPacienteDoc extends Document, IPaciente {
@@ -73,6 +74,7 @@ export interface IPacienteDoc extends Document, IPaciente {
     fotoId?: Schema.Types.ObjectId;
     createdBy: any;
     updatedBy?: any;
+    scan?: String;
     /**
      * Devuelve los campos originales antes de haber sufrido alguna modificacion.
      */

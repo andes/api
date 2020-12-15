@@ -174,6 +174,12 @@ router.post('/pacientes', async (req, res, next) => {
         pacienteNuevo.activo = true;
         andesLog(req, logKeys.mpiInsert.key, null, 'postPacientes', req.body, ignorarSugerencias);
         if (pacienteNuevo.documento) {
+            if (pacienteNuevo.scan) {
+                // obtengo el numero de tramite del documento que contiene el scan del paciente
+                const numTramite = Number(pacienteNuevo.scan.split('@')[0]);
+                const valor = numTramite ? numTramite.toString() : '';
+                pacienteNuevo.identificadores = valor ? [{ entidad: 'RENAPER', valor }] : null;
+            }
             const resultado = await controller.checkRepetido(pacienteNuevo, incluirTemporales);
             if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && ignorarSugerencias && !resultado.macheoAlto && !resultado.dniRepetido)) {
                 const pacienteObj = await controller.createPaciente(pacienteNuevo, req);
