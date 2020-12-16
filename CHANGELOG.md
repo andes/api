@@ -1,3 +1,19 @@
+# [5.25.0](https://github.com/andes/api/compare/v5.24.1...v5.25.0) (2020-12-16)
+
+
+### Bug Fixes
+
+* **CIT:** hotfix descarga arancelamiento ([#1223](https://github.com/andes/api/issues/1223)) ([3683a57](https://github.com/andes/api/commit/3683a5776e5cdec23637e0e92a07514f179926a3))
+
+
+### Features
+
+* **bi-query:** organizacion required ([#1217](https://github.com/andes/api/issues/1217)) ([5e7ca6d](https://github.com/andes/api/commit/5e7ca6dae56e710533a84675f2ce6e502792cb58))
+* **buscador:** exportar huds ([#1206](https://github.com/andes/api/issues/1206)) ([84e7ae5](https://github.com/andes/api/commit/84e7ae53143158f85ed6fe565c6e67c17fbf679e))
+* **CIT:** registra motivo liberacion turno ([#1222](https://github.com/andes/api/issues/1222)) ([fb6f812](https://github.com/andes/api/commit/fb6f8128e2a6292c9157449d7a713818b3e15a65))
+* **com:** nuevo valor de prioridad especial a schema de derivaciones ([#1218](https://github.com/andes/api/issues/1218)) ([a34c2d0](https://github.com/andes/api/commit/a34c2d04a0e036c3bf34750573bec059916252ee))
+* **monitoreo:** agrega permiso rupers ([#1225](https://github.com/andes/api/issues/1225)) ([3fb95bb](https://github.com/andes/api/commit/3fb95bb5f7be25491eedc303c870e0b72848c1dc))
+
 ## [5.24.1](https://github.com/andes/api/compare/v5.24.0...v5.24.1) (2020-12-09)
 
 
