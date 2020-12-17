@@ -1,16 +1,14 @@
 import { Derivaciones } from '../modules/centroOperativoMedico/schemas/derivaciones.schema';
 import { readFile } from '../modules/centroOperativoMedico/controllers/comStore';
 import * as configPrivate from '../config.private';
-import { AndesDrive } from '@andes/drive';
+import { AndesDrive, FileMetadata } from '@andes/drive';
 import { userScheduler } from '../config.private';
-let dataLog: any = new Object(userScheduler);
-dataLog.body = { _id: null };
-dataLog.method = null;
 
 // Recorre todas las derivaciones y sus adjuntos migrando aquellos que no se encuentran en el  drive
 async function MigrarAdjuntosDerivacion() {
 
-    let derivaciones: any[] = await Derivaciones.find({}).sort({ createdAt: 1 });
+    const derivaciones: any[] = await Derivaciones.find({});
+
     for (const derivacion of derivaciones) {
         await migrarHistorialDerivacion(derivacion);
         for (const adjunto of derivacion.adjuntos) {
@@ -18,7 +16,12 @@ async function MigrarAdjuntosDerivacion() {
             if (!fileDrive) {
                 try {
                     const archivo = await readFile(adjunto.id);
-                    await AndesDrive.writeFile(archivo, dataLog);
+                    const stream = archivo.stream;
+                    const metadata: FileMetadata = {
+                        ...archivo.file,
+                        origin: 'com'
+                    };
+                    await AndesDrive.writeFile(stream, metadata, userScheduler as any);
                 } catch (e) {
                     return;
                 }
@@ -35,7 +38,12 @@ async function migrarHistorialDerivacion(derivacion) {
                 if (!fileDrive) {
                     try {
                         const archivo = await readFile(adjunto.id);
-                        await AndesDrive.writeFile(archivo, dataLog);
+                        const stream = archivo.stream;
+                        const metadata: FileMetadata = {
+                            ...archivo.file,
+                            origin: 'com'
+                        };
+                        await AndesDrive.writeFile(stream, metadata, userScheduler as any);
                     } catch (e) {
                         return;
                     }
