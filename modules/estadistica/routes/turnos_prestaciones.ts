@@ -22,11 +22,12 @@ router.get('/turnos_prestaciones', async (req, res, next) => {
         profesional: req.query.idProfesional,
         financiador: req.query.financiador,
         estadoFacturacion: req.query.estadoFacturacion,
-        documento: req.query.documento
+        documento: req.query.documento,
+        ambito: req.query.ambito
     };
     try {
         // Procesa los turnos aplicando los filtros
-        let _turnos = agendaController.procesar(parametros);
+        let _turnos = parametros.ambito ? [] : agendaController.procesar(parametros);
         // Procesa las prestaciones fuera de agenda
         let _prestaciones = fueraDeAgendaController.procesar(parametros);
         let [turnos, prestaciones] = await Promise.all([_turnos, _prestaciones]);
