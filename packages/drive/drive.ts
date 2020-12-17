@@ -3,6 +3,9 @@ import { FileAdapter, MongoAdapter, SeaweedAdapter } from './adapters';
 import MulterMiddleware from './middleware/multer';
 import { IFileDescriptor } from './file-descriptor/schemas';
 import { FileDescriptor } from './file-descriptor/controller';
+import { Request } from '@andes/api-tool';
+import { Types } from 'mongoose';
+import { Stream } from 'stream';
 
 export class AndesDrive {
     private static adapter = null;
@@ -94,4 +97,28 @@ export class AndesDrive {
         return await this.adapter.read(file.real_id);
     }
 
+
+    public static async writeFile(fileStream: Stream, metadata: FileMetadata, req: Request) {
+        const realid = await this.adapter.write(fileStream);
+        const extension = metadata.filename.split('.').pop();
+        const data: any = {
+            _id: metadata._id,
+            real_id: realid,
+            adapter: this.adapter.name,
+            originalname: metadata.filename,
+            extension,
+            mimetype: metadata.contentType,
+            origin: metadata.origin
+        };
+        const fd = await FileDescriptor.create(data, req);
+        return fd;
+    }
+
+}
+
+export interface FileMetadata {
+    _id?: Types.ObjectId;
+    filename: string;
+    contentType: string;
+    origin: string;
 }

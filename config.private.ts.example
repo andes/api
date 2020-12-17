@@ -274,7 +274,10 @@ export const registroProvincialData = {
 
 export const Drive = {
     adapter: 'file',
-    options: {}
+    options: {
+        host: '',
+        port: ''
+    }
 };
 
 // Lista separada por comas de emails (string)

@@ -57,14 +57,5 @@ DerivacionesRouter.get('/store/:id', async (req, res, next) => {
         const stream1 = await AndesDrive.read(fileDrive);
         res.contentType(fileDrive.mimetype);
         stream1.pipe(res);
-    } else {
-        const data = await readFile(req.params.id);
-        res.contentType(data.file.contentType);
-        data.stream.on('data', (data2) => {
-            res.write(data2);
-        });
-        data.stream.on('end', () => {
-            res.end();
-        });
     }
 });
