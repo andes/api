@@ -23,7 +23,8 @@ async function MigrarAdjuntosDerivacion() {
                     };
                     await AndesDrive.writeFile(stream, metadata, userScheduler as any);
                 } catch (e) {
-                    return;
+                    // tslint:disable-next-line:no-console
+                    console.error(e);
                 }
             }
         }
@@ -45,7 +46,8 @@ async function migrarHistorialDerivacion(derivacion) {
                         };
                         await AndesDrive.writeFile(stream, metadata, userScheduler as any);
                     } catch (e) {
-                        return;
+                        // tslint:disable-next-line:no-console
+                        console.error(e);
                     }
                 }
             }
