@@ -2,7 +2,7 @@ import { Disclaimer } from './../../core/tm/schemas/disclaimer';
 import * as mongoose from 'mongoose';
 import { AuthUsers } from '../../auth/schemas/authUsers';
 import { Auth } from '../../auth/auth.class';
-import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
+import { CustomError, MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { getUserInfo } from '../../auth/ldap.controller';
 import { Request, Response } from '@andes/api-tool';
@@ -44,7 +44,7 @@ class UsuariosResource extends ResourceBase {
             const user = await getUserInfo(documento);
             return res.json(user);
         } catch (err) {
-            throw new ResourceNotFound();
+            throw new CustomError('No se pudo obtener información del usuario en One Login. Contáctese con un referente informático.', 404);
         }
     }
 
