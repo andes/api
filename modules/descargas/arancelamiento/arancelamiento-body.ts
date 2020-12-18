@@ -115,23 +115,30 @@ export class ArancelamientoBody extends HTMLComponent {
 </section>
 
 
-<section class="contenedor firma">
+<section class="contenedor firma" style='margin-top:30px'>
     <span class="contenedor-principal-data" >
         <h6 class='volanta paciente' >Firma del paciente</h6>
     </span>
     <span class="contenedor-principal-data">
         <div>
             {{#if firmaHTML}}
-                    {{{ firmaHTML }}}
+                {{{ firmaHTML }}}
             {{/if}}
 
             {{#if firma}}
-                <img style='width:100px' src="{{ firma.foto }}">
+                {{#if firma.foto}}
+                    <img style='width:100px' src="{{ firma.foto }}">
+                {{/if}}
+
                 <h4>{{ firma.nombre }}</h4>
                 <h6 class="volanta">
                     {{ firma.aclaracion1 }}<br>
-                    {{ firma.aclaracion2 }}<br>
-                    {{ firma.aclaracion3 }}
+                    {{ firma.aclaracion2 }}
+
+                    {{#if firma.aclaracion3}}
+                        <br>
+                        {{ firma.aclaracion3 }}
+                    {{/if}}
                 </h6>
             {{/if}}
         <div>
@@ -182,7 +189,12 @@ export class ArancelamientoBody extends HTMLComponent {
                 aclaracion2: _data.config['arancelamiento.aclaracion2'],
                 aclaracion3: _data.config['arancelamiento.aclaracion3']
             };
+        } else {
+            this.data.firma = {
+                nombre: `${_data.profesional.apellido} ${_data.profesional.nombre}`,
+                aclaracion1: _data.organizacionNombre.substring(0, _data.organizacionNombre.indexOf('-')),
+                aclaracion2: ''
+            };
         }
     }
 }
-
