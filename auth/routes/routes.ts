@@ -5,7 +5,7 @@ import { Organizacion } from './../../core/tm/schemas/organizacion';
 import * as mongoose from 'mongoose';
 
 import { checkPassword } from '../ldap.controller';
-import { findUser, updateUser, checkMobile, generateTokenPayload } from '../auth.controller';
+import { findUser, updateUser, checkMobile, generateTokenPayload, setValidationTokenAndNotify, reset } from '../auth.controller';
 import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
 
 const sha1Hash = require('sha1');
@@ -179,6 +179,35 @@ router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
 
 router.post('/file-token', Auth.authenticate(), (req, res, next) => {
     return res.json({ token: Auth.generateFileToken() });
+});
+
+
+router.post('/getValidationTokenAndNotify', async (req, res, next) => {
+    try {
+        const username = req.body.username;
+        if (username) {
+            const result = await setValidationTokenAndNotify(username);
+            result ? res.json({status: 'ok'}) : res.json({status: 404});
+        } else {
+            return next(403);
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/resetPassword', async (req, res, next) => {
+    try {
+        const {token, password} = req.body;
+        if (token && password) {
+            const result = await reset(token, password);
+            result ? res.json({status: 'ok'}) : res.json({status: 404});
+        } else {
+            return next(403);
+        }
+    } catch (error) {
+        return next(error);
+    }
 });
 
 export = router;

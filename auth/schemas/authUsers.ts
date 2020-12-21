@@ -23,6 +23,9 @@ export interface IAuthUsers {
         }[];
     }[];
     lastLogin: Date;
+    tipo?: String;
+    validationToken?: String;
+    email?: String;
     configuracion?: { [key: string]: any };
     disclaimers?: {
         _id: ObjectId;
@@ -62,6 +65,18 @@ export const AuthUsersSchema = new mongoose.Schema({
         }]
     }],
     lastLogin: Date,
+    tipo: {
+        type: String,
+        required: false
+    },
+    email: {
+        type: String,
+        required: false
+    },
+    validationToken: {
+        type: String,
+        required: false
+    },
     configuracion: {
         type: mongoose.SchemaTypes.Mixed,
         default: {}
