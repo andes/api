@@ -67,8 +67,10 @@ export function initAPI(app: Express) {
 
     const modulos = [
         './modules/rup',
-        './modules/huds/export-huds',
+        './modules/huds/export-huds'
     ];
+
+    // ,
 
     modulos.forEach((moduloPath) => {
         const m = require(moduloPath);
@@ -91,6 +93,12 @@ export function initAPI(app: Express) {
     app.use('/api/modules', require('./modules/seguimiento-paciente').SeguimientoPacienteRouter);
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').DerivacionesRouter);
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').ReglasDerivacionRouter);
+    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacVacunaRouter);
+    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacCondicionRouter);
+    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacCategoriaRouter);
+    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacLaboratorioRouter);
+    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacEsquemaRouter);
+    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacDosisRouter);
     app.use('/api/core-v2/mpi', MPI.RoutingMPI);
 
     if (configPrivate.hosts.BI_QUERY) {
