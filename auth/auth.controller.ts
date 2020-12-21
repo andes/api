@@ -2,9 +2,10 @@ import { AndesCache, CustomError, ObjectId } from '@andes/core';
 import { RedisWebSockets, enviarMail } from '../config.private';
 import { Auth } from './auth.class';
 import { AuthUsers } from './schemas/authUsers';
+import { userScheduler } from './../config.private';
 import { Profesional } from './../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
-import { MAIN_DOMAIN } from './../config.private';
+import { APP_DOMAIN } from './../config.private';
 import { sendMail, renderHTML, MailOptions, registerPartialTemplate } from './../utils/roboSender/sendEmail';
 const sha1Hash = require('sha1');
 
@@ -155,12 +156,12 @@ export async function setValidationTokenAndNotify(username) {
         let usuario = await AuthUsers.findOne({ usuario: username});
         if (usuario && usuario.tipo === 'temporal' && usuario.email) {
             usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
-            usuario.audit('set validation token');
+            usuario.audit(userScheduler);
             await usuario.save();
             const extras: any = {
                 titulo: 'Recuperación de contraseña',
                 usuario,
-                url: `${MAIN_DOMAIN.url}/auth/resetPassword/${usuario.validationToken}`,
+                url: `${APP_DOMAIN}/auth/resetPassword/${usuario.validationToken}`,
             };
             registerPartialTemplate('recover-password'); // Registro el template de recover
             const htmlToSend = await renderHTML('emails/layout.html', extras); // render del html genérico
@@ -179,7 +180,7 @@ export async function setValidationTokenAndNotify(username) {
             return null;
         }
     } catch (error) {
-        throw new CustomError(error, 500);
+        throw error;
     }
 }
 
@@ -193,8 +194,7 @@ export async function reset(token, password) {
         if (usuario) {
             usuario.validationToken = null;
             usuario.password = sha1Hash(password);
-            // debería envir un token desde la app para auditar el usuario??
-            usuario.audit('update password');
+            usuario.audit(userScheduler);
             await usuario.save();
             return usuario;
         } else {

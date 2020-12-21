@@ -182,12 +182,12 @@ router.post('/file-token', Auth.authenticate(), (req, res, next) => {
 });
 
 
-router.post('/getValidationTokenAndNotify', async (req, res, next) => {
+router.post('/setValidationTokenAndNotify', async (req, res, next) => {
     try {
         const username = req.body.username;
         if (username) {
             const result = await setValidationTokenAndNotify(username);
-            result ? res.json({status: 'ok'}) : res.json({status: 404});
+            result ? res.json({status: 'ok'}) : res.json({status: 'redirectOneLogin'});
         } else {
             return next(403);
         }
@@ -201,7 +201,7 @@ router.post('/resetPassword', async (req, res, next) => {
         const {token, password} = req.body;
         if (token && password) {
             const result = await reset(token, password);
-            result ? res.json({status: 'ok'}) : res.json({status: 404});
+            result ? res.json({status: 'ok'}) : next(404);
         } else {
             return next(403);
         }

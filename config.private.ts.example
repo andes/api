@@ -312,8 +312,6 @@ export const IPS = {
     auth: getEnv('IPS_AUTH', false),
     enabled: getEnv('IPS_ENABLED', false)
 };
-export const MAIN_DOMAIN = {
-    url: getEnv('DOMAIN', 'http://localhost:4200')
-};
+export const APP_DOMAIN = 'http://localhost:4200';
 
 export const provincia = getEnv('PROVINCIA', 'neuquen');

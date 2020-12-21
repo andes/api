@@ -106,5 +106,6 @@ AuthUsersSchema.index({
     usuario: 1,
     'organizaciones._id': 1,
 });
+AuthUsersSchema.index({ validationToken: 1 });
 
 export const AuthUsers = mongoose.model<IAuthUsersDoc>('authUsers', AuthUsersSchema, 'authUsers');
