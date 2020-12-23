@@ -177,7 +177,7 @@ export async function procesar(parametros: any) {
                 turno: '$turno',
                 idPrestacion: '$prestacion0._id',
                 estadoFacturacion: '$turno.estadoFacturacion',
-                ambito: '$prestacion0.solicitud.ambitoOrigen'
+                ambito: { $ifNull: ['$prestacion0.solicitud.ambitoOrigen', 'ambulatorio'] }
             }
         },
         {

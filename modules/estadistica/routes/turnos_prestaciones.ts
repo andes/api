@@ -27,7 +27,7 @@ router.get('/turnos_prestaciones', async (req, res, next) => {
     };
     try {
         // Procesa los turnos aplicando los filtros
-        let _turnos = parametros.ambito ? [] : agendaController.procesar(parametros);
+        let _turnos = parametros?.ambito === 'internacion' ? [] : agendaController.procesar(parametros);
         // Procesa las prestaciones fuera de agenda
         let _prestaciones = fueraDeAgendaController.procesar(parametros);
         let [turnos, prestaciones] = await Promise.all([_turnos, _prestaciones]);
