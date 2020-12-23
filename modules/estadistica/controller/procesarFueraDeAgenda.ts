@@ -38,6 +38,9 @@ export async function procesar(parametros: any) {
     if (parametros.profesional) {
         match2['prestacion.solicitud.profesional.id'] = new mongoose.Types.ObjectId(parametros.profesional);
     }
+    if (parametros.ambito) {
+        match2['prestacion.solicitud.ambitoOrigen'] = parametros.ambito;
+    }
 
     // if (parametros.estadoFacturacion) {
     //     match2['estadoFacturacion.estado'] = parametros.estadoFacturacion;
