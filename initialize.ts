@@ -67,8 +67,10 @@ export function initAPI(app: Express) {
 
     const modulos = [
         './modules/rup',
-        './modules/huds/export-huds',
+        './modules/huds/export-huds'
     ];
+
+    // ,
 
     modulos.forEach((moduloPath) => {
         const m = require(moduloPath);
@@ -77,9 +79,15 @@ export function initAPI(app: Express) {
 
     const TMRouter = require('./core/tm').Routes;
     const MPI = require('./core-v2/mpi');
+    const NomivacRouter = require('./modules/vacunas').Routes;
+
     // const MPI = require('@andes/mpi');
     TMRouter.forEach(router => {
         app.use('/api/core/tm', router);
+    });
+
+    NomivacRouter.forEach(router => {
+        app.use('/api/modules/vacunas', router);
     });
 
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').UsuariosRouter);
