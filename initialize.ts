@@ -79,9 +79,15 @@ export function initAPI(app: Express) {
 
     const TMRouter = require('./core/tm').Routes;
     const MPI = require('./core-v2/mpi');
+    const NomivacRouter = require('./modules/vacunas').Routes;
+
     // const MPI = require('@andes/mpi');
     TMRouter.forEach(router => {
         app.use('/api/core/tm', router);
+    });
+
+    NomivacRouter.forEach(router => {
+        app.use('/api/modules/vacunas', router);
     });
 
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').UsuariosRouter);
@@ -93,12 +99,6 @@ export function initAPI(app: Express) {
     app.use('/api/modules', require('./modules/seguimiento-paciente').SeguimientoPacienteRouter);
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').DerivacionesRouter);
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').ReglasDerivacionRouter);
-    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacVacunaRouter);
-    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacCondicionRouter);
-    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacCategoriaRouter);
-    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacLaboratorioRouter);
-    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacEsquemaRouter);
-    app.use('/api/modules/vacunas', require('./modules/vacunas').nomivacDosisRouter);
     app.use('/api/core-v2/mpi', MPI.RoutingMPI);
 
     if (configPrivate.hosts.BI_QUERY) {
