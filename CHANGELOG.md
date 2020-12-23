@@ -1,3 +1,17 @@
+# [5.26.0](https://github.com/andes/api/compare/v5.25.0...v5.26.0) (2020-12-23)
+
+
+### Bug Fixes
+
+* **arancelamiento:** reestablece ruta ([#1229](https://github.com/andes/api/issues/1229)) ([e943206](https://github.com/andes/api/commit/e943206b7193d3bfa524f1e75ed2379855468656))
+* **citas:** fix firma arancelamiento ([#1227](https://github.com/andes/api/issues/1227)) ([9fe6e08](https://github.com/andes/api/commit/9fe6e0822def504924fed235cef564400ae98c7d))
+
+
+### Features
+
+* **com:** migrar archivos viejos al drive ([#1224](https://github.com/andes/api/issues/1224)) ([8425ed2](https://github.com/andes/api/commit/8425ed25aa684ecced89860bdbb7efd27d4f3496))
+* **gdu:** mejorar feedback al usuario al cargar un usuario ([#1230](https://github.com/andes/api/issues/1230)) ([efa7da4](https://github.com/andes/api/commit/efa7da49badd735a7fd8ca99e580ca0ffa258f9f))
+
 # [5.25.0](https://github.com/andes/api/compare/v5.24.1...v5.25.0) (2020-12-16)
 
 
