@@ -125,10 +125,8 @@ export async function exportCovid19(done) {
             }
         }
     ];
-    console.log(JSON.stringify(pipelineVacunaCovid19));
     let prestacionesVacunaContraCovid = await Prestacion.aggregate(pipelineVacunaCovid19);
     let prestaciones = [...prestacionesVacunaContraCovid];
-    console.log('Cantidad de prestaciones encontradas: ', prestaciones.length);
     for (let unaPrestacion of prestaciones) {
         let data = {
             ciudadano:
@@ -139,31 +137,29 @@ export async function exportCovid19(done) {
                     nombre: unaPrestacion.nombre,
                     apellido: unaPrestacion.apellido,
                     fechaNacimiento: unaPrestacion.fechaNacimiento,
-                    calle: unaPrestacion.direccion,
+                    calle: unaPrestacion.direccion ? unaPrestacion.direccion : '',
                     pais:200,
                     provincia:15,
-                    departamento:365  // Confluencia
+                    departamento:365  // Confluencia, luego updetear por el que corresponda
                 },
             aplicacionVacuna:
                 {
                     establecimiento: unaPrestacion.CodigoSisa,
-                    fechaAplicacion: unaPrestacion.vacunas[0].fechaAplicacion,
+                    fechaAplicacion: unaPrestacion.vacunas[0].fechaAplicacion ? moment(unaPrestacion.vacunas[0].fechaAplicacion).format('DD-MM-YYYY'): null,
                     lote: unaPrestacion.vacunas[0].lote,
-                    esquema: unaPrestacion.vacunas[0].esquema,
-                    condicionAplicacion: unaPrestacion.vacunas[0].condicion,
-                    vacuna: unaPrestacion.vacunas[0].vacuna,
-                    ordenDosis: unaPrestacion.vacunas[0].dosis,
+                    esquema: unaPrestacion.vacunas[0].esquema.codigo,
+                    condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
+                    vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
+                    ordenDosis: unaPrestacion.vacunas[0].dosis.vacuna.codigo,
                     referenciaSistemaProvincial :"32342"   // faltaría ver bien que es esto
                 }
             }
         let dto = {
-            usuario: user,
-            clave,
+            username: user,
+            password: clave,
             ciudadano: data.ciudadano,
-            aplicaciones: data.aplicacionVacuna
+            aplicacionVacuna: data.aplicacionVacuna
         };
-
-        console.log('Cada dto', dto);
 
         let log = {
             fecha: new Date(),
@@ -174,9 +170,9 @@ export async function exportCovid19(done) {
             resultado: {}
         };
         try {
-            const response = await nodeFetch(urlSisa, { method: 'POST', body: JSON.stringify(dto), headers: { 'Content-Type': 'application/json' } });
+            const response = await nodeFetch(urlSisa, { method: 'POST', body: dto, headers: { 'Content-Type': 'application/json' } });
             const resJson: any = await response.json();
-            console.log('resultado del post: ', resJson);
+            
             if (resJson) {
                 log.resultado = {
                     resultado: resJson.resultado ? resJson.resultado : '',
