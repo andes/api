@@ -43,27 +43,19 @@ export async function exportCovid19(done, horas) {
                 vacuna: '$ejecucion.registros.valor.vacuna'
             }
         },
-        {
-            $group: {
-                _id: '$paciente',
-                primeraPrestacion: {
-                    $first: '$$ROOT'
-                }
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                idPaciente: '$_id.idPaciente',
-                dni: '$_id.dni',
-                sexo: '$_id.sexo',
-                nombre: '$_id.nombre',
-                apellido: '$_id.apellido',
-                fechaNacimiento: '$_id.fechaNacimiento',
-                fecha: '$primeraPrestacion.fecha',
-                idEfector: '$primeraPrestacion.idEfector',
-                vacuna: '$primeraPrestacion.vacuna'
-            }
+
+        { $project: {
+            _id: 0,
+            idPaciente: '$paciente.idPaciente',
+            dni: '$paciente.dni',
+            sexo: '$paciente.sexo',
+            nombre: '$paciente.nombre',
+            apellido: '$paciente.apellido',
+            fechaNacimiento: '$paciente.fechaNacimiento',
+            fecha: '$fecha',
+            idEfector: '$idEfector',
+            vacuna: '$vacuna'
+        }
         },
         {
             $lookup: {
@@ -143,6 +135,7 @@ export async function exportCovid19(done, horas) {
     let prestacionesVacunaContraCovid = await Prestacion.aggregate(pipelineVacunaCovid19);
     let prestaciones = [...prestacionesVacunaContraCovid];
     for (let unaPrestacion of prestaciones) {
+
         let data = {
             ciudadano:
             {
@@ -186,36 +179,37 @@ export async function exportCovid19(done, horas) {
         };
         try {
             const options = {
-                urlSisa,
+                uri: urlSisa,
                 method: 'POST',
-                body: JSON.stringify(dto),
+                body: dto,
                 headers: { 'Content-Type': 'application/json' },
                 json: true,
             };
             const resJson = await handleHttpRequest(options);
-
-            if (resJson) {
+            if (resJson && resJson.length > 0) {
+                const code = resJson[0];
+                const response = resJson[1];
                 log.resultado = {
-                    resultado: resJson.resultado ? resJson.resultado : '',
-                    id_caso: resJson.id_caso ? resJson.id_caso : '',
-                    description: resJson.description ? resJson.description : ''
+                    status: code ? code : '',
+                    resultado: response.resultado ? response.resultado : '',
+                    description: response.description ? response.description : '',
+                    error: response.errors ? response.errors : ''
                 };
 
             } else {
                 log.resultado = {
                     resultado: 'ERROR_DE_ENVIO',
-                    id_caso: '',
+                    status: '',
                     description: 'No se recibió ningún resultado'
                 };
             }
-
             let info = new InformacionExportada(log);
             await info.save();
 
         } catch (error) {
             log.resultado = {
                 resultado: 'ERROR_DE_ENVIO',
-                id_caso: '',
+                status: 500,
                 description: error.toString()
             };
             let info = new InformacionExportada(log);
