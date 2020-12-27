@@ -3,7 +3,6 @@ import { Prestacion } from '../modules/rup/schemas/prestacion';
 import { InformacionExportada } from '../core/log/schemas/logExportaInformacion';
 import { sisa } from './../config.private';
 
-
 const nodeFetch = require('node-fetch');
 const fs = require('fs');
 
@@ -11,11 +10,9 @@ const user = sisa.username;
 const clave = sisa.password;
 const urlSisa = sisa.url_nomivac;
 
-export async function exportCovid19(done) {
-
-    const start = moment(new Date().setHours(0, 0, 0, 0)).subtract(3,'d').format('YYYY-MM-DD HH:mm:ss');
+export async function exportCovid19(done, horas) {
+    const start = moment(new Date().setHours(0, 0, 0, 0)).subtract(horas, 'h').format('YYYY-MM-DD HH:mm:ss');
     const end = moment(new Date().setHours(23, 59, 0, 0)).format('YYYY-MM-DD HH:mm:ss');
-
     const pipelineVacunaCovid19 = [
         {
             $match: {
@@ -24,7 +21,7 @@ export async function exportCovid19(done) {
                 },
                 'estadoActual.tipo': 'validada',
                 'ejecucion.registros.concepto.conceptId': '840534001'
-            
+
             }
         },
         {
@@ -39,7 +36,6 @@ export async function exportCovid19(done) {
                     dni: '$paciente.documento',
                     nombre: '$paciente.nombre',
                     apellido: '$paciente.apellido',
-                    direccion: '$paciente.direccion.valor',
                     sexo: '$paciente.sexo',
                     fechaNacimiento: '$paciente.fechaNacimiento'
                 },
@@ -64,7 +60,6 @@ export async function exportCovid19(done) {
                 sexo: '$_id.sexo',
                 nombre: '$_id.nombre',
                 apellido: '$_id.apellido',
-                direccion: '$_id.direccion',
                 fechaNacimiento: '$_id.fechaNacimiento',
                 fecha: '$primeraPrestacion.fecha',
                 idEfector: '$primeraPrestacion.idEfector',
@@ -90,14 +85,35 @@ export async function exportCovid19(done) {
             }
         },
         {
+            $lookup: {
+                from: 'paciente',
+                localField: 'idPaciente',
+                foreignField: '_id',
+                as: 'dirPaciente'
+            }
+        },
+        {
+            $addFields: {
+                direccion: {
+                    $arrayElemAt: [
+                        '$dirPaciente.direccion',
+                        0
+                    ]
+                }
+            }
+        },
+        {
             $project: {
                 tipo: 'vacuna',
                 idPaciente: '$idPaciente',
                 dni: '$dni',
                 sexo: '$sexo',
-                nombre:'$nombre',
-                apellido:'$apellido',
-                direccion: '$direccion',
+                nombre: '$nombre',
+                apellido: '$apellido',
+                direccion: {$arrayElemAt: [
+                    '$direccion.valor',
+                    0
+                ]},
                 fechaNacimiento: {
                     $dateToString: {
                         date: '$fechaNacimiento',
@@ -130,30 +146,30 @@ export async function exportCovid19(done) {
     for (let unaPrestacion of prestaciones) {
         let data = {
             ciudadano:
-                {
-                    tipoDocumento:1,
-                    numeroDocumento: unaPrestacion.dni,
-                    sexo: unaPrestacion.sexo === 'femenino' ? 'F' : (unaPrestacion.sexo === 'masculino') ? 'M' : '',
-                    nombre: unaPrestacion.nombre,
-                    apellido: unaPrestacion.apellido,
-                    fechaNacimiento: unaPrestacion.fechaNacimiento,
-                    calle: unaPrestacion.direccion ? unaPrestacion.direccion : '',
-                    pais:200,
-                    provincia:15,
-                    departamento:365  // Confluencia, luego updetear por el que corresponda
-                },
+            {
+                tipoDocumento: 1,
+                numeroDocumento: unaPrestacion.dni,
+                sexo: unaPrestacion.sexo === 'femenino' ? 'F' : (unaPrestacion.sexo === 'masculino') ? 'M' : '',
+                nombre: unaPrestacion.nombre,
+                apellido: unaPrestacion.apellido,
+                fechaNacimiento: unaPrestacion.fechaNacimiento,
+                calle: unaPrestacion.direccion ? unaPrestacion.direccion : '',
+                pais: 200,
+                provincia: 15,
+                departamento: 365  // Confluencia, luego updetear por el que corresponda
+            },
             aplicacionVacuna:
-                {
-                    establecimiento: unaPrestacion.CodigoSisa,
-                    fechaAplicacion: unaPrestacion.vacunas[0].fechaAplicacion ? moment(unaPrestacion.vacunas[0].fechaAplicacion).format('DD-MM-YYYY'): null,
-                    lote: unaPrestacion.vacunas[0].lote,
-                    esquema: unaPrestacion.vacunas[0].esquema.codigo,
-                    condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
-                    vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
-                    ordenDosis: unaPrestacion.vacunas[0].dosis.codigo,
-                    referenciaSistemaProvincial :"32342"   // faltaría ver bien que es esto, aunque no es obligatorio
-                }
+            {
+                establecimiento: unaPrestacion.CodigoSisa,
+                fechaAplicacion: unaPrestacion.vacunas[0].fechaAplicacion ? moment(unaPrestacion.vacunas[0].fechaAplicacion).format('DD-MM-YYYY') : null,
+                lote: unaPrestacion.vacunas[0].lote,
+                esquema: unaPrestacion.vacunas[0].esquema.codigo,
+                condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
+                vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
+                ordenDosis: unaPrestacion.vacunas[0].dosis.codigo,
+                referenciaSistemaProvincial : '32342'   // faltaría ver bien que es esto, aunque no es obligatorio
             }
+        };
         let dto = {
             username: user,
             password: clave,
@@ -172,7 +188,7 @@ export async function exportCovid19(done) {
         try {
             const response = await nodeFetch(urlSisa, { method: 'POST', body: JSON.stringify(dto), headers: { 'Content-Type': 'application/json' } });
             const resJson: any = await response.json();
-            
+
             if (resJson) {
                 log.resultado = {
                     resultado: resJson.resultado ? resJson.resultado : '',
