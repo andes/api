@@ -135,7 +135,6 @@ export async function exportCovid19(done, horas) {
     let prestacionesVacunaContraCovid = await Prestacion.aggregate(pipelineVacunaCovid19);
     let prestaciones = [...prestacionesVacunaContraCovid];
     for (let unaPrestacion of prestaciones) {
-
         let data = {
             ciudadano:
             {
