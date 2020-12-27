@@ -1,9 +1,8 @@
 import * as moment from 'moment';
 import { Prestacion } from '../modules/rup/schemas/prestacion';
 import { InformacionExportada } from '../core/log/schemas/logExportaInformacion';
+import { handleHttpRequest } from '../utils/requestHandler';
 import { sisa } from './../config.private';
-
-const nodeFetch = require('node-fetch');
 const fs = require('fs');
 
 const user = sisa.username;
@@ -11,8 +10,8 @@ const clave = sisa.password;
 const urlSisa = sisa.url_nomivac;
 
 export async function exportCovid19(done, horas) {
-    const start = moment(new Date().setHours(0, 0, 0, 0)).subtract(horas, 'h').format('YYYY-MM-DD HH:mm:ss');
-    const end = moment(new Date().setHours(23, 59, 0, 0)).format('YYYY-MM-DD HH:mm:ss');
+    const start = moment(new Date()).subtract(horas, 'h').format('YYYY-MM-DD HH:mm:ss');
+    const end = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
     const pipelineVacunaCovid19 = [
         {
             $match: {
@@ -186,8 +185,14 @@ export async function exportCovid19(done, horas) {
             resultado: {}
         };
         try {
-            const response = await nodeFetch(urlSisa, { method: 'POST', body: JSON.stringify(dto), headers: { 'Content-Type': 'application/json' } });
-            const resJson: any = await response.json();
+            const options = {
+                urlSisa,
+                method: 'POST',
+                body: JSON.stringify(dto),
+                headers: { 'Content-Type': 'application/json' },
+                json: true,
+            };
+            const resJson = await handleHttpRequest(options);
 
             if (resJson) {
                 log.resultado = {
