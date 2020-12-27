@@ -150,8 +150,8 @@ export async function exportCovid19(done) {
                     esquema: unaPrestacion.vacunas[0].esquema.codigo,
                     condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
                     vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
-                    ordenDosis: unaPrestacion.vacunas[0].dosis.vacuna.codigo,
-                    referenciaSistemaProvincial :"32342"   // faltaría ver bien que es esto
+                    ordenDosis: unaPrestacion.vacunas[0].dosis.codigo,
+                    referenciaSistemaProvincial :"32342"   // faltaría ver bien que es esto, aunque no es obligatorio
                 }
             }
         let dto = {
@@ -170,7 +170,7 @@ export async function exportCovid19(done) {
             resultado: {}
         };
         try {
-            const response = await nodeFetch(urlSisa, { method: 'POST', body: dto, headers: { 'Content-Type': 'application/json' } });
+            const response = await nodeFetch(urlSisa, { method: 'POST', body: JSON.stringify(dto), headers: { 'Content-Type': 'application/json' } });
             const resJson: any = await response.json();
             
             if (resJson) {
