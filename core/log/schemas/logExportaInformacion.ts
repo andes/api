@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let informacionExportadaSchema = new mongoose.Schema({
+export const informacionExportadaSchema = new mongoose.Schema({
     fecha: {
         type: Date
     },
@@ -14,4 +14,4 @@ export let informacionExportadaSchema = new mongoose.Schema({
 informacionExportadaSchema.index({ fecha: 1, sistema: 1, key: 1 });
 informacionExportadaSchema.index({ fecha: 1, idPaciente: 1 });
 
-export let InformacionExportada = mongoose.model('informacionExportada', informacionExportadaSchema, 'informacionExportada');
+export const InformacionExportada = mongoose.model('nomivacInformacionExportada', informacionExportadaSchema, 'nomivacInformacionExportada');

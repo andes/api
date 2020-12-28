@@ -10,13 +10,13 @@ const clave = sisa.password;
 const urlSisa = sisa.url_nomivac;
 
 export async function exportCovid19(done, horas) {
-    const start = moment(new Date()).subtract(horas, 'h').format('YYYY-MM-DD HH:mm:ss');
-    const end = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+    const start = moment().subtract(horas, 'h').toDate();
+    const end = moment().toDate();
     const pipelineVacunaCovid19 = [
         {
             $match: {
                 'solicitud.fecha': {
-                    $gte: new Date(start), $lte: new Date(end)
+                    $gte: start, $lte: end
                 },
                 'estadoActual.tipo': 'validada',
                 'ejecucion.registros.concepto.conceptId': '840534001'
@@ -24,38 +24,18 @@ export async function exportCovid19(done, horas) {
             }
         },
         {
-            $sort: {
-                'solicitud.fecha': 1
-            }
-        },
-        {
             $project: {
-                paciente: {
-                    idPaciente: '$paciente.id',
-                    dni: '$paciente.documento',
-                    nombre: '$paciente.nombre',
-                    apellido: '$paciente.apellido',
-                    sexo: '$paciente.sexo',
-                    fechaNacimiento: '$paciente.fechaNacimiento'
-                },
+                _id: 0,
+                idPaciente: '$paciente.id',
+                dni: '$paciente.documento',
+                sexo: '$paciente.sexo',
+                nombre: '$paciente.nombre',
+                apellido: '$paciente.apellido',
+                fechaNacimiento: '$paciente.fechaNacimiento',
                 fecha: '$solicitud.fecha',
                 idEfector: '$solicitud.organizacion.id',
                 vacuna: '$ejecucion.registros.valor.vacuna'
             }
-        },
-
-        { $project: {
-            _id: 0,
-            idPaciente: '$paciente.idPaciente',
-            dni: '$paciente.dni',
-            sexo: '$paciente.sexo',
-            nombre: '$paciente.nombre',
-            apellido: '$paciente.apellido',
-            fechaNacimiento: '$paciente.fechaNacimiento',
-            fecha: '$fecha',
-            idEfector: '$idEfector',
-            vacuna: '$vacuna'
-        }
         },
         {
             $lookup: {
@@ -65,16 +45,7 @@ export async function exportCovid19(done, horas) {
                 as: 'organizacion'
             }
         },
-        {
-            $addFields: {
-                organizacion: {
-                    $arrayElemAt: [
-                        '$organizacion',
-                        0
-                    ]
-                }
-            }
-        },
+        { $unwind: '$organizacion' },
         {
             $lookup: {
                 from: 'paciente',
@@ -101,10 +72,12 @@ export async function exportCovid19(done, horas) {
                 sexo: '$sexo',
                 nombre: '$nombre',
                 apellido: '$apellido',
-                direccion: {$arrayElemAt: [
-                    '$direccion.valor',
-                    0
-                ]},
+                direccion: {
+                    $arrayElemAt: [
+                        '$direccion.valor',
+                        0
+                    ]
+                },
                 fechaNacimiento: {
                     $dateToString: {
                         date: '$fechaNacimiento',
@@ -158,7 +131,7 @@ export async function exportCovid19(done, horas) {
                 condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
                 vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
                 ordenDosis: unaPrestacion.vacunas[0].dosis.codigo,
-                referenciaSistemaProvincial : '32342'   // faltaría ver bien que es esto, aunque no es obligatorio
+                referenciaSistemaProvincial: '32342'   // faltaría ver bien que es esto, aunque no es obligatorio
             }
         };
         let dto = {
