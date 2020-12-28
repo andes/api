@@ -73,12 +73,7 @@ export async function exportCovid19(done, horas) {
                 sexo: '$sexo',
                 nombre: '$nombre',
                 apellido: '$apellido',
-                direccion: {
-                    $arrayElemAt: [
-                        '$direccion.valor',
-                        0
-                    ]
-                },
+                direccion: '$direccion.valor',
                 fechaNacimiento: {
                     $dateToString: {
                         date: '$fechaNacimiento',
