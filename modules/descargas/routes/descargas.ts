@@ -11,6 +11,7 @@ import { RecuperoCosto } from '../recupero-costo/recupero-costo';
 import { ConstanciaPuco } from '../puco/constancia-puco';
 import { Derivacion } from '../com/derivacion';
 import { Arancelamiento } from '../arancelamiento/arancelamiento';
+import { readFile } from '../../../core/tm/controller/file-storage';
 
 const router = express.Router();
 
@@ -71,9 +72,11 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
     const idPrestacion = req.body.idPrestacion;
     const idRegistro = req.body.idRegistro;
+    const adjuntos = req.body.adjuntos;
 
     const prestacion: any = await Prestacion.findById(idPrestacion);
     let procedimiento = '';
+    const attachments = [];
 
     if (idRegistro) {
         const registro = prestacion.findRegistroById(idRegistro);
@@ -97,6 +100,20 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     if (org && org.configuraciones && org.configuraciones.emails) {
         emailFiltrado = org.configuraciones.emails.filter(x => x.email === email);
     }
+
+    if (adjuntos) {
+        let count = 0;
+        const fecha = moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss');
+        for (const adj of adjuntos) {
+            count++;
+            const data = await readFile(adj.id, 'RupStore');
+            attachments.push({
+                content: data.stream,
+                filename: `adjunto_${count} - ${fecha}.${adj.ext}`
+            });
+        }
+    }
+
     if (emailFiltrado) {
         try {
             // const archivo = await Documento.descargar(req, res, next);
@@ -110,10 +127,13 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
                 subject: handlebarsData.procesoProcedencia + ' - ' + procedimiento + ' - PACIENTE ' + handlebarsData.paciente.nombre + ' ' + handlebarsData.paciente.apellido + ' - PROFESIONAL  ' + handlebarsData.profesional.nombre + ' ' + handlebarsData.profesional.apellido,
                 text: '',
                 html,
-                attachments: {
-                    filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
-                    path: fileName
-                }
+                attachments: [
+                    {
+                        filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
+                        path: fileName
+                    },
+                    ...attachments
+                ]
             };
             await SendEmail.sendMail(data);
             res.json({ status: 'OK' });
