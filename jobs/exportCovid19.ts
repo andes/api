@@ -125,7 +125,7 @@ export async function exportCovid19(done, horas) {
                 esquema: unaPrestacion.vacunas[0].esquema.codigo,
                 condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
                 vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
-                ordenDosis: unaPrestacion.vacunas[0].dosis.codigo,
+                ordenDosis: unaPrestacion.vacunas[0].dosis.orden,
                 referenciaSistemaProvincial: '32342'   // faltaría ver bien que es esto, aunque no es obligatorio
             }
         };
