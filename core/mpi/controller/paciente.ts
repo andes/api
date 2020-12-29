@@ -20,8 +20,9 @@ import * as localidadController from '../../tm/controller/localidad';
 import { Types } from 'mongoose';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { logPaciente } from '../../log/schemas/logPaciente';
-const ObjectId = Types.ObjectId;
+import { replaceChars } from '../../../core-v2/mpi';
 
+const ObjectId = Types.ObjectId;
 const sharp = require('sharp');
 
 /**
@@ -277,16 +278,6 @@ export async function matching(data) {
     }
 }
 
-function replaceChars(text: string) {
-    text = text.replace(/á/gi, 'a');
-    text = text.replace(/é/gi, 'e');
-    text = text.replace(/í/gi, 'i');
-    text = text.replace(/ó/gi, 'o');
-    text = text.replace(/ú/gi, 'u');
-    text = text.replace(/ü/gi, 'u');
-    text = text.replace(/ñ/gi, 'n');
-    return text;
-}
 
 function obtenerSugeridos(_paciente, pacientesSimilares) {
     const weights = _paciente.escaneado ? config.mpi.weightsScan : config.mpi.weightsDefault;
