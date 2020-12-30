@@ -44,7 +44,8 @@ export let PlantillasRUPSchema = new Schema({
     },
 
     title: String,
-    descripcion: String
+    descripcion: String,
+    target: { type: SnomedConcept, required: false }
 });
 
 PlantillasRUPSchema.plugin(AuditPlugin);
