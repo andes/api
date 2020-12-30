@@ -11,6 +11,7 @@ import { AndesDrive } from '@andes/drive';
 import { apiOptionsMiddleware } from '@andes/api-tool';
 import { SendMessageCacheRouter, PacienteAppRouter } from './modules/mobileApp';
 import { initialize as FHIRInitialize } from '@andes/fhir';
+import { registerPartialTemplate } from './utils/roboSender/sendEmail';
 
 const proxy = require('express-http-proxy');
 const requireDir = require('require-dir');
@@ -18,6 +19,9 @@ const requireDir = require('require-dir');
 export function initAPI(app: Express) {
 
     FHIRInitialize({ dominio: configPrivate.FHIR.domain });
+
+    // Handlebars: Registramos template de password recovery
+    registerPartialTemplate('recover-password');
 
     // Inicializa Mongoose
     Connections.initialize();

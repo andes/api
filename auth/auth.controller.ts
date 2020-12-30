@@ -6,7 +6,7 @@ import { userScheduler } from './../config.private';
 import { Profesional } from './../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 import { APP_DOMAIN } from './../config.private';
-import { sendMail, renderHTML, MailOptions, registerPartialTemplate } from './../utils/roboSender/sendEmail';
+import { sendMail, renderHTML, MailOptions } from './../utils/roboSender/sendEmail';
 const sha1Hash = require('sha1');
 
 
@@ -163,7 +163,6 @@ export async function setValidationTokenAndNotify(username) {
                 usuario,
                 url: `${APP_DOMAIN}/auth/resetPassword/${usuario.validationToken}`,
             };
-            registerPartialTemplate('recover-password'); // Registro el template de recover
             const htmlToSend = await renderHTML('emails/layout.html', extras); // render del html genérico
             const options: MailOptions = {
                 from: enviarMail.auth.user,
