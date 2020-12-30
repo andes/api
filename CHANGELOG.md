@@ -1,3 +1,20 @@
+# [5.27.0](https://github.com/andes/api/compare/v5.26.0...v5.27.0) (2020-12-30)
+
+
+### Bug Fixes
+
+* **MAT:** corrige filtros guia paciente ([#1212](https://github.com/andes/api/issues/1212)) ([67254b7](https://github.com/andes/api/commit/67254b770f243c9d534352f2b4f6677fc09dcd2e))
+* **nomivac:** modificamos el campo que orden ([8e3814e](https://github.com/andes/api/commit/8e3814eabe5d6328fd3fc2b4fedd5e375b0edac2))
+
+
+### Features
+
+* **nomivac:** registro de aplicaciones de vacunas ([#1236](https://github.com/andes/api/issues/1236)) ([9410ffc](https://github.com/andes/api/commit/9410ffc1dbd1e8332378a382b5a0a9c98ac1b067))
+* **rup:** enviar adjuntos ([#1074](https://github.com/andes/api/issues/1074)) ([b84db5a](https://github.com/andes/api/commit/b84db5ae3363faac5c504730378aaeee218876de))
+* **RUP:** rutas de datos paramétricos  para registros de vacuna ([#1234](https://github.com/andes/api/issues/1234)) ([b549362](https://github.com/andes/api/commit/b5493624a5c2486a33849633514919defe9ce5b8))
+* **top:** subir archivos a andesDrive ([#1228](https://github.com/andes/api/issues/1228)) ([d54d9f9](https://github.com/andes/api/commit/d54d9f92065e6bfb3800f52c6002ba3b5529252c))
+* **turnos-prestaciones:** filtro ambito  ([#1232](https://github.com/andes/api/issues/1232)) ([48b2718](https://github.com/andes/api/commit/48b2718a9f38e0e03656ee41ec3e263febe5dbf1))
+
 # [5.26.0](https://github.com/andes/api/compare/v5.25.0...v5.26.0) (2020-12-23)
 
 
