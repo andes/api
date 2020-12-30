@@ -159,6 +159,7 @@ export async function exportCovid19(done, horas) {
                 log.resultado = {
                     status: code ? code : '',
                     resultado: response.resultado ? response.resultado : '',
+                    idSniAplicacion: response.idSniAplicacion ? response.idSniAplicacion : '',
                     description: response.description ? response.description : '',
                     error: response.errors ? response.errors : ''
                 };
