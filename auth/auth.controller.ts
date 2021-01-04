@@ -153,17 +153,19 @@ export const checkMobile = (profesionalId) => {
  */
 export async function setValidationTokenAndNotify(username) {
     try {
-        let usuario = await AuthUsers.findOne({ usuario: username});
+        let usuario = await AuthUsers.findOne({ usuario: username });
         if (usuario && usuario.tipo === 'temporal' && usuario.email) {
             usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
             usuario.audit(userScheduler);
             await usuario.save();
+
             const extras: any = {
                 titulo: 'Recuperación de contraseña',
                 usuario,
                 url: `${APP_DOMAIN}/auth/resetPassword/${usuario.validationToken}`,
             };
-            const htmlToSend = await renderHTML('emails/layout.html', extras); // render del html genérico
+            const htmlToSend = await renderHTML('emails/recover-password.html', extras);
+
             const options: MailOptions = {
                 from: enviarMail.auth.user,
                 to: usuario.email.toString(),

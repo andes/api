@@ -21,7 +21,7 @@ export function initAPI(app: Express) {
     FHIRInitialize({ dominio: configPrivate.FHIR.domain });
 
     // Handlebars: Registramos template de password recovery
-    registerPartialTemplate('recover-password');
+    registerPartialTemplate('layout', 'emails/layout.html');
 
     // Inicializa Mongoose
     Connections.initialize();

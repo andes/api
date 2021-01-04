@@ -33,24 +33,6 @@
             border-collapse: collapse;
         }
 
-        .ExternalClass {
-            width: 100%;
-        }
-
-        .ExternalClass,
-        .ExternalClass p,
-        .ExternalClass span,
-        .ExternalClass font,
-        .ExternalClass td,
-        .ExternalClass div {
-            line-height: 100%;
-        }
-
-        .ReadMsgBody {
-            width: 100%;
-            background-color: #ebebeb;
-        }
-
         table {
             mso-table-lspace: 0pt;
             mso-table-rspace: 0pt;
@@ -139,7 +121,9 @@
 
                             <div class="body-text"
                                  style="font-family:Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;text-align:left;color:#333333">
-                                    {{> partial}}
+
+                                {{> @partial-block }}
+
                                 <br><br>
                             </div>
 
