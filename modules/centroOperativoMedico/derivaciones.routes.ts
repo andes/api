@@ -59,3 +59,27 @@ DerivacionesRouter.get('/store/:id', async (req, res, next) => {
         stream1.pipe(res);
     }
 });
+
+DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const derivacion: any = await Derivaciones.findById(req.params.id);
+        if (derivacion) {
+            derivacion.historial.push(req.body);
+            if (req.body.prioridad) {
+                derivacion.prioridad = req.body.prioridad;
+            }
+            if (req.body.estado) {
+                derivacion.estado = req.body.estado;
+            }
+            if (req.body.organizacionDestino) {
+                derivacion.organizacionDestino = req.body.organizacionDestino;
+            }
+            Auth.audit(derivacion, req);
+            await derivacion.save();
+            return res.json(derivacion);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
