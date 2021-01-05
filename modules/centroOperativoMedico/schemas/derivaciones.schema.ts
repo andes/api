@@ -10,6 +10,10 @@ let DerivacionHistorialSchema = new mongoose.Schema({
         type: String,
         enum: ESTADOS_DERIVACION
     },
+    prioridad: {
+        type: String,
+        enum: ['baja', 'media', 'alta', 'especial']
+    },
     organizacionDestino: {
         id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' },
         nombre: String
