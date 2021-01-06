@@ -75,6 +75,8 @@ export const geocodingPaths = {
 export const sisa = {
     username: getEnv('SISA_USERNAME', ''),
     password: getEnv('SISA_PASSWORD', ''),
+    APP_ID_ALTA: getEnv('APP_ID_ALTA', ' xxxxxx'),
+    APP_KEY_ALTA: getEnv('APP_KEY_ALTA', 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyy'),
     host: getEnv('SISA_HOST', 'sisa.msal.gov.ar'),
     port: getEnv('SISA_PORT', 443, 'n'),
     url: getEnv('SISA_URL', 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?'),

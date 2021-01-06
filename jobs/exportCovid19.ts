@@ -3,10 +3,7 @@ import { Prestacion } from '../modules/rup/schemas/prestacion';
 import { InformacionExportada } from '../core/log/schemas/logExportaInformacion';
 import { handleHttpRequest } from '../utils/requestHandler';
 import { sisa } from './../config.private';
-const fs = require('fs');
 
-const user = sisa.username;
-const clave = sisa.password;
 const urlSisa = sisa.url_nomivac;
 
 export async function exportCovid19(done, horas) {
@@ -130,8 +127,6 @@ export async function exportCovid19(done, horas) {
             }
         };
         const dto = {
-            username: user,
-            password: clave,
             ciudadano: data.ciudadano,
             aplicacionVacuna: data.aplicacionVacuna
         };
@@ -144,12 +139,13 @@ export async function exportCovid19(done, horas) {
             info_enviada: data,
             resultado: {}
         };
+
         try {
             const options = {
                 uri: urlSisa,
                 method: 'POST',
                 body: dto,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { APP_ID: sisa.APP_ID_ALTA, APP_KEY: sisa.APP_KEY_ALTA , 'Content-Type': 'application/json' },
                 json: true,
             };
             const resJson = await handleHttpRequest(options);
