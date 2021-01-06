@@ -1,6 +1,5 @@
-import { renaper, sisa, renaperToAndes, sisaToAndes } from '@andes/fuentes-autenticas';
-import { RenaperConfig } from './validacion.interfaces';
-import { renaper as renaConfig } from '../../../config.private';
+import { sisa, renaperToAndes, sisaToAndes, renaperv3 } from '@andes/fuentes-autenticas';
+import { busInteroperabilidad } from '../../../config.private';
 import { sisa as sisaConfig } from '../../../config.private';
 import { matchUbicacion } from '../../../core/tm/controller/localidad';
 import { IDireccion } from '../../../shared/interface';
@@ -25,18 +24,7 @@ function identidadSinAcentos(ciudadano) {
  */
 
 export async function validar(documento: string, sexo: string) {
-    /*const pacientes = await Paciente.find({ documento, sexo });
-    if (pacientes && pacientes.length > 0) {
-        const paciente = pacientes[0];
-        return paciente;
-    }*/
-    const renaperConfig: RenaperConfig = {
-        usuario: renaConfig.Usuario,
-        password: renaConfig.password,
-        url: renaConfig.url,
-        server: renaConfig.serv
-    };
-    let ciudadanoRenaper = await renaper({ documento, sexo }, renaperConfig, renaperToAndes);
+    let ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
     if (ciudadanoRenaper) {
         // Valida el tamaño de la foto
         ciudadanoRenaper.foto = await validarTamañoFoto(ciudadanoRenaper.foto);
