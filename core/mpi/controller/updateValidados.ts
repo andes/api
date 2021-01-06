@@ -11,21 +11,17 @@ export async function updateValidados(done) {
     try {
         const options = { limit: limite, sort: { updatedAt: -1 } };
         const pacientes: any = await PacienteCtr.search({ estado: 'validado', activo: true, fechaUpdate: `<${fechaDesde}` }, options as any, userScheduler as any);
-        let pacientesValidados = [];
+        let persona_validada;
 
         for (const pac of pacientes) {
-            pacientesValidados.push(await validar(pac.documento, pac.sexo));
-        }
-        let pacientes_updates = [];
-        pacientes.forEach(async (paciente: any) => {
-            const persona_validada = pacientesValidados.find(pac => { return pac.documento === paciente.documento && pac.sexo === paciente.sexo; });
+            persona_validada = await validar(pac.documento, pac.sexo);
             let data: any = {};
             if (persona_validada) {
                 data.foto = persona_validada.foto;
                 if (persona_validada.fechaFallecimiento) {
                     data.fechaFallecimiento = persona_validada.fechaFallecimiento;
                 }
-                if (paciente.direccion?.[0]) {
+                if (pac.direccion?.[0]) {
                     if (persona_validada.direccion?.length > 0) {
                         data.direccion[1] = persona_validada.direccion[1];
                     }
@@ -38,10 +34,10 @@ export async function updateValidados(done) {
                     const geoRef: any = await geoReferenciar(dir, geoKey);
                     data.direccion[0].geoReferencia = geoRef && Object.keys(geoRef).length > 0 ? [geoRef.lat, geoRef.lng] : null;
                 }
-                pacientes_updates.push(PacienteCtr.update(paciente.id, data, userScheduler as any));
+                await PacienteCtr.update(pac.id, data, userScheduler as any);
             }
-        });
-        await Promise.all(pacientes_updates);
+        }
+
     } catch (err) {
         return err;
     }
