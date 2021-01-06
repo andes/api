@@ -97,7 +97,17 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
         type: String,
         lowercase: true
     }],
-    validateAt: Date
+    validateAt: Date,
+    documentos: [{
+        fecha: Date,
+        archivos: [{
+            ext: String, id: String
+        }],
+        tipo: {
+            id: String,
+            label: String
+        }
+    }]
 }, { versionKey: false });
 
 PacienteSchema.pre('save', function (next) {

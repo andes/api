@@ -113,7 +113,8 @@ export default [
                     { key: 'putAndes', title: 'Actualización de un paciente', type: 'boolean' },
                     { key: 'deleteAndes', title: 'Eliminar un paciente', type: 'boolean' },
                     { key: 'patchAndes', title: 'Modificar datos de un paciente', type: 'boolean' },
-                    { key: 'parentesco', title: 'Obtener parentesco', type: 'boolean' }
+                    { key: 'parentesco', title: 'Obtener parentesco', type: 'boolean' },
+                    { key: 'documentacion', title: 'Documentación adjunta', type: 'boolean' },
                 ]
             },
         ]
