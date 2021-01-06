@@ -1,3 +1,19 @@
+# [5.28.0](https://github.com/andes/api/compare/v5.27.0...v5.28.0) (2021-01-06)
+
+
+### Bug Fixes
+
+* **com:** nueva ruta para actualizar historial ([#1243](https://github.com/andes/api/issues/1243)) ([a2bcfa1](https://github.com/andes/api/commit/a2bcfa154a98bf7762e994f0f502087ec646dd35))
+
+
+### Features
+
+* **com:** sumar prioridad a DerivacionHistorialSchema ([#1242](https://github.com/andes/api/issues/1242)) ([11d8077](https://github.com/andes/api/commit/11d8077658471ffd134a335140dae1c4c3593a1d))
+* **Job Vacunas:** Agrega idSniAplicacion en el log de informacion exportada ([1806a08](https://github.com/andes/api/commit/1806a08206a8ada433c8a39c3aa3f931e2dcb241))
+* **mpi:** se agrega el numero de tramite del paciente ([#1226](https://github.com/andes/api/issues/1226)) ([554fac9](https://github.com/andes/api/commit/554fac9ae39d10dcb91f96eb14e88872cd0b7ca1))
+* **rup:** plantillas moleculas ([#1239](https://github.com/andes/api/issues/1239)) ([a100257](https://github.com/andes/api/commit/a1002576e3dfdadc55f5ed176a67da80de3ffa34))
+* **TM:** rutas adjuntar titulo profesional ([#1216](https://github.com/andes/api/issues/1216)) ([95a6cf7](https://github.com/andes/api/commit/95a6cf7996c49a7663d16942e272d1fe3b00f9a7))
+
 # [5.27.0](https://github.com/andes/api/compare/v5.26.0...v5.27.0) (2020-12-30)
 
 
