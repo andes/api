@@ -376,50 +376,27 @@ router.get('/paciente/:id', async (req: any, res, next) => {
  */
 
 router.get('/:id/:name', async (req: any, res, next) => {
-
+try {
+    
     if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
         return next(403);
     }
+    
     const id = ObjectId(req.params.id);
     const name = req.params.name;
     const realName = req.params.name.split('.')[0];
-
-    const CDAFiles = makeFs();
-    const cda = await CDAFiles.findOne({ _id: id });
-
-    if (cda) {
-        const adj = cda.metadata.adjuntos.find(_adj => {
-            return String(_adj.id) === realName;
-        });
-
-        if (adj && adj.adapter === 'drive') {
-
-            const fileDrive = await AndesDrive.find(ObjectId(realName));
-            if (fileDrive) {
-                const stream1 = await AndesDrive.read(fileDrive);
-                res.contentType(fileDrive.mimetype);
-                stream1.pipe(res);
-            }
-
-        } else {
-            const query = {
-                filename: name,
-                'metadata.cdaId': id
-            };
-
-            const file = await CDAFiles.findOne(query);
-            if (req.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(req.user.pacientes[0].id)) {
-                return next(403);
-            }
-
-            const stream1 = await CDAFiles.readFile({ _id: file._id });
-            res.contentType(file.contentType);
-            stream1.pipe(res);
-        }
-
-    } else {
-        return next('NO EXISTE EL ARCHIVO');
+    const params =  {
+        id,
+        name,
+        realName,
+        res
+    };
+    await cdaCtr.getCda(params);
+    
+    } catch (ex) {
+        return next(ex) // poner error lindo
     }
+    
 });
 
 
