@@ -1,8 +1,13 @@
-import { AndesCache, ObjectId } from '@andes/core';
-import { RedisWebSockets } from '../config.private';
+import { AndesCache, CustomError, ObjectId } from '@andes/core';
+import { RedisWebSockets, enviarMail } from '../config.private';
 import { Auth } from './auth.class';
 import { AuthUsers } from './schemas/authUsers';
+import { userScheduler } from './../config.private';
 import { Profesional } from './../core/tm/schemas/profesional';
+import * as mongoose from 'mongoose';
+import { APP_DOMAIN } from './../config.private';
+import { sendMail, renderHTML, MailOptions } from './../utils/roboSender/sendEmail';
+const sha1Hash = require('sha1');
 
 
 export let AuthCache: AndesCache;
@@ -140,3 +145,64 @@ export const checkMobile = (profesionalId) => {
         });
     });
 };
+
+
+/**
+ * Envía un link para recuperar la contraseña en caso qeu sea un usuario temporal con email (fuera de onelogin).
+ * AuthUser
+ */
+export async function setValidationTokenAndNotify(username) {
+    try {
+        let usuario = await AuthUsers.findOne({ usuario: username });
+        if (usuario && usuario.tipo === 'temporal' && usuario.email) {
+            usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
+            usuario.audit(userScheduler);
+            await usuario.save();
+
+            const extras: any = {
+                titulo: 'Recuperación de contraseña',
+                usuario,
+                url: `${APP_DOMAIN}/auth/resetPassword/${usuario.validationToken}`,
+            };
+            const htmlToSend = await renderHTML('emails/recover-password.html', extras);
+
+            const options: MailOptions = {
+                from: enviarMail.auth.user,
+                to: usuario.email.toString(),
+                subject: 'Recuperación de contraseña',
+                text: '',
+                html: htmlToSend,
+                attachments: null
+            };
+            await sendMail(options);
+            return usuario;
+        } else {
+            // El usuario no existe o es de gobierno => debe operar por onelogin
+            return null;
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * Busca el usuario que corresponde con el validationToken y si lo encuentra permite el reset de la contraseña.
+ * AuthUser
+ */
+export async function reset(token, password) {
+    try {
+        let usuario = await AuthUsers.findOne({ validationToken: token });
+        if (usuario) {
+            usuario.validationToken = null;
+            usuario.password = sha1Hash(password);
+            usuario.audit(userScheduler);
+            await usuario.save();
+            return usuario;
+        } else {
+            // No existe usuario con el token buscado
+            return null;
+        }
+    } catch (error) {
+        throw new CustomError(error, 500);
+    }
+}

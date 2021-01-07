@@ -36,8 +36,9 @@ export async function checkPassword(user, password): Promise<any> {
             ldap.on('connect', () => {
 
                 ldap.bind(dn, password, (err) => {
+
                     if (err) {
-                        if (err.name === 'InvalidCredentialsError') {
+                        if (err.name === 'InvalidCredentialsError' || err.name === 'NoSuchObjectError') {
                             return resolve('invalid');
                         } else {
                             return;

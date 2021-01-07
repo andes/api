@@ -65,3 +65,9 @@ export function renderHTML(templateName: string, extras: any): Promise<string> {
         });
     });
 }
+
+export function registerPartialTemplate(key: string, fileName: string) {
+    const filePath = path.join(process.cwd(), `templates/${fileName}`);
+    const file = fs.readFileSync(filePath);
+    handlebars.registerPartial(key, file.toString());
+}

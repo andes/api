@@ -94,8 +94,8 @@
                     <tr style="font-family:Helvetica, Arial, sans-serif;
                     font-size:24px;
                     font-weight:bold;
-                    color:#3b1b48;
-                    background:#3b1b48;">
+                    color:#4d7998;
+                    background:#4d7998;">
                         <td class="container-padding header" align="left" style="
                         padding-top: 12px;
                         padding-bottom:12px;
@@ -111,7 +111,7 @@
                                     width:100%;
                                     text-align:right;
                                     padding-top:12px;">
-                                RUP / {{procesoProcedencia}}</span>
+                                {{titulo}}</span>
                         </td>
                     </tr>
                     <tr>
@@ -119,35 +119,12 @@
                             style="padding-left:24px;padding-right:24px;padding-top:12px;padding-bottom:12px;background-color:#ffffff">
                             <br>
 
-                            <div class="title"
-                                 style="font-family:Helvetica, Arial, sans-serif;font-size:18px;font-weight:600;color:#374550">
-                                ANDES - Resumen de Prestación</div>
-                            <br>
-
                             <div class="body-text"
                                  style="font-family:Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;text-align:left;color:#333333">
 
-                                <b>{{organizacion}}</b><br>
-
-                                <b>Fecha y hora:</b> {{datetime fechaInicio}}<br>
-
-                                <b>Tipo de Prestacion:</b> {{procedimiento}}<br>
-
-                                {{#with profesional}}
-                                <b>Profesional:</b> {{apellido}}, {{nombre}}
-                                {{/with}} <br>
-
-                                {{#with paciente}}
-                                <b>Paciente:</b> {{apellido}} {{nombre}}
-                                {{#if documento }}
-                                | {{documento}}
-                                {{/if}}
-                                {{/with}}
-                                <br>
-                                <br><br>
+                                {{> @partial-block }}
 
                                 <br><br>
-
                             </div>
 
                         </td>
@@ -157,20 +134,11 @@
                             style="font-family:Helvetica, Arial, sans-serif;font-size:12px;line-height:16px;color:#aaaaaa;padding-left:24px;padding-right:24px">
                             <br><br>
 
-                            RUP ~ Registro Universal de Prestaciones.
-                            <br><br>
 
                             <strong>ANDES ~ Aplicaciones Neuquinas De Salud</strong><br>
                             <span class="ios-footer">
-                                El contenido de este informe ha sido validado digitalmente siguiendo los estándares de
-                                calidad y seguridad requeridos. {{organizacion}} es responsable Inscripto en el Registro
-                                Nacional de
-                                Protección de Datos Personales bajo el N° de Registro 100000182, según lo requiere la
-                                Ley N° 25.326(art. 3° y 21 inciso 1)<br>
+                                <br>
                             </span>
-                            <a href="//app.andes.gob.ar/" style="color:#aaaaaa">Aplicación Andes</a><br>
-
-                            <br><br>
 
                         </td>
                     </tr>
