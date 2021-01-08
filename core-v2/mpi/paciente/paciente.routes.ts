@@ -2,14 +2,12 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { Request, Response, asyncHandler, Router } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import { Paciente } from './paciente.schema';
-import { suggest, isMatchingAlto, multimatch, make, findById, set } from './paciente.controller';
+import { suggest, multimatch, make, findById, set } from './paciente.controller';
 import * as mongoose from 'mongoose';
-import { PatientDuplicate, PatientNotFound } from './paciente.error';
+import { PatientNotFound } from './paciente.error';
 import { EventCore } from '@andes/event-bus';
 import { IPacienteDoc } from './paciente.interface';
-import { geoReferenciar, getBarrio } from '@andes/georeference';
-import * as Barrio from '../../../core/tm/schemas/barrio';
-import * as configPrivate from '../../../config.private';
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 
 class PacienteResource extends ResourceBase<IPacienteDoc> {
     Model = Paciente;
@@ -17,13 +15,9 @@ class PacienteResource extends ResourceBase<IPacienteDoc> {
     resourceName = 'pacientes';
     middlewares = [Auth.authenticate()];
     routesAuthorization = {
-        get: Auth.authorize('mpi:paciente:getbyId'),
-        search: Auth.authorize('mpi:paciente:search'),
-        post: Auth.authorize('mpi:paciente:postAndes'),
-        put: Auth.authorize('mpi:paciente:putAndes'),
-        patch: Auth.authorize('mpi:paciente:patchAndes'),
         delete: Auth.authorize('mpi:paciente:deleteAndes')
     };
+    routesEnable = ['delete'];
     searchFileds = {
         ids: MongoQuery.inArray.withField('_id'),
         documento: MongoQuery.partialString,
@@ -88,7 +82,7 @@ class PacienteResource extends ResourceBase<IPacienteDoc> {
 }
 
 export const PacienteCtr = new PacienteResource({});
-export const PacienteRouter = Router();
+export const PacienteRouter = PacienteCtr.makeRoutes();
 
 /**
  * @api {get} /pacientes/:id Requiere datos de un paciente
@@ -105,6 +99,7 @@ export const find = async (req: Request, res: Response) => {
     const options = req.apiOptions();
     const paciente = await findById(id, options);
     if (paciente) {
+        paciente.financiador = await getObraSocial(paciente); // Se busca la obra social
         return res.json(paciente);
     }
     throw new PatientNotFound();
@@ -125,11 +120,11 @@ export const get = async (req: Request, res: Response) => {
         delete conditions.search;
         Object.keys(options).map(opt => delete conditions[opt]);
         const pacientes = await multimatch(req.query.search, conditions, options);
-        res.json(pacientes);
+        return res.json(pacientes);
     } else {
         const conditions = req.query;
         const pacientes = await PacienteCtr.search(conditions, options, req);
-        res.json(pacientes);
+        return res.json(pacientes);
     }
 };
 
@@ -177,43 +172,6 @@ export const getFoto = async (req: Request, res: Response, next) => {
 
 
 /**
- * * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
- * @param data debe contener direccion y localidad.
- */
-
-export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
-    try {
-        let direccion: any = paciente.direccion;
-        // (valores de direccion fueron modificados): están completos?
-        if (direccion[0].valor && direccion[0].ubicacion.localidad && direccion[0].ubicacion.provincia) {
-            let dir = direccion[0].valor + ', ' + direccion[0].ubicacion.localidad.nombre + ', ' + direccion[0].ubicacion.provincia.nombre;
-            const geoRef: any = await geoReferenciar(dir, configPrivate.geoKey);
-            // georeferencia exitosa?
-            if (geoRef && Object.keys(geoRef).length) {
-                direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                let nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, configPrivate.geoNode.auth.user, configPrivate.geoNode.auth.password);
-                // consulta exitosa?
-                if (nombreBarrio) {
-                    const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));
-                    if (barrioPaciente) {
-                        direccion[0].ubicacion.barrio = barrioPaciente;
-                    }
-                }
-            } else {
-                direccion[0].geoReferencia = null;
-                direccion[0].ubicacion.barrio = null;
-            }
-        }
-        if (direccion[0].georeferencia) {
-            paciente = set(paciente, direccion);
-            PacienteCtr.update(paciente.id, paciente, configPrivate.userScheduler as any);
-        }
-    } catch (err) {
-        return (err);
-    }
-};
-
-/**
  * @api {post} /pacientes Creación de un paciente
  * @apiName postPacientes
  * @apiGroup MPI
@@ -250,7 +208,7 @@ export const post = async (req: Request, res: Response) => {
 export const match = async (req: Request, res: Response) => {
     const body = req.body;
     const sugeridos = await suggest(body);
-    res.json(sugeridos);
+    return res.json(sugeridos);
 };
 
 /**

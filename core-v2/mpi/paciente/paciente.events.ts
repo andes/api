@@ -2,8 +2,7 @@ import { EventCore } from '@andes/event-bus';
 import { IPacienteDoc } from './paciente.interface';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import { linkPacientesDuplicados } from './paciente.controller';
-import { updateGeoreferencia } from './paciente.routes';
+import { linkPacientesDuplicados, updateGeoreferencia } from './paciente.controller';
 
 // TODO: Handlear errores
 EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
