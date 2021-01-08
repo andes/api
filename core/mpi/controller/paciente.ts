@@ -20,8 +20,9 @@ import * as localidadController from '../../tm/controller/localidad';
 import { Types } from 'mongoose';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { logPaciente } from '../../log/schemas/logPaciente';
-const ObjectId = Types.ObjectId;
+import { replaceChars } from '../../../core-v2/mpi';
 
+const ObjectId = Types.ObjectId;
 const sharp = require('sharp');
 
 /**
@@ -193,6 +194,7 @@ export async function matching(data) {
         case 'multimatch':
             {
                 let words = data.cadenaInput.replace(ExpRegFilter, '');
+                words = replaceChars(words);
                 words = words.trim().toLowerCase().split(' ');
                 let andQuery = [];
                 words.forEach(w => {
@@ -224,6 +226,7 @@ export async function matching(data) {
                 if (data.filtros.cadenaInput) {
                     // si se ingresa una cadena de texto se busca matching con tokens de paciente
                     let words = data.filtros.cadenaInput.replace(ExpRegFilter, '');
+                    words = replaceChars(words);
                     words = words.trim().toLowerCase().split(' ');
                     words.forEach(w => {
                         if (w.length > 0) {
@@ -274,6 +277,7 @@ export async function matching(data) {
         return [];
     }
 }
+
 
 function obtenerSugeridos(_paciente, pacientesSimilares) {
     const weights = _paciente.escaneado ? config.mpi.weightsScan : config.mpi.weightsDefault;

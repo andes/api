@@ -10,3 +10,5 @@ router.use(RoutingValidacion);
 
 
 export const RoutingMPI = router;
+
+export * from './paciente';

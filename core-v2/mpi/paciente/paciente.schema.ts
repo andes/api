@@ -133,7 +133,7 @@ PacienteSchema.pre('save', function (next) {
     if (user.numeroIdentificacion) {
         words.push(user.numeroIdentificacion.toLowerCase());
     }
-    user.tokens = words;
+    user.tokens = words.map(replaceChars);
     next();
 
 });
@@ -253,3 +253,14 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
 });
 
 export const Paciente = mongoose.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
+
+export function replaceChars(text: string) {
+    text = text.replace(/á/gi, 'a');
+    text = text.replace(/é/gi, 'e');
+    text = text.replace(/í/gi, 'i');
+    text = text.replace(/ó/gi, 'o');
+    text = text.replace(/ú/gi, 'u');
+    text = text.replace(/ü/gi, 'u');
+    text = text.replace(/ñ/gi, 'n');
+    return text;
+}
