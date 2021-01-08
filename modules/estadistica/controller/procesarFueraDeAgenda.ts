@@ -1,5 +1,5 @@
+import { Prestacion } from '../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
-import { Codificacion } from '../../rup/schemas/codificacion';
 
 /**
  * @export Devuelve las prestaciones fuera de agenda que cumplen con los filtros
@@ -7,15 +7,15 @@ import { Codificacion } from '../../rup/schemas/codificacion';
  * @returns {object} {fecha, paciente, financiador, prestacion, profesionales, estado, idAgenda:null, idBloque:null, turno:null, idPrestacion}
  */
 export async function procesar(parametros: any) {
-
-    let pipeline2 = [];
-
-    let match: any = {
-        $and: [
-            { createdAt: { $gte: new Date(parametros.fechaDesde) } },
-            { createdAt: { $lte: new Date(parametros.fechaHasta) } }
-        ],
-        'createdBy.organizacion._id': String(parametros.organizacion)
+    const match: any = {
+        'ejecucion.fecha': {
+            $gte: new Date(parametros.fechaDesde),
+            $lte: new Date(parametros.fechaHasta)
+        },
+        'estadoActual.tipo': 'validada',
+        'solicitud.tipoPrestacion.noNominalizada': { $ne: true },
+        'solicitud.turno': null,
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(parametros.organizacion)
     };
 
     if (parametros.documento) {
@@ -28,72 +28,40 @@ export async function procesar(parametros: any) {
         } else {
             match['estadoFacturacion.estado'] = parametros.estadoFacturacion;
         }
-
     }
-    let match2 = {};
 
     if (parametros.prestacion) {
-        match2['prestacion.solicitud.tipoPrestacion.conceptId'] = parametros.prestacion;
+        match['solicitud.tipoPrestacion.conceptId'] = parametros.prestacion;
     }
+
     if (parametros.profesional) {
-        match2['prestacion.solicitud.profesional.id'] = new mongoose.Types.ObjectId(parametros.profesional);
+        match['solicitud.profesional.id'] = new mongoose.Types.ObjectId(parametros.profesional);
     }
     if (parametros.ambito) {
-        match2['prestacion.solicitud.ambitoOrigen'] = parametros.ambito;
+        match['solicitud.ambitoOrigen'] = parametros.ambito;
     }
 
-    // if (parametros.estadoFacturacion) {
-    //     match2['estadoFacturacion.estado'] = parametros.estadoFacturacion;
-    // }
-    if (parametros.estadoFacturacion) {
-        if (parametros.estadoFacturacion === 'Sin comprobante') {
-            match2['estadoFacturacion'] = { $exists: false };
-        } else {
-            match2['estadoFacturacion.estado'] = parametros.estadoFacturacion;
-        }
-
-    }
-
-    pipeline2 = [
-        {
-            $match: match
-        },
-        {
-            $lookup: {
-                from: 'prestaciones',
-                localField: 'idPrestacion',
-                foreignField: '_id',
-                as: 'prestacion'
-            }
-        },
-        {
-            $unwind: '$prestacion',
-        },
-        {
-            $match: match2
-        }
-    ];
 
     try {
-        const prestaciones = Codificacion.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
+        const prestaciones = Prestacion.aggregate([{ $match: match }]).cursor({ batchSize: 100 }).exec();
         const resultado = [];
         let os = parametros.financiador ? parametros.financiador : 'todos';
         let filtroEstado = parametros.estado ? parametros.estado : 'todos';
         await prestaciones.eachAsync(async (prestacion, error) => {
             let filtroOS = false;
             let dtoPrestacion = {
-                fecha: prestacion.prestacion.ejecucion.fecha,
+                fecha: prestacion.ejecucion.fecha,
                 paciente: prestacion.paciente,
                 financiador: prestacion.paciente && prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial : null,
-                prestacion: prestacion.prestacion.solicitud.tipoPrestacion,
-                profesionales: [prestacion.prestacion.solicitud.profesional],
+                prestacion: prestacion.solicitud.tipoPrestacion,
+                profesionales: [prestacion.solicitud.profesional],
                 estado: 'Presente con registro del profesional',
                 idAgenda: null,
                 idBloque: null,
                 turno: null,
-                idPrestacion: prestacion.idPrestacion,
+                idPrestacion: prestacion._id,
                 estadoFacturacion: prestacion.estadoFacturacion,
-                ambito: prestacion.prestacion.solicitud.ambitoOrigen
+                ambito: prestacion.solicitud.ambitoOrigen
             };
 
             if (prestacion.paciente && prestacion.paciente.obraSocial === os || os === 'todos') {
