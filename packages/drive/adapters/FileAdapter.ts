@@ -6,18 +6,18 @@ import { Types } from 'mongoose';
 export class FileAdapter implements IAdapter {
     public name = 'file-adapter';
     private folder;
-    constructor ({ folder }) {
+    constructor({ folder }) {
         this.folder = folder;
     }
 
-    private folderName(name) {
+    private folderName(name: string) {
         return path.join(this.folder, name);
     }
 
-    write (stream: NodeJS.WriteStream): Promise<string> {
+    write(stream: NodeJS.WriteStream): Promise<string> {
         return new Promise((resolve, reject) => {
             const id = Types.ObjectId();
-            const p = this.folderName(id);
+            const p = this.folderName(String(id));
             const file = fs.createWriteStream(p);
             stream.pipe(file);
             stream.on('end', () => {
@@ -37,7 +37,7 @@ export class FileAdapter implements IAdapter {
         });
     }
 
-    delete (uuid: string): Promise<void> {
+    delete(uuid: string): Promise<void> {
         return new Promise((resolve, reject) => {
             const p = this.folderName(uuid);
             fs.unlink(p, (err) => {
