@@ -200,9 +200,6 @@ export async function patch(data: Partial<ICama>, req: Request) {
         delete data['paciente'];
     }
 
-    const metadata = data['metadata'];
-    delete data['metadata'];
-
     if (cambioPermitido) {
         if ((data as any).idCama || (data as any).createdAt) {
             // La APP debería mandar solo lo que quiere modificar
@@ -232,7 +229,7 @@ export async function patch(data: Partial<ICama>, req: Request) {
             EventCore.emitAsync('mapa-camas:paciente:egreso', nuevoEstado);
         }
         if (nuevoEstado.extras?.ingreso) {
-            EventCore.emitAsync('mapa-camas:paciente:ingreso', { ...nuevoEstado, metadata });
+            EventCore.emitAsync('mapa-camas:paciente:ingreso', { ...nuevoEstado });
         }
 
 

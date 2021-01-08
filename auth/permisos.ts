@@ -136,8 +136,7 @@ export default [
                 child: [
                     { key: 'medica', title: 'Médico', type: 'boolean' },
                     { key: 'enfermeria', title: 'Enfermero', type: 'boolean' },
-                    { key: 'estadistica', title: 'Estadístico', type: 'boolean' },
-                    { key: 'administrativa', title: 'Administrativo', type: 'boolean' },
+                    { key: 'estadistica', title: 'Estadístico', type: 'boolean' }
                 ]
             },
             {
