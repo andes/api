@@ -8,6 +8,56 @@ const user = sisa.user_snvs;
 const clave = sisa.password_snvs;
 const urlSisa = sisa.url_snvs;
 
+export async function getToken(usr: string, pass: string) {
+    const url = `${sisa.url_snvs_covid}/auth/realms/sisa/protocol/openid-connect/token`;
+    const formData = new URLSearchParams();
+    formData.append('grant_type', 'password');
+    formData.append('client_id', 'snvs-token');
+    formData.append('username', usr);
+    formData.append('password', pass);
+    const options = {
+        uri: url,
+        method: 'POST',
+        form: formData.toString(),
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        json: true,
+    };
+    const [status, resJson] = await handleHttpRequest(options);
+    if (status >= 200 && status <= 299) {
+        if (resJson.access_token) {
+            return resJson.access_token;
+        }
+    }
+    return null;
+}
+
+async function getCasosConfirmados(documento: String) {
+    let token = await getToken(sisa.user_snvs_covid, sisa.pass_snvs_covid);
+    const url = `${sisa.url_snvs_covid}/snvs/covid19/personas?nrodoc=${documento}`;
+    const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-type': 'application/json',
+        Accept: 'application/json'
+    };
+    const options = {
+        uri: url,
+        method: 'GET',
+        headers,
+        json: true
+    };
+    const [status, resJson] = await handleHttpRequest(options);
+    if (status >= 200 && status <= 299) {
+        if (resJson && resJson.length > 0) {
+            // Se filtran los eventos de casos confirmados
+            const eventos = resJson.filter(evento => { return evento.clasif_RESUMEN === 'Confirmado'; });
+            return eventos;
+        }
+    }
+    return [];
+}
+
 export async function exportSisa(done) {
 
     const start = moment().startOf('d').toDate();
@@ -226,72 +276,79 @@ export async function exportSisa(done) {
     const prestaciones = [...prestacionesNexo, ...prestacionesAntigenos];
 
     for (const unaPrestacion of prestaciones) {
-        const eventoNominal = {
-            idTipodoc: '1',
-            nrodoc: unaPrestacion.dni.toString(),
-            sexo: unaPrestacion.sexo === 'femenino' ? 'F' : (unaPrestacion.sexo === 'masculino') ? 'M' : '',
-            fechaNacimiento: unaPrestacion.fechaNacimiento,
-            idGrupoEvento: '113',
-            idEvento: '307',
-            idEstablecimientoCarga: unaPrestacion.CodigoSisa.toString(),
-            fechaPapel: unaPrestacion.fecha,
-            idClasificacionManualCaso: unaPrestacion.tipo === 'nexo' ? '792' : unaPrestacion.tipo === 'antigeno' ? '795' : ''
-        };
-
-        const dto = {
-            usuario: user,
-            clave,
-            altaEventoCasoNominal: eventoNominal
-        };
-
-        const log = {
-            fecha: new Date(),
-            sistema: 'Sisa',
-            key: unaPrestacion.tipo === 'nexo' ? 'sisa_nexos' : unaPrestacion.tipo === 'antigeno' ? 'sisa_antigenos' : '',
-            idPaciente: unaPrestacion.idPaciente,
-            info_enviada: eventoNominal,
-            resultado: {}
-        };
-        try {
-            const options = {
-                uri: urlSisa,
-                method: 'POST',
-                body: dto,
-                headers: {
-                    APP_ID: sisa.APP_ID_ALTA,
-                    APP_KEY: sisa.APP_KEY_ALTA,
-                    'Content-Type': 'application/json'
-                },
-                json: true,
+        const documento = unaPrestacion.dni.toString();
+        let casos = [];
+        if (documento) {
+            casos = await getCasosConfirmados(unaPrestacion.dni.toString());
+        }
+        if (casos.length <= 0) {
+            const eventoNominal = {
+                idTipodoc: '1',
+                nrodoc: unaPrestacion.dni.toString(),
+                sexo: unaPrestacion.sexo === 'femenino' ? 'F' : (unaPrestacion.sexo === 'masculino') ? 'M' : '',
+                fechaNacimiento: unaPrestacion.fechaNacimiento,
+                idGrupoEvento: '113',
+                idEvento: '307',
+                idEstablecimientoCarga: unaPrestacion.CodigoSisa.toString(),
+                fechaPapel: unaPrestacion.fecha,
+                idClasificacionManualCaso: unaPrestacion.tipo === 'nexo' ? '792' : unaPrestacion.tipo === 'antigeno' ? '795' : ''
             };
-            const [status, resJson] = await handleHttpRequest(options);
 
-            if (status >= 200 && status <= 299) {
-                log.resultado = {
-                    resultado: resJson.resultado ? resJson.resultado : '',
-                    id_caso: resJson.id_caso ? resJson.id_caso : '',
-                    description: resJson.description ? resJson.description : ''
+            const dto = {
+                usuario: user,
+                clave,
+                altaEventoCasoNominal: eventoNominal
+            };
+
+            const log = {
+                fecha: new Date(),
+                sistema: 'Sisa',
+                key: unaPrestacion.tipo === 'nexo' ? 'sisa_nexos' : unaPrestacion.tipo === 'antigeno' ? 'sisa_antigenos' : '',
+                idPaciente: unaPrestacion.idPaciente,
+                info_enviada: eventoNominal,
+                resultado: {}
+            };
+            try {
+                const options = {
+                    uri: urlSisa,
+                    method: 'POST',
+                    body: dto,
+                    headers: {
+                        APP_ID: sisa.APP_ID_ALTA,
+                        APP_KEY: sisa.APP_KEY_ALTA,
+                        'Content-Type': 'application/json'
+                    },
+                    json: true,
                 };
+                const [status, resJson] = await handleHttpRequest(options);
 
-            } else {
+                if (status >= 200 && status <= 299) {
+                    log.resultado = {
+                        resultado: resJson.resultado ? resJson.resultado : '',
+                        id_caso: resJson.id_caso ? resJson.id_caso : '',
+                        description: resJson.description ? resJson.description : ''
+                    };
+
+                } else {
+                    log.resultado = {
+                        resultado: 'ERROR_DE_ENVIO',
+                        id_caso: '',
+                        description: 'No se recibió ningún resultado'
+                    };
+                }
+
+                let info = new InformacionExportada(log);
+                await info.save();
+
+            } catch (error) {
                 log.resultado = {
                     resultado: 'ERROR_DE_ENVIO',
                     id_caso: '',
-                    description: 'No se recibió ningún resultado'
+                    description: error.toString()
                 };
+                let info = new InformacionExportada(log);
+                await info.save();
             }
-
-            let info = new InformacionExportada(log);
-            await info.save();
-
-        } catch (error) {
-            log.resultado = {
-                resultado: 'ERROR_DE_ENVIO',
-                id_caso: '',
-                description: error.toString()
-            };
-            let info = new InformacionExportada(log);
-            await info.save();
         }
     }
     done();
