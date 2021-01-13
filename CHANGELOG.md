@@ -1,3 +1,18 @@
+# [5.29.0](https://github.com/andes/api/compare/v5.28.0...v5.29.0) (2021-01-13)
+
+
+### Bug Fixes
+
+* **drive:** ajueste file adapter ([#1245](https://github.com/andes/api/issues/1245)) ([5c2c63b](https://github.com/andes/api/commit/5c2c63bc64667c938a22222ecd74b6a4ca830a9c))
+* **tm:** fix error en sincro organizacion con sisa ([#1240](https://github.com/andes/api/issues/1240)) ([18d35fa](https://github.com/andes/api/commit/18d35faea2aeedd6e99c7ca104dbcec8a0254794))
+
+
+### Features
+
+* **auth:** permite realizar el cambio de contraseña para usuarios externos a oneLogin ([#1233](https://github.com/andes/api/issues/1233)) ([aa33a3d](https://github.com/andes/api/commit/aa33a3dfee746f3c091a1ba4b93533a7e52a5ab7))
+* **misc:** turnos prestaciones busca prestaciones en vez de codificaciones  ([#1068](https://github.com/andes/api/issues/1068)) ([ff56d93](https://github.com/andes/api/commit/ff56d93e97b118e6349aca48df38de748156db00))
+* **vacuna:** Agregamos las credenciales en el header en lugar de enviarlas en el body ([#1241](https://github.com/andes/api/issues/1241)) ([d7fdd15](https://github.com/andes/api/commit/d7fdd1582e1ce911f8a79b0ffd6ebc04f3bbe3d4))
+
 # [5.28.0](https://github.com/andes/api/compare/v5.27.0...v5.28.0) (2021-01-06)
 
 
