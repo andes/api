@@ -82,7 +82,13 @@ export const sisa = {
     url: getEnv('SISA_URL', 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?'),
     urlEstablecimiento: getEnv('SISA_URL_ESTABLECIMIENTO', 'https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/'),
     urlPrestacionesPorEfector: getEnv('SISA_URL_PRESTACIONES', 'https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/prestaciones/'),
-    url_nomivac: getEnv('NOMIVAC_URL', 'https://ws200-qa.sisa.msal.gov.ar/nomivacAplicacion/v1/aplicaciones/alta/')
+    url_nomivac: getEnv('NOMIVAC_URL', 'https://ws200-qa.sisa.msal.gov.ar/nomivacAplicacion/v1/aplicaciones/alta/'),
+    user_snvs: getEnv('SISA_USERSNVS', ''),
+    password_snvs: getEnv('SISA_PASSWORD_SNVS', ''),
+    url_snvs: getEnv('SISA_URL_SNVS', ''),
+    url_snvs_covid: getEnv('SNVS_COVID_URL', ''),
+    user_snvs_covid: getEnv('SNVS_COVID_USER', ''),
+    pass_snvs_covid: getEnv('SNVS_COVID_PASS', '')
 };
 // Configuración servicio ANSES
 export const anses = {
