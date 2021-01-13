@@ -37,18 +37,21 @@ export async function validar(documento: string, sexo: string) {
             return ciudadanoRenaper;
         }
     }
-    const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
-    if (ciudadanoSisa) {
-        ciudadanoSisa.direccion[0] = await matchDireccion(ciudadanoSisa);
-        ciudadanoSisa.direccion[1] = ciudadanoSisa.direccion[0];
-        ciudadanoSisa.validateAt = new Date();
-        if (ciudadanoRenaper) {
-            ciudadanoSisa.foto = ciudadanoRenaper.foto;
-            ciudadanoSisa.direccion = ciudadanoRenaper.direccion;
+    try {
+        const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
+        if (ciudadanoSisa) {
+            ciudadanoSisa.direccion[0] = await matchDireccion(ciudadanoSisa);
+            ciudadanoSisa.direccion[1] = ciudadanoSisa.direccion[0];
+            ciudadanoSisa.validateAt = new Date();
+            if (ciudadanoRenaper) {
+                ciudadanoSisa.foto = ciudadanoRenaper.foto;
+                ciudadanoSisa.direccion = ciudadanoRenaper.direccion;
+            }
+            return ciudadanoSisa;
         }
-        return ciudadanoSisa;
+    } catch (error) {
+        return null;
     }
-    return null;
 
 }
 

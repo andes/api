@@ -21,16 +21,19 @@ export async function updateValidados(done) {
                 if (persona_validada.fechaFallecimiento) {
                     data.fechaFallecimiento = persona_validada.fechaFallecimiento;
                 }
+                data['direccion'] = pac.direccion;
                 if (pac.direccion?.[0]) {
                     if (persona_validada.direccion?.length > 0) {
-                        data.direccion[1] = persona_validada.direccion[1];
+                        data.direccion[0] = persona_validada.direccion[0];
                     }
                 } else {
                     // si el paciente no tiene direccion le asignamos ambas con el valor de su direccion legal
                     data.direccion = persona_validada.direccion;
                 }
-                if (!data.direccion[0].georeferencia || (data.direccion.length > 0 && data.direccion[0].georeferencia === null)) {
-                    const dir = data.direccion[0].valor + ', ' + data.direccion[0].ubicacion.localidad.nombre + ', ' + data.direccion[0].ubicacion.provincia.nombre;
+                if (data.direccion[0].ubicacion.localidad && (!data.direccion[0].georeferencia || (data.direccion.length > 0 && data.direccion[0].georeferencia === null))) {
+                    const localidad = data.direccion[0].ubicacion.localidad.nombre;
+                    const provincia = data.direccion[0].ubicacion.provincia.nombre;
+                    const dir = `${data.direccion[0].valor}, ${localidad}, ${provincia}`;
                     const geoRef: any = await geoReferenciar(dir, geoKey);
                     data.direccion[0].geoReferencia = geoRef && Object.keys(geoRef).length > 0 ? [geoRef.lat, geoRef.lng] : null;
                 }
