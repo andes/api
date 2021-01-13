@@ -1,6 +1,9 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { Prestacion } from '../schemas/prestacion';
+import { ObjectId } from '@andes/core';
+import { AndesDrive } from '@andes/drive/';
+import { readFile } from '../../../core/tm/controller/file-storage';
 
 /**
  * Función recursiva que permite recorrer un objeto y todas sus propiedades
@@ -197,4 +200,16 @@ export function matchConcepts(registro, conceptos) {
         });
     }
     return match;
+}
+
+
+export async function getArchivoAdjunto(id: ObjectId) {
+    const fileDrive = await AndesDrive.find(id);
+    if (fileDrive) {
+        const stream1 = await AndesDrive.read(fileDrive);
+        return stream1;
+    } else {
+        const data = await readFile(id, 'RupStore');
+        return data.stream;
+    }
 }

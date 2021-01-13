@@ -11,7 +11,7 @@ import { RecuperoCosto } from '../recupero-costo/recupero-costo';
 import { ConstanciaPuco } from '../puco/constancia-puco';
 import { Derivacion } from '../com/derivacion';
 import { Arancelamiento } from '../arancelamiento/arancelamiento';
-import { readFile } from '../../../core/tm/controller/file-storage';
+import { getArchivoAdjunto } from '../../../modules/rup/controllers/rup';
 
 const router = express.Router();
 
@@ -106,9 +106,9 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
         const fecha = moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss');
         for (const adj of adjuntos) {
             count++;
-            const data = await readFile(adj.id, 'RupStore');
+            const stream = await getArchivoAdjunto(adj.id);
             attachments.push({
-                content: data.stream,
+                content: stream,
                 filename: `adjunto_${count} - ${fecha}.${adj.ext}`
             });
         }
