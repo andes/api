@@ -47,7 +47,10 @@ const EstadoSchema = new Schema({
                 nombre: String
             }]
         }]
-    }]
+    }],
+    ingresos: SchemaTypes.Mixed,
+    columns: SchemaTypes.Mixed,
+    turnero: SchemaTypes.Mixed,
 });
 
 EstadoSchema.methods.check = function (origen, destino) {

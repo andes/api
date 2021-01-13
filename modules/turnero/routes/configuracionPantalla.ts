@@ -184,4 +184,13 @@ EventSocket.on('turnero-proximo-llamado', async (paquete: Packet) => {
     }
 });
 
+EventSocket.on('turnero-proximo-llamado-internacion', async (paquete: Packet) => {
+    try {
+        const turno = paquete.data;
+        paquete.toRoom(`turnero-pantalla-${turno.idPantalla}`, 'mostrar-turno', turno);
+    } catch (err) {
+        return err;
+    }
+});
+
 module.exports = router;

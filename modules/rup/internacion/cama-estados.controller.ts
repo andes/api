@@ -33,7 +33,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         thirdMatch['sectores._id'] = mongoose.Types.ObjectId(filtros.sector);
     }
 
-    const aggregate = [
+    const aggregate: any[] = [
         {
             $match: {
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
@@ -167,7 +167,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                             }
                         }
                     },
-                    { $project: { createdAt: 0, createdBy: 0 }}
+                    { $project: { createdAt: 0, createdBy: 0 } }
                 ],
                 as: 'cama'
             }
@@ -177,18 +177,33 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                 newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
             }
         },
+
         {
             $match: thirdMatch
-        },
-        {
-            $addFields: {
-                id: '$_id',
-            }
         },
         {
             $project: { cama: 0, __v: 0, }
         }
     ];
+
+    if (ambito === 'guardia') {
+        aggregate.push({
+            $lookup: {
+                from: 'internacionPacienteResumen',
+                localField: 'idInternacion',
+                foreignField: '_id',
+                as: 'estado_internacion'
+            }
+        });
+        aggregate.push({ $unwind: { path: '$estado_internacion', preserveNullAndEmptyArrays: true } });
+        aggregate.push({
+            $addFields: {
+                fechaIngreso: '$estado_internacion.fechaIngreso',
+                fechaAtencion: '$estado_internacion.fechaAtencion',
+                prioridad: '$estado_internacion.prioridad',
+            }
+        });
+    }
 
     return await CamaEstados.aggregate(aggregate);
 }

@@ -20,13 +20,24 @@ export interface IInternacionResumen {
     };
     fechaIngreso?: Date;
     fechaEgreso?: Date;
+    fechaAtencion?: Date;
     tipo_egreso?: string;
     deletedAt?: Date;
+
+    ingreso: {
+        elementoRUP: ObjectId,
+        registros: [any]
+    };
+    prioridad?: {
+        id: number;
+        label: string;
+        type: string;
+    };
 }
 
 export type IInternacionResumenDoc = AndesDoc<IInternacionResumen>;
 
-export const InternacionResumenschema = new Schema({
+export const InternacionResumenSchema = new Schema({
     ambito: String,
     paciente: {
         id: SchemaTypes.ObjectId,
@@ -43,9 +54,24 @@ export const InternacionResumenschema = new Schema({
     },
     fechaIngreso: Date,
     fechaEgreso: Date,
+    fechaAtencion: Date,
     tipo_egreso: { type: String, required: false },
     deletedAt: { type: Date, required: false },
 
+    prioridad: new Schema({
+        id: Number,
+        label: String,
+        type: String
+    }, { _id: false }),
+
+    ingreso: {
+        type: {
+            elementoRUP: SchemaTypes.ObjectId,
+            registros: [SchemaTypes.Mixed]
+        },
+        required: false
+    }
+
 });
 
-export const InternacionResumen = model<IInternacionResumenDoc>('internacionPacienteResumen', InternacionResumenschema, 'internacionPacienteResumen');
+export const InternacionResumen = model<IInternacionResumenDoc>('internacionPacienteResumen', InternacionResumenSchema, 'internacionPacienteResumen');

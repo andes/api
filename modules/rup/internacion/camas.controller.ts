@@ -229,7 +229,7 @@ export async function patch(data: Partial<ICama>, req: Request) {
             EventCore.emitAsync('mapa-camas:paciente:egreso', nuevoEstado);
         }
         if (nuevoEstado.extras?.ingreso) {
-            EventCore.emitAsync('mapa-camas:paciente:ingreso', nuevoEstado);
+            EventCore.emitAsync('mapa-camas:paciente:ingreso', { ...nuevoEstado });
         }
 
 

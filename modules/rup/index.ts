@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { ElementoRUPRouter } from './elementos-rup.controller';
-import { EstadosRouter, CamasRouter, CensosRouter, InternacionRouter, SalaComunRouter } from './internacion';
+import { EstadosRouter, CamasRouter, CensosRouter, InternacionRouter, SalaComunRouter, InternacionResumenRouter } from './internacion';
 
 export function setup(app: express.Application) {
     app.use('/api/modules/rup', ElementoRUPRouter);
@@ -9,4 +9,5 @@ export function setup(app: express.Application) {
     app.use('/api/modules/rup/internacion', CensosRouter);
     app.use('/api/modules/rup/internacion', SalaComunRouter);
     app.use('/api/modules/rup/internacion', InternacionRouter);
+    app.use('/api/modules/rup/internacion', InternacionResumenRouter);
 }
