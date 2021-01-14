@@ -10,7 +10,9 @@ class InternacionResumenController extends ResourceBase<IInternacionResumenDoc> 
         organizacion: {
             field: 'organizacion.id',
             fn: MongoQuery.matchString
-        }
+        },
+        ingreso: MongoQuery.matchDate.withField('fechaIngreso'),
+        egreso: MongoQuery.matchDate.withField('fechaEgreso')
     };
 
     async populate(data: IInternacionResumen) {

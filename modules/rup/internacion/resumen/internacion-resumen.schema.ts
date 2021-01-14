@@ -74,4 +74,8 @@ export const InternacionResumenSchema = new Schema({
 
 });
 
+InternacionResumenSchema.index({
+    fechaIngreso: 1
+});
+
 export const InternacionResumen = model<IInternacionResumenDoc>('internacionPacienteResumen', InternacionResumenSchema, 'internacionPacienteResumen');
