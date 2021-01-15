@@ -160,4 +160,6 @@ export function initAPI(app: Express) {
     app.use('/api/modules/mobileApp', SendMessageCacheRouter);
     app.use('/api/modules/mobileApp', PacienteAppRouter);
     app.use('/api/core/mpi', require('./core/mpi').ParentescoRouter);
+    app.use('/api/modules', require('./modules/personalSalud').PersonalSaludRouter);
+    app.use('/api/modules', require('./modules/modificadores').ModificadoresRouter);
 }
