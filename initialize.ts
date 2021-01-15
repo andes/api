@@ -94,6 +94,7 @@ export function initAPI(app: Express) {
         app.use('/api/modules/vacunas', router);
     });
 
+    app.use('/api/modules/forms', require('./modules/forms').FormRouter);
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').UsuariosRouter);
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').PerfilesRouter);
     app.use('/api/modules/registro-novedades', require('./modules/registro-novedades').NovedadesRouter);
