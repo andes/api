@@ -1,18 +1,14 @@
-import { PersonalSaludRouter } from '../personalSalud/personal-salud.routes';
 const { Engine } = require('json-rules-engine');
+import * as request from 'request';
 
-
-/**
- * Setup a new engine
- */
 export let engine = new Engine();
 
 let esPersonalSalud = {
     conditions: {
         all: [{
-            fact: 'documento',
+            fact: 'personal-salud',
             operator: 'equal',
-            value: '34658023'
+            value: true
         }]
     },
     event: {
@@ -25,10 +21,27 @@ let esPersonalSalud = {
 
 engine.addRule(esPersonalSalud);
 
-engine.addFact('documento', (params, almanac) => {
+let personalSaludFact = async function (params, almanac) {
+    const documento = await almanac.factValue('documento');
     return almanac.factValue('fuente')
         .then(fuente => {
-            const resp = PersonalSaludRouter.get(`${fuente.ruta}?${params.documento}`);
-            return resp;
+            return new Promise(resolve => {
+                request({
+                    url: `${fuente.ruta}?documento=${documento}`,
+                    json: true
+                }, function (error, response) {
+                    if (!error)
+                        resolve(response.body);
+                })
+            }).then(response => {
+                if (response[0]) {
+                    return true
+                } else {
+                    return false;
+                }
+            });
         });
-});
+};
+
+engine.addFact('personal-salud', personalSaludFact);
+
