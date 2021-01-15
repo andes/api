@@ -161,7 +161,6 @@ export async function multimatch(searchText: string, filter: any, options?: any)
     words.forEach(w => {
         andQuery.push({ tokens: RegExp(`^${w}`) });
     });
-    filter.activo = { $eq: true };
     andQuery.push(filter);
     const query = {
         $and: andQuery
