@@ -4,6 +4,8 @@ import { exportHudsLog } from './exportHuds.log';
 import { ExportHudsModel } from './exportHuds.schema';
 import * as archiver from 'archiver';
 import { InformeRUP } from '../../descargas/informe-rup/informe-rup';
+import { makeFs } from '../../../modules/cda/schemas/CDAFiles';
+import { getCda } from '../../../modules/cda/controller/CDAPatient';
 
 import moment = require('moment');
 
@@ -12,6 +14,7 @@ export async function createFile(idExportHuds) {
         const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
         let fechaCondicion = null;
         let prestaciones: any[] = [];
+        let cdas = [];
         if (peticionExport.prestaciones.length) {
             prestaciones = await Prestacion.find({ _id: { $in: peticionExport.prestaciones } });
         } else {
@@ -30,6 +33,16 @@ export async function createFile(idExportHuds) {
                 query['solicitud.tipoPrestacion.conceptId'] = peticionExport.tipoPrestacion;
             }
             prestaciones = await Prestacion.find(query);
+
+            let queryCda = {
+                'metadata.paciente': peticionExport.pacienteId,
+                'metadata.adjuntos': { $exists: true }
+            };
+            if (fechaCondicion) {
+                queryCda['metadata.fecha'] = fechaCondicion;
+            }
+            const cdaFiles = makeFs();
+            cdas = await cdaFiles.find(queryCda).toArray();
         }
         const fecha = moment(peticionExport.createAt).format('YYYY-MM-DD');
 
@@ -87,12 +100,39 @@ export async function createFile(idExportHuds) {
                 }
             }));
         };
+        const getCdas = () => {
+            return Promise.all(cdas.map(async (cda: any) => {
+                const realName = cda.filename.split('.')[0];
+                try {
+                    let params = {
+                        id: cda._id,
+                        name: cda.metadata.adjuntos[0].path,
+                        realName,
+                        user: peticionExport.user
+                    };
+                    let fileCda = await getCda(params);
+                    archive.append(fileCda.stream, { name: params.name });
+
+                } catch (error) {
+                    exportHudsLog.error('Crear cda', objectLog, error);
+                }
+            }));
+        };
         // Primero obtengo los pdf y luego cierro el archivo
         if (prestaciones) {
             getData().then(() => {
-                archive.finalize().then();
+                if (cdas) {
+                    getCdas().then(() => {
+                        archive.finalize().then();
+                    });
+                } else {
+                    archive.finalize().then();
+                }
             });
-        } else { // Caso en el que no hay prestaciones, devuelvo el zip vacio
+        } else {
+            if (cdas) {
+                getCdas().then();
+            } // Caso en el que no hay prestaciones, devuelvo el zip vacio
             archive.finalize().then();
         }
     });

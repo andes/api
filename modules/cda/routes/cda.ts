@@ -376,27 +376,31 @@ router.get('/paciente/:id', async (req: any, res, next) => {
  */
 
 router.get('/:id/:name', async (req: any, res, next) => {
-try {
-    
-    if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
-        return next(403);
-    }
-    
-    const id = ObjectId(req.params.id);
-    const name = req.params.name;
-    const realName = req.params.name.split('.')[0];
-    const params =  {
-        id,
-        name,
-        realName,
-        res
-    };
-    await cdaCtr.getCda(params);
-    
+    try {
+
+        if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
+            return next(403);
+        }
+
+        const id = ObjectId(req.params.id);
+        const name = req.params.name;
+        const realName = req.params.name.split('.')[0];
+        const user = req.user;
+        const params = {
+            id,
+            name,
+            realName,
+            user
+        };
+        const cda = await cdaCtr.getCda(params);
+        const contentType = cda.file.contentType ? cda.file.contentType : cda.file.mimetype;
+        const str = cda.stream;
+        res.contentType(contentType);
+        str.pipe(res);
     } catch (ex) {
-        return next(ex) // poner error lindo
+        return next(ex); // poner error lindo
     }
-    
+
 });
 
 

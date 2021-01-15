@@ -15,6 +15,7 @@ import { CDA as CDAConfig } from '../../../config.private';
 import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
 import { Auth } from '../../../auth/auth.class';
 import { AndesDrive } from '@andes/drive';
+import { readFile as readFileBase } from '../../../core/tm/controller/file-storage';
 
 /**
  * Matcheamos los datos del paciente.
@@ -764,7 +765,6 @@ export function checkAndExtract(xmlDom) {
 
 
 export async function getCda(params) {
-
     const CDAFiles = makeFs();
     const ObjectId = Types.ObjectId;
     const cda = await CDAFiles.findOne({ _id: params.id });
@@ -773,27 +773,25 @@ export async function getCda(params) {
             return String(_adj.id) === params.realName;
         });
         if (adj && adj.adapter === 'drive') {
-
             const fileDrive = await AndesDrive.find(ObjectId(params.realName));
             if (fileDrive) {
                 const stream1 = await AndesDrive.read(fileDrive);
-                params.response.contentType(fileDrive.mimetype);
-                stream1.pipe(params.res);
-               return stream1;
+                const archivo = {
+                    file: fileDrive,
+                    stream: stream1
+                };
+                return archivo;
             }
-
         } else {
             const query = {
                 filename: params.name,
-               'metadata.cdaId': params.id
+                'metadata.cdaId': params.id
             };
             const file = await CDAFiles.findOne(query);
-            if (params.res.user && params.res.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(params.res.user.pacientes[0].id)) {
-                throw 403
+            if (params.user && params.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(params.user.pacientes[0].id)) {
+                throw 403;
             }
-            const stream1 = await CDAFiles.readFile({ _id: file._id });
-            params.res.contentType(file.contentType);
-            stream1.pipe(params.res);
+            const stream1 = await readFileBase(file._id, 'CDAFiles');
             return stream1;
         }
 
