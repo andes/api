@@ -1,0 +1,47 @@
+definitions:
+  PersonalSaludSchema:
+    type: object
+    properties:
+      id:
+        type: string
+      nombre:
+        type: string
+      apellido:
+        type: string  
+      documento:
+        type: string
+      sexo:
+        type: string
+      fechaNacimiento:
+        type: date-time
+      ocupacion: 
+        type: string
+paths:
+  /modules/personalSalud:
+    get:
+      description: Busqueda de personal de salud  
+      summary: Busqueda de personal de salud
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: nombre
+          in: query
+          description: Nombre del personal de salud.
+          type: string
+        - name: apellido
+          in: query
+          description: Apellido del personal de salud
+          type: string
+        - name: documento
+          in: query
+          description: Documento del personal de salud
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los datos del personal de salud que encontro coincidencias
+        '401':
+          description: No Autorizado

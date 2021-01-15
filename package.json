@@ -49,6 +49,7 @@
     "http-status-codes": "^1.1.6",
     "ipaddr.js": "^1.7.0",
     "is-reachable": "^2.3.2",
+    "json-rules-engine": "^6.0.0",
     "jsonwebtoken": "^8.2.1",
     "ldapjs": "^1.0.1",
     "libxmljs2": "^0.26.3",
