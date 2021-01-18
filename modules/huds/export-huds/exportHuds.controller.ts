@@ -111,7 +111,7 @@ export async function createFile(idExportHuds) {
                         user: peticionExport.user
                     };
                     let fileCda = await getCda(params);
-                    archive.append(fileCda.stream, { name: params.name });
+                    archive.append(fileCda.stream, { name: `${moment(cda.metadata.fecha).format('YYYY-MM-DD')} - ${cda.metadata.prestacion.snomed.term}.pdf` });
 
                 } catch (error) {
                     exportHudsLog.error('Crear cda', objectLog, error);
@@ -120,20 +120,11 @@ export async function createFile(idExportHuds) {
         };
         // Primero obtengo los pdf y luego cierro el archivo
         if (prestaciones) {
-            getData().then(() => {
-                if (cdas) {
-                    getCdas().then(() => {
-                        archive.finalize().then();
-                    });
-                } else {
-                    archive.finalize().then();
-                }
-            });
-        } else {
-            if (cdas) {
-                getCdas().then();
-            } // Caso en el que no hay prestaciones, devuelvo el zip vacio
-            archive.finalize().then();
+            await getData();
         }
+        if (cdas) {
+            await getCdas();
+        }
+        archive.finalize();
     });
 }

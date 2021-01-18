@@ -398,7 +398,7 @@ router.get('/:id/:name', async (req: any, res, next) => {
         res.contentType(contentType);
         str.pipe(res);
     } catch (ex) {
-        return next(ex); // poner error lindo
+        return next(500);
     }
 
 });
