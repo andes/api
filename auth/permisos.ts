@@ -56,7 +56,8 @@ export default [
                     { key: 'puedeImprimir', title: 'Revisar-Imprimir agenda', comment: 'Habilita botón Auditoría de agendas', type: 'boolean' },
                     { key: 'puedeReasignar', title: 'Reasignar Turno', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
-                    { key: 'puedeBorrar', title: 'Borrar agenda', comment: 'Borra agendas en planificación', type: 'boolean' }
+                    { key: 'puedeBorrar', title: 'Borrar agenda', comment: 'Borra agendas en planificación', type: 'boolean' },
+                    { key: 'READ', title: 'Solo Lectura', comment: 'ver agenda publicada', type: 'boolean' }
                 ]
             },
             {
@@ -88,7 +89,8 @@ export default [
                     { key: 'solicitud', title: 'Registrar solicitud', type: 'boolean' },
                     { key: 'autocitado', title: 'Registrar Autocitación', type: 'boolean' },
                     { key: 'darTurnos', title: 'Dar turnos desde punto inicio', type: 'boolean' },
-                    { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' }
+                    { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
+                    { key: 'READ', title: 'Solo Lectura', type: 'boolean' }
                 ]
             }
         ]
