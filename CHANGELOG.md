@@ -1,3 +1,17 @@
+# [5.30.0](https://github.com/andes/api/compare/v5.29.0...v5.30.0) (2021-01-20)
+
+
+### Bug Fixes
+
+* **mpi:** se agregan controles varios ([#1244](https://github.com/andes/api/issues/1244)) ([8d366f2](https://github.com/andes/api/commit/8d366f2428d436715a82736ad4885758db8b8b2b))
+* **rup:** adjuntos desde andes drive ([#1249](https://github.com/andes/api/issues/1249)) ([2b2b178](https://github.com/andes/api/commit/2b2b1788c8d7edc91a334de5272709a927d0c7f5))
+
+
+### Features
+
+* **guardia:** primeros pasos ([#1215](https://github.com/andes/api/issues/1215)) ([859039a](https://github.com/andes/api/commit/859039a8ed9e8f0e93fa0b426933c20f2f28a3e8))
+* **JOB:** Exportación a sisa de casos covid ([#1200](https://github.com/andes/api/issues/1200)) ([d010d5e](https://github.com/andes/api/commit/d010d5e59877e36ace8e3b6f321264927cd23e8e))
+
 # [5.29.0](https://github.com/andes/api/compare/v5.28.0...v5.29.0) (2021-01-13)
 
 
