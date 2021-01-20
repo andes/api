@@ -1,11 +1,11 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Forms } from './forms.schema';
-// import { authenticate, checkPermission } from '../application';
+import { Auth } from '../../auth/auth.class';
 
 class FormsResource extends ResourceBase {
     Model = Forms;
     resourceName = 'formulario';
-    middlewares = [];
+    middlewares = [Auth.authenticate()];
     routesAuthorization = {};
     searchFileds = {
         name: MongoQuery.partialString,

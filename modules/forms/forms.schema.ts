@@ -37,7 +37,7 @@ export const FieldSchema = new mongoose.Schema({
     max: Number,
     required: Boolean,
     subfilter: Boolean,
-    resource: { type: String, required: false },
+    resources: { type: String, required: false },
     preload: Boolean,
 
 });
