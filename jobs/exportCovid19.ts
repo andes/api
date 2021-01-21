@@ -12,7 +12,7 @@ export async function exportCovid19(done, horas) {
     const pipelineVacunaCovid19 = [
         {
             $match: {
-                'solicitud.fecha': {
+                'ejecucion.fecha': {
                     $gte: start, $lte: end
                 },
                 'estadoActual.tipo': 'validada',
