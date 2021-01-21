@@ -45,6 +45,7 @@ export default [
                 title: 'Operaciones sobre agendas',
                 comment: 'Habilita funciones del gestor',
                 child: [
+                    { key: 'read', title: 'Ver Agendas', comment: 'ver agenda publicada', type: 'boolean' },
                     { key: 'puedeEditar', title: 'Editar agenda', type: 'boolean' },
                     { key: 'puedeSuspender', title: 'Suspender', type: 'boolean' },
                     { key: 'puedeHabilitar', title: 'Habilitar agenda', type: 'boolean' },
@@ -57,7 +58,8 @@ export default [
                     { key: 'puedeReasignar', title: 'Reasignar Turno', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
                     { key: 'puedeBorrar', title: 'Borrar agenda', comment: 'Borra agendas en planificación', type: 'boolean' },
-                    { key: 'READ', title: 'Solo Lectura', comment: 'ver agenda publicada', type: 'boolean' }
+                    { key: 'puedeRevision', title: 'Revisar agenda', comment: 'Revisión de agendas', type: 'boolean' },
+                    { key: 'puedeNota', title: 'Agregar nota', comment: 'Agregar nota', type: 'boolean' },
                 ]
             },
             {
@@ -86,11 +88,13 @@ export default [
                 key: 'puntoInicio',
                 title: 'Punto Inicio',
                 child: [
+                    { key: 'read', title: 'Ver Turnos', type: 'boolean' },
                     { key: 'solicitud', title: 'Registrar solicitud', type: 'boolean' },
                     { key: 'autocitado', title: 'Registrar Autocitación', type: 'boolean' },
                     { key: 'darTurnos', title: 'Dar turnos desde punto inicio', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
-                    { key: 'READ', title: 'Solo Lectura', type: 'boolean' }
+                    { key: 'activarMobile', title: 'Activar App Mobile', type: 'boolean' },
+
                 ]
             }
         ]
@@ -111,9 +115,7 @@ export default [
                     { key: 'patchAndes', title: 'Modificar datos de un paciente', type: 'boolean' },
                     { key: 'parentesco', title: 'Obtener parentesco', type: 'boolean' }
                 ]
-
             },
-
         ]
     },
     {
