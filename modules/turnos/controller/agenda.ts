@@ -371,7 +371,8 @@ export function editarAgenda(req, data) {
     // Para que setee el atributo en null segun corresponda
     data.espacioFisico = req.body.espacioFisico;
     data.otroEspacioFisico = req.body.otroEspacioFisico;
-
+    // Si se desactivaron los mensajes al dar turno
+    data.enviarSms = req.body.enviarSms || false;
 }
 
 // Agenda
