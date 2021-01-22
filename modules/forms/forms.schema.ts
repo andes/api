@@ -1,16 +1,22 @@
 import * as mongoose from 'mongoose';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import {FormResourcesSchema} from './forms-resources/forms-resources-schema';
 
 export interface FormTypes {
     name: string;
     type: string;
     active: boolean;
     fields: {
-        key: string;
-        label: string;
+        field_key: string;
+        field_label: string;
         type: string;
         description: string;
         required: boolean;
+        sections: {
+            activo: boolean,
+            nombre: string,
+            id: string,
+            type: string
+        }[];
         subfilter: {
             type: boolean;
             default: false;
@@ -33,6 +39,7 @@ export const FieldSchema = new mongoose.Schema({
     label: String,
     description: String,
     type: String,
+    sections: [FormResourcesSchema],
     min: Number,
     max: Number,
     required: Boolean,

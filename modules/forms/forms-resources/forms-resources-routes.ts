@@ -9,8 +9,9 @@ class FormResourceResource extends ResourceBase {
     searchFileds = {
         nombre: MongoQuery.partialString,
         activo: MongoQuery.partialString,
-        key: MongoQuery.equalMatch,
-        search: ['nombre', 'key']
+        id: MongoQuery.equalMatch,
+        type: MongoQuery.partialString,
+        search: ['nombre', 'id', 'type']
     };
 }
 
