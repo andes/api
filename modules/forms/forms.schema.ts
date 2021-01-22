@@ -6,8 +6,8 @@ export interface FormTypes {
     type: string;
     active: boolean;
     fields: {
-        field_key: string;
-        field_label: string;
+        key: string;
+        label: string;
         type: string;
         description: string;
         required: boolean;
