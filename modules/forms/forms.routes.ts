@@ -1,7 +1,6 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Forms } from './forms.schema';
 import { Auth } from '../../auth/auth.class';
-
 class FormsResource extends ResourceBase {
     Model = Forms;
     resourceName = 'formulario';
@@ -12,8 +11,8 @@ class FormsResource extends ResourceBase {
         type: MongoQuery.partialString,
         active: MongoQuery.equalMatch,
         search: ['name', 'type'],
-        fields: {
-            field: 'fields.key',
+        sections: {
+            field: 'sections.id',
             fn: value => value
         }
     };

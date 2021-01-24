@@ -1,32 +1,31 @@
 import * as mongoose from 'mongoose';
-import {FormResourcesSchema} from './forms-resources/forms-resources-schema';
+import { FormResourcesSchema } from './forms-resources/forms-resources-schema';
 
 export interface FormTypes {
     name: string;
     type: string;
     active: boolean;
-    fields: {
-        key: string;
-        label: string;
-        type: string;
-        description: string;
-        required: boolean;
-        sections: {
-            activo: boolean,
-            nombre: string,
-            id: string,
-            type: string
+    sections: {
+        id: string,
+        active: boolean,
+        name: string,
+        type: string,
+        fields: {
+            key: string;
+            label: string;
+            type: string;
+            description: string;
+            required: boolean;
+            subfilter: {
+                type: boolean;
+                default: false;
+            };
+            extras: any;
+            resources: string;
+            preload: boolean;
         }[];
-        subfilter: {
-            type: boolean;
-            default: false;
-        };
-        extras: any;
-        resources: string;
-        preload: boolean;
     }[];
 }
-
 export interface FormsTypesDocument extends mongoose.Document, FormTypes { }
 
 export const FieldSchema = new mongoose.Schema({
@@ -39,7 +38,6 @@ export const FieldSchema = new mongoose.Schema({
     label: String,
     description: String,
     type: String,
-    sections: [FormResourcesSchema],
     min: Number,
     max: Number,
     required: Boolean,
@@ -49,14 +47,19 @@ export const FieldSchema = new mongoose.Schema({
 
 });
 
-export const FormSchema = new mongoose.Schema({
+export const SectionSchema = new mongoose.Schema({
+    id: String,
+    active: Boolean,
     name: String,
-    active: { type: Boolean, default: true },
-    type: {
-        type: String,
-        index: { unique: true }
-    },
+    type: String,
     fields: [FieldSchema]
+});
+
+export const FormSchema = new mongoose.Schema({
+    name: { type: String, index: { unique: true } },
+    active: { type: Boolean, default: true },
+    type: { type: String, index: { unique: true } },
+    sections: [SectionSchema]
 });
 
 FormSchema.index({
