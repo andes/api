@@ -9,6 +9,7 @@ import { Profesional } from './../core/tm/schemas/profesional';
 import { MailOptions, renderHTML, sendMail } from './../utils/roboSender/sendEmail';
 import { Auth } from './auth.class';
 import { AuthUsers } from './schemas/authUsers';
+const isReachable = require('is-reachable');
 
 export let AuthCache: AndesCache;
 
@@ -209,7 +210,8 @@ export async function reset(token, password) {
 
 export async function checkPassword(user, password): Promise<any> {
     let usuario = null;
-    if (await authAlive()) {
+    let verificationStatus = await authAlive();
+    if (verificationStatus && verificationStatus[0] === 200) {
         const options = {
             url: `${configPrivate.hosts.authenticationAndes}/auth`,
             method: 'POST',
@@ -239,5 +241,9 @@ async function authAlive() {
         method: 'GET',
         json: true
     };
-    return await handleHttpRequest(options);
+    if (await isReachable(url)) {
+        return await handleHttpRequest(options);
+    } else {
+        return 500;
+    }
 }
