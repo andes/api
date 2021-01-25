@@ -11,6 +11,7 @@ export interface IEstados {
     capa: String;
     estados: { key: IEstadoKey, label: String, color: String, icon: String }[];
     relaciones: { origen: IEstadoKey, destino: IEstadoKey }[];
+    historialMedico: boolean;
 }
 
 export interface IEstadosDocument extends Document, IEstados { }
@@ -51,6 +52,7 @@ const EstadoSchema = new Schema({
     ingresos: SchemaTypes.Mixed,
     columns: SchemaTypes.Mixed,
     turnero: SchemaTypes.Mixed,
+    historialMedico: Boolean
 });
 
 EstadoSchema.methods.check = function (origen, destino) {
