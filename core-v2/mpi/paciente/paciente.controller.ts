@@ -33,10 +33,10 @@ export function set(paciente: IPacienteDoc, body: any) {
         delete body['fechaNacimiento'];
         delete body['estado'];
     }
+    paciente.set(body);
     if (paciente.foto && !paciente.fotoId) {
         (paciente as any).fotoId = new ObjectId();
     }
-    paciente.set(body);
     return paciente;
 }
 

@@ -182,7 +182,7 @@ export const getFoto = async (req: Request, res: Response, next) => {
 export const post = async (req: Request, res: Response) => {
     const body = req.body;
     const sugeridos = await suggest(body);
-    if (sugeridos.length && !body.ignoreCheck) {
+    if (sugeridos.length && !body.ignoreSuggestions) {
         return res.json({ sugeridos });
     }
     body.activo = true; // Todo paciente esta activo por defecto
@@ -225,7 +225,7 @@ export const patch = async (req: Request, res: Response) => {
     let paciente = await findById(id);
     if (paciente) {
         paciente = set(paciente, body);
-        const updated = await PacienteCtr.update(id, body, req);
+        const updated = await PacienteCtr.update(id, paciente, req);
         return res.json(updated);
     }
     throw new PatientNotFound();
