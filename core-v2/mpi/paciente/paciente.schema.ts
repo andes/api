@@ -119,16 +119,24 @@ PacienteSchema.pre('save', function (next) {
     }
     if (user.nombre) {
         user.nombre.toLowerCase().split(' ').forEach(doc => {
-            words.push(doc.toLowerCase());
+            if (doc.length > 0) {
+                words.push(doc.toLowerCase());
+            }
         });
     }
     if (user.apellido) {
         user.apellido.toLowerCase().split(' ').forEach(doc => {
-            words.push(doc.toLowerCase());
+            if (doc.length > 0) {
+                words.push(doc.toLowerCase());
+            }
         });
     }
     if (user.alias) {
-        words.push(user.alias.toLowerCase());
+        user.alias.toLowerCase().split(' ').forEach(doc => {
+            if (doc.length > 0) {
+                words.push(doc.toLowerCase());
+            }
+        });
     }
     if (user.numeroIdentificacion) {
         words.push(user.numeroIdentificacion.toLowerCase());
