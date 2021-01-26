@@ -1,4 +1,4 @@
-import { Paciente } from './paciente.schema';
+import { Paciente, replaceChars } from './paciente.schema';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Matching } from '@andes/match';
@@ -156,6 +156,7 @@ export function isMatchingAlto(sugeridos: any[]) {
 export async function multimatch(searchText: string, filter: any, options?: any) {
     const ExpRegFilter = /([-_()\[\]{}+?*.$\^|¨`´~,:#<>¡!\\])/g;
     let words: any = searchText.replace(ExpRegFilter, '');
+    words = replaceChars(words);
     words = words.trim().toLowerCase().split(' ');
     let andQuery = [];
     words.forEach(w => {
