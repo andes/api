@@ -236,9 +236,9 @@ export const patch = async (req: Request, res: Response) => {
 };
 
 PacienteRouter.use(Auth.authenticate());
-PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:search'), asyncHandler(get));
+PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(get));
 PacienteRouter.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(find));
 PacienteRouter.get('/pacientes/:id/foto/:fotoId', asyncHandler(getFoto));
 PacienteRouter.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(post));
-PacienteRouter.post('/pacientes/match', Auth.authorize('mpi:paciente:search'), asyncHandler(match));
+PacienteRouter.post('/pacientes/match', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(match));
 PacienteRouter.patch('/pacientes/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(patch));
