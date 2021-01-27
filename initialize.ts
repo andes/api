@@ -107,6 +107,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').TipoTrasladoRouter);
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').ReglasDerivacionRouter);
     app.use('/api/core-v2/mpi', MPI.RoutingMPI);
+    app.use('/api/modules/forms/forms-epidemiologia', require('./modules/forms/forms-epidemiologia').FormEpidemiologiaRouter);
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(
