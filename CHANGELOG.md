@@ -1,3 +1,17 @@
+# [5.31.0](https://github.com/andes/api/compare/v5.30.0...v5.31.0) (2021-01-27)
+
+
+### Bug Fixes
+
+* **exportCovid:** se modifica la fecha para que toma la de la creción del registro y no de la solicitud para evitar gaps ([#1246](https://github.com/andes/api/issues/1246)) ([94f5e06](https://github.com/andes/api/commit/94f5e0636b8734e9fe00120dc101e75b10a44d8c))
+* **mapa-camas:** historial camas trae salas ([#1255](https://github.com/andes/api/issues/1255)) ([61e32be](https://github.com/andes/api/commit/61e32bebcd4acd5a19725eee61a1bc8e10f89a9d))
+
+
+### Features
+
+* **mapa-camas:** filtros resumen internacion ([#1252](https://github.com/andes/api/issues/1252)) ([dfe0d8c](https://github.com/andes/api/commit/dfe0d8c2a93ea580e7777d051733553674e2d686))
+* **mobile-app:** se suma max_id y count a parametros para traer tweets ([#1254](https://github.com/andes/api/issues/1254)) ([287891a](https://github.com/andes/api/commit/287891a96a57baf4187973087fcf04844d0c1165))
+
 # [5.30.0](https://github.com/andes/api/compare/v5.29.0...v5.30.0) (2021-01-20)
 
 
