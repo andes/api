@@ -75,7 +75,6 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
         documento: String,
         fechaFallecimiento: Date,
         numeroIdentificacion: String,
-        foto: String,
         fotoId: mongoose.Schema.Types.ObjectId
     }],
     financiador: [FinanciadorSchema],
