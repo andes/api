@@ -24,20 +24,21 @@ function identidadSinAcentos(ciudadano) {
  */
 
 export async function validar(documento: string, sexo: string) {
+
     let ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
-    if (ciudadanoRenaper) {
-        // Valida el tamaño de la foto
-        ciudadanoRenaper.foto = await validarTamañoFoto(ciudadanoRenaper.foto);
-        ciudadanoRenaper.fotoId = ciudadanoRenaper.foto && ciudadanoRenaper.foto.length > 0 ? new Types.ObjectId() : null;
-        ciudadanoRenaper.estado = 'validado';
-        ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
-        ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
-        ciudadanoRenaper.validateAt = new Date();
-        if (identidadSinAcentos(ciudadanoRenaper)) {
-            return ciudadanoRenaper;
-        }
-    }
     try {
+        if (ciudadanoRenaper) {
+            // Valida el tamaño de la foto
+            ciudadanoRenaper.foto = await validarTamañoFoto(ciudadanoRenaper.foto);
+            ciudadanoRenaper.fotoId = ciudadanoRenaper.foto && ciudadanoRenaper.foto.length > 0 ? new Types.ObjectId() : null;
+            ciudadanoRenaper.estado = 'validado';
+            ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
+            ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
+            ciudadanoRenaper.validateAt = new Date();
+            if (identidadSinAcentos(ciudadanoRenaper)) {
+                return ciudadanoRenaper;
+            }
+        }
         const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
         if (ciudadanoSisa) {
             ciudadanoSisa.direccion[0] = await matchDireccion(ciudadanoSisa);
@@ -48,6 +49,8 @@ export async function validar(documento: string, sexo: string) {
                 ciudadanoSisa.direccion = ciudadanoRenaper.direccion;
             }
             return ciudadanoSisa;
+        } else {
+            return ciudadanoRenaper;
         }
     } catch (error) {
         return null;
@@ -67,20 +70,23 @@ async function validarTamañoFoto(foto) {
 }
 
 async function resizeFoto(foto) {
-    const base64Image = foto;
+    try {
+        const base64Image = foto;
 
-    let parts = base64Image.split(';');
-    let mimType = parts[0].split(':')[1];
-    let imageData = parts[1].split(',')[1];
+        let parts = base64Image.split(';');
+        let mimType = parts[0].split(':')[1];
+        let imageData = parts[1].split(',')[1];
 
-    let img = new Buffer(imageData, 'base64');
-    const semiTransparentRedPng = await sharp(img)
-        .resize(500, 500)
-        .toBuffer();
-
-    let resizedImageData = semiTransparentRedPng.toString('base64');
-    let resizedBase64 = `data:${mimType};base64,${resizedImageData}`;
-    return resizedBase64;
+        let img = Buffer.from(imageData, 'base64');
+        const semiTransparentRedPng = await sharp(img)
+            .resize(600, 600)
+            .toBuffer();
+        let resizedImageData = semiTransparentRedPng.toString('base64');
+        let resizedBase64 = `data:${mimType};base64,${resizedImageData}`;
+        return resizedBase64;
+    } catch (error) {
+        return null;
+    }
 }
 
 async function matchDireccion(persona) {

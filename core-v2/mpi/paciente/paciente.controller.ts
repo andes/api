@@ -1,16 +1,16 @@
+import { Types } from 'mongoose';
 import { Paciente, replaceChars } from './paciente.schema';
 import * as moment from 'moment';
-import { Types } from 'mongoose';
 import { Matching } from '@andes/match';
 import { IPacienteDoc, IPaciente } from './paciente.interface';
 import { isSelected } from '@andes/core';
-import * as config from '../../../config';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { PacienteCtr } from './paciente.routes';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
 import * as Barrio from '../../../core/tm/schemas/barrio';
 import * as configPrivate from '../../../config.private';
-const ObjectId = Types.ObjectId;
+import * as config from '../../../config';
+
 /**
  * Crea un objeto paciente
  */
@@ -35,7 +35,7 @@ export function set(paciente: IPacienteDoc, body: any) {
     }
     paciente.set(body);
     if (paciente.foto && !paciente.fotoId) {
-        (paciente as any).fotoId = new ObjectId();
+        (paciente as any).fotoId = new Types.ObjectId();
     }
     return paciente;
 }
