@@ -5,7 +5,7 @@ import { ExportHudsModel } from './exportHuds.schema';
 import * as archiver from 'archiver';
 import { InformeRUP } from '../../descargas/informe-rup/informe-rup';
 import { makeFs } from '../../../modules/cda/schemas/CDAFiles';
-import { getCda } from '../../../modules/cda/controller/CDAPatient';
+import { getCdaAdjunto } from '../../../modules/cda/controller/CDAPatient';
 
 import moment = require('moment');
 
@@ -102,19 +102,15 @@ export async function createFile(idExportHuds) {
         };
         const getCdas = () => {
             return Promise.all(cdas.map(async (cda: any) => {
-                const realName = cda.filename.split('.')[0];
-                try {
-                    let params = {
-                        id: cda._id,
-                        name: cda.metadata.adjuntos[0].path,
-                        realName,
-                        user: peticionExport.user
-                    };
-                    let fileCda = await getCda(params);
-                    archive.append(fileCda.stream, { name: `${moment(cda.metadata.fecha).format('YYYY-MM-DD')} - ${cda.metadata.prestacion.snomed.term}.pdf` });
+                if (cda.metadata.adjuntos?.length > 0) {
+                    const realName = cda.metadata.adjuntos[0].id;
+                    try {
+                        const fileCda = await getCdaAdjunto(cda, realName);
+                        archive.append(fileCda.stream, { name: `${moment(cda.metadata.fecha).format('YYYY-MM-DD')} - ${cda.metadata.prestacion.snomed.term}.pdf` });
 
-                } catch (error) {
-                    exportHudsLog.error('Crear cda', objectLog, error);
+                    } catch (error) {
+                        exportHudsLog.error('Crear cda', objectLog, error);
+                    }
                 }
             }));
         };

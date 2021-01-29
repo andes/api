@@ -382,21 +382,24 @@ router.get('/:id/:name', async (req: any, res, next) => {
             return next(403);
         }
 
-        const id = ObjectId(req.params.id);
+        const cda = await cdaCtr.getCDAById(req.params.id);
+
+        if (req.user.type === 'paciente-token' && String(cda.metadata.paciente) !== String(req.user.pacientes[0].id)) {
+            return next(403);
+        }
+
         const name = req.params.name;
         const realName = req.params.name.split('.')[0];
-        const user = req.user;
-        const params = {
-            id,
-            name,
-            realName,
-            user
-        };
-        const cda = await cdaCtr.getCda(params);
-        const contentType = cda.file.contentType ? cda.file.contentType : cda.file.mimetype;
-        const str = cda.stream;
+
+
+        const cdaFile = await cdaCtr.getCdaAdjunto(cda, realName);
+
+
+        const contentType = cdaFile.file.contentType || cdaFile.file.mimetype;
+        const str = cdaFile.stream;
         res.contentType(contentType);
         str.pipe(res);
+
     } catch (ex) {
         return next(500);
     }
