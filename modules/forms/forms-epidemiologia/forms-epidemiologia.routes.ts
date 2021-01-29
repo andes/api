@@ -13,6 +13,10 @@ class FormsEpidemiologiaResource extends ResourceBase {
             field: 'createdAt',
             fn: (value) => (MongoQuery.matchDate(value))
         },
+        paciente: {
+            field: 'paciente._id',
+            fn: MongoQuery.equalMatch
+        },
     };
 }
 
