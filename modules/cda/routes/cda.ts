@@ -376,50 +376,34 @@ router.get('/paciente/:id', async (req: any, res, next) => {
  */
 
 router.get('/:id/:name', async (req: any, res, next) => {
+    try {
 
-    if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
-        return next(403);
-    }
-    const id = ObjectId(req.params.id);
-    const name = req.params.name;
-    const realName = req.params.name.split('.')[0];
-
-    const CDAFiles = makeFs();
-    const cda = await CDAFiles.findOne({ _id: id });
-
-    if (cda) {
-        const adj = cda.metadata.adjuntos.find(_adj => {
-            return String(_adj.id) === realName;
-        });
-
-        if (adj && adj.adapter === 'drive') {
-
-            const fileDrive = await AndesDrive.find(ObjectId(realName));
-            if (fileDrive) {
-                const stream1 = await AndesDrive.read(fileDrive);
-                res.contentType(fileDrive.mimetype);
-                stream1.pipe(res);
-            }
-
-        } else {
-            const query = {
-                filename: name,
-                'metadata.cdaId': id
-            };
-
-            const file = await CDAFiles.findOne(query);
-            if (req.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(req.user.pacientes[0].id)) {
-                return next(403);
-            }
-
-            const stream1 = await CDAFiles.readFile({ _id: file._id });
-            res.contentType(file.contentType);
-            stream1.pipe(res);
+        if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
+            return next(403);
         }
 
-    } else {
-        return next('NO EXISTE EL ARCHIVO');
+        const cda = await cdaCtr.getCDAById(req.params.id);
+
+        if (req.user.type === 'paciente-token' && String(cda.metadata.paciente) !== String(req.user.pacientes[0].id)) {
+            return next(403);
+        }
+
+        const name = req.params.name;
+        const realName = req.params.name.split('.')[0];
+
+
+        const cdaFile = await cdaCtr.getCdaAdjunto(cda, realName);
+
+
+        const contentType = cdaFile.file.contentType || cdaFile.file.mimetype;
+        const str = cdaFile.stream;
+        res.contentType(contentType);
+        str.pipe(res);
+
+    } catch (ex) {
+        return next(500);
     }
+
 });
 
 

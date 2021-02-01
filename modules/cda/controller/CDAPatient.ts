@@ -14,6 +14,9 @@ import * as moment from 'moment';
 import { CDA as CDAConfig } from '../../../config.private';
 import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
 import { Auth } from '../../../auth/auth.class';
+import { AndesDrive } from '@andes/drive';
+import { readFile as readFileBase } from '../../../core/tm/controller/file-storage';
+import { ObjectId } from '@andes/core';
 
 /**
  * Matcheamos los datos del paciente.
@@ -759,4 +762,41 @@ export function checkAndExtract(xmlDom) {
     }
 
     return metadata;
+}
+
+
+export async function getCDAById(id: ObjectId) {
+    const CDAFiles = makeFs();
+    const cda = await CDAFiles.findOne({
+        _id: new Types.ObjectId(id)
+    });
+    return cda;
+}
+
+export async function getCdaAdjunto(cda, fileID: string) {
+    const CDAFiles = makeFs();
+    const adj = cda.metadata.adjuntos.find(_adj => {
+        return String(_adj.id) === String(fileID);
+    });
+    if (adj) {
+        if (adj.adapter === 'drive') {
+            const fileDrive = await AndesDrive.find(new Types.ObjectId(fileID));
+            if (fileDrive) {
+                const stream1 = await AndesDrive.read(fileDrive);
+                const archivo = {
+                    file: fileDrive,
+                    stream: stream1
+                };
+                return archivo;
+            }
+        } else {
+            const query = {
+                _id: new Types.ObjectId(fileID),
+                'metadata.cdaId': cda._id
+            };
+            const file = await CDAFiles.findOne(query);
+            const stream1 = await readFileBase(file._id, 'CDAFiles');
+            return stream1;
+        }
+    }
 }

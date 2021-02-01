@@ -4,6 +4,8 @@ import { exportHudsLog } from './exportHuds.log';
 import { ExportHudsModel } from './exportHuds.schema';
 import * as archiver from 'archiver';
 import { InformeRUP } from '../../descargas/informe-rup/informe-rup';
+import { makeFs } from '../../../modules/cda/schemas/CDAFiles';
+import { getCdaAdjunto } from '../../../modules/cda/controller/CDAPatient';
 
 import moment = require('moment');
 
@@ -12,6 +14,7 @@ export async function createFile(idExportHuds) {
         const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
         let fechaCondicion = null;
         let prestaciones: any[] = [];
+        let cdas = [];
         if (peticionExport.prestaciones.length) {
             prestaciones = await Prestacion.find({ _id: { $in: peticionExport.prestaciones } });
         } else {
@@ -30,6 +33,16 @@ export async function createFile(idExportHuds) {
                 query['solicitud.tipoPrestacion.conceptId'] = peticionExport.tipoPrestacion;
             }
             prestaciones = await Prestacion.find(query);
+
+            let queryCda = {
+                'metadata.paciente': peticionExport.pacienteId,
+                'metadata.adjuntos': { $exists: true }
+            };
+            if (fechaCondicion) {
+                queryCda['metadata.fecha'] = fechaCondicion;
+            }
+            const cdaFiles = makeFs();
+            cdas = await cdaFiles.find(queryCda).toArray();
         }
         const fecha = moment(peticionExport.createAt).format('YYYY-MM-DD');
 
@@ -87,13 +100,27 @@ export async function createFile(idExportHuds) {
                 }
             }));
         };
+        const getCdas = () => {
+            return Promise.all(cdas.map(async (cda: any) => {
+                if (cda.metadata.adjuntos?.length > 0) {
+                    const realName = cda.metadata.adjuntos[0].id;
+                    try {
+                        const fileCda = await getCdaAdjunto(cda, realName);
+                        archive.append(fileCda.stream, { name: `${moment(cda.metadata.fecha).format('YYYY-MM-DD')} - ${cda.metadata.prestacion.snomed.term}.pdf` });
+
+                    } catch (error) {
+                        exportHudsLog.error('Crear cda', objectLog, error);
+                    }
+                }
+            }));
+        };
         // Primero obtengo los pdf y luego cierro el archivo
         if (prestaciones) {
-            getData().then(() => {
-                archive.finalize().then();
-            });
-        } else { // Caso en el que no hay prestaciones, devuelvo el zip vacio
-            archive.finalize().then();
+            await getData();
         }
+        if (cdas) {
+            await getCdas();
+        }
+        archive.finalize();
     });
 }

@@ -5,10 +5,16 @@
 */
 
 
+import { AndesDrive } from '@andes/drive/';
+
 import { Connections } from './../connections';
+import { Drive } from '../config.private';
+
 const path = require('path');
 
 Connections.initialize();
+
+AndesDrive.setup(Drive);
 
 const done = () => {
     process.exit(0);
