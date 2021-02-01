@@ -1,29 +1,23 @@
 import * as express from 'express';
+import { asyncHandler } from '@andes/api-tool';
 import { profesion } from '../schemas/profesion_model';
 
 const router = express.Router();
 
-router.get('/profesiones/:id*?', (req, res, next) => {
+router.get('/profesiones/:id', asyncHandler(async (req, res, next) => {
+    const prof = await profesion.findById(req.params.id);
+    res.json(prof);
+}));
 
-    if (req.params.id) {
-        profesion.findById(req.params.id, (err, data) => {
-            if (err) {
-                return next(err);
-            }
+router.get('/profesiones/', asyncHandler(async (req, res, next) => {
+    const query: any = {};
 
-            res.json(data);
-        });
-
-    } else {
-
-        profesion.find({}).sort({ codigoSISA: 1 }).exec((error, data) => {
-            if (error) {
-                return next(error);
-            }
-
-            res.json(data);
-        });
+    if (req.query.codigo) {
+        query.codigo = req.query.codigo;
     }
-});
+
+    const profesiones = await profesion.find(query).sort({ codigoSISA: 1 });
+    res.json(profesiones);
+}));
 
 export = router;
