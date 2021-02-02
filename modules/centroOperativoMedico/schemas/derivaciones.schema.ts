@@ -66,6 +66,7 @@ export const DerivacionSchema = new mongoose.Schema({
         documento: Number,
         id: { type: mongoose.Schema.Types.ObjectId, ref: 'profesional' }
     },
+    prestacion: { type: mongoose.Schema.Types.ObjectId, ref: 'prestacion' },
     paciente: {
         type: {
             id: { type: mongoose.Schema.Types.ObjectId, ref: 'paciente' },
