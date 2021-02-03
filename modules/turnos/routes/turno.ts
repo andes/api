@@ -58,8 +58,6 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
     if (continues.valid) {
         let agendaRes;
         try {
-            await getPaciente(req.body.paciente.id);
-            await getTipoPrestacion(req.body.tipoPrestacion._id);
             agendaRes = await getAgenda(req.params.idAgenda);
         } catch (err) {
             return next(err);
@@ -94,20 +92,23 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         let query;
         // seteamos el cupo en -1 cuando la agenda no tiene límite de cupos
         if ((agendaRes as any).cupo > -1) {
-            const nuevoCupo = ((agendaRes as any).cupo > 0) ? (agendaRes as any).cupo - 1 : 0;
-            update = { 'bloques.0.turnos': turnos, cupo: nuevoCupo };
+            if ((agendaRes as any).cupo === 0) {
+                // Si hubo solapamiento de turnos en el ultimo cupo (Dación de turnos al mismo tiempo)
+                return next('Este turno ya no se encuentra disponible');
+            }
+            update = { $push: { 'bloques.0.turnos': turno }, $set: { cupo: (agendaRes as any).cupo - 1 } };
             query = {
                 _id: req.params.idAgenda,
                 cupo: { $gt: 0 }
             };
         } else {
-            update = { 'bloques.0.turnos': turnos };
+            update = { $push: { 'bloques.0.turnos': turno } };
             query = {
                 _id: req.params.idAgenda
             };
         }
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        Agenda.findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
+        Agenda.findOneAndUpdate(query, update, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
             if (err4) {
                 return next(err4);
             }
@@ -117,6 +118,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             if (writeOpResult && writeOpResult.value === null) {
                 return next('Turno no disponible');
             } else {
+
                 const datosOp = {
                     estado: doc2.estado,
                     paciente: doc2.paciente,
@@ -129,7 +131,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
                 const turnoLog = doc2.bloques[0].turnos[turnos.length - 1];
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turnoLog, doc2.bloques[0].id, req.params.idAgenda);
-                res.json(doc2);
+                res.json(turnoLog);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
 
