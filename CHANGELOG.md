@@ -1,3 +1,17 @@
+# [5.32.0](https://github.com/andes/api/compare/v5.31.0...v5.32.0) (2021-02-03)
+
+
+### Bug Fixes
+
+* **mpi:** cambia permisos de get ([#1261](https://github.com/andes/api/issues/1261)) ([5bfacea](https://github.com/andes/api/commit/5bfaceadc1a785425962ea100dd45d93b48f819b))
+* **mpi:** controla error resize de la foto ([#1263](https://github.com/andes/api/issues/1263)) ([8bfe96c](https://github.com/andes/api/commit/8bfe96c835643af49b6e78329fb35954aeca495c))
+
+
+### Features
+
+* **huds:** agrega CDAs en exportacion HUDS ([#1251](https://github.com/andes/api/issues/1251)) ([1f1389a](https://github.com/andes/api/commit/1f1389ae4ae0092cf66b8c329a7d159b862fb82f))
+* **tm:** busca profesion por codigo ([#1250](https://github.com/andes/api/issues/1250)) ([4619b34](https://github.com/andes/api/commit/4619b34567163615ed8ba571e04ef2632fb9a2ee))
+
 # [5.31.0](https://github.com/andes/api/compare/v5.30.0...v5.31.0) (2021-01-27)
 
 
