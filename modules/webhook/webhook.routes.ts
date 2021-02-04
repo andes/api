@@ -28,7 +28,10 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
         const paciente = await findOrCreate(query, req);
         // Verifica los datos de contacto
         if (query.telefono) {
-            const contactos = paciente.contacto.filter(c => c && c.valor && (c.valor === query.telefono));
+            let contactos = [];
+            if (paciente.contacto && paciente.contacto.length > 0) {
+                contactos = paciente.contacto.filter(c => c && c.valor && (c.valor === query.telefono));
+            }
             if (contactos.length === 0) {
                 const nuevoContacto = {
                     activo: true,
