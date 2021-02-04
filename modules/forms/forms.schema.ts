@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose';
-import { FormResourcesSchema } from './forms-resources/forms-resources-schema';
 
 export interface FormTypes {
     name: string;
     type: string;
+    snomedCode: string;
     active: boolean;
     sections: {
         id: string,
@@ -16,6 +16,7 @@ export interface FormTypes {
             type: string;
             description: string;
             required: boolean;
+            snomedCodeOrQuery: string,
             subfilter: {
                 type: boolean;
                 default: false;
@@ -40,6 +41,7 @@ export const FieldSchema = new mongoose.Schema({
     type: String,
     min: Number,
     max: Number,
+    snomedCodeOrQuery: String,
     required: Boolean,
     subfilter: Boolean,
     resources: { type: String, required: false },
@@ -58,6 +60,7 @@ export const SectionSchema = new mongoose.Schema({
 export const FormSchema = new mongoose.Schema({
     name: { type: String, index: { unique: true } },
     active: { type: Boolean, default: true },
+    snomedCode: { type: String },
     type: { type: String, index: { unique: true } },
     sections: [SectionSchema]
 });
