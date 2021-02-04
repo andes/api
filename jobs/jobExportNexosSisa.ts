@@ -1,7 +1,8 @@
 import { exportSisa } from './exportNexosSisa';
 
 function run(done) {
-    exportSisa(done);
+    const horas = process.env.HORAS || '4';
+    exportSisa(done, parseInt(horas, 10));
 }
 
 export = run;
