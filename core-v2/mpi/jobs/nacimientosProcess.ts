@@ -1,13 +1,13 @@
-import { paciente } from '../schemas/paciente';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { validar } from '../../../core-v2/mpi/validacion';
+import { Paciente } from '../paciente/paciente.schema';
+import { PacienteCtr } from '../paciente/paciente.routes';
+import { validar } from '../validacion';
 import { registroProvincialData, userScheduler } from '../../../config.private';
 import { mpiNacimientosLog } from '../mpi.log';
 import { handleHttpRequest } from '../../../utils/requestHandler';
-import { IPaciente } from '../../../core-v2/mpi/paciente/paciente.interface';
+import { IPaciente } from '../paciente/paciente.interface';
 import moment = require('moment');
 import debug = require('debug');
-import { ParentescoCtr } from '../parentesco.routes';
+import { ParentescoCtr } from '../../../core/mpi/parentesco.routes';
 import { Types } from 'mongoose';
 import { extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
 
@@ -175,8 +175,8 @@ function parsearPacientes(importedData) {
         });
     }
 
-    let bebe = new paciente(parsedData.bebe);
-    let mama = new paciente(parsedData.mama);
+    let bebe = new Paciente(parsedData.bebe);
+    let mama = new Paciente(parsedData.mama);
     return { bebe, mama };
 }
 

@@ -1,4 +1,4 @@
-import { updateFuzzy } from '../controller/updateFuzzy';
+import { updateFuzzy } from './updateFuzzy';
 
 function run(done) {
     updateFuzzy(done, ['documento']);

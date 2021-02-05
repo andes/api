@@ -1,11 +1,11 @@
-import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { Paciente } from '../paciente/paciente.schema';
+import { PacienteCtr } from '../paciente/paciente.routes';
 import { userScheduler } from '../../../config.private';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 import { sisa, sisaToAndes } from '@andes/fuentes-autenticas';
 import { sisa as sisaConfig } from '../../../config.private';
 import { log } from '@andes/log';
-import { logKeys } from './../../../config';
+import { logKeys } from '../../../config';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
 

@@ -1,6 +1,6 @@
 import { userScheduler, geoKey } from '../../../config.private';
-import { validar } from '../../../core-v2/mpi/validacion/validacion.controller';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { validar } from '../validacion/validacion.controller';
+import { PacienteCtr } from '../paciente/paciente.routes';
 import { geoReferenciar } from '@andes/georeference';
 import * as moment from 'moment';
 import { extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';

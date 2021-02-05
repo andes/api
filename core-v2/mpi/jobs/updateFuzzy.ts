@@ -1,5 +1,5 @@
-import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { Paciente } from '../paciente/paciente.schema';
+import { PacienteCtr } from '../paciente/paciente.routes';
 import { userScheduler } from '../../../config.private';
 
 export const updateFuzzy = async (done, attrs) => {

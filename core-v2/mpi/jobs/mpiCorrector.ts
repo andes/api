@@ -1,5 +1,5 @@
 import { userScheduler } from '../../../config.private';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { PacienteCtr } from '../paciente/paciente.routes';
 import { mpiCorrectorLog } from '../mpi.log';
 import { sisa, sisaToAndes } from '@andes/fuentes-autenticas';
 import { sisa as sisaConfig } from '../../../config.private';

@@ -1,5 +1,5 @@
-import { paciente } from '../../mpi/schemas/paciente';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { Paciente } from '../paciente/paciente.schema';
+import { PacienteCtr } from '../paciente/paciente.routes';
 import { Types } from 'mongoose';
 import { userScheduler } from '../../../config.private';
 const ObjectId = Types.ObjectId;
@@ -8,7 +8,7 @@ dataLog.body = { _id: null };
 dataLog.method = null;
 
 export const updateFoto = async (done) => {
-    const cursor = paciente.find({ $and: [{ foto: { $exists: true } }, { foto: { $ne: null } }, { foto: { $ne: '' } }, { fotoId: { $exists: false } }] }, '+foto').cursor({ batchSize: 100 });
+    const cursor = Paciente.find({ $and: [{ foto: { $exists: true } }, { foto: { $ne: null } }, { foto: { $ne: '' } }, { fotoId: { $exists: false } }] }, '+foto').cursor({ batchSize: 100 });
     const updatePatient = async (pac) => {
         try {
             if (pac.foto?.length) {
@@ -21,7 +21,7 @@ export const updateFoto = async (done) => {
                     por el contenido del nuevo campo 'fotoId' recien seteado  */
                 if (pac.relaciones) {
                     for (const rel of pac.relaciones) {
-                        let relacionado: any = await paciente.findById(rel.referencia, '+foto'); // un paciente relacionado
+                        let relacionado: any = await Paciente.findById(rel.referencia, '+foto'); // un paciente relacionado
                         if (relacionado) {
                             if (relacionado.relaciones && relacionado.relaciones.length > 0) {
                                 relacionado.relaciones.map((unaRel: any) => { return agregarFotoId(unaRel, fotoIdPac, pac.id); }); // este paciente ('pac' en su relacion opuesta)

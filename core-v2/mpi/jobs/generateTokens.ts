@@ -1,4 +1,4 @@
-import { generateTokensPatient } from '../controller/updateFuzzy';
+import { generateTokensPatient } from './updateFuzzy';
 
 function run(done) {
     generateTokensPatient(done);
