@@ -58,10 +58,9 @@ async function getCasosConfirmados(documento: String) {
     return [];
 }
 
-export async function exportSisa(done) {
-
-    const start = moment().startOf('d').toDate();
-    const end = moment().endOf('d').toDate();
+export async function exportSisa(done, horas) {
+    const start = moment().subtract(horas, 'h').toDate();
+    const end = moment().toDate();
     const pipelineNexos = [
         {
             $match: {
