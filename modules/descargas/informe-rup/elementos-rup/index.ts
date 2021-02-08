@@ -4,6 +4,7 @@ import { MoleculaBaseComponent } from './molecula-base.component';
 import { ValorNumericoComponent } from './valor-numerico.component';
 import { ValorNumericoFactory } from './valor-numerico.factory';
 import { ValorFechaComponent } from './valor-fecha.component';
+import { UltimaFechaComponent } from './ultima-fecha.component';
 import { SolicitudPrestacionDefaultComponent } from './solicitud-default.component';
 import { SelectPorRefsetComponent } from './select-por-refset.component';
 import { RegistrarMedicamentoDefaultComponent } from './registrar-medicamento-default.component';
@@ -44,6 +45,7 @@ export const ElementosRUPHTML = {
 
     ValorNumericoComponent,
     ValorFechaComponent,
+    UltimaFechaComponent,
     ObservacionesComponent,
     FormulaBaseComponent,
     MoleculaBaseComponent,
