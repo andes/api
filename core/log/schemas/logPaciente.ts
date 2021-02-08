@@ -53,4 +53,7 @@ logPacienteSchema.index({
     operacion: 1,
     createdAt: -1
 });
+logPacienteSchema.index({
+    operacion: 1
+});
 export let logPaciente = mongoose.model('logPaciente', logPacienteSchema, 'logPaciente');

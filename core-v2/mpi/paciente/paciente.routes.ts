@@ -190,6 +190,7 @@ export const post = async (req: Request, res: Response) => {
         return res.json({ sugeridos });
     }
     body.activo = true; // Todo paciente esta activo por defecto
+    body.estado = body.estado || 'temporal';
     const paciente = make(body);
     if (paciente.scan) {
         // obtengo el numero de tramite del documento que contiene el scan del paciente

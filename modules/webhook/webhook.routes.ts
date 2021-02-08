@@ -29,7 +29,7 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
         // Verifica los datos de contacto
         if (query.telefono) {
             let contactos = [];
-            if (paciente.contacto && paciente.contacto.length > 0) {
+            if (paciente.contacto && paciente.contacto.length >= 0) {
                 contactos = paciente.contacto.filter(c => c && c.valor && (c.valor === query.telefono));
             }
             if (contactos.length === 0) {
@@ -40,7 +40,8 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
                     ranking: 0,
                     ultimaActualizacion: new Date()
                 };
-                paciente.contacto.push(nuevoContacto);
+                contactos.push(nuevoContacto);
+                paciente.contacto = contactos;
             }
             await PacienteCtr.update(paciente.id, paciente, req as any);
         }
