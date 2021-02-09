@@ -162,15 +162,11 @@ PrestacionSchema.pre('save', function (next) {
         let err = new Error('Debe seleccionar el paciente');
         return next(err);
     }
+
     // Prestación debe tener organización asignada
     // Solicitudes deben tener organización origen asignada
     if (!prestacion.solicitud.organizacion.id && (prestacion.solicitud.tipoPrestacionOrigen.conceptId && prestacion.solicitud.organizacionOrigen.id)) {
         let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
-        return next(err);
-    }
-    // Si es prestación debe tener profesional asignado, y si es solicitud debe tener profesional origen asignado.
-    if (!prestacion.solicitud.profesional.id && (prestacion.solicitud.tipoPrestacionOrigen.conceptId && !prestacion.solicitud.profesionalOrigen.id)) {
-        let err = new Error('Debe seleccionar el profesional que solicita');
         return next(err);
     }
 
@@ -239,7 +235,7 @@ function getAll(registros: any[]) {
     for (let i = 0; i < registros.length; i++) {
         const reg = registros[i];
         resultado = [...resultado, reg];
-        if (reg.registros?.length) {
+        if (reg.registros ?.length) {
             const rs = getAll(reg.registros);
             resultado = [...resultado, ...rs];
         }
