@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { DireccionSchema } from '../../../shared/schemas/direccion';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
+import { TipoTrasladoSchema } from './tipoTraslado.schema';
 
 export const ESTADOS_DERIVACION = ['solicitada', 'habilitada', 'inhabilitada', 'asignada', 'rechazada', 'aceptada', 'finalizada', 'encomendada'];
 
@@ -49,6 +50,16 @@ export const DerivacionSchema = new mongoose.Schema({
         },
         required: true
     },
+    organizacionTraslado: {
+        type: {
+            nombre: String,
+            direccion: {
+                type: DireccionSchema
+            },
+            id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
+        },
+    },
+    tipoTraslado: TipoTrasladoSchema,
     profesionalSolicitante: {
         nombre: String,
         apellido: String,

@@ -8,6 +8,8 @@ import { Auth } from '../../../auth/auth.class';
 import { AuthUsers } from '../../../auth/schemas/authUsers';
 import * as CamasController from '../../../modules/rup/internacion/camas.controller';
 import { validarOrganizacionSisa, obtenerOfertaPrestacional, addSector, changeSector, deleteSector, getConfiguracion } from '../controller/organizacion';
+import { Types } from 'mongoose';
+
 const GeoJSON = require('geojson');
 const router = express.Router();
 
@@ -156,6 +158,9 @@ router.get('/organizaciones', async (req, res, next) => {
     }
     if (req.query.esCOM) {
         filtros['esCOM'] = req.query.esCOM;
+    }
+    if (req.query.trasladosEspeciales) {
+        filtros['trasladosEspeciales._id'] = Types.ObjectId(req.query.trasladosEspeciales);
     }
     if (req.query.cuie) {
         filtros['codigo.cuie'] = req.query.cuie;

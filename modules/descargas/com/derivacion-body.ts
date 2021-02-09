@@ -73,6 +73,23 @@ export class DerivacionBody extends HTMLComponent {
                     <span>FECHA Y HORA DE DERIVACIÓN: {{ fecha }} hs</span>
                 </div>
             </div>
+            {{#if tipoTraslado}}
+                <div class="row" >
+                    <div class="col">
+                        <span>TIPO TRASLADO:
+                            {{ tipoTraslado.nombre }}</span>
+                    </div>
+                </div>
+            {{/if}}
+            {{#if organizacionTraslado}}
+                <div class="row" >
+                    <div class="col">
+                        <span>TRASLADO A CARGO DE:
+                            {{ organizacionTraslado.nombre }}</span>
+                    </div>
+                </div>
+            {{/if}}
+
             {{#if finalizada }}
             <div class="row">
                 <div class="col">
@@ -125,6 +142,8 @@ export class DerivacionBody extends HTMLComponent {
             finalizada,
             fechaFinalizacion: moment(fechaFinalizacion).format('DD/MM/YYYY HH:mm'),
             profesionalFinalizacion: profesional,
+            tipoTraslado: this.derivacion.tipoTraslado,
+            organizacionTraslado: this.derivacion.organizacionTraslado,
             firmaHTML
         };
     }

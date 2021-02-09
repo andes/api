@@ -102,6 +102,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/webhook', require('./modules/webhook/webhooklog').WebhookLogRouter);
     app.use('/api/modules', require('./modules/seguimiento-paciente').SeguimientoPacienteRouter);
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').DerivacionesRouter);
+    app.use('/api/modules/com', require('./modules/centroOperativoMedico').TipoTrasladoRouter);
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').ReglasDerivacionRouter);
     app.use('/api/core-v2/mpi', MPI.RoutingMPI);
 

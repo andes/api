@@ -1,8 +1,7 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { Derivaciones } from './schemas/derivaciones.schema';
-import { Auth } from '../../auth/auth.class';
-import { readFile } from './controllers/comStore';
 import { AndesDrive } from '@andes/drive';
+import { Auth } from '../../auth/auth.class';
+import { Derivaciones } from './schemas/derivaciones.schema';
 
 class DerivacionesResource extends ResourceBase {
     Model = Derivaciones;
@@ -22,6 +21,12 @@ class DerivacionesResource extends ResourceBase {
         profesionalSolicitante: {
             field: 'profesionalSolicitante._id',
             fn: MongoQuery.equalMatch
+        },
+        tipoTraslado: {
+            field: 'tipoTraslado',
+            fn: (value) => {
+                return { $ne: null };
+            }
         },
         prioridad: MongoQuery.equalMatch,
         paciente: (value) => {
@@ -64,15 +69,21 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
     try {
         const derivacion: any = await Derivaciones.findById(req.params.id);
         if (derivacion) {
-            derivacion.historial.push(req.body);
-            if (req.body.prioridad) {
-                derivacion.prioridad = req.body.prioridad;
+            const nuevoEstado = req.body.estado;
+            derivacion.historial.push(nuevoEstado);
+            if (nuevoEstado.prioridad) {
+                derivacion.prioridad = nuevoEstado.prioridad;
             }
-            if (req.body.estado) {
-                derivacion.estado = req.body.estado;
+            if (nuevoEstado.estado) {
+                derivacion.estado = nuevoEstado.estado;
             }
-            if (req.body.organizacionDestino) {
-                derivacion.organizacionDestino = req.body.organizacionDestino;
+            if (nuevoEstado.organizacionDestino) {
+                derivacion.organizacionDestino = nuevoEstado.organizacionDestino;
+            }
+
+            if (req.body.trasladoEspecial) {
+                derivacion.organizacionTraslado = req.body.trasladoEspecial.organizacionTraslado;
+                derivacion.tipoTraslado = req.body.trasladoEspecial.tipoTraslado;
             }
             Auth.audit(derivacion, req);
             await derivacion.save();
@@ -82,4 +93,3 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
         return next(err);
     }
 });
-

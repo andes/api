@@ -7,6 +7,7 @@ import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { tipoPrestacionSchema } from './tipoPrestacion';
 import { IOrganizacion } from '../interfaces/IOrganizacion';
+import { TipoTrasladoSchema } from '../../../modules/centroOperativoMedico/schemas/tipoTraslado.schema';
 
 export let MapaSectoresSchema = new Schema({
     tipoSector: SnomedConcept,
@@ -60,7 +61,8 @@ const _schema = new Schema({
     configuraciones: SchemaTypes.Mixed,
     ofertaPrestacional: [{ prestacion: tipoPrestacionSchema, detalle: String }], // "prestaciones" traidas de sisa. Se muestran en la app mobile
     aceptaDerivacion: Boolean,
-    esCOM: Boolean
+    esCOM: Boolean,
+    trasladosEspeciales: [TipoTrasladoSchema],
 });
 
 _schema.plugin(AuditPlugin);
