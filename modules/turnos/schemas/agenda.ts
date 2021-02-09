@@ -64,6 +64,7 @@ export const AgendaSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    enviarSms: Boolean,
     // Una agenda dinamica no tiene turnos predefinidos, estos se van agregando como en una estructura FIFO.
     dinamica: {
         type: Boolean,
