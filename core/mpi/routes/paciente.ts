@@ -409,18 +409,5 @@ router.patch('/pacientes/:id', async (req, res, next) => {
 
 });
 
-router.get('/pacientes/:id/turnos', async (req, res, next) => {
-    try {
-        let resultado = await controller.buscarPaciente(req.params.id);
-        if (resultado) {
-            const turnosResult = await controller.getHistorialPaciente(req, resultado.paciente);
-            res.json(turnosResult);
-        } else {
-            return next('Paciente no encontrado');
-        }
-    } catch (err) {
-        return next(err);
-    }
-});
 
 export = router;
