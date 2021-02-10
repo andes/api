@@ -1,3 +1,24 @@
+# [5.33.0](https://github.com/andes/api/compare/v5.32.0...v5.33.0) (2021-02-10)
+
+
+### Bug Fixes
+
+* **citas:** solapamiento de turnos en agendas dinamicas ([#1269](https://github.com/andes/api/issues/1269)) ([6f4e577](https://github.com/andes/api/commit/6f4e5773018c808adaa959b8c549529902324cb6))
+* **job:** cambia frecuencia ([#1271](https://github.com/andes/api/issues/1271)) ([690977f](https://github.com/andes/api/commit/690977f71524d421a74f70f1d8e2c9ad4f993795))
+* **mpi:** control de contacto notification ([#1266](https://github.com/andes/api/issues/1266)) ([c5aee5d](https://github.com/andes/api/commit/c5aee5da6e7d1187cbcdd3e63d0ed292f083af22))
+* **mpi:** control de fotos ([#1273](https://github.com/andes/api/issues/1273)) ([a40ccea](https://github.com/andes/api/commit/a40cceabba46b8dda7db2bd59ea709acc284ceb6))
+
+
+### Features
+
+* **citas:** nuevo atributo para envio de sms de la agenda ([#1257](https://github.com/andes/api/issues/1257)) ([396029b](https://github.com/andes/api/commit/396029b1efbcf10950947eb607ee9737a013c009))
+* **com:** agregamos el campo de búsqueda el tipo de traslado ([2e58d90](https://github.com/andes/api/commit/2e58d90d2f706d5183b92cda6377fdf9a20460e4))
+* **COM:** incluye traslados especiales ([e669ee5](https://github.com/andes/api/commit/e669ee5ae9dc329f15e03967b5e6a2230f7893de))
+* **mapa-camas:** agrega configPases al schema de la maquina de estados ([#1219](https://github.com/andes/api/issues/1219)) ([78e0b8d](https://github.com/andes/api/commit/78e0b8d19ea9d38804252dcd9c489fe37290acb3))
+* **rup:** Agregamos lote de vacunas ([#1265](https://github.com/andes/api/issues/1265)) ([c5ab22f](https://github.com/andes/api/commit/c5ab22ffbfad57ded27f44c3b3b7a025229fd97e))
+* **rup:** informe-pdf se agrega implementación de UltimaFechaComponent ([#1272](https://github.com/andes/api/issues/1272)) ([62b0e25](https://github.com/andes/api/commit/62b0e254d6a948da695998ddfc701a1bcf1e3d61))
+* **top:** permitir cargar solicitudes sin profesional origen ([#1268](https://github.com/andes/api/issues/1268)) ([9cc319c](https://github.com/andes/api/commit/9cc319c52fee952c6e80ac835780809646d5dce1))
+
 # [5.32.0](https://github.com/andes/api/compare/v5.31.0...v5.32.0) (2021-02-03)
 
 
