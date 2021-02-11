@@ -200,8 +200,14 @@ router.post('/mailGenerico', async (req, res, next) => {
     // renderizacion del email
     let html = await SendEmail.renderHTML('emails/emailGenerico.html', body);
 
-    let adjuntos = body.adjuntos.map(x => {
-        x.content = x.content.split('base64,')[1];
+    let adjuntos = [];
+    body.adjuntos.forEach(element => {
+        let newElement = {   // encoded string as an attachment
+            filename: element.filename,
+            content: element.content.split('base64,')[1],
+            encoding: 'base64'
+        };
+        adjuntos.push(newElement);
     });
     const data = {
         from: configPrivate.enviarMail.auth.user,
@@ -209,7 +215,7 @@ router.post('/mailGenerico', async (req, res, next) => {
         subject: body.asunto,
         text: '',
         html,
-        attachments: body.adjuntos
+        attachments: adjuntos
     };
 
     let respuesta = await SendEmail.sendMail(data);
