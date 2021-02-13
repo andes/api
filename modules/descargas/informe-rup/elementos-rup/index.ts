@@ -2,6 +2,7 @@ import { RecetaMedicaComponent } from './receta-medica.component';
 import { ObservacionesComponent } from './observaciones.component';
 import { MoleculaBaseComponent } from './molecula-base.component';
 import { ValorNumericoComponent } from './valor-numerico.component';
+import { VacunasComponent } from './vacuna.component';
 import { ValorNumericoFactory } from './valor-numerico.factory';
 import { ValorFechaComponent } from './valor-fecha.component';
 import { UltimaFechaComponent } from './ultima-fecha.component';
@@ -44,6 +45,7 @@ export const ElementosRUPHTML = {
     SeccionComponent,
 
     ValorNumericoComponent,
+    VacunasComponent,
     ValorFechaComponent,
     UltimaFechaComponent,
     ObservacionesComponent,
