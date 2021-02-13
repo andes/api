@@ -25,7 +25,7 @@ import { SelectStaticComponent } from './select/select-static.component';
 import { SeccionadoComponent } from './seccion/seccionado.component';
 import { SeccionComponent } from './seccion/seccion.component';
 import { InformeEpicrisisComponent } from './informe-epicrisis.component';
-
+import { ChecklistComponent } from './checklist.component';
 /**
  * [TODO] ProcedimientoDeEnfermeriaComponent
  * [TODO] OdontogramaRefsetComponent
@@ -51,6 +51,7 @@ export const ElementosRUPHTML = {
     ObservacionesComponent,
     FormulaBaseComponent,
     MoleculaBaseComponent,
+    ChecklistComponent,
 
     SelectPorRefsetComponent,
     SolicitudPrestacionDefaultComponent,
