@@ -9,20 +9,25 @@ export class VacunasComponent extends HTMLComponent {
     </p>
 
 </div>
-</br>
+
 <section class="contenedor-data-origen">
-
-
-
     <div class="contenedor-secundario" style = "float: left;width:50%">
         <div class="contenedor-bloque-texto">
+        {{#if vacunador}}
             <h6 class="bolder">
                 Vacunador:
             </h6>
             <h6>
                 {{ vacunadorApellido }},{{ vacunadorNombre }}
             </h6>
-
+        {{else}}
+          <h6 class="bolder">
+               Vacunador:
+         </h6>
+            <h6 class="bolder">
+            -
+            </h6>
+        {{/if}}
         </div>
         <br>
         <div class="contenedor-bloque-texto">
@@ -56,19 +61,23 @@ export class VacunasComponent extends HTMLComponent {
         </div>
         <br>
         <div class="contenedor-bloque-texto">
+        {{#if laboratorio}}
             <h6 class="bolder">
                 Laboratorio:
             </h6>
             <h6>
                 {{ laboratorio }}
             </h6>
-
+            {{else}}
+            <h6 class="bolder">
+            Laboratorio:
+           </h6>
+              <h6 class="bolder">
+              -
+              </h6>
+          {{/if}}
         </div>
     </div>
-
-
-
-
     <div class="contenedor-secundario" style = "float: left;width:50%">
         <div class="contenedor-bloque-texto">
             <h6 class="bolder">
@@ -124,15 +133,16 @@ export class VacunasComponent extends HTMLComponent {
 
 
 </section>
-<br>
+
 <div class="contenedor-bloque-texto">
+{{#if comentario}}
     <h6 class="bolder">
         Comentario:
     </h6>
     <h6>
         {{ comentario }}
     </h6>
-
+    {{/if}}
 </div>
 
 
@@ -144,20 +154,22 @@ export class VacunasComponent extends HTMLComponent {
     }
 
     async process() {
+        const vacunador = this.registro.valor.vacuna.vacunador?.nombre || this.registro.valor.vacuna.vacunador?.apellido;
         this.data = {
             registro: this.registro,
             fechaAplicacion: moment(this.registro.valor.vacuna.fechaAplicacion).format('DD/MM/YYYY'),
-            vacunadorNombre: this.registro.valor.vacuna.vacunador.nombre,
-            vacunadorApellido: this.registro.valor.vacuna.vacunador.apellido,
+            vacunadorNombre: this.registro.valor.vacuna.vacunador?.nombre,
+            vacunadorApellido: this.registro.valor.vacuna.vacunador?.apellido,
             categoria: this.registro.valor.vacuna.categoria.nombre,
             condicion: this.registro.valor.vacuna.condicion.nombre,
             vacuna: this.registro.valor.vacuna.vacuna.nombre,
             esquema: this.registro.valor.vacuna.esquema.nombre,
             dosis: this.registro.valor.vacuna.dosis.nombre,
             lote: this.registro.valor.vacuna.lote,
-            laboratorio: this.registro.valor.vacuna.laboratorio.nombre,
+            laboratorio: this.registro.valor.vacuna.laboratorio?.nombre,
             fechaVencimiento: moment(this.registro.valor.vacuna.fechaVencimiento).format('DD/MM/YYYY'),
-            comentario: this.registro.valor.vacuna.comentarios
+            comentario: this.registro.valor.vacuna?.comentarios,
+            vacunador
         };
 
     }
