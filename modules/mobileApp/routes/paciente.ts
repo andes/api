@@ -3,8 +3,6 @@ import * as cdaCtr from '../../cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
 import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { EventCore } from '@andes/event-bus';
-import { calcularEdadReal } from '../../../core-v2/mpi/paciente/paciente.schema';
 const router = express.Router();
 
 /**
@@ -79,13 +77,19 @@ router.get('/relaciones', async (req: any, res, next) => {
 
 router.put('/paciente/:id', async (req: any, res, next) => {
     const idPaciente = req.params.id;
-    const pacientes = req.user.pacientes;
-    const index = pacientes.findIndex(item => item.id === idPaciente);
-    if (index >= 0) {
+    let paciente = await findById(idPaciente);
+    const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
+    let esFamiliar;
+    if (index <= 0) {
+        const resultado = await findById(req.user.pacientes[0].id);
+        esFamiliar = resultado.relaciones.find(rel => {
+            return rel.referencia.toString() === paciente.id.toString();
+        });
+    }
+    if (index >= 0 || esFamiliar) {
         try {
-            let paciente = await findById(pacientes[index].id);
             if (paciente) {
-                const updated = await PacienteCtr.update(paciente.id, req.body, req);
+                await PacienteCtr.update(paciente.id, req.body, req);
                 return res.send({ status: 'OK' });
             }
         } catch (error) {
