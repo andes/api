@@ -1,7 +1,6 @@
 import * as mongoose from 'mongoose';
 
 export const FormsEpidemiologiaSchema = new mongoose.Schema({
-    id: mongoose.Schema.Types.ObjectId,
     type: String,
     createdAt: Date,
     updatedAt: Date,
