@@ -45,6 +45,7 @@ export interface IOrganizacion {
      * @memberof IOrganizacion
      */
     showMapa?: boolean;
+    esCOM: Boolean;
 }
 
 export type OrganizacionRef = Pick<IOrganizacion, 'id' | 'nombre'>;

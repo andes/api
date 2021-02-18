@@ -1,7 +1,8 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { AndesDrive } from '@andes/drive';
-import { Auth } from '../../auth/auth.class';
 import { Derivaciones } from './schemas/derivaciones.schema';
+import { Auth } from '../../auth/auth.class';
+import { Organizacion } from '../../core/tm/schemas/organizacion';
 
 class DerivacionesResource extends ResourceBase {
     Model = Derivaciones;
@@ -74,9 +75,17 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
             if (nuevoEstado.prioridad) {
                 derivacion.prioridad = nuevoEstado.prioridad;
             }
+
             if (nuevoEstado.estado) {
+                const organizacionId = Auth.getOrganization(req);
+                const organizacion = await Organizacion.findById(organizacionId);
+
+                if (!organizacion.esCOM && (derivacion.organizacionDestino.id !== organizacionId)) {
+                    return next('La derivación ya no está asignada a su organización');
+                }
                 derivacion.estado = nuevoEstado.estado;
             }
+
             if (nuevoEstado.organizacionDestino) {
                 derivacion.organizacionDestino = nuevoEstado.organizacionDestino;
             }
@@ -85,6 +94,7 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                 derivacion.organizacionTraslado = req.body.trasladoEspecial.organizacionTraslado;
                 derivacion.tipoTraslado = req.body.trasladoEspecial.tipoTraslado;
             }
+
             Auth.audit(derivacion, req);
             await derivacion.save();
             return res.json(derivacion);
