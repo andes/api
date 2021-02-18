@@ -391,6 +391,7 @@ export async function getPlanillaC1(params: any) {
                     {
                         $project: {
                             paciente: '$agenda.bloques.turnos.paciente',
+                            prestacionHora: '$agenda.bloques.turnos.horaInicio',
                             ejecucion: 1,
                             solicitud: 1,
                         }
@@ -421,6 +422,7 @@ export async function getPlanillaC1(params: any) {
                     {
                         $project: {
                             paciente: '$agenda.sobreturnos.paciente',
+                            prestacionHora: '$agenda.bloques.turnos.horaInicio',
                             ejecucion: 1,
                             solicitud: 1,
                         }
@@ -437,6 +439,7 @@ export async function getPlanillaC1(params: any) {
                     {
                         $project: {
                             paciente: 1,
+                            prestacionHora: '$ejecucion.fecha',
                             ejecucion: 1,
                             solicitud: 1,
                         }
@@ -476,7 +479,7 @@ export async function getPlanillaC1(params: any) {
                     }
                 },
                 pacienteObraSocial: '$paciente.obraSocial.financiador',
-                prestacionHora: '$ejecucion.fecha',
+                prestacionHora: '$prestacionHora',
                 prestacionTipo: '$solicitud.tipoPrestacion.term',
                 prestacionConceptoPrincipal: '$ejecucion.registros.concepto.term',
                 prestacionEsPrimeraVez: '$ejecucion.registros.esPrimeraVez',
