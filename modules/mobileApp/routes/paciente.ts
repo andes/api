@@ -80,7 +80,7 @@ router.put('/paciente/:id', async (req: any, res, next) => {
     let paciente = await findById(idPaciente);
     const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
     let esFamiliar;
-    if (index <= 0) {
+    if (index < 0) {
         const resultado = await findById(req.user.pacientes[0].id);
         esFamiliar = resultado.relaciones.find(rel => {
             return rel.referencia.toString() === paciente.id.toString();
