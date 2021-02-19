@@ -9,7 +9,7 @@ import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import { AndesDrive } from '@andes/drive';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-// import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 const ObjectId = Types.ObjectId;
 
@@ -381,29 +381,29 @@ router.get('/:id/:name', async (req: any, res, next) => {
         if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
             return next(403);
         }
-
         const cda = await cdaCtr.getCDAById(req.params.id);
-
-        if (req.user.type === 'paciente-token' && String(cda.metadata.paciente) !== String(req.user.pacientes[0].id)) {
+        const idPaciente = cda.metadata.paciente;
+        let paciente: any = await findById(idPaciente);
+        const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
+        let esFamiliar;
+        if (index < 0) {
+            const resultado = await findById((req as any).user.pacientes[0].id);
+            esFamiliar = resultado.relaciones.find(rel => {
+                return rel.referencia.toString() === paciente.id.toString();
+            });
+        }
+        if (req.user.type === 'paciente-token' && !(index >= 0 || esFamiliar)) {
             return next(403);
         }
-
-        const name = req.params.name;
         const realName = req.params.name.split('.')[0];
-
-
         const cdaFile = await cdaCtr.getCdaAdjunto(cda, realName);
-
-
         const contentType = cdaFile.file.contentType || cdaFile.file.mimetype;
         const str = cdaFile.stream;
         res.contentType(contentType);
         str.pipe(res);
-
     } catch (ex) {
         return next(500);
     }
-
 });
 
 

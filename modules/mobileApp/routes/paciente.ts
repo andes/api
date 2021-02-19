@@ -128,17 +128,22 @@ router.patch('/pacientes/:id', async (req: any, res, next) => {
  * Devuelve los CDA de laboratorios de un paciente.
  */
 
-router.get('/laboratorios/(:id)', async (req, res, next) => {
+
+router.get('/laboratorios/(:id)', async (req: any, res, next) => {
     const idPaciente = req.params.id;
-    const pacientes = (req as any).user.pacientes;
-    const index = pacientes.findIndex(item => item.id === idPaciente);
-    if (index >= 0) {
-        // tslint:disable-next-line: no-shadowed-variable
-        let paciente: any = await findById(idPaciente);
+    let paciente: any = await findById(idPaciente);
+    const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
+    let esFamiliar;
+    if (index < 0) {
+        const resultado = await findById((req as any).user.pacientes[0].id);
+        esFamiliar = resultado.relaciones.find(rel => {
+            return rel.referencia.toString() === paciente.id.toString();
+        });
+    }
+    if (index >= 0 || esFamiliar) {
         if (!paciente) {
             return next({ message: 'no existe el paciente' });
         }
-
         let limit = parseInt(req.query.limit || 10, 0);
         let skip = parseInt(req.query.skip || 0, 0);
         let cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip });
@@ -150,6 +155,8 @@ router.get('/laboratorios/(:id)', async (req, res, next) => {
             cda.organizacion = dom.ClinicalDocument.author.assignedAuthor.representedOrganization.name['#text'];
         }
         res.json(cdas);
+    } else {
+        return next({ message: 'unauthorized' });
     }
 });
 
