@@ -8,10 +8,7 @@ import { Profesional } from '../../core/tm/schemas/profesional';
 class PersonalSaludResource extends ResourceBase {
     Model = PersonalSalud;
     resourceName = 'personalSalud';
-    // middlewares = [Auth.authenticate()];
-    // routesAuthorization = {
-    //     get: Auth.authorize('')
-    // };
+    middlewares = [Auth.authenticate()];
     routesEnable = ['get'];
     searchFileds = {
         documento: MongoQuery.partialString,
@@ -46,4 +43,4 @@ export const get = async (req: Request, res: Response, next) => {
     }
 };
 
-PersonalSaludRouter.get('/personalSalud', /*Auth.authorize(''),*/ asyncHandler(get));
+PersonalSaludRouter.get('/personalSalud', Auth.authenticate(), asyncHandler(get));
