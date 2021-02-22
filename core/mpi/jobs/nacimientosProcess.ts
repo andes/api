@@ -40,28 +40,41 @@ async function getInfoPacientes(queryPath = '') {
     }
 }
 
-async function relacionar(mama, bebe) {
-    // Buscamos si el paciente bebe fué previamente registrado como temporal
-    const token = `^${bebe.nombre} ${bebe.apellido} ${bebe.documento || ''}`;
-    let fechaNacimiento = moment(bebe.fechaNacimiento).format('YYYY-MM-DD');
-    const bebeSimilitudes = await PacienteCtr.search({ tokens: token, fechaNacimiento, activo: true }, {}, userScheduler as any);
-    if (bebeSimilitudes.length > 0) {
-        // buscamos entre las relaciones de bebeSimilares a la mamá, si la encontramos nos quedamos con ese bebé
-        // (debería encontrar a 1, salvo que no se haya cargado a la mamá cuando nació)
-        const bebes = bebeSimilitudes.filter(pac =>
-            pac.relaciones.find(rel => rel.referencia.toString() === mama._id.toString())
-        );
-        if (bebes.length > 0) {
-            bebe = bebes[0];
-        } else {
-            bebe = bebeSimilitudes[0];
+
+// obtenemos a un paciente este entre las relaciones por fecha de nacimiento
+const getRelacionNacimiento = async (relaciones: any[], fechaNac) => {
+    if (relaciones?.length) {
+        for (const rel of relaciones) {
+            if (rel.referencia) {
+                const pacienteFound: IPaciente = await PacienteCtr.findById(rel.referencia.toString(), {});
+                if (moment(pacienteFound.fechaNacimiento).format('YYYY-MM-DD') === moment(fechaNac).format('YYYY-MM-DD')) {
+                    return pacienteFound;
+                }
+            }
         }
     }
-    // Buscar el parentesco asociado
-    const progenitor = await ParentescoCtr.search({ nombre: '^progenitor' }, {}, userScheduler as any);
+    return null;
+};
+
+/**
+ * relacionamos al bebe con su progenitor/a
+ */
+async function relacionar(mama, bebe) {
+
+    // buscamos entre las relaciones de la mamá al bebé por fecha de nacimiento
+    let bebeFound: IPaciente = await getRelacionNacimiento(mama.relaciones, bebe.fechaNacimiento);
+    if (bebeFound) {
+        bebeFound.certificadoRenaper = bebe.certificadoRenaper;
+        bebe = bebeFound;
+    }
+
+    // verificaciones si el id está incluido en las relaciónes
+    const incluyeRelacion = (relaciones: any[], id) => (
+        (relaciones?.length) ? relaciones.some(rel => rel.referencia.toString() === id.toString()) : false);
+
     // Incluimos a la mamá en las relaciones del bebe en caso de no estarlo
-    const rela = bebe.relaciones.some(rel => rel.referencia.toString() === mama.id.toString());
-    if (!bebe.relaciones?.length || !rela) {
+    if (!incluyeRelacion(bebe.relaciones, mama.id)) {
+        const progenitor = await ParentescoCtr.findOne({ nombre: '^progenitor' }, {}, userScheduler as any);
         let mamaRelacion = {
             relacion: progenitor,
             referencia: mama._id,
@@ -72,18 +85,22 @@ async function relacionar(mama, bebe) {
             fotoId: mama.fotoId ? mama.fotoId : null,
             fechaFallecimiento: mama.fechaFallecimiento ? mama.fechaFallecimiento : null
         };
-        bebe.relaciones.push(mamaRelacion);
+        bebe.relaciones?.length ? bebe.relaciones.push(mamaRelacion) : bebe.relaciones = [mamaRelacion];
     }
+
     // Insertamos/actualizamos al bebé
     let bebeAndes: IPaciente;
-    if (bebeSimilitudes.length > 0) {
+    if (bebeFound) {
         bebeAndes = await PacienteCtr.update(bebe.id, bebe, userScheduler as any);
     } else {
         bebeAndes = await PacienteCtr.create(bebe, userScheduler as any);
     }
-    const hijo = await ParentescoCtr.search({ nombre: '^hijo' }, {}, userScheduler as any);
+
+
     // Incluimos al bebe en las relaciones de la mamá en caso de no estarlo
-    if (!mama.relaciones?.length || !mama.relaciones.some(rel => rel.referencia.toString() === bebe.id.toString())) {
+    if (!mama.relaciones?.length || !bebeFound) {
+
+        const hijo = await ParentescoCtr.findOne({ nombre: '^hijo' }, {}, userScheduler as any);
         let bebeRelacion = {
             relacion: hijo,
             referencia: bebeAndes['id'],
@@ -97,7 +114,6 @@ async function relacionar(mama, bebe) {
         mama.relaciones?.length ? mama.relaciones.push(bebeRelacion) : mama.relaciones = [bebeRelacion];
     }
 
-    deb('UPDATE MAMA--->', mama.apellido);
     const mamaUpdated = await PacienteCtr.update(mama.id, mama, userScheduler as any);
     await nacimientosLog.info('nacimiento-updated', { tutor: mamaUpdated.id, bebe: bebeAndes['id'] }, userScheduler);
 }
@@ -175,7 +191,8 @@ async function validarPaciente(dataPaciente) {
     dataPaciente.estado = resultado.estado;
     dataPaciente.fechaNacimiento = resultado.fechaNacimiento;
     dataPaciente.foto = resultado.foto;
-    dataPaciente.fotoId = !resultado.fotoId && resultado.foto.length > 0 ? new Types.ObjectId() : null;
+    dataPaciente.fotoId = !resultado.foto?.length ? null :
+        resultado.fotoId ? new Types.ObjectId(resultado.fotoId) : new Types.ObjectId();
     dataPaciente.fechaFallecimiento = resultado.fechaFallecimiento;
     dataPaciente.cuil = !dataPaciente.cuil && resultado.cuil ? resultado.cuil : '';
 
@@ -195,7 +212,16 @@ async function procesarDataNacimientos(nacimiento) {
     deb('PARSER RESULT--->', resultadoParse);
     try {
         let mama = resultadoParse.mama;
-        const pacientesFound = await PacienteCtr.search({ documento: resultadoParse.mama.documento, sexo: 'femenino', activo: true, }, { limit: 1 }, userScheduler as any);
+        const pacientesFound = await PacienteCtr.search(
+            {
+                documento: resultadoParse.mama.documento,
+                sexo: 'femenino', activo: true
+            },
+            {
+                limit: 1
+            },
+            userScheduler as any);
+
         // Existe en ANDES?
         if (pacientesFound?.length > 0) {
             mama = pacientesFound[0];
