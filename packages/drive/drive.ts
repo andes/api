@@ -102,7 +102,6 @@ export class AndesDrive {
         const realid = await this.adapter.write(fileStream);
         const extension = metadata.filename.split('.').pop();
         const data: any = {
-            _id: metadata._id,
             real_id: realid,
             adapter: this.adapter.name,
             originalname: metadata.filename,
@@ -110,6 +109,9 @@ export class AndesDrive {
             mimetype: metadata.contentType,
             origin: metadata.origin
         };
+        if (metadata._id) {
+            data._id = metadata._id;
+        }
         const fd = await FileDescriptor.create(data, req);
         return fd;
     }

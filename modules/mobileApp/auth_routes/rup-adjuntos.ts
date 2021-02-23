@@ -1,14 +1,13 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
-// import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { model as PrestacionAdjunto } from '../../rup/schemas/prestacion-adjuntos';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
-import { storeFile } from '../../../core/tm/controller/file-storage';
 const fs = require('fs');
 import { FileMetadata, AndesDrive } from '@andes/drive';
+import * as intoStream from 'into-stream';
 
 const router = express.Router();
 
@@ -118,25 +117,26 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
 
     PrestacionAdjunto.findById(id).then(async (doc: any) => {
         const files = [];
+        let i = 1;
         for (const file of value) {
             if (file.ext && file.plain64) {
-                file.plain64 = file.plain64.replace(/\n/gi, '');
-                if (file.ext === 'pdf') {
-                    file.plain64 = file.plain64.replace('image/*', 'application/pdf');
-                } else {
-                    file.plain64 = file.plain64.replace('image/*', 'image/' + file.ext);
-                }
+                let parts = file.plain64.split(';');
+                let mimType = parts[0].split(':')[1];
+                let fileData = parts[1].split(',')[1];
+                const fileDataBuffer = Buffer.from(fileData, 'base64');
+                const fileStream = intoStream(fileDataBuffer);
                 const metadata: FileMetadata = {
                     ...file,
+                    filename: `adjuntoRup_${i}.${file.ext}`,
+                    contentType: mimType,
                     origin: 'rup'
                 };
-                let writeStream = fs.createWriteStream('archivo.pdf');
-                writeStream.write(file.plain64, 'base64');
-                const data: any = await AndesDrive.writeFile(writeStream, metadata, req);
+                const data: any = await AndesDrive.writeFile(fileStream, metadata, req);
                 files.push({ id: data._id, ext: file.ext });
             } else {
                 files.push(file);
             }
+            i++;
         }
         doc.valor = { documentos: files };
         doc.estado = estado;
@@ -147,6 +147,5 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
         return next(err);
     });
 });
-
 
 export = router;
