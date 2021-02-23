@@ -7,6 +7,8 @@ import { Prestacion } from '../../rup/schemas/prestacion';
 import { model as PrestacionAdjunto } from '../../rup/schemas/prestacion-adjuntos';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { storeFile } from '../../../core/tm/controller/file-storage';
+const fs = require('fs');
+import { FileMetadata, AndesDrive } from '@andes/drive';
 
 const router = express.Router();
 
@@ -115,7 +117,6 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
     const estado = req.body.estado;
 
     PrestacionAdjunto.findById(id).then(async (doc: any) => {
-
         const files = [];
         for (const file of value) {
             if (file.ext && file.plain64) {
@@ -125,17 +126,18 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
                 } else {
                     file.plain64 = file.plain64.replace('image/*', 'image/' + file.ext);
                 }
-                const metadata = {
-                    registro: doc.registro,
-                    prestacion: doc.prestacion
+                const metadata: FileMetadata = {
+                    ...file,
+                    origin: 'rup'
                 };
-                const data: any = await storeFile(file.plain64, metadata, 'RupStore');
+                let writeStream = fs.createWriteStream('archivo.pdf');
+                writeStream.write(file.plain64, 'base64');
+                const data: any = await AndesDrive.writeFile(writeStream, metadata, req);
                 files.push({ id: data._id, ext: file.ext });
             } else {
                 files.push(file);
             }
         }
-
         doc.valor = { documentos: files };
         doc.estado = estado;
         doc.save().then(() => {
