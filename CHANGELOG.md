@@ -1,3 +1,13 @@
+# [5.34.0](https://github.com/andes/api/compare/v5.33.0...v5.34.0) (2021-02-24)
+
+
+### Features
+
+* **citas:** se agrega permiso soloLectura ([#1256](https://github.com/andes/api/issues/1256)) ([b66f6ac](https://github.com/andes/api/commit/b66f6ac499f4639f443c105b86aae4c7a58360c7))
+* **com:** verifica organizacion destino en POST derivaciones ([#1260](https://github.com/andes/api/issues/1260)) ([4d02158](https://github.com/andes/api/commit/4d02158c42bdca164005bd0d3d7cde2508a799c2))
+* **rup:** informe-pdf se agrega implementación de CheckListComponent ([#1278](https://github.com/andes/api/issues/1278)) ([f7b4fe1](https://github.com/andes/api/commit/f7b4fe11b36afca8917345ee2d3c1ebd24fd73ad))
+* **rup:** informe-pdf se agrega implementación de VacunasComponent ([#1277](https://github.com/andes/api/issues/1277)) ([7f17980](https://github.com/andes/api/commit/7f17980c083d708ca9af2f3da46af1e58c22d3af))
+
 # [5.33.0](https://github.com/andes/api/compare/v5.32.0...v5.33.0) (2021-02-10)
 
 
