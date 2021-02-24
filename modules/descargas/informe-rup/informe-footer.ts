@@ -10,12 +10,7 @@ export class InformeRupFooter extends HTMLComponent {
         <span class="contenedor-zocalo">
             <img class="logo-pdp" src="data:image/png;base64,{{ logos.pdp }}">
             <article class="contenedor-data-pdp">
-                <h6>Nota: El contenido de este informe ha sido validado digitalmente siguiendo los estándares de
-                    calidad y seguridad
-                    requeridos. El ministerio de salud de la provincia de Neuquén es responsable inscripto en el
-                    Registro
-                    Nacional de Protección de Datos Personales, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso
-                    1).</h6>
+                <h6>Nota: {{{ notaPie }}} </h6>
             </article>
             <article class="contenedor-data-organizacion">
                 <h6>
@@ -67,7 +62,8 @@ export class InformeRupFooter extends HTMLComponent {
                 pdp: loadImage('templates/rup/informes/img/logo-pdp.png'),
             },
             validacion: this.getDatosValidacion(),
-            numeracionHTML: '<small> {{page}} </small> de <small> {{pages}} </small>'
+            numeracionHTML: '<small> {{page}} </small> de <small> {{pages}} </small>',
+            notaPie: organizacion.configuraciones?.notaAlPie || InformeRupFooter.notaAlPieDefault
         };
     }
 
@@ -82,5 +78,12 @@ export class InformeRupFooter extends HTMLComponent {
         }
         return null;
     }
+
+    static readonly notaAlPieDefault = `El contenido de este informe ha sido validado digitalmente siguiendo los estándares de
+calidad y seguridad
+requeridos. El ministerio de salud de la provincia de Neuquén es responsable inscripto en el
+Registro
+Nacional de Protección de Datos Personales, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso
+1).`;
 
 }
