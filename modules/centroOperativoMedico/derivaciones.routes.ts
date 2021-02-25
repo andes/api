@@ -3,6 +3,7 @@ import { AndesDrive } from '@andes/drive';
 import { Derivaciones } from './schemas/derivaciones.schema';
 import { Auth } from '../../auth/auth.class';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
+import { sendMailComprobanteDerivacion } from './controllers/com.controller';
 
 class DerivacionesResource extends ResourceBase {
     Model = Derivaciones;
@@ -84,6 +85,12 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                     return next('La derivación ya no está asignada a su organización');
                 }
                 derivacion.estado = nuevoEstado.estado;
+
+                const isPacienteDestino = derivacion.estado === 'finalizada' && derivacion.organizacionDestino && derivacion.organizacionDestino.id !== derivacion.organizacionOrigen.id;
+                if (isPacienteDestino && organizacion.esCOM) {
+                    const emailTo = organizacion.configuraciones.emails.find(e => e.nombre === 'recupero').email;
+                    sendMailComprobanteDerivacion(derivacion, emailTo);
+                }
             }
 
             if (nuevoEstado.organizacionDestino) {
