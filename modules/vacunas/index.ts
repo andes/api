@@ -5,6 +5,8 @@ import { nomivacEsquemaRouter } from './nomivacEsquema.route';
 import { nomivacLaboratorioRouter } from './nomivacLaboratorio.route';
 import { nomivacLoteRouter } from './nomivacLote.route';
 import { nomivacVacunaRouter } from './nomivacVacuna.route';
+import { InscripcionVacunasRouter } from './inscripcion-vacunas.routes';
+import { VacunasRouter } from './routes/vacunas';
 export const Routes = [
     nomivacCondicionRouter,
     nomivacVacunaRouter,
@@ -12,5 +14,7 @@ export const Routes = [
     nomivacLaboratorioRouter,
     nomivacEsquemaRouter,
     nomivacDosisRouter,
-    nomivacLoteRouter
+    nomivacLoteRouter,
+    InscripcionVacunasRouter,
+    VacunasRouter
 ];
