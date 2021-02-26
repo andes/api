@@ -29,7 +29,21 @@ export const InscripcionVacunaSchema = new Schema({
     paciente: {
         id: Types.ObjectId,
         addAt: Date,
-    }
+    },
+    alergia: Boolean,
+    condicion: Boolean,
+    enfermedad: Boolean,
+    convaleciente: Boolean,
+    aislamiento: Boolean,
+    vacuna: Boolean,
+    plasma: Boolean,
+    amamantando: Boolean,
+    embarazada: Boolean,
+    profesion: String,
+    matricula: String,
+    establecimiento: String,
+    localidadEstablecimiento: String,
+    relacion: String
 });
 
 export const InscripcionVacuna = model('inscripcion-vacuna', InscripcionVacunaSchema, 'inscripcion-vacunas');
