@@ -42,7 +42,7 @@ export const InscripcionVacunaSchema = new Schema({
     profesion: String,
     matricula: String,
     establecimiento: String,
-    localidadEstablecimiento: String,
+    localidadEstablecimiento: { type: nombreSchema },
     relacion: String
 });
 
