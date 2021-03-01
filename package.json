@@ -47,6 +47,7 @@
     "html-pdf": "^2.2.0",
     "http": "0.0.0",
     "http-status-codes": "^1.1.6",
+    "into-stream": "^5.0.0",
     "ipaddr.js": "^1.7.0",
     "is-reachable": "^2.3.2",
     "json-rules-engine": "^6.0.0",
