@@ -14,7 +14,6 @@ export const InscripcionVacunaSchema = new Schema({
         id: Schema.Types.ObjectId,
         nombre: String
     },
-
     email: String,
     telefono: String,
     localidad: { type: nombreSchema },
@@ -30,6 +29,7 @@ export const InscripcionVacunaSchema = new Schema({
         id: Types.ObjectId,
         addAt: Date,
     },
+    cue: String,
     alergia: Boolean,
     condicion: Boolean,
     enfermedad: Boolean,

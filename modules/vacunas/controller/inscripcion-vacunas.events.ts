@@ -7,7 +7,7 @@ import { findOrCreate } from '../../../core-v2/mpi/paciente/paciente.controller'
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 
 EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscriptoValidado: any, req: Request) => {
-    if (inscripto.grupo === 'personal-salud') {
+    if (inscripto.grupo && inscripto.grupo.nombre === 'personal-salud') {
         inscripto.personal_salud = true;
         inscripto.estado = 'habilitado';
         const profesional = await Profesional.findOne({ documento: inscripto.documento, sexo: inscripto.sexo }, { nombre: true, apellido: true });
@@ -27,7 +27,7 @@ EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscri
         if (provinciaInscripto === provincia) {
             inscripto.validaciones.push('domicilio');
         } else {
-            if (inscripto.grupo === 'mayores60') {
+            if (inscripto.grupo && inscripto.grupo.nombre === 'mayores60') {
                 inscripto.estado = 'pendiente';
             }
         }
