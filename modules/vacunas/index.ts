@@ -7,6 +7,7 @@ import { nomivacLoteRouter } from './nomivacLote.route';
 import { nomivacVacunaRouter } from './nomivacVacuna.route';
 import { InscripcionVacunasRouter } from './inscripcion-vacunas.routes';
 import { VacunasRouter } from './routes/vacunas';
+require('./controller/inscripcion-vacunas.events');
 export const Routes = [
     nomivacCondicionRouter,
     nomivacVacunaRouter,

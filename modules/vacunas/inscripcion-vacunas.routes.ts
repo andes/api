@@ -6,6 +6,8 @@ import { EventCore } from '@andes/event-bus/';
 import { validar } from '../../core-v2/mpi/validacion';
 import { matching } from '../../core-v2/mpi/paciente/paciente.controller';
 import { mpi } from '../../config';
+import { handleHttpRequest } from '../../utils/requestHandler';
+import { captcha } from './../../config.private';
 
 class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
@@ -25,10 +27,35 @@ class InscripcionVacunasResource extends ResourceBase {
 export const InscripcionVacunasCtr = new InscripcionVacunasResource({});
 export const InscripcionVacunasRouter = InscripcionVacunasCtr.makeRoutes();
 
+async function validarToken(token) {
+    try {
+        if (token === null || token === undefined) {
+            return false;
+        }
+        const urlValidacion = `${captcha.url}?secret=${captcha.secret_key}&response=${token}`;
+        const options = {
+            uri: urlValidacion,
+            method: 'POST',
+            json: true,
+        };
+        const [status, body] = await handleHttpRequest(options);
+        if (status === 200 && body.success) {
+            return true;
+        }
+        return false;
+    } catch (err) {
+        return false;
+    }
+}
+
 InscripcionVacunasRouter.get('/inscripcion-vacunas/consultas', async (req: Request, res, next) => {
     try {
         const doc = req.query.documento;
         const sexo = req.query.sexo;
+        const verificar = await validarToken(req.query.recaptcha);
+        if (!verificar) {
+            return next('Error recaptcha');
+        }
         if (doc && sexo) {
             const inscripto = await InscripcionVacunasCtr.findOne({
                 documento: doc,
@@ -55,6 +82,11 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async 
 
 InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, next) => {
     try {
+        // Verifica el recaptcha
+        const verificar = await validarToken(req.body.recaptcha);
+        if (!verificar) {
+            return next('Error recaptcha');
+        }
         const documento = req.body.documento;
         const sexo = req.body.sexo;
         // Verifica si se encuentra inscripto previamente
@@ -67,21 +99,26 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, 
             if (inscriptoValidado) {
                 const tramite = Number(req.body.nroTramite);
                 // Verifica el número de trámite
-                if (inscriptoValidado.tieneTramite && inscriptoValidado.idTramite !== tramite) {
+                if ((req.body.tieneTramite && inscriptoValidado.idTramite !== tramite) ||
+                    (inscriptoValidado.idTramite && inscriptoValidado.idTramite !== tramite)) {
                     return next('Número de Trámite inválido');
                 }
                 // Realiza el match
                 const value = await matching(inscriptoValidado, req.body);
                 if (value < mpi.cotaMatchMax) {
-                    return next('Datos inválidos');
+                    return next('Datos inválidos, verifique sus datos personales');
                 }
                 req.body.validado = true;
+            } else {
+                if (req.body.grupo.nombre !== 'mayores60') {
+                    return next('No es posible verificar su identidad.  Por favor verifique sus datos');
+                }
             }
             const inscripcion = await InscripcionVacunasCtr.create(req.body, req);
             EventCore.emitAsync('vacunas:inscripcion-vacunas:create', inscripcion, inscriptoValidado, req);
             return res.json(inscripcion);
         } else {
-            return next('Se encuentra inscripto');
+            return next('Existe una inscripción registrada');
         }
 
     } catch (err) {

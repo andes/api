@@ -1,10 +1,11 @@
 import { EventCore } from '@andes/event-bus';
-import { Request, Response } from '@andes/api-tool';
+import { Request } from '@andes/api-tool';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { provincia as provinciaActual } from '../../../config.private';
 import { PersonalSaludCtr } from '../../../modules/personalSalud/personal-salud.routes';
 import { findOrCreate } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
+import { replaceChars } from '../../../core-v2/mpi';
 
 EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscriptoValidado: any, req: Request) => {
     if (inscripto.grupo && inscripto.grupo.nombre === 'personal-salud') {
@@ -22,9 +23,9 @@ EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscri
     }
     // Verifica el domicilio del paciente
     if (inscriptoValidado) {
-        const provincia = provinciaActual || 'Neuquén';
-        const provinciaInscripto = inscriptoValidado.direccion.ubicacion.provincia.nombre;
-        if (provinciaInscripto === provincia) {
+        const provincia = provinciaActual || 'neuquen';
+        const provinciaInscripto = inscriptoValidado.direccion[0].ubicacion.provincia.nombre || '';
+        if (replaceChars(provinciaInscripto).toLowerCase() === replaceChars(provincia)) {
             inscripto.validaciones.push('domicilio');
         } else {
             if (inscripto.grupo && inscripto.grupo.nombre === 'mayores60') {
