@@ -10,6 +10,7 @@ import * as jwt from 'jsonwebtoken';
 import * as configPrivate from '../config.private';
 import { Request, Response } from '@andes/api-tool';
 import { ObjectId } from '@andes/core';
+import { handleHttpRequest } from '../utils/requestHandler';
 
 const shiroTrie = require('shiro-trie');
 
@@ -106,6 +107,35 @@ export class Auth {
         }
     }
 
+    static validateCaptcha() {
+        return async (req, res, next) => {
+            if (configPrivate.captcha.enabled) {
+                try {
+                    const recaptcha = req.body.recaptcha;
+                    if (!recaptcha) {
+                        next(403);
+                    }
+                    const urlValidacion = `${configPrivate.captcha.url}?secret=${configPrivate.captcha.secret_key}&response=${recaptcha}`;
+                    const options = {
+                        uri: urlValidacion,
+                        method: 'POST',
+                        json: true,
+                    };
+                    const [status, body] = await handleHttpRequest(options);
+                    if (status === 200 && body.success) {
+                        next();
+                    } else {
+                        next(403);
+                    }
+                } catch (err) {
+                    next(403);
+                }
+            } else {
+                next();
+            }
+        };
+    }
+
     /**
      * optionalAuth: extract
      */
@@ -125,7 +155,6 @@ export class Auth {
             }
         };
     }
-
 
     /**
      * Middleware Denied patients access

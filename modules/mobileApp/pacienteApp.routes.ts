@@ -15,6 +15,5 @@ class PacienteAppResource extends ResourceBase {
     };
 }
 
-
 export const PacienteAppCtr = new PacienteAppResource({});
 export const PacienteAppRouter = PacienteAppCtr.makeRoutes();
