@@ -8,15 +8,11 @@ class FormsEpidemiologiaResource extends ResourceBase {
     middlewares = [Auth.authenticate()];
     searchFileds = {
         type: MongoQuery.partialString,
-        search: ['type'],
-        createdAt: {
-            field: 'createdAt',
-            fn: (value) => (MongoQuery.matchDate(value))
-        },
+        fechaCondicion: MongoQuery.matchDate.withField('createdAt'),
         paciente: {
             field: 'paciente.id',
             fn: MongoQuery.equalMatch
-        },
+        }
     };
 }
 

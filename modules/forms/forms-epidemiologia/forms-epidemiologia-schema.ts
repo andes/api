@@ -1,9 +1,8 @@
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 
 export const FormsEpidemiologiaSchema = new mongoose.Schema({
     type: String,
-    createdAt: Date,
-    updatedAt: Date,
     paciente: {
         id: { type: mongoose.Schema.Types.ObjectId, ref: 'paciente' },
         documento: String,
@@ -14,5 +13,6 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
     secciones: [Object]
 });
 
+FormsEpidemiologiaSchema.plugin(AuditPlugin);
 
 export const FormsEpidemiologia = mongoose.model('formsEpidemiologia', FormsEpidemiologiaSchema, 'formsEpidemiologia');
