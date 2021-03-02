@@ -67,7 +67,7 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, 
             if (inscriptoValidado) {
                 const tramite = Number(req.body.nroTramite);
                 // Verifica el número de trámite
-                if (inscriptoValidado.idTramite && inscriptoValidado.idTramite !== tramite) {
+                if (inscriptoValidado.tieneTramite && inscriptoValidado.idTramite !== tramite) {
                     return next('Número de Trámite inválido');
                 }
                 // Realiza el match

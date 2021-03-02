@@ -11,10 +11,10 @@ export const InscripcionVacunaSchema = new Schema({
     fechaNacimiento: Date,
     sexo: String,
     grupo: {
-        type: String,
-        required: true,
-        enum: ['mayores60', 'personal-salud', 'personal-seguridad', 'docentes', 'otros']
+        id: Schema.Types.ObjectId,
+        nombre: String
     },
+
     email: String,
     telefono: String,
     localidad: { type: nombreSchema },
