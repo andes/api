@@ -1,3 +1,12 @@
+# [5.35.0](https://github.com/andes/api/compare/v5.34.0...v5.35.0) (2021-03-03)
+
+
+### Features
+
+* **mpi:** documentos paciente ([#1259](https://github.com/andes/api/issues/1259)) ([8faa8b8](https://github.com/andes/api/commit/8faa8b8d5faa9e0b173759f53f8aa78c0f704765))
+* **rup:** adjuntos en drive ([#1283](https://github.com/andes/api/issues/1283)) ([8d70c04](https://github.com/andes/api/commit/8d70c04a637af8acac3fda7acbdb3aaf2272508f))
+* **rup:** nota al pie configurable ([#1284](https://github.com/andes/api/issues/1284)) ([85b00e4](https://github.com/andes/api/commit/85b00e45043f5071dd6ae13ccda99420bb676bab))
+
 # [5.34.0](https://github.com/andes/api/compare/v5.33.0...v5.34.0) (2021-02-24)
 
 
