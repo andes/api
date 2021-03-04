@@ -569,5 +569,27 @@ export default [
         comment: '',
         child: [
         ]
+    },
+    {
+        key: 'formBuilder',
+        title: 'Generador de formularios customizables',
+        comment: '',
+        child: [
+            {
+                key: 'create',
+                title: 'Genearar nuevo',
+                type: 'boolean'
+            },
+            {
+                key: 'update',
+                title: 'Modificar existente',
+                type: 'boolean'
+            },
+            {
+                key: 'read',
+                title: 'Sólo lectura',
+                type: 'boolean'
+            }
+        ]
     }
 ];
