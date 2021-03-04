@@ -89,6 +89,9 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, 
         }
         const documento = req.body.documento;
         const sexo = req.body.sexo;
+        req.body.nombre = req.body.nombre.toUpperCase();
+        req.body.apellido = req.body.apellido.toUpperCase();
+
         // Verifica si se encuentra inscripto previamente
         const inscripto = await InscripcionVacunasCtr.findOne({ documento, sexo });
         if (!inscripto) {
@@ -99,9 +102,12 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, 
             if (inscriptoValidado) {
                 const tramite = Number(req.body.nroTramite);
                 // Verifica el número de trámite
-                if ((req.body.tieneTramite && inscriptoValidado.idTramite !== tramite) ||
-                    (inscriptoValidado.idTramite && inscriptoValidado.idTramite !== tramite)) {
+                if (req.body.tieneTramite && inscriptoValidado.idTramite !== tramite) {
                     return next('Número de Trámite inválido');
+                }
+                // Verifica el caso en que marca que no tiene numero de trámite pero si tiene
+                if (!req.body.tieneTramite && inscriptoValidado.idTramite) {
+                    return next('Su documento registra un número de trámite, por favor verifique');
                 }
                 // Realiza el match
                 const value = await matching(inscriptoValidado, req.body);
