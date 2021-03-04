@@ -129,6 +129,11 @@ export const snomed = {
     snowstormBranch: getEnv('SNOWSTORM_BRANCH', 'MAIN/SNOMEDCT-ES')
 };
 
+export const captcha = {
+    url: getEnv('URL_RECAPTCHA', ''),
+    secret_key: getEnv('SECRET_KEY', '')
+};
+
 // Push Notifications
 export const pushNotificationsSettings = {
     gcm: {
