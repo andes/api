@@ -3,51 +3,9 @@ import { EventCore } from '@andes/event-bus';
 import { WebHook } from './webhook.schema';
 import { WebHookLog } from './webhooklog/webhooklog.schema';
 import { Patient } from '@andes/fhir';
+import { Engine } from 'json-rules-engine';
 
 const request = require('request');
-
-
-function filterData(filters: any[], data) {
-    let i = 0;
-    let continua = true;
-
-    while (i < filters.length && continua) {
-        let filter = filters[i];
-        let op = filter.operation;
-        if (op) {
-            switch (op) {
-                case 'equal': {
-                    for (let key in filter.data) {
-                        if (!data[key] || JSON.stringify(data[key]) === JSON.stringify(filter.data[key])) {
-                            continua = true;
-                        } else {
-                            continua = false;
-                        }
-                    }
-                    break;
-                }
-                case 'distinct': {
-                    // Es para evitar el procesamiento de un objeto determinado
-                    for (let key in filter.data) {
-                        if (!data[key] || JSON.stringify(data[key]) === JSON.stringify(filter.data[key])) {
-                            continua = false;
-                        } else {
-                            continua = true;
-                        }
-                    }
-                    break;
-                }
-                default: {
-                    // No se aplica ningún filtrado porque no entró en ninguna condición
-                    continua = true;
-                    break;
-                }
-            }
-        }
-        i++;
-    }
-    return continua;
-}
 
 const trasform = {
     fhir: Patient.encode
@@ -59,21 +17,23 @@ EventCore.on(/.*/, async function (body) {
         active: true,
         event
     });
-    subscriptions.forEach((sub: any) => {
+
+    subscriptions.forEach(async (sub: any) => {
+
+        const valid = await verificarFiltros(sub, body);
+        if (!valid) {
+            return;
+        }
+
         const bodyTransform = trasform[sub.trasform] ? trasform[sub.trasform](body) : body;
 
-        if (sub.filters) {
-            const respuesta = !filterData(sub.filters, bodyTransform);
-            if (respuesta) {
-                return null;
-            }
-        }
         const data = {
             id: new mongoose.Types.ObjectId(),
             subscription: sub._id,
             data: bodyTransform,
             event
         };
+
         request({
             method: sub.method,
             uri: sub.url,
@@ -83,7 +43,7 @@ EventCore.on(/.*/, async function (body) {
             timeout: 10000,
         }, (error, response, _body) => {
 
-            let log = new WebHookLog({
+            const log = new WebHookLog({
                 event,
                 url: sub.url,
                 method: sub.method,
@@ -98,3 +58,29 @@ EventCore.on(/.*/, async function (body) {
 
     });
 });
+
+async function verificarFiltros(subscription, body) {
+    if (subscription && subscription.rules) {
+
+        const engine = new Engine();
+
+        const _body = JSON.parse(JSON.stringify(body)); // Engine tiene problemas al leer modelos de Mongoose
+
+        engine.addFact('data', _body);
+
+        engine.addRule({
+            conditions: subscription.rules,
+            event: { type: 'valid' }
+        });
+
+
+        return engine
+            .run()
+            .then(({ events }) => {
+                return events.length > 0;
+            });
+
+    } else {
+        return true;
+    }
+}
