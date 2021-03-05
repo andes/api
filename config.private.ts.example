@@ -130,6 +130,7 @@ export const snomed = {
 };
 
 export const captcha = {
+    enabled: getEnv('RECAPTCHA_ENABLED', false),
     url: getEnv('URL_RECAPTCHA', ''),
     secret_key: getEnv('SECRET_KEY', '')
 };
