@@ -13,10 +13,8 @@ const router = express.Router();
 router.get('/agendasDisponibles', async (req: any, res, next) => {
     const pipelineAgendas = [];
     const matchAgendas = {};
-
-    if (req.query.prestacion) {
-        const conceptoTurneable = JSON.parse(req.query.prestacion);
-        matchAgendas['tipoPrestaciones.conceptId'] = conceptoTurneable.conceptId;
+    if (req.query.conceptId) {
+        matchAgendas['tipoPrestaciones.conceptId'] = req.query.conceptId;
     }
 
     matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
