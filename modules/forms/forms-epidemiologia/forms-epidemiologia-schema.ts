@@ -1,14 +1,15 @@
-import { PacienteSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
-import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-
+import * as mongoose from 'mongoose';
 
 export const FormsEpidemiologiaSchema = new mongoose.Schema({
-    id: mongoose.Schema.Types.ObjectId,
     type: String,
-    createdAt: Date,
-    updatedAt: Date,
-    paciente: PacienteSchema,
+    paciente: {
+        id: { type: mongoose.Schema.Types.ObjectId, ref: 'paciente' },
+        documento: String,
+        nombre: String,
+        apellido: String,
+        fechaNacimiento: Date,
+    },
     secciones: [Object]
 });
 

@@ -591,5 +591,27 @@ export default [
                 type: 'boolean'
             }
         ]
+    },
+    {
+        key: 'epidemiologia',
+        title: 'Epidemiología',
+        comment: '',
+        child: [
+            {
+                key: 'create',
+                title: 'Crear ficha',
+                type: 'boolean'
+            },
+            {
+                key: 'update',
+                title: 'Editar ficha',
+                type: 'boolean'
+            },
+            {
+                key: 'read',
+                title: 'Visualizar ficha',
+                type: 'boolean'
+            }
+        ]
     }
 ];
