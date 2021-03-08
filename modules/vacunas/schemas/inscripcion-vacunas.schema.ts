@@ -44,7 +44,8 @@ export const InscripcionVacunaSchema = new Schema({
     establecimiento: String,
     localidadEstablecimiento: { type: nombreSchema },
     relacion: String,
-    diaseleccionados: String
+    diaseleccionados: String,
+    fechaVacunacion: Date
 });
 
 export const InscripcionVacuna = model('inscripcion-vacuna', InscripcionVacunaSchema, 'inscripcion-vacunas');

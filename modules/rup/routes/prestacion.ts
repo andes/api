@@ -683,18 +683,36 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
 
 EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
     const elementosRUPSet = await elementosRUPAsSet();
-
     const registros = prestacion.getRegistros(true);
 
     for (const reg of registros) {
 
+        if (reg.elementoRUP) {
+            const elemento = elementosRUPSet.getByID(reg.elementoRUP);
+            if (elemento && elemento.dispatch) {
+                elemento.dispatch.forEach(hook => {
+                    if (hook.method === 'validar-prestacion') {
+                        EventCore.emitAsync(hook.event, { prestacion, registro: reg });
+                    }
+                });
+            }
+        }
+    }
+});
 
+EventCore.on('rup:prestacion:romperValidacion', async (prestacion: IPrestacionDoc) => {
+    const elementosRUPSet = await elementosRUPAsSet();
+    const registros = prestacion.getRegistros(true);
+
+    for (const reg of registros) {
         if (reg.elementoRUP) {
 
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);
             if (elemento && elemento.dispatch) {
                 elemento.dispatch.forEach(hook => {
-                    EventCore.emitAsync(hook.event, { prestacion, registro: reg });
+                    if (hook.method === 'romper-validacion') {
+                        EventCore.emitAsync(hook.event, { prestacion, registro: reg });
+                    }
                 });
             }
         }
