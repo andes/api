@@ -56,16 +56,27 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas/consultas', async (req: Reque
     try {
         const doc = req.query.documento;
         const sexo = req.query.sexo;
-        const verificar = await validarToken(req.query.recaptcha);
-        if (!verificar) {
-            return next('Error recaptcha');
+        if (captcha.enabled) {
+            const verificar = await validarToken(req.query.recaptcha);
+            if (!verificar) {
+                return next('Error recaptcha');
+            }
         }
         if (doc && sexo) {
             const inscripto = await InscripcionVacunasCtr.findOne({
                 documento: doc,
                 sexo
             });
-            return res.json(inscripto);
+            if (inscripto) {
+                return res.json({
+                    documento: inscripto.documento,
+                    estado: inscripto.estado,
+                    fechaRegistro: inscripto.fechaRegistro,
+                    fechaVacunacion: inscripto.fechaVacunacion
+                });
+            } else {
+                return next('No existe una inscripción para los datos ingresados');
+            }
         }
         return next('Parámetros incorrectos');
     } catch (err) {
