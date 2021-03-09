@@ -45,7 +45,19 @@ export const InscripcionVacunaSchema = new Schema({
     localidadEstablecimiento: { type: nombreSchema },
     relacion: String,
     diaseleccionados: String,
-    fechaVacunacion: Date
+    fechaVacunacion: Date,
+    idPrestacionVacuna: Types.ObjectId
+});
+
+InscripcionVacunaSchema.index({
+    'paciente.id': 1
+});
+InscripcionVacunaSchema.index({
+    fechaRegistro: 1
+});
+InscripcionVacunaSchema.index({
+    documento: 1,
+    sexo: 1
 });
 
 export const InscripcionVacuna = model('inscripcion-vacuna', InscripcionVacunaSchema, 'inscripcion-vacunas');

@@ -49,6 +49,7 @@ EventCore.on('vacunas:inscripcion:vacunado', async ({ prestacion }, req: Request
     const inscripto = await InscripcionVacunasCtr.findOne({ idPaciente: prestacion.paciente.id });
     if (inscripto) {
         inscripto.fechaVacunacion = prestacion.ejecucion.fecha;
+        inscripto.idPrestacionVacuna = prestacion._id;
         await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
     }
 });
@@ -58,6 +59,7 @@ EventCore.on('vacunas:inscripcion:cancelar-vacunado', async ({ prestacion }, req
     const inscripto = await InscripcionVacunasCtr.findOne({ idPaciente: prestacion.paciente.id });
     if (inscripto) {
         inscripto.fechaVacunacion = null;
+        inscripto.idPrestacionVacuna = null;
         await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
     }
 });
