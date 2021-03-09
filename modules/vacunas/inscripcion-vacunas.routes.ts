@@ -19,7 +19,11 @@ class InscripcionVacunasResource extends ResourceBase {
         documento: MongoQuery.equalMatch,
         nombre: MongoQuery.partialString,
         apellido: MongoQuery.partialString,
-        sexo: MongoQuery.equalMatch
+        sexo: MongoQuery.equalMatch,
+        idPaciente: {
+            field: 'paciente.id',
+            fn: MongoQuery.equalMatch
+        }
     };
     eventBus = EventCore;
 }

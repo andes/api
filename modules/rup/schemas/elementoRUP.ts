@@ -26,6 +26,7 @@ export interface IElementoRUP {
     permiteRepetidos?: boolean;
     dispatch?: {
         event: string;
+        method: string;
     }[];
 }
 
@@ -158,7 +159,8 @@ export const ElementoRUPSchema = new mongoose.Schema({
     },
     rules: [mongoose.SchemaTypes.Mixed],
     dispatch: [{
-        event: String
+        event: String,
+        method: String
     }]
 });
 

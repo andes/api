@@ -43,3 +43,24 @@ EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscri
     await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
 
 });
+
+// Al validar la prestacion de vacunacion, inserta la fecha de vacunacion en la inscripcion
+EventCore.on('vacunas:inscripcion:vacunado', async ({ prestacion }, req: Request) => {
+    const inscripto = await InscripcionVacunasCtr.findOne({ idPaciente: prestacion.paciente.id });
+    if (inscripto) {
+        inscripto.fechaVacunacion = prestacion.ejecucion.fecha;
+        inscripto.idPrestacionVacuna = prestacion._id;
+        await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
+    }
+});
+
+// Quita la fecha de vacunacion si se rompe la validacion
+EventCore.on('vacunas:inscripcion:cancelar-vacunado', async ({ prestacion }, req: Request) => {
+    const inscripto = await InscripcionVacunasCtr.findOne({ idPaciente: prestacion.paciente.id });
+    if (inscripto) {
+        inscripto.fechaVacunacion = null;
+        inscripto.idPrestacionVacuna = null;
+        await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
+    }
+});
+
