@@ -1,3 +1,24 @@
+# [5.36.0](https://github.com/andes/api/compare/v5.35.0...v5.36.0) (2021-03-10)
+
+
+### Bug Fixes
+
+* **AM:** Corrige parametro en get de agendas disponibles ([#1287](https://github.com/andes/api/issues/1287)) ([42c0957](https://github.com/andes/api/commit/42c09573c58e557f7960eb63af8bb3f26f24b031))
+* **formBuilder:** update properties formbuilder ([91e934f](https://github.com/andes/api/commit/91e934ff698f7a901512f179eb0da510f5a818ad))
+
+
+### Features
+
+* **epidemiologia:** resource base ficha epidemiologica ([748764b](https://github.com/andes/api/commit/748764bec002f5112acc0c3fceb04baa2e4c7220))
+* **epidemiologia:** resource base forms epidemiologia ([6284593](https://github.com/andes/api/commit/6284593c7443dbfe68dfd5b4967f7fad1a812269))
+* **form:** Add security and formsResources ([a7921b8](https://github.com/andes/api/commit/a7921b8b182cc6c347ccc49ef3edf4516f04bd66))
+* **formBuilder:** add snomed fields and formsCode ([f23c19e](https://github.com/andes/api/commit/f23c19eca558dabeb7447d5c3ab16a4ce3b5ac7c))
+* **formBuilder:** mejoras y cambio de estructura en recursos y formularios ([fa6f85b](https://github.com/andes/api/commit/fa6f85b10bc1939b46ee5f0352cd92899c539edc))
+* **formBuilder:** permisos ([573611d](https://github.com/andes/api/commit/573611d3fbac428664e8c08f7c28e634aca5c2c3))
+* **forms:** Creamos resourceBase y schema ([3bb7fa7](https://github.com/andes/api/commit/3bb7fa76e157dc79a00c076c0993964efa64f44b))
+* **Inscripcion vacunas:** agrega recurso ([#1286](https://github.com/andes/api/issues/1286)) ([ca7c225](https://github.com/andes/api/commit/ca7c225ecbecf4857099fa446941ac0ac80b7b97))
+* **inscripcion-vacunacion:** Agrega eventos para actualizar inscripción ([#1293](https://github.com/andes/api/issues/1293)) ([700d007](https://github.com/andes/api/commit/700d00727e3b4810e7a8a3a46d8eb73baeae90b6))
+
 # [5.35.0](https://github.com/andes/api/compare/v5.34.0...v5.35.0) (2021-03-03)
 
 
