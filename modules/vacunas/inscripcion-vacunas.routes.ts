@@ -87,9 +87,11 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async 
 InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, next) => {
     try {
         // Verifica el recaptcha
-        const verificar = await validarToken(req.body.recaptcha);
-        if (!verificar) {
-            return next('Error recaptcha');
+        if (captcha.enabled) {
+            const verificar = await validarToken(req.body.recaptcha);
+            if (!verificar) {
+                return next('Error recaptcha');
+            }
         }
         const documento = req.body.documento;
         const sexo = req.body.sexo;
