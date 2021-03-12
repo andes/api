@@ -258,7 +258,11 @@ export class Auth {
      */
     static check(req: express.Request | Request, string: string): boolean {
         if (!(req as any).user || !(req as any).user.permisos) {
-            return false;
+            if (!(req as any).user.app?.nombre || !(req as any).user.permisos) {
+                return false;
+            } else {
+                return this.getShiro(req).check(string);
+            }
         } else {
             return this.getShiro(req).check(string);
         }
