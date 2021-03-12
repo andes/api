@@ -10,6 +10,7 @@ import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
+import { getTemporyTokenCOVID } from '../../../auth/auth.controller';
 import { formacionCero, matriculaCero, migrarTurnos, saveTituloFormacionGrado, saveTituloFormacionPosgrado } from '../controller/profesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
@@ -1227,7 +1228,8 @@ router.post('/profesionales/validar', async (req, res, next) => {
     if (resRenaper && resRenaper.idTramite === Number(nroTramite)) {
         const regexSexo = new RegExp(['^', sexo, '$'].join(''), 'i');
         const profesional = await Profesional.findOne({ documento, sexo: regexSexo });
-        return profesional ? res.json(profesional) : next(`El profesional no se encuentra registrado en Andes.`);
+        const token = await getTemporyTokenCOVID(documento);
+        return profesional ? res.json({ profesional, token }) : next(`El profesional no se encuentra registrado en Andes.`);
     } else {
         return next(`No se pudo validar el profesional. Por favor revise los datos ingresados.`);
     }

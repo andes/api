@@ -23,6 +23,7 @@ export class Auth {
      */
 
     static expiresIn = 60 * 60 * 24 * 10;  /* 10 días */
+    static expiresInTemporaly = 60 * 5;
 
     /**
      * Devuelve una instancia de shiro. Implementa un cache en el request actual para mejorar la performance
@@ -258,11 +259,7 @@ export class Auth {
      */
     static check(req: express.Request | Request, string: string): boolean {
         if (!(req as any).user || !(req as any).user.permisos) {
-            if (!(req as any).user.app?.nombre || !(req as any).user.permisos) {
-                return false;
-            } else {
-                return this.getShiro(req).check(string);
-            }
+            return false;
         } else {
             return this.getShiro(req).check(string);
         }
@@ -427,6 +424,19 @@ export class Auth {
             type: 'user-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
+    }
+
+    static generateUserTokenTemporaly(username: string, permisos: Array<any>, organizacion: ObjectId = null, account_id = null): any {
+        // Crea el token con los datos de sesión
+        const token: any = {
+            id: mongoose.Types.ObjectId(),
+            usuario: username,
+            organizacion,
+            account_id,
+            permisos,
+            type: 'user-token-temp'
+        };
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresInTemporaly });
     }
 
     /**

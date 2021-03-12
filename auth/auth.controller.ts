@@ -210,27 +210,30 @@ export async function reset(token, password) {
 
 export async function updateUserPermisos(req) {
     const user: any = await AuthUsers.findOne({ _id: req.params.usuario });
-    const { permisos } = req.body;
 
-    let organizacionPermisos = user.organizaciones;
-    if (organizacionPermisos && organizacionPermisos.length) {
-        permisos.forEach(e => {
-            organizacionPermisos.forEach(op => {
-                if (!op.permisos.find(e2 => e2 === e)) {
-                    op.permisos.push(e);
-                }
+    const permisos = getPermisosByType(req.body.tipoPermisos);
+
+    if (permisos && permisos.length) {
+        let organizacionPermisos = user.organizaciones;
+        if (organizacionPermisos && organizacionPermisos.length) {
+            permisos.forEach(e => {
+                organizacionPermisos.forEach(op => {
+                    if (!op.permisos.find(e2 => e2 === e)) {
+                        op.permisos.push(e);
+                    }
+                });
             });
-        });
-    } else {
-        const subsecretaria = await Organizacion.findOne({subsecretariaSalud: true});
-        user.organizaciones = [{
-            _id: subsecretaria._id,
-            nombre: subsecretaria.nombre,
-            permisos
-        }];
+        } else {
+            const organizacion = await Organizacion.findOne({ matriculacion: true });
+            user.organizaciones = [{
+                _id: organizacion._id,
+                nombre: organizacion.nombre,
+                permisos
+            }];
+        }
+        Auth.audit(user, req);
+        return await user.save();
     }
-    Auth.audit(user, req);
-    return await user.save();
 }
 
 export async function createUser(data) {
@@ -244,16 +247,33 @@ export async function createUser(data) {
     user.authMethod = 'password';
     user.tipo = 'temporal';
 
-    const subsecretaria = await Organizacion.findOne({subsecretariaSalud: true});
+    const organizacion = await Organizacion.findOne({matriculacion: true});
+    const permisos = getPermisosByType(data.tipoPermisos);
     const organizaciones = [{
-        _id: subsecretaria._id,
-        nombre: subsecretaria.nombre,
+        _id: organizacion._id,
+        nombre: organizacion.nombre,
         activo: true,
-        permisos: data.permisos,
+        permisos,
         perfiles: []
     }];
     user.organizaciones = organizaciones;
 
     user.audit(userScheduler);
     return await user.save();
+}
+
+export async function getTemporyTokenCOVID(username) {
+    const organizacion = await Organizacion.findOne({matriculacion: true});
+    const permisos = getPermisosByType('inscripcionProfesionalesCovid19');
+    return Auth.generateUserTokenTemporaly(username, permisos, organizacion._id);
+}
+
+function getPermisosByType(tipoPermisos) {
+    let permisos;
+    if (tipoPermisos === 'certificadosCovid19') {
+        permisos = ['mpi:paciente:getbyId', 'rup:tipoPrestacion:604793e28566033a409007ea'];
+    } else if (tipoPermisos === 'inscripcionProfesionalesCovid19') {
+        permisos = ['usuarios:read', 'usuarios:write', 'matriculaciones:profesionales:putProfesional'];
+    }
+    return permisos;
 }
