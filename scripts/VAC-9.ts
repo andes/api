@@ -1,7 +1,7 @@
 import { InscripcionVacuna } from './../modules/vacunas/schemas/inscripcion-vacunas.schema';
 import { Prestacion } from './../modules/rup/schemas/prestacion';
 
-// Recorre todas las derivaciones y sus adjuntos migrando aquellos que no se encuentran en el  drive
+// Recorre todas las prestaciones de vacuna y agrega la fecha e id en la colección de inscripción.
 async function ActualizarInscripciones() {
     const inscripciones: any[] = await InscripcionVacuna.find({});
     for (const inscripcion of inscripciones) {
