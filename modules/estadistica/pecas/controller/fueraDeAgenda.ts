@@ -95,10 +95,7 @@ export async function fueraAgendaPecas(start, end, done) {
 
     try {
         const prestaciones = Codificacion.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
-        await prestaciones.eachAsync(async (prestacion, error) => {
-            if (error) {
-                return error;
-            }
+        await prestaciones.eachAsync(async (prestacion) => {
             await eliminaPrestacion(prestacion.idPrestacion);
             await auxiliar(prestacion);
         });
