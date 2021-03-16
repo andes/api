@@ -47,7 +47,7 @@ export async function procesar(parametros: any) {
         const resultado = [];
         let os = parametros.financiador ? parametros.financiador : 'todos';
         let filtroEstado = parametros.estado ? parametros.estado : 'todos';
-        await prestaciones.eachAsync(async (prestacion, error) => {
+        await prestaciones.eachAsync(async (prestacion) => {
             let filtroOS = false;
             let dtoPrestacion = {
                 fecha: prestacion.ejecucion.fecha,
@@ -83,9 +83,6 @@ export async function procesar(parametros: any) {
 
             if (filtroOS === true && (filtroEstado === dtoPrestacion.estado || filtroEstado === 'todos')) {
                 resultado.push(dtoPrestacion);
-            }
-            if (error) {
-                return error;
             }
         });
         return resultado;
