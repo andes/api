@@ -17,7 +17,15 @@ class InscripcionVacunasResource extends ResourceBase {
     routesEnable = ['put'];
     middlewares = [Auth.authenticate()];
     searchFileds = {
-        documento: MongoQuery.equalMatch,
+        documento: MongoQuery.matchString,
+        grupo: {
+            field: 'grupo.nombre',
+            fn: MongoQuery.equalMatch
+        },
+        localidad: {
+            field: 'localidad._id',
+            fn: MongoQuery.equalMatch,
+        },
         nombre: MongoQuery.partialString,
         apellido: MongoQuery.partialString,
         sexo: MongoQuery.equalMatch,
@@ -76,8 +84,9 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas/consultas', async (req: Reque
 InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async (req: Request, res, next) => {
     try {
         const options = req.apiOptions();
-        const data = req.query;
-        const inscriptos = await InscripcionVacunasCtr.search(data, options, req);
+        let conditions = { ...req.query };
+        Object.keys(options).map(opt => delete conditions[opt]);
+        const inscriptos = await InscripcionVacunasCtr.search(conditions, options, req);
         return res.json(inscriptos);
     } catch (err) {
         return next(err);
