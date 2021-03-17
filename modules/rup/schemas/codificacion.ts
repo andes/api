@@ -56,6 +56,18 @@ CodificacionSchema.index({
 });
 
 CodificacionSchema.index({
+    createdAt: 1,
+    ambitoPrestacion: 1,
+    'createdBy.organizacion.id': 1
+});
+
+CodificacionSchema.index({
+    updatedAt: 1,
+    ambitoPrestacion: 1,
+    'createdBy.organizacion.id': 1
+});
+
+CodificacionSchema.index({
     idPrestacion: 1
 });
 
