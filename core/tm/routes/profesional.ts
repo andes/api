@@ -177,6 +177,10 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['nombre'] = utils.makePattern(req.query.nombre);
     }
 
+    if (opciones['formacionGrado.profesion.codigo'] && !opciones['formacionGrado.matriculacion.matriculaNumero']) {
+        return next('Parámetros incorrectos');
+    }
+
     if (Object.keys(opciones).length) {
         opciones['formacionGrado.matriculacion'] = { $ne: null };
         opciones['profesionalMatriculado'] = true;
