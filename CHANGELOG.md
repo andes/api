@@ -1,3 +1,17 @@
+# [5.37.0](https://github.com/andes/api/compare/v5.36.0...v5.37.0) (2021-03-17)
+
+
+### Bug Fixes
+
+* **mpi:** se corrigen bugs al guardar pacientes obtenidos del Registro Civil ([#1282](https://github.com/andes/api/issues/1282)) ([0046551](https://github.com/andes/api/commit/004655168754c8c495ca5f024aca66d58979af8e))
+* **pecas:** quita control de segundo parametro de eachAsync por modificacion en su uso ([#1297](https://github.com/andes/api/issues/1297)) ([b37818d](https://github.com/andes/api/commit/b37818dd73fbefb2bb6cc96af769c45a2f5d6053))
+* **VAC:** Agregar el campo de riesgos/morbilidades a las inscripcion ([#1296](https://github.com/andes/api/issues/1296)) ([3310474](https://github.com/andes/api/commit/3310474822f86bcaefc41352abe5b1f34400ac79))
+
+
+### Features
+
+* **vac:** variable para deshabilitar control captcha ([#1290](https://github.com/andes/api/issues/1290)) ([a4571b6](https://github.com/andes/api/commit/a4571b6bafab72781c6b8d5bba79999739424c48))
+
 # [5.36.0](https://github.com/andes/api/compare/v5.35.0...v5.36.0) (2021-03-10)
 
 
