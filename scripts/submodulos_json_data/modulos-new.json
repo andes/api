@@ -509,6 +509,17 @@
                 "activo": true,
                 "orden": 3,
                 "color": "#49A280"
+            },
+            {
+                "activo": true,
+                "permisos": [
+                    "visualizacionInformacion:listadoInscriptos"
+                ],
+                "nombre": "Listado de inscriptos",
+                "linkAcceso": "/vacunacion/listado",
+                "color": "#A74482",
+                "icono": "escritorio",
+                "orden": 2
             }
         ]
     },
