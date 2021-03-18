@@ -3,9 +3,9 @@ import * as express from 'express';
 import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
-import { updateRegistroHistorialSolicitud } from '../controllers/prestacion';
+import { updateRegistroHistorialSolicitud, hudsPaciente } from '../controllers/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
+import { registrosProfundidad } from '../controllers/rup';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
@@ -27,6 +27,7 @@ const router = express.Router();
  * @param idPaciente: id mongo del paciente
  * @param estado: buscar en prestaciones con un estado distinto a validada
  * @param idPrestacion: buscar concepto/s en una prestacion especifica
+ * @param deadline: fecha de partida para la busqueda
  * @param expresion: expresion snomed que incluye los conceptos que estamos buscando
  *
  */
@@ -63,17 +64,8 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
         if (!prestaciones) {
             return res.status(404).send('Paciente no encontrado');
         }
+        return res.json(response.huds);
 
-
-        if (req.query.expresion) {
-            const conceptos = await SnomedCtr.getConceptByExpression(req.query.expresion);
-            const data = buscarEnHuds(prestaciones, conceptos);
-            if (req.query.valor) {
-                const salida = data.filter(p => p.registro.valor);
-                return res.json(salida);
-            }
-            return res.json(data);
-        }
     } catch (e) {
         return next(e);
     }

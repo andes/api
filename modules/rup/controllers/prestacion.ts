@@ -1,6 +1,10 @@
 import { Prestacion } from '../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
+import { Types } from 'mongoose';
+import moment = require('moment');
+import { buscarEnHuds } from '../controllers/rup';
+import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
 /**
  * Libera la referencia al turno dentro de la solicitud
@@ -76,23 +80,47 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
     if (observaciones) {
         registroHistorial.observaciones = observaciones;
     }
-
     if (datos.turnos) {
         registroHistorial.turno = datos.turnos[0];
     }
-
     if (solicitud.profesional && solicitud.profesional.id) {
         registroHistorial.profesional = solicitud.profesional;
     }
-
     solicitud.historial.push(registroHistorial);
 }
+
 
 export async function enEjecucion(turno) {
     let prestacion: any = await Prestacion.findOne({ 'solicitud.turno': turno._id }).exec();
     return (prestacion && prestacion.ejecucion && prestacion.ejecucion.fecha);
 }
 
+
 export async function search(params) {
     return await Prestacion.find(params);
+}
+
+
+export async function hudsPaciente(id, estado, idPrestacion, deadline, expresion, valor) {
+    let huds = [];
+    const query = {
+        'paciente.id': id,
+        'estadoActual.tipo': estado,
+    };
+    if (idPrestacion) {
+        query['_id'] = Types.ObjectId(idPrestacion);
+    }
+    if (deadline) {
+        query['ejecucion.fecha'] = { $gte: moment(deadline).startOf('day').toDate() };
+    }
+    const prestaciones = await Prestacion.find(query);
+
+    if (prestaciones && expresion) {
+        const conceptos = await SnomedCtr.getConceptByExpression(expresion);
+        huds = buscarEnHuds(prestaciones, conceptos);
+        if (valor) {
+            huds = huds.filter(p => p.registro.valor);
+        }
+    }
+    return { prestaciones, huds };
 }
