@@ -48,6 +48,8 @@ export const InscripcionVacunaSchema = new Schema({
     fechaVacunacion: Date,
     idPrestacionVacuna: Types.ObjectId,
     morbilidades: [String],
+    fechaValidacion: Date,
+    localidadDeclarada: String,
 });
 
 InscripcionVacunaSchema.index({
