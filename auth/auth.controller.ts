@@ -52,7 +52,7 @@ export function createPayload(user, authOrg, prof) {
  */
 export async function findTokenData(username: number, organizacion: ObjectId) {
     const pAuth = AuthUsers.findOne({ usuario: username, 'organizaciones._id': organizacion });
-    const pProfesional = Profesional.findOne({ documento: username }, { nombre: true, apellido: true });
+    const pProfesional = Profesional.findOne({ documento: String(username) }, { nombre: true, apellido: true });
     const [auth, prof]: [any, any] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
         const authOrganizacion = auth.organizaciones.find(item => String(item._id) === String(organizacion));
