@@ -7,6 +7,7 @@ import { Profesional } from './../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 import { APP_DOMAIN } from './../config.private';
 import { sendMail, renderHTML, MailOptions } from './../utils/roboSender/sendEmail';
+import { Organizacion } from '../core/tm/schemas/organizacion';
 const sha1Hash = require('sha1');
 
 
@@ -205,4 +206,74 @@ export async function reset(token, password) {
     } catch (error) {
         throw new CustomError(error, 500);
     }
+}
+
+export async function updateUserPermisos(req) {
+    const user: any = await AuthUsers.findOne({ _id: req.params.usuario });
+
+    const permisos = getPermisosByType(req.body.tipoPermisos);
+
+    if (permisos && permisos.length) {
+        let organizacionPermisos = user.organizaciones;
+        if (organizacionPermisos && organizacionPermisos.length) {
+            permisos.forEach(e => {
+                organizacionPermisos.forEach(op => {
+                    if (!op.permisos.find(e2 => e2 === e)) {
+                        op.permisos.push(e);
+                    }
+                });
+            });
+        } else {
+            const organizacion = await Organizacion.findOne({ matriculacion: true });
+            user.organizaciones = [{
+                _id: organizacion._id,
+                nombre: organizacion.nombre,
+                permisos
+            }];
+        }
+        Auth.audit(user, req);
+        return await user.save();
+    }
+}
+
+export async function createUser(data) {
+    let user = new AuthUsers();
+    user.usuario = data.documento;
+    user.documento = data.documento;
+    user.activo = true;
+    user.nombre = data.nombre;
+    user.apellido = data.apellido;
+    user.email = data.email;
+    user.authMethod = 'password';
+    user.tipo = 'temporal';
+
+    const organizacion = await Organizacion.findOne({matriculacion: true});
+    const permisos = getPermisosByType(data.tipoPermisos);
+    const organizaciones = [{
+        _id: organizacion._id,
+        nombre: organizacion.nombre,
+        activo: true,
+        permisos,
+        perfiles: []
+    }];
+    user.organizaciones = organizaciones;
+
+    user.audit(userScheduler);
+    return await user.save();
+}
+
+export async function getTemporyTokenCOVID(username) {
+    const organizacion = await Organizacion.findOne({matriculacion: true});
+    const permisos = getPermisosByType('inscripcionProfesionalesCovid19');
+    return Auth.generateUserTokenTemporaly(username, permisos, organizacion._id);
+}
+
+function getPermisosByType(tipoPermisos) {
+    let permisos;
+    if (tipoPermisos === 'certificadosCovid19') {
+        permisos = ['mpi:paciente:getbyId', 'rup:tipoPrestacion:604793e28566033a409007ea'];
+    } else if (tipoPermisos === 'inscripcionProfesionalesCovid19') {
+        permisos = ['usuarios:read', 'usuarios:write', 'matriculaciones:profesionales:putProfesional'];
+    }
+    return permisos;
 }

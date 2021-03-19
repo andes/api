@@ -1,11 +1,11 @@
-import { Disclaimer } from './../../core/tm/schemas/disclaimer';
 import * as mongoose from 'mongoose';
 import { AuthUsers } from '../../auth/schemas/authUsers';
 import { Auth } from '../../auth/auth.class';
-import { CustomError, MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
+import { CustomError, MongoQuery, ResourceBase } from '@andes/core';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { getUserInfo } from '../../auth/ldap.controller';
 import { Request, Response } from '@andes/api-tool';
+import { updateUserPermisos, createUser, setValidationTokenAndNotify } from '../../auth/auth.controller';
 
 const shiroTrie = require('shiro-trie');
 class UsuariosResource extends ResourceBase {
@@ -72,6 +72,20 @@ UsuariosRouter.post('/usuarios/:usuario/organizaciones/:organizacion', Auth.auth
     }
 });
 
+UsuariosRouter.post('/usuarios/create', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'usuarios:write')) {
+        return next(403);
+    }
+    try {
+        const user = await createUser(req.body);
+        await setValidationTokenAndNotify(req.body.documento);
+        return res.json(user);
+
+    } catch (err) {
+        return next(err);
+    }
+});
+
 UsuariosRouter.patch('/usuarios/:usuario/organizaciones/:organizacion', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'usuarios:write')) {
         return next(403);
@@ -105,6 +119,17 @@ UsuariosRouter.delete('/usuarios/:usuario/organizaciones/:organizacion', Auth.au
             await user.save();
             return res.json(organizacion);
         }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+UsuariosRouter.put('/usuarios/:usuario/organizaciones/permisos', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'usuarios:write')) {
+        return next(403);
+    }
+    try {
+        return res.json(await updateUserPermisos(req));
     } catch (err) {
         return next(err);
     }

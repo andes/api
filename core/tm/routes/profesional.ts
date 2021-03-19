@@ -10,6 +10,7 @@ import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
+import { getTemporyTokenCOVID } from '../../../auth/auth.controller';
 import { formacionCero, matriculaCero, migrarTurnos, saveTituloFormacionGrado, saveTituloFormacionPosgrado } from '../controller/profesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
@@ -17,8 +18,8 @@ import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
 import moment = require('moment');
 import { streamToBase64 } from '../controller/file-storage';
-import { AndesDrive } from '@andes/drive';
-import { Types } from 'mongoose';
+import { renaperv3, renaperToAndes } from '@andes/fuentes-autenticas';
+import { busInteroperabilidad } from '../../../config.private';
 
 let router = express.Router();
 
@@ -1218,6 +1219,20 @@ router.post('/profesionales/formacionGrado/titulo', async (req, res, next) => {
 router.post('/profesionales/formacionPosgrado/titulo', async (req, res, next) => {
     await saveTituloFormacionPosgrado(req.body);
     res.json('OK');
+});
+
+router.post('/profesionales/validar', async (req, res, next) => {
+    const { documento, sexo, nroTramite } = req.body;
+
+    const resRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
+    if (resRenaper && resRenaper.idTramite === Number(nroTramite)) {
+        const regexSexo = new RegExp(['^', sexo, '$'].join(''), 'i');
+        const profesional = await Profesional.findOne({ documento, sexo: regexSexo });
+        const token = await getTemporyTokenCOVID(documento);
+        return profesional ? res.json({ profesional, token }) : next(`El profesional no se encuentra registrado en Andes.`);
+    } else {
+        return next(`No se pudo validar el profesional. Por favor revise los datos ingresados.`);
+    }
 });
 
 // router.post('/profesionales/vencimientoPosGrado', async (req, res, next) => {
