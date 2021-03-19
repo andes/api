@@ -27,7 +27,12 @@ export const InscripcionVacunaSchema = new Schema({
     validaciones: [String],
     paciente: {
         id: Types.ObjectId,
-        addAt: Date,
+        nombre: String,
+        apellido: String,
+        documento: String,
+        telefono: String,
+        sexo: String,
+        fechaNacimiento: Date
     },
     cud: String,
     alergia: Boolean,
@@ -48,6 +53,8 @@ export const InscripcionVacunaSchema = new Schema({
     fechaVacunacion: Date,
     idPrestacionVacuna: Types.ObjectId,
     morbilidades: [String],
+    fechaValidacion: Date,
+    localidadDeclarada: String,
 });
 
 InscripcionVacunaSchema.index({
