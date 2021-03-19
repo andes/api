@@ -497,6 +497,19 @@ export class Auth {
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
     }
 
+    static checkPacienteToken(req, paciente) {
+        try {
+            if (req.query.pacienteToken) {
+                const tokenSettings = Auth.decode(req.query.pacienteToken);
+                const pacientePrincipal = tokenSettings.pacientes?.find(p => p.relacion === 'principal');
+                return tokenSettings.type === 'paciente-token' && (String(pacientePrincipal?.id) === String(paciente.id));
+            }
+        } catch (err) {
+            return null;
+        }
+        return null;
+    }
+
     /**
      * Regenera un Access Token para entrar en una nueva organizacion
      * @param token Token para refrescar
@@ -598,5 +611,4 @@ export class Auth {
 
         return null;
     }
-
 }

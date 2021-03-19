@@ -138,13 +138,13 @@ export const get = async (req: Request, res: Response) => {
 
 
 export const getFoto = async (req: Request, res: Response, next) => {
-    /**
-     * TODO: Ver check de permisos para esta ruta porque no los esta tomando
-     */
     const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
-        return next(404);
+        return next(500);
+    }
+    if (req.query.pacienteToken && !Auth.checkPacienteToken(req, { id: req.params.id })) {
+        return next(401);
     }
     const pacienteBuscado: any = await Paciente.findById(req.params.id, '+foto');
     try {
