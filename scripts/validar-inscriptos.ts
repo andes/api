@@ -41,10 +41,7 @@ async function run(done) {
                 } else {
                     const paciente = await findOrCreate(inscriptoValidado, dataLog);
                     if (paciente && paciente.id) {
-                        inscripcion.paciente = {
-                            id: paciente.id,
-                            addAt: new Date()
-                        };
+                        inscripcion.paciente = paciente;
                     }
                 }
                 // Busca el paciente y si no existe lo guarda

@@ -35,8 +35,7 @@ EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscri
         // Busca el paciente y si no existe lo guarda
         const paciente = await findOrCreate(inscriptoValidado, req);
         if (paciente && paciente.id) {
-            inscripto.paciente.id = paciente.id;
-            inscripto.paciente.addAt = new Date();
+            inscripto.paciente = paciente;
         }
     }
 
