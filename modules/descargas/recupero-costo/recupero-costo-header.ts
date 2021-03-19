@@ -2,7 +2,10 @@ import { loadImage } from '../model/informe.class';
 import { HTMLComponent } from '../model/html-component.class';
 
 export class RecuperoCostoHeader extends HTMLComponent {
-    template = `<div class="login-header"><img class="logo-gobierno" src="data:image/jpg;base64,{{ logo }}"><img class="logo-gobierno-salud" src="data:image/jpg;base64,{{ logoSalud }}"></div>`;
+    template = `<div class="login-header">
+                    <img class="logo-gobierno" src="data:image/jpg;base64,{{ logo }}">
+                    <img class="logo-gobierno-salud" src="data:image/jpg;base64,{{ logoSalud }}">
+                </div>`;
 
     constructor() {
         super();
