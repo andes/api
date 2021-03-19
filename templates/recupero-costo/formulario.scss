@@ -11,7 +11,7 @@ body {
     margin: 0;
     -webkit-print-color-adjust: exact;
     font-family: sans-serif;
-    font-size: 12px;
+    font-size: 10.5px;
 }
 
 .content {
@@ -50,8 +50,10 @@ body {
 .egt,
 .egt th,
 .egt td {
-    border: 1px solid black;
+    border: 1px solid gray;
     border-collapse: collapse;
+    padding-top: 3px;
+    padding-bottom: 3px;
 }
 
 hr {
@@ -63,6 +65,8 @@ th {
 
 td {
     padding-left: 10px;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 .text-bottom {
@@ -82,6 +86,9 @@ td {
 }
 .h50 {
     height: 50px;
+}
+.h20 {
+    height: 20px;
 }
 .font14 {
     font-size: 14px;
