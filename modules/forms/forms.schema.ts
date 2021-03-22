@@ -33,8 +33,7 @@ export const FieldSchema = new mongoose.Schema({
     key: {
         type: String,
         trim: true,
-        lowercase: true,
-        index: { unique: true }
+        lowercase: true
     },
     label: String,
     description: String,
@@ -68,6 +67,10 @@ export const FormSchema = new mongoose.Schema({
 FormSchema.index({
     name: 1,
     type: 1
+});
+
+FormSchema.index({
+    'sections.fields.key': 1
 });
 
 export const Forms = mongoose.model<FormsTypesDocument>('forms', FormSchema, 'forms');
