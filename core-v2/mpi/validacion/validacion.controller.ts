@@ -28,15 +28,19 @@ export async function validar(documento: string, sexo: string) {
     let ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
     try {
         if (ciudadanoRenaper) {
-            // Valida el tamaño de la foto
-            ciudadanoRenaper.foto = ciudadanoRenaper.foto.includes('image/jpg') ? await validarTamañoFoto(ciudadanoRenaper.foto) : null;
-            ciudadanoRenaper.fotoId = ciudadanoRenaper.foto && ciudadanoRenaper.foto.length > 0 ? new Types.ObjectId() : null;
-            ciudadanoRenaper.estado = 'validado';
-            ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
-            ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
-            ciudadanoRenaper.validateAt = new Date();
-            if (identidadSinAcentos(ciudadanoRenaper)) {
-                return ciudadanoRenaper;
+            if (ciudadanoRenaper.foto) {
+                // Valida el tamaño de la foto
+                ciudadanoRenaper.foto = ciudadanoRenaper.foto.includes('image/jpg') ? await validarTamañoFoto(ciudadanoRenaper.foto) : null;
+                ciudadanoRenaper.fotoId = ciudadanoRenaper.foto && ciudadanoRenaper.foto.length > 0 ? new Types.ObjectId() : null;
+                ciudadanoRenaper.estado = 'validado';
+                ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
+                ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
+                ciudadanoRenaper.validateAt = new Date();
+                if (identidadSinAcentos(ciudadanoRenaper)) {
+                    return ciudadanoRenaper;
+                }
+            } else {
+                ciudadanoRenaper = null;
             }
         }
         const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
