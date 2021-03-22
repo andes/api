@@ -39,9 +39,12 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
     }
 
     try {
-        // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+        const paciente: any = await PacienteCtr.findById(req.params.idPaciente);
+        if (!paciente) {
+            return res.status(404).send('Paciente no encontrado');
+        }
         const query = {
-            'paciente.id': req.params.idPaciente,
+            'paciente.id': { $in: paciente.vinculos },
             'estadoActual.tipo': req.query.estado ? req.query.estado : 'validada'
         };
 
