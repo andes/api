@@ -16,7 +16,8 @@ export const WebHookSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    active: Boolean
+    active: Boolean,
+    rules: mongoose.SchemaTypes.Mixed
 }, { timestamps: true });
 
 export const WebHook = mongoose.model('webhook', WebHookSchema, 'webhook');
