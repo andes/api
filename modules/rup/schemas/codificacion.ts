@@ -1,8 +1,9 @@
 import * as mongoose from 'mongoose';
 import { schema as cie10Schema } from '../../../core/term/schemas/cie10';
 import { SnomedConcept } from './snomed-concept';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { MongooseAuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
+import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 
 const pacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
@@ -24,6 +25,7 @@ export const CodificacionSchema = new mongoose.Schema({
     idPrestacion: {
         type: mongoose.Schema.Types.ObjectId
     },
+    tipoPrestacion: tipoPrestacionSchema,
     paciente: pacienteSchema,
     ambitoPrestacion: {
         type: String,
@@ -71,6 +73,8 @@ CodificacionSchema.index({
     idPrestacion: 1
 });
 
-CodificacionSchema.plugin(AuditPlugin);
+CodificacionSchema.plugin(
+    MongooseAuditPlugin(true)
+);
 export const Codificacion = mongoose.model('codificacion', CodificacionSchema, 'codificacion');
 
