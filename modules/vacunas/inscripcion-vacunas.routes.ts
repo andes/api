@@ -126,6 +126,11 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, 
                     return next('No es posible verificar su identidad.  Por favor verifique sus datos');
                 }
             }
+
+            if (req.body.grupo.nombre === 'factores-riesgo' && !req.body.morbilidades[0]) {
+                return next('Seleccionar factor de riesgo asociado a vacunación');
+            }
+
             const inscripcion = await InscripcionVacunasCtr.create(req.body, req);
             EventCore.emitAsync('vacunas:inscripcion-vacunas:create', inscripcion, inscriptoValidado, req);
             return res.json(inscripcion);
