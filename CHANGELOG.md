@@ -1,3 +1,20 @@
+# [5.38.0](https://github.com/andes/api/compare/v5.37.0...v5.38.0) (2021-03-24)
+
+
+### Bug Fixes
+
+* **matriculaciones:** protección de rutas ([#1298](https://github.com/andes/api/issues/1298)) ([4ef0012](https://github.com/andes/api/commit/4ef001299b343552d0b881592e11ec3b722e3f2a))
+
+
+### Features
+
+* Envio comprobante derivacion x mail ([#1285](https://github.com/andes/api/issues/1285)) ([e15e59a](https://github.com/andes/api/commit/e15e59acd51747d0b435e1865e6a81db44a68595))
+* **huds:**  busqueda por pacientes vinculados ([#1306](https://github.com/andes/api/issues/1306)) ([23f6561](https://github.com/andes/api/commit/23f6561d3636aafb4286cd3db34884f35a408870))
+* **pecas:** Agrega parametros a job de fuera de agenda+indices en codificacion ([#1301](https://github.com/andes/api/issues/1301)) ([7bf649b](https://github.com/andes/api/commit/7bf649b3e725b649854f6a96165b6031a902a523))
+* **script:** validación de inscriptos ([#1305](https://github.com/andes/api/issues/1305)) ([a015c07](https://github.com/andes/api/commit/a015c076eff731fee3f025dcf4728d41bf150875))
+* **VAC:** rutas para certificado de vacunacion covid ([#1291](https://github.com/andes/api/issues/1291)) ([81deb72](https://github.com/andes/api/commit/81deb72147719ee914ef11157926c340276f9a21))
+* **webhook:** aplicas filtros por base de datos ([#1288](https://github.com/andes/api/issues/1288)) ([a95862a](https://github.com/andes/api/commit/a95862a99afadc6bdb1ed970e259834aaab3a6cc))
+
 # [5.37.0](https://github.com/andes/api/compare/v5.36.0...v5.37.0) (2021-03-17)
 
 
