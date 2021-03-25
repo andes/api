@@ -58,15 +58,6 @@ class DerivacionesResource extends ResourceBase {
 export const DerivacionesCtr = new DerivacionesResource({});
 export const DerivacionesRouter = DerivacionesCtr.makeRoutes();
 
-DerivacionesRouter.get('/store/:id', async (req, res, next) => {
-    const fileDrive = await AndesDrive.find(req.params.id);
-    if (fileDrive) {
-        const stream1 = await AndesDrive.read(fileDrive);
-        res.contentType(fileDrive.mimetype);
-        stream1.pipe(res);
-    }
-});
-
 DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), async (req, res, next) => {
     try {
         const derivacion: any = await Derivaciones.findById(req.params.id);
