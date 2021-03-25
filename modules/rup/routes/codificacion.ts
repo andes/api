@@ -4,36 +4,33 @@ import { Codificacion } from '../schemas/codificacion';
 import { Prestacion } from '../schemas/prestacion';
 import { codificarPrestacion } from '../controllers/codificacionController';
 import { Auth } from './../../../auth/auth.class';
-import { toArray } from '../../../utils/utils';
+import { IPrestacionDoc } from '../prestaciones.interface';
+import { asyncHandler } from '@andes/api-tool';
 
 
 const router = express.Router();
 
-router.post('/codificacion', async (req, res, next) => {
+router.post('/codificacion', asyncHandler(async (req, res) => {
     const idPrestacion = req.body.idPrestacion;
-    const unaPrestacion = await Prestacion.findById(idPrestacion);
-    const codificaciones = await codificarPrestacion(unaPrestacion);
+    const prestacion = await Prestacion.findById(idPrestacion) as IPrestacionDoc;
+    const codificaciones = await codificarPrestacion(prestacion);
     if (codificaciones) {
-        let data = new Codificacion({
+        const data = new Codificacion({
             idPrestacion,
-            paciente: (unaPrestacion as any).paciente,
-            ambitoPrestacion: (unaPrestacion as any).solicitud.ambitoOrigen,
+            tipoPrestacion: prestacion.solicitud.tipoPrestacion,
+            paciente: prestacion.paciente,
+            ambitoPrestacion: prestacion.solicitud.ambitoOrigen,
             diagnostico: {
                 codificaciones
             }
         });
         Auth.audit(data, req);
-        data.save((err) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        await data.save();
+        res.json(data);
     } else {
         res.json({});
     }
-
-});
+}));
 
 router.patch('/codificacion/:id', async (req, res, next) => {
     const unaCodificacion = await Codificacion.findById(req.params.id);
@@ -88,15 +85,6 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
                 $match: filtros
             },
             {
-                $lookup: {
-                    from: 'prestaciones',
-                    localField: 'idPrestacion',
-                    foreignField: '_id',
-                    as: 'prestacion'
-                }
-            },
-            { $unwind: '$prestacion' },
-            {
                 $project:
                 {
                     id: '$_id',
@@ -107,11 +95,11 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
                     createdBy: 1,
                     updatedAt: 1,
                     updatedBy: 1,
-                    prestacion: '$prestacion.solicitud.tipoPrestacion.term'
+                    prestacion: '$tipoPrestacion.term'
                 }
             }];
         try {
-            const data = await toArray(Codificacion.aggregate(pipeline).cursor({}).exec());
+            const data = await Codificacion.aggregate(pipeline);
             res.json(data);
         } catch (err) {
             return next(err);
