@@ -6,6 +6,10 @@ import { PersonalSaludCtr } from '../../../modules/personalSalud/personal-salud.
 import { findOrCreate } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { replaceChars } from '../../../core-v2/mpi';
+import { userScheduler } from '../../../config.private';
+let dataLog: any = new Object(userScheduler);
+dataLog.body = { _id: null };
+dataLog.method = null;
 
 EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscriptoValidado: any, req: Request) => {
     if (inscripto.grupo && inscripto.grupo.nombre === 'personal-salud') {
@@ -63,3 +67,22 @@ EventCore.on('vacunas:inscripcion:cancelar-vacunado', async ({ prestacion }, req
     }
 });
 
+// Al validar la prestacion de certificación de paciente con riesgo aumentado de COVID-19, inserta la fecha de certificado en la inscripcion
+EventCore.on('vacunas:inscripcion:certificado', async ({ prestacion }) => {
+    const inscripto = await InscripcionVacunasCtr.findOne({ idPaciente: prestacion.paciente.id });
+    if (inscripto) {
+        inscripto.fechaCertificado = prestacion.ejecucion.fecha;
+        inscripto.idPrestacionCertificado = prestacion._id;
+        await InscripcionVacunasCtr.update(inscripto.id, inscripto, dataLog);
+    }
+});
+
+// Quitar la fecha de certificado si se rompe la validación
+EventCore.on('vacunas:inscripcion:cancelar-certificado', async ({ prestacion }) => {
+    const inscripto = await InscripcionVacunasCtr.findOne({ idPaciente: prestacion.paciente.id });
+    if (inscripto) {
+        inscripto.fechaCertificado = null;
+        inscripto.idPrestacionCertificado = null;
+        await InscripcionVacunasCtr.update(inscripto.id, inscripto, dataLog);
+    }
+});
