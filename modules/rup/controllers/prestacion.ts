@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import moment = require('moment');
 import { buscarEnHuds } from '../controllers/rup';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
+import { ObjectId } from '@andes/core';
 
 /**
  * Libera la referencia al turno dentro de la solicitud
@@ -101,26 +102,36 @@ export async function search(params) {
 }
 
 
-export async function hudsPaciente(id, estado, idPrestacion, deadline, expresion, valor) {
-    let huds = [];
+export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPrestacion: string, estado: string, deadline, valor?) {
+    if (!expresion) {
+        return null;
+    }
+
     const query = {
-        'paciente.id': id,
+        'paciente.id': pacienteID,
         'estadoActual.tipo': estado,
     };
+
     if (idPrestacion) {
         query['_id'] = Types.ObjectId(idPrestacion);
     }
+
     if (deadline) {
-        query['ejecucion.fecha'] = { $gte: moment(deadline).startOf('day').toDate() };
+        query['ejecucion.fecha'] = {
+            $gte: moment(deadline).startOf('day').toDate()
+        };
     }
+
     const prestaciones = await Prestacion.find(query);
 
-    if (prestaciones && expresion) {
-        const conceptos = await SnomedCtr.getConceptByExpression(expresion);
-        huds = buscarEnHuds(prestaciones, conceptos);
-        if (valor) {
-            huds = huds.filter(p => p.registro.valor);
-        }
+    if (!prestaciones) {
+        return null;
     }
-    return { prestaciones, huds };
+
+    const conceptos = await SnomedCtr.getConceptByExpression(expresion);
+    let huds = buscarEnHuds(prestaciones, conceptos);
+    if (valor) {
+        huds = huds.filter(p => p.registro.valor);
+    }
+    return huds;
 }

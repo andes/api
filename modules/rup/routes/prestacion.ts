@@ -36,35 +36,23 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
     // verificamos que sea un ObjectId válido
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
-        return res.status(404).send('Turno no encontrado');
+        return res.status(404).send('Paciente no encontrado');
     }
 
     try {
-        const paciente: any = await PacienteCtr.findById(req.params.idPaciente);
-        if (!paciente) {
-            return res.status(404).send('Paciente no encontrado');
+        // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+        const id = req.params.idPaciente;
+        const estado = req.query.estado || 'validada';
+        const idPrestacion = req.query.idPrestacion;
+        const deadline = req.query.deadline;
+        const expresion = req.query.expresion;
+        const valor = req.query.valor;
+
+        const response = await hudsPaciente(id, expresion, idPrestacion, estado, deadline, valor);
+        if (!response) {
+            return res.status(404).send('Turno no encontrado');
         }
-        const query = {
-            'paciente.id': { $in: paciente.vinculos },
-            'estadoActual.tipo': req.query.estado ? req.query.estado : 'validada'
-        };
-
-        if (req.query.idPrestacion) {
-            query['_id'] = Types.ObjectId(req.query.idPrestacion);
-        }
-
-        if (req.query.deadline) {
-            query['ejecucion.fecha'] = { $gte: moment(req.query.deadline).startOf('day').toDate() };
-        }
-
-
-        const prestaciones = await Prestacion.find(query);
-
-
-        if (!prestaciones) {
-            return res.status(404).send('Paciente no encontrado');
-        }
-        return res.json(response.huds);
+        return res.json(response);
 
     } catch (e) {
         return next(e);

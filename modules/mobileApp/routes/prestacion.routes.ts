@@ -15,10 +15,10 @@ const getHuds = async (req: Request, res: Response) => {
     const valor = req.query.valor || undefined;
 
     const response = await hudsPaciente(id, estado, idPrestacion, deadline, expresion, valor);
-    if (!response.prestaciones) {
+    if (!response) {
         return res.status(404).send('Paciente no encontrado');
     }
-    return res.json(response.huds);
+    return res.json(response);
 };
 
 router.get('/prestaciones/huds/:idPaciente', asyncHandler(getHuds));
