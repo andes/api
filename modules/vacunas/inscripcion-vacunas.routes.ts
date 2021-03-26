@@ -1,5 +1,5 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { Request, Response } from '@andes/api-tool';
+import { Request } from '@andes/api-tool';
 import { Auth } from '../../auth/auth.class';
 import { InscripcionVacuna } from './schemas/inscripcion-vacunas.schema';
 import { EventCore } from '@andes/event-bus/';
@@ -8,6 +8,7 @@ import { matching } from '../../core-v2/mpi/paciente/paciente.controller';
 import { mpi } from '../../config';
 import { handleHttpRequest } from '../../utils/requestHandler';
 import { captcha } from './../../config.private';
+import { mensajeEstadoInscripcion } from './controller/inscripcion.vacunas.controller';
 
 class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
@@ -63,20 +64,8 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas/consultas', async (req: Reque
             }
         }
         if (doc && sexo) {
-            const inscripto = await InscripcionVacunasCtr.findOne({
-                documento: doc,
-                sexo
-            });
-            if (inscripto) {
-                return res.json({
-                    documento: inscripto.documento,
-                    estado: inscripto.estado,
-                    fechaRegistro: inscripto.fechaRegistro,
-                    fechaVacunacion: inscripto.fechaVacunacion
-                });
-            } else {
-                return next('No existe una inscripción para los datos ingresados');
-            }
+            const mensaje = await mensajeEstadoInscripcion(doc, sexo);
+            return res.json(mensaje);
         }
         return next('Parámetros incorrectos');
     } catch (err) {
