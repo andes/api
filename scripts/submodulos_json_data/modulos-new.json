@@ -515,11 +515,11 @@
                 "permisos": [
                     "visualizacionInformacion:listadoInscriptos"
                 ],
-                "nombre": "Listado de inscriptos",
+                "nombre": "Vacunación COVID-19",
                 "linkAcceso": "/vacunacion/listado",
                 "color": "#A74482",
-                "icono": "escritorio",
-                "orden": 2
+                "icono": "documento-paciente",
+                "orden": 4
             }
         ]
     },
