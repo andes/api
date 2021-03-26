@@ -14,10 +14,7 @@ export let tipoPrestacionSchema = new Schema({
     conceptId: String,
     term: String,
     fsn: String,
-    semanticTag: {
-        type: String,
-        enum: ['procedimiento', 'solicitud', 'hallazgo', 'trastorno', 'antecedenteFamiliar', 'régimen/tratamiento']
-    },
+    semanticTag: String,
     noNominalizada: Boolean,
     auditable: {
         type: Boolean,
