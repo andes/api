@@ -47,6 +47,7 @@ export async function validar(documento: string, sexo: string) {
             if (ciudadanoRenaper) {
                 ciudadanoSisa.foto = ciudadanoRenaper.foto;
                 ciudadanoSisa.direccion = ciudadanoRenaper.direccion;
+                ciudadanoSisa.idTramite = ciudadanoRenaper.idTramite;
             }
             return ciudadanoSisa;
         } else {
