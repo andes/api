@@ -2,11 +2,15 @@ import { exportCovid19 } from './exportCovid19';
 
 
 function run(done) {
-    // Cantidad de horas inicio Ej: Si quiero todas las prestaciones desde hace 6 horas hasta este momento, envio el número 6.
-    const horas = process.env.HORAS || '1';
-    const desde = process.env.FECHADESDE;
-    const hasta = process.env.FECHAHASTA;
-    exportCovid19(done, parseInt(horas, 10), desde, hasta);
+    // Si length=5 entonces vienen dos argumentos (fechaDesde y fechaHasta)
+    if (process.argv.length === 5) {
+        const desde = process.argv[3];
+        const hasta = process.argv[4];
+        exportCovid19(done, null, desde, hasta);
+    } else { // Si no es 5 entonces viene 1 solo argumento (horas) o sin argumentos (por defecto una hora)
+        const horas = process.argv[3] || '1';
+        exportCovid19(done, parseInt(horas, 10), null, null);
+    }
 }
 
 export = run;
