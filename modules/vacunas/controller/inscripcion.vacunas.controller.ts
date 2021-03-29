@@ -98,6 +98,7 @@ async function verificarPersonalSalud(inscripcion, validacion) {
             // se verifica el personal de salud
             return validacion.mensajeError;
         }
+        return { titulo: '', subtitulo: '', body: '', status: 'warning' };
     } catch (err) {
         return err;
     }
