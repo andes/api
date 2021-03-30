@@ -8,6 +8,14 @@ export interface IEstadoInscripcion {
     subtitulo: String;
     body: String;
     status: String;
+    inscripto?: {
+        nombre: String;
+        apellido: String;
+        documento: String;
+        sexo: String;
+        fechaNacimiento: Date;
+        localidad: any;
+    };
 }
 
 export async function mensajeEstadoInscripcion(documento: String, sexo: String) {
@@ -35,8 +43,7 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
                 }
             } else {
                 estadoInscripcion.subtitulo = 'Su inscripción para la vacunación se encuentra vigente';
-                estadoInscripcion.body = `Usted se encuentra en proceso de validación. Con los
-                siguientes datos ${inscripto.nombre} ${inscripto.apellido}, fecha de Nacimiento ${moment(inscripto.fechaNacimiento).format('DD/MM/YYYY')}`;
+                estadoInscripcion.body = 'Usted se encuentra en proceso de validación.';
                 estadoInscripcion.status = 'warning';
             }
         }
@@ -51,6 +58,14 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
             }
         }
         estadoInscripcion.titulo = `Grupo: ${grupo.descripcion}`;
+        estadoInscripcion.inscripto = {
+            nombre: inscripto.nombre,
+            apellido: inscripto.apellido,
+            documento: inscripto.documento,
+            sexo: inscripto.sexo,
+            fechaNacimiento: inscripto.fechaNacimiento,
+            localidad: inscripto.localidad
+        };
     }
     return estadoInscripcion;
 }
