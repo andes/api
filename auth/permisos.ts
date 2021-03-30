@@ -491,6 +491,11 @@ export default [
                 key: 'totalOrganizaciones',
                 title: 'Todas las organizaciones',
                 type: 'boolean'
+            },
+            {
+                key: 'listadoInscriptos',
+                title: 'Listado de inscriptos para vacunación',
+                type: 'boolean'
             }
         ]
     },
