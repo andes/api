@@ -6,7 +6,12 @@ class GrupoPoblacionalResource extends ResourceBase {
     resourceName = 'grupo-poblacional';
     searchFileds = {
         search: ['nombre'],
-        nombre: MongoQuery.partialString,
+        nombre: {
+            field: 'nombre',
+            fn: (value) => {
+                return { $in: value };
+            }
+        },
         descripcion: MongoQuery.partialString,
         activo: MongoQuery.equalMatch
     };

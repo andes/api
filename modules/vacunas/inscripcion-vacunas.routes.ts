@@ -10,6 +10,8 @@ import { handleHttpRequest } from '../../utils/requestHandler';
 import { captcha } from './../../config.private';
 import { mensajeEstadoInscripcion } from './controller/inscripcion.vacunas.controller';
 import moment = require('moment');
+import { provincia as provinciaActual } from '../../config.private';
+import { replaceChars } from '../../core-v2/mpi';
 
 class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
@@ -96,6 +98,28 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async 
         Object.keys(options).map(opt => delete conditions[opt]);
         const inscriptos = await InscripcionVacunasCtr.search(conditions, options, req);
         return res.json(inscriptos);
+    } catch (err) {
+        return next(err);
+    }
+});
+
+InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), async (req: Request, res, next) => {
+    try {
+        const inscripto = await InscripcionVacunasCtr.findById(req.params.id);
+        if (inscripto) {
+            const inscriptoValidado = await validar(req.body.documento, req.body.sexo);
+            if (inscriptoValidado) {
+                const provincia = provinciaActual || 'neuquen';
+                const provinciaInscripto = inscriptoValidado.direccion[0].ubicacion.provincia.nombre || '';
+                if (replaceChars(provinciaInscripto).toLowerCase() === replaceChars(provincia) && !req.body.validaciones.includes('domicilio')) {
+                    req.body.validaciones.push('domicilio');
+                }
+            }
+            const updated = await InscripcionVacunasCtr.update(req.params.id, req.body, req);
+            return res.send(updated);
+        } else {
+            return next('No se encuentra la inscripción');
+        }
     } catch (err) {
         return next(err);
     }
