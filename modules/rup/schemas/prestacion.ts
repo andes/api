@@ -146,6 +146,7 @@ export const PrestacionSchema = new Schema({
         elementoRUP: SchemaTypes.ObjectId
 
     },
+    tags: Schema.Types.Mixed,
     // Historia de estado de la prestación
     estados: [PrestacionEstadoSchema],
     estadoActual: PrestacionEstadoSchema
