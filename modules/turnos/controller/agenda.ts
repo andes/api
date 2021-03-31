@@ -18,6 +18,10 @@ import { Types } from 'mongoose';
 import { agendaLog } from '../citasLog';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
+export async function getAgendaById(agendaId) {
+    return await Agenda.findById(agendaId);
+}
+
 // Turno
 export function darAsistencia(req, data, tid = null) {
     const turno = getTurno(req, data, tid);

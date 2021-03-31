@@ -1,0 +1,105 @@
+html {
+    display: inline-block;
+    padding: 0 2rem;
+    font-family: sans-serif;
+}
+
+body {
+    margin: 0; //Override
+}
+
+.contenedor-logos {
+    margin-top: .50cm;
+    width: 100%;
+    padding-bottom: 30px;
+    border-bottom: solid 2px black;
+
+    .logo-adicional {
+        filter: grayscale(100%);
+        -webkit-filter: grayscale(1);
+        height: .55cm;
+        width: auto;
+        float: right;
+    }
+
+    .logo-andes {
+        float: left; // display: inline-block; // width: 300px;
+        height: .55cm;
+        width: auto; // margin-left: 2cm; // float: right;
+    }
+}
+
+.bordered-section {
+    line-height: 1.1rem;
+    font-size: 0.6rem;
+}
+
+header{
+    font-size: smaller;
+}
+
+label{
+    font-weight:bolder;
+    text-transform: uppercase;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    page-break-inside: auto
+}
+
+.table tr {
+    border: 1px solid #eceeef;
+    margin: 0cm !important;
+    padding: 0;
+    page-break-inside: avoid;
+    page-break-after: auto
+}
+
+.table thead {
+    display: table-header-group;
+}
+
+.table thead tr th {
+    border: 1px solid #eceeef;
+    font-weight:normal;
+    font-size: 6px;
+    margin: 0 !important;
+    padding: 0;
+    font-weight: bold;
+
+}
+
+.table tbody tr td {
+    border: 1px solid #eceeef;
+    font-weight: normal;
+    font-size: .20cm;
+    margin: 0cm !important;
+    border-spacing: 0;
+    page-break-inside: avoid;
+    page-break-after: auto;
+    padding: 0;
+    width: auto;
+    text-align: center;
+}
+
+.diagnostico{
+    width:230px !important;
+}
+
+.firma{
+    display: flex;
+    justify-content: end;
+    float: right;
+    margin-top: 50px;
+    text-align: right;
+    border-top: 1px solid #000000;
+    width: 25%;
+    
+}
+
+.firma label{
+    text-transform:capitalize;
+}

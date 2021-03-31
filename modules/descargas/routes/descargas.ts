@@ -11,6 +11,7 @@ import { RecuperoCosto } from '../recupero-costo/recupero-costo';
 import { ConstanciaPuco } from '../puco/constancia-puco';
 import { Derivacion } from '../com/derivacion';
 import { Arancelamiento } from '../arancelamiento/arancelamiento';
+import { Agenda } from '../agenda/agenda';
 import { getArchivoAdjunto } from '../../../modules/rup/controllers/rup';
 
 const router = express.Router();
@@ -168,4 +169,12 @@ router.post('/arancelamiento/:tipo?', Auth.authenticate(), async (req: any, res)
     res.download(fileName);
 });
 
+router.post('/agenda/:id', Auth.authenticate(), async (req: any, res) => {
+    const opciones = { header: { height: '3cm' }, orientation: 'landscape' };
+
+    const docAgenda = new Agenda(req);
+    const fileName = await docAgenda.informe(opciones);
+
+    res.download(fileName);
+});
 export = router;
