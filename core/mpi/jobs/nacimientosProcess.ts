@@ -9,6 +9,7 @@ import moment = require('moment');
 import debug = require('debug');
 import { ParentescoCtr } from '../parentesco.routes';
 import { Types } from 'mongoose';
+import { extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 const nacimientosLog = mpiNacimientosLog.startTrace();
 const deb = debug('nacimientosJob');
@@ -186,11 +187,12 @@ async function validarPaciente(dataPaciente) {
     if (!resultado || !resultado.estado) {
         return dataPaciente;
     }
+    await extractFoto(resultado, userScheduler);
     dataPaciente.nombre = resultado.nombre;
     dataPaciente.apellido = resultado.apellido;
     dataPaciente.estado = resultado.estado;
     dataPaciente.fechaNacimiento = resultado.fechaNacimiento;
-    dataPaciente.foto = resultado.foto;
+    // dataPaciente.foto = resultado.foto;
     dataPaciente.fotoId = !resultado.foto?.length ? null :
         resultado.fotoId ? new Types.ObjectId(resultado.fotoId) : new Types.ObjectId();
     dataPaciente.fechaFallecimiento = resultado.fechaFallecimiento;

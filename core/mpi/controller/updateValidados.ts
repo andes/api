@@ -3,6 +3,7 @@ import { validar } from '../../../core-v2/mpi/validacion/validacion.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { geoReferenciar } from '@andes/georeference';
 import * as moment from 'moment';
+import { extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 export async function updateValidados(done) {
     const cantidad = process.env.COUNT_VALIDADO || '5';
@@ -17,7 +18,10 @@ export async function updateValidados(done) {
             persona_validada = await validar(pac.documento, pac.sexo);
             let data: any = {};
             if (persona_validada) {
-                data.foto = persona_validada.foto;
+                // data.foto = persona_validada.foto;
+                await extractFoto(extractFoto, userScheduler);
+                data.fotoId = persona_validada.fotoId;
+
                 if (persona_validada.fechaFallecimiento) {
                     data.fechaFallecimiento = persona_validada.fechaFallecimiento;
                 }

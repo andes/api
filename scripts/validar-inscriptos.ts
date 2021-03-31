@@ -2,7 +2,7 @@ import { InscripcionVacuna } from '../modules/vacunas/schemas/inscripcion-vacuna
 import { userScheduler } from '../config.private';
 import { InscripcionVacunasCtr } from '../modules/vacunas/inscripcion-vacunas.routes';
 import { validar } from './../core-v2/mpi/validacion';
-import { matching } from '../core-v2/mpi/paciente/paciente.controller';
+import { extractFoto, matching } from '../core-v2/mpi/paciente/paciente.controller';
 import { mpi } from '../config';
 import { EventCore } from '@andes/event-bus/';
 import { provincia as provinciaActual } from '../config.private';
@@ -21,6 +21,7 @@ async function run(done) {
             let inscripcion = inscripto;
             const inscriptoValidado = await validar(inscripto.documento, inscripto.sexo);
             if (inscriptoValidado) {
+
                 inscripcion.fechaValidacion = new Date();
                 inscripcion.validado = true;
                 if (inscriptoValidado.direccion[0].ubicacion.localidad) {
@@ -39,6 +40,7 @@ async function run(done) {
                 if (value < mpi.cotaMatchMax) {
                     inscripcion.validado = false;
                 } else {
+                    await extractFoto(inscriptoValidado, dataLog);
                     const paciente = await findOrCreate(inscriptoValidado, dataLog);
                     if (paciente && paciente.id) {
                         inscripcion.paciente = paciente;

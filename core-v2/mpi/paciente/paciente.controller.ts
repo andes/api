@@ -298,3 +298,11 @@ export async function storePhoto(foto: String, fotoId: Types.ObjectId, req) {
     const data: any = await AndesDrive.writeFile(fileStream, metadata, req);
     return data;
 }
+
+
+export async function extractFoto(paciente, req) {
+    if (paciente.foto && paciente.fotoId) {
+        await storePhoto(paciente.foto, paciente.fotoId, req);
+        paciente.foto = null;
+    }
+}
