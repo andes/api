@@ -1,3 +1,19 @@
+# [5.39.0](https://github.com/andes/api/compare/v5.38.0...v5.39.0) (2021-03-31)
+
+
+### Bug Fixes
+
+* **codificacion:** validacion de tipoPrestacion ([#1318](https://github.com/andes/api/issues/1318)) ([a267a59](https://github.com/andes/api/commit/a267a59ef41b6e0cb0fc116cea5e973aa9531176))
+* **misc:** formbuilder remove fieldkey unique ([#1310](https://github.com/andes/api/issues/1310)) ([85b7396](https://github.com/andes/api/commit/85b73966f222986ae96c7e6157a109c87dfccf07))
+* **profesionales:** permite buscar por dni y profesion ([#1321](https://github.com/andes/api/issues/1321)) ([da5d57c](https://github.com/andes/api/commit/da5d57c133b410893a090929fc2a0e6704a6573c))
+* **validacion:** agrega idTramite en validación por Sisa ([#1320](https://github.com/andes/api/issues/1320)) ([5edc808](https://github.com/andes/api/commit/5edc808cc4bfc121e7be4fdde3e141bcd15eaf65))
+
+
+### Features
+
+* **codificacion:** mejoras de performance ([#1314](https://github.com/andes/api/issues/1314)) ([cf41057](https://github.com/andes/api/commit/cf41057b4d1ae994306e04363098668b82f625a0))
+* **matriculaciones:** ajuste guia profesional ([d9a1bdf](https://github.com/andes/api/commit/d9a1bdf51bbf13c1e5af92284ce9812eef2e602f))
+
 # [5.38.0](https://github.com/andes/api/compare/v5.37.0...v5.38.0) (2021-03-24)
 
 
