@@ -9,12 +9,13 @@ import { mpi } from '../../config';
 import { handleHttpRequest } from '../../utils/requestHandler';
 import { captcha } from './../../config.private';
 import { mensajeEstadoInscripcion } from './controller/inscripcion.vacunas.controller';
+import moment = require('moment');
 
 class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
     resourceModule = 'vacunas';
     resourceName = 'inscripcion-vacunas';
-    routesEnable = ['put'];
+    routesEnable = ['patch'];
     middlewares = [Auth.authenticate()];
     searchFileds = {
         documento: MongoQuery.matchString,
@@ -32,7 +33,14 @@ class InscripcionVacunasResource extends ResourceBase {
         idPaciente: {
             field: 'paciente.id',
             fn: MongoQuery.equalMatch
-        }
+        },
+        incluirVacunados: {
+            field: 'fechaVacunacion',
+            fn: (value) => {
+                return { $exists: value };
+            }
+        },
+        fechaRegistro: MongoQuery.matchDate.withField('fechaRegistro')
     };
     eventBus = EventCore;
 }
