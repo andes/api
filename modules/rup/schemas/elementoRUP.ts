@@ -28,6 +28,7 @@ export interface IElementoRUP {
         event: string;
         method: string;
     }[];
+    tags?: string[];
 }
 
 export type IElementoRUPDoc = AndesDoc<IElementoRUP>;
@@ -161,7 +162,8 @@ export const ElementoRUPSchema = new mongoose.Schema({
     dispatch: [{
         event: String,
         method: String
-    }]
+    }],
+    tags: [String]
 });
 
 ElementoRUPSchema.plugin(AuditPlugin);

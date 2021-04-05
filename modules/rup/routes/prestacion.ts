@@ -692,12 +692,21 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
 
         if (reg.elementoRUP) {
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);
+
             if (elemento && elemento.dispatch) {
                 elemento.dispatch.forEach(hook => {
                     if (hook.method === 'validar-prestacion') {
                         EventCore.emitAsync(hook.event, { prestacion, registro: reg });
                     }
                 });
+            }
+            if (elemento && elemento.tags) {
+                const tags = {};
+                elemento.tags.forEach(tag => {
+                    tags[tag] = true;
+                });
+                prestacion.tags = tags;
+                await prestacion.save();
             }
         }
     }
