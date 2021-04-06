@@ -1227,7 +1227,7 @@ router.post('/profesionales/validar', async (req, res, next) => {
     const resRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
     if (resRenaper && resRenaper.idTramite === Number(nroTramite)) {
         const regexSexo = new RegExp(['^', sexo, '$'].join(''), 'i');
-        const profesional = await Profesional.findOne({ documento, sexo: regexSexo });
+        const profesional = await Profesional.findOne({ documento, sexo: regexSexo, profesionalMatriculado: true });
         const token = await getTemporyTokenCOVID(documento);
         return profesional ? res.json({ profesional, token }) : next(`El profesional no se encuentra registrado en Andes.`);
     } else {
