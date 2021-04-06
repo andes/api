@@ -9,9 +9,7 @@ async function ActualizarInscripciones() {
             const prestaciones: any[] = await Prestacion.find({ 'ejecucion.registros.concepto.conceptId': '840534001', 'paciente.id': inscripcion.paciente.id });
             if (prestaciones.length) {
                 try {
-                    inscripcion.fechaVacunacion = prestaciones[0].ejecucion.fecha;
-                    inscripcion.idPrestacionVacuna = prestaciones[0].id;
-                    await inscripcion.save();
+                    await InscripcionVacuna.updateOne( { _id: inscripcion.id} , { $set: { fechaVacunacion: prestaciones[0].ejecucion.fecha, idPrestacionVacuna: prestaciones[0].id} });
                 } catch (e) {
                     return;
                 }
