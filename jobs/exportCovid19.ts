@@ -6,9 +6,9 @@ import { sisa } from './../config.private';
 
 const urlSisa = sisa.url_nomivac;
 
-export async function exportCovid19(done, horas) {
-    const start = moment().subtract(horas, 'h').toDate();
-    const end = moment().toDate();
+export async function exportCovid19(done, horas, desde, hasta) {
+    const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
+    const end = hasta ? moment(hasta).toDate() : moment().toDate();
     const pipelineVacunaCovid19 = [
         {
             $match: {
@@ -145,7 +145,7 @@ export async function exportCovid19(done, horas) {
                 uri: urlSisa,
                 method: 'POST',
                 body: dto,
-                headers: { APP_ID: sisa.APP_ID_ALTA, APP_KEY: sisa.APP_KEY_ALTA , 'Content-Type': 'application/json' },
+                headers: { APP_ID: sisa.APP_ID_ALTA, APP_KEY: sisa.APP_KEY_ALTA, 'Content-Type': 'application/json' },
                 json: true,
             };
             const resJson = await handleHttpRequest(options);
