@@ -30,7 +30,6 @@ export function make(body: IPaciente) {
 export function set(paciente: IPacienteDoc, body: any) {
     if (paciente.estado === 'validado') {
         delete body['documento'];
-        delete body['fechaNacimiento'];
         delete body['estado'];
     }
     paciente.set(body);
