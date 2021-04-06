@@ -1,6 +1,6 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { FormsEpidemiologia } from './forms-epidemiologia-schema';
 import { Auth } from '../../../auth/auth.class';
+import { FormsEpidemiologia } from './forms-epidemiologia-schema';
 
 class FormsEpidemiologiaResource extends ResourceBase {
     Model = FormsEpidemiologia;
@@ -8,6 +8,7 @@ class FormsEpidemiologiaResource extends ResourceBase {
     middlewares = [Auth.authenticate()];
     searchFileds = {
         type: MongoQuery.partialString,
+        search: ['identifier'],
         fechaCondicion: MongoQuery.matchDate.withField('createdAt'),
         paciente: {
             field: 'paciente.id',
