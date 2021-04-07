@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as vacunaCtr from '../controller/VacunaController';
+import * as vacunaCtr from '../controller/vacunas.controller';
 import { asyncHandler } from '@andes/api-tool';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Auth } from '../../../auth/auth.class';
@@ -15,6 +15,17 @@ router.get('/paciente/:id', Auth.authenticate(), asyncHandler(async (req: any, r
     const paciente = await PacienteCtr.findById(pacienteId);
     const vacunas = await vacunaCtr.getVacunas(paciente);
     res.json(vacunas);
+}));
+
+
+router.post('/paciente', Auth.authenticate(), asyncHandler(async (req: any, res, next) => {
+    try {
+        const pacienteId = req.body.paciente.id;
+        await vacunaCtr.exportCovid19(null, pacienteId);
+        return res.json({ success: true });
+    } catch (err) {
+        return next(err);
+    }
 }));
 
 export const VacunasRouter = router;
