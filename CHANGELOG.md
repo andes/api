@@ -1,3 +1,18 @@
+# [5.40.0](https://github.com/andes/api/compare/v5.39.0...v5.40.0) (2021-04-07)
+
+
+### Bug Fixes
+
+* **mpi:** revalidacion de paciente ([#1315](https://github.com/andes/api/issues/1315)) ([fc50bd9](https://github.com/andes/api/commit/fc50bd9c843f0dd734f760988588e11fa51d5753))
+* **script VAC-9:** reemplaza save por updateOne ([#1329](https://github.com/andes/api/issues/1329)) ([0fd1642](https://github.com/andes/api/commit/0fd1642491105d18bb4f7345a38a3fcf38d8a8a6))
+
+
+### Features
+
+* **inscripcion-profesional:** campo solo profesionales matriculados ([#1328](https://github.com/andes/api/issues/1328)) ([bd87562](https://github.com/andes/api/commit/bd875629edac9800f415bbdd701f6c0df80e760d))
+* **vac:** cambio en el mensaje de inscripción registrada ([#1323](https://github.com/andes/api/issues/1323)) ([8f97abe](https://github.com/andes/api/commit/8f97abe48899871cc1ac887d8d553ae07a5fcdac))
+* **vac:** mostrar los datos del inscripto al consulta por la inscripción ([#1322](https://github.com/andes/api/issues/1322)) ([77b3962](https://github.com/andes/api/commit/77b3962a7c53938aa0c8b0169c190e8f36dc6cf1))
+
 # [5.39.0](https://github.com/andes/api/compare/v5.38.0...v5.39.0) (2021-03-31)
 
 
