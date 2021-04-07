@@ -495,7 +495,66 @@ export default [
             {
                 key: 'listadoInscriptos',
                 title: 'Listado de inscriptos para vacunación',
-                type: 'boolean'
+                type: 'boolean',
+                child: [
+                    {
+                        key: 'ver',
+                        title: 'Visualizar grupo',
+                        child: [
+                            {
+                                key: 'discapacidad',
+                                title: 'Ver inscriptos de grupo con discapacidad',
+                                type: 'boolean'
+                            },
+                            {
+                                key: 'personal-salud',
+                                title: 'Ver inscriptos de grupo personal de salud',
+                                type: 'boolean'
+                            },
+                            {
+                                key: 'policia',
+                                title: 'Ver inscriptos de grupo personal policial',
+                                type: 'boolean'
+                            },
+                            {
+                                key: 'mayores60',
+                                title: 'Ver inscriptos de grupo mayores de 60',
+                                type: 'boolean'
+                            },
+                            {
+                                key: 'factores-riesgo',
+                                title: 'Ver inscriptos de grupo adultos con factores de riesgo',
+                                type: 'boolean'
+                            }
+                        ]
+                    },
+                    {
+                        key: 'editar',
+                        title: 'Editar datos de inscripción',
+                        child: [
+                            {
+                                key: 'estado',
+                                title: 'Editar estado de inscripción',
+                                type: 'boolean'
+                            },
+                            {
+                                key: 'contacto',
+                                title: 'Editar contacto de paciente',
+                                type: 'boolean'
+                            },
+                            {
+                                key: 'grupoPoblacional',
+                                title: 'Editar grupo de paciente',
+                                type: 'boolean'
+                            },
+                            {
+                                key: 'domicilio',
+                                title: 'Editar domicilio de paciente',
+                                type: 'boolean'
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     },

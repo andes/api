@@ -14,13 +14,18 @@ class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
     resourceModule = 'vacunas';
     resourceName = 'inscripcion-vacunas';
-    routesEnable = ['put'];
+    routesEnable = ['patch'];
     middlewares = [Auth.authenticate()];
     searchFileds = {
         documento: MongoQuery.matchString,
         grupo: {
             field: 'grupo.nombre',
-            fn: MongoQuery.equalMatch
+            fn: (value) => {
+                if (Array.isArray(value)) {
+                    return { $in: value };
+                }
+                return value;
+            }
         },
         localidad: {
             field: 'localidad._id',

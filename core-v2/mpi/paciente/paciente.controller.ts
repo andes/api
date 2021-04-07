@@ -180,7 +180,7 @@ export async function multimatch(searchText: string, filter: any, options?: any)
 export async function findOrCreate(query: any, req) {
     const sugeridos = await suggest(query);
     if (sugeridos.length > 0 && isMatchingAlto(sugeridos)) {
-        return sugeridos[0];
+        return sugeridos[0].paciente;
     }
     query.activo = true; // Todo paciente esta activo por defecto
     query.genero = query.genero || query.sexo;
