@@ -4,48 +4,45 @@ import { HTMLComponent } from '../model/html-component.class';
 export class RecuperoCostoBody extends HTMLComponent {
     template = `
     <main>
-        <section class="ma-50">
+        <section class="mx">
             <div class="text-center">
                 <b>Anexo 2</b>
             </div>
-            <table class="egt" style="height: 180px; margin-left: auto; margin-right: auto;" width="90%">
+            <div class="mx text-right">
+            {{ fechaActual }}
+            </div>
+            <hr>
+            <h5 class="text-center">COMPROBANTE DE ATENCIÓN DE BENEFICIARIOS DE AGENTES DEL SEGURO SALUD</h5>
+            <div class="mx">
+            {{#efector}}
+                <b>Denominacion HPdGP:</b>
+                {{ efector }}
+            {{/efector}}
+
+            {{#efectorCodigoSisa}}
+                <b>Codigo HPdGD-REFES:</b>
+                Sarasa
+                {{ efectorCodigoSisa }}
+            {{/efectorCodigoSisa}}
+            </div>
+                <table class="egt">
                 <tbody>
-                    <tr>
-                        <td colspan="8"><label>COMPROBANTE DE ATENCION DE BENEFICIARIOS DE AGENTES DEL SEGURO SALUD</label></td>
-                        <td colspan="1"><label>Fecha</label>
-                            {{ fechaActual }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="8">
-                            <label>Denominacion HPdGP</label>
-                            {{ efector }}
-                        </td>
-                        <td colspan="1"
-                            <label>Codigo HPdGD-REFES</label>
-                            {{ efectorCodigoSisa }}
-                        </td>
-                    </tr>
-                    <tr class="h50">
+                    <tr class="">
                         <td colspan="9" class="text-center">
                             <label>DATOS DEL BENEFICIARIO</label>
                         </td>
                     </tr>
-                    <tr class="h50">
-                        <td colspan="8">
-                            <label>Apellido y Nombre:</label>
+                    <tr class="">
+                        <td colspan="6">
+                            <label >Apellido y Nombre:</label>
                             {{ nombre }}
                         </td>
-                        <td colspan="1">
-                            <label>DNI N:</label>
+                        <td colspan="3">
+                            <label >DNI N°:</label>
                             {{ dni }}
                         </td>
                     </tr>
-                </tbody>
-            </table>
-            <table class="egt" style="margin-left: auto; margin-right: auto;" width="90%">
-                <tbody>
-                    <tr class="h50">
+                    <tr class="">
                         <td colspan="4" width="40%">
                             <label>Tipo de Beneficiario</label>
                         </td>
@@ -60,13 +57,13 @@ export class RecuperoCostoBody extends HTMLComponent {
                         </td>
                     </tr>
                     <tr class="h50">
-                        <td><label for="">Titular</label>  <input class="ml25" type="checkbox" name="" id=""></td>
-                        <td><label for="">Familiar</label>  <input class="ml25" type="checkbox" name="" id=""></td>
-                        <td><label for="">Adherente</label>  <input class="ml25" type="checkbox" name="" id=""></td>
-                        <td><label for="">Otro</label>  <input class="ml25" type="checkbox" name="" id=""></td>
-                        <td><label for="">Cónyuge</label>  <input class="ml25" type="checkbox" name="" id=""></td>
-                        <td><label for="">Hijo</label>  <input class="ml25" type="checkbox" name="" id=""></td>
-                        <td><label for="">Otro</label>  <input class="ml25" type="checkbox" name="" id=""></td>
+                        <td><label for="">Titular</label><br><input type="checkbox" name="" id=""></td>
+                        <td><label for="">Familiar</label><br><input type="checkbox" name="" id=""></td>
+                        <td><label for="">Adherente</label><br><input type="checkbox" name="" id=""></td>
+                        <td width="10%"><label for="">Otro</label><br><input type="checkbox" name="" id=""></td>
+                        <td><label for="">Cónyuge</label><br><input type="checkbox" name="" id=""></td>
+                        <td><label for="">Hijo</label><br><input type="checkbox" name="" id=""></td>
+                        <td><label for="">Otro</label><br><input type="checkbox" name="" id=""></td>
                         <td >
                             {{ sexo }}
                         </td>
@@ -74,69 +71,67 @@ export class RecuperoCostoBody extends HTMLComponent {
                             {{ edad }}
                         </td>
                     </tr>
-                </tbody>
-            </table>
-            <table class="egt" style="height: 180px; margin-left: auto; margin-right: auto;" width="90%">
-                <tbody>
-                    <tr class="h50">
-                        <td width="20%"><label>Tipo de Atención</label></td>
-                        <td width="15%"></td>
-                        <td></td>
-                        <td width="30%">
-                            <label>Fecha de Prestación</label>
+                    <tr class="">
+                        <td colspan="5"><label >Tipo de Atención:</label></td>
+                        <td colspan="4">
+                        <label >Fecha de Prestación:</label>
                             {{ horaInicio }}
                         </td>
                     </tr>
-                    <tr class="h50">
-                        <td rowspan="2"><label>Consulta</label> <input class="ml25" type="checkbox" name="" id=""></td>
-                        <td><label for="">Especialidad</label></td>
-                        <td colspan="2">
+                    <tr class="">
+                        <td rowspan="2"><label>Consulta</label> <input type="checkbox" name="" id=""></td>
+                        <td colspan="8"><label >Especialidad: </label>
                             {{ tipoPrestacion }}
                         </td>
                     </tr>
                     <tr class="h50">
-                        <td><label for="">Diagnostico</label></td>
-                        <td colspan="3"></td>
+                        <td colspan="8"><label class="casilla-dato">Diagnóstico: </label></td>
                     </tr>
-                    <tr class="h50">
-                        <td><label for="">Práctica</label> <input class="ml25" type="checkbox" name="" id=""></td>
+                    <tr class="">
+                        <td><label for="">Práctica</label> <input type="checkbox" name="" id=""></td>
                         <td>Códigos NHPdGD</td>
-                        <td colspan="3"></td>
+                        <td colspan="7"></td>
                     </tr>
-                    <tr class="h50">
-                        <td ><label>Internación</label> <input class="ml25" type="checkbox" name="" id=""></td>
+                    <tr class="">
+                        <td ><label>Internación</label> <input type="checkbox" name="" id=""></td>
                         <td>Diagnostico de
                             Egreso CIE 10</td>
-                        <td >Codigos Principal</td>
-                        <td colspan="3">Otros Codigos</td>
+                        <td colspan="3">
+                            <label class="casilla-dato">Código Principal:</label>
+                        </td>
+                        <td colspan="4">
+                            <label class="casilla-dato">Otros Códigos:</label>
+                        </td>
                     </tr>
                 </tbody>
             </table>
-            <table class="egt" style="height: 190px;margin-left: auto; margin-right: auto;" width="90%">
-                    <tbody>
-                        <tr class="font14">
-                            <td class="text-center" colspan="6">
-                                <label>
-                                    NHPdGD: Nomenclador de Hospitales Públicos de Gestión Descentralizada -  CIE10 Clasificación Internacional de Enfermedades
-                                </label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td rowspan="2" class="text-center text-bottom font14" width="60%"><label>Firma del Médico y sello con N° de Matricula</label></td>
-                            <td rowspan="2" width="10%"><label>Ultimo <br> Recibo de <br> Sueldo</label></td>
-                            <td colspan="2" class="text-center"><label>Mes</label></td>
-                            <td colspan="2" class="text-center"><label>Año</label></td>
-                        </tr>
-                        <tr class="h90">
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-            </table>
-            <table class="egt" style="margin-left: auto; margin-right: auto;" width="90%">
+            <table class="egt">
                 <tbody>
+                    <tr class="">
+                        <td class="text-center" colspan="7">
+                            <label>
+                                NHPdGD: Nomenclador de Hospitales Públicos de Gestión Descentralizada<br>
+                                CIE10 Clasificación Internacional de Enfermedades
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3"></td>
+                        <td colspan="4">
+                            <label>Último Recibo de Sueldo</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td rowspan="4" colspan="3" class="text-center text-bottom">
+                            <label>Firma del Médico y sello con N° de Matricula</label>
+                        </td>
+                        <td colspan="2" class="text-center"><label>Mes</label></td>
+                        <td colspan="2" class="text-center"><label>Año</label></td>
+                    </tr>
+                    <tr class="">
+                        <td colspan="2" class="h20"></td>
+                        <td colspan="2" class="h20"></td>
+                    </tr>
                     <tr>
                         <td colspan="3">
                             <label>NOMBRE DEL AGENTE DEL SEGURO DE SALUD</label>
@@ -145,20 +140,21 @@ export class RecuperoCostoBody extends HTMLComponent {
                             <label>RNOS</label>
                         </td>
                     </tr>
-                    <tr class="h50">
-                        <td colspan="3" >
+                    <tr class="">
+                        <td colspan="3" class="h20">
                             {{ obraSocial }}
                         </td>
-                        <td colspan="3">
+                        <td colspan="3" class="h20">
                             {{ codigoOs }}
                         </td>
                     </tr>
-                </tbody>
-            </table>
-            <table class="egt" style="margin-left: auto; margin-right: auto;" width="90%">
-                <tbody>
                     <tr class="h50">
-                        <td colspan="2" width="50%">
+                        <td colspan="3"></td>
+                        <td colspan="2"></td>
+                        <td colspan="2"></td>
+                    </tr>
+                    <tr class="">
+                        <td colspan="3" width="50%">
                             <label>Firma Responsable Administrativo/Contable</label>
                         </td>
                         <td colspan="2">
@@ -167,11 +163,6 @@ export class RecuperoCostoBody extends HTMLComponent {
                         <td colspan="2">
                             <label>Firma Beneficiario</label>
                         </td>
-                    </tr>
-                    <tr class="h110">
-                        <td colspan="2"></td>
-                        <td colspan="2"></td>
-                        <td colspan="2"></td>
                     </tr>
                 </tbody>
             </table>
