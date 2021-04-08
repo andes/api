@@ -688,8 +688,8 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
     const elementosRUPSet = await elementosRUPAsSet();
     const registros = prestacion.getRegistros(true);
 
+    let tags = {};
     for (const reg of registros) {
-
         if (reg.elementoRUP) {
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);
             if (elemento && elemento.dispatch) {
@@ -699,8 +699,14 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
                     }
                 });
             }
+            if (elemento && elemento.tags) {
+                elemento.tags.forEach(tag => {
+                    tags[tag] = true;
+                });
+            }
         }
     }
+    await Prestacion.updateOne( { _id: prestacion.id} , { $set: { tags } });
 });
 
 EventCore.on('rup:prestacion:romperValidacion', async (prestacion: IPrestacionDoc) => {

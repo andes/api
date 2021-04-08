@@ -33,6 +33,7 @@ export interface IPrestacion {
     };
 
     solicitud: IPrestacionSolicitud;
+    tags?: any;
 
 }
 
