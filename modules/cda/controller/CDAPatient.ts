@@ -32,7 +32,7 @@ import { ObjectId } from '@andes/core';
  */
 export async function findOrCreate(req, dataPaciente, organizacion) {
     if (dataPaciente.id) {
-        if (Auth.check(req, 'cda:paciente')) {
+        if (req.user.type === 'user-token-2' || Auth.check(req, 'cda:paciente')) {
             const realPac = await PacienteCtr.findById(dataPaciente.id);
             if (realPac) {
                 return realPac;
