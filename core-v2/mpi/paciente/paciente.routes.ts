@@ -1,5 +1,5 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { Request, Response, asyncHandler, Router } from '@andes/api-tool';
+import { Request, Response, asyncHandler } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import { Paciente } from './paciente.schema';
 import { suggest, multimatch, make, findById, set, extractFoto } from './paciente.controller';
@@ -260,6 +260,7 @@ export const patch = async (req: Request, res: Response) => {
     }
     throw new PatientNotFound();
 };
+
 
 PacienteRouter.use(Auth.authenticate());
 PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(get));

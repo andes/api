@@ -1,4 +1,4 @@
-import { updateFoto } from '../controller/updateFoto';
+import { updateFoto } from './updateFoto';
 
 function run(done) {
     updateFoto(done);
