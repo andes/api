@@ -3,9 +3,9 @@ import * as express from 'express';
 import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
-import { updateRegistroHistorialSolicitud } from '../controllers/prestacion';
+import { updateRegistroHistorialSolicitud, hudsPaciente } from '../controllers/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
+import { registrosProfundidad } from '../controllers/rup';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
@@ -27,6 +27,7 @@ const router = express.Router();
  * @param idPaciente: id mongo del paciente
  * @param estado: buscar en prestaciones con un estado distinto a validada
  * @param idPrestacion: buscar concepto/s en una prestacion especifica
+ * @param deadline: fecha de partida para la busqueda
  * @param expresion: expresion snomed que incluye los conceptos que estamos buscando
  *
  */
@@ -35,45 +36,24 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
 
     // verificamos que sea un ObjectId válido
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
-        return res.status(404).send('Turno no encontrado');
+        return res.status(404).send('Paciente no encontrado');
     }
 
     try {
-        const paciente: any = await PacienteCtr.findById(req.params.idPaciente);
-        if (!paciente) {
-            return res.status(404).send('Paciente no encontrado');
+        // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+        const id = req.params.idPaciente;
+        const estado = req.query.estado || 'validada';
+        const idPrestacion = req.query.idPrestacion;
+        const deadline = req.query.deadline;
+        const expresion = req.query.expresion;
+        const valor = req.query.valor;
+
+        const response = await hudsPaciente(id, expresion, idPrestacion, estado, deadline, valor);
+        if (!response) {
+            return res.status(404).send('Turno no encontrado');
         }
-        const query = {
-            'paciente.id': { $in: paciente.vinculos },
-            'estadoActual.tipo': req.query.estado ? req.query.estado : 'validada'
-        };
+        return res.json(response);
 
-        if (req.query.idPrestacion) {
-            query['_id'] = Types.ObjectId(req.query.idPrestacion);
-        }
-
-        if (req.query.deadline) {
-            query['ejecucion.fecha'] = { $gte: moment(req.query.deadline).startOf('day').toDate() };
-        }
-
-
-        const prestaciones = await Prestacion.find(query);
-
-
-        if (!prestaciones) {
-            return res.status(404).send('Paciente no encontrado');
-        }
-
-
-        if (req.query.expresion) {
-            const conceptos = await SnomedCtr.getConceptByExpression(req.query.expresion);
-            const data = buscarEnHuds(prestaciones, conceptos);
-            if (req.query.valor) {
-                const salida = data.filter(p => p.registro.valor);
-                return res.json(salida);
-            }
-            return res.json(data);
-        }
     } catch (e) {
         return next(e);
     }
