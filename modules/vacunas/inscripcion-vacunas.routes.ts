@@ -42,7 +42,8 @@ class InscripcionVacunasResource extends ResourceBase {
                 return { $exists: value };
             }
         },
-        fechaRegistro: MongoQuery.matchDate.withField('fechaRegistro')
+        fechaRegistro: MongoQuery.matchDate.withField('fechaRegistro'),
+        grupos: MongoQuery.inArray.withField('grupo.nombre')
     };
     eventBus = EventCore;
 }
@@ -112,11 +113,11 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
                 const provincia = provinciaActual || 'neuquen';
                 const provinciaInscripto = inscriptoValidado.direccion[0].ubicacion.provincia.nombre || '';
                 if (replaceChars(provinciaInscripto).toLowerCase() === replaceChars(provincia) && !req.body.validaciones.includes('domicilio')) {
-                    req.body.validaciones.push('domicilio');
+                    req.body.validaciones ?.length ? req.body.validaciones.push('domicilio') : req.body.validaciones = ['domicilio'];
                 }
+                const updated = await InscripcionVacunasCtr.update(req.params.id, req.body, req);
+                return res.send(updated);
             }
-            const updated = await InscripcionVacunasCtr.update(req.params.id, req.body, req);
-            return res.send(updated);
         } else {
             return next('No se encuentra la inscripción');
         }

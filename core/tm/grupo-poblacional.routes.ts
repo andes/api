@@ -13,7 +13,8 @@ class GrupoPoblacionalResource extends ResourceBase {
             }
         },
         descripcion: MongoQuery.partialString,
-        activo: MongoQuery.equalMatch
+        activo: MongoQuery.equalMatch,
+        ids: MongoQuery.inArray.withField('_id')
     };
 }
 export const GrupoPoblacionalCtr = new GrupoPoblacionalResource({});
