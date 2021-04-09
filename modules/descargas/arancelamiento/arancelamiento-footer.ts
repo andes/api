@@ -32,7 +32,7 @@ export class ArancelamientoFooter extends HTMLComponent {
 
     constructor() {
         super();
-        const provincia = configPrivate.provincia || 'neuquen';
+        const provincia = configPrivate.provincia.nombre || 'neuquen';
         this.data = {
             logoPDP: loadImage(`templates/rup/informes/img/logo-pdp.png`)
         };

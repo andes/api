@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as localidad from '../schemas/localidad';
 import * as mongoose from 'mongoose';
-import { toArray } from '../../../utils/utils';
+import { provincia } from '../../../config.private';
 
 const router = express.Router();
 
@@ -93,6 +93,11 @@ router.get('/localidades/:id?', (req, res, next) => {
 
         if (req.query.codigo) {
             query.where('codigoProvincia').equals(Number(req.query.codigo));
+        }
+        /** Caso en el que la busqueda viene del selec-search.directive (busqueda dinámica)
+         *  toma el codigo de la provincia seteade en config.private*/
+        if (req.query.search) {
+            query.where('codigoProvincia').equals(Number(provincia.codigo));
         }
 
         query.sort({ nombre: 1 }).exec((err, data) => {

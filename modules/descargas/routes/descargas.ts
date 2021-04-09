@@ -156,7 +156,7 @@ router.post('/constanciaPuco/:tipo?', Auth.authenticate(), async (req: any, res)
 });
 
 router.post('/arancelamiento/:tipo?', Auth.authenticate(), async (req: any, res) => {
-    const provincia = configPrivate.provincia || 'neuquen';
+    const provincia = configPrivate.provincia.nombre || 'neuquen';
     const opciones = { header: { height: '3cm' } };
     let fileName: any;
     if (provincia === 'neuquen') {

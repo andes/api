@@ -24,7 +24,7 @@ export class ArancelamientosHeader extends HTMLComponent {
 
     constructor(_data) {
         super();
-        const provincia = configPrivate.provincia || 'neuquen';
+        const provincia = configPrivate.provincia.nombre || 'neuquen';
 
         this.data = {
             logos: {

@@ -41,7 +41,7 @@ export class CensoHeader extends HTMLComponent {
         super();
 
         // consulta por provincia
-        const provincia = configPrivate.provincia || 'neuquen';
+        const provincia = configPrivate.provincia.nombre || 'neuquen';
 
         this.data = {
             unidadOrganizativa,

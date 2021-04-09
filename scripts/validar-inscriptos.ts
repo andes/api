@@ -30,7 +30,7 @@ async function run(done) {
                         nombre: inscriptoValidado.direccion[0].ubicacion.localidad.nombre
                     };
 
-                    const provincia = provinciaActual || 'neuquen';
+                    const provincia = provinciaActual.nombre || 'neuquen';
                     const provinciaInscripto = inscriptoValidado.direccion[0].ubicacion.provincia.nombre || '';
                     if (replaceChars(provinciaInscripto).toLowerCase() === replaceChars(provincia)) {
                         inscripcion.validaciones.push('domicilio');

@@ -27,7 +27,7 @@ EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscri
     }
     // Verifica el domicilio del paciente
     if (inscriptoValidado) {
-        const provincia = provinciaActual || 'neuquen';
+        const provincia = provinciaActual.nombre || 'neuquen';
         const provinciaInscripto = inscriptoValidado.direccion[0].ubicacion.provincia.nombre || '';
         if (replaceChars(provinciaInscripto).toLowerCase() === replaceChars(provincia)) {
             inscripto.validaciones.push('domicilio');

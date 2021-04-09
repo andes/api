@@ -326,4 +326,7 @@ export const IPS = {
 };
 export const APP_DOMAIN = 'http://localhost:4200';
 
-export const provincia = getEnv('PROVINCIA', 'neuquen');
+export const provincia = {
+    nombre: getEnv('PROVINCIA', 'neuquen'),
+    codigo: getEnv('CODIGO_PROVINCIA', 15)
+};
