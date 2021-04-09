@@ -1,12 +1,14 @@
 import { Types } from 'mongoose';
 import { Paciente, replaceChars } from './paciente.schema';
 import * as moment from 'moment';
+import * as intoStream from 'into-stream';
 import { Matching } from '@andes/match';
 import { IPacienteDoc, IPaciente } from './paciente.interface';
 import { isSelected } from '@andes/core';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { PacienteCtr } from './paciente.routes';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
+import { FileMetadata, AndesDrive } from '@andes/drive';
 import * as Barrio from '../../../core/tm/schemas/barrio';
 import * as configPrivate from '../../../config.private';
 import * as config from '../../../config';
@@ -273,3 +275,34 @@ export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
         return (err);
     }
 };
+
+
+/**
+ * Guarda la foto de un paciente utilizando AndesDrive
+ *
+ * @param {object} query Condiciones a buscar
+ */
+
+export async function storePhoto(foto: String, fotoId: Types.ObjectId, req) {
+    const parts = foto.split(';');
+    const mimType = parts[0].split(':')[1];
+    const fileData = parts[1].split(',')[1];
+    const fileDataBuffer = Buffer.from(fileData, 'base64');
+    const fileStream = intoStream(fileDataBuffer);
+    const metadata: FileMetadata = {
+        _id: fotoId,
+        filename: `foto_${fotoId}.${mimType.split('/')[1]}`,
+        contentType: mimType,
+        origin: 'mpi'
+    };
+    const data: any = await AndesDrive.writeFile(fileStream, metadata, req);
+    return data;
+}
+
+
+export async function extractFoto(paciente, req) {
+    if (paciente.foto && paciente.fotoId) {
+        await storePhoto(paciente.foto, paciente.fotoId, req);
+        paciente.foto = null;
+    }
+}

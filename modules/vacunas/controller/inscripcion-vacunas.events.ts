@@ -3,7 +3,7 @@ import { Request } from '@andes/api-tool';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { provincia as provinciaActual } from '../../../config.private';
 import { PersonalSaludCtr } from '../../../modules/personalSalud/personal-salud.routes';
-import { findOrCreate } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { findOrCreate, extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { replaceChars } from '../../../core-v2/mpi';
 import { userScheduler } from '../../../config.private';
@@ -37,13 +37,14 @@ EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscri
             }
         }
         // Busca el paciente y si no existe lo guarda
-        const paciente = await findOrCreate(inscriptoValidado, req);
+        await extractFoto(inscriptoValidado, dataLog);
+        const paciente = await findOrCreate(inscriptoValidado, dataLog);
         if (paciente && paciente.id) {
             inscripto.paciente = paciente;
         }
     }
 
-    await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
+    await InscripcionVacunasCtr.update(inscripto.id, inscripto, dataLog);
 
 });
 
