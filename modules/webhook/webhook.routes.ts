@@ -6,6 +6,7 @@ import { PacienteCtr } from '../../core-v2/mpi/paciente/paciente.routes';
 import { PatientNotFound } from '../../core-v2/mpi/paciente/paciente.error';
 import { asyncHandler } from '@andes/api-tool';
 import * as moment from 'moment';
+import { EventCore } from '@andes/event-bus/';
 
 class WebhookResource extends ResourceBase {
     Model = WebHook;
@@ -43,6 +44,7 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
                 contactos.push(nuevoContacto);
                 paciente.contacto = contactos;
             }
+            EventCore.emitAsync('notification:patient:laboratory', paciente);
             await PacienteCtr.update(paciente.id, paciente, req as any);
         }
         return res.json(paciente);
