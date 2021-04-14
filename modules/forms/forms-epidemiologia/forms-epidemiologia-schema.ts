@@ -1,4 +1,5 @@
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
 import * as mongoose from 'mongoose';
 
 export const FormsEpidemiologiaSchema = new mongoose.Schema({
@@ -13,7 +14,8 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         apellido: String,
         fechaNacimiento: Date,
     },
-    secciones: [Object]
+    secciones: [Object],
+    zonaSanitaria: zonaSanitariasSchema
 });
 
 FormsEpidemiologiaSchema.plugin(AuditPlugin);

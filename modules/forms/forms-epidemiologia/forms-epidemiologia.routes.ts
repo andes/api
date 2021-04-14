@@ -15,6 +15,22 @@ class FormsEpidemiologiaResource extends ResourceBase {
         paciente: {
             field: 'paciente.id',
             fn: MongoQuery.equalMatch
+        },
+        localidad: {
+            field: 'secciones.fields.localidadresidencia.nombre',
+            fn: MongoQuery.partialString
+        },
+        organizacion: {
+            field: 'secciones.fields.organizacion',
+            fn: MongoQuery.partialString
+        },
+        zonaSanitaria: {
+            field: 'zonaSanitaria._id',
+            fn: MongoQuery.equalMatch
+        },
+        identificadorPcr: {
+            field: 'secciones.fields.identificadorpcr',
+            fn: MongoQuery.partialString
         }
     };
 }

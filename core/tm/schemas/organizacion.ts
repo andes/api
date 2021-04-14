@@ -8,6 +8,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { tipoPrestacionSchema } from './tipoPrestacion';
 import { IOrganizacion } from '../interfaces/IOrganizacion';
 import { TipoTrasladoSchema } from '../../../modules/centroOperativoMedico/schemas/tipoTraslado.schema';
+import { zonaSanitariasSchema } from './zonaSanitarias';
 
 export let MapaSectoresSchema = new Schema({
     tipoSector: SnomedConcept,
@@ -63,6 +64,7 @@ const _schema = new Schema({
     aceptaDerivacion: Boolean,
     esCOM: Boolean,
     trasladosEspeciales: [TipoTrasladoSchema],
+    zonaSanitaria: zonaSanitariasSchema
 });
 
 _schema.plugin(AuditPlugin);
