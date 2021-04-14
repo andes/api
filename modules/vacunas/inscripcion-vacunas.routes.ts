@@ -7,9 +7,8 @@ import { validar } from '../../core-v2/mpi/validacion';
 import { matching } from '../../core-v2/mpi/paciente/paciente.controller';
 import { mpi } from '../../config';
 import { handleHttpRequest } from '../../utils/requestHandler';
-import { captcha } from './../../config.private';
+import { captcha, userScheduler } from './../../config.private';
 import { mensajeEstadoInscripcion } from './controller/inscripcion.vacunas.controller';
-import moment = require('moment');
 import { provincia as provinciaActual } from '../../config.private';
 import { replaceChars } from '../../core-v2/mpi';
 
@@ -173,7 +172,7 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, 
                 return next('Seleccionar factor de riesgo asociado a vacunación');
             }
 
-            const inscripcion = await InscripcionVacunasCtr.create(req.body, req);
+            const inscripcion = await InscripcionVacunasCtr.create(req.body, userScheduler as any);
             EventCore.emitAsync('vacunas:inscripcion-vacunas:create', inscripcion, inscriptoValidado, req);
             return res.json(inscripcion);
         } else {

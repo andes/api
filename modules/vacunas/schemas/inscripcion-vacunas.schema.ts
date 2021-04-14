@@ -1,6 +1,7 @@
 
 import { Schema, Types, model } from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export const InscripcionVacunaSchema = new Schema({
     fechaRegistro: Date,
@@ -60,6 +61,7 @@ export const InscripcionVacunaSchema = new Schema({
     idPrestacionCertificado: Types.ObjectId
 });
 
+InscripcionVacunaSchema.plugin(AuditPlugin);
 InscripcionVacunaSchema.index({
     'paciente.id': 1
 });
