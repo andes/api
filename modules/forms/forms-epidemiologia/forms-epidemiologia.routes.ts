@@ -7,7 +7,10 @@ class FormsEpidemiologiaResource extends ResourceBase {
     resourceName = 'formEpidemiologia';
     middlewares = [Auth.authenticate()];
     searchFileds = {
-        type: MongoQuery.partialString,
+        type: {
+            field: 'type.name',
+            fn: MongoQuery.partialString
+        },
         fechaCondicion: MongoQuery.matchDate.withField('createdAt'),
         paciente: {
             field: 'paciente.id',
@@ -18,3 +21,13 @@ class FormsEpidemiologiaResource extends ResourceBase {
 
 export const FormEpidemiologiaCtr = new FormsEpidemiologiaResource();
 export const FormEpidemiologiaRouter = FormEpidemiologiaCtr.makeRoutes();
+
+FormEpidemiologiaRouter.get('/types', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const types: any = await FormsEpidemiologia.find({}, { type: 1 });
+        return res.json(types);
+    } catch (err) {
+        return next(err);
+    }
+});
+
