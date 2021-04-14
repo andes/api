@@ -32,7 +32,8 @@ export const InscripcionVacunaSchema = new Schema({
         documento: String,
         telefono: String,
         sexo: String,
-        fechaNacimiento: Date
+        fechaNacimiento: Date,
+        addAt: Date
     },
     cud: String,
     alergia: Boolean,
