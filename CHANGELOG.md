@@ -1,3 +1,22 @@
+# [5.41.0](https://github.com/andes/api/compare/v5.40.0...v5.41.0) (2021-04-14)
+
+
+### Bug Fixes
+
+* **cda:** ajuste de permisos al crear CDA ([#1333](https://github.com/andes/api/issues/1333)) ([4a86222](https://github.com/andes/api/commit/4a86222b44f2deb925f415a14a0b83e33d62ff4d))
+* **mpi:** error validando paciente ([#1303](https://github.com/andes/api/issues/1303)) ([c5a2a06](https://github.com/andes/api/commit/c5a2a069fa237b20421743272203d2f443ba6d4c))
+
+
+### Features
+
+* **drive:** adaptador mongo ([#1335](https://github.com/andes/api/issues/1335)) ([f662ce6](https://github.com/andes/api/commit/f662ce612331665f97726f701f40922e050f116a))
+* **mpi:** quita foto del schema paciente.  ([#1326](https://github.com/andes/api/issues/1326)) ([5a131fd](https://github.com/andes/api/commit/5a131fd1baa5edf19dbcb9e665130acc6e9b747a))
+* **vac:** agrega filtro por fecha de registro ([#1325](https://github.com/andes/api/issues/1325)) ([f49726c](https://github.com/andes/api/commit/f49726cb19e93b064a09c577f55c22bdcbf30d36))
+* **vac:** nuevos eventos al validar o romper validación de certificación de paciente riesgo covid ([#1316](https://github.com/andes/api/issues/1316)) ([fc3ecdf](https://github.com/andes/api/commit/fc3ecdf71be74450b4fb4e3fb433d3f85e19b2f8))
+* **vacunas:** nueva ruta para exportar vacunas ([#1300](https://github.com/andes/api/issues/1300)) ([2464c49](https://github.com/andes/api/commit/2464c498bbef75ee88d13a5c48c51a777528325d))
+* **vacunas:** TAG vacunasCovid en prestaciones ([#1324](https://github.com/andes/api/issues/1324)) ([765e133](https://github.com/andes/api/commit/765e133c979cfe9b8c853280648154803f8bca1a))
+* **webhook:** cambia nombre de evento ([#1338](https://github.com/andes/api/issues/1338)) ([16dec93](https://github.com/andes/api/commit/16dec93e1c39c70d065ad9d6ad32fa75ec7d2fea))
+
 # [5.40.0](https://github.com/andes/api/compare/v5.39.0...v5.40.0) (2021-04-07)
 
 
