@@ -491,12 +491,49 @@ export default [
                 key: 'totalOrganizaciones',
                 title: 'Todas las organizaciones',
                 type: 'boolean'
+            }
+        ]
+    },
+    {
+        key: 'vacunacion',
+        title: 'Módulo vacunación',
+        child: [
+            {
+                key: 'tipoGrupos',
+                title: 'Visualización de grupos poblacionales',
+                type: 'grupo-poblacional'
             },
             {
-                key: 'listadoInscriptos',
-                title: 'Listado de inscriptos para vacunación',
+                key: 'editar',
+                title: 'Editar inscripciones',
+                child: [
+                    {
+                        key: 'estado',
+                        title: 'Editar estado de inscripción',
+                        type: 'boolean'
+                    },
+                    {
+                        key: 'contacto',
+                        title: 'Editar contacto de paciente',
+                        type: 'boolean'
+                    },
+                    {
+                        key: 'grupoPoblacional',
+                        title: 'Editar grupo de paciente',
+                        type: 'boolean'
+                    },
+                    {
+                        key: 'domicilio',
+                        title: 'Editar domicilio de paciente',
+                        type: 'boolean'
+                    }
+                ]
+            },
+            {
+                key: 'crear',
+                title: 'Crear inscripciones',
                 type: 'boolean'
-            }
+            },
         ]
     },
     {

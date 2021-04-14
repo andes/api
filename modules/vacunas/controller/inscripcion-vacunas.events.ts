@@ -41,6 +41,7 @@ EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscri
         const paciente = await findOrCreate(inscriptoValidado, dataLog);
         if (paciente && paciente.id) {
             inscripto.paciente = paciente;
+            inscripto.paciente.id = paciente.id;
         }
     }
 
