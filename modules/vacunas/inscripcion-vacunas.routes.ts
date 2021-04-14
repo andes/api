@@ -41,6 +41,12 @@ class InscripcionVacunasResource extends ResourceBase {
                 return { $exists: value };
             }
         },
+        tieneCertificado: {
+            field: 'idPrestacionCertificado',
+            fn: (value) => {
+                return { $exists: value };
+            }
+        },
         fechaRegistro: MongoQuery.matchDate.withField('fechaRegistro'),
         grupos: MongoQuery.inArray.withField('grupo.nombre')
     };
