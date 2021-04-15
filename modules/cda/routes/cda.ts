@@ -381,20 +381,25 @@ router.get('/:id/:name', async (req: any, res, next) => {
         if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
             return next(403);
         }
+
         const cda = await cdaCtr.getCDAById(req.params.id);
         const idPaciente = cda.metadata.paciente;
-        let paciente: any = await findById(idPaciente);
-        const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
-        let esFamiliar;
-        if (index < 0) {
-            const resultado = await findById((req as any).user.pacientes[0].id);
-            esFamiliar = resultado.relaciones.find(rel => {
-                return rel.referencia.toString() === paciente.id.toString();
-            });
+
+        if (req.user.type === 'paciente-token') {
+            const paciente: any = await findById(idPaciente);
+            const index = req.user.pacientes.findIndex(item => String(item.id) === String(idPaciente));
+            let esFamiliar;
+            if (index < 0) {
+                const resultado = await findById((req as any).user.pacientes[0].id);
+                esFamiliar = resultado.relaciones.find(rel => {
+                    return rel.referencia.toString() === paciente.id.toString();
+                });
+            }
+            if (!(index >= 0 || esFamiliar)) {
+                return next(403);
+            }
         }
-        if (req.user.type === 'paciente-token' && !(index >= 0 || esFamiliar)) {
-            return next(403);
-        }
+
         const realName = req.params.name.split('.')[0];
         const cdaFile = await cdaCtr.getCdaAdjunto(cda, realName);
         const contentType = cdaFile.file.contentType || cdaFile.file.mimetype;
