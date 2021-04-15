@@ -42,7 +42,8 @@ export let PlantillasRUPSchema = new Schema({
         },
         required: false
     },
-
+    link: String,
+    esArchivoLink: Boolean,
     title: String,
     descripcion: String,
     target: { type: SnomedConcept, required: false }
