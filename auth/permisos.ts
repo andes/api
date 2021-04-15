@@ -497,6 +497,7 @@ export default [
     {
         key: 'vacunacion',
         title: 'Módulo vacunación',
+        visibility: 'restricted',
         child: [
             {
                 key: 'tipoGrupos',
