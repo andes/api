@@ -11,7 +11,7 @@ let dataLog: any = new Object(userScheduler);
 dataLog.body = { _id: null };
 dataLog.method = null;
 
-EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscriptoValidado: any, req: Request) => {
+EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscriptoValidado: any) => {
     if (inscripto.grupo && inscripto.grupo.nombre === 'personal-salud') {
         inscripto.personal_salud = true;
         inscripto.estado = 'habilitado';
@@ -50,22 +50,22 @@ EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscri
 });
 
 // Al validar la prestacion de vacunacion, inserta la fecha de vacunacion en la inscripcion
-EventCore.on('vacunas:inscripcion:vacunado', async ({ prestacion }, req: Request) => {
+EventCore.on('vacunas:inscripcion:vacunado', async ({ prestacion }) => {
     const inscripto = await InscripcionVacunasCtr.findOne({ idPaciente: prestacion.paciente.id });
     if (inscripto) {
         inscripto.fechaVacunacion = prestacion.ejecucion.fecha;
         inscripto.idPrestacionVacuna = prestacion._id;
-        await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
+        await InscripcionVacunasCtr.update(inscripto.id, inscripto, dataLog);
     }
 });
 
 // Quita la fecha de vacunacion si se rompe la validacion
-EventCore.on('vacunas:inscripcion:cancelar-vacunado', async ({ prestacion }, req: Request) => {
+EventCore.on('vacunas:inscripcion:cancelar-vacunado', async ({ prestacion }) => {
     const inscripto = await InscripcionVacunasCtr.findOne({ idPaciente: prestacion.paciente.id });
     if (inscripto) {
         inscripto.fechaVacunacion = null;
         inscripto.idPrestacionVacuna = null;
-        await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
+        await InscripcionVacunasCtr.update(inscripto.id, inscripto, dataLog);
     }
 });
 
