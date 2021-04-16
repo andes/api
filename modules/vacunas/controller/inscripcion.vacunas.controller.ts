@@ -46,15 +46,15 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
                 estadoInscripcion.body = 'Usted se encuentra en proceso de validación.';
                 estadoInscripcion.status = 'warning';
             }
-        }
-        if (!grupo.mensajeDefault && estadoInscripcion.body === '') {
-            estadoInscripcion.subtitulo = 'Su inscripción para la vacunación se encuentra habilitada';
-            estadoInscripcion.body = `Usted se encuentra habilitado para recibir la vacuna,
-            el turno será asignado cuando tengamos disponibilidad efectiva de dosis`;
-            estadoInscripcion.status = 'success';
-        } else {
-            if (grupo.mensajeDefault) {
-                estadoInscripcion = grupo.mensajeDefault;
+            if (!grupo.mensajeDefault && estadoInscripcion.body === '') {
+                estadoInscripcion.subtitulo = 'Su inscripción para la vacunación se encuentra habilitada';
+                estadoInscripcion.body = `Usted se encuentra habilitado para recibir la vacuna,
+                el turno será asignado cuando tengamos disponibilidad efectiva de dosis`;
+                estadoInscripcion.status = 'success';
+            } else {
+                if (grupo.mensajeDefault) {
+                    estadoInscripcion = grupo.mensajeDefault;
+                }
             }
         }
         estadoInscripcion.titulo = `Grupo: ${grupo.descripcion}`;
