@@ -14,7 +14,7 @@ import { extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
 const nacimientosLog = mpiNacimientosLog.startTrace();
 const deb = debug('nacimientosJob');
 
-// Variable utilizada en testing
+// Variable utilizada en testing (formato 'YYYY-MM-DD')
 let fechaPrueba;
 
 /**
@@ -242,7 +242,7 @@ async function procesarDataNacimientos(nacimiento) {
     }
 }
 
-export async function importarNacimientos(done) {
+export async function importarNacimientos() {
     let fecha = fechaPrueba || moment().format('YYYY-MM-DD');
     let queryFechaPath = registroProvincialData.queryFechaPath + fecha;
     const infoNacimientosArray = await getInfoPacientes(queryFechaPath);
@@ -256,13 +256,12 @@ export async function importarNacimientos(done) {
         }
     }
     deb('Proceso Importar Nacimientos Finalizado');
-    done();
 }
 
 /**
  * se actualizan los datos de todos los pacientes con dni = '' que contengan certificadoRenaper
  */
-export async function importarDocumentosAsignados(done) {
+export async function importarDocumentosAsignados() {
     try {
         // Buscamos en andes los bebes que aún no tienen documento
         let resultadoBusqueda: any = await PacienteCtr.search({ documento: '', certificadoRenaper: { $exists: true }, activo: true }, {}, userScheduler as any);
@@ -276,7 +275,6 @@ export async function importarDocumentosAsignados(done) {
         return error;
     }
     deb('Proceso Agregar documentos Faltantes Finalizado');
-    done();
 }
 
 /**
