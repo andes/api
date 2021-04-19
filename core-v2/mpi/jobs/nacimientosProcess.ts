@@ -7,7 +7,7 @@ import { handleHttpRequest } from '../../../utils/requestHandler';
 import { IPaciente } from '../paciente/paciente.interface';
 import moment = require('moment');
 import debug = require('debug');
-import { ParentescoCtr } from '../../../core/mpi/parentesco.routes';
+import { ParentescoCtr } from '../../../core-v2/mpi/parentesco/parentesco.routes';
 import { Types } from 'mongoose';
 import { extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
 

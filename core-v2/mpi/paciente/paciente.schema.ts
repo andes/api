@@ -2,10 +2,10 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from '../../../core/mpi/schemas/constantes';
+import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from './constantes';
 import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';
 import { FinanciadorSchema } from '../financiador/financiador.schema';
-import { ParentescoSchema } from '../../../core/mpi/parentesco.schema';
+import { ParentescoSchema } from '../parentesco/parentesco.schema';
 import { IPacienteDoc } from './paciente.interface';
 
 
