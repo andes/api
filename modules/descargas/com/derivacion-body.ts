@@ -1,3 +1,5 @@
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
+import { Derivaciones } from '../../../modules/centroOperativoMedico/schemas/derivaciones.schema';
 import * as moment from 'moment';
 import { HTMLComponent } from '../model/html-component.class';
 import { DerivacionFirma } from './derivacion-firma';
@@ -109,6 +111,94 @@ export class DerivacionBody extends HTMLComponent {
             </div>
             </div>
             {{/if}}
+
+
+            {{#if datosSolicitud}}
+            <br><br>
+            <div class="row">
+                <div class="col">
+                    <span><b>DATOS DE SOLICITUD</b></span>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col">
+                    <span>FECHA y HORA:
+                        {{ datosSolicitud.fecha }} hs</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <span>ORGANIZACION:
+                        {{ datosSolicitud.organizacion }}</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <span>USUARIO:
+                        {{ datosSolicitud.usuario }}</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <span>DETALLE: {{ datosSolicitud.detalle }}</span>
+                </div>
+            </div>
+            {{/if}}
+
+            {{#if historial }}
+            <br><br>
+            <div class="row">
+                <div class="col">
+                    <span><b>HISTORIAL DE DERIVACIÓN</b></span>
+                </div>
+            </div>
+            <style>
+                table, th, td {
+                    border: 1px solid grey;
+                }
+
+                table {
+                    border-collapse: collapse;
+                    page-break-before: always;
+                    float:left;
+                    font-size: 7px;
+                    line-height: normal;
+                }
+
+            </style>
+            <br/>
+            <font size="1" >
+            <table>
+                <thead style='display: table-header-group' >
+                    <th>Fecha</th>
+                    {{#if reporteCOM }}<th>Organización</th>{{/if}}
+                    <th>Evento</th>
+                    {{#if reporteCOM }}<th>Prioridad</th>{{/if}}
+                    <th>Observación</th>
+                    <th>Usuario</th>
+                    {{#if reporteCOM }}<th>Org. Destino</th>{{/if}}
+                </thead>
+
+                {{#each historial}}
+
+                <tr>
+                    <td>{{ fechaCreacion }}</td>
+                    {{#if reporteCOM }}<td>{{ createdBy.organizacion.nombre }}</td>{{/if}}
+                    <td>{{#if estado }}{{ estado }}{{/if}} {{#if esActualizacion }}actualización{{/if}}</td>
+                    {{#if reporteCOM }}<td>{{#if prioridad}}{{ prioridad }}{{/if}}</td>{{/if}}
+                    <td>{{#if observacion}}{{observacion}}{{/if}}</td>
+                    <td>{{ createdBy.nombreCompleto }}</td>
+                    {{#if reporteCOM }}<td>{{#if organizacionDestino}}{{ organizacionDestino.nombre }}{{/if}}</td>{{/if}}
+                </tr>
+
+                {{/each}}
+
+            </table>
+            </font>
+
+            {{/if}}
+
             {{#if firmaHTML}}
                 {{{ firmaHTML }}}
             {{/if}}
@@ -117,52 +207,84 @@ export class DerivacionBody extends HTMLComponent {
 
     `;
 
-    constructor(public derivacion) {
+    constructor(public _data) {
         super();
     }
 
     public async process() {
+        const derivacion: any = await Derivaciones.findById(this._data.derivacionId);
 
         let finalizada = false;
         let elementoHistorial: any;
         let fechaFinalizacion = moment().toDate();
         let profesional: any;
-        if (this.derivacion.estado === 'finalizada') {
+        if (derivacion.estado === 'finalizada') {
             finalizada = true;
-            elementoHistorial = this.derivacion.historial.find(elemento => elemento.estado === 'finalizada');
+            elementoHistorial = derivacion.historial.find(elemento => elemento.estado === 'finalizada');
             fechaFinalizacion = elementoHistorial.createdAt;
             profesional = elementoHistorial.createdBy;
         }
 
-        const firmaHTML = await this.getFirmaHTML();
+        const firmaHTML = await this.getFirmaHTML(derivacion);
+        const datosSolicitud = this._data.historial ? await this.getDatosSolicitud(derivacion) : null;
+        const fecha = moment(derivacion.historial[0].createdAt).format('DD/MM/YYYY HH:mm');
+        const organizacion = await Organizacion.findById(this._data.organizacionId);
+        const historial = this._data.historial ? await this.getHistorialDerivacion(organizacion, derivacion) : null;
         this.data = {
-            idDerivacion: this.derivacion._id,
-            nombre: this.derivacion.paciente.nombre,
-            apellido: this.derivacion.paciente.apellido,
-            dni: this.derivacion.paciente.documento,
-            fechaNacimiento: moment(this.derivacion.paciente.fechaNacimiento).format('DD/MM/YYYY'),
-            sexo: this.derivacion.paciente.sexo,
-            obraSocial: this.derivacion.paciente.obraSocial,
-            organizacionOrigen: this.derivacion.organizacionOrigen.nombre,
-            organizacionDestino: this.derivacion.organizacionDestino.nombre,
-            unidadDestino: this.derivacion.unidadDestino?.term,
-            fecha: moment(this.derivacion.historial[0].createdAt).format('DD/MM/YYYY HH:mm'),
+            idDerivacion: derivacion._id,
+            nombre: derivacion.paciente.nombre,
+            apellido: derivacion.paciente.apellido,
+            dni: derivacion.paciente.documento,
+            fechaNacimiento: moment(derivacion.paciente.fechaNacimiento).format('DD/MM/YYYY'),
+            sexo: derivacion.paciente.sexo,
+            obraSocial: derivacion.paciente.obraSocial,
+            organizacionOrigen: derivacion.organizacionOrigen.nombre,
+            organizacionDestino: derivacion.organizacionDestino?.nombre,
+            unidadDestino: derivacion.unidadDestino?.term,
+            fecha,
             finalizada,
             fechaFinalizacion: moment(fechaFinalizacion).format('DD/MM/YYYY HH:mm'),
             profesionalFinalizacion: profesional,
-            tipoTraslado: this.derivacion.tipoTraslado,
-            organizacionTraslado: this.derivacion.organizacionTraslado,
-            firmaHTML
+            tipoTraslado: derivacion.tipoTraslado,
+            organizacionTraslado: derivacion.organizacionTraslado,
+            datosSolicitud,
+            firmaHTML,
+            historial,
+            reporteCOM: organizacion.esCOM
         };
     }
 
-    async getFirmaHTML() {
-        if (this.derivacion.estado === 'finalizada') {
-            const firmaHTMLComponent = new DerivacionFirma(this.derivacion);
+    async getFirmaHTML(derivacion) {
+        if (derivacion.estado === 'finalizada') {
+            const firmaHTMLComponent = new DerivacionFirma(derivacion);
             await firmaHTMLComponent.process();
             return firmaHTMLComponent.render();
         } else {
             return null;
         }
+    }
+
+    async getHistorialDerivacion(organizacion, derivacion) {
+        derivacion.historial.shift();
+        let historial = organizacion.esCOM ? derivacion.historial : derivacion.historial.filter((h) => h.createdBy.organizacion.id === organizacion.id);
+        historial = historial.filter(h => !h.eliminado);
+        historial.forEach(h => {
+            h.fechaCreacion = moment(h.createdAt).locale('es').format('DD/MM/YYYY HH:mm');
+            h.reporteCOM = organizacion.esCOM;
+            h.esActualizacion = !h.estado;
+        });
+        return historial.sort((a, b) => b.createdAt - a.createdAt);
+    }
+
+    async getDatosSolicitud(derivacion) {
+        const estadoSolicitud = derivacion.historial[0];
+        const datosSolicitud = {
+            fecha: moment(estadoSolicitud.createdAt).format('DD/MM/YYYY HH:mm'),
+            organizacion: estadoSolicitud.createdBy.organizacion.nombre,
+            usuario: estadoSolicitud.createdBy.nombreCompleto,
+            detalle: derivacion.detalle
+        };
+
+        return datosSolicitud;
     }
 }
