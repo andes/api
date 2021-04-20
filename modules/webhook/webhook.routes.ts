@@ -51,6 +51,10 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
                 protocolo: query.protocolo ? query.protocolo : null,
                 resultado: query.resultado ? query.resultado : null
             };
+            /* Nueva información que viene desde el laboratorio:
+                1) Nos permitirá dar resultado por sms (cuando den el ok).
+                2) Nos permite actualizar la información de PCR automáticamente en la ficha
+            */
             if (data.resultado) {
                 EventCore.emitAsync('notification:fichaEpidemiologica:laboratory', data);
             }
