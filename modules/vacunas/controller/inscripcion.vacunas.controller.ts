@@ -2,6 +2,11 @@ import * as moment from 'moment';
 import { GrupoPoblacionalCtr } from './../../../core/tm/grupo-poblacional.routes';
 import { PacienteCtr, replaceChars } from './../../../core-v2/mpi';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
+import { provincia as provinciaActual } from '../../../config.private';
+import { Profesional } from '../../../core/tm/schemas/profesional';
+import { PersonalSaludCtr } from '../../../modules/personalSalud';
+import { mpi } from '../../../config';
+import { findOrCreate, extractFoto, matching, updateContacto } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 export interface IEstadoInscripcion {
     titulo: String;
@@ -37,14 +42,20 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
             estadoInscripcion.body = `Usted posee un registro de aplicación de la vacuna con fecha ${moment(inscripto.fechaVacunacion).format('DD/MM/YYYY')}`;
             estadoInscripcion.status = 'success';
         } else {
-            if (inscripto.validado) {
-                for (const validacion of grupo.validaciones) {
-                    estadoInscripcion = await verificarEstadoInscripcion(inscripto, validacion);
-                }
+            if (inscripto.estado === 'inhabilitado') {
+                estadoInscripcion.subtitulo = 'Su inscripción para la vacunación no ha sido posible';
+                estadoInscripcion.body = `Sus datos no pudieron ser validados. Por favor, reintente la inscripción en el grupo correspondiente`;
+                estadoInscripcion.status = 'fail';
             } else {
-                estadoInscripcion.subtitulo = 'Su inscripción para la vacunación se encuentra vigente';
-                estadoInscripcion.body = 'Usted se encuentra en proceso de validación.';
-                estadoInscripcion.status = 'warning';
+                if (inscripto.validado) {
+                    for (const validacion of grupo.validaciones) {
+                        estadoInscripcion = await verificarEstadoInscripcion(inscripto, validacion);
+                    }
+                } else {
+                    estadoInscripcion.subtitulo = 'Su inscripción para la vacunación se encuentra vigente';
+                    estadoInscripcion.body = 'Usted se encuentra en proceso de validación.';
+                    estadoInscripcion.status = 'warning';
+                }
             }
             if (!grupo.mensajeDefault && estadoInscripcion.body === '') {
                 estadoInscripcion.subtitulo = 'Su inscripción para la vacunación se encuentra habilitada';
@@ -53,7 +64,11 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
                 estadoInscripcion.status = 'success';
             } else {
                 if (grupo.mensajeDefault) {
-                    estadoInscripcion = grupo.mensajeDefault;
+                    if (estadoInscripcion.subtitulo === '') {
+                        estadoInscripcion.subtitulo = grupo.mensajeDefault.subtitulo;
+                    }
+                    estadoInscripcion.body = grupo.mensajeDefault.body;
+                    estadoInscripcion.status = 'warning';
                 }
             }
         }
@@ -117,4 +132,66 @@ async function verificarPersonalSalud(inscripcion, validacion) {
     } catch (err) {
         return err;
     }
+}
+
+export async function validarDomicilio(inscripcion) {
+    try {
+        const provincia = provinciaActual || 'neuquen';
+        let domicilio = null;
+        // se verifica el domicilio del paciente asociado a la inscripción
+        if (inscripcion.paciente && inscripcion.paciente.id) {
+            const paciente = await PacienteCtr.findById(inscripcion.paciente.id);
+            domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === replaceChars(provincia));
+        }
+        if (!domicilio) {
+            domicilio = inscripcion.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === replaceChars(provincia));
+        }
+        return domicilio;
+    } catch {
+        return null;
+    }
+}
+
+export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
+    if (inscripcion.grupo && inscripcion.grupo.nombre === 'personal-salud' && !inscripcion.personal_salud) {
+        if (inscripcion.estado === 'habilitado') {
+            inscripcion.personal_salud = true;
+        } else {
+            const profesional = await Profesional.findOne({ documento: inscripcion.documento, sexo: inscripcion.sexo }, { nombre: true, apellido: true });
+            if (!profesional) {
+                // Busco si es personal de salud
+                const personal = await PersonalSaludCtr.findOne({ documento: inscripcion.documento });
+                if (personal) {
+                    inscripcion.personal_salud = true;
+                    inscripcion.estado = 'habilitado';
+                }
+            }
+        }
+    }
+    // Verifica el domicilio del paciente
+    if (!inscripcion.validaciones?.includes('domicilio')) {
+        const domicilio = await validarDomicilio(inscriptoValidado);
+        if (domicilio) {
+            inscripcion.validaciones?.length ? inscripcion.validaciones.push('domicilio') : inscripcion.validaciones = ['domicilio'];
+        }
+    }
+    if (inscriptoValidado && !(inscripcion.paciente && inscripcion.paciente.id)) {
+        // Realizar el matcheo y actualizar
+        const value = await matching(inscriptoValidado, inscripcion);
+        if (value < mpi.cotaMatchMax) {
+            inscripcion.validado = false;
+        } else {
+            await extractFoto(inscriptoValidado, req);
+            const paciente = await findOrCreate(inscriptoValidado, req);
+            const contactos = [{ tipo: 'celular', valor: inscripcion.telefono }, { tipo: 'email', valor: inscripcion.email }];
+            await updateContacto(contactos, paciente, req);
+            if (paciente && paciente.id) {
+                inscripcion.paciente = paciente;
+                inscripcion.paciente.id = paciente.id;
+            }
+        }
+        inscripcion.fechaValidacion = new Date();
+    }
+    return inscripcion;
+
 }
