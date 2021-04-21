@@ -1,3 +1,24 @@
+# [5.42.0](https://github.com/andes/api/compare/v5.41.0...v5.42.0) (2021-04-21)
+
+
+### Bug Fixes
+
+* **cda:** visualizar cda desde andes ([#1342](https://github.com/andes/api/issues/1342)) ([5f7ff99](https://github.com/andes/api/commit/5f7ff99e0cbec23ea9823557a107d0766dcd6d65))
+* **inscripcion:** cambia control para el mensaje de consulta ([#1345](https://github.com/andes/api/issues/1345)) ([1e8412e](https://github.com/andes/api/commit/1e8412e4596bd1df01c192baa04f0b87d8012e88))
+* **mpi:** resuelve error por job que finaliza antes de lo esperado ([#1339](https://github.com/andes/api/issues/1339)) ([51f212c](https://github.com/andes/api/commit/51f212ca2504d72b7fff61a6380ded09551e4e0b))
+* **rup:** ajuste en informe PDF ([#1354](https://github.com/andes/api/issues/1354)) ([b50403f](https://github.com/andes/api/commit/b50403f2f30c35a3f50a0009e8438f6ef87b6437))
+
+
+### Features
+
+* **am:** permitir a familiar consultar laboratorios ([#1281](https://github.com/andes/api/issues/1281)) ([3ca3704](https://github.com/andes/api/commit/3ca37041d9a81c32d2669da9d77547cb062cc015))
+* **COM:** crear derivación como una prestación ([e222ab0](https://github.com/andes/api/commit/e222ab0a92dca828fe3e6b2ce67dc019e95a2f38))
+* **EP:** formEpidemiologia.type.id ([1e31d26](https://github.com/andes/api/commit/1e31d26bd6432ea9d1be58c9091b0a99c46d04e4))
+* **epidemiologia:** buscador fichas epidemiologicas ([a99ee82](https://github.com/andes/api/commit/a99ee828a6fff26673338f3dea4afee15f5feaba))
+* **vac:** audit plugin en inscripcion-vacunas ([#1340](https://github.com/andes/api/issues/1340)) ([6cf0b35](https://github.com/andes/api/commit/6cf0b35d2820126934bd5f67692129c776874563))
+* **vac:** filtro por certificado ([#1341](https://github.com/andes/api/issues/1341)) ([3e2911e](https://github.com/andes/api/commit/3e2911ea69042ada7f7fef0880b733fc6089c5c7))
+* **vac:** restringir permisos de vacunación ([#1344](https://github.com/andes/api/issues/1344)) ([2cccb1f](https://github.com/andes/api/commit/2cccb1ffcebfc3cb68f6645967a797366c6fbc20))
+
 # [5.41.0](https://github.com/andes/api/compare/v5.40.0...v5.41.0) (2021-04-14)
 
 
