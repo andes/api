@@ -3,7 +3,10 @@ import { HTMLComponent } from '../../model/html-component.class';
 
 export async function registroToHTML(prestacion, registro, depth: number) {
     const elementoRUP = registro.elementoRUPObject;
-    registro.params = elementoRUP.params;
+    registro.params = {
+        ...registro.params,
+        ...(elementoRUP.params || {})
+    };
 
     if (!elementoRUP) {
         // tslint:disable-next-line:no-console
