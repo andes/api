@@ -1,7 +1,9 @@
 
 import { Schema, Types, model } from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
+import { ITokenSearch, TokenSearch } from '@andes/mongoose-token-search';
+import { IVacunasInscripcion } from '../inscripcion-vacunas.interface';
 
 export const InscripcionVacunaSchema = new Schema({
     fechaRegistro: Date,
@@ -63,6 +65,7 @@ export const InscripcionVacunaSchema = new Schema({
 });
 
 InscripcionVacunaSchema.plugin(AuditPlugin);
+InscripcionVacunaSchema.plugin(TokenSearch(['documento', 'nombre', 'apellido']));
 InscripcionVacunaSchema.index({
     'paciente.id': 1
 });
@@ -74,5 +77,7 @@ InscripcionVacunaSchema.index({
     sexo: 1
 });
 
-export const InscripcionVacuna = model('inscripcion-vacuna', InscripcionVacunaSchema, 'inscripcion-vacunas');
+export type IVacunasInscripcionDoc = AndesDocWithAudit<IVacunasInscripcion>;
+
+export const InscripcionVacuna = model<IVacunasInscripcionDoc, ITokenSearch<IVacunasInscripcionDoc>>('inscripcion-vacuna', InscripcionVacunaSchema, 'inscripcion-vacunas');
 

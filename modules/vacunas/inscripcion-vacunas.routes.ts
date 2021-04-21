@@ -30,6 +30,7 @@ class InscripcionVacunasResource extends ResourceBase {
         },
         nombre: MongoQuery.partialString,
         apellido: MongoQuery.partialString,
+        tokens: MongoQuery.equalMatch,
         sexo: MongoQuery.equalMatch,
         idPaciente: {
             field: 'paciente.id',
@@ -103,7 +104,13 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async 
         const options = req.apiOptions();
         let conditions = { ...req.query };
         Object.keys(options).map(opt => delete conditions[opt]);
-        const inscriptos = await InscripcionVacunasCtr.search(conditions, options, req);
+        let inscriptos;
+        if (conditions.paciente) {
+            const tokensQuery = InscripcionVacuna.search(conditions.paciente);
+            delete conditions.paciente;
+            conditions.tokens = tokensQuery;
+        }
+        inscriptos = await InscripcionVacunasCtr.search(conditions, options, req);
         return res.json(inscriptos);
     } catch (err) {
         return next(err);
