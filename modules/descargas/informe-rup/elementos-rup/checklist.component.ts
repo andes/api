@@ -29,7 +29,11 @@ export class ChecklistComponent extends HTMLComponent {
         const valores = this.registro.valor;
 
         if (valores) {
-            return valores.map(v => v.term).join('<br>');
+            if (Array.isArray(valores)) {
+                return valores.map(v => v.term).join('<br>');
+            } else {
+                return valores.label || valores.term;
+            }
 
         }
 
