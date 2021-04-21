@@ -12,7 +12,6 @@ import { apiOptionsMiddleware } from '@andes/api-tool';
 import { SendMessageCacheRouter, PacienteAppRouter } from './modules/mobileApp';
 import { initialize as FHIRInitialize } from '@andes/fhir';
 import { registerPartialTemplate } from './utils/roboSender/sendEmail';
-import { setupServicies } from './services';
 
 const proxy = require('express-http-proxy');
 const requireDir = require('require-dir');
@@ -56,7 +55,8 @@ export function initAPI(app: Express) {
     // Inicializa Swagger
     Swagger.initialize(app);
 
-    setupServicies(app);
+    const { setupServices } = require('./services');
+    setupServices(app);
 
     // Carga los módulos y rutas
     for (const m in config.modules) {

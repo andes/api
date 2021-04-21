@@ -1211,14 +1211,18 @@ router.post('/profesionales/formacionPosgrado/titulo', async (req, res, next) =>
 router.post('/profesionales/validar', async (req, res, next) => {
     const { documento, sexo, nroTramite } = req.body;
 
-    const resRenaper = await services.get('renaper').exec({ documento, sexo });
-    // const resRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
+    const resRenaper = await services.get('renaper').exec({
+        documento, sexo
+    });
 
     if (resRenaper && resRenaper.idTramite === Number(nroTramite)) {
         const regexSexo = new RegExp(['^', sexo, '$'].join(''), 'i');
         const profesional = await Profesional.findOne({ documento, sexo: regexSexo, profesionalMatriculado: true });
         const token = await getTemporyTokenCOVID(documento);
-        return profesional ? res.json({ profesional, token }) : next(`El profesional no se encuentra registrado en Andes.`);
+        if (profesional) {
+            return res.json({ profesional, token });
+        }
+        return next(`El profesional no se encuentra registrado en Andes.`);
     } else {
         return next(`No se pudo validar el profesional. Por favor revise los datos ingresados.`);
     }

@@ -154,6 +154,7 @@ export const pushNotificationsSettings = {
 
 // E-mail server settings
 export const enviarMail = {
+    active: getEnv('EMAIL_ACTIVE', 'false', 'b'),
     host: getEnv('EMAIL_HOST', ''),
     port: getEnv('EMAIL_PORT', 587, 'n'),
     secure: getEnv('EMAIL_SECURE', false, 'b'),

@@ -9,7 +9,7 @@ import { asyncHandler } from '@andes/api-tool';
 
 export let services: AndesServices;
 
-export function setupServicies(app: express.Express) {
+export function setupServices(app: express.Express) {
     services = new AndesServices(
         Connections.main,
         Connections.logs

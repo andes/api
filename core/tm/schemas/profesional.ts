@@ -19,6 +19,7 @@ const matriculacionSchema = new mongoose.Schema({
     fin: Date,
     revalidacionNumero: Number
 });
+
 export const ProfesionalSchema = new mongoose.Schema({
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
@@ -130,6 +131,7 @@ ProfesionalSchema.virtual('nombreCompleto').get(function () {
     return this.apellido + ', ' + this.nombre;
 
 });
+
 ProfesionalSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
