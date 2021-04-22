@@ -3,10 +3,9 @@ import * as moment from 'moment';
 import { Agenda } from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
-import * as controller from '../../../core/mpi/controller/paciente';
 import { Auth } from './../../../auth/auth.class';
-import { paciente as pacienteModel } from '../../../core/mpi/schemas/paciente';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { checkCarpeta } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 type Agenda = any;
 
@@ -124,7 +123,7 @@ export function getTurno(req) {
 
                 if (req.query && req.query.pacienteId) {
                     const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
-                    let { paciente } = await buscarPaciente(idPaciente);
+                    const paciente: any = await PacienteCtr.findById(idPaciente);
                     matchTurno['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
                 }
 
@@ -174,7 +173,7 @@ export async function getHistorialPaciente(req) {
     // console.warn('Deprecation warning: getHistorialPaciente is deprecated. Use getHistorialPaciente in core/mpi/controller/paciente');
     if (req.query && req.query.pacienteId) {
         const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
-        let { paciente } = await buscarPaciente(idPaciente);
+        const paciente: any = await PacienteCtr.findById(idPaciente);
         try {
             let pipelineTurno = [];
             let pipelineSobreturno = [];
@@ -343,7 +342,7 @@ export async function getLiberadosPaciente(req) {
     if (req.query && req.query.pacienteId) {
         try {
             const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
-            let { paciente } = await buscarPaciente(idPaciente);
+            const paciente: any = await PacienteCtr.findById(idPaciente);
             const resultado: any = await logPaciente.find(
                 {
                     paciente: { $in: paciente.vinculos },
@@ -382,31 +381,28 @@ export async function getLiberadosPaciente(req) {
  * @param {*} pacienteMPI
  * @returns
  */
-export async function actualizarCarpeta(req: any, res: any, next: any, pacienteMPI: any, carpetas) {
+export async function actualizarCarpeta(req: any, res: any, next: any, paciente: any, carpetas) {
     let carpetasAux = (carpetas && carpetas.length > 0) ? (carpetas[0] as any).carpetaEfectores : [];
-    if (pacienteMPI) {
-        if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
-            if (carpetasAux.length < pacienteMPI.paciente.carpetaEfectores.length) {
-                req.body.carpetaEfectores = pacienteMPI.paciente.carpetaEfectores;
+    if (paciente) {
+        if (paciente.carpetaEfectores.length) {
+            if (carpetasAux.length < paciente.carpetaEfectores.length) {
+                req.body.carpetaEfectores = paciente.carpetaEfectores;
             } else {
                 if (carpetasAux) {
                     req.body.carpetaEfectores = carpetasAux;
                 }
             }
         } else {
-            if (carpetas.length > 0) {
+            if (carpetas.length) {
                 req.body.carpetaEfectores = carpetasAux;
             }
         }
-        const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
+        const repetida = await checkCarpeta(req);
         if (!repetida) {
-            controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
-            // controller.updateTurnosPaciente(pacienteMPI.paciente);
+            paciente.carpetaEfectores = req.body.carpetaEfectores;
+            await PacienteCtr.update(paciente.id, paciente, req);
         } else {
             return next('El nÚmero de carpeta ya existe');
         }
-        let pacienteAndes = pacienteMPI.paciente;
-        Auth.audit(pacienteAndes, req);
-        await pacienteAndes.save();
     }
 }
