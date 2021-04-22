@@ -3,6 +3,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { DireccionSchema } from '../../../shared/schemas/direccion';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 import { TipoTrasladoSchema } from './tipoTraslado.schema';
+import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
 export const ESTADOS_DERIVACION = ['solicitada', 'habilitada', 'inhabilitada', 'asignada', 'rechazada', 'aceptada', 'finalizada', 'encomendada'];
 
@@ -19,6 +20,7 @@ let DerivacionHistorialSchema = new mongoose.Schema({
         id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' },
         nombre: String
     },
+    unidadDestino: SnomedConcept,
     observacion: String,
     adjuntos: mongoose.Schema.Types.Mixed,
     eliminado: Boolean
@@ -50,6 +52,7 @@ export const DerivacionSchema = new mongoose.Schema({
         },
         required: true
     },
+    unidadDestino: SnomedConcept,
     organizacionTraslado: {
         type: {
             nombre: String,
