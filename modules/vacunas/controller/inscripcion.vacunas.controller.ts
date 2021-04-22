@@ -22,7 +22,7 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
     const inscripto = await InscripcionVacunasCtr.findOne({
         documento,
         sexo
-    });
+    }, { sort: '-fechaRegistro' });
     let estadoInscripcion: IEstadoInscripcion = { titulo: '', subtitulo: '', body: '', status: 'warning' };
     if (!inscripto) {
         estadoInscripcion.titulo = `Inscripción inexistente`;
@@ -93,7 +93,7 @@ async function verificarDomicilioInscripcion(inscripcion, validacion) {
             // se verifica el domicilio del paciente
             if (inscripcion.paciente && inscripcion.paciente.id) {
                 const paciente = await PacienteCtr.findById(inscripcion.paciente.id);
-                const domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia.nombre && replaceChars(dir.ubicacion.provincia.nombre as any).toLowerCase() === validacion.provincia);
+                const domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === validacion.provincia);
                 if (!domicilio) {
                     return validacion.mensajeError;
                 }
