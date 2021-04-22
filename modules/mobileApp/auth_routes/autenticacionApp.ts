@@ -6,7 +6,10 @@ import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from '../../../config.private';
-import { asyncify } from 'async';
+import { validar } from '../../../core-v2/mpi/validacion';
+import { findOrCreate, extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { PacienteAppCtr } from '../pacienteApp.routes';
+import { generarCodigoVerificacion, enviarCodigoVerificacion } from '../controller/AuthController';
 
 const router = express.Router();
 
@@ -184,7 +187,6 @@ router.post('/reestablecer-password', (req, res, next) => {
     });
 });
 
-
 /**
  * envio de emails desde la app mobile
  * @param {string} email  email del usuario
@@ -214,6 +216,55 @@ router.post('/mailGenerico', async (req, res, next) => {
 
     let respuesta = await SendEmail.sendMail(data);
     return res.json(respuesta);
+});
+
+router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => {
+    try {
+        const documento = req.body.documento;
+        const sexo = req.body.sexo;
+        const email = req.body.email;
+        // Verifica si se encuentra inscripto previamente
+        const pacienteApp = await PacienteAppCtr.findOne({ email });
+        if (!pacienteApp) {
+            req.body.validado = false;
+            req.body.estado = 'pendiente';
+            // Realiza la búsqueda en Renaper
+            const pacienteValidado = await validar(documento, sexo);
+            if (pacienteValidado) {
+                const tramite = Number(req.body.tramite);
+                // Verifica el número de trámite
+                if (pacienteValidado.idTramite !== tramite) {
+                    return res.status(404).send('Número de trámite inválido');
+                }
+                req.body.nombre = pacienteValidado.nombre;
+                req.body.apellido = pacienteValidado.apellido;
+                req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
+                req.body.validado = true;
+            } else {
+                return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
+            }
+            // Busca el paciente y si no existe lo guarda
+            await extractFoto(pacienteValidado, configPrivate.userScheduler);
+            const paciente = await findOrCreate(pacienteValidado, configPrivate.userScheduler);
+            let inscripcion = {};
+            if (paciente && paciente.id) {
+                const passw = generarCodigoVerificacion();
+                req.body.pacientes = [{
+                    id: paciente.id,
+                    relacion: 'principal',
+                    addedAt: new Date()
+                }],
+                    req.body.password = passw;
+                inscripcion = await PacienteAppCtr.create(req.body, req);
+                enviarCodigoVerificacion(inscripcion, passw);
+            }
+            return res.json(inscripcion);
+        } else {
+            return res.status(404).send('Ya existe una cuenta registrada con el email ingresado');
+        }
+    } catch (err) {
+        return next(err);
+    }
 });
 
 export = router;

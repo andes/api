@@ -135,15 +135,8 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
     }
 });
 
-InscripcionVacunasRouter.post('/inscripcion-vacunas', async (req: Request, res, next) => {
+InscripcionVacunasRouter.post('/inscripcion-vacunas', Auth.validateCaptcha(), async (req: Request, res, next) => {
     try {
-        // Verifica el recaptcha
-        if (captcha.enabled) {
-            const verificar = await validarToken(req.body.recaptcha);
-            if (!verificar) {
-                return next('Error recaptcha');
-            }
-        }
         const documento = req.body.documento;
         const sexo = req.body.sexo;
         req.body.nombre = req.body.nombre.toUpperCase();
