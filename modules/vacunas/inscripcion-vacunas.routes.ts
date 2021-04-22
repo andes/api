@@ -16,7 +16,7 @@ class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
     resourceModule = 'vacunas';
     resourceName = 'inscripcion-vacunas';
-    routesEnable = ['put'];
+    routesEnable = ['put', 'post'];
     middlewares = [Auth.authenticate()];
     searchFileds = {
         documento: MongoQuery.matchString,
@@ -135,7 +135,7 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
     }
 });
 
-InscripcionVacunasRouter.post('/inscripcion-vacunas', Auth.validateCaptcha(), async (req: Request, res, next) => {
+InscripcionVacunasRouter.post('/inscripcion-vacunas/registro', async (req: Request, res, next) => {
     try {
         const documento = req.body.documento;
         const sexo = req.body.sexo;
