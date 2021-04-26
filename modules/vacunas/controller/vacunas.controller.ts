@@ -1,12 +1,12 @@
-import { IPaciente } from './../../../core-v2/mpi/paciente/paciente.interface';
-import { vacunasApi } from '../schemas/vacunasApi';
 import * as moment from 'moment';
-import { InformacionExportada } from '../../../core/log/schemas/logExportaInformacion';
-import { handleHttpRequest } from '../../../utils/requestHandler';
-import { sisa } from '../../../config.private';
-import { Prestacion } from '../../../modules/rup/schemas/prestacion';
-import { matching } from '../../../core-v2/mpi/paciente/paciente.controller';
 import * as mongoose from 'mongoose';
+import { sisa } from '../../../config.private';
+import { matching } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { InformacionExportada } from '../../../core/log/schemas/logExportaInformacion';
+import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { handleHttpRequest } from '../../../utils/requestHandler';
+import { vacunasApi } from '../schemas/vacunasApi';
+import { IPaciente } from './../../../core-v2/mpi/paciente/paciente.interface';
 
 export async function getVacunas(paciente) {
     const conditions = {
@@ -44,14 +44,13 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
     const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
     const end = hasta ? moment(hasta).toDate() : moment().toDate();
     let match = {
+        $and: [{
+            'ejecucion.fecha': { $gte: start, $lte: end }
+        }],
         'estadoActual.tipo': 'validada',
         'ejecucion.registros.concepto.conceptId': '840534001'
     };
-    if (horas) {
-        match['ejecucion.fecha'] = {
-            $gte: start, $lte: end
-        };
-    }
+
     if (pacienteId) {
         match['paciente.id'] = mongoose.Types.ObjectId(pacienteId);
     }
@@ -139,47 +138,47 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
     ];
     const prestaciones = await Prestacion.aggregate(pipelineVacunaCovid19);
     for (let unaPrestacion of prestaciones) {
-        const data = {
-            ciudadano:
-            {
-                tipoDocumento: 1,
-                numeroDocumento: unaPrestacion.dni,
-                sexo: unaPrestacion.sexo === 'femenino' ? 'F' : (unaPrestacion.sexo === 'masculino') ? 'M' : '',
-                nombre: unaPrestacion.nombre,
-                apellido: unaPrestacion.apellido,
-                fechaNacimiento: unaPrestacion.fechaNacimiento,
-                calle: unaPrestacion.direccion ? unaPrestacion.direccion : '',
-                pais: 200,
-                provincia: 15,
-                departamento: 365  // Confluencia, luego updetear por el que corresponda
-            },
-            aplicacionVacuna:
-            {
-                establecimiento: unaPrestacion.CodigoSisa,
-                fechaAplicacion: unaPrestacion.vacunas[0].fechaAplicacion ? moment(unaPrestacion.vacunas[0].fechaAplicacion).format('DD-MM-YYYY') : null,
-                lote: unaPrestacion.vacunas[0].lote,
-                esquema: unaPrestacion.vacunas[0].esquema.codigo,
-                condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
-                vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
-                ordenDosis: unaPrestacion.vacunas[0].dosis.orden,
-                referenciaSistemaProvincial: '32342'   // faltaría ver bien que es esto, aunque no es obligatorio
-            }
-        };
-        const dto = {
-            ciudadano: data.ciudadano,
-            aplicacionVacuna: data.aplicacionVacuna
-        };
-
-        let log = {
-            fecha: new Date(),
-            sistema: 'Nomivac',
-            key: unaPrestacion.tipo,
-            idPaciente: unaPrestacion.idPaciente,
-            info_enviada: data,
-            resultado: {}
-        };
-
         try {
+            const data = {
+                ciudadano:
+                {
+                    tipoDocumento: 1,
+                    numeroDocumento: unaPrestacion.dni,
+                    sexo: unaPrestacion.sexo === 'femenino' ? 'F' : (unaPrestacion.sexo === 'masculino') ? 'M' : '',
+                    nombre: unaPrestacion.nombre,
+                    apellido: unaPrestacion.apellido,
+                    fechaNacimiento: unaPrestacion.fechaNacimiento,
+                    calle: unaPrestacion.direccion ? unaPrestacion.direccion : '',
+                    pais: 200,
+                    provincia: 15,
+                    departamento: 365  // Confluencia, luego updetear por el que corresponda
+                },
+                aplicacionVacuna:
+                {
+                    establecimiento: unaPrestacion.CodigoSisa,
+                    fechaAplicacion: unaPrestacion.vacunas[0].fechaAplicacion ? moment(unaPrestacion.vacunas[0].fechaAplicacion).format('DD-MM-YYYY') : null,
+                    lote: unaPrestacion.vacunas[0].lote,
+                    esquema: unaPrestacion.vacunas[0].esquema.codigo,
+                    condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
+                    vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
+                    ordenDosis: unaPrestacion.vacunas[0].dosis.orden,
+                    referenciaSistemaProvincial: '32342'   // faltaría ver bien que es esto, aunque no es obligatorio
+                }
+            };
+            const dto = {
+                ciudadano: data.ciudadano,
+                aplicacionVacuna: data.aplicacionVacuna
+            };
+
+            let log = {
+                fecha: new Date(),
+                sistema: 'Nomivac',
+                key: unaPrestacion.tipo,
+                idPaciente: unaPrestacion.idPaciente,
+                info_enviada: data,
+                resultado: {}
+            };
+
             const options = {
                 uri: urlSisa,
                 method: 'POST',
@@ -208,13 +207,20 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
             }
             let info = new InformacionExportada(log);
             await info.save();
+
         } catch (error) {
-            log.resultado = {
-                resultado: 'ERROR_DE_ENVIO',
-                status: 500,
-                description: error.toString()
+            const logEspecial = {
+                fecha: new Date(),
+                sistema: 'Nomivac',
+                key: unaPrestacion.tipo,
+                idPaciente: unaPrestacion.idPaciente,
+                resultado: {
+                    resultado: 'ERROR EN LOS DATOS',
+                    status: 500,
+                    description: error
+                }
             };
-            let info = new InformacionExportada(log);
+            let info = new InformacionExportada(logEspecial);
             await info.save();
         }
     }
