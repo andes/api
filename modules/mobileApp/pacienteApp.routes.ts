@@ -11,6 +11,7 @@ class PacienteAppResource extends ResourceBase {
     searchFileds = {
         documento: MongoQuery.partialString,
         email: MongoQuery.partialString,
+        sexo: MongoQuery.partialString,
         search: ['documento']
     };
 }
