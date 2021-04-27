@@ -64,7 +64,7 @@ export async function procesar(parametros: any) {
                 ambito: prestacion.solicitud.ambitoOrigen
             };
 
-            if (prestacion.paciente && prestacion.paciente.obraSocial === os || os === 'todos') {
+            if (prestacion.paciente?.obraSocial?.financiador === os || os === 'todos') {
                 dtoPrestacion['financiador'] = prestacion.paciente.obraSocial;
                 filtroOS = true;
             } else {
