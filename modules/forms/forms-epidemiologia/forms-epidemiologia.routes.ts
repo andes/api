@@ -1,6 +1,6 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { FormsEpidemiologia } from './forms-epidemiologia-schema';
 import { Auth } from '../../../auth/auth.class';
+import { FormsEpidemiologia } from './forms-epidemiologia-schema';
 
 class FormsEpidemiologiaResource extends ResourceBase {
     Model = FormsEpidemiologia;

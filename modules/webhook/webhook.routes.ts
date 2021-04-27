@@ -1,12 +1,12 @@
-import { WebHook } from './webhook.schema';
-import { Auth } from '../../auth/auth.class';
-import { MongoQuery, ResourceBase } from '@andes/core';
-import { findOrCreate } from '../../core-v2/mpi/paciente/paciente.controller';
-import { PacienteCtr } from '../../core-v2/mpi/paciente/paciente.routes';
-import { PatientNotFound } from '../../core-v2/mpi/paciente/paciente.error';
 import { asyncHandler } from '@andes/api-tool';
-import * as moment from 'moment';
+import { MongoQuery, ResourceBase } from '@andes/core';
 import { EventCore } from '@andes/event-bus/';
+import * as moment from 'moment';
+import { Auth } from '../../auth/auth.class';
+import { findOrCreate } from '../../core-v2/mpi/paciente/paciente.controller';
+import { PatientNotFound } from '../../core-v2/mpi/paciente/paciente.error';
+import { PacienteCtr } from '../../core-v2/mpi/paciente/paciente.routes';
+import { WebHook } from './webhook.schema';
 
 class WebhookResource extends ResourceBase {
     Model = WebHook;
@@ -46,6 +46,18 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
             }
             EventCore.emitAsync('notification:patient:laboratory', paciente);
             await PacienteCtr.update(paciente.id, paciente, req as any);
+            const data = {
+                paciente,
+                protocolo: query.protocolo ? query.protocolo : null,
+                resultado: query.resultado ? query.resultado : null
+            };
+            /* Nueva información que viene desde el laboratorio:
+                1) Nos permitirá dar resultado por sms (cuando den el ok).
+                2) Nos permite actualizar la información de PCR automáticamente en la ficha
+            */
+            if (data.resultado) {
+                EventCore.emitAsync('notification:fichaEpidemiologica:laboratory', data);
+            }
         }
         return res.json(paciente);
     }
