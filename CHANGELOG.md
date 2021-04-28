@@ -1,3 +1,21 @@
+# [5.43.0](https://github.com/andes/api/compare/v5.42.0...v5.43.0) (2021-04-28)
+
+
+### Bug Fixes
+
+* **AM:** Control de unico email por usuario app ([#1361](https://github.com/andes/api/issues/1361)) ([c426112](https://github.com/andes/api/commit/c426112cc81b2a5185e55273387f9870abda7742))
+* **inscripcion:** cambia control de nro de trámite ([#1359](https://github.com/andes/api/issues/1359)) ([a92628f](https://github.com/andes/api/commit/a92628f5626953fb42a06d1f35625cb95b9d7da7))
+* **jobVacunas:** Se fixea un error que rompe el proceso y se agrega a la query cuando se hace por fecha ([f2951a3](https://github.com/andes/api/commit/f2951a3c8511fb4185bf965726fb95498d4fb3df))
+
+
+### Features
+
+* **am:** permitir el registro de nuevos paciente desde la app ([#1292](https://github.com/andes/api/issues/1292)) ([acf5173](https://github.com/andes/api/commit/acf5173905315eae2c6c00b060c31eb899d9d9c3))
+* **fichaEpidemio:** Se agregan eventos para realizar diferentes tareas ([be521f3](https://github.com/andes/api/commit/be521f3990111b772f9b1e77a006ca7aeb7c520d))
+* **fichaEpidemiologia:** Permite actualizar información de pcr dado un evento de notificación ([9e5d771](https://github.com/andes/api/commit/9e5d77160a88c0f69844ead2e989abbc4a3e23bc))
+* **vac:** nueva ruta post para registrar con paciente ([#1332](https://github.com/andes/api/issues/1332)) ([8d451d7](https://github.com/andes/api/commit/8d451d7a96d8efb4814f08d7e3f9c1617df4ebf1))
+* **vac:** token para filtrar por dni, nombre y apellido ([#1353](https://github.com/andes/api/issues/1353)) ([1fe9c7d](https://github.com/andes/api/commit/1fe9c7d0fae4d5f0c00b3c4dfcc023e7823ba1e7))
+
 # [5.42.0](https://github.com/andes/api/compare/v5.41.0...v5.42.0) (2021-04-21)
 
 
