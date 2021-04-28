@@ -1,13 +1,13 @@
 import { Types } from 'mongoose';
 import { InformePDF, getAssetsURL } from '../model/informe.class';
 import { Prestacion } from '../../rup/schemas/prestacion';
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { InformeRupHeader } from './informe-header';
 import { InformeRupBody } from './informe-body';
 import { InformeRupFooter } from './informe-footer';
 import { elementosRUPAsSet, fulfillPrestacion } from '../../rup/controllers/elementos-rup.controller';
 import { findByPaciente } from '../../rup/internacion/camas.controller';
+import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 export class InformeRUP extends InformePDF {
 
@@ -21,7 +21,7 @@ export class InformeRUP extends InformePDF {
 
     public async process() {
         const prestacion: any = await Prestacion.findById(this.prestacionId);
-        const { paciente } = await buscarPaciente(prestacion.paciente.id);
+        const paciente = await findById(prestacion.paciente.id);
         const organizacion = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
         const elementosRUPSet = await elementosRUPAsSet();
 
@@ -33,7 +33,7 @@ export class InformeRUP extends InformePDF {
         this.body = new InformeRupBody(prestacion, paciente, organizacion, this.registroId);
         this.footer = new InformeRupFooter(prestacion, paciente, organizacion, this.usuario);
 
-        // Obligatorio por ahora llamar al proccess de la clase abstracta
+        // Obligatorio por ahora para llamar al proccess de la clase abstracta
         await super.process();
     }
 
