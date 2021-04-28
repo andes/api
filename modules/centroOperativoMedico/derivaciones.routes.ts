@@ -88,6 +88,8 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                 derivacion.organizacionDestino = nuevoEstado.organizacionDestino;
             }
 
+            derivacion.unidadDestino = nuevoEstado.unidadDestino;
+
             if (req.body.trasladoEspecial) {
                 derivacion.organizacionTraslado = req.body.trasladoEspecial.organizacionTraslado;
                 derivacion.tipoTraslado = req.body.trasladoEspecial.tipoTraslado;

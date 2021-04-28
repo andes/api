@@ -68,6 +68,13 @@ export class DerivacionBody extends HTMLComponent {
                         {{ organizacionDestino }}</span>
                 </div>
             </div>
+            {{#if unidadDestino }}
+            <div class="row">
+                <div class="col">
+                    <span>UNIDAD DESTINO: {{ unidadDestino }}</span>
+                </div>
+            </div>
+            {{/if}}
             <div class="row">
                 <div class="col">
                     <span>FECHA Y HORA DE DERIVACIÓN: {{ fecha }} hs</span>
@@ -138,6 +145,7 @@ export class DerivacionBody extends HTMLComponent {
             obraSocial: this.derivacion.paciente.obraSocial,
             organizacionOrigen: this.derivacion.organizacionOrigen.nombre,
             organizacionDestino: this.derivacion.organizacionDestino.nombre,
+            unidadDestino: this.derivacion.unidadDestino?.term,
             fecha: moment(this.derivacion.historial[0].createdAt).format('DD/MM/YYYY HH:mm'),
             finalizada,
             fechaFinalizacion: moment(fechaFinalizacion).format('DD/MM/YYYY HH:mm'),
