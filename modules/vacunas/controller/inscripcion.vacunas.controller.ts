@@ -7,6 +7,7 @@ import { Profesional } from '../../../core/tm/schemas/profesional';
 import { PersonalSaludCtr } from '../../../modules/personalSalud';
 import { mpi } from '../../../config';
 import { findOrCreate, extractFoto, matching, updateContacto } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { validar } from '../../../core-v2/mpi/validacion';
 
 export interface IEstadoInscripcion {
     titulo: String;
@@ -44,7 +45,8 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
         } else {
             if (inscripto.estado === 'inhabilitado') {
                 estadoInscripcion.subtitulo = 'Su inscripción para la vacunación no ha sido posible';
-                estadoInscripcion.body = `Sus datos no pudieron ser validados. Por favor, reintente la inscripción en el grupo correspondiente`;
+                estadoInscripcion.body = `Si usted considera que este mensaje es erróneo,
+                por favor envie un email a inscripcionvacuna@neuquen.gov.ar `;
                 estadoInscripcion.status = 'fail';
             } else {
                 if (inscripto.validado) {
@@ -153,6 +155,7 @@ export async function validarDomicilio(inscripcion) {
 }
 
 export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
+
     if (inscripcion.grupo && inscripcion.grupo.nombre === 'personal-salud' && !inscripcion.personal_salud) {
         if (inscripcion.estado === 'habilitado') {
             inscripcion.personal_salud = true;
@@ -170,27 +173,39 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
     }
     // Verifica el domicilio del paciente
     if (!inscripcion.validaciones?.includes('domicilio')) {
+        if (!inscriptoValidado) {
+            inscriptoValidado = await validar(inscripcion.documento, inscripcion.sexo);
+        }
         const domicilio = await validarDomicilio(inscriptoValidado);
         if (domicilio) {
             inscripcion.validaciones?.length ? inscripcion.validaciones.push('domicilio') : inscripcion.validaciones = ['domicilio'];
         }
     }
-    if (inscriptoValidado && !(inscripcion.paciente && inscripcion.paciente.id)) {
+    let paciente = null;
+    if (!(inscripcion.paciente && inscripcion.paciente.id)) {
         // Realizar el matcheo y actualizar
+        if (!inscriptoValidado) {
+            inscriptoValidado = await validar(inscripcion.documento, inscripcion.sexo);
+        }
         const value = await matching(inscriptoValidado, inscripcion);
         if (value < mpi.cotaMatchMax) {
             inscripcion.validado = false;
         } else {
             await extractFoto(inscriptoValidado, req);
-            const paciente = await findOrCreate(inscriptoValidado, req);
-            const contactos = [{ tipo: 'celular', valor: inscripcion.telefono }, { tipo: 'email', valor: inscripcion.email }];
-            await updateContacto(contactos, paciente, req);
+            paciente = await findOrCreate(inscriptoValidado, req);
             if (paciente && paciente.id) {
                 inscripcion.paciente = paciente;
                 inscripcion.paciente.id = paciente.id;
+                inscripcion.validado = true;
             }
         }
         inscripcion.fechaValidacion = new Date();
+    } else {
+        paciente = await PacienteCtr.findById(inscripcion.paciente.id);
+    }
+    if (paciente) {
+        const contactos = [{ tipo: 'celular', valor: inscripcion.telefono }, { tipo: 'email', valor: inscripcion.email }];
+        await updateContacto(contactos, paciente, req);
     }
     return inscripcion;
 
