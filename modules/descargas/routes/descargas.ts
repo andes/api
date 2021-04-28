@@ -16,11 +16,15 @@ import { getArchivoAdjunto } from '../../../modules/rup/controllers/rup';
 
 const router = express.Router();
 
-router.post('/comprobanteDerivacion', async (req: any, res) => {
-    let derivacion = new Derivacion(req);
-    const opciones = { header: { height: '3cm' } };
-    const fileName: any = await derivacion.informe(opciones);
-    res.download(fileName);
+router.post('/comprobanteDerivacion', async (req: any, res, next) => {
+    try {
+        let derivacion = new Derivacion(req);
+        const opciones = { header: { height: '3cm' } };
+        const fileName: any = await derivacion.informe(opciones);
+        res.download(fileName);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 /**
