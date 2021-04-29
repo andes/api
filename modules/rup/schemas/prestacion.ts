@@ -1,11 +1,11 @@
-import { SchemaTypes, Schema, model, Types } from 'mongoose';
-import * as registro from './prestacion.registro';
-import { SemanticTag } from './semantic-tag';
-import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
-import { PrestacionEstadoSchema } from './prestacion.estado';
-import { iterate, convertToObjectId } from '../controllers/rup';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
+import { convertToObjectId, iterate } from '../controllers/rup';
+import { PrestacionEstadoSchema } from './prestacion.estado';
+import * as registro from './prestacion.registro';
+import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
+import { SemanticTag } from './semantic-tag';
 
 
 export const PrestacionSchema = new Schema({
@@ -24,7 +24,8 @@ export const PrestacionSchema = new Schema({
         telefono: String,
         sexo: String,
         fechaNacimiento: Date,
-        obraSocial: ObraSocialSchema
+        obraSocial: ObraSocialSchema,
+        idPacienteValidado: Schema.Types.ObjectId
     },
     noNominalizada: {
         type: Boolean,
@@ -236,7 +237,7 @@ function getAll(registros: any[]) {
     for (let i = 0; i < registros.length; i++) {
         const reg = registros[i];
         resultado = [...resultado, reg];
-        if (reg.registros ?.length) {
+        if (reg.registros?.length) {
             const rs = getAll(reg.registros);
             resultado = [...resultado, ...rs];
         }

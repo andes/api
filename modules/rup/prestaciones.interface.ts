@@ -1,8 +1,8 @@
 import { ObjectId } from '@andes/core';
+import { Document } from 'mongoose';
 import { IFinanciador } from '../../core-v2/mpi/financiador';
 import { IOrganizacion } from '../../core/tm/interfaces/IOrganizacion';
 import { ISnomedConcept } from './schemas/snomed-concept';
-import { Document } from 'mongoose';
 
 export interface IPrestacion {
     id: ObjectId;
@@ -14,7 +14,8 @@ export interface IPrestacion {
         telefono: string;
         sexo: string;
         fechaNacimiento: Date;
-        obraSocial: IFinanciador
+        obraSocial: IFinanciador,
+        idPacienteValidado?: ObjectId
     };
     inicio: 'top' | 'agenda' | 'fuera-agenda' | 'internacion';
     noNominalizada: boolean;
