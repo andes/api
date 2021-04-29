@@ -1,12 +1,13 @@
-import { SchemaTypes, Schema, model, Types } from 'mongoose';
-import * as registro from './prestacion.registro';
-import { SemanticTag } from './semantic-tag';
-import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
-import { PrestacionEstadoSchema } from './prestacion.estado';
-import { iterate, convertToObjectId } from '../controllers/rup';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import { convertToObjectId, iterate } from '../controllers/rup';
+import { PrestacionEstadoSchema } from './prestacion.estado';
+import * as registro from './prestacion.registro';
+import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
+import { SemanticTag } from './semantic-tag';
+
 
 export const PrestacionSchema = new Schema({
     trackId: { required: false, type: Schema.Types.ObjectId },
@@ -24,7 +25,8 @@ export const PrestacionSchema = new Schema({
         telefono: String,
         sexo: String,
         fechaNacimiento: Date,
-        obraSocial: ObraSocialSchema
+        obraSocial: ObraSocialSchema,
+        idPacienteValidado: Schema.Types.ObjectId
     },
     noNominalizada: {
         type: Boolean,

@@ -1,14 +1,14 @@
+import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { Request, Response, asyncHandler } from '@andes/api-tool';
-import { Auth } from '../../../auth/auth.class';
-import { Paciente } from './paciente.schema';
-import { suggest, multimatch, make, findById, set, extractFoto } from './paciente.controller';
-import * as mongoose from 'mongoose';
-import { PatientNotFound } from './paciente.error';
-import { EventCore } from '@andes/event-bus';
-import { IPacienteDoc } from './paciente.interface';
-import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { AndesDrive } from '@andes/drive';
+import { EventCore } from '@andes/event-bus';
+import * as mongoose from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
+import { extractFoto, findById, make, multimatch, set, suggest } from './paciente.controller';
+import { PatientNotFound } from './paciente.error';
+import { IPacienteDoc } from './paciente.interface';
+import { Paciente } from './paciente.schema';
 
 class PacienteResource extends ResourceBase<IPacienteDoc> {
     Model = Paciente;
@@ -251,13 +251,15 @@ export const patch = async (req: Request, res: Response) => {
     const body = req.body;
     let paciente = await findById(id);
     if (paciente) {
-
+        // Acordamos crear una ruta específica para linkeo
+        EventCore.emitAsync('mpi:pacientes:link', paciente);
         await extractFoto(body, req);
 
         paciente = set(paciente, body);
         const updated = await PacienteCtr.update(id, paciente, req);
         return res.json(updated);
     }
+
     throw new PatientNotFound();
 };
 
