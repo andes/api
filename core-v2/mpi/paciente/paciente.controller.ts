@@ -12,6 +12,8 @@ import { FileMetadata, AndesDrive } from '@andes/drive';
 import * as Barrio from '../../../core/tm/schemas/barrio';
 import * as configPrivate from '../../../config.private';
 import * as config from '../../../config';
+import { IContacto } from '../../../shared/Contacto.interface';
+
 
 /**
  * Crea un objeto paciente
@@ -304,5 +306,29 @@ export async function extractFoto(paciente, req) {
     if (paciente.foto && paciente.fotoId) {
         await storePhoto(paciente.foto, paciente.fotoId, req);
         paciente.foto = null;
+    }
+}
+
+export async function updateContacto(contactos, paciente, req) {
+    if (contactos.length > 0) {
+        let contactosPaciente = paciente.contacto || [];
+        contactos.forEach((contacto) => {
+            let contactoFound = null;
+            if (paciente.contacto && paciente.contacto.length >= 0) {
+                contactoFound = paciente.contacto.find(c => c && c.valor && (c.valor === contacto.valor));
+            }
+            if (!contactoFound) {
+                const nuevoContacto: IContacto = {
+                    activo: true,
+                    tipo: contacto.tipo,
+                    valor: contacto.valor,
+                    ranking: 0,
+                    ultimaActualizacion: new Date()
+                };
+                contactosPaciente.push(nuevoContacto);
+            }
+        });
+        paciente.contacto = contactosPaciente;
+        await PacienteCtr.update(paciente.id, paciente, req as any);
     }
 }

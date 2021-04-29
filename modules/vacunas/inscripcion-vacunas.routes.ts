@@ -8,9 +8,8 @@ import { matching } from '../../core-v2/mpi/paciente/paciente.controller';
 import { mpi } from '../../config';
 import { handleHttpRequest } from '../../utils/requestHandler';
 import { captcha, userScheduler } from './../../config.private';
-import { mensajeEstadoInscripcion } from './controller/inscripcion.vacunas.controller';
-import { provincia as provinciaActual } from '../../config.private';
-import { replaceChars } from '../../core-v2/mpi';
+import { mensajeEstadoInscripcion, validarDomicilio, validarInscripcion } from './controller/inscripcion.vacunas.controller';
+import { IInscripcionVacunas } from './interfaces/inscripcion-vacunas.interface';
 
 class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
@@ -48,6 +47,7 @@ class InscripcionVacunasResource extends ResourceBase {
                 return { $exists: value };
             }
         },
+        estado: MongoQuery.equalMatch,
         fechaRegistro: MongoQuery.matchDate.withField('fechaRegistro'),
         grupos: MongoQuery.inArray.withField('grupo.nombre'),
         validado: MongoQuery.equalMatch
@@ -119,21 +119,22 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async 
 
 InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), async (req: Request, res, next) => {
     try {
-        const inscripto = await InscripcionVacunasCtr.findById(req.params.id);
+        let inscripto: IInscripcionVacunas = req.body;
         if (inscripto) {
-            const inscriptoValidado = await validar(req.body.documento, req.body.sexo);
-            if (inscriptoValidado) {
-                const provincia = provinciaActual || 'neuquen';
-                const provinciaInscripto = inscriptoValidado.direccion.length ? inscriptoValidado.direccion[0].ubicacion.provincia?.nombre : '';
-                if (replaceChars(provinciaInscripto).toLowerCase() === replaceChars(provincia) && !req.body.validaciones.includes('domicilio')) {
-                    req.body.validaciones?.length ? req.body.validaciones.push('domicilio') : req.body.validaciones = ['domicilio'];
-                    req.body.localidad = inscriptoValidado.direccion[0].ubicacion.localidad;
+            if (!inscripto.validaciones?.includes('domicilio')) {
+                const domicilio = await validarDomicilio(inscripto);
+                if (domicilio) {
+                    inscripto.validaciones?.length ? inscripto.validaciones.push('domicilio') : inscripto.validaciones = ['domicilio'];
                 }
             }
-            if (req.body.estado === 'habilitado' && req.body.grupo.nombre === 'personal-salud') {
-                req.body.personal_salud = true;
+            if (!inscripto.validaciones?.includes('domicilio') || inscripto.validado === false) {
+                const inscriptoValidado = await validar(inscripto.documento as any, inscripto.sexo as any);
+                inscripto = await validarInscripcion(req.body, inscriptoValidado, req);
             }
-            const updated = await InscripcionVacunasCtr.update(inscripto.id, req.body, req);
+            if (inscripto.estado === 'habilitado' && req.body.grupo.nombre === 'personal-salud') {
+                inscripto.personal_salud = true;
+            }
+            const updated = await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
             return res.json(updated);
         } else {
             return next('No se encuentra la inscripción');
