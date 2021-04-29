@@ -1,13 +1,13 @@
-import { ParentescoSchema } from '../parentesco.schema';
 import * as mongoose from 'mongoose';
 import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
 import { ObraSocialSchema } from '../../../modules/obraSocial/schemas/obraSocial';
-import * as constantes from './constantes';
+import * as constantes from '../../../core-v2/mpi/paciente/constantes';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as pac from '../controller/paciente';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { ParentescoSchema } from '../../../core-v2/mpi/parentesco/parentesco.schema';
 
 const mongoose_fuzzy_searching = require('mongoose-fuzzy-searching');
 

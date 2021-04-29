@@ -59,13 +59,6 @@ export const modules = {
         route: '/core/status',
         middleware: null, // Son APIs públicas
     },
-    mpi: {
-        active: true,
-        path: './core/mpi/routes',
-        route: '/core/mpi',
-        // TODO activar middleware de autenticación
-        middleware: appMiddleware
-    },
     turnos: {
         active: true,
         path: './modules/turnos/routes',
