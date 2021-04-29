@@ -670,6 +670,11 @@ export default [
                 key: 'read',
                 title: 'Visualizar ficha',
                 type: 'boolean'
+            },
+            {
+                key: 'historial',
+                title: 'Ver historial',
+                type: 'boolean'
             }
         ]
     }
