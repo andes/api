@@ -2,7 +2,7 @@ import { PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as authController from '../controller/AuthController';
-import * as controllerPaciente from '../../../core/mpi/controller/paciente';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 const router = express.Router();
 
@@ -43,9 +43,7 @@ router.post('/create/:id', (req: any, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
-    return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
-        const pacienteObj = resultado.paciente;
-
+    return PacienteCtr.findById(pacienteId).then((pacienteObj) => {
         authController.createUserFromPaciente(pacienteObj, contacto).then(() => {
             // Hack momentaneo. Descargamos los laboratorios a demanda.
             return res.send({ message: 'OK' });
@@ -70,10 +68,9 @@ router.get('/check/:id', (req: any, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
-    return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
-        const pacienteObj = resultado.paciente;
-        authController.checkAppAccounts(pacienteObj).then((resultado2) => {
-            return res.send(resultado2);
+    return PacienteCtr.findById(pacienteId).then((pacienteObj) => {
+        authController.checkAppAccounts(pacienteObj).then((resultado) => {
+            return res.send(resultado);
         }).catch((error) => {
             return res.send(error);
         });
@@ -112,11 +109,10 @@ router.post('/v2/reenviar-codigo', (req, res, next) => {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
 
-    return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
-        const pacienteObj = resultado.paciente;
-        authController.checkAppAccounts(pacienteObj).then(async (resultado2: any) => {
-            if (resultado2.account) {
-                const account = resultado2.account;
+    return PacienteCtr.findById(pacienteId).then((pacienteObj) => {
+        authController.checkAppAccounts(pacienteObj).then(async (resultado: any) => {
+            if (resultado.account) {
+                const account = resultado.account;
 
                 account.email = contacto.email.toLowerCase();
                 account.telefono = contacto.telefono;

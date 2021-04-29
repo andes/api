@@ -1,5 +1,4 @@
 import { PacienteApp } from '../schemas/pacienteApp';
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
@@ -8,6 +7,7 @@ import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as configPrivate from '../../../config.private';
 import { validar } from '../../../core-v2/mpi/validacion';
 import { findOrCreate, extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { PacienteAppCtr } from '../pacienteApp.routes';
 import { generarCodigoVerificacion, enviarCodigoVerificacion } from '../controller/AuthController';
 
@@ -63,9 +63,16 @@ router.post('/login', (req, res, next) => {
                     user
                 });
 
-                let resultado = await buscarPaciente(user.pacientes[0].id);
-                if (resultado.paciente) {
-                    user.pacientes[0] = resultado.paciente.basicos();
+                let paciente = await PacienteCtr.findById(user.pacientes[0].id);
+                if (paciente) {
+                    user.pacientes[0] = {
+                        id: paciente.id,
+                        nombre: paciente.nombre,
+                        apellido: paciente.apellido,
+                        documento: paciente.documento,
+                        fechaNacimiento: paciente.fechaNacimiento,
+                        sexo: paciente.sexo
+                    } as any;
                     EventCore.emitAsync('mobile:patient:login', user);
                 }
                 return;
