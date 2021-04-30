@@ -2,7 +2,7 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { Request, Response, asyncHandler } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import { Paciente } from './paciente.schema';
-import { suggest, multimatch, make, findById, set, extractFoto } from './paciente.controller';
+import { suggest, multimatch, make, findById, set, extractFoto, linkOperation } from './paciente.controller';
 import * as mongoose from 'mongoose';
 import { PatientNotFound } from './paciente.error';
 import { EventCore } from '@andes/event-bus';
@@ -250,12 +250,14 @@ export const patch = async (req: Request, res: Response) => {
     const id = req.params.id;
     const body = req.body;
     let paciente = await findById(id);
+    const linkOp = linkOperation(paciente, body);
     if (paciente) {
-
         await extractFoto(body, req);
-
         paciente = set(paciente, body);
         const updated = await PacienteCtr.update(id, paciente, req);
+        if (linkOp) {
+            EventCore.emitAsync('mpi:pacientes:link', updated);
+        }
         return res.json(updated);
     }
     throw new PatientNotFound();

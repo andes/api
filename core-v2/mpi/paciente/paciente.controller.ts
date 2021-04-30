@@ -195,6 +195,24 @@ export async function findOrCreate(query: any, req) {
 }
 
 /**
+ * Compara el paciente actual con el nuevo modificado
+ * Devuelve true si se está realizando una nueva vinculación
+ *
+ * @param {object} paciente paciente recuperado de la DB
+ * @param {object} data paciente modificado
+ */
+export function linkOperation(paciente, data) {
+    if (data.identificadores?.length || paciente.identificadores?.length) {
+        const vinculados = data.identificadores?.filter(item => item.entidad === 'ANDES' && item.valor);
+        const ultimoVinculado = vinculados[vinculados.length - 1] || null;
+        const vinculadosPaciente = paciente.identificadores?.filter(item => item.entidad === 'ANDES' && item.valor);
+        const ultimoVinculadoPaciente = vinculadosPaciente[vinculadosPaciente?.length - 1] || null;
+        return ultimoVinculado?.valor !== ultimoVinculadoPaciente?.valor;
+    }
+    return false;
+}
+
+/**
  * Vincula pacientes
  *
  * @param {string} op tipo de operación
