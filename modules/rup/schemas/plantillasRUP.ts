@@ -1,6 +1,7 @@
 import { model, Model, Types, Document, Schema, SchemaTypes } from 'mongoose';
 import { SnomedConcept, ISnomedConcept } from './snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { NombreSchemaV2 } from '../../../shared/schemas';
 
 export interface IPlantillasRUP extends Document {
     profesional: {
@@ -36,10 +37,7 @@ export let PlantillasRUPSchema = new Schema({
         required: false
     },
     organizacion: {
-        type: {
-            id: Schema.Types.ObjectId,
-            nombre: String
-        },
+        type: NombreSchemaV2,
         required: false
     },
     link: String,
