@@ -551,6 +551,11 @@ export default [
                 title: 'Crear inscripciones',
                 type: 'boolean'
             },
+            {
+                key: 'dacion-turnos',
+                title: 'Dación de turnos',
+                type: 'boolean'
+            }
         ]
     },
     {

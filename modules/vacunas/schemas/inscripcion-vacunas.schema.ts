@@ -61,7 +61,25 @@ export const InscripcionVacunaSchema = new Schema({
     fechaValidacion: Date,
     localidadDeclarada: String,
     fechaCertificado: Date,
-    idPrestacionCertificado: Types.ObjectId
+    idPrestacionCertificado: Types.ObjectId,
+    asignado: {
+        fechaAsignacion: Date,
+        usuario: {
+            id: Types.ObjectId,
+            nombreCompleto: String,
+            nombre: String,
+            apellido: String,
+            username: String,
+            documento: String
+        }
+    },
+    turno: {
+        organizacion: {
+            id: Types.ObjectId,
+            nombre: String
+        },
+        fechaYHora: Date
+    }
 });
 
 InscripcionVacunaSchema.plugin(AuditPlugin);
