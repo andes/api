@@ -44,12 +44,14 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
     const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
     const end = hasta ? moment(hasta).toDate() : moment().toDate();
     let match = {
-        $and: [{
-            'ejecucion.fecha': { $gte: start, $lte: end }
-        }],
         'estadoActual.tipo': 'validada',
         'ejecucion.registros.concepto.conceptId': '840534001'
     };
+
+    // Es necesario mantener este if por si la solicitud viene de monitoreo, en ese caso no usa filtro de fechas
+    if (horas || desde && hasta) {
+        match['ejecucion.fecha'] = { $gte: start, $lte: end };
+    }
 
     if (pacienteId) {
         match['paciente.id'] = mongoose.Types.ObjectId(pacienteId);
