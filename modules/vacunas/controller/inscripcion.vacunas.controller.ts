@@ -187,16 +187,18 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
         if (!inscriptoValidado) {
             inscriptoValidado = await validar(inscripcion.documento, inscripcion.sexo);
         }
-        const value = await matching(inscriptoValidado, inscripcion);
-        if (value < mpi.cotaMatchMax) {
-            inscripcion.validado = false;
-        } else {
-            await extractFoto(inscriptoValidado, req);
-            paciente = await findOrCreate(inscriptoValidado, req);
-            if (paciente && paciente.id) {
-                inscripcion.paciente = paciente;
-                inscripcion.paciente.id = paciente.id;
-                inscripcion.validado = true;
+        if (inscriptoValidado) {
+            const value = await matching(inscriptoValidado, inscripcion);
+            if (value < mpi.cotaMatchMax) {
+                inscripcion.validado = false;
+            } else {
+                await extractFoto(inscriptoValidado, req);
+                paciente = await findOrCreate(inscriptoValidado, req);
+                if (paciente && paciente.id) {
+                    inscripcion.paciente = paciente;
+                    inscripcion.paciente.id = paciente.id;
+                    inscripcion.validado = true;
+                }
             }
         }
         inscripcion.fechaValidacion = new Date();
