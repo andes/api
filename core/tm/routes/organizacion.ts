@@ -147,7 +147,7 @@ router.get('/organizaciones/:id', async (req, res, next) => {
 });
 
 router.get('/organizaciones', async (req, res, next) => {
-    const filtros = {};
+    let filtros = {};
     if (req.query.nombre) {
         filtros['nombre'] = {
             $regex: utils.makePattern(req.query.nombre)
@@ -176,6 +176,11 @@ router.get('/organizaciones', async (req, res, next) => {
     }
     if (req.query.ids) {
         filtros['_id'] = { $in: req.query.ids };
+    }
+    if (req.query.internaciones) {
+        filtros = {
+            $or: [{ nombre: { $regex: utils.makePattern('hospital') } }, { nombre: { $regex: utils.makePattern('clinica') } }]
+        };
     }
     const query = Organizacion.find(filtros);
     if (req.query.fields) {
