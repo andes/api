@@ -63,16 +63,9 @@ router.post('/login', (req, res, next) => {
                     user
                 });
 
-                let paciente = await PacienteCtr.findById(user.pacientes[0].id);
+                const paciente: any = await PacienteCtr.findById(user.pacientes[0].id);
                 if (paciente) {
-                    user.pacientes[0] = {
-                        id: paciente.id,
-                        nombre: paciente.nombre,
-                        apellido: paciente.apellido,
-                        documento: paciente.documento,
-                        fechaNacimiento: paciente.fechaNacimiento,
-                        sexo: paciente.sexo
-                    } as any;
+                    user.pacientes[0] = paciente.basicos();
                     EventCore.emitAsync('mobile:patient:login', user);
                 }
                 return;

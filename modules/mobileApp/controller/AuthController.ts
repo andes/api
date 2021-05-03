@@ -301,22 +301,14 @@ export function updateAccount(account: IPacienteAppDoc, data) {
  * @param {pacienteAppSchema} userAccount
  * @param {object} mpiData Datos del paciente para matching
  */
-export function verificarCuenta(userAccount, mpiData) {
-    return new Promise((resolve, reject) => {
-        const pacienteId = userAccount.pacientes[0].id;
-        PacienteCtr.findById(pacienteId).then((paciente => {
+export async function verificarCuenta(userAccount, mpiData) {
+    const pacienteId = userAccount.pacientes[0].id;
+    const paciente = PacienteCtr.findById(pacienteId);
+    const match = new Matching();
+    const resultadoMatching = match.matchPersonas(mpiData, paciente, config.mpi.weightsScan, 'Levenshtein');
 
-            const match = new Matching();
-            const resultadoMatching = match.matchPersonas(mpiData, paciente, config.mpi.weightsScan, 'Levenshtein');
-
-            // no cumple con el numero del matching
-            if (resultadoMatching >= config.mpi.cotaMatchMax) {
-                return resolve(true);
-            }
-            return reject();
-
-        })).catch(reject);
-    });
+    // no cumple con el numero del matching
+    return resultadoMatching >= config.mpi.cotaMatchMax;
 }
 
 /**

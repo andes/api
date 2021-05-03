@@ -87,23 +87,20 @@ router.post('/v2/check', (req, res, next) => {
  * @param {object} paciente Datos del scaneo del DNI
  */
 
-router.post('/v2/verificar', (req, res, next) => {
+router.post('/v2/verificar', async (req, res, next) => {
     const email = (req.body.email) ? req.body.email.toLowerCase() : null;
     const code = req.body.code;
     const mpiData = req.body.paciente;
     if (!email || !code) {
         return next('faltan datos');
     }
-
-    getAccount(codeTostring(code), email).then((datosUsuario) => {
-        authController.verificarCuenta(datosUsuario, mpiData).then(() => {
-            res.send({ status: 'ok' });
-        }).catch(() => {
-            return next('No hay matching');
-        });
-    }).catch((err) => {
+    try {
+        const datosUsuario = await getAccount(codeTostring(code), email);
+        const respuesta = await authController.verificarCuenta(datosUsuario, mpiData);
+        return respuesta ? res.send({ status: 'ok' }) : next('No hay matching');
+    } catch (err) {
         return next(err);
-    });
+    }
 });
 
 /**

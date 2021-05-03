@@ -36,25 +36,20 @@ router.put('/account', (req: any, res, next) => {
  * @param id {string} ID del paciente a crear
  */
 
-router.post('/create/:id', (req: any, res, next) => {
-
+router.post('/create/:id', async (req: any, res, next) => {
     const pacienteId = req.params.id;
     const contacto = req.body;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
-    return PacienteCtr.findById(pacienteId).then((pacienteObj) => {
-        authController.createUserFromPaciente(pacienteObj, contacto).then(() => {
-            // Hack momentaneo. Descargamos los laboratorios a demanda.
-            return res.send({ message: 'OK' });
-        }).catch((error) => {
-            return res.send(error);
-        });
-
-    }).catch(() => {
-        return res.send({ error: 'paciente_error' });
-    });
-
+    try {
+        const paciente = await PacienteCtr.findById(pacienteId);
+        await authController.createUserFromPaciente(paciente, contacto);
+        // Hack momentaneo. Descargamos los laboratorios a demanda.
+        return res.send({ message: 'OK' });
+    } catch (error) {
+        return next(error);
+    }
 });
 
 
@@ -63,20 +58,18 @@ router.post('/create/:id', (req: any, res, next) => {
  * @param id {string} ID del paciente a chequear
  */
 
-router.get('/check/:id', (req: any, res, next) => {
+router.get('/check/:id', async (req: any, res, next) => {
     const pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
-    return PacienteCtr.findById(pacienteId).then((pacienteObj) => {
-        authController.checkAppAccounts(pacienteObj).then((resultado) => {
-            return res.send(resultado);
-        }).catch((error) => {
-            return res.send(error);
-        });
-    }).catch(() => {
-        return res.send({ error: 'paciente_error' });
-    });
+    try {
+        const paciente = await PacienteCtr.findById(pacienteId);
+        const resultado = await authController.checkAppAccounts(paciente);
+        return res.send(resultado);
+    } catch (error) {
+        return next(error);
+    }
 });
 
 
@@ -102,38 +95,31 @@ router.get('/email/:email', async (req: any, res, next) => {
  * [DEPRECATED]
  */
 
-router.post('/v2/reenviar-codigo', (req, res, next) => {
+router.post('/v2/reenviar-codigo', async (req, res, next) => {
     const pacienteId = req.body.id;
     const contacto = req.body.contacto;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
 
-    return PacienteCtr.findById(pacienteId).then((pacienteObj) => {
-        authController.checkAppAccounts(pacienteObj).then(async (resultado: any) => {
-            if (resultado.account) {
-                const account = resultado.account;
+    try {
+        const paciente = await PacienteCtr.findById(pacienteId);
+        const resultado: any = await authController.checkAppAccounts(paciente);
+        if (resultado.account) {
+            const account = resultado.account;
+            account.email = contacto.email.toLowerCase();
+            account.telefono = contacto.telefono;
 
-                account.email = contacto.email.toLowerCase();
-                account.telefono = contacto.telefono;
+            const passw = authController.generarCodigoVerificacion();
+            account.password = passw;
 
-                const passw = authController.generarCodigoVerificacion();
-                account.password = passw;
-
-                account.save((errSave, userSaved: any) => {
-                    if (errSave) {
-                        return res.send({ error: 'paciente_error' });
-                    }
-                    authController.enviarCodigoVerificacion(userSaved, passw);
-                    return res.json({ status: 'OK' });
-                });
-            }
-        }).catch((error) => {
-            return res.send(error);
-        });
-    }).catch(() => {
-        return res.send({ error: 'paciente_error' });
-    });
+            const userSaved = await account.save();
+            await authController.enviarCodigoVerificacion(userSaved, passw);
+            return res.json({ status: 'OK' });
+        }
+    } catch (error) {
+        return next(error);
+    }
 });
 
 router.patch('/account', async (req: any, res, next) => {
