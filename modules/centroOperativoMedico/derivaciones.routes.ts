@@ -1,9 +1,8 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { AndesDrive } from '@andes/drive';
-import { Derivaciones } from './schemas/derivaciones.schema';
 import { Auth } from '../../auth/auth.class';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { sendMailComprobanteDerivacion } from './controllers/com.controller';
+import { Derivaciones } from './schemas/derivaciones.schema';
 
 class DerivacionesResource extends ResourceBase {
     Model = Derivaciones;
@@ -78,9 +77,11 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                 derivacion.estado = nuevoEstado.estado;
 
                 const isPacienteDestino = derivacion.estado === 'finalizada' && derivacion.organizacionDestino && derivacion.organizacionDestino.id !== derivacion.organizacionOrigen.id;
-                if (isPacienteDestino && organizacion.esCOM) {
-                    const emailTo = organizacion.configuraciones.emails.find(e => e.nombre === 'recupero').email;
-                    sendMailComprobanteDerivacion(derivacion, emailTo);
+                if (isPacienteDestino && organizacion.esCOM && organizacion.configuraciones?.emails) {
+                    const emailTo = organizacion.configuraciones.emails.find(e => e.nombre === 'recupero')?.email;
+                    if (emailTo) {
+                        sendMailComprobanteDerivacion(derivacion, emailTo);
+                    }
                 }
             }
 
