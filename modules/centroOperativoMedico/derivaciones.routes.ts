@@ -62,6 +62,14 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
         const derivacion: any = await Derivaciones.findById(req.params.id);
         if (derivacion) {
             const nuevoEstado = req.body.estado;
+
+            if (nuevoEstado.estado === 'habilitada') {
+                const orgCOM = (await Organizacion.find({esCOM: true}))[0];
+                const { id, nombre, direccion } = orgCOM;
+                nuevoEstado.organizacionDestino = { id, nombre, direccion };
+                delete nuevoEstado.unidadDestino;
+            }
+
             derivacion.historial.push(nuevoEstado);
             if (nuevoEstado.prioridad) {
                 derivacion.prioridad = nuevoEstado.prioridad;
