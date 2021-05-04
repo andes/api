@@ -185,7 +185,6 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas/registro', async (req: Reque
             }
 
             const inscripcion = await InscripcionVacunasCtr.create(req.body, userScheduler as any);
-            EventCore.emitAsync('vacunas:inscripcion-vacunas:create', inscripcion, inscriptoValidado, req);
             return res.json(inscripcion);
         } else {
             return next('Existe una inscripción registrada. Verifique su estado en la página de consultas.');
