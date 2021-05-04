@@ -20,7 +20,7 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         direccion: Object,
         fechaNacimiento: Date,
     },
-    secciones: [Object],
+    secciones: [mongoose.Schema.Types.Mixed],
     zonaSanitaria: zonaSanitariasSchema,
     score: {
         value: String,
