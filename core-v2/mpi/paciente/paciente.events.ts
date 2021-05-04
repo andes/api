@@ -61,6 +61,8 @@ EventCore.on('mpi:pacientes:link', async (paciente) => {
     if (paciente.estado === 'validado' && paciente.activo) {
         await updatePrestacionPatientData(paciente);
     }
+});
+EventCore.on('mpi:pacientes:unlink', async (paciente) => {
     if (paciente.estado === 'temporal' && paciente.activo) {
         await restorePrestacionPatientData(paciente);
     }
