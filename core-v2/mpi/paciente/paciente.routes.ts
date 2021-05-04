@@ -1,11 +1,11 @@
 import { asyncHandler, Request, Response } from '@andes/api-tool';
-import { MongoQuery, ResourceBase } from '@andes/core';
+import { CustomError, MongoQuery, ResourceBase } from '@andes/core';
 import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
-import { extractFoto, findById, make, multimatch, set, suggest } from './paciente.controller';
+import { extractFoto, findById, linkPaciente, make, multimatch, set, suggest } from './paciente.controller';
 import { PatientNotFound } from './paciente.error';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from './paciente.schema';
@@ -263,6 +263,48 @@ export const patch = async (req: Request, res: Response) => {
     throw new PatientNotFound();
 };
 
+/**
+ * @api {link} /pacientes/link/:id Vinculación o desviculación de pacientes
+ * @apiName linkPacientes
+ * @apiGroup MPI
+ *
+ * @apiParam {Number} ID de identificación del paciente.
+ * @apiSuccess {IPaciente} Paciente linkeado.
+ */
+export const link = async (req: Request, res: Response, next) => {
+    try {
+        const id = req.params.id;
+        const pacienteLink = req.body.pacienteLink;
+        const operation = req.body.op;
+        if (operation) {
+            let paciente = await findById(id);
+            if (paciente && pacienteLink) {
+                const patientRequest = {
+                    user: paciente.createdBy,
+                    ip: 'localhost',
+                    connection: {
+                        localAddress: ''
+                    },
+                    body: paciente
+                };
+                const updated = await linkPaciente(patientRequest, operation, paciente, pacienteLink);
+                if (operation === 'link') {
+                    EventCore.emitAsync(`mpi:pacientes:link`, updated[0]);
+                }
+                if (operation === 'unlink') {
+                    EventCore.emitAsync(`mpi:pacientes:unlink`, updated[1]);
+                }
+                return res.json(updated);
+            } else {
+                throw new PatientNotFound();
+            }
+        } else {
+            throw new CustomError('Debe enviar la operación a realizar', 500);
+        }
+    } catch (err) {
+        return next(err);
+    }
+};
 
 PacienteRouter.use(Auth.authenticate());
 PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(get));
@@ -271,3 +313,4 @@ PacienteRouter.get('/pacientes/:id/foto/:fotoId', asyncHandler(getFoto));
 PacienteRouter.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(post));
 PacienteRouter.post('/pacientes/match', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(match));
 PacienteRouter.patch('/pacientes/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(patch));
+PacienteRouter.patch('/pacientes/link/:id', Auth.authorize('mpi:paciente:patchAndes'), asyncHandler(link));

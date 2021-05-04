@@ -1,18 +1,18 @@
-import { Types } from 'mongoose';
-import { Paciente, replaceChars } from './paciente.schema';
-import * as moment from 'moment';
-import * as intoStream from 'into-stream';
-import { Matching } from '@andes/match';
-import { IPacienteDoc, IPaciente } from './paciente.interface';
 import { isSelected } from '@andes/core';
-import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
-import { PacienteCtr } from './paciente.routes';
+import { AndesDrive, FileMetadata } from '@andes/drive';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
-import { FileMetadata, AndesDrive } from '@andes/drive';
-import * as Barrio from '../../../core/tm/schemas/barrio';
-import * as configPrivate from '../../../config.private';
+import { Matching } from '@andes/match';
+import * as intoStream from 'into-stream';
+import * as moment from 'moment';
+import { Types } from 'mongoose';
 import * as config from '../../../config';
+import * as configPrivate from '../../../config.private';
+import * as Barrio from '../../../core/tm/schemas/barrio';
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { IContacto } from '../../../shared/Contacto.interface';
+import { IPaciente, IPacienteDoc } from './paciente.interface';
+import { PacienteCtr } from './paciente.routes';
+import { Paciente, replaceChars } from './paciente.schema';
 
 
 /**
@@ -221,9 +221,10 @@ export async function linkPaciente(req, op, pacienteBase, pacienteLinkeado) {
         }
         pacienteLinkeado.activo = true;
     }
-
     await PacienteCtr.update(pacienteBase.id, pacienteBase, req);
     await PacienteCtr.update(pacienteLinkeado.id, pacienteLinkeado, req);
+    // Devueve en un array el pacienteBase y el vinculado para mantener la funcionalidad ya existente
+    return ([pacienteBase, pacienteLinkeado]);
 }
 
 
