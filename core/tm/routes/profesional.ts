@@ -581,14 +581,6 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             opciones['habilitado'] = false;
         }
 
-        if (req.query.nombreCompleto) {
-            opciones['nombre'] = {
-                $regex: utils.makePattern(req.query.nombreCompleto)
-            };
-            opciones['apellido'] = {
-                $regex: utils.makePattern(req.query.nombreCompleto)
-            };
-        }
         if (req.query.documento) {
             opciones['documento'] = utils.makePattern(req.query.documento);
         }
@@ -635,21 +627,15 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
         if (req.query.nombreCompleto) {
-            const filter = [{
-                apellido: {
-                    $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
-                }
-            }, {
-                nombre: {
-                    $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
-                }
-            }];
-            let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
-            query = Profesional.find(q).
+
+            const tokensQuery = Profesional.search(req.query.nombreCompleto);
+            query = Profesional
+                .find(tokensQuery).
                 sort({
                     apellido: 1,
                     nombre: 1
                 });
+
         } else if (!req.query.exportarPlanillaCalculo) {
             query = Profesional.find(opciones).skip(skip).limit(limit);
         } else {

@@ -1,8 +1,10 @@
 import * as mongoose from 'mongoose';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { AndesDocWithAudit, AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import { ObjSIISASchema, EspecialidadSIISASchema } from './siisa';
+import { IProfesional } from '../interfaces/profesional.interface';
+import { ITokenSearch, TokenSearch } from '@andes/mongoose-token-search';
 
 const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -133,6 +135,9 @@ ProfesionalSchema.virtual('fallecido').get(function () {
 });
 
 ProfesionalSchema.plugin(AuditPlugin);
+ProfesionalSchema.plugin(
+    TokenSearch(['documento', 'nombre', 'apellido'])
+);
 
 ProfesionalSchema.index({ documento: 1 });
 
@@ -141,4 +146,7 @@ ProfesionalSchema.index({
     nombre: 1
 });
 
-export const Profesional = mongoose.model('profesional', ProfesionalSchema, 'profesional');
+export type IProfesionalDoc = AndesDocWithAudit<IProfesional>;
+
+export const Profesional = mongoose.model<IProfesionalDoc, ITokenSearch<IProfesionalDoc>>('profesional', ProfesionalSchema, 'profesional');
+
