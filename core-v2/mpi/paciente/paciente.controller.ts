@@ -1,5 +1,6 @@
 import { isSelected } from '@andes/core';
 import { AndesDrive, FileMetadata } from '@andes/drive';
+import { EventCore } from '@andes/event-bus/';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
 import { Matching } from '@andes/match';
 import * as intoStream from 'into-stream';
@@ -196,6 +197,26 @@ export async function findOrCreate(query: any, req) {
 }
 
 /**
+ * Compara el paciente actual, el evento enviado por la app y el paciente modificado
+ * Emite un evento y termina
+ *
+ * @param {object} paciente paciente recuperado de la DB
+ * @param {object} data paciente modificado
+ */
+export function linkUnlikOperation(paciente, data, updated) {
+    if (data.identificadores?.length || paciente.identificadores?.length) {
+        const vinculados = data.identificadores?.filter(item => item.entidad === 'ANDES' && item.valor);
+        const vinculadosPaciente = paciente.identificadores?.filter(item => item.entidad === 'ANDES' && item.valor);
+        if (vinculados?.length >= vinculadosPaciente?.length) {
+            return EventCore.emitAsync('mpi:pacientes:link', updated);
+        }
+    }
+    if (!paciente.activo && data.activo) {
+        return EventCore.emitAsync('mpi:pacientes:unlink', updated);
+    }
+}
+
+/**
  * Vincula pacientes
  *
  * @param {string} op tipo de operación
@@ -224,8 +245,6 @@ export async function linkPaciente(req, op, pacienteBase, pacienteLinkeado) {
     }
     await PacienteCtr.update(pacienteBase.id, pacienteBase, req);
     await PacienteCtr.update(pacienteLinkeado.id, pacienteLinkeado, req);
-    // Devueve en un array el pacienteBase y el vinculado para mantener la funcionalidad ya existente
-    return ([pacienteBase, pacienteLinkeado]);
 }
 
 

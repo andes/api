@@ -145,7 +145,7 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
 export async function updatePrestacionPatientData(sourcePatient) {
     try {
         const idPacientesVinculados = sourcePatient.identificadores.filter(identifier => identifier.entidad === 'ANDES');
-        if (idPacientesVinculados && idPacientesVinculados.length > 0) {
+        if (idPacientesVinculados && idPacientesVinculados?.length > 0) {
             for (let i = 0; i < idPacientesVinculados.length; i++) {
                 const query = { 'estadoActual.tipo': 'validada', 'paciente.id': mongoose.Types.ObjectId(idPacientesVinculados[i].valor) };
                 let prestaciones: any = await Prestacion.find(query);
