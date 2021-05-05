@@ -15,6 +15,7 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         fechaNacimiento: Date,
     },
     secciones: [Object],
+    codigoSisa: Number,
     zonaSanitaria: zonaSanitariasSchema
 });
 
