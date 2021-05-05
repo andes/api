@@ -495,6 +495,22 @@ export default [
         ]
     },
     {
+        key: 'perinatal',
+        title: 'Módulo perinatal',
+        child: [
+            {
+                key: 'ver',
+                title: 'Consulta',
+                type: 'boolean'
+            },
+            {
+                key: 'editar',
+                title: 'Edición',
+                type: 'boolean'
+            },
+        ]
+    },
+    {
         key: 'vacunacion',
         title: 'Módulo vacunación',
         visibility: 'restricted',
