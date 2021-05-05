@@ -1,3 +1,20 @@
+# [5.44.0](https://github.com/andes/api/compare/v5.43.0...v5.44.0) (2021-05-05)
+
+
+### Bug Fixes
+
+* **inscripcion:** quita llamada a evento ([#1369](https://github.com/andes/api/issues/1369)) ([71780e9](https://github.com/andes/api/commit/71780e99ebe78baea3eceec97a03f4a9cbbbe270))
+* **jobVacunas:** Se restaura el filtro de horas ([ed3d8fe](https://github.com/andes/api/commit/ed3d8feca10b59ade4c916de1088bd8a04ae15ce))
+
+
+### Features
+
+* **com:** unidad destino derivacion ([bbcca18](https://github.com/andes/api/commit/bbcca1851b164a08cd48fbcabfd3b4d3289dc8f3))
+* **COM:** se verifica si tiene un email asociado para auditoria de com ([4732a52](https://github.com/andes/api/commit/4732a52370438fa1657506574b5eed91bf54cbde))
+* **COM:** try catch en descarga de comprobante derivacion ([5825652](https://github.com/andes/api/commit/5825652d720153a8d1ed7e5ce5f19ec00eaa77d3))
+* **matriculaciones:** aplica tokens search en profesionales ([#1311](https://github.com/andes/api/issues/1311)) ([c5e2241](https://github.com/andes/api/commit/c5e224187c95c2c88026877fa6fc7e2b82d712d8))
+* **rup:** agrega atributos a PlantillasRUPSchema ([#1343](https://github.com/andes/api/issues/1343)) ([18bdc88](https://github.com/andes/api/commit/18bdc889dbd1f8b5588af752f4a3964f0c30f7ed))
+
 # [5.43.0](https://github.com/andes/api/compare/v5.42.0...v5.43.0) (2021-04-28)
 
 
