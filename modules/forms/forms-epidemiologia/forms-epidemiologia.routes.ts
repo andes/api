@@ -31,7 +31,11 @@ class FormsEpidemiologiaResource extends ResourceBase {
         identificadorPcr: {
             field: 'secciones.fields.identificadorpcr',
             fn: MongoQuery.partialString
-        }
+        },
+        codigoSisa: {
+            field: 'secciones.fields.codigoSisa',
+            fn: (value) => (value ? { $type: 'number' } : { $not: { $type: 'number' } })
+        },
     };
 }
 
