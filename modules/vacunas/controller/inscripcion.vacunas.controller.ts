@@ -8,6 +8,7 @@ import { PersonalSaludCtr } from '../../../modules/personalSalud';
 import { mpi } from '../../../config';
 import { findOrCreate, extractFoto, matching, updateContacto } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { validar } from '../../../core-v2/mpi/validacion';
+import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 
 export interface IEstadoInscripcion {
     titulo: String;
@@ -154,6 +155,27 @@ export async function validarDomicilio(inscripcion) {
     }
 }
 
+export async function verificarExistenciaCertificado(inscripcion) {
+    try {
+        // se verifica el domicilio del paciente asociado a la inscripción
+        if (inscripcion.paciente && inscripcion.paciente.id) {
+            let query = {
+                'paciente.id': inscripcion.paciente.id,
+                'estadoActual.tipo': 'validada',
+                'ejecucion.registros.concepto.conceptId': '2171000246104'
+            };
+            let prestacion: any = await Prestacion.findOne(query);
+            if (prestacion) {
+                inscripcion.fechaCertificado = prestacion.ejecucion.fecha;
+                inscripcion.idPrestacionCertificado = prestacion._id;
+            }
+        }
+        return inscripcion;
+    } catch {
+        return null;
+    }
+}
+
 export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
 
     if (inscripcion.grupo && inscripcion.grupo.nombre === 'personal-salud' && !inscripcion.personal_salud) {
@@ -209,6 +231,7 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
         const contactos = [{ tipo: 'celular', valor: inscripcion.telefono }, { tipo: 'email', valor: inscripcion.email }];
         await updateContacto(contactos, paciente, req);
     }
+    await verificarExistenciaCertificado(inscripcion);
     return inscripcion;
 
 }
