@@ -111,7 +111,7 @@ async function verificarDomicilioInscripcion(inscripcion, validacion) {
             // se verifica el domicilio del paciente
             if (inscripcion.paciente && inscripcion.paciente.id) {
                 const paciente = await PacienteCtr.findById(inscripcion.paciente.id);
-                const domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === validacion.provincia);
+                const domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia ?.nombre && replaceChars(dir.ubicacion.provincia ?.nombre as any).toLowerCase() === validacion.provincia);
                 if (!domicilio) {
                     return validacion.mensajeError;
                 }
@@ -144,10 +144,10 @@ export async function validarDomicilio(inscripcion) {
         // se verifica el domicilio del paciente asociado a la inscripción
         if (inscripcion.paciente && inscripcion.paciente.id) {
             const paciente = await PacienteCtr.findById(inscripcion.paciente.id);
-            domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === replaceChars(provincia));
+            domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia ?.nombre && replaceChars(dir.ubicacion.provincia ?.nombre as any).toLowerCase() === replaceChars(provincia));
         }
         if (!domicilio) {
-            domicilio = inscripcion.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === replaceChars(provincia));
+            domicilio = inscripcion.direccion.find(dir => dir.ubicacion.provincia ?.nombre && replaceChars(dir.ubicacion.provincia ?.nombre as any).toLowerCase() === replaceChars(provincia));
         }
         return domicilio;
     } catch {
@@ -194,13 +194,13 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
         }
     }
     // Verifica el domicilio del paciente
-    if (!inscripcion.validaciones?.includes('domicilio')) {
+    if (!inscripcion.validaciones ?.includes('domicilio')) {
         if (!inscriptoValidado) {
             inscriptoValidado = await validar(inscripcion.documento, inscripcion.sexo);
         }
         const domicilio = await validarDomicilio(inscriptoValidado);
         if (domicilio) {
-            inscripcion.validaciones?.length ? inscripcion.validaciones.push('domicilio') : inscripcion.validaciones = ['domicilio'];
+            inscripcion.validaciones ?.length ? inscripcion.validaciones.push('domicilio') : inscripcion.validaciones = ['domicilio'];
         }
     }
     let paciente = null;
@@ -216,14 +216,21 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
             } else {
                 await extractFoto(inscriptoValidado, req);
                 paciente = await findOrCreate(inscriptoValidado, req);
-                if (paciente && paciente.id) {
-                    inscripcion.paciente = paciente;
-                    inscripcion.paciente.id = paciente.id;
+                if (paciente && paciente._id) {
+                    inscripcion.paciente = {
+                        id: paciente._id,
+                        nombre: paciente.nombre,
+                        apellido: paciente.apellido,
+                        documento: paciente.documento,
+                        telefono: paciente.telefono,
+                        sexo: paciente.sexo,
+                        fechaNacimiento: paciente.fechaNacimiento
+                    };
                     inscripcion.validado = true;
+                    inscripcion.fechaValidacion = new Date();
                 }
             }
         }
-        inscripcion.fechaValidacion = new Date();
     } else {
         paciente = await PacienteCtr.findById(inscripcion.paciente.id);
     }
