@@ -5,6 +5,7 @@ import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 import * as controller from './../../../core/mpi/controller/paciente';
 import { sendEmail, IEmail, ISms, sendSms } from '../../../utils/roboSender';
+import { exit } from 'process';
 
 const log = debug('AuthController');
 
@@ -46,6 +47,7 @@ export function enviarCodigoCambioPassword(user) {
 }
 
 export function enviarCodigoVerificacion(user, password) {
+
     const replacements = {
         username: user.apellido + ', ' + user.nombre,
         userEmail: user.email,
@@ -57,7 +59,11 @@ export function enviarCodigoVerificacion(user, password) {
         subject: 'ANDES - Código de Activación app móvil',
         template: 'emails/active-app-code.html',
         extras: replacements,
-        plainText: 'Estimado ' + replacements.username + ', Su código de activación para ANDES app móvil es: ' + password,
+        plainText: `
+        Hola ${replacements.username}, este es su código de activación para ANDES app móvil: ${password}.\n
+        Recordá que el mismo vence en 24 horas.\n
+        Por cualquier problema escribinos a info@andes.gob.ar
+        `,
     };
 
     // enviamos email
