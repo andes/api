@@ -5,7 +5,6 @@ import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
 
-
 router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
 
     turno.findByIdAndUpdate(request.params.turnoId, request.body, { new: true }, (err, res) => {
@@ -24,26 +23,36 @@ router.post('/turnos/:tipo/:profesionalId/', async (req, res, next) => {
     // Convert date to user datetime.
     try {
         const fechaTurno = new Date(req.body.turno.fecha);
-        if (req.body.sobreTurno) {
-            const datos = await Profesional.findById(req.params.profesionalId);
-            const nTurno = new turno({
-                fecha: fechaTurno,
-                tipo: req.body.turno.tipo,
-                profesional: datos
-            });
-            await nTurno.save();
-            return res.json(nTurno);
+        const busquedaTurno = {
+            $and: [
+                { anulado: { $exists: false } },
+                { fecha: fechaTurno }
+            ]
+        };
+        const turnos = await turno.find(busquedaTurno);
+        if (!turnos.length) {
+            if (req.body.sobreTurno) {
+                const datos = await Profesional.findById(req.params.profesionalId);
+                const nTurno = new turno({
+                    fecha: fechaTurno,
+                    tipo: req.body.turno.tipo,
+                    profesional: datos
+                });
+                await nTurno.save();
+                return res.json(nTurno);
+            } else {
+                const datos = await turnoSolicitado.findById(req.params.profesionalId);
+                const nTurno = new turno({
+                    fecha: fechaTurno,
+                    tipo: req.body.turno.tipo,
+                    profesional: datos
+                });
+
+                await nTurno.save();
+                return res.json(nTurno);
+            }
         } else {
-            const datos = await turnoSolicitado.findById(req.params.profesionalId);
-            const nTurno = new turno({
-                fecha: fechaTurno,
-                tipo: req.body.turno.tipo,
-                profesional: datos
-            });
-
-            await nTurno.save();
-            return res.json(nTurno);
-
+            return next('El turno seleccionado ya se encuentra disponible.');
         }
     } catch (err) {
         return next(err);
