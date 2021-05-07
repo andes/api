@@ -1,6 +1,6 @@
+import * as moment from 'moment';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { Derivaciones } from '../../../modules/centroOperativoMedico/schemas/derivaciones.schema';
-import * as moment from 'moment';
 import { HTMLComponent } from '../model/html-component.class';
 import { DerivacionFirma } from './derivacion-firma';
 
@@ -224,12 +224,11 @@ export class DerivacionBody extends HTMLComponent {
             fechaFinalizacion = elementoHistorial.createdAt;
             profesional = elementoHistorial.createdBy;
         }
-
         const firmaHTML = await this.getFirmaHTML(derivacion);
-        const datosSolicitud = this._data.historial ? await this.getDatosSolicitud(derivacion) : null;
-        const fecha = moment(derivacion.historial[0].createdAt).format('DD/MM/YYYY HH:mm');
+        const datosSolicitud = derivacion ? await this.getDatosSolicitud(derivacion) : null;
+        const fecha = derivacion.historial ? moment(derivacion.historial[0].createdAt).format('DD/MM/YYYY HH:mm') : null;
         const organizacion = await Organizacion.findById(this._data.organizacionId);
-        const historial = this._data.historial ? await this.getHistorialDerivacion(organizacion, derivacion) : null;
+        const historial = derivacion ? await this.getHistorialDerivacion(organizacion, derivacion) : null;
         this.data = {
             idDerivacion: derivacion._id,
             nombre: derivacion.paciente.nombre,
@@ -271,7 +270,7 @@ export class DerivacionBody extends HTMLComponent {
         historial.forEach(h => {
             h.fechaCreacion = moment(h.createdAt).locale('es').format('DD/MM/YYYY HH:mm');
             h.reporteCOM = organizacion.esCOM;
-            h.esActualizacion = !h.estado;
+            h.esActualizacion = !h?.estado;
         });
         return historial.sort((a, b) => b.createdAt - a.createdAt);
     }
