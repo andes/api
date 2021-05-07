@@ -27,17 +27,17 @@ export function enviarCodigoCambioPassword(user) {
 
     const mailOptions: IEmail = {
         email: user.email,
-        subject: 'ANDES - Restablecer contraseña',
+        subject: 'ANDES - Restablecer contraseña app móvil',
         template: 'emails/reset-password.html',
         extras: replacements,
-        plainText: 'Su código de verificación para restaurar su password es: ' + user.restablecerPassword.codigo,
+        plainText: 'El código de verificación para restaurar su contraseña es: ' + user.restablecerPassword.codigo,
     };
 
     // enviamos email
     sendEmail(mailOptions);
 
     const sms: ISms = {
-        message: 'Su código de verificación para restaurar su password es: ' + user.restablecerPassword.codigo,
+        message: 'El código de verificación para restaurar su contraseña es: ' + user.restablecerPassword.codigo,
         phone: user.telefono
     };
 
@@ -48,15 +48,16 @@ export function enviarCodigoCambioPassword(user) {
 export function enviarCodigoVerificacion(user, password) {
     const replacements = {
         username: user.apellido + ', ' + user.nombre,
+        userEmail: user.email,
         codigo: password
     };
 
     const mailOptions: IEmail = {
         email: user.email,
-        subject: 'ANDES :: Código de activación',
+        subject: 'ANDES - Código de Activación app móvil',
         template: 'emails/active-app-code.html',
         extras: replacements,
-        plainText: 'Estimado ' + replacements.username + ', Su código de activación para ANDES Mobile es: ' + password,
+        plainText: 'Estimado ' + replacements.username + ', Su código de activación para ANDES app móvil es: ' + password,
     };
 
     // enviamos email
