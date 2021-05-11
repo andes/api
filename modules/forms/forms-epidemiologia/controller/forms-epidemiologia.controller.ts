@@ -1,7 +1,6 @@
 import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
 import * as mongoose from 'mongoose';
 
-
 export async function updateField(id, body) {
     const { seccion, fields } = body;
     const ficha: any = await FormsEpidemiologia.findById(mongoose.Types.ObjectId(id));
@@ -17,4 +16,8 @@ export async function updateField(id, body) {
     });
 
     return ficha;
+}
+
+export async function getLAMPPendientes() { 
+    return await FormsEpidemiologia.find({'secciones.fields.lamp.id': 'muestra'});
 }
