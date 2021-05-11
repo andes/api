@@ -225,7 +225,8 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         const email = req.body.email;
 
         const cuenta = await PacienteAppCtr.findOne({documento: String(documento), sexo});
-        if (cuenta && String(cuenta.email) !== email) {
+        const usrprof = (cuenta.email === cuenta.documento);
+        if (cuenta && !usrprof && String(cuenta.email) !== email) {
             return res.status(404).send('Ya existe una cuenta asociada a su documento');
         }
         // Verifica si se encuentra inscripto previamente
