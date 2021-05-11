@@ -5,7 +5,6 @@ import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 import * as controller from './../../../core/mpi/controller/paciente';
 import { sendEmail, IEmail, ISms, sendSms } from '../../../utils/roboSender';
-import { exit } from 'process';
 
 const log = debug('AuthController');
 
