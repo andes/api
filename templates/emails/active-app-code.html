@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+      xmlns:o="urn:schemas-microsoft-com:office:office">
+
 <head>
     <meta charset="utf-8"> <!-- utf-8 works for most cases -->
     <meta name="viewport" content="width=device-width"> <!-- Forcing initial-scale shouldn't be necessary -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge"> <!-- Use the latest (edge) version of IE rendering engine -->
-    <meta name="x-apple-disable-message-reformatting">  <!-- Disable auto-scale in iOS 10 Mail entirely -->
+    <meta name="x-apple-disable-message-reformatting"> <!-- Disable auto-scale in iOS 10 Mail entirely -->
     <title>ANDES - Clave de activación</title> <!-- The title tag shows in email notifications, like Android 4.4. -->
 
     <!-- CSS Reset : BEGIN -->
     <style>
-
         /* What it does: Remove spaces around the email design added by some email clients. */
         /* Beware: It can remove the padding / margin and add a background color to the compose a reply window. */
         html,
@@ -45,18 +46,21 @@
             table-layout: fixed !important;
             margin: 0 auto !important;
         }
+
         table table table {
             table-layout: auto;
         }
 
         /* What it does: Uses a better rendering method when resizing images in IE. */
         img {
-            -ms-interpolation-mode:bicubic;
+            -ms-interpolation-mode: bicubic;
         }
 
         /* What it does: A work-around for email clients meddling in triggered links. */
-        *[x-apple-data-detectors],  /* iOS */
-        .x-gmail-data-detectors,    /* Gmail */
+        *[x-apple-data-detectors],
+        /* iOS */
+        .x-gmail-data-detectors,
+        /* Gmail */
         .x-gmail-data-detectors *,
         .aBn {
             border-bottom: 0 !important;
@@ -74,8 +78,9 @@
             display: none !important;
             opacity: 0.01 !important;
         }
+
         /* If the above doesn't work, add a .g-img class to any image in question. */
-        img.g-img + div {
+        img.g-img+div {
             display: none !important;
         }
 
@@ -87,40 +92,40 @@
         /* What it does: Removes right gutter in Gmail iOS app: https://github.com/TedGoas/Cerberus/issues/89  */
         /* Create one of these media queries for each additional viewport size you'd like to fix */
         /* Thanks to Eric Lepetit (@ericlepetitsf) for help troubleshooting */
-        @media only screen and (min-device-width: 375px) and (max-device-width: 413px) { /* iPhone 6 and 6+ */
+        @media only screen and (min-device-width: 375px) and (max-device-width: 413px) {
+
+            /* iPhone 6 and 6+ */
             .email-container {
                 min-width: 375px !important;
             }
         }
-
     </style>
     <!-- CSS Reset : END -->
 
     <!-- Progressive Enhancements : BEGIN -->
     <style>
+        /* What it does: Hover styles for buttons */
+        .button-td,
+        .button-a {
+            transition: all 100ms ease-in;
+        }
 
-    /* What it does: Hover styles for buttons */
-    .button-td,
-    .button-a {
-        transition: all 100ms ease-in;
-    }
-    /* .button-td:hover,
+        /* .button-td:hover,
     .button-a:hover {
         background: #043750 !important;
         border-color: #043750 !important;
     } */
 
-    /* Media Queries */
-    @media screen and (max-width: 600px) {
+        /* Media Queries */
+        @media screen and (max-width: 600px) {
 
-        /* What it does: Adjust typography on small screens to improve readability */
-        .email-container p {
-            font-size: 17px !important;
-            line-height: 22px !important;
+            /* What it does: Adjust typography on small screens to improve readability */
+            .email-container p {
+                font-size: 17px !important;
+                line-height: 22px !important;
+            }
+
         }
-
-    }
-
     </style>
     <!-- Progressive Enhancements : END -->
 
@@ -135,12 +140,14 @@
     <![endif]-->
 
 </head>
+
 <body width="100%" bgcolor="#043750" style="margin: 0; mso-line-height-rule: exactly;">
     <center style="width: 100%; /*background: #043750; */ text-align: left;">
 
         <!-- Visually Hidden Preheader Text : BEGIN -->
-        <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
-            ANDES - Password de activación de App Mobile
+        <div
+             style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
+            ANDES - Contraseña de activación de App Móvil
         </div>
         <!-- Visually Hidden Preheader Text : END -->
 
@@ -157,33 +164,49 @@
             <![endif]-->
 
             <!-- Email Header : BEGIN -->
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" style="max-width: 600px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%"
+                   style="max-width: 600px;">
                 <tr>
                     <td style="padding: 20px 0; text-align: center">
-                        <img src="https://www.andes.gob.ar/images/logo-andes.png" width="200" height="200" alt="ANDES - Aplicaciones Neuquinas de Salud" border="0" style="height: auto; background: transparent; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
+                        <img src="https://www.andes.gob.ar/images/logo-andes.png" width="200" height="200"
+                             alt="ANDES - Aplicaciones Neuquinas de Salud" border="0"
+                             style="height: auto; background: transparent; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
                     </td>
                 </tr>
             </table>
             <!-- Email Header : END -->
 
             <!-- Email Body : BEGIN -->
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" style="max-width: 600px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%"
+                   style="max-width: 600px;">
 
                 <!-- 1 Column Text + Button : BEGIN -->
                 <tr>
                     <td bgcolor="#ffffff">
                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                             <tr>
-                                <td style="text-align: center; padding: 40px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #043750;">
-                                    Hola {{username}}, esta es tu clave para activar la aplicación móvil de ANDES. Recordá ingresar con el e-mail  
-                                    que nos brindaste en el punto de acreditación. 
-                                
-                                    <br><br>
+                                <td
+                                    style="text-align: center; padding: 40px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #043750;">
+                                    <h3>Hola {{username}}, el de abajo es tu código de activación para la aplicación
+                                        móvil de
+                                        ANDES.</h3>
+                                    <ul style="text-align: left;">
+                                        <li>No te olvides que tu usuario es el email con el que te registraste:
+                                            <b>{{userEmail}}</b>.
+                                        </li>
+                                        <li>También recordá que el código vence en 24 horas.</li>
+                                        <li>Por cualquier problema o consulta escribinos a <a
+                                               href="mailto:info@andes.gob.ar">info@andes.gob.ar</a>.</li>
+                                    </ul>
+                                    <br>
                                     <!-- Button : Begin -->
-                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: auto;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center"
+                                           style="margin: auto;">
                                         <tr>
-                                            <td style="border-radius: 3px; background: #ea1e79; text-align: center;" class="button-td">
-                                                <div style="background: #ea1e79; border: 15px solid #ea1e79; font-family: sans-serif; font-size: 13px; line-height: 1.1; text-align: center; text-decoration: none; display: block; border-radius: 3px; font-weight: bold;" class="button-a">
+                                            <td style="border-radius: 3px; background: #ea1e79; text-align: center;"
+                                                class="button-td">
+                                                <div style="background: #ea1e79; border: 15px solid #ea1e79; font-family: sans-serif; font-size: 20px; line-height: normal; text-align: center; text-decoration: none; display: block; border-radius: 3px; font-weight: bold;"
+                                                     class="button-a">
                                                     <span style="color:#ffffff;" class="button-link">
                                                         {{codigo}}
                                                     </span>
@@ -196,7 +219,10 @@
 
                                     Si todavía no la tenés, descargala desde acá: <br>
 
-                                    <a href='https://play.google.com/store/apps/details?id=org.andes.mobile&hl=es&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Disponible en Google Play' width="300px" src='https://play.google.com/intl/en_us/badges/images/generic/es_badge_web_generic.png'/></a>
+                                    <a
+                                       href='https://play.google.com/store/apps/details?id=org.andes.mobile&hl=es&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img
+                                             alt='Disponible en Google Play' width="300px"
+                                             src='https://play.google.com/intl/en_us/badges/images/generic/es_badge_web_generic.png' /></a>
 
 
                                     <!-- Button : END -->
@@ -214,7 +240,7 @@
                 </tr>
                 <!-- Clear Spacer : END -->
 
-                
+
             </table>
             <!-- Email Body : END -->
 
@@ -240,4 +266,5 @@
         </div>
     </center>
 </body>
+
 </html>
