@@ -47,7 +47,13 @@ class InscripcionVacunasResource extends ResourceBase {
                 return { $exists: value };
             }
         },
-        estado: MongoQuery.equalMatch,
+        estaAsignado: {
+            field: 'asignado.usuario',
+            fn: (value) => {
+                return { $exists: value };
+            }
+        },
+        estados: MongoQuery.inArray.withField('estado'),
         fechaRegistro: MongoQuery.matchDate.withField('fechaRegistro'),
         grupos: MongoQuery.inArray.withField('grupo.nombre'),
         validado: MongoQuery.equalMatch
@@ -121,13 +127,13 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
     try {
         let inscripto: IInscripcionVacunas = req.body;
         if (inscripto) {
-            if (!inscripto.validaciones?.includes('domicilio')) {
+            if (!inscripto.validaciones ?.includes('domicilio')) {
                 const domicilio = await validarDomicilio(inscripto);
                 if (domicilio) {
-                    inscripto.validaciones?.length ? inscripto.validaciones.push('domicilio') : inscripto.validaciones = ['domicilio'];
+                    inscripto.validaciones ?.length ? inscripto.validaciones.push('domicilio') : inscripto.validaciones = ['domicilio'];
                 }
             }
-            if (!inscripto.validaciones?.includes('domicilio') || inscripto.validado === false) {
+            if (!inscripto.validaciones ?.includes('domicilio') || inscripto.validado === false) {
                 const inscriptoValidado = await validar(inscripto.documento as any, inscripto.sexo as any);
                 inscripto = await validarInscripcion(req.body, inscriptoValidado, req);
             }
@@ -138,6 +144,30 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
             return res.json(updated);
         } else {
             return next('No se encuentra la inscripción');
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+InscripcionVacunasRouter.post('/inscripcion-vacunas/asignacion', Auth.authenticate(), async (req: Request, res, next) => {
+    try {
+        let conditions = { ...req.body.params };
+        conditions.estados = ['pendiente', 'habilitado'];
+        conditions.incluirVacunados = false;
+        conditions.validado = true;
+        conditions.sort = '-fechaRegistro';
+        conditions.estaAsignado = false;
+        const proximaInscripcion = await InscripcionVacunasCtr.findOne(conditions);
+        if (proximaInscripcion) {
+            proximaInscripcion.asignado = {
+                fechaAsignacion: new Date(),
+                usuario: req.user.usuario
+            };
+            const inscripcionAsignada = await InscripcionVacunasCtr.update(proximaInscripcion.id, proximaInscripcion, req);
+            return res.json(inscripcionAsignada);
+        } else {
+            return next('No existen más inscripciones asignables para este grupo/localidad');
         }
     } catch (err) {
         return next(err);
