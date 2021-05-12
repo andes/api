@@ -23,6 +23,13 @@ export interface FormTypes {
             };
             extras: any;
             resources: string;
+            items: {
+                type: [{
+                    id: String,
+                    nombre: String
+                }],
+                required: false
+            };
             preload: boolean;
         }[];
     }[];
@@ -44,6 +51,13 @@ export const FieldSchema = new mongoose.Schema({
     required: Boolean,
     subfilter: Boolean,
     resources: { type: String, required: false },
+    items: {
+        type: [{
+            id: String,
+            nombre: String
+        }],
+        required: false
+    },
     preload: Boolean,
 
 });
