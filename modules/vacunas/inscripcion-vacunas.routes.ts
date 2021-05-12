@@ -53,6 +53,10 @@ class InscripcionVacunasResource extends ResourceBase {
                 return { $exists: value };
             }
         },
+        userAsignado: {
+            field: 'asignado.usuario.id',
+            fn: MongoQuery.equalMatch
+        },
         estados: MongoQuery.inArray.withField('estado'),
         fechaRegistro: MongoQuery.matchDate.withField('fechaRegistro'),
         grupos: MongoQuery.inArray.withField('grupo.nombre'),
