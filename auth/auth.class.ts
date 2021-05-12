@@ -109,7 +109,7 @@ export class Auth {
 
     static validateCaptcha() {
         return async (req, res, next) => {
-            if (configPrivate.captcha.enabled) {
+            if (configPrivate.captcha.enabled && !req.body.scan) {
                 try {
                     const recaptcha = req.body.recaptcha;
                     if (!recaptcha) {
