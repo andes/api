@@ -1,3 +1,22 @@
+# [5.45.0](https://github.com/andes/api/compare/v5.44.0...v5.45.0) (2021-05-12)
+
+
+### Bug Fixes
+
+* **com:** Se resuelven errores en los test ([81f9bef](https://github.com/andes/api/commit/81f9bef5cefe45d4a144e5912d5cbf1fe6942a46))
+* **COM:** asigna habilitadas al COM ([99c3046](https://github.com/andes/api/commit/99c3046b97065dbd6820dc6f5bbf6dbbaddc75a4))
+
+
+### Features
+
+* **COM:** incluye historial en reporte derivacion ([82729f4](https://github.com/andes/api/commit/82729f4a3da7f009a67b9b47795ddcdbdebbe7aa))
+* **email-verificacion-app:** se mejora texto de email ([#1381](https://github.com/andes/api/issues/1381)) ([75e9cd0](https://github.com/andes/api/commit/75e9cd0602e61c5e7f0ebaa4f2fff687dfe14b5a))
+* **EP:** codigo SISA en ficha epidemio ([6655d55](https://github.com/andes/api/commit/6655d552e23c468bfff96bce8d3553cf4f9e6d3a))
+* **form-epidemio:** historial ficha ([a255cd9](https://github.com/andes/api/commit/a255cd9ebd2e762a117787bf56aed78d2dbcc54a))
+* **organizacion:** filtro internaciones ([347a711](https://github.com/andes/api/commit/347a711e58bfc2bb4941e2383d1e3a2c2d190667))
+* **perinatal:** recurso de carnet perinatal ([#1349](https://github.com/andes/api/issues/1349)) ([bb83731](https://github.com/andes/api/commit/bb83731fb9422bc63eae0364dcd0b45344b6b184))
+* **vac:** certificado al momento de la inscripción ([#1371](https://github.com/andes/api/issues/1371)) ([6ab79a9](https://github.com/andes/api/commit/6ab79a99de1a7bb7ef6b41e9769edf9125d503f7))
+
 # [5.44.0](https://github.com/andes/api/compare/v5.43.0...v5.44.0) (2021-05-05)
 
 
