@@ -2,7 +2,6 @@ import { Types } from 'mongoose';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as express from 'express';
 import { Agenda } from '../schemas/agenda';
-import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
@@ -11,10 +10,10 @@ import * as moment from 'moment';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
-import * as controller from '../../../core/mpi/controller/paciente';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
 import { turnosLog } from '../citasLog';
 import { getHistorial } from '../controller/historialCitasController/historialCitasController';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 
 const router = express.Router();
@@ -39,8 +38,8 @@ router.get('/historial', async (req, res, next) => {
 
 });
 
-function getPaciente(idPaciente) {
-    return paciente.findById(idPaciente).exec();
+async function getPaciente(idPaciente) {
+    return await PacienteCtr.findById(idPaciente);
 }
 function getTipoPrestacion(idTipoPrestacion) {
     return tipoPrestacion.findById(idTipoPrestacion).exec();
@@ -176,7 +175,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 }
                 // Si el paciente no tiene carpeta en ese efector, se busca en la colección carpetaPaciente y se actualiza
                 if (!arrPrueba || arrPrueba.length === 0) {
-                    const pacienteMPI = await controller.buscarPaciente(req.body.paciente.id) as any;
+                    const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id) as any;
                     const carpetas = await getCarpeta(req.body.paciente.documento, user.organizacion._id);
                     await turnosController.actualizarCarpeta(req, res, next, pacienteMPI, carpetas);
                     pacienteTurno.carpetaEfectores = req.body.carpetaEfectores;

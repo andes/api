@@ -278,6 +278,33 @@ export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
     }
 };
 
+/**
+ * Verifica la existencia de una carpeta de paciente en el efector actual
+ *
+ * @param {object} req
+ */
+export async function checkCarpeta(req) {
+    if (req.body && req.body.carpetaEfectores) {
+
+        const indiceCarpeta = req.body.carpetaEfectores.findIndex(x => x.organizacion._id === req.user.organizacion.id);
+        if (indiceCarpeta > -1) {
+            const query = {
+                carpetaEfectores: {
+                    $elemMatch: {
+                        nroCarpeta: req.body.carpetaEfectores[indiceCarpeta].nroCarpeta,
+                        'organizacion._id': req.body.carpetaEfectores[indiceCarpeta].organizacion._id
+                    }
+                }
+            };
+            const unPaciente = await Paciente.find(query).exec();
+            return (unPaciente?.length > 0);
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
+}
 
 /**
  * Guarda la foto de un paciente utilizando AndesDrive
