@@ -55,6 +55,9 @@ export function initAPI(app: Express) {
     // Inicializa Swagger
     Swagger.initialize(app);
 
+    const { setupServices } = require('./services');
+    setupServices(app);
+
     // Carga los módulos y rutas
     for (const m in config.modules) {
         if (config.modules[m].active) {
@@ -119,7 +122,6 @@ export function initAPI(app: Express) {
         );
     }
     app.use('/api/modules/turnos', require('./modules/turnos').InstitucionRouter);
-
 
     /**
      * Inicializa las rutas para adjuntar archivos

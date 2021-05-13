@@ -20,6 +20,12 @@ export interface MailOptions {
 
 export function sendMail(options: MailOptions) {
     return new Promise((resolve, reject) => {
+
+        if (!enviarMail.active) {
+            return resolve({});
+        }
+
+
         const transporter = nodemailer.createTransport({
             host: enviarMail.host,
             port: enviarMail.port,
