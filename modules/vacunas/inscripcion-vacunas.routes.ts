@@ -140,6 +140,9 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
             if (inscripto.estado === 'habilitado' && req.body.grupo.nombre === 'personal-salud') {
                 inscripto.personal_salud = true;
             }
+            if (inscripto.email) {
+                inscripto.email = inscripto.email.toLowerCase().trim();
+            }
             const updated = await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
             return res.json(updated);
         } else {
@@ -209,11 +212,12 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas/registro', async (req: Reque
                     return next('No es posible verificar su identidad.  Por favor verifique sus datos');
                 }
             }
-
             if (req.body.grupo.nombre === 'factores-riesgo' && !req.body.morbilidades[0]) {
                 return next('Seleccionar factor de riesgo asociado a vacunación');
             }
-
+            if (req.body.email) {
+                req.body.email = req.body.email.toLowerCase().trim();
+            }
             const inscripcion = await InscripcionVacunasCtr.create(req.body, userScheduler as any);
             return res.json(inscripcion);
         } else {
