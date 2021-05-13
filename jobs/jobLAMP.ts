@@ -1,7 +1,7 @@
-import { importLAMPResults } from './LAMPResultsImport';
+import { importLAMPResults } from './../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 
-function run(done) {
-    importLAMPResults(done);
+
+async function run() {
+    await importLAMPResults();
 }
-
 export = run;

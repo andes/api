@@ -6,14 +6,12 @@
 
 
 import { AndesDrive } from '@andes/drive/';
-
-import { Connections } from './../connections';
 import { Drive } from '../config.private';
+import { Connections } from './../connections';
 
 const path = require('path');
 
 Connections.initialize();
-
 AndesDrive.setup(Drive);
 
 const { setupServices } = require('../services');
@@ -24,6 +22,7 @@ const done = () => {
 };
 
 const actionName = process.argv[2];
+require('./../modules/webhook');
 const action = require(path.join('..', actionName));
 
 action(done);
