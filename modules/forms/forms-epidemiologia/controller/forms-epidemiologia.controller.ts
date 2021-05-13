@@ -1,3 +1,4 @@
+import { EventCore } from '@andes/event-bus/';
 import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
 import * as mongoose from 'mongoose';
 
@@ -19,5 +20,10 @@ export async function updateField(id, body) {
 }
 
 export async function getLAMPPendientes() { 
-    return await FormsEpidemiologia.find({'secciones.fields.lamp.id': 'muestra'});
+    return await FormsEpidemiologia.find({ 'secciones.fields.lamp.id': 'muestra' });
+}
+
+export async function importLAMPResults() {
+    const lamps = await this.getLAMPPendientes();
+    EventCore.emitAsync('notificacion:epidemio:lamp', lamps);
 }

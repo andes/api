@@ -1,6 +1,7 @@
-import { jobs } from '../config.private';
+import { ChildProcess, spawn } from 'child_process';
 import * as debug from 'debug';
-import { spawn, ChildProcess } from 'child_process';
+import { jobs } from '../config.private';
+
 
 const schedule = require('node-schedule');
 const log = debug('jobs');
