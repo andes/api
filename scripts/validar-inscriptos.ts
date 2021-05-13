@@ -42,8 +42,16 @@ async function run(done) {
                 } else {
                     await extractFoto(inscriptoValidado, dataLog);
                     const paciente = await findOrCreate(inscriptoValidado, dataLog);
-                    if (paciente && paciente.id) {
-                        inscripcion.paciente = paciente;
+                    if (paciente && paciente._id) {
+                        inscripcion.paciente = {
+                            id: paciente._id,
+                            nombre: paciente.nombre,
+                            apellido: paciente.apellido,
+                            documento: paciente.documento,
+                            telefono: paciente.telefono,
+                            sexo: paciente.sexo,
+                            fechaNacimiento: paciente.fechaNacimiento
+                        };
                     }
                 }
                 // Busca el paciente y si no existe lo guarda
