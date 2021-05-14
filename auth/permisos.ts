@@ -680,6 +680,11 @@ export default [
                 key: 'historial',
                 title: 'Ver historial',
                 type: 'boolean'
+            },
+            {
+                key: 'seguimiento',
+                title: 'Seguimiento de casos',
+                type: 'boolean'
             }
         ]
     }
