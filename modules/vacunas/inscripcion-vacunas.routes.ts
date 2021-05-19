@@ -127,13 +127,13 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
     try {
         let inscripto: IInscripcionVacunas = req.body;
         if (inscripto) {
-            if (!inscripto.validaciones ?.includes('domicilio')) {
+            if (!inscripto.validaciones?.includes('domicilio')) {
                 const domicilio = await validarDomicilio(inscripto);
                 if (domicilio) {
-                    inscripto.validaciones ?.length ? inscripto.validaciones.push('domicilio') : inscripto.validaciones = ['domicilio'];
+                    inscripto.validaciones?.length ? inscripto.validaciones.push('domicilio') : inscripto.validaciones = ['domicilio'];
                 }
             }
-            if (!inscripto.validaciones ?.includes('domicilio') || inscripto.validado === false) {
+            if (!inscripto.validaciones?.includes('domicilio') || inscripto.validado === false) {
                 const inscriptoValidado = await validar(inscripto.documento as any, inscripto.sexo as any);
                 inscripto = await validarInscripcion(req.body, inscriptoValidado, req);
             }
@@ -212,7 +212,7 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas/registro', async (req: Reque
                     return next('No es posible verificar su identidad.  Por favor verifique sus datos');
                 }
             }
-            if (req.body.grupo.nombre === 'factores-riesgo' && !req.body.morbilidades[0]) {
+            if (req.body.grupo.nombre === 'factores-riesgo' && (!req.body.morbilidades[0] && !req.body.factorRiesgoEdad)) {
                 return next('Seleccionar factor de riesgo asociado a vacunación');
             }
             if (req.body.email) {

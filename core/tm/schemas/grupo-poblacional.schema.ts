@@ -15,7 +15,9 @@ export const GrupoPoblacionalSchema = new Schema({
         default: true
     },
     validaciones: Schema.Types.Mixed,
-    mensajeDefault: Schema.Types.Mixed
+    mensajeDefault: Schema.Types.Mixed,
+    excepciones: Schema.Types.Mixed
+
 });
 
 export const GrupoPoblacional = model('grupo-poblacional', GrupoPoblacionalSchema, 'grupo-poblacional');

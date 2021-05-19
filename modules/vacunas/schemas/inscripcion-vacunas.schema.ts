@@ -58,6 +58,7 @@ export const InscripcionVacunaSchema = new Schema({
     fechaVacunacion: Date,
     idPrestacionVacuna: Types.ObjectId,
     morbilidades: [String],
+    factorRiesgoEdad: Boolean,
     fechaValidacion: Date,
     localidadDeclarada: String,
     fechaCertificado: Date,
