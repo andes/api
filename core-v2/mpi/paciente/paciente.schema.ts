@@ -3,7 +3,7 @@ import * as moment from 'moment';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from './constantes';
-import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';
+import { NombreSchema, DireccionSchema, ContactoSchema, UbicacionSchema } from '../../../shared/schemas';
 import { FinanciadorSchema } from '../financiador/financiador.schema';
 import { ParentescoSchema } from '../parentesco/parentesco.schema';
 import { IPacienteDoc } from './paciente.interface';
@@ -44,6 +44,7 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     estado: ESTADO,
     contacto: [ContactoSchema],
     direccion: [DireccionSchema],
+    lugarNacimiento: UbicacionSchema,
     sexo: SEXO,
     genero: SEXO,
     fechaFallecimiento: Date,
