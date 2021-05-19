@@ -1,3 +1,20 @@
+# [5.46.0](https://github.com/andes/api/compare/v5.45.0...v5.46.0) (2021-05-19)
+
+
+### Bug Fixes
+
+* **AM:** Agrega control al verificar si ya existe la cuenta ([#1385](https://github.com/andes/api/issues/1385)) ([2a55ebb](https://github.com/andes/api/commit/2a55ebb4f381b4583bd87ecc1b5e80cf29aeaad6))
+* **vac:** arreglo al asignar id de paciente en validación ([#1378](https://github.com/andes/api/issues/1378)) ([5539a54](https://github.com/andes/api/commit/5539a54f80e64f50ae0ae1abfc1039d832b578ce))
+* **vac:** convierte mail a minuscula ([#1377](https://github.com/andes/api/issues/1377)) ([1988e93](https://github.com/andes/api/commit/1988e93404a684d9aeeae99205854afebd9e6cfe))
+
+
+### Features
+
+* **epidemio:** Agregamos el campo sexo al objeto paciente de la ficha ([19ea9fe](https://github.com/andes/api/commit/19ea9fe5ff902c9f204dfdb2a33d5cbdad4880f7))
+* **permisos:** permiso para seguimiento de casos ([138f4b1](https://github.com/andes/api/commit/138f4b1bdd92085d711f68eb95824f45bda094c3))
+* **services:** andes services ([#1356](https://github.com/andes/api/issues/1356)) ([c088bf5](https://github.com/andes/api/commit/c088bf52c5741abf1167c75b10eb6f5eea5b7e5a))
+* **vac:** permitir obtener inscripción pendiente ([#1370](https://github.com/andes/api/issues/1370)) ([c7befa2](https://github.com/andes/api/commit/c7befa2c16412eca7633480a16c58acece1c84de))
+
 # [5.45.0](https://github.com/andes/api/compare/v5.44.0...v5.45.0) (2021-05-12)
 
 
