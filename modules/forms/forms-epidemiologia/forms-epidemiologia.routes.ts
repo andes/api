@@ -36,6 +36,15 @@ class FormsEpidemiologiaResource extends ResourceBase {
             field: 'secciones.fields.codigoSisa',
             fn: (value) => (value ? { $type: 'number' } : { $not: { $type: 'number' } })
         },
+        estado: {
+            field: 'secciones.fields.seguimiento.estadoActual.key',
+            fn: (value) => (value !== 'activo' ? { $eq: value } : { $not: { $in: ['alta', 'fallecido'] }})
+        },
+        fechaEstadoActual: MongoQuery.matchDate.withField('score.fecha'),
+        documento: {
+            field: 'paciente.documento',
+            fn: MongoQuery.equalMatch
+        }
     };
 }
 
