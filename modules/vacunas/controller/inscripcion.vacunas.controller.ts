@@ -22,6 +22,7 @@ export interface IEstadoInscripcion {
         sexo: String;
         fechaNacimiento: Date;
         localidad: any;
+        factorRiesgoEdad: boolean;
     };
 }
 
@@ -82,7 +83,8 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
             documento: inscripto.documento,
             sexo: inscripto.sexo,
             fechaNacimiento: inscripto.fechaNacimiento,
-            localidad: inscripto.localidad
+            localidad: inscripto.localidad,
+            factorRiesgoEdad: inscripto.factorRiesgoEdad
         };
     }
     return estadoInscripcion;
