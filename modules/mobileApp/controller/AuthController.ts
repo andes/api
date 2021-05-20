@@ -3,7 +3,7 @@ import { Matching } from '@andes/match';
 import * as config from '../../../config';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
-import * as controller from './../../../core/mpi/controller/paciente';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { sendEmail, IEmail, ISms, sendSms } from '../../../utils/roboSender';
 
 const log = debug('AuthController');
@@ -301,22 +301,14 @@ export function updateAccount(account: IPacienteAppDoc, data) {
  * @param {pacienteAppSchema} userAccount
  * @param {object} mpiData Datos del paciente para matching
  */
-export function verificarCuenta(userAccount, mpiData) {
-    return new Promise((resolve, reject) => {
-        const pacienteId = userAccount.pacientes[0].id;
-        controller.buscarPaciente(pacienteId).then((pac => {
+export async function verificarCuenta(userAccount, mpiData) {
+    const pacienteId = userAccount.pacientes[0].id;
+    const paciente = PacienteCtr.findById(pacienteId);
+    const match = new Matching();
+    const resultadoMatching = match.matchPersonas(mpiData, paciente, config.mpi.weightsScan, 'Levenshtein');
 
-            const match = new Matching();
-            const resultadoMatching = match.matchPersonas(mpiData, pac.paciente, config.mpi.weightsScan, 'Levenshtein');
-
-            // no cumple con el numero del matching
-            if (resultadoMatching >= config.mpi.cotaMatchMax) {
-                return resolve(true);
-            }
-            return reject();
-
-        })).catch(reject);
-    });
+    // no cumple con el numero del matching
+    return resultadoMatching >= config.mpi.cotaMatchMax;
 }
 
 /**
