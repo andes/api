@@ -38,3 +38,42 @@ EventCore.on('notification:fichaEpidemiologica:laboratory', async (info) => {
         }
     }
 });
+
+EventCore.on('epidemiologia:prestaciones:validate', async (info) => {
+    const fichas = await FormEpidemiologiaCtr.search({ paciente: info.paciente.id, type: 'covid19' });
+    if (fichas) {
+        const fichasOrdenadas = fichas.sort((a, b) => b.createdAt - a.createdAt);
+        const lastFicha = fichasOrdenadas[0];
+        const secciones = lastFicha.secciones;
+        let seccionOperaciones = secciones.find(seccion => seccion.name === 'Operaciones');
+        if (!seccionOperaciones) {
+            seccionOperaciones = {
+                name: 'Operaciones',
+                fields: [{
+                    seguimiento: {
+                        llamados: [],
+                        ultimoEstado: {}
+                    }
+                }]
+            };
+            secciones.push(seccionOperaciones);
+        }
+        const fieldSeguimiento = seccionOperaciones.fields.find(field => Object.keys(field)[0] === 'seguimiento');
+        if (!fieldSeguimiento) {
+            seccionOperaciones.fields.push({
+                seguimiento: {
+                    llamados: [],
+                    ultimoEstado: {}
+                }
+            })
+        };
+        const prestacion = {
+            idPrestacion: info._id,
+            tipoPrestacion: info.solicitud.tipoPrestacion.term,
+            fecha: info.createdAt
+        };
+        fieldSeguimiento.seguimiento.llamados.push(prestacion);
+        fieldSeguimiento.seguimiento.ultimoEstado = { 'seguimiento': prestacion.fecha };
+        return await FormEpidemiologiaCtr.update(lastFicha.id, { secciones }, dataLog);
+    }
+});
