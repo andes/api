@@ -4,7 +4,8 @@ import { Derivacion } from '../../../modules/descargas/com/derivacion';
 const moment = require('moment');
 
 export async function sendMailComprobanteDerivacion(derivacion, email) {
-    let comprobante = new Derivacion({body: derivacion});
+    const body = { derivacionId: derivacion._id };
+    const comprobante = new Derivacion({ body });
     const opciones = { header: { height: '3cm' } };
     const fileName: any = await comprobante.informe(opciones);
     const fechaFinalizacion = moment(derivacion.historial.createdAt).format('DD/MM/YYYY');

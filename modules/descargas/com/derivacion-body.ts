@@ -227,8 +227,8 @@ export class DerivacionBody extends HTMLComponent {
         const firmaHTML = await this.getFirmaHTML(derivacion);
         const datosSolicitud = derivacion ? await this.getDatosSolicitud(derivacion) : null;
         const fecha = derivacion.historial ? moment(derivacion.historial[0].createdAt).format('DD/MM/YYYY HH:mm') : null;
-        const organizacion = await Organizacion.findById(this._data.organizacionId);
-        const historial = derivacion ? await this.getHistorialDerivacion(organizacion, derivacion) : null;
+        const organizacion = this._data.historial && this._data.organizacionId ? await Organizacion.findById(this._data.organizacionId) : null;
+        const historial = this._data.historial ? await this.getHistorialDerivacion(organizacion, derivacion) : null;
         this.data = {
             idDerivacion: derivacion._id,
             nombre: derivacion.paciente.nombre,
@@ -249,7 +249,7 @@ export class DerivacionBody extends HTMLComponent {
             datosSolicitud,
             firmaHTML,
             historial,
-            reporteCOM: organizacion.esCOM
+            reporteCOM: organizacion?.esCOM
         };
     }
 

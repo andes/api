@@ -16,7 +16,7 @@ export class Derivacion extends InformePDF {
         this.header = new DerivacionHeader();
 
         const { derivacionId, historial } = this.req.body;
-        const organizacionId = Auth.getOrganization(this.req);
+        const organizacionId = historial ? Auth.getOrganization(this.req) : null;
         this.body = new DerivacionBody({ derivacionId, historial, organizacionId });
         await super.process();
     }
