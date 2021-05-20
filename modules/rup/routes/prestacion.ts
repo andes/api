@@ -633,6 +633,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
             if (req.body.op === 'romperValidacion') {
                 const _prestacion = data;
                 EventCore.emitAsync('rup:prestacion:romperValidacion', _prestacion);
+                // EventCore.emitAsync('epidemiologia:prestaciones:romperValidacionn', _prestacion);
             }
 
             res.json(prestacion);
@@ -666,8 +667,17 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
 
 EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
     const elementosRUPSet = await elementosRUPAsSet();
+    const elementoRUPPrestacion = elementosRUPSet.getByConcept(prestacion.solicitud.tipoPrestacion);
+    if (elementoRUPPrestacion) {
+        if (elementoRUPPrestacion?.dispatch) {
+            elementoRUPPrestacion.dispatch.forEach(hook => {
+                if (hook.method === 'validar-prestacion') {
+                    EventCore.emitAsync(hook.event, prestacion);
+                }
+            });
+        }
+    }
     const registros = prestacion.getRegistros(true);
-
     let tags = {};
     for (const reg of registros) {
         if (reg.elementoRUP) {
@@ -686,11 +696,21 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
             }
         }
     }
-    await Prestacion.updateOne( { _id: prestacion.id} , { $set: { tags } });
+    await Prestacion.updateOne({ _id: prestacion.id }, { $set: { tags } });
 });
 
 EventCore.on('rup:prestacion:romperValidacion', async (prestacion: IPrestacionDoc) => {
     const elementosRUPSet = await elementosRUPAsSet();
+    const elementoRUPPrestacion = elementosRUPSet.getByConcept(prestacion.solicitud.tipoPrestacion);
+    if (elementoRUPPrestacion) {
+        if (elementoRUPPrestacion?.dispatch) {
+            elementoRUPPrestacion.dispatch.forEach(hook => {
+                if (hook.method === 'romper-validacion') {
+                    EventCore.emitAsync(hook.event, prestacion);
+                }
+            });
+        }
+    }
     const registros = prestacion.getRegistros(true);
 
     for (const reg of registros) {
