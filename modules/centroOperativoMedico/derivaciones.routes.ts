@@ -62,9 +62,8 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
         const derivacion: any = await Derivaciones.findById(req.params.id);
         if (derivacion) {
             const nuevoEstado = req.body.estado;
-
             if (nuevoEstado.estado === 'habilitada') {
-                const orgCOM = (await Organizacion.find({esCOM: true}))[0];
+                const orgCOM = (await Organizacion.find({ esCOM: true }))[0];
                 const { id, nombre, direccion } = orgCOM;
                 nuevoEstado.organizacionDestino = { id, nombre, direccion };
                 delete nuevoEstado.unidadDestino;
@@ -74,7 +73,6 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
             if (nuevoEstado.prioridad) {
                 derivacion.prioridad = nuevoEstado.prioridad;
             }
-
             if (nuevoEstado.estado) {
                 const organizacionId = Auth.getOrganization(req);
                 const organizacion = await Organizacion.findById(organizacionId);
@@ -83,12 +81,11 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                     return next('La derivación ya no está asignada a su organización');
                 }
                 derivacion.estado = nuevoEstado.estado;
-
                 const isPacienteDestino = derivacion.estado === 'finalizada' && derivacion.organizacionDestino && derivacion.organizacionDestino.id !== derivacion.organizacionOrigen.id;
                 if (isPacienteDestino && organizacion.esCOM && organizacion.configuraciones?.emails) {
                     const emailTo = organizacion.configuraciones.emails.find(e => e.nombre === 'recupero')?.email;
                     if (emailTo) {
-                        sendMailComprobanteDerivacion(derivacion, emailTo);
+                        sendMailComprobanteDerivacion(derivacion, emailTo, organizacionId);
                     }
                 }
             }
@@ -103,7 +100,6 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                 derivacion.organizacionTraslado = req.body.trasladoEspecial.organizacionTraslado;
                 derivacion.tipoTraslado = req.body.trasladoEspecial.tipoTraslado;
             }
-
             Auth.audit(derivacion, req);
             await derivacion.save();
             return res.json(derivacion);

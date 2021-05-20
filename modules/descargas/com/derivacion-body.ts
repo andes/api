@@ -212,7 +212,8 @@ export class DerivacionBody extends HTMLComponent {
     }
 
     public async process() {
-        const derivacion: any = await Derivaciones.findById(this._data.derivacionId);
+
+        const derivacion: any = await Derivaciones.findById(this._data._id);
 
         let finalizada = false;
         let elementoHistorial: any;
@@ -270,7 +271,7 @@ export class DerivacionBody extends HTMLComponent {
         historial.forEach(h => {
             h.fechaCreacion = moment(h.createdAt).locale('es').format('DD/MM/YYYY HH:mm');
             h.reporteCOM = organizacion.esCOM;
-            h.esActualizacion = !h?.estado;
+            h.esActualizacion = !h.estado;
         });
         return historial.sort((a, b) => b.createdAt - a.createdAt);
     }

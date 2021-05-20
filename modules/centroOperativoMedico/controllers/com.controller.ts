@@ -1,19 +1,17 @@
 import * as configPrivate from '../../../config.private';
-import * as SendEmail from '../../../utils/roboSender/sendEmail';
 import { Derivacion } from '../../../modules/descargas/com/derivacion';
+import * as SendEmail from '../../../utils/roboSender/sendEmail';
 const moment = require('moment');
 
-export async function sendMailComprobanteDerivacion(derivacion, email) {
-    let comprobante = new Derivacion({body: derivacion});
+export async function sendMailComprobanteDerivacion(derivacion, email, organizacionId) {
+    let comprobante = new Derivacion({ body: { derivacion, organizacionId } });
     const opciones = { header: { height: '3cm' } };
     const fileName: any = await comprobante.informe(opciones);
     const fechaFinalizacion = moment(derivacion.historial.createdAt).format('DD/MM/YYYY');
-
     let attachments = [{
         filename: `comprobante derivacion ${derivacion.paciente.nombre}${derivacion.paciente.apellido}-${fechaFinalizacion}.pdf`,
         path: fileName
     }];
-
     const handleBarsData = {
         asunto: 'Aviso de derivación finalizada',
         mensaje: `El paciente ${derivacion.paciente.nombre} ${derivacion.paciente.apellido}
@@ -31,6 +29,5 @@ export async function sendMailComprobanteDerivacion(derivacion, email) {
         html,
         attachments
     };
-
     SendEmail.sendMail(data);
 }

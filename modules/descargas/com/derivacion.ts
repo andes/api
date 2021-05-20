@@ -1,7 +1,6 @@
+import { getAssetsURL, InformePDF } from '../model/informe.class';
 import { DerivacionBody } from './derivacion-body';
 import { DerivacionHeader } from './derivacion-header';
-import { InformePDF, getAssetsURL } from '../model/informe.class';
-import { Auth } from '../../../auth/auth.class';
 
 export class Derivacion extends InformePDF {
     constructor(public req) {
@@ -14,10 +13,9 @@ export class Derivacion extends InformePDF {
 
     public async process() {
         this.header = new DerivacionHeader();
-
-        const { derivacionId, historial } = this.req.body;
-        const organizacionId = Auth.getOrganization(this.req);
-        this.body = new DerivacionBody({ derivacionId, historial, organizacionId });
+        const { _id, historial } = this.req.body.derivacion;
+        const organizacionId = this.req.body.organizacionId;
+        this.body = new DerivacionBody({ _id, historial, organizacionId });
         await super.process();
     }
 
