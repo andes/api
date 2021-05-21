@@ -38,7 +38,11 @@ class FormsEpidemiologiaResource extends ResourceBase {
         },
         estado: {
             field: 'secciones.fields.seguimiento.ultimoEstado.key',
+<<<<<<< HEAD
             fn: (value) => (value !== 'activo' ? { $eq: value } : { $not: { $in: ['alta', 'fallecido'] } })
+=======
+            fn: (value) => (value !== 'activo' ? { $eq: value } : { $not: { $in: ['alta', 'fallecido'] }})
+>>>>>>> feat(EP): merge de seguimiento de covid-19
         },
         fechaEstadoActual: MongoQuery.matchDate.withField('score.fecha'),
         documento: {
