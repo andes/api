@@ -58,14 +58,15 @@ EventCore.on('epidemiologia:prestaciones:validate', async (info) => {
             };
             secciones.push(seccionOperaciones);
         }
-        const fieldSeguimiento = seccionOperaciones.fields.find(field => Object.keys(field)[0] === 'seguimiento');
+        let fieldSeguimiento = seccionOperaciones.fields.find(f => f.seguimiento);
         if (!fieldSeguimiento) {
-            seccionOperaciones.fields.push({
+            fieldSeguimiento = {
                 seguimiento: {
                     llamados: [],
                     ultimoEstado: {}
                 }
-            })
+            }
+            seccionOperaciones.fields.push(fieldSeguimiento);
         };
         const prestacion = {
             idPrestacion: info._id,
@@ -73,7 +74,7 @@ EventCore.on('epidemiologia:prestaciones:validate', async (info) => {
             fecha: info.createdAt
         };
         fieldSeguimiento.seguimiento.llamados.push(prestacion);
-        fieldSeguimiento.seguimiento.ultimoEstado = { 'seguimiento': prestacion.fecha };
+        fieldSeguimiento.seguimiento.ultimoEstado = { key: 'seguimiento', value: prestacion.fecha };
         return await FormEpidemiologiaCtr.update(lastFicha.id, { secciones }, dataLog);
     }
 });
