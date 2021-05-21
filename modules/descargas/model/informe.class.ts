@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
 import { HTMLComponent } from './html-component.class';
+import { enviarMail } from '../../../config.private';
 
 export class InformePDF extends HTMLComponent {
     template = `
@@ -46,6 +47,10 @@ export class InformePDF extends HTMLComponent {
         };
         const html = await this.render();
         return new Promise((resolve, reject) => {
+            if (!enviarMail.active) {
+                // Para que ande en Juenkins por ahora
+                return resolve('');
+            }
             pdf.create(html, opciones).toFile((err, file) => {
                 if (err) {
                     return reject(err);
