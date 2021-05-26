@@ -35,6 +35,7 @@ export const CarnetPerinatalSchema = new Schema({
     fechaUltimaMenstruacion: Date,
     primeriza: Boolean,
     fechaProximoControl: Date,
+    fechaFinEmbarazo: Date,
     embarazo: {
         conceptId: String,
         term: String,
