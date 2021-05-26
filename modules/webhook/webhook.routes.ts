@@ -3,9 +3,10 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { EventCore } from '@andes/event-bus/';
 import * as moment from 'moment';
 import { Auth } from '../../auth/auth.class';
-import { findOrCreate } from '../../core-v2/mpi/paciente/paciente.controller';
+import { findOrCreate, getLocalidad } from '../../core-v2/mpi/paciente/paciente.controller';
 import { PatientNotFound } from '../../core-v2/mpi/paciente/paciente.error';
 import { PacienteCtr } from '../../core-v2/mpi/paciente/paciente.routes';
+import { getZona } from '../../core/tm/controller/localidad';
 import { WebHook } from './webhook.schema';
 
 class WebhookResource extends ResourceBase {
@@ -44,7 +45,17 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
                 contactos.push(nuevoContacto);
                 paciente.contacto = contactos;
             }
-            EventCore.emitAsync('notification:patient:laboratory', paciente);
+            // filtrar zonas que no reciben notificaciones
+            let enviarNotificacion = true;
+            const localidadPaciente: any = getLocalidad(paciente);
+            const Zona = localidadPaciente && await getZona(localidadPaciente._id);
+            if (Zona) {
+                enviarNotificacion = Zona.configuracion.notificaciones;
+            }
+            if (enviarNotificacion) {
+                EventCore.emitAsync('notification:patient:laboratory', paciente);
+            }
+
             await PacienteCtr.update(paciente.id, paciente, req as any);
             const data = {
                 paciente,

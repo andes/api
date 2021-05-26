@@ -1,7 +1,10 @@
 import { Schema, model } from 'mongoose';
 
 export const zonaSanitariasSchema = new Schema({
-    nombre: String
+    nombre: String,
+    configuracion: {
+        notificaciones: Boolean
+    }
 });
 
 

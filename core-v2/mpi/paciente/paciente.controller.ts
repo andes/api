@@ -408,3 +408,12 @@ export async function agregarHijo(progenitor, hijo, req) {
     }
 }
 
+export async function getLocalidad(paciente) {
+    if (paciente.direccion && paciente.direccion.length) {
+        const unaDireccion = paciente.direccion[0];
+        if (unaDireccion.ubicacion && unaDireccion.ubicacion.localidad) {
+            return unaDireccion.ubicacion.localidad;
+        }
+    }
+    return null;
+}
