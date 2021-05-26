@@ -1,3 +1,19 @@
+# [5.47.0](https://github.com/andes/api/compare/v5.46.0...v5.47.0) (2021-05-26)
+
+
+### Bug Fixes
+
+* **COM:** fix send mail comprobante ([bc62ea1](https://github.com/andes/api/commit/bc62ea1da47e89a6045cc5f578618aac4e132df5))
+* **pdf:** evita ejecutar pdf en test ([a15c635](https://github.com/andes/api/commit/a15c635b23feb1c8dc366ad9d1e6f192ff85d4dc))
+* **registro-mobile:** validar email y documento ([#1396](https://github.com/andes/api/issues/1396)) ([fe34bc0](https://github.com/andes/api/commit/fe34bc0913de67b1f044bf5a0196dee053780430))
+* **script:** busca pacientes por vínculos ([#1393](https://github.com/andes/api/issues/1393)) ([53541e9](https://github.com/andes/api/commit/53541e9ddaa0fe10bd4f4c3e2724dbbdba1ab1c9))
+
+
+### Features
+
+* **vac:** devuelve el factorRiesgoEdad al consultar por inscripción ([#1384](https://github.com/andes/api/issues/1384)) ([caaee5a](https://github.com/andes/api/commit/caaee5a861825d0bed1df3ceebc0bcd284d35b29))
+* **vac:** ver listado de inscripciones asignadas ([#1389](https://github.com/andes/api/issues/1389)) ([2ebce02](https://github.com/andes/api/commit/2ebce02dbe6904bdda960af381279b29e6655926))
+
 # [5.46.0](https://github.com/andes/api/compare/v5.45.0...v5.46.0) (2021-05-19)
 
 
