@@ -13,6 +13,7 @@ import * as Barrio from '../../../core/tm/schemas/barrio';
 import * as configPrivate from '../../../config.private';
 import * as config from '../../../config';
 import { IContacto } from '../../../shared/Contacto.interface';
+import { ParentescoCtr } from '../parentesco/parentesco.routes';
 
 
 /**
@@ -359,3 +360,51 @@ export async function updateContacto(contactos, paciente, req) {
         await PacienteCtr.update(paciente.id, paciente, req as any);
     }
 }
+
+export async function agregarHijo(progenitor, hijo, req) {
+    const poseeFamiliar = progenitor.relaciones.find(rel => {
+        return rel.referencia.toString() === hijo._id.toString();
+    });
+    if (!poseeFamiliar) {
+        // agrego relacion al hijo
+        const parentescoProgenitor = await ParentescoCtr.findOne({ nombre: '^progenitor' }, {}, req);
+        let progenitorRelacion = {
+            relacion: parentescoProgenitor,
+            referencia: progenitor._id,
+            nombre: progenitor.nombre,
+            apellido: progenitor.apellido,
+            documento: progenitor.documento ? progenitor.documento : null,
+            numeroIdentificacion: progenitor.numeroIdentificacion ? progenitor.numeroIdentificacion : null,
+            fotoId: progenitor.fotoId ? progenitor.fotoId : null,
+            fechaFallecimiento: progenitor.fechaFallecimiento ? progenitor.fechaFallecimiento : null
+        };
+        if (hijo.relaciones && hijo.relaciones.length) {
+            hijo.relaciones.push(progenitorRelacion);
+        } else {
+            hijo.relaciones = [progenitorRelacion];
+        }
+        await PacienteCtr.update(hijo.id, hijo, req);
+        // agrego relacion al padre
+        const parentescoHijo = await ParentescoCtr.findOne({ nombre: '^hijo' }, {}, req);
+        let familiarRelacion = {
+            relacion: parentescoHijo,
+            referencia: hijo._id,
+            nombre: hijo.nombre,
+            apellido: hijo.apellido,
+            documento: hijo.documento,
+            numeroIdentificacion: hijo.numeroIdentificacion ? hijo.numeroIdentificacion : null,
+            fotoId: hijo.fotoId ? hijo.fotoId : null,
+            fechaFallecimiento: hijo.fechaFallecimiento ? hijo.fechaFallecimiento : null
+        };
+        if (progenitor.relaciones && progenitor.relaciones.length) {
+            progenitor.relaciones.push(familiarRelacion);
+        } else {
+            progenitor.relaciones = [familiarRelacion];
+        }
+        const pacienteUpdated = await PacienteCtr.update(progenitor.id, progenitor, req);
+        return pacienteUpdated;
+    } else {
+        return null;
+    }
+}
+

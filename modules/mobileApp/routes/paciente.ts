@@ -1,11 +1,10 @@
 import * as express from 'express';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
-import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { validar } from '../../../core-v2/mpi/validacion';
-import { findOrCreate, extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
-import { calcularEdad, agregarHijo } from '../../../core/mpi/controller/paciente';
+import { findById, findOrCreate, extractFoto, agregarHijo } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 const router = express.Router();
 
 /**

@@ -8,7 +8,6 @@ import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-// import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import { PatientNotFound } from '../../../core-v2/mpi/paciente/paciente.error';
 import { turnosLog, agendaLog } from '../../turnos/citasLog';
 
