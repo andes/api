@@ -123,6 +123,9 @@ PacienteSchema.pre('save', function (next) {
         const match = new Matching();
         user.claveBlocking = match.crearClavesBlocking(user);
     }
+    if (user.isModified('alias') && user.alias) {
+        user.alias = user.alias.toUpperCase();
+    }
     if (user.documento) {
         words.push(user.documento.toLowerCase());
     }
