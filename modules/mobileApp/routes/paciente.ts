@@ -3,6 +3,9 @@ import * as cdaCtr from '../../cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
 import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { validar } from '../../../core-v2/mpi/validacion';
+import { findOrCreate, extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { calcularEdad, agregarHijo } from '../../../core/mpi/controller/paciente';
 const router = express.Router();
 
 /**
@@ -159,5 +162,53 @@ router.get('/laboratorios/(:id)', async (req: any, res, next) => {
         return next({ message: 'unauthorized' });
     }
 });
+
+
+router.post('/registro-familiar/:id', async (req: any, res, next) => {
+    try {
+        const idPaciente = req.params.id;
+        let pacienteActual: any = await findById(idPaciente);
+        const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
+        if (index >= 0) {
+            const documento = req.body.documento;
+            const sexo = req.body.sexo;
+            req.body.validado = false;
+            req.body.estado = 'pendiente';
+            // Realiza la búsqueda en Renaper
+            const pacienteValidado = await validar(documento, sexo);
+            if (pacienteValidado) {
+                const tramite = Number(req.body.tramite);
+                // Verifica el número de trámite
+                if (pacienteValidado.idTramite !== tramite) {
+                    return res.status(404).send('Número de trámite inválido');
+                }
+                req.body.nombre = pacienteValidado.nombre;
+                req.body.apellido = pacienteValidado.apellido;
+                req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
+                req.body.validado = true;
+                const edadFamiliar = calcularEdad(pacienteValidado.fechaNacimiento);
+                if (edadFamiliar >= 11) {
+                    return res.status(404).send('La edad del familiar a registrar no debe superar los 11 años');
+                }
+            } else {
+                return res.status(404).send('No es posible verificar la identidad del familiar a registrar. Por favor verifique sus datos');
+            }
+            // Busca el paciente y si no existe lo guarda
+            await extractFoto(pacienteValidado, req);
+            const familiar = await findOrCreate(pacienteValidado, req);
+            const pacienteUpdated = await agregarHijo(pacienteActual, familiar, req);
+            if (pacienteUpdated) {
+                return res.json(pacienteUpdated);
+            } else {
+                return res.status(404).send('El paciente ya se encuentra registrado dentro de sus familiares.');
+            }
+        } else {
+            return next({ message: 'unauthorized' });
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
 
 export = router;
