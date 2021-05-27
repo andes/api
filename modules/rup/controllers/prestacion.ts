@@ -6,6 +6,7 @@ import moment = require('moment');
 import { buscarEnHuds } from '../controllers/rup';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { ObjectId } from '@andes/core';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 /**
  * Libera la referencia al turno dentro de la solicitud
@@ -106,9 +107,13 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
     if (!expresion) {
         return null;
     }
+    const paciente: any = await PacienteCtr.findById(pacienteID);
+    if (!paciente) {
+        return null;
+    }
 
     const query = {
-        'paciente.id': pacienteID,
+        'paciente.id': { $in: paciente.vinculos },
         'estadoActual.tipo': estado,
     };
 
