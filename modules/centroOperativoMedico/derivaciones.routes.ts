@@ -64,7 +64,7 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
             const nuevoEstado = req.body.estado;
 
             if (nuevoEstado.estado === 'habilitada') {
-                const orgCOM = (await Organizacion.find({esCOM: true}))[0];
+                const orgCOM = (await Organizacion.find({ esCOM: true }))[0];
                 const { id, nombre, direccion } = orgCOM;
                 nuevoEstado.organizacionDestino = { id, nombre, direccion };
                 delete nuevoEstado.unidadDestino;
@@ -85,10 +85,22 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                 derivacion.estado = nuevoEstado.estado;
 
                 const isPacienteDestino = derivacion.estado === 'finalizada' && derivacion.organizacionDestino && derivacion.organizacionDestino.id !== derivacion.organizacionOrigen.id;
-                if (isPacienteDestino && organizacion.esCOM && organizacion.configuraciones?.emails) {
-                    const emailTo = organizacion.configuraciones.emails.find(e => e.nombre === 'recupero')?.email;
-                    if (emailTo) {
-                        sendMailComprobanteDerivacion(derivacion, emailTo);
+                if (isPacienteDestino && organizacion.esCOM) {
+                    const organizacionDestino = organizacionId !== derivacion.organizacionDestino.id ? await Organizacion.findById(derivacion.organizacionDestino.id) : null;
+
+                    let destinatarios = [];
+                    const emailDestino = organizacionDestino?.configuraciones?.emails?.find(e => e.nombre === 'comDerivacionesRecupero')?.email;
+                    const emailCOM = organizacion.configuraciones?.emails?.find(e => e.nombre === 'comDerivacionesRecupero')?.email;
+
+                    if (emailDestino) {
+                        destinatarios.push(emailDestino);
+                    }
+                    if (emailCOM) {
+                        destinatarios.push(emailCOM);
+                    }
+
+                    if (destinatarios.length) {
+                        sendMailComprobanteDerivacion(derivacion, destinatarios);
                     }
                 }
             }
