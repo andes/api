@@ -1,13 +1,11 @@
-import { paciente } from '../core/mpi/schemas/paciente';
-import { updatePaciente } from '../core/mpi/controller/paciente';
+
+import { Paciente, PacienteCtr } from '../core-v2/mpi/paciente';
 import { userScheduler } from '../config.private';
-let dataLog: any = new Object(userScheduler);
-dataLog.body = { _id: null };
-dataLog.method = null;
+
 
 // Borra el campo 'foto' de los pacientes
 async function run(done) {
-    const cursor = paciente.find({ $and: [{ 'relaciones.foto': { $exists: true } }, { 'relaciones.foto': /data:image/ }] }).cursor({ batchSize: 100 });
+    const cursor = Paciente.find({ $and: [{ 'relaciones.foto': { $exists: true } }, { 'relaciones.foto': /data:image/ }] }).cursor({ batchSize: 100 });
     const updatePatient = async (pac) => {
         try {
             let data = { relaciones: pac.relaciones.toObject() };
@@ -16,7 +14,7 @@ async function run(done) {
                     delete rel.foto;
                 }
             });
-            await updatePaciente(pac, data, dataLog);
+            await PacienteCtr.update(pac, data, userScheduler as any);
         } catch (error) {
             return;
         }
