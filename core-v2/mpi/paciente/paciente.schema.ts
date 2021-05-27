@@ -107,7 +107,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
             id: String,
             label: String
         }
-    }]
+    }],
+    idPacientePrincipal: mongoose.Schema.Types.ObjectId
 }, { versionKey: false });
 
 PacienteSchema.pre('save', function (next) {

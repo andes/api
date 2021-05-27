@@ -204,14 +204,18 @@ export async function findOrCreate(query: any, req) {
  * @param {object} data paciente modificado
  */
 export function linkUnlikOperation(paciente, data, updated) {
+    paciente = paciente._original;
+
     if (data.identificadores?.length || paciente.identificadores?.length) {
+
         const vinculados = data.identificadores?.filter(item => item.entidad === 'ANDES' && item.valor);
         const vinculadosPaciente = paciente.identificadores?.filter(item => item.entidad === 'ANDES' && item.valor);
-        if (vinculados?.length >= vinculadosPaciente?.length) {
+
+        if (vinculados?.length > vinculadosPaciente?.length) {
             return EventCore.emitAsync('mpi:pacientes:link', updated);
         }
     }
-    if (!paciente.activo && data.activo) {
+    if (paciente.idPacientePrincipal && data.idPacientePrincipal === null && data.activo) {
         return EventCore.emitAsync('mpi:pacientes:unlink', updated);
     }
 }
