@@ -185,7 +185,7 @@ router.post('/registro-familiar/:id', async (req: any, res, next) => {
                 req.body.apellido = pacienteValidado.apellido;
                 req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
                 req.body.validado = true;
-                const edadFamiliar = calcularEdad(pacienteValidado.fechaNacimiento);
+                const edadFamiliar = calcularEdad(pacienteValidado.fechaNacimiento, pacienteValidado.fechaFallecimiento);
                 if (edadFamiliar >= 11) {
                     return res.status(404).send('La edad del familiar a registrar no debe superar los 11 años');
                 }
