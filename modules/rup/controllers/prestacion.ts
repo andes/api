@@ -142,50 +142,20 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
     return huds;
 }
 
-export async function updatePrestacionPatientData(sourcePatient) {
+export async function updatePrestacionPatient(sourcePatient, idPaciente, idPacientePrincipal) {
     try {
-        const idPacientesVinculados = sourcePatient.identificadores.filter(identifier => identifier.entidad === 'ANDES');
-        if (idPacientesVinculados && idPacientesVinculados?.length > 0) {
-            for (let i = 0; i < idPacientesVinculados.length; i++) {
-                const query = { 'estadoActual.tipo': 'validada', 'paciente.id': mongoose.Types.ObjectId(idPacientesVinculados[i].valor) };
-                let prestaciones: any = await Prestacion.find(query);
-                let promises = prestaciones.map((p) => {
-                    p.paciente = {
-                        id: p.paciente.id, // El id original lo dejamos por si necesitamos desvincular
-                        nombre: sourcePatient.nombre,
-                        apellido: sourcePatient.apellido,
-                        documento: sourcePatient.documento,
-                        sexo: sourcePatient.sexo,
-                        fechaNacimiento: sourcePatient.fechaNacimiento,
-                        obraSocial: sourcePatient.financiador[0] ? sourcePatient.financiador[0] : p.paciente.financiador[0],
-                        idPacienteValidado: sourcePatient.id
-                    };
-                    Auth.audit(p, userScheduler as any);
-                    p.save();
-                });
-                await Promise.all(promises);
-            }
-        }
-
-    } catch (error) {
-        return error;
-    }
-}
-
-export async function restorePrestacionPatientData(sourcePatient) {
-    try {
-        const query = { 'estadoActual.tipo': 'validada', 'paciente.id': sourcePatient._id };
+        const query = { 'estadoActual.tipo': 'validada', 'paciente.id': idPaciente };
         let prestaciones: any = await Prestacion.find(query);
         let promises = prestaciones.map((p) => {
             p.paciente = {
-                id: sourcePatient._id,
+                id: p.paciente.id,
                 nombre: sourcePatient.nombre,
                 apellido: sourcePatient.apellido,
                 documento: sourcePatient.documento,
                 sexo: sourcePatient.sexo,
                 fechaNacimiento: sourcePatient.fechaNacimiento,
-                obraSocial: sourcePatient.financiador[0] ? sourcePatient.financiador[0] : null,
-                idPacienteValidado: null
+                obraSocial: sourcePatient.financiador.length > 0 ? sourcePatient.financiador[0] : null,
+                idPacienteValidado: idPacientePrincipal
             };
             Auth.audit(p, userScheduler as any);
             p.save();

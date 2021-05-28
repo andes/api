@@ -1,8 +1,8 @@
 import { EventCore } from '@andes/event-bus';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import { restorePrestacionPatientData, updatePrestacionPatientData } from './../../../modules/rup/controllers/prestacion';
-import { linkPacientesDuplicados, updateGeoreferencia } from './paciente.controller';
+import { updatePrestacionPatient } from './../../../modules/rup/controllers/prestacion';
+import { findById, linkPacientesDuplicados, updateGeoreferencia } from './paciente.controller';
 import { IPacienteDoc } from './paciente.interface';
 
 // TODO: Handlear errores
@@ -37,9 +37,17 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
         body: paciente
     };
     const addressChanged = changeFields.includes('direccion');
-
     if (addressChanged) {
         await updateGeoreferencia(paciente);
+    }
+    // Verifica si se realizó alguna operación de vinculación de pacientes
+    const vinculado = changeFields.includes('idPacientePrincipal');
+    if (vinculado && paciente.idPacientePrincipal) {
+        const pacienteVinculado = await findById(paciente.idPacientePrincipal);
+        await updatePrestacionPatient(pacienteVinculado, paciente.id, paciente.idPacientePrincipal);
+    }
+    if (vinculado && paciente.idPacientePrincipal === null && paciente.activo) {
+        await updatePrestacionPatient(paciente, paciente.id, null);
     }
     if (paciente.estado === 'validado') {
         // si el paciente tiene algun reporte de error, verificamos que sea nuevo
@@ -52,15 +60,3 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     }
 });
 
-EventCore.on('mpi:pacientes:link', async (paciente) => {
-    if (paciente.estado === 'validado' && paciente.activo && paciente.identificadores?.length) {
-        await updatePrestacionPatientData(paciente);
-    }
-});
-
-EventCore.on('mpi:pacientes:unlink', async (paciente) => {
-    if (paciente.activo) {
-        await restorePrestacionPatientData(paciente);
-    }
-
-});

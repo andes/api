@@ -1,20 +1,19 @@
-import { isSelected } from '@andes/core';
-import { AndesDrive, FileMetadata } from '@andes/drive';
-import { EventCore } from '@andes/event-bus/';
-import { geoReferenciar, getBarrio } from '@andes/georeference';
-import { Matching } from '@andes/match';
-import * as intoStream from 'into-stream';
-import * as moment from 'moment';
 import { Types } from 'mongoose';
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
-import * as Barrio from '../../../core/tm/schemas/barrio';
+import { Paciente, replaceChars } from './paciente.schema';
+import * as moment from 'moment';
+import * as intoStream from 'into-stream';
+import { Matching } from '@andes/match';
+import { IPacienteDoc, IPaciente } from './paciente.interface';
+import { isSelected } from '@andes/core';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
+import { PacienteCtr } from './paciente.routes';
+import { geoReferenciar, getBarrio } from '@andes/georeference';
+import { FileMetadata, AndesDrive } from '@andes/drive';
+import * as Barrio from '../../../core/tm/schemas/barrio';
+import * as configPrivate from '../../../config.private';
+import * as config from '../../../config';
 import { IContacto } from '../../../shared/Contacto.interface';
 import { ParentescoCtr } from '../parentesco/parentesco.routes';
-import { IPaciente, IPacienteDoc } from './paciente.interface';
-import { PacienteCtr } from './paciente.routes';
-import { Paciente, replaceChars } from './paciente.schema';
 
 
 /**
@@ -197,30 +196,6 @@ export async function findOrCreate(query: any, req) {
 }
 
 /**
- * Compara el paciente actual, el evento enviado por la app y el paciente modificado
- * Emite un evento y termina
- *
- * @param {object} paciente paciente recuperado de la DB
- * @param {object} data paciente modificado
- */
-export function linkUnlikOperation(paciente, data, updated) {
-    paciente = paciente._original;
-
-    if (data.identificadores?.length || paciente.identificadores?.length) {
-
-        const vinculados = data.identificadores?.filter(item => item.entidad === 'ANDES' && item.valor);
-        const vinculadosPaciente = paciente.identificadores?.filter(item => item.entidad === 'ANDES' && item.valor);
-
-        if (vinculados?.length > vinculadosPaciente?.length) {
-            return EventCore.emitAsync('mpi:pacientes:link', updated);
-        }
-    }
-    if (paciente.idPacientePrincipal && data.idPacientePrincipal === null && data.activo) {
-        return EventCore.emitAsync('mpi:pacientes:unlink', updated);
-    }
-}
-
-/**
  * Vincula pacientes
  *
  * @param {string} op tipo de operación
@@ -247,6 +222,7 @@ export async function linkPaciente(req, op, pacienteBase, pacienteLinkeado) {
         }
         pacienteLinkeado.activo = true;
     }
+
     await PacienteCtr.update(pacienteBase.id, pacienteBase, req);
     await PacienteCtr.update(pacienteLinkeado.id, pacienteLinkeado, req);
 }
