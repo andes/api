@@ -6,7 +6,7 @@ import { PrestacionEstadoSchema } from './prestacion.estado';
 import { iterate, convertToObjectId } from '../controllers/rup';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
-
+import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
 export const PrestacionSchema = new Schema({
     trackId: { required: false, type: Schema.Types.ObjectId },
@@ -149,7 +149,8 @@ export const PrestacionSchema = new Schema({
     tags: Schema.Types.Mixed,
     // Historia de estado de la prestación
     estados: [PrestacionEstadoSchema],
-    estadoActual: PrestacionEstadoSchema
+    estadoActual: PrestacionEstadoSchema,
+    unidadOrganizativa: SnomedConcept
 }, { usePushEach: true } as any);
 
 // Valida el esquema
@@ -236,7 +237,7 @@ function getAll(registros: any[]) {
     for (let i = 0; i < registros.length; i++) {
         const reg = registros[i];
         resultado = [...resultado, reg];
-        if (reg.registros ?.length) {
+        if (reg.registros?.length) {
             const rs = getAll(reg.registros);
             resultado = [...resultado, ...rs];
         }
