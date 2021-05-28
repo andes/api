@@ -157,6 +157,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
             // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
             if (unRegistro.concepto && unRegistro.concepto.conceptId && conceptos.find(c => c.conceptId === unRegistro.concepto.conceptId)) {
                 data.push({
+                    idPrestacion: prestacion._id,
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     fecha: prestacion.ejecucion.fecha,
                     profesional: unRegistro.createdBy,
@@ -169,6 +170,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
             if (resultado && resultado.id !== unRegistro.id) {
                 // agregamos el resultado a a devolver
                 data.push({
+                    idPrestacion: prestacion._id,
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     fecha: prestacion.ejecucion.fecha,
                     profesional: unRegistro.createdBy,
