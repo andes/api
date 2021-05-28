@@ -7,7 +7,7 @@ const localidadSchema = new mongoose.Schema({
     codLocalidad: String,
     departamento: String,
     provincia: { type: provinciaSchema },
-    zonaSanitaria: zonaSanitariasSchema
+    zona: zonaSanitariasSchema
 });
 const localidad = mongoose.model('localidad', localidadSchema, 'localidad');
 export = localidad;

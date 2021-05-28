@@ -40,8 +40,8 @@ export async function matchUbicacion(searchProvincia: string, searchLocalidad: s
 export async function getZona(idLocalidad) {
     let unaZona = null;
     const unaLocalidad: any = await localidad.findById(idLocalidad);
-    if (unaLocalidad.zonaSanitaria) {
-        unaZona = await ZonaSanitaria.findById(unaLocalidad.zonaSanitaria._id);
+    if (unaLocalidad.zona) {
+        unaZona = await ZonaSanitaria.findById(unaLocalidad.zona._id);
     }
     return unaZona;
 }
