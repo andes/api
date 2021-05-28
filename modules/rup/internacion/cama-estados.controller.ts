@@ -229,6 +229,11 @@ interface SearchEstadosParams {
     internacion: ObjectId;
 
     /**
+     * ID del movimiento (string o ObjectId)
+     */
+    movimiento: ObjectId;
+
+    /**
      * Estado de la cama
      */
     estado: string;
@@ -237,7 +242,6 @@ interface SearchEstadosParams {
      * Filtra estados que significan un movimiento en la cama y/o internación
      */
     esMovimiento: boolean;
-
 }
 
 
@@ -262,6 +266,10 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
             { 'estados.idInternacion': wrapObjectId(filtros.internacion) },
             { 'estados.extras.idInternacion': wrapObjectId(filtros.internacion) }
         ];
+    }
+
+    if (filtros.movimiento) {
+        secondMatch['estados.idMovimiento'] = filtros.movimiento;
     }
 
     if (filtros.estado) {

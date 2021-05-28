@@ -64,6 +64,7 @@ const CamaEstadosSchema = new Schema({
             type: SnomedConcept,
             required: false
         },
+        idMovimiento: SchemaTypes.ObjectId,
         equipamiento: [SnomedConcept],
         extras: { type: InternacionExtrasSchema, required: false },
         nota: { type: String, required: false },

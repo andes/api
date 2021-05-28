@@ -72,27 +72,37 @@ export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: 
 }
 
 export async function deshacerInternacion(organizacion, capa, ambito, cama, req: Request) {
-    delete cama['createdAt'];
-    delete cama['createdBy'];
-    delete cama['updatedAt'];
-    delete cama['updatedBy'];
-    delete cama['deletedAt'];
-    delete cama['deletedBy'];
     const usuario = Auth.getAuditUser(req);
-
-    let result;
 
     // control pensando en sala-comun
     if (cama.idCama) {
-        const movimientos = await CamasEstadosController.searchEstados({ desde: cama.fecha, hasta: cama.fecha, organizacion, capa, ambito }, { cama: cama.idCama, esMovimiento: true });
-        if (movimientos.length <= 1) {
-            result = await CamasEstadosController.deshacerEstadoCama({ organizacion, ambito, capa, cama: cama.idCama }, cama.fecha, usuario);
-            EventCore.emitAsync('mapa-camas:paciente:undo', {
-                fecha: cama.fecha,
-                idInternacion: cama.idInternacion
-            });
-        }
-    }
+        const internacion: any = await Prestacion.findById(cama.idInternacion);
+        let movimientos = await CamasEstadosController.searchEstados({ desde: internacion.solicitud.fecha, hasta: cama.fecha, organizacion, capa, ambito }, { internacion: internacion.id, esMovimiento: true });
+        let movimientosConsecuentes = [];
+        movimientos.forEach(mov => {
+            if (mov.idMovimiento) {
+                // Obtenemos las camas que pasan a estado 'disponible' como consecuencia de mover al paciente
+                movimientosConsecuentes.push(CamasEstadosController.searchEstados({ desde: internacion.solicitud.fecha, hasta: cama.fecha, organizacion, capa, ambito }, { movimiento: mov.idMovimiento, estado: 'disponible' }));
+            }
+        });
+        movimientosConsecuentes = await Promise.all(movimientosConsecuentes);
+        movimientos = (movimientos.concat(movimientosConsecuentes.map(item => item[0])));
 
-    return result;
+        let deshacerEstados = [];
+        movimientos.forEach(mov => {
+            delete mov['createdAt'];
+            delete mov['createdBy'];
+            delete mov['updatedAt'];
+            delete mov['updatedBy'];
+            delete mov['deletedAt'];
+            delete mov['deletedBy'];
+            deshacerEstados.push(CamasEstadosController.deshacerEstadoCama({ organizacion, ambito, capa, cama: mov.idCama }, mov.fecha, usuario));
+        });
+
+        await Promise.all(deshacerEstados);
+        EventCore.emitAsync('mapa-camas:paciente:undo', {
+            fecha: internacion.solicitud.fecha,
+            idInternacion: internacion.id
+        });
+    }
 }
