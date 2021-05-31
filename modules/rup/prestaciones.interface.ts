@@ -34,6 +34,7 @@ export interface IPrestacion {
 
     solicitud: IPrestacionSolicitud;
     tags?: any;
+    unidadOrganizativa?: ISnomedConcept;
 
 }
 
