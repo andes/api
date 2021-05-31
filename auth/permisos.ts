@@ -636,22 +636,27 @@ export default [
     },
     {
         key: 'formBuilder',
+        avoidAll: true,
+        visibility: 'restricted',
         title: 'Generador de formularios customizables',
         comment: '',
         child: [
             {
                 key: 'create',
                 title: 'Genearar nuevo',
+                visibility: 'restricted',
                 type: 'boolean'
             },
             {
                 key: 'update',
                 title: 'Modificar existente',
+                visibility: 'restricted',
                 type: 'boolean'
             },
             {
                 key: 'read',
                 title: 'Sólo lectura',
+                visibility: 'restricted',
                 type: 'boolean'
             }
         ]
