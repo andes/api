@@ -8,6 +8,7 @@ import * as CamasEstadosController from './cama-estados.controller';
 import { Request } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
+import { InternacionResumen } from './resumen/internacion-resumen.schema';
 
 export async function obtenerPrestaciones(organizacion, filtros) {
     const fechaIngresoDesde = (filtros.fechaIngresoDesde) ? moment(filtros.fechaIngresoDesde).toDate() : moment().subtract(1, 'month').toDate();
@@ -73,35 +74,54 @@ export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: 
 
 export async function deshacerInternacion(organizacion, capa, ambito, cama, req: Request) {
     const usuario = Auth.getAuditUser(req);
+    let fechaDesde;
+    let internacion;
 
+    if (capa === 'estadistica') {
+        internacion = await Prestacion.findById(cama.idInternacion);
+        fechaDesde = internacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso;
+    } else { // capa médica
+        internacion = await InternacionResumen.findById(cama.idInternacion);
+        fechaDesde = internacion.fechaIngreso;
+    }
     // control pensando en sala-comun
-    if (cama.idCama) {
-        const internacion: any = await Prestacion.findById(cama.idInternacion);
-        let movimientos = await CamasEstadosController.searchEstados({ desde: internacion.solicitud.fecha, hasta: cama.fecha, organizacion, capa, ambito }, { internacion: internacion.id, esMovimiento: true });
+    if (cama.idCama && internacion) {
+        let movimientos = await CamasEstadosController.searchEstados({ desde: fechaDesde, hasta: cama.fecha, organizacion, capa, ambito }, { internacion: internacion.id, esMovimiento: true });
         let movimientosConsecuentes = [];
-        movimientos.forEach(mov => {
-            if (mov.idMovimiento) {
-                // Obtenemos las camas que pasan a estado 'disponible' como consecuencia de mover al paciente
-                movimientosConsecuentes.push(CamasEstadosController.searchEstados({ desde: internacion.solicitud.fecha, hasta: cama.fecha, organizacion, capa, ambito }, { movimiento: mov.idMovimiento, estado: 'disponible' }));
-            }
-        });
-        movimientosConsecuentes = await Promise.all(movimientosConsecuentes);
-        movimientos = (movimientos.concat(movimientosConsecuentes.map(item => item[0])));
 
-        let deshacerEstados = [];
-        movimientos.forEach(mov => {
+        if (movimientos.length > 1) {
+            movimientos.forEach(mov => {
+                if (mov.idMovimiento) {
+                    // Obtenemos las camas que pasan a estado 'disponible' como consecuencia de mover al paciente
+                    movimientosConsecuentes.push(CamasEstadosController.searchEstados({ desde: mov.fecha, hasta: mov.fecha, organizacion, capa, ambito }, { movimiento: mov.idMovimiento, estado: 'disponible' }));
+                }
+            });
+            movimientosConsecuentes = await Promise.all(movimientosConsecuentes);
+            movimientos = (movimientos.concat(movimientosConsecuentes.map(item => item[0])));
+        }
+
+        let deshacerEstados = movimientos.map(mov => {
             delete mov['createdAt'];
             delete mov['createdBy'];
             delete mov['updatedAt'];
             delete mov['updatedBy'];
             delete mov['deletedAt'];
             delete mov['deletedBy'];
-            deshacerEstados.push(CamasEstadosController.deshacerEstadoCama({ organizacion, ambito, capa, cama: mov.idCama }, mov.fecha, usuario));
+
+            return CamasEstadosController.deshacerEstadoCama({
+                organizacion,
+                ambito,
+                capa,
+                cama: mov.idCama
+            },
+                mov.fecha,
+                usuario
+            );
         });
 
         await Promise.all(deshacerEstados);
         EventCore.emitAsync('mapa-camas:paciente:undo', {
-            fecha: internacion.solicitud.fecha,
+            fecha: fechaDesde,
             idInternacion: internacion.id
         });
     }

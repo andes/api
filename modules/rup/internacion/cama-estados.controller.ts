@@ -257,6 +257,10 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
         firstMatch['idCama'] = wrapObjectId(filtros.cama);
     }
 
+    if (filtros.movimiento) {
+        firstMatch['estados.idMovimiento'] = filtros.movimiento;
+    }
+
     if (filtros.paciente) {
         secondMatch['estados.paciente.id'] = wrapObjectId(filtros.paciente);
     }
@@ -266,10 +270,6 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
             { 'estados.idInternacion': wrapObjectId(filtros.internacion) },
             { 'estados.extras.idInternacion': wrapObjectId(filtros.internacion) }
         ];
-    }
-
-    if (filtros.movimiento) {
-        secondMatch['estados.idMovimiento'] = filtros.movimiento;
     }
 
     if (filtros.estado) {
