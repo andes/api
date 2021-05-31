@@ -12,20 +12,26 @@ export class RecuperoCostoBody extends HTMLComponent {
             {{ fechaActual }}
             </div>
             <hr>
-            <h5 class="text-center">COMPROBANTE DE ATENCIÓN DE BENEFICIARIOS DE AGENTES DEL SEGURO SALUD</h5>
-            <div class="mx">
-            {{#efector}}
-                <b>Denominacion HPdGP:</b>
-                {{ efector }}
-            {{/efector}}
-
-            {{#efectorCodigoSisa}}
-                <b>Codigo HPdGD-REFES:</b>
-                Sarasa
-                {{ efectorCodigoSisa }}
-            {{/efectorCodigoSisa}}
-            </div>
-                <table class="egt">
+            <table class="egt mx mt-35">
+                <tbody>
+                    <tr class="">
+                        <td colspan="9" class="text-center">
+                            <label>COMPROBANTE DE ATENCIÓN DE BENEFICIARIOS DE AGENTES DEL SEGURO SALUD</label>
+                        </td>
+                    </tr>
+                    <tr class="">
+                        <td colspan="6">
+                        <b>Denominacion HPdGP:</b>
+                            {{ efector }}
+                        </td>
+                        <td colspan="3">
+                        <b>Codigo HPdGD-REFES:</b>
+                        {{ efectorCodigoSisa }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="egt mx">
                 <tbody>
                     <tr class="">
                         <td colspan="9" class="text-center">
@@ -105,10 +111,10 @@ export class RecuperoCostoBody extends HTMLComponent {
                     </tr>
                 </tbody>
             </table>
-            <table class="egt">
+            <table class="egt mx">
                 <tbody>
                     <tr class="">
-                        <td class="text-center" colspan="7">
+                        <td class="text-center" colspan="9">
                             <label>
                                 NHPdGD: Nomenclador de Hospitales Públicos de Gestión Descentralizada<br>
                                 CIE10 Clasificación Internacional de Enfermedades
@@ -116,20 +122,20 @@ export class RecuperoCostoBody extends HTMLComponent {
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="3"></td>
-                        <td colspan="4">
+                        <td colspan="4"></td>
+                        <td colspan="5">
                             <label>Último Recibo de Sueldo</label>
                         </td>
                     </tr>
                     <tr>
-                        <td rowspan="4" colspan="3" class="text-center text-bottom">
+                        <td rowspan="4" colspan="4" class="text-center text-bottom">
                             <label>Firma del Médico y sello con N° de Matricula</label>
                         </td>
-                        <td colspan="2" class="text-center"><label>Mes</label></td>
+                        <td colspan="3" class="text-center"><label>Mes</label></td>
                         <td colspan="2" class="text-center"><label>Año</label></td>
                     </tr>
                     <tr class="">
-                        <td colspan="2" class="h20"></td>
+                        <td colspan="3" class="h20"></td>
                         <td colspan="2" class="h20"></td>
                     </tr>
                     <tr>
@@ -150,17 +156,17 @@ export class RecuperoCostoBody extends HTMLComponent {
                     </tr>
                     <tr class="h50">
                         <td colspan="3"></td>
-                        <td colspan="2"></td>
-                        <td colspan="2"></td>
+                        <td colspan="3"></td>
+                        <td colspan="3"></td>
                     </tr>
                     <tr class="">
                         <td colspan="3" width="50%">
                             <label>Firma Responsable Administrativo/Contable</label>
                         </td>
-                        <td colspan="2">
+                        <td colspan="3">
                             <label>Aclaración Firma</label>
                         </td>
-                        <td colspan="2">
+                        <td colspan="3">
                             <label>Firma Beneficiario</label>
                         </td>
                     </tr>
@@ -171,19 +177,19 @@ export class RecuperoCostoBody extends HTMLComponent {
     `;
 
     constructor(public _data) {
-        super();
+        super();       
         this.data = {
             fechaActual: moment(new Date()).locale('es').format('DD [de] MMMM [de] YYYY'),
-            efector: _data.efector,
-            efectorCodigoSisa: _data.efectorCodigoSisa,
-            nombre: _data.nombre,
-            dni: _data.dni,
-            sexo: _data.sexo,
-            edad: _data.edad,
-            horaInicio: _data.horaInicio,
-            tipoPrestacion: _data.tipoPrestacion,
-            obraSocial: _data.obraSocial,
-            codigoOs: _data.codigoOs
+            efector: _data.organizacion.nombre,
+            efectorCodigoSisa: _data.organizacion.codigo.sisa,
+            nombre: _data.turno.paciente.nombre,
+            dni: _data.turno.paciente.documento,
+            sexo: _data.turno.paciente.sexo,
+            edad: `${moment().diff(_data.turno.paciente.fechaNacimiento, 'years')} años`,
+            horaInicio: moment(_data.turno.horaInicio).locale('es').format('LLLL'),
+            tipoPrestacion: _data.turno.tipoPrestacion.term,
+            obraSocial: _data.turno.paciente.obraSocial.nombre,
+            codigoOs: _data.turno.paciente.obraSocial.codigoPuco
         };
     }
 }
