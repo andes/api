@@ -72,6 +72,22 @@ router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
     }
 });
 
+/**
+ * Get para descarga de prestación por idPrestacion y opcionalmente por idRegistro si viene el parametro
+ */
+router.get('/:tipo/:idPrestacion/(:idRegistro)?', Auth.authenticate(), async (req: any, res, next) => {
+    try {
+        const idPrestacion = req.params.idPrestacion;
+        const idRegistro = req.params.idRegistro;
+        const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+        const fileName = await informe.informe();
+
+        return res.download(fileName);
+    } catch (err) {
+        return next(err);
+    }
+});
+
 // envío de resumen de prestación por correo
 router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     const email = req.body.email;
