@@ -32,52 +32,19 @@ export async function obtenerPrestaciones(organizacion, filtros) {
         $match['solicitud.profesional.id'] = filtros.idProfesional;
     }
 
-    const prestaciones$ = Prestacion.aggregate([
-        {
-            $match: {
-                'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
-                'solicitud.ambitoOrigen': 'internacion',
-                'solicitud.tipoPrestacion.conceptId': '32485007',
-                'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $gte: fechaIngresoDesde },
-                $and: [
-                    { 'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $gte: fechaIngresoDesde } },
-                    { 'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $lte: fechaIngresoHasta } },
-                    ...$matchEgreso
-                ],
-                ...$match
-            }
-        },
-        {
-            $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } }
-        },
-        {
-            $match: { $or: [{ 'lastState.tipo': 'ejecucion' }, { 'lastState.tipo': 'validada' }] }
-        },
-        {
-            $project: {
-                id: '$_id',
-                paciente: 1,
-                solicitud: 1,
-                ejecucion: 1,
-                noNominalizada: 1,
-                estados: 1,
-                createdAt: 1,
-                createdBy: 1,
-                updatedAt: 1,
-                updatedBy: 1,
-                esPrioritario: {
-                    $cond: {
-                        if: { $eq: ['$registroSolicitud.valor.solicitudPrestacion.prioridad', 'prioritario'] },
-                        then: -1,
-                        else: 1
-                    }
-                }
-            }
-        }
-    ]);
+    return Prestacion.find({
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
+        'solicitud.ambitoOrigen': 'internacion',
+        'solicitud.tipoPrestacion.conceptId': '32485007',
+        $and: [
+            { 'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $gte: fechaIngresoDesde } },
+            { 'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $lte: fechaIngresoHasta } },
+            ...$matchEgreso
+        ],
+        ...$match,
+        'estadoActual.tipo': { $in: ['ejecucion', 'validada'] }
 
-    const prestacionesInternacion = await prestaciones$.exec();
-    return prestacionesInternacion;
+    });
 }
 
 export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: string, idInternacion: ObjectId, desde: Date, hasta: Date) {
