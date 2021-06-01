@@ -362,9 +362,13 @@ export async function updateContacto(contactos, paciente, req) {
 }
 
 export async function agregarHijo(progenitor, hijo, req) {
+
+    // Familiar ya existe?
+    progenitor.relaciones = progenitor.relaciones || [];
     const poseeFamiliar = progenitor.relaciones.find(rel => {
         return rel.referencia.toString() === hijo._id.toString();
     });
+
     if (!poseeFamiliar) {
         // agrego relacion al hijo
         const parentescoProgenitor = await ParentescoCtr.findOne({ nombre: '^progenitor' }, {}, req);
@@ -378,11 +382,10 @@ export async function agregarHijo(progenitor, hijo, req) {
             fotoId: progenitor.fotoId ? progenitor.fotoId : null,
             fechaFallecimiento: progenitor.fechaFallecimiento ? progenitor.fechaFallecimiento : null
         };
-        if (hijo.relaciones && hijo.relaciones.length) {
-            hijo.relaciones.push(progenitorRelacion);
-        } else {
-            hijo.relaciones = [progenitorRelacion];
-        }
+
+        hijo.relaciones = hijo.relaciones || [];
+        hijo.relaciones.push(progenitorRelacion);
+
         await PacienteCtr.update(hijo.id, hijo, req);
         // agrego relacion al padre
         const parentescoHijo = await ParentescoCtr.findOne({ nombre: '^hijo' }, {}, req);
@@ -396,11 +399,9 @@ export async function agregarHijo(progenitor, hijo, req) {
             fotoId: hijo.fotoId ? hijo.fotoId : null,
             fechaFallecimiento: hijo.fechaFallecimiento ? hijo.fechaFallecimiento : null
         };
-        if (progenitor.relaciones && progenitor.relaciones.length) {
-            progenitor.relaciones.push(familiarRelacion);
-        } else {
-            progenitor.relaciones = [familiarRelacion];
-        }
+
+        progenitor.relaciones.push(familiarRelacion);
+
         const pacienteUpdated = await PacienteCtr.update(progenitor.id, progenitor, req);
         return pacienteUpdated;
     } else {
