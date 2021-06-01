@@ -111,8 +111,6 @@ export class DerivacionBody extends HTMLComponent {
             </div>
             </div>
             {{/if}}
-
-
             {{#if datosSolicitud}}
             <br><br>
             <div class="row">
@@ -144,6 +142,19 @@ export class DerivacionBody extends HTMLComponent {
                     <span>DETALLE: {{ datosSolicitud.detalle }}</span>
                 </div>
             </div>
+            {{/if}}
+            {{#if dispositivoOxigeno}}
+            <br><br>
+            <div class="row">
+                <div class="col">
+                    <span><b>REQUIRIÓ DISPOSITIVO DE OXIGENO</b></span>
+                </div>
+            </div>
+            <div class="row" >
+               <div class="col">
+                  <span>{{ dispositivoOxigeno }}</span>
+                    </div>
+                </div>
             {{/if}}
 
             {{#if historial }}
@@ -240,6 +251,7 @@ export class DerivacionBody extends HTMLComponent {
             organizacionOrigen: derivacion.organizacionOrigen.nombre,
             organizacionDestino: derivacion.organizacionDestino?.nombre,
             unidadDestino: derivacion.unidadDestino?.term,
+            dispositivoOxigeno: derivacion.dispositivo ? `${derivacion.dispositivo.nombre}, ${derivacion.dispositivo.descripcion}` : null,
             fecha,
             finalizada,
             fechaFinalizacion: moment(fechaFinalizacion).format('DD/MM/YYYY HH:mm'),

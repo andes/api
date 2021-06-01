@@ -74,6 +74,7 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
             if (nuevoEstado.prioridad) {
                 derivacion.prioridad = nuevoEstado.prioridad;
             }
+            derivacion.dispositivo = (nuevoEstado.dispositivo) ? nuevoEstado.dispositivo : null;
 
             if (nuevoEstado.estado) {
                 const organizacionId = Auth.getOrganization(req);

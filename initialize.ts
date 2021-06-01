@@ -1,16 +1,16 @@
+import { apiOptionsMiddleware } from '@andes/api-tool';
+import { AndesDrive } from '@andes/drive';
+import { initialize as FHIRInitialize } from '@andes/fhir';
 import * as bodyParser from 'body-parser';
+import { Express, Router } from 'express';
 import * as boolParser from 'express-query-boolean';
+import * as HttpStatus from 'http-status-codes';
+import { Auth } from './auth/auth.class';
 import * as config from './config';
 import * as configPrivate from './config.private';
-import { Auth } from './auth/auth.class';
-import { Swagger } from './swagger/swagger.class';
 import { Connections } from './connections';
-import * as HttpStatus from 'http-status-codes';
-import { Express, Router } from 'express';
-import { AndesDrive } from '@andes/drive';
-import { apiOptionsMiddleware } from '@andes/api-tool';
-import { SendMessageCacheRouter, PacienteAppRouter } from './modules/mobileApp';
-import { initialize as FHIRInitialize } from '@andes/fhir';
+import { PacienteAppRouter, SendMessageCacheRouter } from './modules/mobileApp';
+import { Swagger } from './swagger/swagger.class';
 import { registerPartialTemplate } from './utils/roboSender/sendEmail';
 
 const proxy = require('express-http-proxy');
@@ -113,6 +113,7 @@ export function initAPI(app: Express) {
     app.use('/api/core-v2/mpi', MPI.RoutingMPI);
     app.use('/api/modules/forms/forms-epidemiologia', require('./modules/forms/').FormEpidemiologiaRouter);
     app.use('/api/modules/forms/forms-epidemiologia', require('./modules/forms/').FormHistoryRouter);
+    app.use('/api/modules', require('./modules/dispositivo/').DispositivoRouter);
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(
