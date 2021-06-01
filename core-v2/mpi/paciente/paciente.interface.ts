@@ -63,6 +63,7 @@ export interface IPaciente {
     contacto?: IContacto[];
     direccion?: IDireccion[];
     scan?: String;
+    idPacientePrincipal?: Schema.Types.ObjectId;
 }
 
 export interface IPacienteDoc extends Document, IPaciente {

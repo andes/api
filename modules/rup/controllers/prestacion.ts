@@ -1,12 +1,13 @@
-import { Prestacion } from '../../rup/schemas/prestacion';
-import * as mongoose from 'mongoose';
-import { Auth } from '../../../auth/auth.class';
-import { Types } from 'mongoose';
-import moment = require('moment');
-import { buscarEnHuds } from '../controllers/rup';
-import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { ObjectId } from '@andes/core';
+import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
+import { userScheduler } from '../../../config.private';
+import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { Prestacion } from '../../rup/schemas/prestacion';
+import { buscarEnHuds } from '../controllers/rup';
+import moment = require('moment');
 
 /**
  * Libera la referencia al turno dentro de la solicitud
@@ -139,4 +140,29 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
         huds = huds.filter(p => p.registro.valor);
     }
     return huds;
+}
+
+export async function updatePrestacionPatient(sourcePatient, idPaciente, idPacientePrincipal) {
+    try {
+        const query = { 'estadoActual.tipo': 'validada', 'paciente.id': idPaciente };
+        let prestaciones: any = await Prestacion.find(query);
+        let promises = prestaciones.map((p) => {
+            p.paciente = {
+                id: p.paciente.id,
+                nombre: sourcePatient.nombre,
+                apellido: sourcePatient.apellido,
+                documento: sourcePatient.documento,
+                sexo: sourcePatient.sexo,
+                fechaNacimiento: sourcePatient.fechaNacimiento,
+                obraSocial: sourcePatient.financiador.length > 0 ? sourcePatient.financiador[0] : null,
+                idPacienteValidado: idPacientePrincipal
+            };
+            Auth.audit(p, userScheduler as any);
+            p.save();
+        });
+        await Promise.all(promises);
+
+    } catch (error) {
+        return error;
+    }
 }
