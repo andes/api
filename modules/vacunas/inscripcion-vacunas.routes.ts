@@ -185,8 +185,6 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas/registro', async (req: Reque
     try {
         const documento = req.body.documento;
         const sexo = req.body.sexo;
-        req.body.nombre = req.body.nombre.toUpperCase();
-        req.body.apellido = req.body.apellido.toUpperCase();
 
         // Verifica si se encuentra inscripto previamente
         const inscripto = await InscripcionVacunasCtr.findOne({ documento, sexo, validado: true });
@@ -212,16 +210,17 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas/registro', async (req: Reque
                 }
                 req.body.validado = true;
             } else {
-                if (req.body.grupo.nombre !== 'mayores60') {
-                    return next('No es posible verificar su identidad.  Por favor verifique sus datos');
-                }
+                return next('No es posible verificar su identidad.  Por favor verifique sus datos');
             }
             if (req.body.grupo.nombre === 'factores-riesgo' && (!req.body.morbilidades[0] && !req.body.factorRiesgoEdad)) {
                 return next('Seleccionar factor de riesgo asociado a vacunación');
             }
-            if (req.body.email) {
-                req.body.email = req.body.email.toLowerCase().trim();
-            }
+
+            req.body.email = req.body.email.toLowerCase().trim() || '';
+            // Asigna los datos básicos de la inscripcion
+            req.body.fechaNacimiento = inscriptoValidado.fechaNacimiento;
+            req.body.apellido = inscriptoValidado.apellido;
+            req.body.nombre = inscriptoValidado.nombre;
             const inscripcion = await InscripcionVacunasCtr.create(req.body, userScheduler as any);
             return res.json(inscripcion);
         } else {
