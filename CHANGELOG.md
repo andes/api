@@ -1,3 +1,26 @@
+# [5.48.0](https://github.com/andes/api/compare/v5.47.0...v5.48.0) (2021-06-02)
+
+
+### Bug Fixes
+
+* **mpi:** quita versión anterior del controller de mpi ([#1404](https://github.com/andes/api/issues/1404)) ([543ea99](https://github.com/andes/api/commit/543ea990136850b98ce48ffef1a13151205e8563))
+* **relaciones:** control array vacío ([#1412](https://github.com/andes/api/issues/1412)) ([4e2fd09](https://github.com/andes/api/commit/4e2fd09dcbe9823e148e4e5476350be19167ee9d))
+* **rup:** busqueda de conceptos por pacientes vinculados ([#1402](https://github.com/andes/api/issues/1402)) ([f01dfa5](https://github.com/andes/api/commit/f01dfa595a2176139a7b2ac243bf29ab7c24293d))
+
+
+### Features
+
+* **am:** registro de familiares desde la app ([#1386](https://github.com/andes/api/issues/1386)) ([550a418](https://github.com/andes/api/commit/550a41827eb2a6dfd0eac4eeedbc7180763a4de7))
+* **COM:** envio mail a org destino ([42419d0](https://github.com/andes/api/commit/42419d035531e7b9e5e8de492d77b6f17067153b))
+* **fichaEpidemiologia:** Se agrega al esquema de paciente de la ficha la identificacion de extrajero ([2dae73c](https://github.com/andes/api/commit/2dae73cb759e7e0b47ca0494f10efdddc698ee54))
+* **FORMS:** restrict formBuilder visibility ([473e987](https://github.com/andes/api/commit/473e987a9e475225d7f904c078a04df7ba6467f5))
+* **mpi:** aplica mayúscula al guardar alias del paciente ([#1406](https://github.com/andes/api/issues/1406)) ([4fde7c0](https://github.com/andes/api/commit/4fde7c0ce235abfcdca7943111ac66400f3744a7))
+* **mpi:** Eventos de linkeo y deslinkeo y actualización de la información de pacientes en las prestaciones médicas ([#1376](https://github.com/andes/api/issues/1376)) ([f514b3f](https://github.com/andes/api/commit/f514b3f4d149275d65b8d77b6619e58de9b5da13))
+* **rup:** agregar unidad organizativa a la prestación ([#1408](https://github.com/andes/api/issues/1408)) ([0d55dc5](https://github.com/andes/api/commit/0d55dc59fec8ef690ad413e6a234ea957238efca))
+* **rup:** patch paciente para obra social ([#1403](https://github.com/andes/api/issues/1403)) ([68e57d1](https://github.com/andes/api/commit/68e57d1924abebaa56fe5bf4e4c9fc7d412cf2f6))
+* **vac:** no validar tŕamite o captcha si es scan ([#1392](https://github.com/andes/api/issues/1392)) ([c439e3a](https://github.com/andes/api/commit/c439e3a3766ff49c9d211fdc9cbfff3f37904886))
+* **WEBHOOK:** Agrega control por zona sanitaria para los sms de resultados covid ([#1405](https://github.com/andes/api/issues/1405)) ([22f7469](https://github.com/andes/api/commit/22f74693859821a8408ef581c6f5010c9ac09d9a))
+
 # [5.47.0](https://github.com/andes/api/compare/v5.46.0...v5.47.0) (2021-05-26)
 
 
