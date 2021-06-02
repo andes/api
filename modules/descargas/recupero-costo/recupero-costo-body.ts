@@ -177,7 +177,7 @@ export class RecuperoCostoBody extends HTMLComponent {
     `;
 
     constructor(public _data) {
-        super();       
+        super();
         this.data = {
             fechaActual: moment(new Date()).locale('es').format('DD [de] MMMM [de] YYYY'),
             efector: _data.organizacion.nombre,

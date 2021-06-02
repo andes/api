@@ -19,7 +19,7 @@ export class RecuperoCosto extends InformePDF {
         const dataTurno: any = await getTurnoById(this.req.body.turnoId);
         const organizacionId = Auth.getOrganization(this.req);
         const organizacion: any = await Organizacion.findById(organizacionId).select('nombre codigo');
-        
+
         this.header = new RecuperoCostoHeader();
         this.body = new RecuperoCostoBody({...dataTurno, organizacion});
 
