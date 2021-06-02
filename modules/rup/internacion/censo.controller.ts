@@ -102,6 +102,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     checkPaciente(ultimoMovimiento);
                     tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                         ingreso: 'SI',
+                        fechaIngreso,
                         egreso: informesInternacion.egreso.tipoEgreso.id,
                         diasEstada: timestampEnd.diff(moment(ultimoMovimiento.fecha), 'days') + 1,
                     });
@@ -117,6 +118,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     if (!ingresoEgresoCargado) {
                         checkPaciente(ultimoMovimiento);
                         tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
+                            fechaIngreso,
                             egreso: informesInternacion.egreso.tipoEgreso.id,
                             diasEstada: timestampEnd.diff(moment(ultimoMovimiento.fecha), 'days') + 1,
                         });
@@ -131,6 +133,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                 checkPaciente(ultimoMovimientoUO);
                 tablaPacientes[ultimoMovimientoUO.paciente.id].actividad.push({
                     ingreso: null,
+                    fechaIngreso,
                     paseDe: null,
                     egreso: null,
                     paseA: null,
@@ -142,6 +145,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     checkPaciente(ultimoMovimientoUO);
                     tablaPacientes[ultimoMovimientoUO.paciente.id].actividad.push({
                         ingreso: 'SI',
+                        fechaIngreso,
                         diasEstada: timestampEnd.diff(moment(ultimoMovimientoUO.fecha), 'days') + 1,
                     });
                 }
@@ -156,6 +160,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     checkPaciente(movimiento);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
                         paseDe: movimientoAnterior.unidadOrganizativa.term,
+                        fechaIngreso,
                         diasEstada: timestampEnd.diff(moment(movimiento.fecha), 'days') + 1,
                     });
                 } else {
@@ -164,6 +169,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         checkPaciente(movimientoAnterior);
                         tablaPacientes[movimiento.paciente.id].actividad.push({
                             paseA: movimiento.unidadOrganizativa.term,
+                            fechaIngreso,
                             diasEstada: timestampEnd.diff(moment(movimientoAnterior.fecha), 'days') + 1,
                         });
                     }

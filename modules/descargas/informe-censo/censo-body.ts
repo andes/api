@@ -1,5 +1,4 @@
 import * as moment from 'moment';
-import { loadImage, InformePDF, getAssetsURL } from '../model/informe.class';
 import { HTMLComponent } from '../model/html-component.class';
 
 export class CensoBody extends HTMLComponent {
@@ -16,12 +15,13 @@ export class CensoBody extends HTMLComponent {
                                 <th>Pase de</th>
                                 <th>Egreso</th>
                                 <th>Pase a</th>
+                                <th>Fecha de ingreso</th>
                             </tr>
                         </thead>
                         <tbody>
                             {{#each filas}}
                                 <tr>
-                                    <td> {{ datos.paciente.apellido }}, {{ datos.paciente.nombre }} | {{ datos.paciente.documento }} </td>
+                                    <td> {{ datos.paciente.apellido }}, {{ datos.paciente.nombre }} <br> {{ datos.paciente.documento }} </td>
                                     <td> {{ datos.cama.nombre }},
                                         {{#each datos.cama.sectores}}
                                             {{#if @last}}
@@ -47,6 +47,11 @@ export class CensoBody extends HTMLComponent {
                                     <td>
                                         {{#if paseA }}
                                             {{ paseA }}
+                                        {{/if}}
+                                    </td>
+                                    <td>
+                                        {{#if fechaIngreso }}
+                                        {{ fechaIngreso }}
                                         {{/if}}
                                     </td>
                                 </tr>
@@ -123,6 +128,7 @@ export class CensoBody extends HTMLComponent {
     constructor(public listadoCenso, public resumenCenso) {
         super();
 
+        listadoCenso.map(item => item.fechaIngreso = moment(item.fechaIngreso).format('DD/MM/YYYY HH:mm'));
         this.data = {
             filas: listadoCenso,
             filaResumen: resumenCenso,
