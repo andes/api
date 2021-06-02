@@ -94,6 +94,9 @@ router.get('/localidades/:id?', (req, res, next) => {
         if (req.query.codigo) {
             query.where('codigoProvincia').equals(Number(req.query.codigo));
         }
+        if (req.query.activo) {
+            query.where('activo').equals(req.query.activo);
+        }
 
         query.sort({ nombre: 1 }).exec((err, data) => {
             if (err) {
