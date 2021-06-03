@@ -1,3 +1,4 @@
+import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 import * as moment from 'moment';
 import { HTMLComponent } from '../model/html-component.class';
 
@@ -178,6 +179,9 @@ export class RecuperoCostoBody extends HTMLComponent {
 
     constructor(public _data) {
         super();
+        
+        
+
         this.data = {
             fechaActual: moment(new Date()).locale('es').format('DD [de] MMMM [de] YYYY'),
             efector: _data.organizacion.nombre,
@@ -185,7 +189,7 @@ export class RecuperoCostoBody extends HTMLComponent {
             nombre: _data.turno.paciente.nombre,
             dni: _data.turno.paciente.documento,
             sexo: _data.turno.paciente.sexo,
-            edad: `${moment().diff(_data.turno.paciente.fechaNacimiento, 'years')} años`,
+            edad: calcularEdad(_data.turno.paciente.fechaNacimiento, _data.turno.paciente.fechaFallecimiento),
             horaInicio: moment(_data.turno.horaInicio).locale('es').format('LLLL'),
             tipoPrestacion: _data.turno.tipoPrestacion.term,
             obraSocial: _data.turno.paciente.obraSocial.nombre,
