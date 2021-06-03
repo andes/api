@@ -8,6 +8,7 @@ import { Request } from '@andes/api-tool';
 import { ObjectId } from '@andes/core';
 import { ISnomedConcept } from '../schemas/snomed-concept';
 import { EventCore } from '@andes/event-bus';
+import { Auth } from '../../../auth/auth.class';
 
 interface INombre {
     _id: ObjectId;
@@ -231,7 +232,9 @@ export async function patch(data: Partial<ICama>, req: Request) {
         if (nuevoEstado.extras?.ingreso) {
             EventCore.emitAsync('mapa-camas:paciente:ingreso', { ...nuevoEstado });
         }
-
+        if (nuevoEstado.extras?.unidadOrganizativaOrigen) {
+            EventCore.emitAsync('mapa-camas:paciente:pase', { ...nuevoEstado });
+        }
 
         camaEncontrada.set(data);
         camaEncontrada.audit(req);
@@ -382,3 +385,13 @@ export async function checkSectorDelete(idOrganizacion: string, idSector: string
 
     return true;
 }
+
+EventCore.on('mapa-camas:paciente:pase', async (estado) => {
+    if (estado?.idInternacion && estado.capa === 'estadistica') {
+        const prestacion: any = await Prestacion.findById(estado.idInternacion);
+        prestacion.unidadOrganizativa = estado.unidadOrganizativa;
+        const user = Auth.getUserFromResource(prestacion);
+        Auth.audit(prestacion, user as any);
+        await prestacion.save();
+    }
+});
