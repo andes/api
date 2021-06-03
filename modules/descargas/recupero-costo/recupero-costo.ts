@@ -23,7 +23,7 @@ export class RecuperoCosto extends InformePDF {
 
         const paciente = await Paciente.findById(dataTurno.turno.paciente.id);
         dataTurno.turno.paciente.fechaFallecimiento = paciente.fechaFallecimiento;
-          
+
         this.header = new RecuperoCostoHeader();
         this.body = new RecuperoCostoBody({...dataTurno, organizacion});
 
