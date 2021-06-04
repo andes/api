@@ -1,6 +1,7 @@
 import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 import * as moment from 'moment';
 import { HTMLComponent } from '../model/html-component.class';
+import { IRecuperoPDF } from './recupero-costo.interface';
 
 export class RecuperoCostoBody extends HTMLComponent {
     template = `
@@ -180,7 +181,7 @@ export class RecuperoCostoBody extends HTMLComponent {
     constructor(public _data) {
         super();
 
-        const data = {
+        const data: IRecuperoPDF = {
             fechaActual: moment(new Date()).locale('es').format('DD [de] MMMM [de] YYYY'),
             efector: _data.organizacion.nombre,
             efectorCodigoSisa: _data.organizacion.codigo.sisa,
