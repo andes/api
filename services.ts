@@ -6,6 +6,7 @@ import * as express from 'express';
 import { renaperToAndes, renaperv3 } from '@andes/fuentes-autenticas';
 import { busInteroperabilidad } from './config.private';
 import { asyncHandler } from '@andes/api-tool';
+import { hudsPaciente } from './modules/rup';
 
 export let services: AndesServices;
 
@@ -28,6 +29,16 @@ export function setupServices(app: express.Express) {
     services.register('renaper-bus-interoperabilidad', async (_config, params) => {
         const { documento, sexo } = params;
         return await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
+    });
+
+    services.register('huds-registros', async (_config, params) => {
+        const { paciente, expression } = params;
+        const registros = await hudsPaciente(paciente, expression, null, 'validada', null);
+
+        registros.forEach(r => r.registro = r.registro.toObject());
+        registros.sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
+
+        return registros;
     });
 
     // app.get('/api/services/:id/info', asyncHandler(async (req, res) => {
