@@ -17,7 +17,10 @@ export class RecuperoCosto extends InformePDF {
 
     public async process() {
 
+        // console.log(this.req.body);
+
         const dataTurno: any = await getTurnoById(this.req.body.turnoId);
+        console.log(dataTurno);
         const organizacionId = Auth.getOrganization(this.req);
         const organizacion: any = await Organizacion.findById(organizacionId).select('nombre codigo');
 
@@ -25,7 +28,7 @@ export class RecuperoCosto extends InformePDF {
         dataTurno.turno.paciente.fechaFallecimiento = paciente.fechaFallecimiento;
 
         this.header = new RecuperoCostoHeader();
-        this.body = new RecuperoCostoBody({...dataTurno, organizacion});
+        this.body = new RecuperoCostoBody({ ...dataTurno, organizacion });
 
         await super.process();
     }

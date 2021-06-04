@@ -180,18 +180,19 @@ export class RecuperoCostoBody extends HTMLComponent {
     constructor(public _data) {
         super();
 
-        this.data = {
+        const data = {
             fechaActual: moment(new Date()).locale('es').format('DD [de] MMMM [de] YYYY'),
             efector: _data.organizacion.nombre,
             efectorCodigoSisa: _data.organizacion.codigo.sisa,
-            nombre: _data.turno.paciente.nombre,
+            nombre: `${_data.turno.paciente.apellido}, ${_data.turno.paciente.nombre}`,
             dni: _data.turno.paciente.documento,
             sexo: _data.turno.paciente.sexo,
             edad: calcularEdad(_data.turno.paciente.fechaNacimiento, _data.turno.paciente.fechaFallecimiento),
             horaInicio: moment(_data.turno.horaInicio).locale('es').format('LLLL'),
             tipoPrestacion: _data.turno.tipoPrestacion.term,
-            obraSocial: _data.turno.paciente.obraSocial.nombre,
-            codigoOs: _data.turno.paciente.obraSocial.codigoPuco
+            obraSocial: _data.turno.paciente.obraSocial ? _data.turno.paciente.obraSocial.nombre : 'Sin obra social',
+            codigoOs: _data.turno.paciente.obraSocial ? _data.turno.paciente.obraSocial.codigoPuco : 'Sin código PUCO'
         };
+        this.data = data;
     }
 }
