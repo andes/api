@@ -17,7 +17,7 @@ class FormsEpidemiologiaResource extends ResourceBase {
             fn: MongoQuery.equalMatch
         },
         localidad: {
-            field: 'secciones.fields.localidadresidencia.nombre',
+            field: 'secciones.fields.localidadresidencia.id',
             fn: MongoQuery.partialString
         },
         organizacion: {
