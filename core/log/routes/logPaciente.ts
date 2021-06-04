@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { logPaciente } from '../schemas/logPaciente';
 import * as mongoose from 'mongoose';
+import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ router.get('/paciente', (req, res, next) => {
         // populamos los datos del paciente
         query.populate({
             path: 'paciente',
-            model: 'paciente',
+            model: Paciente,
         });
 
         query.sort({ createdAt: -1 });
