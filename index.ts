@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as debug from 'debug';
 import { initAPI } from './initialize';
 import { Websockets } from './websockets';
+import { Connections } from './connections';
 
 // Inicializa express
 const app = express();
@@ -17,6 +18,23 @@ Websockets.initialize(server);
 
 // Muestra mensaje y línea de un error dentro de una promise ;-)
 if (process.env.NODE_ENV !== 'production') {
-    // tslint:disable-next-line:no-console
-    process.on('unhandledRejection', r => console.log(r));
+    process.on('unhandledRejection', r => debug('andes')(r));
 }
+
+/**
+ * Gracefull shutdown
+ */
+
+process.on('SIGINT', () => {
+    debug('andes')('gracefull shutdown');
+    server.close(() => {
+        setTimeout(
+            () => {
+                Connections.main.close().then(() => {
+                    process.exit();
+                });
+            }
+            , 500
+        );
+    });
+});
