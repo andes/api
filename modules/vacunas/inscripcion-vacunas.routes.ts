@@ -131,32 +131,31 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
     try {
         let inscripto: IInscripcionVacunas = req.body;
         if (inscripto) {
-            if (req.body.desasociarPaciente) {
-                const inscripcion = await InscripcionVacunasCtr.findById(inscripto.id);
-                inscripcion.paciente = undefined;
-                Auth.audit(inscripcion, req);
-                await inscripcion.save();
-                return res.json(inscripcion);
-            } else {
-                if (!inscripto.validaciones ?.includes('domicilio')) {
-                    const domicilio = await validarDomicilio(inscripto);
-                    if (domicilio) {
-                        inscripto.validaciones ?.length ? inscripto.validaciones.push('domicilio') : inscripto.validaciones = ['domicilio'];
-                    }
+            if (!inscripto.validaciones?.includes('domicilio')) {
+                const domicilio = await validarDomicilio(inscripto);
+                if (domicilio) {
+                    inscripto.validaciones?.length ? inscripto.validaciones.push('domicilio') : inscripto.validaciones = ['domicilio'];
                 }
-                if (!inscripto.validaciones ?.includes('domicilio') || inscripto.validado === false) {
-                    const inscriptoValidado = await validar(inscripto.documento as any, inscripto.sexo as any);
-                    inscripto = await validarInscripcion(req.body, inscriptoValidado, req);
-                }
-                if (inscripto.estado === 'habilitado' && req.body.grupo.nombre === 'personal-salud') {
-                    inscripto.personal_salud = true;
-                }
-                if (inscripto.email) {
-                    inscripto.email = inscripto.email.toLowerCase().trim();
-                }
-                const updated = await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
-                return res.json(updated);
             }
+            if (!inscripto.validaciones?.includes('domicilio') || inscripto.validado === false) {
+                const inscriptoValidado = await validar(inscripto.documento as any, inscripto.sexo as any);
+                inscripto = await validarInscripcion(req.body, inscriptoValidado, req);
+            }
+            if (inscripto.estado === 'habilitado' && req.body.grupo.nombre === 'personal-salud') {
+                inscripto.personal_salud = true;
+            }
+            if (inscripto.email) {
+                inscripto.email = inscripto.email.toLowerCase().trim();
+            }
+            const inscripcion = await InscripcionVacunasCtr.findById(inscripto.id);
+            inscripcion.set(inscripto);
+            if (inscripto.paciente === null) {
+                inscripcion.paciente = undefined;
+            }
+            Auth.audit(inscripcion, req);
+            await inscripcion.save();
+            return res.json(inscripcion);
+
         } else {
             return next('No se encuentra la inscripción');
         }
