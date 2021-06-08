@@ -225,7 +225,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         const cuenta = await PacienteAppCtr.findOne({ documento: String(documento), sexo });
         const usrprof = cuenta && (cuenta.email === cuenta.documento);
         if (!usrprof && cuenta && String(cuenta.email) !== email) {
-            return res.status(404).send('Ya existe una cuenta asociada a su documento');
+            return next('Ya existe una cuenta asociada a su documento');
         }
         // Verifica si se encuentra inscripto previamente
         const pacienteApp = await PacienteAppCtr.findOne({ email });
@@ -238,14 +238,14 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
                 const tramite = Number(req.body.tramite);
                 // Verifica el número de trámite
                 if (pacienteValidado.idTramite !== tramite) {
-                    return res.status(404).send('Número de trámite inválido');
+                    return next('Número de trámite inválido');
                 }
                 req.body.nombre = pacienteValidado.nombre;
                 req.body.apellido = pacienteValidado.apellido;
                 req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
                 req.body.validado = true;
             } else {
-                return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
+                return next('No es posible verificar su identidad. Por favor verifique sus datos');
             }
             // Busca el paciente y si no existe lo guarda
             await extractFoto(pacienteValidado, configPrivate.userScheduler);
@@ -264,7 +264,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
             }
             return res.json(inscripcion);
         } else {
-            return res.status(404).send('Ya existe una cuenta registrada con el email ingresado');
+            return next('Ya existe una cuenta registrada con el email ingresado');
         }
     } catch (err) {
         return next(err);
