@@ -535,11 +535,6 @@ export function validateMiddleware(req, res, next) {
         errors.paciente.apellido = 'required';
     }
 
-    if (!validString(dataPaciente.documento)) {
-        errors.paciente = errors.paciente || {};
-        errors.paciente.documento = 'required';
-    }
-
     if (!dataPaciente.fechaNacimiento || !moment(req.body.fecha).isValid()) {
         errors.paciente = errors.paciente || {};
         errors.paciente.fechaNacimiento = 'invalid_date';
