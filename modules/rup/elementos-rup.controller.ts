@@ -38,7 +38,7 @@ ElementoRUPRouter.post('/elementos-rup/requeridos', Auth.authenticate(), async (
     const prestacionID = req.body.prestacion;
     const conceptId = req.body.conceptId;
 
-    const reglas = await ElementoRUPRequeridos.find({ 'concepto.conceptId': conceptId, active: true });
+    const reglas = await ElementoRUPRequeridos.find({ 'conceptos.conceptId': conceptId, active: true });
 
     const prestacion = await Prestacion.findById(prestacionID) as IPrestacionDoc;
 

@@ -32,13 +32,13 @@ export function setupServices(app: express.Express) {
     });
 
     services.register('huds-registros', async (_config, params) => {
-        const { paciente, expression } = params;
+        const { paciente, expression, first } = params;
+        const sort = params.sort || -1;
         const registros = await hudsPaciente(paciente, expression, null, 'validada', null);
-
-        registros.forEach(r => r.registro = r.registro.toObject());
-        registros.sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
-
-        return registros;
+        registros.sort(
+            (a, b) => sort * (b.fecha.getTime() - a.fecha.getTime())
+        );
+        return first ? registros[0] : registros;
     });
 
     // app.get('/api/services/:id/info', asyncHandler(async (req, res) => {

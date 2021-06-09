@@ -18,6 +18,7 @@ import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
+import { AppCache } from '../../../connections';
 
 const router = express.Router();
 
@@ -498,7 +499,7 @@ router.post('/prestaciones', async (req, res, next) => {
         }
     }
 
-    const data = new Prestacion(dto);
+    const data = new Prestacion(dto) as IPrestacionDoc;
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
@@ -506,6 +507,9 @@ router.post('/prestaciones', async (req, res, next) => {
         }
         res.json(data);
         EventCore.emitAsync('rup:prestacion:create', data);
+        if (data.paciente) {
+            AppCache.clear(`huds-${data.paciente.id}`);
+        }
     });
 });
 
@@ -619,6 +623,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
         data.save(async (error, prestacion: any) => {
             if (error) {
                 return next(error);
+            }
+
+            if (data.paciente) {
+                AppCache.clear(`huds-${data.paciente.id}`);
             }
 
 
