@@ -38,7 +38,7 @@ class FormsEpidemiologiaResource extends ResourceBase {
         },
         estado: {
             field: 'secciones.fields.seguimiento.ultimoEstado.key',
-            fn: (value) => (value !== 'activo' ? { $eq: value } : { $not: { $in: ['alta', 'fallecido'] }})
+            fn: (value) => (value !== 'activo' ? { $eq: value } : { $not: { $in: ['alta', 'fallecido'] } })
         },
         fechaEstadoActual: MongoQuery.matchDate.withField('score.fecha'),
         documento: {
@@ -63,4 +63,3 @@ FormEpidemiologiaRouter.get('/types', Auth.authenticate(), async (req, res, next
         return next(err);
     }
 });
-
