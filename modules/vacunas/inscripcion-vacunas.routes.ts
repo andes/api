@@ -147,8 +147,15 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
             if (inscripto.email) {
                 inscripto.email = inscripto.email.toLowerCase().trim();
             }
-            const updated = await InscripcionVacunasCtr.update(inscripto.id, inscripto, req);
-            return res.json(updated);
+            const inscripcion = await InscripcionVacunasCtr.findById(inscripto.id);
+            inscripcion.set(inscripto);
+            if (inscripto.paciente === null) {
+                inscripcion.paciente = undefined;
+            }
+            Auth.audit(inscripcion, req);
+            await inscripcion.save();
+            return res.json(inscripcion);
+
         } else {
             return next('No se encuentra la inscripción');
         }
