@@ -31,9 +31,17 @@ export const seguimientoPacienteSchema = new Schema(
         },
         llamados: [
             {
+                fechaLlamado: Date,
                 idPrestacion: Types.ObjectId,
-                tipoPrestacion: String,
-                fecha: Date
+                profesional: {
+                    id: Types.ObjectId,
+                    nombre: String,
+                    apellido: String
+                },
+                organizacion: {
+                    id: Types.ObjectId,
+                    nombre: String
+                },
             }
         ],
         ultimoEstado: {

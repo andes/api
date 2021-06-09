@@ -11,6 +11,7 @@ class SeguimientoPacienteResource extends ResourceBase {
         paciente: (value) => {
             return {
                 $or: [
+                    { 'paciente.id': MongoQuery.equalMatch(value) },
                     { 'paciente.documento': MongoQuery.partialString(value) },
                     { 'paciente.nombre': MongoQuery.partialString(value) },
                     { 'paciente.apellido': MongoQuery.partialString(value) }
