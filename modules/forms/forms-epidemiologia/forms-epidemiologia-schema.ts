@@ -1,3 +1,4 @@
+import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
@@ -24,7 +25,7 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         value: String,
         fecha: Date
     }
-}); 
+});
 
 FormsEpidemiologiaSchema.plugin(AuditPlugin);
 
@@ -43,8 +44,8 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
             edad = years;
         }
         return edad;
-    }
-    
+    };
+
     const seccionClasificacion = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final');
     let clasificacionfinal = seccionClasificacion.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
     const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento);
@@ -53,40 +54,13 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
     if (clasificacionfinal === 'Confirmado') {
 
         ficha.score = {
-            value: edadPaciente >= 60 && comorbilidades ? 10 : comorbilidades ? 6 : 3, 
+            value: edadPaciente >= 60 && comorbilidades ? 10 : comorbilidades ? 6 : 3,
             fecha: new Date()
-        }
-
-        let operaciones = ficha.secciones.find(s => s.name === 'Operaciones');
-        if (!operaciones) {
-            operaciones = {
-                name : "Operaciones",
-                fields : []
-            };
-            ficha.secciones.push(operaciones);
-        }
-        let seguimientoField = operaciones.fields.find(f => f.seguimiento);
-        
-        if(!seguimientoField) {
-            seguimientoField = {
-                seguimiento: {
-                    llamados: []
-                }
-            }
-            operaciones.fields.push(seguimientoField);
-        }
-        
-        const llamados = seguimientoField.seguimiento.llamados?.length;
-        const ultimoEstado = seguimientoField.seguimiento.ultimoEstado?.key;
-
-        if (!llamados && ultimoEstado !== 'fallecido' && ultimoEstado !== 'alta'  ) {
-            seguimientoField.seguimiento.ultimoEstado = {
-                key : "pendiente",
-                value : new Date()
-            };
-        }            
+        };
+        // Evento para crear un seguimiento a partir del caso confirmado
+        EventCore.emitAsync('epidemiologia:seguimiento:create', ficha);
+        // TODO: Evaluar que deberíamos hacer en caso que modifiquen la ficha de confirmado --> sospechoso por error (¿evento para quitar el seguimiento? o ¿que lo hagan a manopla?)
     }
-
     next();
 });
 
