@@ -1,3 +1,22 @@
+# [5.49.0](https://github.com/andes/api/compare/v5.48.0...v5.49.0) (2021-06-09)
+
+
+### Bug Fixes
+
+* **auditoria:** cambia populate ([#1420](https://github.com/andes/api/issues/1420)) ([145c6af](https://github.com/andes/api/commit/145c6af379b0bb552e5f5523b3d824b8b0f3dcb5))
+* **cda:** crear cda a extranjeros ([#1422](https://github.com/andes/api/issues/1422)) ([fe65e3b](https://github.com/andes/api/commit/fe65e3be58564018c68047c232ed62ea8eda042d))
+* **forms:** localidades ([dfae01a](https://github.com/andes/api/commit/dfae01ac5d89db5221410ff0a1648ecf14299565))
+* **inscripcion:** quita excepción para mayores de 60 ([#1418](https://github.com/andes/api/issues/1418)) ([dd17171](https://github.com/andes/api/commit/dd1717150c97a25919eff58a730d23be05259b4c))
+
+
+### Features
+
+* **core:** graceful shutdown ([#1423](https://github.com/andes/api/issues/1423)) ([4db1463](https://github.com/andes/api/commit/4db14633f115ae23143495c46da21311499193a2))
+* **fichaEpidemiologica:** Apertura de casos por nexo y antigeno desde la ficha ([bab9235](https://github.com/andes/api/commit/bab92351cce863874be3092be16e8a318a19a471))
+* **localidades:** field activo ([8f69178](https://github.com/andes/api/commit/8f69178f250c264c20ebc8bcc1177ad3c08cd8dc))
+* **mapa-camas:** guarda unidad organizativa en prestacion ([#1395](https://github.com/andes/api/issues/1395)) ([2404f16](https://github.com/andes/api/commit/2404f1678f767fc0b286c37f82f818a06fcd83b7))
+* **mapa-camsa:** agrega fecha de ingreso en censo diario ([#1415](https://github.com/andes/api/issues/1415)) ([613ea86](https://github.com/andes/api/commit/613ea8624df802bd42e6f082c9946276a196be4b))
+
 # [5.48.0](https://github.com/andes/api/compare/v5.47.0...v5.48.0) (2021-06-02)
 
 
