@@ -3,6 +3,18 @@ import { Document, model, Schema, Types } from 'mongoose';
 import { ISeguimientoPaciente } from '../interfaces/seguimiento-paciente.interface';
 import { contactoEstrechoSchema } from './contacto-estrecho.schema';
 
+export const pointSchema = new Schema({
+    type: {
+        type: String,
+        enum: ['Point'],
+        required: true
+    },
+    coordinates: {
+        type: [Number],
+        required: true
+    }
+});
+
 export const seguimientoPacienteSchema = new Schema(
     {
         fechaInicio: {
@@ -27,7 +39,13 @@ export const seguimientoPacienteSchema = new Schema(
             direccionActual: String,
             sexo: String,
             foto: String,
-            fechaNacimiento: Date
+            fechaNacimiento: Date,
+            location: pointSchema
+        },
+        organizacionSeguimiento: {
+            id: Types.ObjectId,
+            nombre: String,
+            codigoSisa: String
         },
         llamados: [
             {

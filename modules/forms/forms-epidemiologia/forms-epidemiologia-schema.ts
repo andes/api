@@ -17,6 +17,7 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         estado: String,
         tipoIdentificacion: String,
         numeroIdentificacion: String,
+        direccion: Object,
         fechaNacimiento: Date,
     },
     secciones: [Object],
@@ -52,14 +53,11 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
     const comorbilidades = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields.find(f => f.presenta)?.presenta;
 
     if (clasificacionfinal === 'Confirmado') {
-
         ficha.score = {
             value: edadPaciente >= 60 && comorbilidades ? 10 : comorbilidades ? 6 : 3,
             fecha: new Date()
         };
         EventCore.emitAsync('epidemiologia:seguimiento:create', ficha);
-        // TODO Análisis:
-        // Evaluar que deberíamos hacer en caso que modifiquen la ficha de confirmado --> sospechoso por error (¿evento para quitar el seguimiento? o ¿que lo hagan a manopla?)
     }
     next();
 });

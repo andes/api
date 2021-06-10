@@ -19,6 +19,16 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
         if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
             const mpiSections = data.secciones.find(s => s.name === 'Mpi');
             const contactosEstrechos = data.secciones.find(s => s.name === 'Contactos Estrechos');
+            const patientGeoRef = data.paciente.direccion ? data.paciente.direccion[0].geoReferencia : null;
+            const location = {
+                type: 'Point',
+                coordinates: [...patientGeoRef]
+            };
+            // Para Rulo
+            // TODO dado el location del paciente, debería devolver la organización de seguimiento. La dejo en null
+
+            const organizacionSeguimiento = null;
+
             const seguimiento: ISeguimientoPaciente = {
                 fechaInicio: new Date(),
                 origen: {
@@ -39,9 +49,10 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
                     direccionActual: mpiSections.fields.find(f => f.direccioncaso).direccioncaso,
                     sexo: data.paciente.sexo,
                     foto: '',
-                    // foto: data.paciente.foto ? data.paciente.foto : null, // Evaluar si queremos la foto
+                    location,
                     fechaNacimiento: data.paciente.fechaNacimiento
                 },
+                organizacionSeguimiento,
                 llamados: [],
                 ultimoEstado: {
                     clave: 'pendiente',
