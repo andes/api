@@ -15,7 +15,7 @@ function moreThan14Days(seguimientos) {
 
 EventCore.on('epidemiologia:seguimiento:create', async (data) => {
     try {
-        const seguimientos = await SeguimientoPacienteCtr.search({ 'paciente.id': data.paciente.id });
+        const seguimientos = await SeguimientoPaciente.find({ 'paciente.id': data.paciente.id });
         if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
             const mpiSections = data.secciones.find(s => s.name === 'Mpi');
             const contactosEstrechos = data.secciones.find(s => s.name === 'Contactos Estrechos');
