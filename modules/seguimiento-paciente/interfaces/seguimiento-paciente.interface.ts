@@ -19,8 +19,14 @@ export interface ISeguimientoPaciente {
         sexo: string,
         foto: string,
         fechaNacimiento: Date,
+        location: object
     };
     llamados: any[];
+    organizacionSeguimiento: {
+        id: string,
+        nombre: string,
+        codigoSisa: string
+    };
     ultimoEstado: {
         clave: string,
         valor: Date

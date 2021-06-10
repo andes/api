@@ -30,6 +30,10 @@ class SeguimientoPacienteResource extends ResourceBase {
             field: 'ultimoEstado.clave',
             fn: MongoQuery.partialString
         },
+        organizacionSisa: {
+            field: 'organizacion.codigoSisa',
+            fn: MongoQuery.partialString
+        }
     };
 }
 
