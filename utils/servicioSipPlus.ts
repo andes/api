@@ -16,15 +16,14 @@ export async function getPaciente(paciente: any) {
                 json: true,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Basic ' + Buffer.from(`${SIP_PLUS.username}:${SIP_PLUS.password}`, 'binary').toString('base64')
+                    Authorization: 'Basic ' + Buffer.from(`${SIP_PLUS.username}:${SIP_PLUS.password}`, 'binary').toString('base64')
                 }
-            }
+            };
             const [status, resJson] = await await handleHttpRequest(options);
 
             if (status >= 200 && status < 300) {
                 const keyResponse = Object.keys(resJson).length;
-
-                return { paciente: keyResponse ? resJson : null }
+                return { paciente: keyResponse ? resJson : null };
             }
             if (status === 404) {
                 // paciente no encontrado

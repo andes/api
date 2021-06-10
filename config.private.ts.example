@@ -333,4 +333,4 @@ export const SIP_PLUS = {
     username: getEnv('SIP_PLUS_USERNAME', ''),
     password: getEnv('SIP_PLUS_PASSWORD', ''),
     host: getEnv('SIP_PLUS_URL', ''),
-}
+};

@@ -1,14 +1,11 @@
 
 import { CarnetPerinatal } from '../modules/perinatal/schemas/carnet-perinatal.schema';
-import { CarnetPerinatalCtr } from '../modules/perinatal/carnet-perinatal.routes'
+import { CarnetPerinatalCtr } from '../modules/perinatal/carnet-perinatal.routes';
 import { perinatalFechaFinEmbarazoLog } from '../modules/perinatal/perinatal.log';
 import { getPaciente as getPacienteSP } from '../utils/servicioSipPlus';
-
 import { userScheduler } from '../config.private';
-
 import moment = require('moment');
-
-import { ISnomedConcept } from 'modules/rup/schemas/snomed-concept';
+import { ISnomedConcept } from '../modules/rup/schemas/snomed-concept';
 
 const fechaFinEmbLog = perinatalFechaFinEmbarazoLog.startTrace();
 
@@ -73,34 +70,12 @@ export async function actualizarFechaFin(registroPer: any) {
  */
 function getNumGesta(concepto: ISnomedConcept) {
     const conceptId = concepto.conceptId;
-    const conceptIdPrimerGesta = ['29399001', '199719009', '127364007', '53881005'];
-    let numGesta = null;
-    if (conceptIdPrimerGesta.includes(conceptId)) {
-        numGesta = 1;
-    }
-    else {
-        switch (conceptId) {
-            case '127365008': numGesta = 2;
-                break;
-            case '127366009': numGesta = 3;
-                break;
-            case '127367000': numGesta = 4;
-                break;
-            case '127368005': numGesta = 5;
-                break;
-            case '127369002': numGesta = 6;
-                break;
-            case '127370001': numGesta = 7;
-                break;
-            case '127371002': numGesta = 8;
-                break;
-            case '127372009': numGesta = 9;
-                break;
-            case '127373004': numGesta = 10;
-                break;
-            default:
-                break;
-        }
-    }
+    const gestas = {
+        29399001: 1, 199719009: 1, 127364007: 1, 53881005: 1,
+        127365008: 2, 127366009: 3, 127367000: 4, 127368005: 5,
+        127369002: 6, 127370001: 7, 127371002: 8, 127372009: 9,
+        127373004: 10
+    };
+    const numGesta = gestas[conceptId] || null;
     return numGesta;
 }
