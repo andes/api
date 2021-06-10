@@ -351,11 +351,9 @@ router.get('/prestaciones', async (req: any, res, next) => {
         }
     }
     if (req.query.fechaDesde) {
-        // query.where('createdAt').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
     }
     if (req.query.fechaHasta) {
-        // query.where('createdAt').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
         query.where('ejecucion.fecha').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
     }
     if (req.query.idProfesional) {
@@ -410,7 +408,19 @@ router.get('/prestaciones', async (req: any, res, next) => {
     }
 
     if (req.query.tipoPrestaciones) {
-        query.where({ 'solicitud.tipoPrestacion.conceptId': { $in: req.query.tipoPrestaciones } });
+        const tipoPrestacion = req.query.tipoPrestaciones;
+        let compare = {};
+        if (Array.isArray(tipoPrestacion)) {
+            compare = { $in: tipoPrestacion };
+        } else {
+            if (tipoPrestacion.match(/^(\d)*$/)) {
+                compare = { $eq: tipoPrestacion };
+            } else {
+                const conceptos = await SnomedCtr.getConceptByExpression(tipoPrestacion);
+                compare = { $in: conceptos.map(c => c.conceptId) };
+            }
+        }
+        query.where({ 'solicitud.tipoPrestacion.conceptId': compare });
     }
 
     if (req.query.organizacion) {

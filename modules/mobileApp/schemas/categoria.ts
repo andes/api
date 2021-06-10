@@ -11,7 +11,7 @@ export let CategoriaSchema = new mongoose.Schema({
         type: Boolean
     },
     busquedaPor: {
-        type: Array,
+        type: String,
         items: {
             type: String,
             enum: ['registros', 'prestaciones', 'cdas']
