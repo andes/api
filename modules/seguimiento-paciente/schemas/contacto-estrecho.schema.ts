@@ -2,9 +2,8 @@ import { Schema } from 'mongoose';
 
 export const contactoEstrechoSchema = new Schema(
     {
-        apellido: String,
-        nombre: String,
-        documento: String,
+        apellidoNombre: String,
+        dni: String,
         telefono: String,
         domicilio: String,
         fechaUltimoContacto: String,

@@ -57,9 +57,9 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
             value: edadPaciente >= 60 && comorbilidades ? 10 : comorbilidades ? 6 : 3,
             fecha: new Date()
         };
-        // Evento para crear un seguimiento a partir del caso confirmado
         EventCore.emitAsync('epidemiologia:seguimiento:create', ficha);
-        // TODO: Evaluar que deberíamos hacer en caso que modifiquen la ficha de confirmado --> sospechoso por error (¿evento para quitar el seguimiento? o ¿que lo hagan a manopla?)
+        // TODO Análisis:
+        // Evaluar que deberíamos hacer en caso que modifiquen la ficha de confirmado --> sospechoso por error (¿evento para quitar el seguimiento? o ¿que lo hagan a manopla?)
     }
     next();
 });

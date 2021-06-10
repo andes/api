@@ -11,7 +11,6 @@ class SeguimientoPacienteResource extends ResourceBase {
         paciente: (value) => {
             return {
                 $or: [
-                    { 'paciente.id': MongoQuery.equalMatch(value) },
                     { 'paciente.documento': MongoQuery.partialString(value) },
                     { 'paciente.nombre': MongoQuery.partialString(value) },
                     { 'paciente.apellido': MongoQuery.partialString(value) }
@@ -26,7 +25,11 @@ class SeguimientoPacienteResource extends ResourceBase {
                     { 'origen.id ': MongoQuery.equalMatch(value) }
                 ]
             };
-        }
+        },
+        estado: {
+            field: 'ultimoEstado.clave',
+            fn: MongoQuery.partialString
+        },
     };
 }
 
