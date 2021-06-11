@@ -4,6 +4,7 @@ import { ISeguimientoPaciente } from './interfaces/seguimiento-paciente.interfac
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 import { SeguimientoPacienteCtr } from './seguimiento-paciente.route';
 import moment = require('moment');
+import { getOrganizacionAreaByLocationPoint } from '../../modules/georeferencia/controller/areasPrograma';
 
 let dataLog: any = new Object(userScheduler);
 
@@ -19,16 +20,13 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
         if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
             const mpiSections = data.secciones.find(s => s.name === 'Mpi');
             const contactosEstrechos = data.secciones.find(s => s.name === 'Contactos Estrechos');
-            const patientGeoRef = data.paciente.direccion ? data.paciente.direccion[0].geoReferencia : null;
+            const patientGeoRef = data.paciente.direccion ? data.paciente.direccion[0].geoReferencia.reverse() : null;
             const location = {
                 type: 'Point',
                 coordinates: [...patientGeoRef]
             };
-            // Para Rulo
-            // TODO dado el location del paciente, debería devolver la organización de seguimiento. La dejo en null
 
-            const organizacionSeguimiento = null;
-
+            const organizacionSeguimiento = await getOrganizacionAreaByLocationPoint(location);
             const seguimiento: ISeguimientoPaciente = {
                 fechaInicio: new Date(),
                 origen: {
