@@ -125,7 +125,8 @@ export default [
         comment: 'Habilita permisos sobre prestaciones solo para profesionales matriculados',
         avoidAll: true,
         child: [
-            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion', avoidAll: true }
+            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion', avoidAll: true },
+            { key: 'validacion', title: 'Validación extras', type: 'prestacion', avoidAll: true },
         ]
     },
     {

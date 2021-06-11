@@ -2,6 +2,7 @@ import { HTMLComponent } from '../model/html-component.class';
 import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
 import { streamToBase64 } from '../../../core/tm/controller/file-storage';
 import { searchMatriculas } from '../../../core/tm/controller/profesional';
+import { Profesional } from '../../../core/tm/schemas/profesional';
 
 export class InformeRupFirma extends HTMLComponent {
     template = `
@@ -29,6 +30,7 @@ export class InformeRupFirma extends HTMLComponent {
     }
 
     async process() {
+        this.profesional = await Profesional.findOne({ documento: this.profesional.documento });
         const imagenFirma = await this.getFirma(this.profesional);
         const matriculas = await this.getMatriculas();
 

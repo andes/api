@@ -87,7 +87,8 @@ export class InformeRupBody extends HTMLComponent {
 
     async getFirmaHTML() {
         if (this.validada()) {
-            const firmaHTMLComponent = new InformeRupFirma(this.prestacion.solicitud.profesional, this.prestacion.solicitud.organizacion);
+            const prof = this.prestacion.estadoActual.createdBy;
+            const firmaHTMLComponent = new InformeRupFirma(prof, this.prestacion.solicitud.organizacion);
             await firmaHTMLComponent.process();
             return firmaHTMLComponent.render();
         } else {
@@ -113,7 +114,7 @@ export class InformeRupBody extends HTMLComponent {
     }
 
     validada() {
-        return (this.prestacion.estados[this.prestacion.estados.length - 1].tipo === 'validada');
+        return (this.prestacion.estadoActual.tipo === 'validada');
     }
 
 }
