@@ -1,7 +1,7 @@
-import { handleHttpRequest } from '../../../utils/requestHandler';
-import { AreaPrograma } from '../areaPrograma.schema';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { GeoSaludLayer } from '../../../utils/geoJson/geoSalud-layers.schema';
+import { handleHttpRequest } from '../../../utils/requestHandler';
+import { AreaPrograma } from '../areaPrograma.schema';
 
 export async function importAreasProgramaGeoSalud() {
 
@@ -37,14 +37,14 @@ export async function getOrganizacionAreaByLocationPoint(location) {
     const areaPrograma: any = await AreaPrograma.findOne({
         geometry: { $geoIntersects: { $geometry: location } }
     });
-    const sisa = areaPrograma.sisaOrganizacion;
-
+    // Ojo que no esta viniendo el codigo sisa aca!!!
+    const sisa = areaPrograma?.sisaOrganizacion;
     if (sisa) {
         const org = await Organizacion.findOne({ 'codigo.sisa': sisa });
         return {
             id: org._id,
             nombre: org.nombre,
-            codigoSisa: org.codigo.sisa
+            codigoSisa: org.codigo.sisa.toString()
         };
     }
 
