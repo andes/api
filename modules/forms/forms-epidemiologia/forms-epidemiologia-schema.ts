@@ -28,6 +28,8 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
     }
 });
 
+export const FormsEpidemiologiaCloneSchema = FormsEpidemiologiaSchema.clone();
+
 FormsEpidemiologiaSchema.plugin(AuditPlugin);
 
 FormsEpidemiologiaSchema.pre('save', function (next) {
