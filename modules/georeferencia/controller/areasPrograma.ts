@@ -27,6 +27,7 @@ export async function importAreasProgramaGeoSalud() {
     return await Promise.all(features.map(a => {
         const areaDto = {
             nombre: a.properties.Name,
+            sisaOrganizacion: a.properties.cod_SISA,
             geometry: a.geometry
         };
         return new AreaPrograma(areaDto).save();
