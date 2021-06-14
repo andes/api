@@ -38,7 +38,10 @@ export function setupServices(app: express.Express) {
         registros.sort(
             (a, b) => sort * (b.fecha.getTime() - a.fecha.getTime())
         );
-        return first ? registros[0] : registros;
+        if (first) {
+            return registros[0] || null;
+        }
+        return registros;
     });
 
     // app.get('/api/services/:id/info', asyncHandler(async (req, res) => {

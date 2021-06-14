@@ -46,19 +46,3 @@ function checkDependencies(contexto: Context, def: ContextDefinition) {
     }
     return def.dependsOn.every(d => !!contexto[d]);
 }
-
-/**
- * EJEMPLO
- */
-
-const dinamicContext = [
-    {
-        name: 'fractura',
-        service: 'paciente-huds-registros',
-        params: {
-            paciente: '$.prestacion.paciente.id',
-            expression: '<<15574005'
-        },
-        dependsOn: []
-    }
-];

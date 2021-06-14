@@ -51,14 +51,19 @@ ElementoRUPRouter.post('/elementos-rup/requeridos', Auth.authenticate(), async (
             { prestacion: prestacion.toObject() }
         );
 
-
         const engine = new Engine();
 
         engine.addOperator('dateGreaterThan', (a: Date, b: Date) => {
+            if (!a || !b) {
+                return false;
+            }
             return a.getTime() >= b.getTime();
         });
 
         engine.addOperator('dateLessThan', (a: Date, b: Date) => {
+            if (!a || !b) {
+                return false;
+            }
             return a.getTime() <= b.getTime();
         });
 
@@ -109,6 +114,8 @@ async function runEngine(engine) {
                 } else {
                     return resolve(null);
                 }
+            }).catch((e) => {
+                return resolve(null);
             });
     });
 }
