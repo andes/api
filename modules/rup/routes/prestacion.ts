@@ -632,7 +632,6 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 AppCache.clear(`huds-${data.paciente.id}`);
             }
 
-
             if (req.body.estado && req.body.estado.tipo === 'validada') {
                 EventCore.emitAsync('rup:prestacion:validate', data);
                 // Se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
@@ -661,8 +660,6 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
             }
 
             res.json(prestacion);
-
-
         });
     });
 });

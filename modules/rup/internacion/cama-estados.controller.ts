@@ -409,7 +409,7 @@ export async function store({ organizacion, ambito, capa, cama }, estado, req: R
 
 /**
  * Operación especial para modificar la fecha de un estado
- */
+*/
 
 export async function patch({ organizacion, ambito, capa, cama }, from: Date, to: Date) {
     const result = await CamaEstados.update(
