@@ -156,8 +156,8 @@ router.get('/organizaciones', async (req, res, next) => {
     if (req.query.aceptaDerivacion) {
         filtros['aceptaDerivacion'] = req.query.aceptaDerivacion;
     }
-    if (req.query.esCOM) {
-        filtros['esCOM'] = req.query.esCOM;
+    if ('esCOM' in req.query) {
+        filtros['esCOM'] = req.query.esCOM ? true : { $exists: false };
     }
     if (req.query.trasladosEspeciales) {
         filtros['trasladosEspeciales._id'] = Types.ObjectId(req.query.trasladosEspeciales);
