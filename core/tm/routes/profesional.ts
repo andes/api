@@ -18,8 +18,6 @@ import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
 import moment = require('moment');
 import { streamToBase64 } from '../controller/file-storage';
-import { renaperv3, renaperToAndes } from '@andes/fuentes-autenticas';
-import { busInteroperabilidad } from '../../../config.private';
 import { services } from '../../../services';
 
 let router = express.Router();
@@ -937,16 +935,25 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
 
         }
         if (req.body.profesional) {
-            const newProfesional = new Profesional(req.body.profesional);
-            Auth.audit(newProfesional, req);
-            newProfesional.save(async (err2) => {
-                if (err2) {
-                    return next(err2);
-                }
+            // Se busca si existe un profesional no matriculado con el mismo doc y sexo
+            const doc = req.body.profesional.documento;
+            const sexo = req.body.profesional.sexo;
+            const profesional = await Profesional.findOne({ documento: doc, sexo, profesionalMatriculado: false });
+            let newProfesional = new Profesional(req.body.profesional);
+            if (profesional && profesional._id) {
+                req.body.profesional._id = profesional._id;
+                newProfesional = profesional.set(req.body.profesional);
+                Auth.audit(newProfesional, req);
+                await Profesional.update({ _id: profesional._id }, newProfesional, { upsert: true });
+                EventCore.emitAsync('matriculaciones:profesionales:update', newProfesional);
+            } else {
+                Auth.audit(newProfesional, req);
+                await newProfesional.save();
                 EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
-                log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
-                res.json(newProfesional);
-            });
+            }
+            log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
+            return res.json(newProfesional);
+
         }
 
     } catch (err) {
