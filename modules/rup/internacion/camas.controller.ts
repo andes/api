@@ -225,7 +225,6 @@ export async function patch(data: Partial<ICama>, req: Request) {
             Camas.findById(data.id),
             CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado, req),
         ]);
-
         if (nuevoEstado.extras?.egreso) {
             EventCore.emitAsync('mapa-camas:paciente:egreso', nuevoEstado);
         }
@@ -235,7 +234,9 @@ export async function patch(data: Partial<ICama>, req: Request) {
         if (nuevoEstado.extras?.unidadOrganizativaOrigen) {
             EventCore.emitAsync('mapa-camas:paciente:pase', { ...nuevoEstado });
         }
-
+        if (data.unidadOrganizativa) {
+            camaEncontrada.unidadOrganizativaOriginal = data.unidadOrganizativa;
+        }
         camaEncontrada.set(data);
         camaEncontrada.audit(req);
         return await camaEncontrada.save();
@@ -245,7 +246,7 @@ export async function patch(data: Partial<ICama>, req: Request) {
 }
 
 /**
- * Crea una cama de creo. Genera el movimiento inicial en cada capa.
+ * Crea una cama de cero. Genera el movimiento inicial en cada capa.
  * @param data
  * @param req
  */

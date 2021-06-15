@@ -4,7 +4,6 @@ import * as SalaComunController from './sala-comun/sala-comun.controller';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
-import { ObjectID } from 'bson';
 
 const router = express.Router();
 
@@ -155,7 +154,6 @@ router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(asy
     };
 
     const data = { ...req.body, organizacion, id: req.params.id };
-
     const result = await CamasController.patch(data, req);
 
     if (result) {
@@ -163,7 +161,6 @@ router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(asy
     } else {
         return next('No se puede realizar el movimiento');
     }
-
 }));
 
 router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
