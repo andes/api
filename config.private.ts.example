@@ -328,3 +328,9 @@ export const IPS = {
 export const APP_DOMAIN = 'http://localhost:4200';
 
 export const provincia = getEnv('PROVINCIA', 'neuquen');
+
+export const SIP_PLUS = {
+    username: getEnv('SIP_PLUS_USERNAME', ''),
+    password: getEnv('SIP_PLUS_PASSWORD', ''),
+    host: getEnv('SIP_PLUS_URL', ''),
+};
