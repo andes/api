@@ -1,63 +1,41 @@
+import { services } from '../../services';
 import { handleHttpRequest } from '../../utils/requestHandler';
 import { IPacsConfig } from './pacs-config.schema';
 
+
 export async function loginPacs(pacsConfig: IPacsConfig) {
-    const url = `${pacsConfig.auth.host}/auth/realms/dcm4che/protocol/openid-connect/token`;
-    const [status, body] = await handleHttpRequest({
-        method: 'POST',
-        url,
-        headears: {
-            Accept: 'application/json'
-        },
-        form: {
-            grant_type: 'client_credentials',
-            client_id: pacsConfig.auth.clientId,
-            client_secret: pacsConfig.auth.clientSecret
-        }
+
+    const response = await services.get('dcm4chee-login').exec({
+        host: pacsConfig.auth.host,
+        clientId: pacsConfig.auth.clientId,
+        clientSecret: pacsConfig.auth.clientSecret
     });
-    if (status >= 200 && status < 300) {
-        const token = JSON.parse(body).access_token;
-        return token;
-    }
-    throw new Error(body);
+
+    return response.access_token;
 }
 
 export async function createPaciente(pacsConfig: IPacsConfig, data: any, token: string) {
-    const url = `${pacsConfig.host}/dcm4chee-arc/aets/${pacsConfig.aet}/rs/patients`;
-    const [status, body] = await handleHttpRequest({
-        method: 'POST',
-        url,
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + token
-        },
-        json: true,
-        body: data
+
+    const response = await services.get('dcm4chee-create-paciente').exec({
+        host: pacsConfig.host,
+        aet: pacsConfig.aet,
+        token,
+        paciente: data
     });
-    if (status >= 200 && status < 300) {
-        return body;
-    }
-    throw new Error(body);
+
+    return response;
 }
 
 export async function createWorkList(pacsConfig: IPacsConfig, data: any, token: string) {
-    const url = `${pacsConfig.host}/dcm4chee-arc/aets/${pacsConfig.aet}/rs/mwlitems`;
-    const [status, body] = await handleHttpRequest({
-        method: 'POST',
-        url,
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + token
-        },
-        json: true,
-        body: data
+
+    const response = await services.get('dcm4chee-programar-estudio').exec({
+        host: pacsConfig.host,
+        aet: pacsConfig.aet,
+        token,
+        estudio: data
     });
-    if (status >= 200 && status < 300) {
-        return body;
-    }
-    throw new Error(body);
+
+    return response;
 }
 
 
