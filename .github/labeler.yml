@@ -1,2 +1,4 @@
 script:
     - scripts/*
+config:
+    - config.private.ts.example
