@@ -1,7 +1,7 @@
 import { AndesServices } from '@andes/services';
 import { validar } from './core-v2/mpi/validacion';
 import { Types } from 'mongoose';
-import { Connections } from './connections';
+import { AppCache, Connections } from './connections';
 import * as express from 'express';
 import { renaperToAndes, renaperv3 } from '@andes/fuentes-autenticas';
 import { busInteroperabilidad } from './config.private';
@@ -13,7 +13,9 @@ export let services: AndesServices;
 export function setupServices(app: express.Express) {
     services = new AndesServices(
         Connections.main,
-        Connections.logs
+        Connections.logs,
+        {},
+        AppCache
     );
 
     services.addFunction('toObjectId', (id) => {
