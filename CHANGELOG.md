@@ -1,3 +1,11 @@
+# [5.50.0](https://github.com/andes/api/compare/v5.49.0...v5.50.0) (2021-06-16)
+
+
+### Features
+
+* **com:** Se agregan dispositivos y la posibilidad de asociar dispositivos de oxigeno a la derivación ([85679d0](https://github.com/andes/api/commit/85679d03092b6e0000ec37e3c042e00c6735df04))
+* **descargas:** Agrega get para descarga de prestaciones ([#1416](https://github.com/andes/api/issues/1416)) ([f29079d](https://github.com/andes/api/commit/f29079dd22bd6d4018abc8989cf56d5295e54e50))
+
 # [5.49.0](https://github.com/andes/api/compare/v5.48.0...v5.49.0) (2021-06-09)
 
 
