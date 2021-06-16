@@ -156,7 +156,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
                     ...attachments
                 ]
             };
-            await SendEmail.sendMail(data);
+            await SendEmail.sendMail(data, configPrivate.ServidorEmailRUP);
             res.json({ status: 'OK' });
         } catch (e) {
             next(e);

@@ -18,19 +18,20 @@ export interface MailOptions {
     attachments: any;
 }
 
-export function sendMail(options: MailOptions) {
+export function sendMail(options: MailOptions, config = null) {
     return new Promise((resolve, reject) => {
+        const configuracion = config || enviarMail;
 
-        if (!enviarMail.active) {
+        if (!configuracion.active) {
             return resolve({});
         }
 
 
         const transporter = nodemailer.createTransport({
-            host: enviarMail.host,
-            port: enviarMail.port,
-            secure: enviarMail.secure,
-            auth: enviarMail.auth,
+            host: configuracion.host,
+            port: configuracion.port,
+            secure: configuracion.secure,
+            auth: configuracion.auth,
         });
 
         const mailOptions = {
