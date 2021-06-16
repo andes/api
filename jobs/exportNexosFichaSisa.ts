@@ -146,15 +146,10 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
             }
         }
     ];
-
     const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
     for (const unaFicha of fichas) {
         const documento = unaFicha.Paciente_documento;
-        let casos = [];
         if (documento) {
-            casos = await getCasosConfirmados(documento);
-        }
-        if (casos.length <= 0) {
             const eventoNominal = {
                 idTipodoc: '1',
                 nrodoc: documento,
