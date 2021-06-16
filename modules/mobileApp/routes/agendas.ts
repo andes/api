@@ -3,6 +3,8 @@ import { Agenda } from '../../turnos/schemas/agenda';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as moment from 'moment';
 import { getDistanceBetweenPoints } from '../../../utils/utilCoordenadas';
+import { verificarCondicionPaciente } from '../../../modules/turnos/condicionPaciente/condicionPaciente.controller';
+import { CondicionPaciente } from '../../../modules/turnos/condicionPaciente/condicionPaciente.schema';
 
 const router = express.Router();
 
@@ -13,18 +15,41 @@ const router = express.Router();
 router.get('/agendasDisponibles', async (req: any, res, next) => {
     const pipelineAgendas = [];
     const matchAgendas = {};
+    const condiciones: any = await CondicionPaciente.find({activo: true});
+    let reglas = [];
+    let fieldRegla;
+    for (const condicion of condiciones) {
+        const verificar = await verificarCondicionPaciente(condicion, req.query.idPaciente);
+        if (verificar) {
+            reglas.push(condicion.tipoPrestacion.conceptId);
+        }
+    }
     if (req.query.conceptId) {
         matchAgendas['tipoPrestaciones.conceptId'] = req.query.conceptId;
     }
-
     matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['bloques.restantesProgramados'] = { $gt: 0 };
-    matchAgendas['bloques.restantesMobile'] = { $gt: 0 };
-
     matchAgendas['estado'] = 'publicada';
     matchAgendas['dinamica'] = false;
-
+    if (reglas) {
+        matchAgendas['$or'] = [
+            {
+                'bloques.restantesMobile': { $gt: 0 },
+            },
+            {
+                'tipoPrestaciones.conceptId': { $in:  reglas  }
+            }
+        ];
+        fieldRegla =  {
+            cumpleRegla: {
+                $not: [{$eq: [{$size: { $setIntersection: ['$tipoPrestaciones.conceptId', reglas]}}, 0]}]
+            }
+        };
+    }
     pipelineAgendas.push({ $match: matchAgendas });
+    if (fieldRegla) {
+        pipelineAgendas.push({ $addFields: fieldRegla });
+    }
     pipelineAgendas.push({
         $group: {
             _id: { id: '$organizacion._id' },
@@ -67,7 +92,6 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
             // Limitamos a 10 km los turnos a mostrar (FILTRA LOS MAYORES A 10 KM)
             agendasResultado = agendasResultado.filter(obj => obj.distance <= 10);
         }
-
         res.json(agendasResultado);
     } catch (err) {
         res.status(422).json({ message: err });
