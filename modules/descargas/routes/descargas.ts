@@ -13,7 +13,6 @@ import { Derivacion } from '../com/derivacion';
 import { Arancelamiento } from '../arancelamiento/arancelamiento';
 import { Agenda } from '../agenda/agenda';
 import { getArchivoAdjunto } from '../../../modules/rup/controllers/rup';
-import { services } from '../../../services';
 
 const router = express.Router();
 
@@ -155,8 +154,11 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
                     ...attachments
                 ]
             };
-            const emailService = org.configuraciones.servicioEmail || 'email-send-default';
-            await services.get(emailService).exec(data);
+
+            await SendEmail.sendMail(
+                data,
+                org.configuraciones?.servicioEmail
+            );
 
             res.json({ status: 'OK' });
 

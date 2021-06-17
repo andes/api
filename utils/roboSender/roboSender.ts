@@ -37,7 +37,6 @@ export function roboSender() {
                             }
 
                             const mailOptions: mailTools.MailOptions = {
-                                from: configPrivate.enviarMail.host,
                                 to: env.email,
                                 subject: env.subject,
                                 text: env.message,

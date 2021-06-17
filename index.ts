@@ -3,7 +3,6 @@ import * as express from 'express';
 import * as debug from 'debug';
 import { initAPI } from './initialize';
 import { Websockets } from './websockets';
-import { Connections } from './connections';
 
 // Inicializa express
 const app = express();
@@ -30,6 +29,7 @@ process.on('SIGINT', () => {
     server.close(() => {
         setTimeout(
             () => {
+                const { Connections } = require('./connections');
                 Connections.main.close().then(() => {
                     process.exit();
                 });

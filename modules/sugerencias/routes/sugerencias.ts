@@ -13,7 +13,6 @@ router.post('/', (req, res) => {
     // renderizacion del email
     SendEmail.renderHTML('emails/email-sugerencias.html', body).then((html) => {
         const data = {
-            from: configPrivate.enviarMail.auth.user,
             to: configPrivate.enviarMail.auth.user,
             subject: body.subject,
             text: body.texto,

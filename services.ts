@@ -10,7 +10,7 @@ import { hudsPaciente } from './modules/rup';
 
 export let services: AndesServices;
 
-export function setupServices(app: express.Express) {
+export function setupServices(app: express.Express = null) {
     services = new AndesServices(
         Connections.main,
         Connections.logs,
@@ -73,9 +73,10 @@ export function setupServices(app: express.Express) {
 
     };
 
-
-    app.get('/api/services/:id', asyncHandler(httpRequestHandler));
-    app.post('/api/services/:id', asyncHandler(httpRequestHandler));
+    if (app) {
+        app.get('/api/services/:id', asyncHandler(httpRequestHandler));
+        app.post('/api/services/:id', asyncHandler(httpRequestHandler));
+    }
 
     return services;
 }

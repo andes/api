@@ -67,7 +67,6 @@
     "node-pushnotifications": "^1.0.18",
     "node-sass": "^4.14.1",
     "node-schedule": "^1.2.4",
-    "nodemailer": "^4.6.2",
     "passport": "^0.3.2",
     "passport-jwt": "^4.0.0",
     "pdfkit": "^0.9.0",

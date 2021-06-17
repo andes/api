@@ -335,13 +335,3 @@ export const SIP_PLUS = {
     host: getEnv('SIP_PLUS_URL', ''),
 };
 
-export const ServidorEmailRUP = {
-    active: getEnv('EMAIL_RUP_ACTIVE', 'false', 'b'),
-    host: getEnv('EMAIL_RUP_HOST', ''),
-    port: getEnv('EMAIL_RUP_PORT', 587, 'n'),
-    secure: getEnv('EMAIL_RUP_SECURE', false, 'b'),
-    auth: {
-        user: getEnv('EMAIL_RUP_USERNAME', ''),
-        pass: getEnv('EMAIL_RUP_PASSWORD', '')
-    }
-};

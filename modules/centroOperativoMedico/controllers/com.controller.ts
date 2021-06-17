@@ -1,4 +1,3 @@
-import * as configPrivate from '../../../config.private';
 import * as SendEmail from '../../../utils/roboSender/sendEmail';
 import { Derivacion } from '../../../modules/descargas/com/derivacion';
 const moment = require('moment');
@@ -23,13 +22,10 @@ export async function sendMailComprobanteDerivacion(derivacion, to) {
             el día ${fechaFinalizacion}.
             Descargue el comprobante adjunto.`
     };
-    const from = `ANDES <${configPrivate.enviarMail.auth.user}>`;
     const html = await SendEmail.renderHTML('emails/emailGenerico.html', handleBarsData);
     const data = {
-        from,
         to,
         subject: `Comprobante de derivación ${derivacion.paciente.nombre} ${derivacion.paciente.apellido} ${fechaFinalizacion}`,
-        text: '',
         html,
         attachments
     };

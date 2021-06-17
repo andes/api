@@ -206,10 +206,8 @@ router.post('/mailGenerico', async (req, res, next) => {
         x.content = x.content.split('base64,')[1];
     });
     const data = {
-        from: configPrivate.enviarMail.auth.user,
         to: body.emails,
         subject: body.asunto,
-        text: '',
         html,
         attachments: body.adjuntos
     };
