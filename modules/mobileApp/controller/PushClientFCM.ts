@@ -23,7 +23,7 @@ export async function sendPushNotification(token, notification: any) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `key=${pushNotificationsSettings.gcm.id}`,
+            Authorization: `key=${pushNotificationsSettings.gcm.id}`,
         },
         body: JSON.stringify(payload)
     });
