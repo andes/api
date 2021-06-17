@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 
 export const AreaProgramaSchema = new mongoose.Schema(
     {
-        nombre:  mongoose.SchemaTypes.Mixed,
+        nombre: String,
         geometry: {
             type: { type: String },
             coordinates: []
