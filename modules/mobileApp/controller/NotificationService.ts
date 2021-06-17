@@ -54,8 +54,8 @@ export class NotificationService {
      */
     public static solicitudAdjuntos(profesionalId, adjuntoId) {
         const notificacion = {
-            title: 'Archivo adjunto Andes RUP',
-            body: 'Tocar para ir a adjuntar',
+            title: 'Adjunto Andes RUP',
+            body: 'Tocar para ir a adjuntar un documento',
             extraData: {
                 action: 'rup-adjuntar',
                 id: adjuntoId
@@ -112,6 +112,11 @@ export class NotificationService {
         id = new mongoose.Types.ObjectId(id);
         PacienteApp.find({ profesionalId: id }, (err, docs: any[]) => {
             docs.forEach(user => {
+
+                // Legacy: dispositivos iOS es posible que aun reciban de esa manera
+                const devices = user.devices.map(item => item.device_id);
+                new PushClient().send(devices, notification);
+
                 // Traer el último token válido
                 const lastIndex = user.devices.length - 1;
                 const deviceToken = user.devices[lastIndex];
