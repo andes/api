@@ -33,6 +33,10 @@ class SeguimientoPacienteResource extends ResourceBase {
         organizacionSisa: {
             field: 'organizacion.codigoSisa',
             fn: MongoQuery.partialString
+        },
+        organizacionSeguimiento: {
+            field: 'organizacionSeguimiento.id',
+            fn: MongoQuery.equalMatch
         }
     };
 }
