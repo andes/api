@@ -18,12 +18,15 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     const condiciones: any = await CondicionPaciente.find({activo: true});
     let reglas = [];
     let fieldRegla;
-    for (const condicion of condiciones) {
-        const verificar = await verificarCondicionPaciente(condicion, req.query.idPaciente);
-        if (verificar) {
-            reglas.push(condicion.tipoPrestacion.conceptId);
+    if (req.query.idPaciente) {
+        for (const condicion of condiciones) {
+            const verificar = await verificarCondicionPaciente(condicion, req.query.idPaciente);
+            if (verificar) {
+                reglas.push(condicion.tipoPrestacion.conceptId);
+            }
         }
     }
+
     if (req.query.conceptId) {
         matchAgendas['tipoPrestaciones.conceptId'] = req.query.conceptId;
     }
@@ -45,6 +48,8 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
                 $not: [{$eq: [{$size: { $setIntersection: ['$tipoPrestaciones.conceptId', reglas]}}, 0]}]
             }
         };
+    } else {
+        matchAgendas['bloques.restantesMobile'] = { $gt: 0 };
     }
     pipelineAgendas.push({ $match: matchAgendas });
     if (fieldRegla) {
