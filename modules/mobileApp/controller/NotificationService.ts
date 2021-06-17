@@ -4,6 +4,7 @@ import { Agenda } from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
+import * as fcm from '../../../modules/mobileApp/controller/PushClientFCM';
 
 const log = debug('NotificationService');
 
@@ -53,7 +54,8 @@ export class NotificationService {
      */
     public static solicitudAdjuntos(profesionalId, adjuntoId) {
         const notificacion = {
-            body: 'Haz click para adjuntar la foto solicitada',
+            title: 'Archivo adjunto Andes RUP',
+            body: 'Tocar para ir a adjuntar',
             extraData: {
                 action: 'rup-adjuntar',
                 id: adjuntoId
@@ -110,8 +112,10 @@ export class NotificationService {
         id = new mongoose.Types.ObjectId(id);
         PacienteApp.find({ profesionalId: id }, (err, docs: any[]) => {
             docs.forEach(user => {
-                const devices = user.devices.map(item => item.device_id);
-                new PushClient().send(devices, notification);
+                // Traer el último token válido
+                const lastIndex = user.devices.length - 1;
+                const deviceToken = user.devices[lastIndex];
+                fcm.sendPushNotification(deviceToken, notification);
             });
         });
     }
