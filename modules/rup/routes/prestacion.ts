@@ -580,9 +580,6 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if (req.body.paciente) {
                         data.paciente = req.body.paciente;
                     }
-                    if (req.body.esCensable) {
-                        data.esCensable = req.body.esCensable;
-                    }
                 }
                 break;
             case 'informeIngreso':
@@ -630,7 +627,6 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
             if (data.paciente) {
                 AppCache.clear(`huds-${data.paciente.id}`);
             }
-
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
                 EventCore.emitAsync('rup:prestacion:validate', data);
