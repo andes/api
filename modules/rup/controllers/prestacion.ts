@@ -8,6 +8,8 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { buscarEnHuds } from '../controllers/rup';
 import moment = require('moment');
+import { AppCache } from '../../../connections';
+
 
 /**
  * Libera la referencia al turno dentro de la solicitud
@@ -105,6 +107,7 @@ export async function search(params) {
 
 
 export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPrestacion: string, estado: string, deadline, valor?) {
+    let useCache = true;
     if (!expresion) {
         return null;
     }
@@ -119,19 +122,27 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
     };
 
     if (idPrestacion) {
+        useCache = false;
         query['_id'] = Types.ObjectId(idPrestacion);
     }
 
     if (deadline) {
+        useCache = false;
         query['ejecucion.fecha'] = {
             $gte: moment(deadline).startOf('day').toDate()
         };
     }
 
-    const prestaciones = await Prestacion.find(query);
-
-    if (!prestaciones) {
-        return null;
+    let prestaciones;
+    if (useCache) {
+        prestaciones = await AppCache.get(`huds-${pacienteID}`);
+        if (!prestaciones) {
+            prestaciones = await Prestacion.find(query);
+            prestaciones = prestaciones.map(p => p.toObject());
+            AppCache.set(`huds-${pacienteID}`, prestaciones, 60 * 60);
+        }
+    } else {
+        prestaciones = await Prestacion.find(query);
     }
 
     const conceptos = await SnomedCtr.getConceptByExpression(expresion);

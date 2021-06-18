@@ -10,3 +10,5 @@ export function setup(app: express.Application) {
     app.use('/api/modules/rup/internacion', InternacionRouter);
     app.use('/api/modules/rup/internacion', InternacionResumenRouter);
 }
+
+export { hudsPaciente } from './controllers/prestacion';
