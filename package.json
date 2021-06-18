@@ -6,7 +6,7 @@
   "dependencies": {
     "@agm/core": "^1.0.0-beta.5",
     "@andes/api-tool": "^2.1.0",
-    "@andes/core": "^1.9.0",
+    "@andes/core": "^1.9.1",
     "@andes/drive": "file:packages/drive",
     "@andes/etl": "^0.1.1",
     "@andes/event-bus": "file:packages/event-bus",
@@ -17,7 +17,7 @@
     "@andes/match": "^1.1.12",
     "@andes/mongoose-plugin-audit": "^1.2.0",
     "@andes/mongoose-token-search": "^1.0.0",
-    "@andes/services": "^0.3.0",
+    "@andes/services": "^0.3.1",
     "@types/async": "^2.0.49",
     "@types/bcrypt-nodejs": "0.0.30",
     "@types/core-js": "^0.9.36",
