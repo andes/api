@@ -148,6 +148,10 @@ export const PrestacionSchema = new Schema({
         elementoRUP: SchemaTypes.ObjectId
 
     },
+    esCensable: {
+        type: Boolean,
+        required: false
+    },
     tags: Schema.Types.Mixed,
     // Historia de estado de la prestación
     estados: [PrestacionEstadoSchema],
