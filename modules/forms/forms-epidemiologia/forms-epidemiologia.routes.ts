@@ -31,7 +31,7 @@ class FormsEpidemiologiaResource extends ResourceBase {
             fn: MongoQuery.equalMatch
         },
         clasificacion: {
-            field: 'secciones.fields.clasificacion',
+            field: 'secciones.fields.clasificacion.id',
             fn: MongoQuery.equalMatch
         },
         identificadorPcr: {
