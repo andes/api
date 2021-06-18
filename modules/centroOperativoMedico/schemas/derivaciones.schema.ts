@@ -15,7 +15,7 @@ let DerivacionHistorialSchema = new mongoose.Schema({
     },
     prioridad: {
         type: String,
-        enum: ['baja', 'media', 'alta', 'especial']
+        enum: ['baja', 'media', 'intermedia', 'alta', 'especial']
     },
     organizacionDestino: {
         id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' },
@@ -100,7 +100,7 @@ export const DerivacionSchema = new mongoose.Schema({
     },
     prioridad: {
         type: String,
-        enum: ['baja', 'media', 'alta', 'especial']
+        enum: ['baja', 'media', 'intermedia', 'alta', 'especial']
     },
 });
 
