@@ -91,7 +91,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             }
         }
 
-        if (!ultimoMovimiento.esCensable) {
+        if (!ultimoMovimiento.esCensable && !(prestacion as any).esCensable) {
             return;
         }
         if (fechaEgreso) {

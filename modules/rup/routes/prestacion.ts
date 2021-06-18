@@ -610,9 +610,11 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if (req.body.solicitud) {
                         data.solicitud = req.body.solicitud;
                     }
-
                     if (req.body.paciente) {
                         data.paciente = req.body.paciente;
+                    }
+                    if (req.body.esCensable) {
+                        data.esCensable = req.body.esCensable;
                     }
                 }
                 break;
