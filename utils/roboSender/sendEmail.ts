@@ -1,54 +1,26 @@
-import { enviarMail } from '../../config.private';
+
 import * as fs from 'fs';
 import moment = require('moment');
+import { services } from '../../services';
 const handlebars = require('handlebars');
 const path = require('path');
-const nodemailer = require('nodemailer');
 
 handlebars.registerHelper('datetime', dateTime => {
     return moment(dateTime).format('D MMM YYYY [a las] H:mm [hs]');
 });
 
 export interface MailOptions {
-    from: string;
+    from?: string;
     to: string;
     subject: string;
-    text: string;
+    text?: string;
     html: string;
-    attachments: any;
+    attachments?: any;
 }
 
-export function sendMail(options: MailOptions) {
-    return new Promise((resolve, reject) => {
-
-        if (!enviarMail.active) {
-            return resolve({});
-        }
-
-
-        const transporter = nodemailer.createTransport({
-            host: enviarMail.host,
-            port: enviarMail.port,
-            secure: enviarMail.secure,
-            auth: enviarMail.auth,
-        });
-
-        const mailOptions = {
-            from: options.from,
-            to: options.to,
-            subject: options.subject,
-            text: options.text,
-            html: options.html,
-            attachments: options.attachments
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve(info);
-        });
-    });
+export async function sendMail(options: MailOptions, servicioAlternativo: string = null) {
+    const servicio = servicioAlternativo || 'email-send-default';
+    return services.get(servicio).exec(options);
 }
 
 export function renderHTML(templateName: string, extras: any): Promise<string> {

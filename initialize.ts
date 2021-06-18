@@ -8,10 +8,7 @@ import * as HttpStatus from 'http-status-codes';
 import { Auth } from './auth/auth.class';
 import * as config from './config';
 import * as configPrivate from './config.private';
-import { Connections } from './connections';
-import { PacienteAppRouter, SendMessageCacheRouter } from './modules/mobileApp';
 import { Swagger } from './swagger/swagger.class';
-import { registerPartialTemplate } from './utils/roboSender/sendEmail';
 
 const proxy = require('express-http-proxy');
 const requireDir = require('require-dir');
@@ -20,15 +17,17 @@ export function initAPI(app: Express) {
 
     FHIRInitialize({ dominio: configPrivate.FHIR.domain });
 
-    // Handlebars: Registramos template de password recovery
-    registerPartialTemplate('layout', 'emails/layout.html');
 
     // Inicializa Mongoose
+    const { Connections } = require('./connections');
     Connections.initialize();
 
     // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
 
+    // Handlebars: Registramos template de password recovery
+    const { registerPartialTemplate } = require('./utils/roboSender/sendEmail');
+    registerPartialTemplate('layout', 'emails/layout.html');
 
     // Configura Express
     app.use(bodyParser.json({ limit: '150mb' }));
@@ -124,6 +123,12 @@ export function initAPI(app: Express) {
     }
     app.use('/api/modules/turnos', require('./modules/turnos').InstitucionRouter);
 
+    const { PacienteAppRouter, SendMessageCacheRouter } = require('./modules/mobileApp');
+    app.use('/api/modules/mobileApp', SendMessageCacheRouter);
+    app.use('/api/modules/mobileApp', PacienteAppRouter);
+    app.use('/api/modules', require('./modules/personalSalud').PersonalSaludRouter);
+    app.use('/api/modules/turnos', require('./modules/turnos/condicionPaciente').CondicionPacienteRouter);
+
     /**
      * Inicializa las rutas para adjuntar archivos
      */
@@ -166,8 +171,5 @@ export function initAPI(app: Express) {
         }
     });
 
-    app.use('/api/modules/mobileApp', SendMessageCacheRouter);
-    app.use('/api/modules/mobileApp', PacienteAppRouter);
-    app.use('/api/modules', require('./modules/personalSalud').PersonalSaludRouter);
-    app.use('/api/modules/turnos', require('./modules/turnos/condicionPaciente').CondicionPacienteRouter);
+
 }

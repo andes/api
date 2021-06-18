@@ -18,8 +18,6 @@ import { log } from '@andes/log';
 import { EventCore } from '@andes/event-bus';
 import moment = require('moment');
 import { streamToBase64 } from '../controller/file-storage';
-import { renaperv3, renaperToAndes } from '@andes/fuentes-autenticas';
-import { busInteroperabilidad } from '../../../config.private';
 import { services } from '../../../services';
 
 let router = express.Router();
@@ -963,57 +961,6 @@ router.post('/profesionales/sms', (req, res, next) => {
     if (sendSms(smsOptions)) {
         res.send();
     }
-
-});
-
-router.post('/profesionales/sendMail', (req, res, next) => {
-    'use strict';
-    const config_private = require('../../../config.private');
-    const nodemailer = require('nodemailer');
-    const _profesional = req.body.profesional;
-    // Generate test SMTP service account from ethereal.email
-    // Only needed if you don't have a real mail account for testing
-
-    // create reusable transporter object using the default SMTP transport
-    const transporter = nodemailer.createTransport({
-        host: config_private.enviarMail.host,
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: config_private.enviarMail.auth.user, // generated ethereal user
-            pass: config_private.enviarMail.auth.pass // generated ethereal password
-        }
-    });
-
-    const contactos = _profesional.contactos;
-    let email;
-    contactos.forEach(element => {
-        if (element.tipo === 'email') {
-            email = element.valor;
-        }
-    });
-
-    const html1 = '<strong>Estimado ' + _profesional.nombreCompleto + '</strong> <br> una de sus matriculas esta por vencer, por favor presentarse para realizar la renovacion de la misma.';
-    // setup email data with unicode symbols
-    const mailOptions = {
-        from: '"Matriculaciones Salud" <ultrakite6@gmail.com>', // sender address
-        to: email, // list of receivers
-        subject: 'Vencimiento', // Subject line
-        text: 'Vencimiento?', // plain text body
-        html: '' + html1 + '' // html body
-    };
-
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            return next(error);
-        }
-        res.send(true);
-        // Preview only available when sending through an Ethereal account
-
-        // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@blurdybloop.com>
-        // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-    });
 
 });
 

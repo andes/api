@@ -122,6 +122,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
         emailFiltrado = org.configuraciones.emails.filter(x => x.email === email);
     }
 
+
     if (adjuntos) {
         let count = 0;
         const fecha = moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss');
@@ -137,16 +138,13 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
 
     if (emailFiltrado) {
         try {
-            // const archivo = await Documento.descargar(req, res, next);
             const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
             const fileName = await informe.informe();
 
             const html = await SendEmail.renderHTML('emails/email-informe.html', handlebarsData);
             const data = {
-                from: `ANDES <${configPrivate.enviarMail.auth.user}>`,
                 to: email,
                 subject: handlebarsData.procesoProcedencia + ' - ' + procedimiento + ' - PACIENTE ' + handlebarsData.paciente.nombre + ' ' + handlebarsData.paciente.apellido + ' - PROFESIONAL  ' + handlebarsData.profesional.nombre + ' ' + handlebarsData.profesional.apellido,
-                text: '',
                 html,
                 attachments: [
                     {
@@ -156,8 +154,14 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
                     ...attachments
                 ]
             };
-            await SendEmail.sendMail(data);
+
+            await SendEmail.sendMail(
+                data,
+                org.configuraciones?.servicioEmail
+            );
+
             res.json({ status: 'OK' });
+
         } catch (e) {
             next(e);
         }

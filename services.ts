@@ -1,7 +1,7 @@
 import { AndesServices } from '@andes/services';
 import { validar } from './core-v2/mpi/validacion';
 import { Types } from 'mongoose';
-import { Connections } from './connections';
+import { AppCache, Connections } from './connections';
 import * as express from 'express';
 import { renaperToAndes, renaperv3 } from '@andes/fuentes-autenticas';
 import { busInteroperabilidad } from './config.private';
@@ -10,10 +10,12 @@ import { hudsPaciente } from './modules/rup';
 
 export let services: AndesServices;
 
-export function setupServices(app: express.Express) {
+export function setupServices(app: express.Express = null) {
     services = new AndesServices(
         Connections.main,
-        Connections.logs
+        Connections.logs,
+        {},
+        AppCache
     );
 
     services.addFunction('toObjectId', (id) => {
@@ -71,9 +73,10 @@ export function setupServices(app: express.Express) {
 
     };
 
-
-    app.get('/api/services/:id', asyncHandler(httpRequestHandler));
-    app.post('/api/services/:id', asyncHandler(httpRequestHandler));
+    if (app) {
+        app.get('/api/services/:id', asyncHandler(httpRequestHandler));
+        app.post('/api/services/:id', asyncHandler(httpRequestHandler));
+    }
 
     return services;
 }

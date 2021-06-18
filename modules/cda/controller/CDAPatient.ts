@@ -505,6 +505,7 @@ export function validateMiddleware(req, res, next) {
     const dataProfesional = req.body.profesional || {};
     const file = req.body.file;
 
+    req.body.fecha = req.body.fecha?.substring(0, 10);
     if (!moment(req.body.fecha).isValid()) {
         errors.fecha = 'invalid_format';
     }
