@@ -9,7 +9,6 @@ import { AndesDrive } from '@andes/drive/';
 
 import { Connections } from './../connections';
 import { Drive } from '../config.private';
-import { setupServices } from '../services';
 
 const path = require('path');
 
@@ -17,6 +16,7 @@ Connections.initialize();
 
 AndesDrive.setup(Drive);
 
+const { setupServices } = require('../services');
 setupServices();
 
 const done = () => {
