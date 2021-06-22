@@ -19,10 +19,10 @@ export function roboSender() {
 
         let counter = 0;
 
-        RoboModel.find(condition).then((enviosPendientes: any[]) => {
+        RoboModel.find(condition).then(async (enviosPendientes: any[]) => {
             log('Encuentro ', enviosPendientes.length, 'mensajes para enviar');
             if (enviosPendientes.length > 0) {
-                enviosPendientes.forEach(async env => {
+                for (const env of enviosPendientes) {
                     try {
                         if (env.email) {
                             let html = '';
@@ -79,7 +79,7 @@ export function roboSender() {
                     if (finEjecucion(counter, enviosPendientes.length)) {
                         return resolve();
                     }
-                });
+                }
             } else {
                 log('Termina la ejecución');
                 return resolve();
