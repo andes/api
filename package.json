@@ -170,7 +170,7 @@
     "@types/jest": "^24.0.22",
     "@types/mongoose": "^5.7.36",
     "@types/node": "^14.11.9",
-    "@types/request": "^2.48.1",
+    "@types/request": "^2.48.5",
     "before": "0.0.1",
     "chai": "^4.1.2",
     "jest": "^24.9.0",
