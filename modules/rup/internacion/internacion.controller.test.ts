@@ -302,7 +302,7 @@ test('Deshacer Internacion', async () => {
 
     let camaEncontrada: any = await findById({ organizacion, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
     expect(camaEncontrada.estado).toBe('ocupada');
-    await InternacionController.deshacerInternacion(camaEncontrada.organizacion._id, capa, ambito, camaEncontrada, REQMock);
+    await InternacionController.deshacerInternacion(camaEncontrada.organizacion._id, capa, ambito, camaEncontrada.idInternacion, false, REQMock);
 
     camaEncontrada = await findById({ organizacion, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
     expect(camaEncontrada.estado).toBe('disponible');

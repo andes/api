@@ -8,6 +8,8 @@ export interface InternacionExtras {
     tipo_egreso?: string;
     idInternacion?: ObjectId;
     unidadOrganizativaOrigen?: ISnomedConcept;
+    idMovimiento?: ObjectId;
+
 }
 export const InternacionExtrasSchema = new Schema(
     {
@@ -16,6 +18,8 @@ export const InternacionExtrasSchema = new Schema(
         tipo_egreso: { type: String, required: false },
         idInternacion: { type: SchemaTypes.ObjectId, required: false }, // idInternacion al egresar,
         unidadOrganizativaOrigen: { type: SnomedConcept, required: false },
+        idMovimiento: { type: SchemaTypes.ObjectId, required: false },
+
     },
     { _id: false }
 );
@@ -64,7 +68,6 @@ const CamaEstadosSchema = new Schema({
             type: SnomedConcept,
             required: false
         },
-        idMovimiento: SchemaTypes.ObjectId,
         equipamiento: [SnomedConcept],
         extras: { type: InternacionExtrasSchema, required: false },
         nota: { type: String, required: false },

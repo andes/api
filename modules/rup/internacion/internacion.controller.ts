@@ -72,42 +72,52 @@ export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: 
     return historialInternacion;
 }
 
-export async function deshacerInternacion(organizacion, capa, ambito, cama, req: Request) {
+export async function deshacerInternacion(organizacion, capa: string, ambito: string, idInternacion: string, completo: boolean, req: Request) {
     const usuario = Auth.getAuditUser(req);
     let fechaDesde;
     let internacion;
 
     if (capa === 'estadistica') {
-        internacion = await Prestacion.findById(cama.idInternacion);
+        internacion = await Prestacion.findById(idInternacion);
         fechaDesde = internacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso;
     } else { // capa médica
-        internacion = await InternacionResumen.findById(cama.idInternacion);
-        fechaDesde = internacion.fechaIngreso;
+        internacion = await InternacionResumen.findById(idInternacion);
+        fechaDesde = internacion?.fechaIngreso || moment().subtract(-12, 'months').toDate();
     }
-    // control pensando en sala-comun
-    if (cama.idCama && internacion) {
-        let movimientos = await CamasEstadosController.searchEstados({ desde: fechaDesde, hasta: cama.fecha, organizacion, capa, ambito }, { internacion: internacion.id, esMovimiento: true });
-        let movimientosConsecuentes = [];
 
-        if (movimientos.length > 1) {
-            movimientos.forEach(mov => {
-                if (mov.idMovimiento) {
-                    // Obtenemos las camas que pasan a estado 'disponible' como consecuencia de mover al paciente
-                    movimientosConsecuentes.push(CamasEstadosController.searchEstados({ desde: mov.fecha, hasta: mov.fecha, organizacion, capa, ambito }, { movimiento: mov.idMovimiento, estado: 'disponible' }));
-                }
-            });
-            movimientosConsecuentes = await Promise.all(movimientosConsecuentes);
-            movimientos = (movimientos.concat(movimientosConsecuentes.map(item => item[0])));
+    if (internacion) {
+        let movimientos = await CamasEstadosController.searchEstados(
+            { desde: fechaDesde, hasta: new Date(), organizacion, capa, ambito },
+            { internacion: internacion.id, esMovimiento: true }
+        );
+        movimientos.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+
+        if (!completo) {
+            movimientos = movimientos.slice(-1);
         }
 
-        let deshacerEstados = movimientos.map(mov => {
-            delete mov['createdAt'];
-            delete mov['createdBy'];
-            delete mov['updatedAt'];
-            delete mov['updatedBy'];
-            delete mov['deletedAt'];
-            delete mov['deletedBy'];
 
+        const ps = movimientos.map(async mov => {
+            if (mov.extras?.idMovimiento) {
+                const ms = await CamasEstadosController.searchEstados(
+                    { desde: mov.fecha, hasta: mov.fecha, organizacion, capa, ambito },
+                    { movimiento: mov.extras.idMovimiento, estado: 'disponible' }
+                );
+                return ms[0];
+            }
+        });
+        const movs = await Promise.all(ps);
+
+        movimientos = [
+            ...movimientos,
+            ...movs.filter(m => m)
+        ];
+
+        if (movimientos.length === 1) {
+            completo = true;
+        }
+
+        const deshacerEstados = movimientos.map(mov => {
             return CamasEstadosController.deshacerEstadoCama({
                 organizacion,
                 ambito,
@@ -120,9 +130,14 @@ export async function deshacerInternacion(organizacion, capa, ambito, cama, req:
         });
 
         await Promise.all(deshacerEstados);
-        EventCore.emitAsync('mapa-camas:paciente:undo', {
-            fecha: fechaDesde,
-            idInternacion: internacion.id
-        });
+        if (completo) {
+            EventCore.emitAsync('mapa-camas:paciente:undo', {
+                fecha: fechaDesde,
+                idInternacion: internacion.id
+            });
+        }
+
+        return completo;
     }
+    return false;
 }

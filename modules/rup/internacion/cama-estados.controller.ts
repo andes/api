@@ -258,7 +258,8 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
     }
 
     if (filtros.movimiento) {
-        firstMatch['estados.idMovimiento'] = filtros.movimiento;
+        firstMatch['estados.extras.idMovimiento'] = filtros.movimiento;
+        secondMatch['estados.extras.idMovimiento'] = filtros.movimiento;
     }
 
     if (filtros.paciente) {
