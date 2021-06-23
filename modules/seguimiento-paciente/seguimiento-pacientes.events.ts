@@ -1,5 +1,5 @@
 import { EventCore } from '@andes/event-bus';
-import { userScheduler } from '../../config.private';
+import { defaultPointReference, userScheduler } from '../../config.private';
 import { getOrganizacionAreaByLocationPoint } from './../georeferencia/controller/areasPrograma';
 import { ISeguimientoPaciente } from './interfaces/seguimiento-paciente.interface';
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
@@ -20,7 +20,7 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
         if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
             const mpiSections = data.secciones.find(s => s.name === 'Mpi');
             const contactosEstrechos = data.secciones.find(s => s.name === 'Contactos Estrechos');
-            const patientGeoRef = (data.paciente.direccion && data.paciente.direccion[0].georeferencia) ? data.paciente.direccion[0].geoReferencia.reverse() : [-68.0863283, -38.945162]; // SSS si no tiene referencia
+            const patientGeoRef = (data.paciente.direccion && data.paciente.direccion[0].georeferencia) ? data.paciente.direccion[0].geoReferencia.reverse() : defaultPointReference; // default reference
             const location = {
                 type: 'Point',
                 coordinates: [...patientGeoRef]
