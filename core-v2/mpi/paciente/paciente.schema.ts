@@ -44,6 +44,12 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     estado: ESTADO,
     contacto: [ContactoSchema],
     direccion: [DireccionSchema],
+    lugarNacimiento: {
+        localidad: { type: NombreSchema },
+        provincia: { type: NombreSchema },
+        pais: { type: NombreSchema },
+        lugar: { type: String }
+    },
     sexo: SEXO,
     genero: SEXO,
     fechaFallecimiento: Date,
