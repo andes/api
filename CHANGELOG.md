@@ -1,3 +1,19 @@
+# [5.51.0](https://github.com/andes/api/compare/v5.50.0...v5.51.0) (2021-06-23)
+
+
+### Bug Fixes
+
+* **robosernder:** error import ([#1442](https://github.com/andes/api/issues/1442)) ([f40b9b3](https://github.com/andes/api/commit/f40b9b34c92e11a900306b5cc236ddd11cbe0a7c))
+
+
+### Features
+
+* **COM:** filtro esCOM false ([560a2da](https://github.com/andes/api/commit/560a2dac46c092e7211f45e9c5f6fc72b8f89735))
+* **COM:** Se le agrega color naranja para identificar gravedades intermedias ([411e5d1](https://github.com/andes/api/commit/411e5d13005b76f5697d12f1ac9e487b8f8f593b))
+* **robosender:** reemplaza forEach x for ([#1443](https://github.com/andes/api/issues/1443)) ([2f3b30a](https://github.com/andes/api/commit/2f3b30a8dc90187f6371d3729b2b0c953d8ab2a0))
+* **rup:** elementos rup requeridos dinamicos ([#1427](https://github.com/andes/api/issues/1427)) ([12e76b1](https://github.com/andes/api/commit/12e76b1f9bfe93d00fac20171d033c739a888a99))
+* **rup:** nueva configuracion servidor de email ([#1433](https://github.com/andes/api/issues/1433)) ([7479779](https://github.com/andes/api/commit/747977932a841747096a6c25683783ef313a8bb6))
+
 # [5.50.0](https://github.com/andes/api/compare/v5.49.0...v5.50.0) (2021-06-16)
 
 
