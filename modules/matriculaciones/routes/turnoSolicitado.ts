@@ -1,3 +1,4 @@
+import { Profesional } from '../../../core/tm/schemas/profesional';
 import * as express from 'express';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 
@@ -6,11 +7,18 @@ import { turnoSolicitado } from '../schemas/turnoSolicitado';
 
 const router = express.Router();
 
-router.post('/turnoSolicitados', (req, res, next) => {
+router.post('/turnoSolicitados', async (req, res, next) => {
 
     // // // if (!Auth.check(req, 'matriculaciones:profesional:postProfesional')) {
     // // //     return next(403);
     // // // }
+    const doc = req.body.documento;
+    const sexo = req.body.sexo;
+    const profesional = await Profesional.findOne({ documento: doc, sexo, profesionalMatriculado: false });
+    if (profesional && profesional._id) {
+        req.body._id = profesional._id;
+        req.body.profesionalMatriculado = true;
+    }
     const newProfesional = new turnoSolicitado(req.body);
     newProfesional.save((err2) => {
         if (err2) {
