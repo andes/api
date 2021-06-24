@@ -57,13 +57,8 @@ export function roboSender() {
                             await smsTools.sendSms(smsOptions);
                         }
                         if (env.device_id) {
-                            try {
-                                new PushClient().send(env.device_id, env.notificationData);
-                                const pushn = await sendPushNotification(env.device_id[0], env.notificationData);
-                                console.log(pushn);
-                            } catch (err) {
-                                console.log(err);
-                            }
+                            new PushClient().send(env.device_id, env.notificationData);
+                            await sendPushNotification(env.device_id[0], env.notificationData);
                         }
                         // Exportar HUDS
                         if (env.idExportHuds) {
