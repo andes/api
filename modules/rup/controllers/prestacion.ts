@@ -138,7 +138,7 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
         prestaciones = await AppCache.get(`huds-${pacienteID}`);
         if (!prestaciones) {
             prestaciones = await Prestacion.find(query);
-            prestaciones = prestaciones.map(p => p.toObject());
+            prestaciones = prestaciones.map(p => p.toJSON());
             AppCache.set(`huds-${pacienteID}`, prestaciones, 60 * 60);
         }
     } else {
