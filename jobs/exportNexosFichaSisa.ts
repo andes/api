@@ -33,31 +33,6 @@ async function getToken(usr: string, pass: string) {
     return null;
 }
 
-async function getCasosConfirmados(documento: String) {
-    let token = await getToken(sisa.user_snvs_covid, sisa.pass_snvs_covid);
-    const url = `${sisa.url_snvs_covid}/snvs/covid19/personas?nrodoc=${documento}`;
-    const headers = {
-        Authorization: `Bearer ${token}`,
-        'Content-type': 'application/json',
-        Accept: 'application/json'
-    };
-    const options = {
-        uri: url,
-        method: 'GET',
-        headers,
-        json: true
-    };
-    const [status, resJson] = await handleHttpRequest(options);
-    if (status >= 200 && status <= 299) {
-        if (resJson && resJson.length > 0) {
-            // Se filtran los eventos de casos confirmados
-            const eventos = resJson.filter(evento => { return evento.clasif_RESUMEN === 'Confirmado'; });
-            return eventos;
-        }
-    }
-    return [];
-}
-
 export async function exportSisaFicha(done, horas, desde, hasta) {
     const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
     const end = hasta ? moment(hasta).toDate() : moment().toDate();
@@ -67,7 +42,8 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 createdAt: {
                     $gte: start,
                     $lte: end
-                }
+                },
+                'type.name': 'covid19'
             }
         },
         {
@@ -110,18 +86,31 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                         timezone: 'America/Argentina/Buenos_Aires'
                     }
                 },
-                fields: '$secciones'
+                secciones: '$secciones',
+                clasifications: {
+                    $filter: {
+                        input: '$secciones',
+                        cond: { $eq: ['$$this.name', 'Clasificacion'] }
+                    }
+                },
             }
         },
         {
-            $unwind: '$fields'
+            $addFields: {
+                Type_clasification: '$clasifications.fields.clasificacion',
+            }
+        },
+        {
+            $match: { 'Type_clasification.0.id': { $ne: 'controlAlta' } }
+        },
+        {
+            $unwind: '$secciones'
         },
         {
             $match: {
-                'fields.name': { $regex: 'Tipo de confirmación y Clasificación Final' }
+                'secciones.name': { $regex: 'Tipo de confirmación y Clasificación Final' }
             }
         },
-
         {
             $project: {
                 _id: '$_id',
@@ -136,8 +125,8 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 Organizacion_Id: { $toString: { $arrayElemAt: ['$Organizacion._id', 0] } },
                 Organizacion_Nombre: { $arrayElemAt: ['$Organizacion.nombre', 0] },
                 Sisa: { $arrayElemAt: ['$Organizacion.codigo.sisa', 0] },
-                clasificacion: { $arrayElemAt: ['$fields.fields.segundaclasificacion.nombre', 0] },
-                resultado: { $arrayElemAt: ['$fields.fields.clasificacionfinal', 0] },
+                clasificacion: { $arrayElemAt: ['$secciones.fields.segundaclasificacion.nombre', 0] },
+                resultado: { $arrayElemAt: ['$secciones.fields.clasificacionfinal', 0] },
             },
         },
         {
@@ -145,16 +134,12 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 resultado: { $regex: 'Confirmado' }
             }
         }
-    ];
 
+    ];
     const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
     for (const unaFicha of fichas) {
         const documento = unaFicha.Paciente_documento;
-        let casos = [];
         if (documento) {
-            casos = await getCasosConfirmados(documento);
-        }
-        if (casos.length <= 0) {
             const eventoNominal = {
                 idTipodoc: '1',
                 nrodoc: documento,
@@ -181,7 +166,6 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 info_enviada: eventoNominal,
                 resultado: {}
             };
-            // Debe tener identificador manual de caso
             if (dto.altaEventoCasoNominal.idClasificacionManualCaso) {
                 try {
                     const options = {
