@@ -9,12 +9,12 @@ EventCore.on('notification:fichaEpidemiologica:laboratory', async (info) => {
     const fichas = await FormEpidemiologiaCtr.search({ paciente: info.paciente.id });
     if (fichas.length > 0) {
         const fichasOrdenadas = fichas.sort((a, b) => b.createdAt - a.createdAt);
-        const resultadoLabo = (info.resultado === 'Se detecta genoma de SARS-CoV-2') ? 'Confirmado' : (info.resultado === 'No se detecta genoma de SARS-CoV-2') ? 'Descartado' : 'Repetir';
+        const resultadoLabo = (info.resultado === 'SE DETECTA GENOMA DE SARS-CoV-2') ? 'Confirmado' : (info.resultado === 'NO SE DETECTA GENOMA DE SARS-CoV-2') ? 'Descartado' : 'Repetir';
         if (resultadoLabo !== 'Repetir') { // NO hace nada si fue marcado para repeticióno anulado
             const resultadoPCR = {
                 pcr: {
                     id: resultadoLabo === 'Confirmado' ? 'confirmado' : 'descartado',
-                    nombre: resultadoLabo === 'Confirmado' ? 'Se detecta genoma de SARS-CoV-2' : 'No se detecta genoma de SARS-CoV-2'
+                    nombre: resultadoLabo === 'Confirmado' ? 'SE DETECTA GENOMA DE SARS-CoV-2' : 'NO SE DETECTA GENOMA DE SARS-CoV-2'
                 }
             };
             let lastFicha = fichasOrdenadas[0];
