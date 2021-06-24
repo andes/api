@@ -195,9 +195,6 @@ export async function patch(data: Partial<ICama>, req: Request) {
     if (data.esMovimiento) {
         const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
         cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado);
-        if (data.estado === 'disponible') {
-            delete estadoCama.fechaIngreso;
-        }
     } else {
         // por las dudas borro datos que no se deben cambiar
         delete data['idInternacion'];
