@@ -137,10 +137,6 @@ export const captcha = {
 
 // Push Notifications
 export const pushNotificationsSettings = {
-    gcm: {
-        id: getEnv('GCM_API_KEY', 'GCM_API_KEY'),
-        phonegap: true
-    },
     apn: {
         token: {
             key: getEnv('IOS_KEY_FILE', './certs/key.p8'), // optionally: fs.readFileSync('./certs/key.p8')
