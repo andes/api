@@ -48,9 +48,9 @@ WebhookRouter.post('/notification', Auth.authenticate(), asyncHandler(async (req
             // filtrar zonas que no reciben notificaciones
             let enviarNotificacion = true;
             const localidadPaciente: any = await getLocalidad(paciente);
-            const Zona = localidadPaciente && await getZona(localidadPaciente._id);
-            if (Zona) {
-                enviarNotificacion = Zona.configuracion.notificaciones;
+            const zona = localidadPaciente && await getZona(localidadPaciente._id);
+            if (zona) {
+                enviarNotificacion = zona.configuracion.notificaciones;
             }
             if (enviarNotificacion) {
                 EventCore.emitAsync('notification:patient:laboratory', paciente);

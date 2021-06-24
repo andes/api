@@ -1,7 +1,7 @@
 
+import { MatchingAndes } from '@andes/match/lib/matchingAndes.class';
 import * as localidad from '../schemas/localidad';
 import * as provincia from '../schemas/provincia_model';
-import { MatchingAndes } from '@andes/match/lib/matchingAndes.class';
 import { ZonaSanitaria } from '../schemas/zonaSanitarias';
 
 
@@ -40,7 +40,7 @@ export async function matchUbicacion(searchProvincia: string, searchLocalidad: s
 export async function getZona(idLocalidad) {
     let unaZona = null;
     const unaLocalidad: any = await localidad.findById(idLocalidad);
-    if (unaLocalidad.zona) {
+    if (unaLocalidad?.zona) {
         unaZona = await ZonaSanitaria.findById(unaLocalidad.zona._id);
     }
     return unaZona;
