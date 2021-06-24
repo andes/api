@@ -36,11 +36,12 @@ router.get('/:capa/:idInternacion/historial', capaMiddleware, async (req: Reques
 });
 
 router.patch('/deshacer', capaMiddleware, async (req: Request, res: Response, next) => {
-    const cama = req.body;
     const organizacionId = Auth.getOrganization(req);
 
-    await InternacionController.deshacerInternacion(organizacionId, cama.capa, cama.ambito, cama, req);
-    return res.status(200).json(cama);
+    const { capa, ambito, idInternacion, completo } = req.body;
+
+    const _completo = await InternacionController.deshacerInternacion(organizacionId, capa, ambito, idInternacion, completo, req);
+    return res.status(200).json({ status: _completo });
 });
 
 export const InternacionRouter = router;

@@ -8,6 +8,7 @@ import * as CamasEstadosController from './cama-estados.controller';
 import { Request } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
+import { InternacionResumen } from './resumen/internacion-resumen.schema';
 
 export async function obtenerPrestaciones(organizacion, filtros) {
     const fechaIngresoDesde = (filtros.fechaIngresoDesde) ? moment(filtros.fechaIngresoDesde).toDate() : moment().subtract(1, 'month').toDate();
@@ -71,28 +72,72 @@ export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: 
     return historialInternacion;
 }
 
-export async function deshacerInternacion(organizacion, capa, ambito, cama, req: Request) {
-    delete cama['createdAt'];
-    delete cama['createdBy'];
-    delete cama['updatedAt'];
-    delete cama['updatedBy'];
-    delete cama['deletedAt'];
-    delete cama['deletedBy'];
+export async function deshacerInternacion(organizacion, capa: string, ambito: string, idInternacion: string, completo: boolean, req: Request) {
     const usuario = Auth.getAuditUser(req);
+    let fechaDesde;
+    let internacion;
 
-    let result;
-
-    // control pensando en sala-comun
-    if (cama.idCama) {
-        const movimientos = await CamasEstadosController.searchEstados({ desde: cama.fecha, hasta: cama.fecha, organizacion, capa, ambito }, { cama: cama.idCama, esMovimiento: true });
-        if (movimientos.length <= 1) {
-            result = await CamasEstadosController.deshacerEstadoCama({ organizacion, ambito, capa, cama: cama.idCama }, cama.fecha, usuario);
-            EventCore.emitAsync('mapa-camas:paciente:undo', {
-                fecha: cama.fecha,
-                idInternacion: cama.idInternacion
-            });
-        }
+    if (capa === 'estadistica') {
+        internacion = await Prestacion.findById(idInternacion);
+        fechaDesde = internacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso;
+    } else { // capa médica
+        internacion = await InternacionResumen.findById(idInternacion);
+        fechaDesde = internacion?.fechaIngreso || moment().subtract(-12, 'months').toDate();
     }
 
-    return result;
+    if (internacion) {
+        let movimientos = await CamasEstadosController.searchEstados(
+            { desde: fechaDesde, hasta: new Date(), organizacion, capa, ambito },
+            { internacion: internacion.id, esMovimiento: true }
+        );
+        movimientos.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+
+        if (!completo) {
+            movimientos = movimientos.slice(-1);
+        }
+
+
+        const ps = movimientos.map(async mov => {
+            if (mov.extras?.idMovimiento) {
+                const ms = await CamasEstadosController.searchEstados(
+                    { desde: mov.fecha, hasta: mov.fecha, organizacion, capa, ambito },
+                    { movimiento: mov.extras.idMovimiento, estado: 'disponible' }
+                );
+                return ms[0];
+            }
+        });
+        const movs = await Promise.all(ps);
+
+        movimientos = [
+            ...movimientos,
+            ...movs.filter(m => m)
+        ];
+
+        if (movimientos.length === 1) {
+            completo = true;
+        }
+
+        const deshacerEstados = movimientos.map(mov => {
+            return CamasEstadosController.deshacerEstadoCama({
+                organizacion,
+                ambito,
+                capa,
+                cama: mov.idCama
+            },
+                mov.fecha,
+                usuario
+            );
+        });
+
+        await Promise.all(deshacerEstados);
+        if (completo) {
+            EventCore.emitAsync('mapa-camas:paciente:undo', {
+                fecha: fechaDesde,
+                idInternacion: internacion.id
+            });
+        }
+
+        return completo;
+    }
+    return false;
 }
