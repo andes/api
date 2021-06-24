@@ -267,6 +267,10 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
     }
 
     if (filtros.internacion) {
+        firstMatch['$or'] = [
+            { 'estados.idInternacion': wrapObjectId(filtros.internacion) },
+            { 'estados.extras.idInternacion': wrapObjectId(filtros.internacion) }
+        ];
         secondMatch['$or'] = [
             { 'estados.idInternacion': wrapObjectId(filtros.internacion) },
             { 'estados.extras.idInternacion': wrapObjectId(filtros.internacion) }
