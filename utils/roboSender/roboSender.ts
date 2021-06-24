@@ -5,6 +5,7 @@ import { services } from '../../services';
 import { RoboModel } from './roboSchema';
 import * as mailTools from './sendEmail';
 import * as smsTools from './sendSms';
+import { sendPushNotification } from '../../modules/mobileApp/controller/PushClientFCM';
 
 const log = debug('roboSender');
 
@@ -56,7 +57,13 @@ export function roboSender() {
                             await smsTools.sendSms(smsOptions);
                         }
                         if (env.device_id) {
-                            new PushClient().send(env.device_id, env.notificationData);
+                            try {
+                                new PushClient().send(env.device_id, env.notificationData);
+                                const pushn = await sendPushNotification(env.device_id[0], env.notificationData);
+                                console.log(pushn);
+                            } catch (err) {
+                                console.log(err);
+                            }
                         }
                         // Exportar HUDS
                         if (env.idExportHuds) {
@@ -81,12 +88,12 @@ export function roboSender() {
 
                     counter++;
                     if (finEjecucion(counter, enviosPendientes.length)) {
-                        return resolve();
+                        return resolve(true);
                     }
                 }
             } else {
                 log('Termina la ejecución');
-                return resolve();
+                return resolve(true);
             }
 
         }).catch((err) => {
