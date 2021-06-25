@@ -10,7 +10,6 @@ import { handleHttpRequest } from '../../utils/requestHandler';
 import { captcha, userScheduler } from './../../config.private';
 import { mensajeEstadoInscripcion, validarDomicilio, validarInscripcion } from './controller/inscripcion.vacunas.controller';
 import { IInscripcionVacunas } from './interfaces/inscripcion-vacunas.interface';
-import moment = require('moment');
 
 class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
@@ -58,12 +57,9 @@ class InscripcionVacunasResource extends ResourceBase {
             field: 'asignado.usuario.id',
             fn: MongoQuery.equalMatch
         },
-        fechaProximoLlamado: {
+        fechaProximoLlamado: (value: Date) => {
             // Retorna true si no existe la propiedad o la fecha ingresada (value) es mayor
-            field: 'fechaProximoLlamado',
-            fn: (value) => {
-                return { $exists: false } || { $lte: value };
-            }
+            return { $or: [{ fechaProximoLlamado: { $exists: false } }, { fechaProximoLlamado: { $lte: value } }] };
         },
         estados: MongoQuery.inArray.withField('estado'),
         fechaRegistro: MongoQuery.matchDate.withField('fechaRegistro'),
@@ -160,7 +156,7 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
             if (inscripto.paciente === null) {
                 inscripcion.paciente = undefined;
             }
-            if (inscripto.fechaProximoLlamado !== null) {
+            if (inscripto.fechaProximoLlamado) {
                 inscripcion.asignado = undefined;
             } else {
                 inscripcion.fechaProximoLlamado = undefined;
@@ -189,7 +185,7 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas/asignacion', Auth.authentica
         conditions.validado = true;
         conditions.sort = '-fechaRegistro';
         conditions.estaAsignado = false;
-        //      conditions.fechaProximoLlamado = new Date();
+        conditions.fechaProximoLlamado = new Date();
         const proximaInscripcion = await InscripcionVacunasCtr.findOne(conditions);
         if (proximaInscripcion) {
             proximaInscripcion.asignado = {
