@@ -1,5 +1,5 @@
 
-import { Schema, Types, model } from 'mongoose';
+import { Schema, Types, model, SchemaTypes } from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 import { ITokenSearch, TokenSearch } from '@andes/mongoose-token-search';
@@ -78,7 +78,12 @@ export const InscripcionVacunaSchema = new Schema({
             nombre: String
         },
         fechaYHora: Date
-    }
+    },
+    llamados: [{
+        numeroIntento: Number,
+        fechaRealizacion: Date,
+        usuario: SchemaTypes.Mixed
+    }]
 });
 
 InscripcionVacunaSchema.plugin(AuditPlugin);
