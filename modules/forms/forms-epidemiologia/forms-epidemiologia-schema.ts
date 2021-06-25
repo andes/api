@@ -50,7 +50,7 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
     };
 
     const seccionClasificacion = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final');
-    let clasificacionfinal = seccionClasificacion.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
+    let clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
     const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento);
     const comorbilidades = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields.find(f => f.presenta)?.presenta;
 
