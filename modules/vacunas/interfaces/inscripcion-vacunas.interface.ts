@@ -42,8 +42,6 @@ export interface IInscripcionVacunas {
     aislamiento?: Boolean;
     vacuna?: Boolean;
     plasma?: Boolean;
-    amamantando?: Boolean;
-    embarazada?: Boolean;
     profesion?: String;
     matricula?: String;
     establecimiento?: String;
