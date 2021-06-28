@@ -32,13 +32,13 @@ CondicionPacienteRouter.get('/rules', Auth.authenticate(), async (req, res, next
         return next(403);
     }
     if (req.query.prestacion) {
-        const condicion: any = await CondicionPaciente.findOne({ 'tipoPrestacion.conceptId': req.query.prestacion });
+        const condicion: any = await CondicionPaciente.findOne({ 'tipoPrestacion.conceptId': req.query.prestacion, activo: true });
         const verificar = await verificarCondicionPaciente(condicion, req.query.paciente, Auth.getOrganization(req));
         if (verificar) {
             return res.json([condicion.tipoPrestacion]);
         }
     } else {
-        const condiciones: any = await CondicionPaciente.find({});
+        const condiciones: any = await CondicionPaciente.find({activo: true});
         const resultados = [];
         for (const condicion of condiciones) {
             const verificar = await verificarCondicionPaciente(condicion, req.query.paciente, Auth.getOrganization(req));

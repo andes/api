@@ -1,27 +1,28 @@
 const { Engine } = require('json-rules-engine');
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { PersonalSaludCtr } from '../../personalSalud';
-import { Organizacion } from '../../../core/tm/schemas/organizacion';
+import { loadDinamicContext } from './../../rup/dinamic-context.controller';
+import * as mongoose from 'mongoose';
+import { ObjectId } from 'bson';
 
 export async function verificarCondicionPaciente(condicion, pacienteId, organizacionId?) {
-    let engine = new Engine();
     if (condicion && condicion.rules) {
-        engine.addRule({ conditions: condicion.rules, event: { type: 'valid' } });
-        engine.addFact('paciente', async () => {
-            const paciente = await PacienteCtr.findById(pacienteId);
-            return paciente.toObject({ virtuals: true });
-        });
-        engine.addFact('personal-salud', async (params, almanac) => {
-            const paciente = await almanac.factValue('paciente');
-            const personal = await PersonalSaludCtr.findOne({ documento: paciente.documento });
-            return !!personal;
-        });
+        let condicionPaciente = condicion.toObject();
+        let idPaciente = mongoose.Types.ObjectId(pacienteId);
+        let params = {
+            id: new ObjectId(idPaciente)
+        };
         if (organizacionId) {
-            engine.addFact('organizacion', async () => {
-                const org = await Organizacion.findById(organizacionId);
-                return org;
-            });
+            params['organizacion'] = mongoose.Types.ObjectId(organizacionId);
         }
+        const contexto = await loadDinamicContext(
+            condicionPaciente.contexto,
+            params
+        );
+        let engine = new Engine();
+        engine.addRule({ conditions: condicion.rules, event: { type: 'valid' } });
+        Object.keys(contexto).forEach(
+            key => engine.addFact(key, contexto[key])
+        );
+
         return engine
             .run()
             .then(({ events }) => {

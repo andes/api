@@ -7,6 +7,8 @@ import { renaperToAndes, renaperv3 } from '@andes/fuentes-autenticas';
 import { busInteroperabilidad } from './config.private';
 import { asyncHandler } from '@andes/api-tool';
 import { hudsPaciente } from './modules/rup';
+import { PacienteCtr } from './core-v2/mpi/paciente/paciente.routes';
+import * as mongoose from 'mongoose';
 
 export let services: AndesServices;
 
@@ -44,6 +46,12 @@ export function setupServices(app: express.Express = null) {
             return registros[0] || null;
         }
         return registros;
+    });
+
+    services.register('obtener-paciente', async (_config, params) => {
+        const idPaciente = mongoose.Types.ObjectId(params.id);
+        const paciente = await PacienteCtr.findById(idPaciente);
+        return paciente.toObject({ virtuals: true });
     });
 
     // app.get('/api/services/:id/info', asyncHandler(async (req, res) => {
