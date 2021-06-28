@@ -14,6 +14,8 @@ export const cacheVacunasAreaProgramaSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    idZona: mongoose.Schema.Types.ObjectId,
+    zona: String,
     areaPrograma: {
         type: String,
         required: false

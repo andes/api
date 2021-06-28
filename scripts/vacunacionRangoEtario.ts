@@ -14,12 +14,12 @@ async function run(done) {
                     'ejecucion.fecha': { $gt: new Date('2020-12-27T00:00:00.000-03:00') }
                     // $and: [
                     //     {
-                    //         'ejecucion.fecha': { $gte: new Date('2021-06-01T23:00:03.707-03:00') }
-                    //     },
-                    //     {
-                    //         'ejecucion.fecha': { $lte: new Date('2021-06-30T23:00:03.707-03:00') }
-                    //     }
-                    // ]
+                    //          'ejecucion.fecha': { $gte: new Date('2021-06-25T23:00:03.707-03:00') }
+                    //      },
+                    //      {
+                    //          'ejecucion.fecha': { $lte: new Date('2021-06-30T23:00:03.707-03:00') }
+                    //      }
+                    //  ]
                 }
             },
             {
@@ -103,7 +103,7 @@ async function run(done) {
                 $group: {
                     _id: {
                         range: '$range', nombreZona: '$organizacionCompleta.zonaSanitaria.nombre',
-                        nombreLocalidad: '$organizacionCompleta.direccion.ubicacion.localidad.nombre'
+                        idZona: '$organizacionCompleta.zonaSanitaria._id', nombreLocalidad: '$organizacionCompleta.direccion.ubicacion.localidad.nombre'
                     },
                     areaPrograma: {
                         $push: {
@@ -125,7 +125,7 @@ async function run(done) {
             },
             {
                 $project: {
-                    rango: '$_id.range', zona: '$_id.nombreZona', localidad: '$_id.nombreLocalidad', vacunados: '$cnt',
+                    rango: '$_id.range', zona: '$_id.nombreZona', idZona: '$_id.idZona', localidad: '$_id.nombreLocalidad', vacunados: '$cnt',
                     areaPrograma: '$nombreArea.area.nombre', _id: 0, key: { $concat: ['$_id.range', '-', '$nombreArea.area.nombre'] },
                 }
             },
