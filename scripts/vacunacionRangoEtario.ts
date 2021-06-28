@@ -11,15 +11,7 @@ async function run(done) {
                 $match: {
                     'tags.vacunasCovid': true,
                     'estadoActual.tipo': 'validada',
-                    'ejecucion.fecha': { $gt: new Date('2020-12-27T00:00:00.000-03:00') }
-                    // $and: [
-                    //     {
-                    //          'ejecucion.fecha': { $gte: new Date('2021-06-25T23:00:03.707-03:00') }
-                    //      },
-                    //      {
-                    //          'ejecucion.fecha': { $lte: new Date('2021-06-30T23:00:03.707-03:00') }
-                    //      }
-                    //  ]
+                    'ejecucion.fecha': { $gt: new Date('2020-12-27T00:00:00.000-03:00') } // Fecha inicial de la vacunación
                 }
             },
             {
