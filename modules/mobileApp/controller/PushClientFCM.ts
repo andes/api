@@ -16,7 +16,7 @@ export function sendPushNotification(token, notification: IPushNotification) {
         time_to_live: 0,
     };
 
-    // Enviar push con llamada HTTP 
+    // Enviar push con llamada HTTP
     const servicio = 'push-notifications-default';
     return services.get(servicio).exec(payload);
 
