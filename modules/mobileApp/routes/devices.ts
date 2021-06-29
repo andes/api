@@ -68,7 +68,7 @@ router.post('/devices/update', (req: any, res, next) => {
             device.app_version = device_data.app_version;
             device.device_id = device_data.device_id;
             device.device_type = device_data.device_type;
-            device.device_fcm_token = req.body.device_fcm_token;
+            device.device_fcm_token = device_data.device_fcm_token;
             device.session_id = token;
         }
         return user.save((errSave, u) => {
