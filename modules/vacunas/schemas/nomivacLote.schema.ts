@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-
 export const nomivacLoteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     codigo: {
@@ -13,7 +12,10 @@ export const nomivacLoteSchema = new mongoose.Schema({
     },
     descripcion: String,
     vacuna: {
-        id: mongoose.Schema.Types.ObjectId,
+        _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'nomivacVacunas'
+        },
         codigo: Number,
         nombre: String
     }
