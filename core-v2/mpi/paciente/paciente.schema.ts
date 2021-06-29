@@ -271,7 +271,7 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     sexo: SEXO,
     telefono: String
 
-});
+}, { _id: false });
 
 export const Paciente = mongoose.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
 
