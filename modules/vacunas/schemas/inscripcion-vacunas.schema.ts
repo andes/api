@@ -47,8 +47,6 @@ export const InscripcionVacunaSchema = new Schema({
     aislamiento: Boolean,
     vacuna: Boolean,
     plasma: Boolean,
-    amamantando: Boolean,
-    embarazada: Boolean,
     profesion: String,
     matricula: String,
     establecimiento: String,
