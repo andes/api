@@ -9,12 +9,15 @@ const router = express.Router();
  *
  * @param device_id {String}
  * @param device_type {String}
+ * @param device_fcm_token {String}
  * @param app_version {String}
  */
 
 router.post('/devices/register', (req: any, res, next) => {
+
     const token: string = req.headers.authorization.substring(4);
     const user_id = req.user.account_id;
+
     PacienteApp.findById(user_id, (errFind, user: any) => {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
@@ -22,12 +25,16 @@ router.post('/devices/register', (req: any, res, next) => {
 
         const device_data = {
             device_id: req.body.device_id,
+            device_fcm_token: req.body.device_fcm_token,
             device_type: req.body.device_type,
             app_version: req.body.app_version,
             session_id: token
         };
+
         const device = new DeviceModel(device_data);
+
         user.devices.push(device);
+
         return user.save((errSave, u) => {
             if (errSave) {
                 return next(errSave);
@@ -43,6 +50,7 @@ router.post('/devices/register', (req: any, res, next) => {
  *      @param id {ObjectId}
  *      @param device_id {String}
  *      @param device_type {String}
+ *      @param device_fcm_token {String}
  *      @param app_version {String}
  * }
  */
@@ -60,6 +68,7 @@ router.post('/devices/update', (req: any, res, next) => {
             device.app_version = device_data.app_version;
             device.device_id = device_data.device_id;
             device.device_type = device_data.device_type;
+            device.device_fcm_token = req.body.device_fcm_token;
             device.session_id = token;
         }
         return user.save((errSave, u) => {
