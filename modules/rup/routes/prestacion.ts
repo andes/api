@@ -675,6 +675,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
                 EventCore.emitAsync('rup:prestacion:validate', data);
+                EventCore.emitAsync('mapa-camas:plan-indicacion:create', data);
                 // Se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
                 buscarYCrearSolicitudes(prestacion, req);
             }

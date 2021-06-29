@@ -1,3 +1,3 @@
 export { replaceChars } from './paciente.schema';
 export { PacienteCtr, PacienteRouter } from './paciente.routes';
-export { Paciente } from './paciente.schema';
+export { Paciente, PacienteSubSchema } from './paciente.schema';

@@ -1,6 +1,6 @@
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 
 // Cada registro contiene la información usuario que lo creó (plugin audit)
@@ -71,7 +71,8 @@ schema.add({
     elementoRUP: mongoose.SchemaTypes.ObjectId,
     hasSections: Boolean,
     isSection: Boolean,
-    noIndex: Boolean
+    noIndex: Boolean,
+    idEvolucion: mongoose.SchemaTypes.ObjectId,
 });
 
 // Habilitar plugin de auditoría
