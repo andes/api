@@ -160,7 +160,7 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
             if (inscripto.paciente === null) {
                 inscripcion.paciente = undefined;
             }
-            if (inscripto.fechaProximoLlamado || !inscripto.asignado) {
+            if (inscripto.fechaProximoLlamado || (inscripcion.asignado && !inscripto.asignado)) {
                 inscripcion.asignado = undefined;
             } else {
                 inscripcion.fechaProximoLlamado = undefined;
