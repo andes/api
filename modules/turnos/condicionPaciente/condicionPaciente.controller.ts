@@ -1,14 +1,13 @@
 const { Engine } = require('json-rules-engine');
 import { loadDinamicContext } from './../../rup/dinamic-context.controller';
 import * as mongoose from 'mongoose';
-import { ObjectId } from 'bson';
 
 export async function verificarCondicionPaciente(condicion, pacienteId, organizacionId?) {
     if (condicion && condicion.rules) {
         let condicionPaciente = condicion.toObject();
         let idPaciente = mongoose.Types.ObjectId(pacienteId);
         let params = {
-            id: new ObjectId(idPaciente)
+            id: new mongoose.Types.ObjectId(idPaciente)
         };
         if (organizacionId) {
             params['organizacion'] = mongoose.Types.ObjectId(organizacionId);
