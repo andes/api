@@ -15,6 +15,12 @@ async function run(done) {
                 }
             },
             {
+                $unwind: '$ejecucion.registros'
+            },
+            {
+                $match: { 'ejecucion.registros.valor.vacuna.dosis.nombre': { $regex: /1ra/ } }  // Pidieron que por ahora sea primera dosis
+            },
+            {
                 $addFields: {
                     edad: {
                         $toInt: {
@@ -45,6 +51,7 @@ async function run(done) {
                     }
                 }
             },
+
             {
                 $lookup: {
                     from: 'area-programa-provincial',
