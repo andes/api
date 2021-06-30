@@ -1,11 +1,10 @@
 import { Prestacion } from '../modules/rup/schemas/prestacion';
 import { CacheVacunasAreaPrograma } from '../modules/vacunas/schemas/cache-vacunas-areaPrograma.schema';
-import { toArray } from './../utils/utils';
 
 
 async function run(done) {
-
     try {
+        const consulta = 'query';
         const pipelineZonas = [
             {
                 $match: {
@@ -28,8 +27,8 @@ async function run(done) {
                     edad: {
                         $toInt: {
                             $divide: [{
-                                $subtract: [new Date(),
-                                { $ifNull: ['$paciente.fechaNacimiento', new Date()] }]
+                                $subtract: ['$ejecucion.fecha',
+                                    { $ifNull: ['$paciente.fechaNacimiento', new Date()] }]
                             },
                             { $multiply: [1000, 86400, 365] }]
                         }
@@ -45,16 +44,8 @@ async function run(done) {
                 }
             },
             {
-                $addFields: {
-                    organizacionCompleta: {
-                        $arrayElemAt: [
-                            '$organizacionCompleta',
-                            0
-                        ]
-                    }
-                }
+                $unwind: '$organizacionCompleta'
             },
-
             {
                 $lookup: {
                     from: 'area-programa-provincial',
@@ -64,14 +55,7 @@ async function run(done) {
                 }
             },
             {
-                $addFields: {
-                    areaPrograma: {
-                        $arrayElemAt: [
-                            '$areaPrograma',
-                            0
-                        ]
-                    }
-                }
+                $unwind: '$areaPrograma'
             },
             {
                 $project: {
@@ -116,13 +100,11 @@ async function run(done) {
                 }
             },
             {
+                $unwind: '$areaPrograma'
+            },
+            {
                 $addFields: {
-                    nombreArea: {
-                        $arrayElemAt: [
-                            '$areaPrograma',
-                            0
-                        ]
-                    }
+                    nombreArea: '$areaPrograma'
                 }
             },
             {
@@ -131,12 +113,10 @@ async function run(done) {
                     areaPrograma: '$nombreArea.area.nombre', _id: 0, key: { $concat: ['$_id.range', '-', '$nombreArea.area.nombre'] },
                 }
             },
-            { $sort: { zona: 1 } }
         ];
 
         const resultado = Prestacion.aggregate(pipelineZonas).allowDiskUse(true).cursor({}).exec();
-        const resultados = await toArray(resultado);
-        for (const res of resultados) {
+        for await (const res of resultado) {
             const cache: any = await CacheVacunasAreaPrograma.findOne({ key: res.key }).exec();
             if (cache) {
                 const $set: any = {
@@ -153,6 +133,7 @@ async function run(done) {
         }
 
     } catch (err) {
+        done();
         return err;
     }
     done();
