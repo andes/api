@@ -158,6 +158,7 @@ router.post('/solicitudes/dashboard', async (req, res, next) => {
 
 router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
+        let indice = 'TOP-ENTRADA';
         let pipeline = [];
         let match: any = { $and: [] };
 
@@ -208,6 +209,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.organizacionOrigen) {
+            indice = 'TOP-SALIDA';
             const organizacionesOrigen = Array.isArray(req.query.organizacionOrigen) ? req.query.organizacionOrigen : [req.query.organizacionOrigen];
             match.$and.push({ 'solicitud.organizacionOrigen.id': { $in: organizacionesOrigen.map(id => Types.ObjectId(id)) } });
         }
@@ -318,7 +320,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             pipeline.push({ $limit: parseInt(req.query.limit, 10) });
         }
 
-        res.json(await Prestacion.aggregate(pipeline).allowDiskUse(true));
+        res.json(await Prestacion.aggregate(pipeline).option({ hint: indice }).allowDiskUse(true));
     } catch (err) {
         return next(404);
     }
