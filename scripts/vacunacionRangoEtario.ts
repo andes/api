@@ -18,7 +18,10 @@ async function run(done) {
                 $unwind: '$ejecucion.registros'
             },
             {
-                $match: { 'ejecucion.registros.valor.vacuna.dosis.nombre': { $regex: /1ra/ } }  // Pidieron que por ahora sea primera dosis
+                $match: {
+                    'ejecucion.registros.valor.vacuna.dosis.nombre': { $regex: /1ra/ }, // Pidieron que por ahora sea primera dosis
+                    'ejecucion.registros.concepto.conceptId': '840534001'
+                }
             },
             {
                 $addFields: {
@@ -130,6 +133,7 @@ async function run(done) {
             },
             { $sort: { zona: 1 } }
         ];
+
         const resultado = Prestacion.aggregate(pipelineZonas).allowDiskUse(true).cursor({}).exec();
         const resultados = await toArray(resultado);
         for (const res of resultados) {
@@ -151,7 +155,6 @@ async function run(done) {
     } catch (err) {
         return err;
     }
-
     done();
 }
 
