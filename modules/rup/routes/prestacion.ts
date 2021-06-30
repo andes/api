@@ -219,6 +219,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.idPaciente) {
+            indice = undefined;
             match.$and.push({ 'paciente.id': Types.ObjectId(req.query.idPaciente) });
         }
 
@@ -322,7 +323,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         res.json(await Prestacion.aggregate(pipeline).option({ hint: indice }).allowDiskUse(true));
     } catch (err) {
-        return next(404);
+        return next(err);
     }
 });
 
