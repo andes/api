@@ -332,3 +332,13 @@ export const SIP_PLUS = {
 };
 
 export const defaultPointReference = [-68.0863283, -38.945162]; // Setear el punto de referencia default para cada provincia
+
+export const XROAD_SERVICES = {
+    fallecidos_covid: {
+        server: 'http://localhost:5000',
+        headers: {
+            'X-Road-Client': 'roksnet/GOV/12345678/TestClient',
+            Accept: 'application/json'
+        }
+    }
+};
