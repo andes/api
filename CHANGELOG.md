@@ -1,3 +1,22 @@
+# [5.52.0](https://github.com/andes/api/compare/v5.51.0...v5.52.0) (2021-06-30)
+
+
+### Bug Fixes
+
+* **huds:** no se ven registros anidados ([#1444](https://github.com/andes/api/issues/1444)) ([43d4f51](https://github.com/andes/api/commit/43d4f5128470cd0720245b0057c1a371aff74ed0))
+* **matriculaciones:** verifica profesional al cargar un turno ([#1432](https://github.com/andes/api/issues/1432)) ([e6c83b1](https://github.com/andes/api/commit/e6c83b1b4ae4f91b847d02db47e11705d20d757c))
+* **MISC:** notificacion lab fix match resultado ([a0206e4](https://github.com/andes/api/commit/a0206e475bd6495f750930aece9ef9c2aae56c0a))
+* **tm:** Se agrega control en la función getZona ([16a69e9](https://github.com/andes/api/commit/16a69e9806ac928dfd0ef7dc8cd4177fdf3d9e5d))
+
+
+### Features
+
+* **mapa-camas:** eliminar internacion con varios movimientos ([#1409](https://github.com/andes/api/issues/1409)) ([c01ca65](https://github.com/andes/api/commit/c01ca6521522a6ba37c7d8b0d6bbc3cd38702d43))
+* **MISC:** logs laboratorio central ([b537c2d](https://github.com/andes/api/commit/b537c2d7f39d8962d3aaaf7eadfe0709fa246363))
+* **rup:** permisos especiales para validar ([#1426](https://github.com/andes/api/issues/1426)) ([e8e0a3a](https://github.com/andes/api/commit/e8e0a3af3a26985538836ea162d47ec070e0848f))
+* **snvs:** modifica query de proceso ([b2c5bff](https://github.com/andes/api/commit/b2c5bffd5097432c8ae3fd112f84a87112a86a40))
+* **snvsFicha:** Se debe filtrar los controles de alta para que no impacten en sisa ([27212f4](https://github.com/andes/api/commit/27212f4aba88e6ba9b0980c7cdb650577f2132f5))
+
 # [5.51.0](https://github.com/andes/api/compare/v5.50.0...v5.51.0) (2021-06-23)
 
 
