@@ -2,13 +2,16 @@ import * as moment from 'moment';
 import { GrupoPoblacionalCtr } from './../../../core/tm/grupo-poblacional.routes';
 import { PacienteCtr, replaceChars } from './../../../core-v2/mpi';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
-import { provincia as provinciaActual } from '../../../config.private';
+import { provincia as provinciaActual, XROAD_SERVICES } from '../../../config.private';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { PersonalSaludCtr } from '../../../modules/personalSalud';
 import { mpi } from '../../../config';
 import { findOrCreate, extractFoto, matching, updateContacto } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { validar } from '../../../core-v2/mpi/validacion';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { handleHttpRequest } from '../../../utils/requestHandler';
+import { IInscripcionVacunas } from '../interfaces/inscripcion-vacunas.interface';
+import { chownSync } from 'fs';
 
 export interface IEstadoInscripcion {
     titulo: String;
@@ -113,7 +116,7 @@ async function verificarDomicilioInscripcion(inscripcion, validacion) {
             // se verifica el domicilio del paciente
             if (inscripcion.paciente && inscripcion.paciente.id) {
                 const paciente = await PacienteCtr.findById(inscripcion.paciente.id);
-                const domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia ?.nombre && replaceChars(dir.ubicacion.provincia ?.nombre as any).toLowerCase() === validacion.provincia);
+                const domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === validacion.provincia);
                 if (!domicilio) {
                     return validacion.mensajeError;
                 }
@@ -146,10 +149,10 @@ export async function validarDomicilio(inscripcion) {
         // se verifica el domicilio del paciente asociado a la inscripción
         if (inscripcion.paciente && inscripcion.paciente.id) {
             const paciente = await PacienteCtr.findById(inscripcion.paciente.id);
-            domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia ?.nombre && replaceChars(dir.ubicacion.provincia ?.nombre as any).toLowerCase() === replaceChars(provincia));
+            domicilio = paciente.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === replaceChars(provincia));
         }
         if (!domicilio) {
-            domicilio = inscripcion.direccion.find(dir => dir.ubicacion.provincia ?.nombre && replaceChars(dir.ubicacion.provincia ?.nombre as any).toLowerCase() === replaceChars(provincia));
+            domicilio = inscripcion.direccion.find(dir => dir.ubicacion.provincia?.nombre && replaceChars(dir.ubicacion.provincia?.nombre as any).toLowerCase() === replaceChars(provincia));
         }
         return domicilio;
     } catch {
@@ -196,13 +199,13 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
         }
     }
     // Verifica el domicilio del paciente
-    if (!inscripcion.validaciones ?.includes('domicilio')) {
+    if (!inscripcion.validaciones?.includes('domicilio')) {
         if (!inscriptoValidado) {
             inscriptoValidado = await validar(inscripcion.documento, inscripcion.sexo);
         }
         const domicilio = await validarDomicilio(inscriptoValidado);
         if (domicilio) {
-            inscripcion.validaciones ?.length ? inscripcion.validaciones.push('domicilio') : inscripcion.validaciones = ['domicilio'];
+            inscripcion.validaciones?.length ? inscripcion.validaciones.push('domicilio') : inscripcion.validaciones = ['domicilio'];
         }
     }
     let paciente = null;
@@ -243,4 +246,38 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
     await verificarExistenciaCertificado(inscripcion);
     return inscripcion;
 
+}
+
+
+export async function updateInsriptosFallecidos(req) {
+    try {
+        const url = `${XROAD_SERVICES.fallecidos_covid.server}/r1/roksnet/GOV/70000101/GP-SALUD/WS_Fallecidos_Covid`;
+        const headers = XROAD_SERVICES.fallecidos_covid.headers;
+        const options = {
+            uri: url,
+            method: 'GET',
+            headers,
+            json: true
+        };
+        const [status, body] = await handleHttpRequest(options);
+        if (status >= 200 && status <= 299) {
+            if (body && body.resultado1) {
+                const fallecidos = JSON.parse(body.resultado1);
+                // se buscan los inscriptos
+                for (let i = 0; i < fallecidos.length; i++) {
+                    const inscripto = fallecidos[i];
+                    const sexo = inscripto['Sexo'] === 'F' ? 'femenino' : 'masculino';
+                    const inscriptos = await InscripcionVacunasCtr.search({ documento: inscripto['DNI'].toString(), sexo });
+                    for (let x = 0; x < inscriptos.length; x++) {
+                        const paciente = inscriptos[x];
+                        await InscripcionVacunasCtr.update((paciente as any).id, { estado: 'fallecido' }, req);
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    } catch (err) {
+        return err;
+    }
 }
