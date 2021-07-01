@@ -1,6 +1,8 @@
+import { autocompletarDireccion, geoReferenciar } from '@andes/georeference';
 import * as express from 'express';
-import { geoReferenciar, autocompletarDireccion } from '@andes/georeference';
+import { Auth } from '../../../auth/auth.class';
 import { geoKey } from '../../../config.private';
+import { importAreasProgramaGeoSalud } from '../controller/areasPrograma';
 
 const router = express.Router();
 
@@ -31,6 +33,16 @@ router.get('/autocompletar/', async (req, res, next) => {
         }
     } else {
         return next('Parámetros incorrectos');
+    }
+});
+
+
+router.post('/areasProgama', Auth.authenticate(), async (req, res, next) => {
+    try {
+        const resultado: any = await importAreasProgramaGeoSalud();
+        res.json(resultado);
+    } catch (err) {
+        return next(err);
     }
 });
 

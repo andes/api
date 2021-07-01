@@ -1,33 +1,43 @@
-import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
+import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
-import { SeguimientoPaciente } from './seguimiento-paciente.schema';
-import { Types } from 'mongoose';
+import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 
 class SeguimientoPacienteResource extends ResourceBase {
     Model = SeguimientoPaciente;
-    resourceName = 'seguimiento-paciente';
+    resourceName = 'seguimientoPaciente';
     middlewares = [Auth.authenticate()];
     searchFileds = {
-        paciente: {
-            field: 'paciente.id',
-            fn: (value) => Types.ObjectId(value)
+        fechaInicio: MongoQuery.matchDate.withField('fechaInicio'),
+        paciente: (value) => {
+            return {
+                $or: [
+                    { 'paciente.documento': MongoQuery.partialString(value) },
+                    { 'paciente.nombre': MongoQuery.partialString(value) },
+                    { 'paciente.apellido': MongoQuery.partialString(value) }
+                ]
+            };
         },
-        profesional: {
-            field: 'profesional._id',
-            fn: (value) => Types.ObjectId(value)
+        origen: (value) => {
+            return {
+                $or: [
+                    { 'origen.nombre': MongoQuery.partialString(value) },
+                    { 'origen.tipo': MongoQuery.partialString(value) },
+                    { 'origen.id ': MongoQuery.equalMatch(value) }
+                ]
+            };
         },
-        fechaDesde: {
-            field: 'fechaDiagnostico',
-            fn: (value) => { return { $gte: value }; }
+        estado: {
+            field: 'ultimoEstado.clave',
+            fn: MongoQuery.partialString
         },
-        fechaHasta: {
-            field: 'fechaDiagnostico',
-            fn: (value) => { return { $lte: value }; }
+        organizacionSisa: {
+            field: 'organizacion.codigoSisa',
+            fn: MongoQuery.partialString
+        },
+        organizacionSeguimiento: {
+            field: 'organizacionSeguimiento.id',
+            fn: MongoQuery.equalMatch
         }
-    };
-    routesAuthorization = {
-        get: Auth.authorize('log:get'),
-        post: Auth.authorize('log:post'),
     };
 }
 

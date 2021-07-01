@@ -38,4 +38,3 @@ EventCore.on('notification:fichaEpidemiologica:laboratory', async (info) => {
         }
     }
 });
-

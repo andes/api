@@ -335,3 +335,4 @@ export const SIP_PLUS = {
     host: getEnv('SIP_PLUS_URL', ''),
 };
 
+export const defaultPointReference = [-68.0863283, -38.945162]; // Setear el punto de referencia default para cada provincia
