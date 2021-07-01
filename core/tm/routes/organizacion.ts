@@ -153,6 +153,9 @@ router.get('/organizaciones', async (req, res, next) => {
             $regex: utils.makePattern(req.query.nombre)
         };
     }
+    if (req.query.showMapa) {
+        filtros['showMapa'] = req.query.showMapa;
+    }
     if (req.query.aceptaDerivacion) {
         filtros['aceptaDerivacion'] = req.query.aceptaDerivacion;
     }
