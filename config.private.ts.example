@@ -335,3 +335,12 @@ export const SIP_PLUS = {
     host: getEnv('SIP_PLUS_URL', ''),
 };
 
+export const XROAD_SERVICES = {
+    fallecidos_covid: {
+        server: 'http://localhost:5000',
+        headers: {
+            'X-Road-Client': 'roksnet/GOV/12345678/TestClient',
+            Accept: 'application/json'
+        }
+    }
+};
