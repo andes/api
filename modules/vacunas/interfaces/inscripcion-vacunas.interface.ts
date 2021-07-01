@@ -55,4 +55,5 @@ export interface IInscripcionVacunas {
     localidadDeclarada?: String;
     fechaCertificado?: Date;
     idPrestacionCertificado?: Types.ObjectId;
+    llamados?: Types.ObjectId[];
 }
