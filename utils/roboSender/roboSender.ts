@@ -58,8 +58,15 @@ export function roboSender() {
                         }
                         if (env.device_id) {
                             new PushClient().send(env.device_id, env.notificationData);
-                            await sendPushNotification(env.device_id[0], env.notificationData);
                         }
+
+                        if (env.device_fcm_token) {
+                            const device = [
+                                { device_fcm_token: env.device_fcm_token }
+                            ];
+                            await sendPushNotification(device, env.notificationData);
+                        }
+
                         // Exportar HUDS
                         if (env.idExportHuds) {
                             await createFile(env.idExportHuds);

@@ -46,7 +46,7 @@ export function enviarCodigoCambioPassword(user) {
 
 }
 
-export async function enviarCodigoVerificacion(user, password, fcmToken?) {
+export async function enviarCodigoVerificacion(user, password, device_fcm_token?) {
 
     const replacements = {
         username: user.apellido + ', ' + user.nombre,
@@ -79,8 +79,11 @@ export async function enviarCodigoVerificacion(user, password, fcmToken?) {
         extraData: replacements
     };
 
-    // Enviamos notificiación Push
-    await sendPushNotification(fcmToken, notification);
+    // Enviamos notificación Push
+    const device = [
+        { device_fcm_token }
+    ];
+    await sendPushNotification(device, notification);
 
 
     // let sms: ISms = {

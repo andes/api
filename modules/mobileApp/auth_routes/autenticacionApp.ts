@@ -216,7 +216,7 @@ router.post('/mailGenerico', async (req, res, next) => {
     return res.json(respuesta);
 });
 
-router.post('/registro', async (req: any, res, next) => {
+router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => {
     try {
         const documento = req.body.documento;
         const sexo = req.body.sexo;

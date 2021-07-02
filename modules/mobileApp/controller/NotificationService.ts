@@ -4,7 +4,7 @@ import { Agenda } from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
-import * as fcm from '../../../modules/mobileApp/controller/PushClientFCM';
+import { IPushNotification, sendPushNotification } from './PushClientFCM';
 
 const log = debug('NotificationService');
 
@@ -83,9 +83,10 @@ export class NotificationService {
         });
     }
 
-    public static sendNotification(account, notification) {
+    public static async sendNotification(account, notification: IPushNotification) {
         const devices = account.devices.map(item => item.device_id);
         new PushClient().send(devices, notification);
+        await sendPushNotification(devices, notification);
     }
 
     /**
@@ -96,9 +97,10 @@ export class NotificationService {
 
     private static sendByPaciente(pacienteId, notification) {
         PacienteApp.find({ 'pacientes.id': pacienteId }, (err, docs: any[]) => {
-            docs.forEach(user => {
+            docs.forEach(async (user) => {
                 const devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
+                await sendPushNotification(devices, notification);
             });
         });
     }
@@ -111,16 +113,14 @@ export class NotificationService {
     private static sendByProfesional(id, notification) {
         id = new mongoose.Types.ObjectId(id);
         PacienteApp.find({ profesionalId: id }, (err, docs: any[]) => {
-            docs.forEach(user => {
+            docs.forEach(async (user) => {
 
                 // Legacy: dispositivos iOS es posible que aun reciban de esa manera
                 const devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
 
-                // Traer el último token válido
-                const lastIndex = user.devices.length - 1;
-                const deviceToken = user.devices[lastIndex];
-                fcm.sendPushNotification(deviceToken, notification);
+                const tokens = user.devices.filter(item => item.device_fcm_token);
+                await sendPushNotification(tokens, notification);
             });
         });
     }

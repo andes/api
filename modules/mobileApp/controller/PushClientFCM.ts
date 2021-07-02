@@ -5,19 +5,25 @@ export interface IPushNotification {
     extraData?: any;
 }
 
-export function sendPushNotification(token, notification: IPushNotification) {
-    const payload = {
-        title: notification.title || 'Andes Salud',
-        body: notification.body,
-        extraData: notification.extraData,
-        to: token,
-        priority: 'high',
-        restricted_package_name: '',
-        time_to_live: 0,
-    };
+export function sendPushNotification(devices, notification: IPushNotification): any {
 
-    // Enviar push con llamada HTTP
     const servicio = 'push-notifications-default';
-    return services.get(servicio).exec(payload);
+
+    if (devices.length > 0) {
+        for (const device of devices) {
+            const payload = {
+                title: notification.title || 'Andes Salud',
+                body: notification.body,
+                extraData: notification.extraData,
+                to: (device as any).device_fcm_token,
+                priority: 'high',
+                restricted_package_name: '',
+                time_to_live: 0,
+            };
+
+            // Enviar push con llamada HTTP
+            return services.get(servicio).exec(payload);
+        }
+    }
 
 }
