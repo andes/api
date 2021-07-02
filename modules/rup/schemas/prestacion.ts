@@ -10,11 +10,25 @@ import { SemanticTag } from './semantic-tag';
 
 
 export const PrestacionSchema = new Schema({
+    /**
+     * ID de un EVENTO externo (internacion, guardia, embarazo) para agrupar un conjunto de prestaciones referidas a ese evento
+     */
     trackId: { required: false, type: Schema.Types.ObjectId },
+
+    /**
+     * Clave para agrupar varias prestaciones como un único suceso
+     */
+    groupId: { required: false, type: Schema.Types.ObjectId },
+
     inicio: {
         type: String,
-        enum: ['top', 'agenda', 'fuera-agenda', 'internacion'],
+        enum: ['top', 'agenda', 'fuera-agenda', 'internacion', 'servicio-intermedio'],
     },
+
+
+    servicioIntermedioId: { required: false, type: Schema.Types.ObjectId },
+
+
     // Datos principales del paciente
     paciente: {
         // requirido, validar en middleware
@@ -39,6 +53,11 @@ export const PrestacionSchema = new Schema({
         numeroComprobante: String,
         estado: String
     },
+
+    metadata: [
+        { key: String, valor: SchemaTypes.Mixed }
+    ],
+
     // Datos de la Solicitud
     solicitud: {
 
@@ -114,7 +133,19 @@ export const PrestacionSchema = new Schema({
         },
 
 
-        historial: [PrestacionSolicitudHistorialschema]
+        historial: [PrestacionSolicitudHistorialschema],
+
+        /**
+         * Indica si Solicitudes de servicio-intermedio se pueden dar turno o no.
+         * Tienen que ser si o si ambito ambulatorio
+         * El dato se determina en la regla
+         */
+        turneable: Boolean,
+
+        /**
+         * Id de la regla con la cual matcheo
+         */
+        reglaId: Types.ObjectId
     },
 
     // Datos de la ejecución (i.e. realización)
@@ -274,6 +305,7 @@ PrestacionSchema.methods.getRegistros = function (all = false) {
 PrestacionSchema.plugin(AuditPlugin);
 PrestacionSchema.index({ 'solicitud.turno': 1 });
 PrestacionSchema.index({ 'paciente.id': 1 });
+PrestacionSchema.index({ groupId: 1 }, { sparse: true });
 PrestacionSchema.index({
     'solicitud.organizacion.id': 1,
     'solicitud.ambitoOrigen': 1,
@@ -308,5 +340,16 @@ PrestacionSchema.index({
     'solicitud.organizacionOrigen.id': 1,
     'solicitud.profesionalOrigen.id': 1
 }, { name: 'TOP-PROFESIONAL', partialFilterExpression: { inicio: 'top' } });
+
+
+PrestacionSchema.index(
+    {
+        servicioIntermedioId: 1,
+        'solicitud.fecha': 1,
+    }, {
+        name: 'SERVICIOS-INTERMEDIO',
+        partialFilterExpression: { inicio: 'servicio-intermedio' }
+    }
+);
 
 export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');

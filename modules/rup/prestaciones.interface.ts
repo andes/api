@@ -6,6 +6,8 @@ import { ISnomedConcept } from './schemas/snomed-concept';
 
 export interface IPrestacion {
     id: ObjectId;
+    trackId?: ObjectId;
+    groupId?: ObjectId;
     paciente?: {
         id: ObjectId;
         nombre: string;
@@ -36,6 +38,7 @@ export interface IPrestacion {
     solicitud: IPrestacionSolicitud;
     tags?: any;
     unidadOrganizativa?: ISnomedConcept;
+    metadata?: { key: string, valor: any }[];
 
 }
 
@@ -96,6 +99,10 @@ export interface IPrestacionSolicitud {
     historial: any[]; // [TODO]
 
     registros?: IPrestacionRegistro[];
+
+    turneable: boolean;
+
+    reglaId: ObjectId;
 }
 
 export type IPrestacionDoc = IPrestacion & Document & {

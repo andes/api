@@ -3,8 +3,9 @@ import { ReglasTOP } from '../schemas/reglas';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 import { ConceptosTurneablesCtr } from '../../../core/tm/conceptos-turneables.routes';
-import { Request } from '@andes/api-tool';
+import { asyncHandler, Request } from '@andes/api-tool';
 import { ISnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import { ResourceNotFound } from '@andes/core';
 
 const router = express.Router();
 
@@ -30,6 +31,15 @@ router.post('/reglas', async (req, res, next) => {
     }
 });
 
+router.get('/reglas/:id', asyncHandler(async (req: Request, res) => {
+    const id = req.params.id;
+    const regla = await ReglasTOP.findById(id);
+    if (regla) {
+        return res.json(regla);
+    }
+    throw new ResourceNotFound();
+}));
+
 router.get('/reglas', async (req: Request, res, next) => {
     let prestacionesPermisos: ISnomedConcept[];
     const query = ReglasTOP.find({});
@@ -38,7 +48,11 @@ router.get('/reglas', async (req: Request, res, next) => {
     }
 
     if (req.query.prestacionOrigen) {
-        query.where('origen.prestaciones.prestacion.conceptId').equals(req.query.prestacionOrigen);
+        query.or([
+            { 'origen.prestaciones.prestacion.conceptId': req.query.prestacionOrigen },
+            { 'origen.prestaciones': null },
+        ]);
+        // query.where('origen.prestaciones.prestacion.conceptId').equals(req.query.prestacionOrigen);
     } else if (req.query.prestacionesOrigen) {
         prestacionesPermisos = await ConceptosTurneablesCtr.getByPermisos(req, req.query.prestacionesOrigen);
         if (prestacionesPermisos) {
@@ -56,6 +70,14 @@ router.get('/reglas', async (req: Request, res, next) => {
     if (prestacionesPermisos) {
         reglas.forEach(regla => {
             regla.origen.prestaciones = regla.origen.prestaciones.filter(p => prestacionesPermisos.find(pp => pp.conceptId === p.prestacion.conceptId));
+        });
+    }
+
+    if (req.query.prestacionDestino) {
+        reglas.forEach(regla => {
+            if (Array.isArray(regla.destino.prestacion)) {
+                regla.destino.prestacion = regla.destino.prestacion.find(p => p.conceptId === req.query.prestacionDestino);
+            }
         });
     }
 

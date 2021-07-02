@@ -19,6 +19,8 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
 import { AppCache } from '../../../connections';
+import { MongoQuery } from '@andes/core';
+import { getVisualizadorURL } from '../../pacs';
 
 const router = express.Router();
 
@@ -156,13 +158,29 @@ router.post('/solicitudes/dashboard', async (req, res, next) => {
     return res.json(solicitudes);
 });
 
+
+router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
+    const servicios = Auth.getPermissions(req, 'rup:servicio-intermedio:?').map(id => new Types.ObjectId(id));
+    const query = {
+        inicio: 'servicio-intermedio',
+        servicioIntermedioId: MongoQuery.inArray(servicios),
+        'estadoActual.tipo': { $nin: ['anulada', 'modificada'] },
+        'solicitud.turneable': { $in: [null, false] },
+        'solicitud.fecha': MongoQuery.matchDate(req.query.fecha)
+    };
+    const prestaciones = await Prestacion.find(query);
+    res.json(prestaciones);
+});
+
 router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
         let indice = 'TOP-ENTRADA';
         let pipeline = [];
         let match: any = { $and: [] };
 
-        match.$and.push({ inicio: 'top' });
+        if (!req.query.idPaciente) {
+            match.$and.push({ inicio: 'top' });
+        }
 
         if (req.query.solicitudDesde) {
             match.$and.push({ createdAt: { $gte: (moment(req.query.solicitudDesde).startOf('day').toDate() as any) } });
@@ -177,6 +195,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
 
         if (req.query.origen === 'top') {
+            match.$and.push({ inicio: 'top' });
             match.$and.push({ 'solicitud.prestacionOrigen': { $exists: false } });
         }
 
@@ -253,6 +272,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         let project = {
             $project: {
                 id: '$_id',
+                inicio: 1,
                 paciente: 1,
                 solicitud: 1,
                 ejecucion: 1,
@@ -489,31 +509,34 @@ router.get('/prestaciones', async (req: any, res, next) => {
 });
 
 router.post('/prestaciones', async (req, res, next) => {
-    let dto = parseDate(JSON.stringify(req.body));
+    try {
+        let dto = parseDate(JSON.stringify(req.body));
 
-    if (dto.inicio === 'top') {
-        updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
-    }
-    const estado = dto.estados[dto.estados.length - 1].tipo;
-    if (dto.solicitud.turno && estado !== 'modificada') {
-        const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno, 'estadoActual.tipo': { $ne: 'modificada' } });
-        if (prestacionIniciada > 0) {
-            return next('ya_iniciada');
+        if (dto.inicio === 'top') {
+            updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
         }
-    }
 
-    const data = new Prestacion(dto) as IPrestacionDoc;
-    Auth.audit(data, req);
-    data.save((err) => {
-        if (err) {
-            return next('No fue posible crear la prestación');
+        const estado = dto.estados[dto.estados.length - 1].tipo;
+        if (dto.solicitud.turno && estado !== 'modificada') {
+            const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno, 'estadoActual.tipo': { $ne: 'modificada' } });
+            if (prestacionIniciada > 0) {
+                return next('ya_iniciada');
+            }
         }
-        res.json(data);
-        EventCore.emitAsync('rup:prestacion:create', data);
-        if (data.paciente) {
-            AppCache.clear(`huds-${data.paciente.id}`);
+
+        const prestacion: any = new Prestacion(dto);
+        Auth.audit(prestacion, req);
+        await prestacion.save();
+        res.json(prestacion);
+
+        EventCore.emitAsync('rup:prestacion:create', prestacion);
+        if (prestacion.estadoActual.tipo === 'ejecucion') {
+            EventCore.emitAsync('rup:prestacion:ejecucion', prestacion);
         }
-    });
+
+    } catch (err) {
+        return next('No fue posible crear la prestación');
+    }
 });
 
 router.patch('/prestaciones/:id', (req: Request, res, next) => {
@@ -559,6 +582,12 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 if (req.body.prioridad) {
                     data.solicitud.registros[0].valor.solicitudPrestacion.prioridad = req.body.prioridad;
                     data.solicitud.registros[0].markModified('valor');
+                }
+
+                if (req.body.solicitud) {
+                    if (req.body.solicitud.tipoPrestacion) {
+                        data.solicitud.tipoPrestacion = req.body.solicitud.tipoPrestacion;
+                    }
                 }
 
                 break;
@@ -638,6 +667,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 buscarYCrearSolicitudes(prestacion, req);
             }
 
+            if (req.body.estado && req.body.estado.tipo === 'ejecucion') {
+                EventCore.emitAsync('rup:prestacion:ejecucion', data);
+            }
+
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
                 const registros = prestacion.getRegistros();
@@ -664,6 +697,18 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
     });
 });
 
+router.get('/prestaciones/:id/pacs', async (req, res, next) => {
+    const prestacion: any = await Prestacion.findById(req.params.id);
+    if (prestacion) {
+        const url = await getVisualizadorURL(prestacion);
+        if (url) {
+            return res.redirect(url);
+        }
+    }
+    return next(404);
+});
+
+
 export = router;
 
 
@@ -683,7 +728,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
     }
     const user = Auth.getUserFromResource(prestacion);
     Auth.audit(prestacion, user as any);
-    prestacion.save();
+    await prestacion.save();
 });
 
 EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {

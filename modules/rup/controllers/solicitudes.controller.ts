@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { checkRegla } from '../../top/controller/reglas';
 import { updateRegistroHistorialSolicitud } from './prestacion';
@@ -5,17 +6,21 @@ import { Prestacion } from '../schemas/prestacion';
 import { IPrestacion, IPrestacionDoc, IPrestacionRegistro, IPrestacionRegistroDoc } from '../prestaciones.interface';
 import { Request } from '@andes/api-tool';
 import { ObjectId } from '@andes/core';
+import { EventCore } from '@andes/event-bus';
 
 
 export function crearSolicitud(prestacion: IPrestacion, solicitud: IPrestacionRegistroDoc, regla, profesional) {
-    const prestacionOrigen = regla ?
+
+    const prestacionOrigen = regla?.origen?.prestaciones ?
         regla.origen.prestaciones.find(p => p.prestacion.conceptId === prestacion.solicitud.tipoPrestacion.conceptId)
-        : prestacion.solicitud.tipoPrestacion;
+        : { prestacion: prestacion.solicitud.tipoPrestacion };
 
     const prestacionDestino = regla ? regla.destino.prestacion : solicitud.valor.solicitudPrestacion.prestacionSolicitada;
 
-    const nuevaPrestacion = {
+    const nuevaPrestacion: any = {
+        inicio: regla.destino.inicio || 'top',
         paciente: prestacion.paciente,
+        servicioIntermedioId: regla.destino.servicioIntermedioId || null,
         solicitud: {
             prestacionOrigen: prestacion.id,
             fecha: new Date(),
@@ -27,7 +32,9 @@ export function crearSolicitud(prestacion: IPrestacion, solicitud: IPrestacionRe
             profesionalOrigen: profesional,
             profesional: {},
             ambitoOrigen: prestacion.solicitud.ambitoOrigen,
-            registros: []
+            registros: [],
+            turneable: !!regla?.destino?.turneable && prestacion.solicitud.ambitoOrigen === 'ambulatorio', // [TODO] que depende de la regla y no tan hardcodeado,
+            reglaId: regla?.id
         },
         estados: [{
             fecha: new Date(),
@@ -40,6 +47,11 @@ export function crearSolicitud(prestacion: IPrestacion, solicitud: IPrestacionRe
         nuevaPrestacion.solicitud.profesional = profesional;
     }
     nuevaPrestacion.solicitud.registros.push({ ...solicitud.toObject() });
+
+    if (nuevaPrestacion.inicio === 'servicio-intermedio') {
+        nuevaPrestacion.groupId = new Types.ObjectId();
+    }
+
     return nuevaPrestacion;
 }
 
@@ -61,12 +73,12 @@ export async function buscarYCrearSolicitudes(prestacion: IPrestacionDoc, req: R
     const planes = registros.filter(registro => registro.esSolicitud);
 
     const reglas = await matchReglas(prestacion, planes, Auth.getOrganization(req));
-
     for (const plan of reglas) {
         if (!plan) { continue; }
 
         const { regla, solicitud } = plan;
         const existe = await existeSolicitud(prestacion, solicitud);
+
         if (!existe) {
 
             const dtoSolicitud = crearSolicitud(prestacion, solicitud, regla, usuarioProfesional);
@@ -105,3 +117,64 @@ async function matchReglas(prestacion: IPrestacion, planes: IPrestacionRegistro[
     });
     return Promise.all(ps);
 }
+
+
+EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacion) => {
+    // [TODO] chequear duplicados al revalidar
+
+    const regla = await checkRegla({
+        estado: 'validada',
+        organizacionOrigen: prestacion.solicitud.organizacion.id,
+        organizacionDestino: prestacion.solicitud.organizacion.id,
+        prestacionOrigen: prestacion.solicitud.tipoPrestacion.conceptId
+    });
+    if (regla) {
+
+        if (Array.isArray(regla.destino.prestacion)) {
+            throw new Error(`mala configuracion de la regla ${regla.id}`);
+        }
+
+        const informeRegla = regla.destino.informe;
+        const datosSolicitud = prestacion.solicitud.registros[0]?.valor?.solicitudPrestacion || {};
+        const informe = datosSolicitud.informe;
+
+        // [TODO] de alguna forma debeŕia ser dinamico este chequeo, pueden aparecer otras cosas a futuro
+        if (!informe && informeRegla !== 'required') {
+            return;
+        }
+
+
+        const nuevaPrestacion = {
+            inicio: regla.destino.inicio || 'servicio-intermedio', // [TODO] definir
+            paciente: prestacion.paciente,
+            groupId: prestacion.groupId,
+            servicioIntermedioId: regla.destino.servicioIntermedioId || null,
+            solicitud: {
+                prestacionOrigen: prestacion.id,
+                fecha: new Date(),
+                turno: null,
+                tipoPrestacion: regla.destino.prestacion,
+                tipoPrestacionOrigen: prestacion.solicitud.tipoPrestacion,
+                organizacionOrigen: prestacion.solicitud.organizacion,
+                organizacion: prestacion.solicitud.organizacion,
+                profesionalOrigen: prestacion.solicitud.profesional,
+                profesional: {},
+                ambitoOrigen: prestacion.solicitud.ambitoOrigen,
+                registros: prestacion.solicitud.registros,
+                turneable: !!regla?.destino?.turneable
+            },
+            estados: [{
+                fecha: new Date(),
+                tipo: 'pendiente'
+            }],
+            metadata: prestacion.metadata
+        };
+        updateRegistroHistorialSolicitud(nuevaPrestacion.solicitud, { op: 'creacion' });
+        const user = Auth.getUserFromResource(prestacion);
+
+        const nuevoPlan = new Prestacion(nuevaPrestacion);
+        Auth.audit(nuevoPlan, user as any);
+        await nuevoPlan.save();
+    }
+
+});
