@@ -56,6 +56,7 @@ const CamaEstadosSchema = new Schema({
             fechaNacimiento: Date
         },
         idInternacion: SchemaTypes.ObjectId,
+        fechaIngreso: Date,
         observaciones: {
             type: String
         },

@@ -4,7 +4,8 @@ import * as SalaComunController from './sala-comun/sala-comun.controller';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
-import { ObjectID } from 'bson';
+import { Types } from 'mongoose';
+import { CamaEstados } from './cama-estados.schema';
 
 const router = express.Router();
 
@@ -139,10 +140,24 @@ router.patch('/camas/changeTime/:id', Auth.authenticate(), capaMiddleware, async
         if (cambiaEstado) {
             const camaActualizada = await CamasController.findById({ organizacion, capa, ambito }, idCama, nuevafecha);
             res.json(camaActualizada);
+
+            await CamaEstados.update(
+                {
+                    idOrganizacion: Types.ObjectId(organizacion._id),
+                    ambito,
+                    capa
+                },
+                {
+                    $set: { 'estados.$[elemento].fechaIngreso': nuevafecha }
+                },
+                {
+                    arrayFilters: [{ 'elemento.idInternacion': Types.ObjectId(idInternacion) }],
+                    multi: true
+                }
+            );
         } else {
             return next('No se puede realizar el cambio de estado');
         }
-
     } catch (err) {
         return next(err);
     }

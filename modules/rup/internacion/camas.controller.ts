@@ -75,6 +75,7 @@ export interface ICama {
     };
     extras: any;
     nota: String;
+    fechaIngreso: Date;
 }
 
 
