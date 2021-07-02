@@ -1,10 +1,11 @@
+import * as debug from 'debug';
 import { Prestacion } from '../modules/rup/schemas/prestacion';
 import { CacheVacunasAreaPrograma } from '../modules/vacunas/schemas/cache-vacunas-areaPrograma.schema';
+const logger = debug('vacunasAreaPrograma');
 
 
 async function run(done) {
     try {
-        const consulta = 'query';
         const pipelineZonas = [
             {
                 $match: {
@@ -119,6 +120,7 @@ async function run(done) {
         for await (const res of resultado) {
             const cache: any = await CacheVacunasAreaPrograma.findOne({ key: res.key }).exec();
             if (cache) {
+                logger('Entra por update: ', res.vacunados);
                 const $set: any = {
                     vacunados: res.vacunados
                 };
@@ -127,12 +129,14 @@ async function run(done) {
                     { $set }
                 );
             } else {
+                logger('Entra por insert: ', res.vacunados);
                 res.poblacionObjetivo = 0;
                 await CacheVacunasAreaPrograma.create(res);
             }
         }
 
     } catch (err) {
+        logger('Entra por error: ', err);
         done();
         return err;
     }
