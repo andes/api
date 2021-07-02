@@ -341,4 +341,15 @@ PrestacionSchema.index({
     'solicitud.profesionalOrigen.id': 1
 }, { name: 'TOP-PROFESIONAL', partialFilterExpression: { inicio: 'top' } });
 
+
+PrestacionSchema.index(
+    {
+        servicioIntermedioId: 1,
+        'solicitud.fecha': 1,
+    }, {
+        name: 'SERVICIOS-INTERMEDIO',
+        partialFilterExpression: { inicio: 'servicio-intermedio' }
+    }
+);
+
 export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');

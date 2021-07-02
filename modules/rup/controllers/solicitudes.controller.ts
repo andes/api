@@ -134,11 +134,12 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacion) => {
             throw new Error(`mala configuracion de la regla ${regla.id}`);
         }
 
+        const informeRegla = regla.destino.informe;
         const datosSolicitud = prestacion.solicitud.registros[0]?.valor?.solicitudPrestacion || {};
         const informe = datosSolicitud.informe;
 
         // [TODO] de alguna forma debeŕia ser dinamico este chequeo, pueden aparecer otras cosas a futuro
-        if (!informe) {
+        if (!informe && informeRegla !== 'required') {
             return;
         }
 
