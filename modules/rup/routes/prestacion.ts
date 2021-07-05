@@ -1,26 +1,26 @@
-import { Types } from 'mongoose';
+import { asyncHandler, Request } from '@andes/api-tool';
+import { MongoQuery } from '@andes/core';
+import { EventCore } from '@andes/event-bus';
 import * as express from 'express';
 import * as moment from 'moment';
-import { Auth } from './../../../auth/auth.class';
-import { Prestacion } from '../schemas/prestacion';
-import { updateRegistroHistorialSolicitud, hudsPaciente } from '../controllers/prestacion';
-import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { registrosProfundidad } from '../controllers/rup';
-import { parseDate } from './../../../shared/parse';
-import { EventCore } from '@andes/event-bus';
-import { dashboardSolicitudes } from '../controllers/estadisticas';
-import { removeDiacritics } from '../../../utils/utils';
+import { Types } from 'mongoose';
+import { AppCache } from '../../../connections';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
-import { getTurnoById } from '../../turnos/controller/turnosController';
-import { asyncHandler, Request } from '@andes/api-tool';
-import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
-import { IPrestacionDoc } from '../prestaciones.interface';
-import { AppCache } from '../../../connections';
-import { MongoQuery } from '@andes/core';
+import { removeDiacritics } from '../../../utils/utils';
 import { getVisualizadorURL } from '../../pacs';
+import { getTurnoById } from '../../turnos/controller/turnosController';
+import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
+import { dashboardSolicitudes } from '../controllers/estadisticas';
+import * as frecuentescrl from '../controllers/frecuentesProfesional';
+import { hudsPaciente, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
+import { registrosProfundidad } from '../controllers/rup';
+import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
+import { IPrestacionDoc } from '../prestaciones.interface';
+import { Prestacion } from '../schemas/prestacion';
+import { Auth } from './../../../auth/auth.class';
+import { parseDate } from './../../../shared/parse';
 
 const router = express.Router();
 
@@ -592,11 +592,12 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
 
                 break;
             case 'romperValidacion':
-                if (data.estados[data.estados.length - 1].tipo !== 'validada') {
+                if (data.estadoActual.tipo !== 'validada') {
                     return next('Para poder romper la validación, primero debe validar la prestación.');
                 }
                 if (!req.body.desdeInternacion) {
-                    if ((req as any).user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento) {
+                    const puedeValidar = Auth.check(req, 'rup:validacion:' + data.solicitud.tipoPrestacion.id);
+                    if ((req as any).user.usuario.username !== data.estadoActual.createdBy.documento && !puedeValidar) {
                         return next('Solo puede romper la validación el usuario que haya creado.');
                     }
                 }
