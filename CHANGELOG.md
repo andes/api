@@ -1,3 +1,33 @@
+# [5.53.0](https://github.com/andes/api/compare/v5.52.0...v5.53.0) (2021-07-07)
+
+
+### Bug Fixes
+
+* **seguimiento:** fix sisa code area programa ([96e1157](https://github.com/andes/api/commit/96e1157a51ba29664837228275e3ae3a71b1c377))
+* **top:** indices ([#1455](https://github.com/andes/api/issues/1455)) ([28661d1](https://github.com/andes/api/commit/28661d14e47553c3ee1049ed88400a63e7b5c586))
+* **top:** saco indice si tiene paciente ([#1456](https://github.com/andes/api/issues/1456)) ([68ccb24](https://github.com/andes/api/commit/68ccb24cb6f33d611c4a33986c3a6ce7bed77e42))
+
+
+### Features
+
+* **EP:** asignacion de seguimiento a org por area programa ([596073c](https://github.com/andes/api/commit/596073c8e1e7edb626fbf54a90678dc11d0d42c8))
+* **EP:** buscar organizacion seguimiento ([4bce452](https://github.com/andes/api/commit/4bce452b83c64191f5819a22596136f9e02e9fea))
+* **EP:** filtro de estado & documento ([b669da4](https://github.com/andes/api/commit/b669da407426144df8fac7c71882b19cfa7af482))
+* **EP:** merge de seguimiento de covid-19 ([86005cf](https://github.com/andes/api/commit/86005cfd0f3c9f533b825eac3f3472325965f915))
+* **EP:** merge de seguimiento de covid-19 ([48252de](https://github.com/andes/api/commit/48252dee485d6e7d5a8f8a9716d4a053a169fb1e))
+* **epidemiologia:** event validar prestacion ([7110c0c](https://github.com/andes/api/commit/7110c0c7e0dbc98ecec7881ed7d25db95361ed67))
+* **epidemiologia:** event validar prestacion ([17634a1](https://github.com/andes/api/commit/17634a1c751e9f964e0391e6cdb27ff21f12f6d5))
+* **mapa-camas:** dias de estada ([#1425](https://github.com/andes/api/issues/1425)) ([72dbef5](https://github.com/andes/api/commit/72dbef551eda644721cd80d65c4a346c26997540))
+* **organizaciones:** Agrega parametro showMapa ([#1457](https://github.com/andes/api/issues/1457)) ([3f516eb](https://github.com/andes/api/commit/3f516eb4e52469d39dc8efadb3a5a394542fe576))
+* **pacs:** modulo pacs ([#1401](https://github.com/andes/api/issues/1401)) ([e4a8e38](https://github.com/andes/api/commit/e4a8e3872ee115ebe6cef1dc1bf609452804ec38))
+* **seguimiento:** Agregamos la direccion en ficha epidemio y mejoramos la interacción con seguimiento y recuperamos las coordenadas en location ([0afe045](https://github.com/andes/api/commit/0afe045c67258b96dda6e55b3a7bc0591a300bc0))
+* **seguimiento:** arreglamos el esquema sección llamados ([9dd2028](https://github.com/andes/api/commit/9dd2028174359ba081879d9e66d5e2804e74bf3b))
+* **seguimiento:** arreglamos el esquema sección llamados ([d7372af](https://github.com/andes/api/commit/d7372afeb4a8707e6d37bac4e91b495ccb8f7ba8))
+* **seguimiento:** Se agrega variable con pto de referencia default para setear según provincia. ([e8633cf](https://github.com/andes/api/commit/e8633cffb49dc4009a69113ffa290d793d89881f))
+* **seguimiento:** se modifica para la nueva forma de realizaar el seguimiento ([1cfd3f4](https://github.com/andes/api/commit/1cfd3f42095d808614ad0de5c114f0e5b5a03e65))
+* **seguimiento:** se modifica para la nueva forma de realizaar el seguimiento ([e918a47](https://github.com/andes/api/commit/e918a47897a0148a23ba4497db13ff28c374159d))
+* **seguimiento-event:** romper validacion ([de69716](https://github.com/andes/api/commit/de69716711aa6e97226f8d7c668e8fe64e64f8d2))
+
 # [5.52.0](https://github.com/andes/api/compare/v5.51.0...v5.52.0) (2021-06-30)
 
 
