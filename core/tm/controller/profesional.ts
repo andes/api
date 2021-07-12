@@ -156,10 +156,20 @@ export async function searchMatriculas(profesionalId) {
         return e.matriculacion && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
     };
 
-    const formacionGrado = _profesional.formacionGrado ?
-        _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
-    const formacionPosgrado = _profesional.formacionPosgrado ?
-        _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+    let formacionGrado;
+    let formacionPosgrado;
+    if (_profesional.profesionalMatriculado) {
+        formacionGrado = _profesional.formacionGrado ?
+            _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+        formacionPosgrado = _profesional.formacionPosgrado ?
+            _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+    } else {
+        formacionGrado = [{
+            nombre: _profesional.profesionExterna.nombre,
+            numero: _profesional.matriculaExterna
+        }];
+        formacionPosgrado = [];
+    }
 
     return {
         nombre: _profesional.nombre,
@@ -212,7 +222,7 @@ export async function saveFirma(data, admin = false) {
         await firma.unlink(fileFirma._id, (error) => { });
     }
     // Inserta en la bd en files y chunks
-    const writePromise = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         firma.writeFile({
             filename: admin ? 'firmaAdmin.png' : 'firma.png',
             contentType: 'image/jpeg',
@@ -226,6 +236,5 @@ export async function saveFirma(data, admin = false) {
             });
         input.end(_base64);
     });
-    return await writePromise;
 }
 
