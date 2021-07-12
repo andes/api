@@ -19,7 +19,7 @@ export async function getPaciente(paciente: any) {
                     Authorization: 'Basic ' + Buffer.from(`${SIP_PLUS.username}:${SIP_PLUS.password}`, 'binary').toString('base64')
                 }
             };
-            const [status, resJson] = await await handleHttpRequest(options);
+            const [status, resJson] = await handleHttpRequest(options);
 
             if (status >= 200 && status < 300) {
                 const keyResponse = Object.keys(resJson).length;
