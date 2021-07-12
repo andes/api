@@ -5,6 +5,10 @@ import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoS
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
 import { userScheduler } from '../../../config.private';
 import { Auth } from './../../../auth/auth.class';
+import { makeFsFirma } from '../schemas/firmaProf';
+import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
+import * as stream from 'stream';
+import * as base64 from 'base64-stream';
 
 /**
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
@@ -153,9 +157,9 @@ export async function searchMatriculas(profesionalId) {
     };
 
     const formacionGrado = _profesional.formacionGrado ?
-             _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+        _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
     const formacionPosgrado = _profesional.formacionPosgrado ?
-            _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+        _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
 
     return {
         nombre: _profesional.nombre,
@@ -180,3 +184,48 @@ export async function saveTituloFormacionPosgrado(data) {
     formacionPosgrado.tituloFileId = data.fileId;
     return await actualizar(_profesional);
 }
+
+export async function saveFirma(data, admin = false) {
+    const _base64 = data.firmaP;
+    const decoder = base64.decode();
+    const input = new stream.PassThrough();
+    let firma;
+    let metadataFind;
+    let metadataWrite;
+
+    if (admin) {
+        firma = makeFsFirmaAdmin();
+        metadataFind = { 'metadata.idSupervisor': data.idSupervisor };
+        metadataWrite = {
+            idSupervisor: data.idSupervisor,
+            administracion: data.nombreCompleto
+        };
+    } else {
+        firma = makeFsFirma();
+        metadataFind = { 'metadata.idProfesional': data.idProfesional };
+        metadataWrite = { idProfesional: data.idProfesional };
+    }
+
+    // Remueve la firma anterior antes de insertar la nueva
+    const fileFirma = await firma.findOne(metadataFind);
+    if (fileFirma && fileFirma._id) {
+        await firma.unlink(fileFirma._id, (error) => { });
+    }
+    // Inserta en la bd en files y chunks
+    const writePromise = new Promise((resolve, reject) => {
+        firma.writeFile({
+            filename: admin ? 'firmaAdmin.png' : 'firma.png',
+            contentType: 'image/jpeg',
+            metadata: metadataWrite
+        }, input.pipe(decoder),
+            (error, createdFile) => {
+                if (error) {
+                    reject(error);
+                }
+                resolve(createdFile);
+            });
+        input.end(_base64);
+    });
+    return await writePromise;
+}
+
