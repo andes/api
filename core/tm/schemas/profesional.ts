@@ -20,7 +20,19 @@ const matriculacionSchema = new mongoose.Schema({
     revalidacionNumero: Number
 });
 
-export const ProfesionalSchema = new mongoose.Schema({
+export const ProfesionalBaseSchema = new mongoose.Schema({
+    documento: { type: String, required: false },
+    sexo: { type: String, required: false },
+    nombre: { type: String, required: false },
+    apellido: { type: String, required: false },
+    fechaNacimiento: { type: Date, required: false },
+    fechaFallecimiento: { type: Date, required: false },
+    validadoRenaper: { type: Boolean, default: false },
+    foto: { type: String, required: false },
+});
+
+export const ProfesionalSchema = ProfesionalBaseSchema.clone();
+ProfesionalSchema.add({
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
     apellido: { type: String, required: false },
@@ -125,11 +137,9 @@ export const ProfesionalSchema = new mongoose.Schema({
     matriculaExterna: { type: String, required: false }
 });
 
-
 // Virtuals
 ProfesionalSchema.virtual('nombreCompleto').get(function () {
     return this.apellido + ', ' + this.nombre;
-
 });
 
 ProfesionalSchema.virtual('fallecido').get(function () {
