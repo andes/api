@@ -1,14 +1,14 @@
-import * as mongoose from 'mongoose';
-import * as moment from 'moment';
-import { Profesional } from '../schemas/profesional';
-import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
-import * as turno from '../../../modules/matriculaciones/schemas/turno';
-import { userScheduler } from '../../../config.private';
-import { Auth } from './../../../auth/auth.class';
-import { makeFsFirma } from '../schemas/firmaProf';
-import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
-import * as stream from 'stream';
 import * as base64 from 'base64-stream';
+import * as moment from 'moment';
+import * as mongoose from 'mongoose';
+import * as stream from 'stream';
+import { userScheduler } from '../../../config.private';
+import * as turno from '../../../modules/matriculaciones/schemas/turno';
+import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
+import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
+import { makeFsFirma } from '../schemas/firmaProf';
+import { Profesional } from '../schemas/profesional';
+import { Auth } from './../../../auth/auth.class';
 
 /**
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
@@ -156,10 +156,20 @@ export async function searchMatriculas(profesionalId) {
         return e.matriculacion && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
     };
 
-    const formacionGrado = _profesional.formacionGrado ?
-        _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
-    const formacionPosgrado = _profesional.formacionPosgrado ?
-        _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+    let formacionGrado;
+    let formacionPosgrado;
+    if (_profesional.profesionalMatriculado) {
+        formacionGrado = _profesional.formacionGrado ?
+            _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+        formacionPosgrado = _profesional.formacionPosgrado ?
+            _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+    } else {
+        formacionGrado = [{
+            nombre: _profesional.profesionExterna.nombre,
+            numero: _profesional.matriculaExterna
+        }];
+        formacionPosgrado = [];
+    }
 
     return {
         nombre: _profesional.nombre,
@@ -186,7 +196,7 @@ export async function saveTituloFormacionPosgrado(data) {
 }
 
 export async function saveFirma(data, admin = false) {
-    const _base64 = data.firmaP;
+    const _base64 = data.firmaP || data.firma;
     const decoder = base64.decode();
     const input = new stream.PassThrough();
     let firma;
@@ -212,7 +222,7 @@ export async function saveFirma(data, admin = false) {
         await firma.unlink(fileFirma._id, (error) => { });
     }
     // Inserta en la bd en files y chunks
-    const writePromise = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         firma.writeFile({
             filename: admin ? 'firmaAdmin.png' : 'firma.png',
             contentType: 'image/jpeg',
@@ -226,6 +236,5 @@ export async function saveFirma(data, admin = false) {
             });
         input.end(_base64);
     });
-    return await writePromise;
 }
 
