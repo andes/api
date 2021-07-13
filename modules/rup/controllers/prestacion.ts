@@ -1,11 +1,10 @@
 import { ObjectId } from '@andes/core';
-import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { Prestacion } from '../../rup/schemas/prestacion';
+import { Prestacion, PrestacionHistorial, PrestacionHistorialSchema } from '../../rup/schemas/prestacion';
 import { buscarEnHuds } from '../controllers/rup';
 import moment = require('moment');
 import { AppCache } from '../../../connections';
@@ -23,7 +22,7 @@ export async function liberarRefTurno(turno, req) {
         const query = Prestacion.findOne({
             $and: [
                 { 'estadoActual.tipo': 'pendiente' },
-                { 'solicitud.turno': mongoose.Types.ObjectId(turno.id) }
+                { 'solicitud.turno': Types.ObjectId(turno.id) }
             ]
         });
         let prestacion: any = await query.exec();
@@ -176,4 +175,15 @@ export async function updatePrestacionPatient(sourcePatient, idPaciente, idPacie
     } catch (error) {
         return error;
     }
+}
+
+// Crea un nuevo registro (coleccion prestacionesHistorial) a partir de una prestacion y estado
+export async function saveEnHistorial(prestacion, estado, req) {
+    prestacion = JSON.parse(JSON.stringify(prestacion));    // sin esta mersada no borra ids
+    delete prestacion.id;
+    delete prestacion._id;
+    prestacion.estados.push(estado);
+    const copiaPrestacion = new PrestacionHistorial(prestacion);
+    Auth.audit(copiaPrestacion, req);
+    return copiaPrestacion.save();
 }
