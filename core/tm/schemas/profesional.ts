@@ -21,14 +21,10 @@ const matriculacionSchema = new mongoose.Schema({
 });
 
 export const ProfesionalBaseSchema = new mongoose.Schema({
-    documento: { type: String, required: false },
+    documento: { type: String, required: true },
     sexo: { type: String, required: false },
-    nombre: { type: String, required: false },
-    apellido: { type: String, required: false },
-    fechaNacimiento: { type: Date, required: false },
-    fechaFallecimiento: { type: Date, required: false },
-    validadoRenaper: { type: Boolean, default: false },
-    foto: { type: String, required: false },
+    nombre: { type: String, required: true },
+    apellido: { type: String, required: true },
 });
 
 export const ProfesionalSchema = ProfesionalBaseSchema.clone();
