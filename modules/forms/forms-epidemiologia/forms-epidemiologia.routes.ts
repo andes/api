@@ -1,5 +1,7 @@
+import { asyncHandler } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../../auth/auth.class';
+import { updateField } from './controller/forms-epidemiologia.controller';
 import { FormsEpidemiologia } from './forms-epidemiologia-schema';
 
 class FormsEpidemiologiaResource extends ResourceBase {
@@ -59,6 +61,18 @@ class FormsEpidemiologiaResource extends ResourceBase {
 export const FormEpidemiologiaCtr = new FormsEpidemiologiaResource();
 export const FormEpidemiologiaRouter = FormEpidemiologiaCtr.makeRoutes();
 
+export const patchField = async (req, res) => {
+    const body = req.body;
+    const id = req.params.id;
+    const ficha = await updateField(id, body);
+
+    Auth.audit(ficha, req);
+    const response = await FormEpidemiologiaCtr.update(id, ficha, req);
+
+    return res.json(response);
+};
+
+
 FormEpidemiologiaRouter.get('/types', Auth.authenticate(), async (req, res, next) => {
     try {
         const types: any = await FormsEpidemiologia.find({}, { type: 1 });
@@ -67,3 +81,5 @@ FormEpidemiologiaRouter.get('/types', Auth.authenticate(), async (req, res, next
         return next(err);
     }
 });
+
+FormEpidemiologiaRouter.patch('/formEpidemiologia/:id/secciones/fields', Auth.authenticate(), asyncHandler(patchField));
