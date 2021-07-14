@@ -57,8 +57,10 @@ export async function elementosRUPAsSet(): Promise<ElementoRUPSet> {
         elemento.requeridosMap = {};
 
         elemento.requeridos.forEach((requerido) => {
-            const ctid = requerido.concepto.conceptId;
-            elemento.requeridosMap[ctid] = requerido;
+            if (requerido.concepto) {
+                const ctid = requerido.concepto.conceptId;
+                elemento.requeridosMap[ctid] = requerido;
+            }
         });
 
     });

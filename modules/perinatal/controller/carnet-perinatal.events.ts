@@ -5,7 +5,7 @@ import { CarnetPerinatalCtr } from './../carnet-perinatal.routes';
 import { CarnetPerinatal } from './../schemas/carnet-perinatal.schema';
 import moment = require('moment');
 
-// Al validar la prestacion de vacunacion, inserta la fecha de vacunacion en la inscripcion
+// Al validar la prestacion de "control embarazo", inserta el nuevo control por embarazo
 EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) => {
     if (registro && registro.valor) {
         const embarazo = registro.valor;
@@ -25,11 +25,15 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             query['embarazo.conceptId'] = embarazo.conceptId;
         }
         const carnetExistente: any = await CarnetPerinatal.findOne(query);
+
+        const proxControl = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '2471000246107')?.valor;
+        const fechaProximoControl = proxControl ? moment(proxControl).startOf('day').toDate() : null;
+
         if (carnetExistente) {
             if (!carnetExistente.controles) {
                 carnetExistente.controles = [];
             }
-            let fechaProximoControl = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '390840006');
+
             let indexControl = carnetExistente.controles.findIndex(item => String(item.idPrestacion) === String(prestacion.id));
             if (indexControl < 0) {
                 carnetExistente.controles.push({
@@ -42,7 +46,7 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             carnetExistente.controles = carnetExistente.controles.sort((a, b) => {
                 return new Date(a.fechaControl).getTime() - new Date(b.fechaControl).getTime();
             });
-            carnetExistente.fechaProximoControl = moment(fechaProximoControl.valor).startOf('day').toDate();
+            carnetExistente.fechaProximoControl = fechaProximoControl;
             carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
             await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
         } else {
@@ -50,7 +54,7 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             let pesoPrevio = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003');
             let talla = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009');
             let fechaProbableDeParto = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006');
-            let fechaProximoControl = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '390840006');
+
             const carnet: any = {
                 fecha: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
                 paciente: prestacion.paciente,
@@ -62,7 +66,7 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
                         profesional: prestacion.solicitud.profesional
                     }],
                 fechaUltimoControl: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
-                fechaProximoControl: moment(fechaProximoControl.valor).startOf('day').toDate(),
+                fechaProximoControl,
                 embarazo
             };
             carnet.primeriza = primeriza;
