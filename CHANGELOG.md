@@ -1,3 +1,17 @@
+# [5.54.0](https://github.com/andes/api/compare/v5.53.0...v5.54.0) (2021-07-14)
+
+
+### Bug Fixes
+
+* **EP:** fix referencia de sisa en area programa ([#1462](https://github.com/andes/api/issues/1462)) ([3e06308](https://github.com/andes/api/commit/3e06308602456a0504ecf7e189bc5a6965b66ed6))
+
+
+### Features
+
+* **AM:** Permitir acceder a turnos mediante reglas ([#1434](https://github.com/andes/api/issues/1434)) ([d415dcd](https://github.com/andes/api/commit/d415dcddadb7daad6bb6504eb19d1d71c3630088))
+* **EP:** fix referencia geolocation ([25bfbc8](https://github.com/andes/api/commit/25bfbc8eea902cdc379c796d2133006df21f9aa3))
+* **rup:** romper validacion si tengo permisoss ([#1461](https://github.com/andes/api/issues/1461)) ([20cbac3](https://github.com/andes/api/commit/20cbac331fde6315997bc8738c733a2b544de29d))
+
 # [5.53.0](https://github.com/andes/api/compare/v5.52.0...v5.53.0) (2021-07-07)
 
 
