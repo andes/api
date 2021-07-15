@@ -30,6 +30,14 @@ class FormsEpidemiologiaResource extends ResourceBase {
             field: 'zonaSanitaria._id',
             fn: MongoQuery.equalMatch
         },
+        clasificacion: {
+            field: 'secciones.fields.clasificacion.id',
+            fn: MongoQuery.equalMatch
+        },
+        tipoConfirmacion: {
+            field: 'secciones.fields.segundaclasificacion.id',
+            fn: MongoQuery.equalMatch
+        },
         identificadorPcr: {
             field: 'secciones.fields.identificadorpcr',
             fn: (value) => {
