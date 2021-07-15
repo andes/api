@@ -115,6 +115,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/forms/forms-epidemiologia', require('./modules/forms/').FormEpidemiologiaRouter);
     app.use('/api/modules/forms/forms-epidemiologia', require('./modules/forms/').FormHistoryRouter);
     app.use('/api/modules', require('./modules/dispositivo/').DispositivoRouter);
+    app.use('/api/modules', require('./modules/semaforo/').SemaforoRouter);
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(
