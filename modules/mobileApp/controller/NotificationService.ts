@@ -119,7 +119,7 @@ export class NotificationService {
                 const devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
 
-                const tokens = user.devices.filter(item => item.device_fcm_token);
+                const tokens = user.devices.filter(item => ({ device_fcm_token: item.device_fcm_token }));
                 await sendPushNotification(tokens, notification);
             });
         });

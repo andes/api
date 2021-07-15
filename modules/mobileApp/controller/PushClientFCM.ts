@@ -22,7 +22,7 @@ export function sendPushNotification(devices, notification: IPushNotification): 
             };
 
             // Enviar push con llamada HTTP
-            return services.get(servicio).exec(payload);
+            services.get(servicio).exec(payload);
         }
     }
 
