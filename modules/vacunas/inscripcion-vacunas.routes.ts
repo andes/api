@@ -152,6 +152,9 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
             if (inscripto.paciente === null) {
                 inscripcion.paciente = undefined;
             }
+            if (!inscripto.asignado) {
+                inscripcion.asignado = undefined;
+            }
             Auth.audit(inscripcion, req);
             await inscripcion.save();
             return res.json(inscripcion);
