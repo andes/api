@@ -21,6 +21,7 @@ const matriculacionSchema = new mongoose.Schema({
 });
 
 export const ProfesionalSchema = new mongoose.Schema({
+    activo: { type: Boolean, required: false },
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
     apellido: { type: String, required: false },
