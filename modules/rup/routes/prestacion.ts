@@ -14,7 +14,7 @@ import { getTurnoById } from '../../turnos/controller/turnosController';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { hudsPaciente, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
+import { hudsPaciente, updateRegistroHistorialSolicitud, saveEnHistorial } from '../controllers/prestacion';
 import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
@@ -540,7 +540,7 @@ router.post('/prestaciones', async (req, res, next) => {
 });
 
 router.patch('/prestaciones/:id', (req: Request, res, next) => {
-    Prestacion.findById(req.params.id, (err, data: any) => {
+    Prestacion.findById(req.params.id, async (err, data: any) => {
         if (err) {
             return next(err);
         }
@@ -560,6 +560,13 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 if (req.body.estado) {
                     if (data.estados[data.estados.length - 1].tipo === 'validada') {
                         return next('Prestación validada, no se puede volver a validar.');
+                    }
+                    if (req.body.estado.tipo === 'anulada' && data.inicio !== 'top') {
+                        // si posee 'motivoRechazo' es una solicitud anulada (top)
+                        const prestacion = await saveEnHistorial(data, req.body.estado, req);
+                        await Prestacion.findOneAndRemove({ _id: data._id });
+                        res.json(prestacion);
+                        return;
                     }
                     data.estados.push(req.body.estado);
                     if (req.body.estado.tipo === 'asignada') {
@@ -583,7 +590,6 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     data.solicitud.registros[0].valor.solicitudPrestacion.prioridad = req.body.prioridad;
                     data.solicitud.registros[0].markModified('valor');
                 }
-
                 if (req.body.solicitud) {
                     if (req.body.solicitud.tipoPrestacion) {
                         data.solicitud.tipoPrestacion = req.body.solicitud.tipoPrestacion;
@@ -601,7 +607,15 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                         return next('Solo puede romper la validación el usuario que haya creado.');
                     }
                 }
-                data.estados.push(req.body.estado);
+                const estadoModificada = {
+                    tipo: 'modificada',
+                    idOrigenModifica: data.id
+                };
+                const prestacionOld = await saveEnHistorial(data, estadoModificada, req);
+                data.estados.push({
+                    tipo: 'ejecucion',
+                    idOrigenModifica: prestacionOld.id
+                });
                 break;
             case 'registros':
                 if (req.body.registros) {

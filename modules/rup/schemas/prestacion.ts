@@ -186,6 +186,10 @@ export const PrestacionSchema = new Schema({
     unidadOrganizativa: SnomedConcept
 }, { usePushEach: true } as any);
 
+// Esquema para prestaciones anuladas/modificadas
+export const PrestacionHistorialSchema = PrestacionSchema.clone();
+PrestacionHistorialSchema.plugin(AuditPlugin);
+
 // Valida el esquema
 PrestacionSchema.pre('save', function (next) {
     let prestacion: any = this;
@@ -353,3 +357,5 @@ PrestacionSchema.index(
 );
 
 export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');
+export const PrestacionHistorial = model('prestacionHistorial', PrestacionHistorialSchema, 'prestacionesHistorial');
+
