@@ -145,7 +145,6 @@ router.post('/', async (req: any, res, next) => {
     const cdaStream: any = cdaCtr.base64toStream(cda64);
     const cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
 
-
     if (cdaXml.length > 0) {
         cdaCtr.validateSchemaCDA(cdaXml).then(async (dom) => {
 
@@ -411,5 +410,19 @@ router.get('/:id/:name', async (req: any, res, next) => {
     }
 });
 
+
+router.delete('/:idCda', async (req: any, res, next) => {
+    try {
+        const idCda = ObjectId(req.params.idCda);
+        const cdaFile = makeFs();
+        const file = await cdaFile.findOne({ _id: idCda });
+        if (file && file._id) {
+            await cdaFile.unlink(file._id, (error) => { });
+        }
+        return res.json({ success: true });
+    } catch (err) {
+        return next(err);
+    }
+});
 
 export = router;
