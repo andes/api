@@ -21,6 +21,15 @@ class CarnetPerinatalResource extends ResourceBase {
                 ]
             };
         },
+        organizacion: MongoQuery.matchString.withField('controles.organizacion.nombre'),
+        profesional: (valor) => {
+            return {
+                $or: [
+                    { 'controles.profesional.nombre': MongoQuery.partialString(valor[0]) },
+                    { 'controles.profesional.apellido': MongoQuery.partialString(valor[1]) }
+                ]
+            };
+        }
     };
     eventBus = EventCore;
 }
