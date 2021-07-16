@@ -5,6 +5,7 @@ import { RoboModel } from './roboSchema';
 import * as debug from 'debug';
 import { PushClient } from '../../modules/mobileApp/controller/PushClient';
 import { createFile } from '../../modules/huds/export-huds/exportHuds.controller';
+import { sendPushNotification } from '../../modules/mobileApp/controller/PushClientFCM';
 
 const log = debug('roboSender');
 
@@ -58,6 +59,14 @@ export function roboSender() {
                         if (env.device_id) {
                             new PushClient().send(env.device_id, env.notificationData);
                         }
+
+                        if (env.device_fcm_token) {
+                            const device = [
+                                { device_fcm_token: env.device_fcm_token }
+                            ];
+                            await sendPushNotification(device, env.notificationData);
+                        }
+
                         // Exportar HUDS
                         if (env.idExportHuds) {
                             await createFile(env.idExportHuds);
@@ -77,12 +86,12 @@ export function roboSender() {
 
                     counter++;
                     if (finEjecucion(counter, enviosPendientes.length)) {
-                        return resolve();
+                        return resolve(true);
                     }
                 }
             } else {
                 log('Termina la ejecución');
-                return resolve();
+                return resolve(true);
             }
 
         }).catch((err) => {
@@ -103,7 +112,7 @@ function changeState(env, newState) {
             if (err) {
                 return reject();
             }
-            return resolve();
+            return resolve(true);
         });
     });
 }
