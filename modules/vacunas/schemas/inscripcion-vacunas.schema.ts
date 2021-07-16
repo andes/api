@@ -83,7 +83,8 @@ export const InscripcionVacunaSchema = new Schema({
         numeroIntento: Number,
         fechaRealizacion: Date,
         usuario: SchemaTypes.Mixed
-    }]
+    }],
+    numeroIdentificacion: String
 });
 
 InscripcionVacunaSchema.plugin(AuditPlugin);
