@@ -1,7 +1,7 @@
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { model, Schema, SchemaTypes, Types } from 'mongoose';
-import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { convertToObjectId, iterate } from '../controllers/rup';
 import { PrestacionEstadoSchema } from './prestacion.estado';
 import * as registro from './prestacion.registro';
@@ -357,5 +357,5 @@ PrestacionSchema.index(
 );
 
 export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');
-export const PrestacionHistorial = model('prestacionHistorial', PrestacionHistorialSchema, 'prestacionesHistorial');
+export const PrestacionHistorial = model('prestacion-historial', PrestacionHistorialSchema, 'prestacion-historial');
 

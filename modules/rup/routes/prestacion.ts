@@ -14,7 +14,7 @@ import { getTurnoById } from '../../turnos/controller/turnosController';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { hudsPaciente, updateRegistroHistorialSolicitud, saveEnHistorial } from '../controllers/prestacion';
+import { hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
@@ -562,11 +562,9 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                         return next('Prestación validada, no se puede volver a validar.');
                     }
                     if (req.body.estado.tipo === 'anulada' && data.inicio !== 'top') {
-                        // si posee 'motivoRechazo' es una solicitud anulada (top)
                         const prestacion = await saveEnHistorial(data, req.body.estado, req);
                         await Prestacion.findOneAndRemove({ _id: data._id });
-                        res.json(prestacion);
-                        return;
+                        return res.json(prestacion);
                     }
                     data.estados.push(req.body.estado);
                     if (req.body.estado.tipo === 'asignada') {
