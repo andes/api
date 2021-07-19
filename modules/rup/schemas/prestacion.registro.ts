@@ -61,7 +61,10 @@ schema.add({
     // Indica los id de otros registros dentro array 'registros' de la prestación
     // O un conceptId si el registro está relacionado con un concepto (ej: un registro de "caries" con concepto "diente 18")
     relacionadoCon: [mongoose.Schema.Types.Mixed],
-
+    esCensable: {
+        type: Boolean,
+        required: false
+    },
     /**
      * ID del ElementoRUP utilizado
      */
