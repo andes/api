@@ -1,9 +1,9 @@
-import * as mongoose from 'mongoose';
-import * as moment from 'moment';
-import { Prestacion } from '../schemas/prestacion';
 import { ObjectId } from '@andes/core';
 import { AndesDrive } from '@andes/drive/';
+import * as moment from 'moment';
+import * as mongoose from 'mongoose';
 import { readFile } from '../../../core/tm/controller/file-storage';
+import { Prestacion } from '../schemas/prestacion';
 
 /**
  * Función recursiva que permite recorrer un objeto y todas sus propiedades
@@ -159,6 +159,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
                 data.push({
                     idPrestacion: prestacion._id,
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
+                    organizacion: prestacion.ejecucion.organizacion,
                     fecha: prestacion.ejecucion.fecha,
                     profesional: unRegistro.createdBy,
                     registro: unRegistro
@@ -172,6 +173,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
                 data.push({
                     idPrestacion: prestacion._id,
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
+                    organizacion: prestacion.ejecucion.organizacion,
                     fecha: prestacion.ejecucion.fecha,
                     profesional: unRegistro.createdBy,
                     registro: resultado

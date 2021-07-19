@@ -40,6 +40,7 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     if (addressChanged) {
         await updateGeoreferencia(paciente);
     }
+
     // Verifica si se realizó alguna operación de vinculación de pacientes
     const vinculado = changeFields.includes('idPacientePrincipal');
     if (vinculado && paciente.idPacientePrincipal) {
