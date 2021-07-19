@@ -412,16 +412,14 @@ router.get('/:id/:name', async (req: any, res, next) => {
 
 
 router.delete('/:idCda', async (req: any, res, next) => {
-    try {
-        const idCda = ObjectId(req.params.idCda);
-        const cdaFile = makeFs();
-        const file = await cdaFile.findOne({ _id: idCda });
-        if (file && file._id) {
-            await cdaFile.unlink(file._id, (error) => { });
-        }
-        return res.json({ success: true });
-    } catch (err) {
-        return next(err);
+    const idCda = ObjectId(req.params.idCda);
+    const cdaFile = makeFs();
+    const file = await cdaFile.findOne({ _id: idCda });
+    if (file && file._id) {
+        cdaFile.unlink(file._id, (error) => {
+            if (error) { return next(error); }
+            return res.json({ success: true });
+        });
     }
 });
 

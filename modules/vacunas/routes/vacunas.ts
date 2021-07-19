@@ -20,24 +20,16 @@ router.get('/paciente/:id', Auth.authenticate(), asyncHandler(async (req: any, r
 
 
 router.post('/paciente', Auth.authenticate(), asyncHandler(async (req: any, res, next) => {
-    try {
-        const pacienteId = req.body.paciente.id;
-        await vacunaCtr.exportCovid19(null, pacienteId);
-        return res.json({ success: true });
-    } catch (err) {
-        return next(err);
-    }
+    const pacienteId = req.body.paciente.id;
+    await vacunaCtr.exportCovid19(null, pacienteId);
+    return res.json({ success: true });
 }));
 
 
 router.delete('/:idVacuna', Auth.authenticate(), asyncHandler(async (req: any, res, next) => {
-    try {
-        const idVacuna = req.params.idvacuna;
-        await vacunasApi.findOneAndRemove({ idvacuna: idVacuna });
-        return res.json({ success: true });
-    } catch (err) {
-        return next(err);
-    }
+    const idVacuna = req.params.idVacuna;
+    await vacunasApi.findOneAndRemove({ idvacuna: idVacuna });
+    return res.json({ success: true });
 }));
 
 export const VacunasRouter = router;
