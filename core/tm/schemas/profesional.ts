@@ -96,6 +96,7 @@ ProfesionalSchema.add({
         matriculado: { type: Boolean, default: false },
         revalida: { type: Boolean, default: false },
         papelesVerificados: { type: Boolean, default: false },
+        fechaDeVencimiento: { type: Date, required: false },
         exportadoSisa: Boolean,
         tieneVencimiento: Boolean,
         notas: [{ type: String, required: false }]
