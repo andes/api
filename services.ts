@@ -1,14 +1,15 @@
-import { AndesServices } from '@andes/services';
-import { validar } from './core-v2/mpi/validacion';
-import { Types } from 'mongoose';
-import { AppCache, Connections } from './connections';
-import * as express from 'express';
-import { renaperToAndes, renaperv3 } from '@andes/fuentes-autenticas';
-import { busInteroperabilidad } from './config.private';
 import { asyncHandler } from '@andes/api-tool';
-import { hudsPaciente } from './modules/rup';
-import { PacienteCtr } from './core-v2/mpi/paciente/paciente.routes';
+import { renaperToAndes, renaperv3 } from '@andes/fuentes-autenticas';
+import { AndesServices } from '@andes/services';
+import * as express from 'express';
 import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
+import { busInteroperabilidad } from './config.private';
+import { AppCache, Connections } from './connections';
+import { PacienteCtr } from './core-v2/mpi/paciente/paciente.routes';
+import { validar } from './core-v2/mpi/validacion';
+import { hudsPaciente } from './modules/rup';
+import { sincronizarVacunas } from './modules/vacunas/controller/vacunas.events';
 
 export let services: AndesServices;
 
@@ -25,9 +26,12 @@ export function setupServices(app: express.Express = null) {
     });
 
     services.register('validar-paciente', async (_config, params) => {
-
         return await validar(params.documento, params.sexo);
+    });
 
+    services.register('paciente-vacunacion-registrar', async (_config, params) => {
+        const { paciente } = params;
+        return await sincronizarVacunas(paciente);
     });
 
     services.register('renaper-bus-interoperabilidad', async (_config, params) => {

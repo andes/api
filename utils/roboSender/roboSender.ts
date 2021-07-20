@@ -1,10 +1,10 @@
-import * as configPrivate from '../../config.private';
+import * as debug from 'debug';
+import { createFile } from '../../modules/huds/export-huds/exportHuds.controller';
+import { PushClient } from '../../modules/mobileApp/controller/PushClient';
+import { services } from '../../services';
+import { RoboModel } from './roboSchema';
 import * as mailTools from './sendEmail';
 import * as smsTools from './sendSms';
-import { RoboModel } from './roboSchema';
-import * as debug from 'debug';
-import { PushClient } from '../../modules/mobileApp/controller/PushClient';
-import { createFile } from '../../modules/huds/export-huds/exportHuds.controller';
 
 const log = debug('roboSender');
 
@@ -63,6 +63,10 @@ export function roboSender() {
                             await createFile(env.idExportHuds);
                         }
 
+                        if (env.service) {
+                            await services.get(env.service).exec(env.params);
+                        }
+
                         await changeState(env, 'success');
 
 
@@ -94,18 +98,11 @@ export function roboSender() {
 }
 
 
-function changeState(env, newState) {
-    return new Promise((resolve, reject) => {
-        env.status = newState;
-        env.tries += 1;
-        env.updatedAt = new Date();
-        env.save((err, datos) => {
-            if (err) {
-                return reject();
-            }
-            return resolve();
-        });
-    });
+async function changeState(env, newState) {
+    env.status = newState;
+    env.tries += 1;
+    env.updatedAt = new Date();
+    await env.save();
 }
 
 function finEjecucion(counter, enviosPendientes) {

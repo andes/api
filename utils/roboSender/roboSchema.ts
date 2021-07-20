@@ -5,6 +5,11 @@ export const RoboSchema = new mongoose.Schema({
     message: String,
     phone: String,
 
+    // Andes Services
+    service: String,
+    params: mongoose.Schema.Types.Mixed,
+
+
     // Emails options
     subject: String,
     email: String,
