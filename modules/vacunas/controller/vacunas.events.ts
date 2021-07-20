@@ -10,10 +10,19 @@ import { services } from '../../../services';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { VacunasPacientes } from '../schemas/vacunas-pacientes.schema';
 
-EventCore.on('vacunas:prestaciones:validate', async (prestacion) => {
+EventCore.on('rup:prestaciones:vacunacion', async (prestacion) => {
     await sincronizarVacunas(prestacion.paciente.id);
 });
 
+EventCore.on('mpi:pacientes:link', async ({ source, target }) => {
+    await sincronizarVacunas(source);
+    await sincronizarVacunas(target);
+});
+
+EventCore.on('mpi:pacientes:unlink', async ({ source, target }) => {
+    await sincronizarVacunas(source);
+    await sincronizarVacunas(target);
+});
 
 export async function sincronizarVacunas(pacienteID: string) {
 
