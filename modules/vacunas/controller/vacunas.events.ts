@@ -30,6 +30,12 @@ export async function sincronizarVacunas(pacienteID: string) {
     if (!paciente) {
         return;
     }
+
+    // Si soy un paciente inactivo, borro la info para no duplicar datos
+    if (String(pacienteID) !== String(paciente.id)) {
+        await VacunasPacientes.remove({ 'paciente.id': new Types.ObjectId(pacienteID) });
+    }
+
     const inscripcionVacuna = await InscripcionVacunasCtr.findOne({ idPaciente: paciente.id });
     let carnetVacuna: any = await VacunasPacientes.findOne({ 'paciente.id': paciente.id });
     if (!carnetVacuna) {
