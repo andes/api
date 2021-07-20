@@ -1,4 +1,5 @@
 import { EventCore } from '@andes/event-bus';
+import { Types } from 'mongoose';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { updatePrestacionPatient } from './../../../modules/rup/controllers/prestacion';
@@ -40,14 +41,23 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     if (addressChanged) {
         await updateGeoreferencia(paciente);
     }
-
     // Verifica si se realizó alguna operación de vinculación de pacientes
     const vinculado = changeFields.includes('idPacientePrincipal');
     if (vinculado && paciente.idPacientePrincipal) {
+
+        EventCore.emitAsync('mpi:pacientes:link', {
+            target: new Types.ObjectId(paciente.idPacientePrincipal),
+            source: new Types.ObjectId(paciente.id)
+        });
+
         const pacienteVinculado = await findById(paciente.idPacientePrincipal);
         await updatePrestacionPatient(pacienteVinculado, paciente.id, paciente.idPacientePrincipal);
     }
     if (vinculado && paciente.idPacientePrincipal === null && paciente.activo) {
+        EventCore.emitAsync('mpi:pacientes:unlink', {
+            target: new Types.ObjectId(paciente._original.idPacientePrincipal),
+            source: new Types.ObjectId(paciente.id)
+        });
         await updatePrestacionPatient(paciente, paciente.id, null);
     }
     if (paciente.estado === 'validado') {
