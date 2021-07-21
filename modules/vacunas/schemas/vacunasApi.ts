@@ -1,6 +1,6 @@
-import * as mongoose from 'mongoose';
+import { model, Schema } from 'mongoose';
 
-export let schema = new mongoose.Schema({
+export let schema = new Schema({
     idvacuna: Number,
     codigo: String,
     documento: String,
@@ -16,7 +16,6 @@ export let schema = new mongoose.Schema({
     fechaAplicacion: Date,
     efector: String,
     esquema: String,
-    condicion: String
 });
 
-export let vacunasApi = mongoose.model('vacunasApi', schema, 'nomivac');
+export let vacunasApi = model('vacunasApi', schema, 'nomivac');

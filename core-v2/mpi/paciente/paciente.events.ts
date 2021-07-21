@@ -1,4 +1,7 @@
 import { EventCore } from '@andes/event-bus';
+import { timeout } from 'async';
+import { AppCache } from '../../../connections';
+import { Types } from 'mongoose';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { updatePrestacionPatient } from './../../../modules/rup/controllers/prestacion';
@@ -43,10 +46,26 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     // Verifica si se realizó alguna operación de vinculación de pacientes
     const vinculado = changeFields.includes('idPacientePrincipal');
     if (vinculado && paciente.idPacientePrincipal) {
+        AppCache.clear(`huds-${paciente.idPacientePrincipal}`);
+        AppCache.clear(`huds-${paciente.id}`);
+        setTimeout(() => {
+            EventCore.emitAsync('mpi:pacientes:link', {
+                target: new Types.ObjectId(paciente.idPacientePrincipal),
+                source: new Types.ObjectId(paciente.id)
+            });
+        }, 10000);
         const pacienteVinculado = await findById(paciente.idPacientePrincipal);
         await updatePrestacionPatient(pacienteVinculado, paciente.id, paciente.idPacientePrincipal);
     }
     if (vinculado && paciente.idPacientePrincipal === null && paciente.activo) {
+        AppCache.clear(`huds-${paciente._original.idPacientePrincipal}`);
+        AppCache.clear(`huds-${paciente.id}`);
+        setTimeout(() => {
+            EventCore.emitAsync('mpi:pacientes:unlink', {
+                target: new Types.ObjectId(paciente._original.idPacientePrincipal),
+                source: new Types.ObjectId(paciente.id)
+            });
+        }, 10000);
         await updatePrestacionPatient(paciente, paciente.id, null);
     }
     if (paciente.estado === 'validado') {
