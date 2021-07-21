@@ -368,10 +368,10 @@ router.get('/prestaciones', async (req: any, res, next) => {
 
     if (req.query.sinEstado) {
         if (Array.isArray(req.query.sinEstado)) {
-            query.where('estadoActual.tipo').nin(req.query.sinEstado);
+            query.where('estados.tipo').nin(req.query.sinEstado);
 
         } else {
-            query.where('estadoActual.tipo').ne(req.query.sinEstado);
+            query.where('estados.tipo').ne(req.query.sinEstado);
         }
     }
     if (req.query.fechaDesde) {
