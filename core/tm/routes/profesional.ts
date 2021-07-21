@@ -11,7 +11,7 @@ import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
 import { getTemporyTokenCOVID } from '../../../auth/auth.controller';
-import { formacionCero, matriculaCero, migrarTurnos, saveTituloFormacionGrado, saveTituloFormacionPosgrado } from '../controller/profesional';
+import { formacionCero, matriculaCero, migrarTurnos, saveTituloFormacionGrado, saveTituloFormacionPosgrado, saveFirma } from '../controller/profesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 import { log } from '@andes/log';
@@ -261,9 +261,7 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, re
 
 });
 router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, next) => {
-    // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFirma')) {
-    //     return next(403);
-    // }
+
     try {
         if (req.query.id) {
             const id = req.query.id;
@@ -880,59 +878,12 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
             input.end(_base64);
         }
         if (req.body.firma) {
-            const _base64 = req.body.firma.firmaP;
-            const decoder = base64.decode();
-            const input = new stream.PassThrough();
-            const firmaProf = makeFsFirma();
-            // remove la firma vieja antes de insertar la nueva
-            const fileFirma = await firmaProf.findOne({
-                'metadata.idProfesional': req.body.firma.idProfesional
-            });
-            if (fileFirma && fileFirma._id) {
-                await firmaProf.unlink(fileFirma._id, (error) => { });
-            }
-            // inserta en la bd en files y chucks
-            await firmaProf.writeFile({
-                filename: 'firma.png',
-                contentType: 'image/jpeg',
-                metadata: {
-                    idProfesional: req.body.firma.idProfesional,
-                }
-            },
-                input.pipe(decoder),
-                (error, createdFile) => {
-                    res.json(createdFile);
-                });
-            input.end(_base64);
+            const response = await saveFirma(req.body.firma);
+            res.json(response);
         }
         if (req.body.firmaAdmin) {
-            const _base64 = req.body.firmaAdmin.firma;
-            const decoder = base64.decode();
-            const input = new stream.PassThrough();
-            const firmaAdmin = makeFsFirmaAdmin();
-
-            // remove la firma vieja antes de insertar la nueva
-            const fileFirmaAdmin = await firmaAdmin.findOne({
-                'metadata.idSupervisor': req.body.firmaAdmin.idSupervisor
-            });
-            if (fileFirmaAdmin && fileFirmaAdmin._id) {
-                await firmaAdmin.unlink(fileFirmaAdmin._id, (error) => { });
-            }
-            // inserta en la bd en files y chucks
-            firmaAdmin.writeFile({
-                filename: 'firmaAdmin.png',
-                contentType: 'image/jpeg',
-                metadata: {
-                    idSupervisor: req.body.firmaAdmin.idSupervisor,
-                    administracion: req.body.firmaAdmin.nombreCompleto,
-                }
-            },
-                input.pipe(decoder),
-                (error, createdFile) => {
-                    res.json(createdFile);
-                });
-            input.end(_base64);
-
+            const response = await saveFirma(req.body.firmaAdmin, true);
+            res.json(response);
         }
         if (req.body.profesional) {
             const newProfesional = new Profesional(req.body.profesional);
@@ -946,7 +897,6 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
                 res.json(newProfesional);
             });
         }
-
     } catch (err) {
         return next(err);
     }

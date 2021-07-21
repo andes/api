@@ -308,7 +308,7 @@ PrestacionSchema.methods.getRegistros = function (all = false) {
 // Habilitar plugin de auditoría
 PrestacionSchema.plugin(AuditPlugin);
 PrestacionSchema.index({ 'solicitud.turno': 1 });
-PrestacionSchema.index({ 'paciente.id': 1 });
+PrestacionSchema.index({ 'paciente.id': 1, 'estadoActual.tipo': 1 });
 PrestacionSchema.index({ groupId: 1 }, { sparse: true });
 PrestacionSchema.index({
     'solicitud.organizacion.id': 1,
