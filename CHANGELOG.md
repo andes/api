@@ -1,3 +1,18 @@
+# [5.55.0](https://github.com/andes/api/compare/v5.54.0...v5.55.0) (2021-07-21)
+
+
+### Features
+
+* **EP:** job importador de LAMP ([b755f8c](https://github.com/andes/api/commit/b755f8c75463779c4b4ead34d75f4972b07d3173))
+* **EP:** patch de fields de ficha epidemiologica ([b9c7cc0](https://github.com/andes/api/commit/b9c7cc078ff14eb87d4bab81796908c25c67f2ec))
+* **EP:** patch de fields de ficha epidemiologica ([af85591](https://github.com/andes/api/commit/af85591e9ccfc792e6fcc8158202d44ccb923c01))
+* **epidemiologia:** search tipoConfirmacion ([9c06a09](https://github.com/andes/api/commit/9c06a09984818400def9bbbf8e3954a41093a7e1))
+* **events:** se propone una forma de resolver lo del evento que no toma ([12e15aa](https://github.com/andes/api/commit/12e15aa88a6f41784abc7f30ed791119f2c2fc8c))
+* **ficha:** filtro clasificacion ([5b38b88](https://github.com/andes/api/commit/5b38b88dff62ac8f41bce9c92aba55331f76e156))
+* **ficha:** Se agrega busqueda por id de clasificación ([7cdb19f](https://github.com/andes/api/commit/7cdb19f63785e003d58b9257d3d119d798b8eb3b))
+* **mapa-camas:** agrega atributo esCensable al esquema de prestacion ([#1440](https://github.com/andes/api/issues/1440)) ([c0be1bd](https://github.com/andes/api/commit/c0be1bdc5bd5bbc6828b33ebcb51e2b043d88346))
+* **rup:** nueva coleccion prestaciones historial ([#1469](https://github.com/andes/api/issues/1469)) ([737dd5e](https://github.com/andes/api/commit/737dd5ecb484526a1db6e93549b286359ab7792c))
+
 # [5.54.0](https://github.com/andes/api/compare/v5.53.0...v5.54.0) (2021-07-14)
 
 
