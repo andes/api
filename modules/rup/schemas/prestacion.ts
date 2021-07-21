@@ -1,7 +1,7 @@
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { model, Schema, SchemaTypes, Types } from 'mongoose';
-import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { convertToObjectId, iterate } from '../controllers/rup';
 import { PrestacionEstadoSchema } from './prestacion.estado';
 import * as registro from './prestacion.registro';
@@ -304,7 +304,7 @@ PrestacionSchema.methods.getRegistros = function (all = false) {
 // Habilitar plugin de auditoría
 PrestacionSchema.plugin(AuditPlugin);
 PrestacionSchema.index({ 'solicitud.turno': 1 });
-PrestacionSchema.index({ 'paciente.id': 1 });
+PrestacionSchema.index({ 'paciente.id': 1, 'estadoActual.tipo': 1 });
 PrestacionSchema.index({ groupId: 1 }, { sparse: true });
 PrestacionSchema.index({
     'solicitud.organizacion.id': 1,
