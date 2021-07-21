@@ -1,5 +1,5 @@
 import { model, Schema, SchemaTypes } from 'mongoose';
-import { NombreSchemaV2 } from '../../../shared/schemas';
+import { ESTADO, NombreSchemaV2 } from '../../../shared/schemas';
 
 export let VacunasPacientesSchema = new Schema({
     paciente: {
@@ -9,6 +9,7 @@ export let VacunasPacientesSchema = new Schema({
         documento: String,
         fechaNacimiento: Date,
         fechaFallecimiento: Date,
+        estado: ESTADO,
         sexo: String,
         telefono: String,
         email: String,

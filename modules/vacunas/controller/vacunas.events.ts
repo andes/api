@@ -15,8 +15,8 @@ EventCore.on('rup:prestaciones:vacunacion', async (prestacion) => {
 });
 
 EventCore.on('mpi:pacientes:link', async ({ source, target }) => {
-    await sincronizarVacunas(source);
     await sincronizarVacunas(target);
+    await sincronizarVacunas(source);
 });
 
 EventCore.on('mpi:pacientes:unlink', async ({ source, target }) => {
@@ -124,6 +124,7 @@ export async function sincronizarVacunas(pacienteID: string) {
         documento: paciente.documento,
         fechaNacimiento: paciente.fechaNacimiento,
         fechaFallecimiento: paciente.fechaFallecimiento,
+        estado: paciente.estado,
         sexo: paciente.sexo,
         email: email?.valor,
         telefono: celular?.valor || telefono?.valor,
