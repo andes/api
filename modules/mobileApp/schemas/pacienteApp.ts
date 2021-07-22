@@ -110,7 +110,8 @@ PacienteAppSchema.index({
     'pacientes.id': 1
 });
 PacienteAppSchema.index({
-    email: 1
+    email: 1,
+    documento: 1
 });
 PacienteAppSchema.index({
     profesionalId: 1
