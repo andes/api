@@ -7,8 +7,10 @@ dataLog.body = { _id: null };
 dataLog.method = null;
 
 EventCore.on('vacunas:inscripcion-vacunas:create', async (inscripto: any, inscriptoValidado: any) => {
-    const inscripcion = await validarInscripcion(inscripto, inscriptoValidado, dataLog);
-    await InscripcionVacunasCtr.update(inscripcion.id, inscripcion, dataLog);
+    if (inscripto.numeroIdentificacion === '') {
+        const inscripcion = await validarInscripcion(inscripto, inscriptoValidado, dataLog);
+        await InscripcionVacunasCtr.update(inscripcion.id, inscripcion, dataLog);
+    }
 });
 
 // Al validar la prestacion de vacunacion, inserta la fecha de vacunacion en la inscripcion
