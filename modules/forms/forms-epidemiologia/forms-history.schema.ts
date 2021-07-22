@@ -1,12 +1,14 @@
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { FormsEpidemiologiaCloneSchema } from './forms-epidemiologia-schema';
 
 
-export const FormsHistorySchema = new mongoose.Schema({
-    ficha: FormsEpidemiologiaCloneSchema
+let FormsHistorySchema = FormsEpidemiologiaCloneSchema.clone();
+FormsHistorySchema.add({
+    createdAt: Date,
+    createdBy: { nombreCompleto: String, username: String },
+    updatedAt: Date,
+    updatedBy: { nombreCompleto: String, username: String },
+    id: mongoose.Types.ObjectId
 });
-
-FormsHistorySchema.plugin(AuditPlugin);
 
 export const FormsHistory = mongoose.model('formsEpidemiologiaHistory', FormsHistorySchema, 'formsEpidemiologiaHistory');

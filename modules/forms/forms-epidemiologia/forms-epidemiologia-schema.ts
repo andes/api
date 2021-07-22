@@ -4,13 +4,15 @@ import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 import * as mongoose from 'mongoose';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
 
+const ObjectId = mongoose.Types.ObjectId;
+
 export const FormsEpidemiologiaSchema = new mongoose.Schema({
     type: {
-        id: mongoose.Schema.Types.ObjectId,
+        id: ObjectId,
         name: String
     },
     paciente: {
-        id: { type: mongoose.Schema.Types.ObjectId, ref: 'paciente' },
+        id: { type: ObjectId, ref: 'paciente' },
         documento: String,
         nombre: String,
         apellido: String,
@@ -66,6 +68,14 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
         EventCore.emitAsync('epidemiologia:seguimiento:create', ficha);
     }
     next();
+});
+
+FormsEpidemiologiaSchema.post('save', (ficha: any) => {
+    const { FormsHistory } = require ('./forms-history.schema');
+    const history = new FormsHistory(ficha.toJSON());
+    history._id = new mongoose.Types.ObjectId();
+
+    history.save();
 });
 
 
