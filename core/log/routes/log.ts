@@ -1,17 +1,21 @@
-import * as express from 'express';
-import { Logger } from '../../../utils/logService';
-import { log } from '../schemas/log';
-import { Auth } from '../../../auth/auth.class';
-import { SystemLog } from '../system.log';
 import { asyncHandler } from '@andes/api-tool';
 import * as crypto from 'crypto';
+import * as express from 'express';
+import { Auth } from '../../../auth/auth.class';
+import { Logger } from '../../../utils/logService';
+import { log } from '../schemas/log';
+import { SystemLog } from '../system.log';
 
 const router = express.Router();
 
 router.post('/error', asyncHandler(async (req, res, next) => {
     const error = req.body;
-    const message = error.message || '';
+    let message = error.message || '';
     const stack = error.stack || '';
+
+    if (typeof message !== 'string') {
+        message = JSON.stringify(message);
+    }
     // Para identificar errores iguales
     const id = crypto.createHash('md5').update(message).digest('hex');
     const data = {
