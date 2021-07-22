@@ -16,9 +16,8 @@ const server = app.listen(3002, () => debug('andes')('listening on port %s', por
 Websockets.initialize(server);
 
 // Muestra mensaje y línea de un error dentro de una promise ;-)
-
 process.on('unhandledRejection', r => debug('andes')(r));
-
+process.on('uncaughtException', r => debug('andes')(r));
 
 /**
  * Gracefull shutdown

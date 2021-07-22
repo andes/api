@@ -91,7 +91,7 @@
   },
   "scripts": {
     "startNode": "tsc && gulp && concurrently \"npm run node\" ",
-    "start": "concurrently -r \"npm run tsc:w\" \"npm run node\" ",
+    "start": "DEBUG=andes concurrently -r \"npm run tsc:w\" \"npm run node\" ",
     "node": "nodemon -q ./index.js",
     "tsc": "tsc",
     "tsc:w": "tsc -w",
