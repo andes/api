@@ -53,7 +53,23 @@ export async function sincronizarVacunas(pacienteID: string) {
     }
 
     const direccion: any = paciente.direccion[0] || {};
-    const _localidad: any = await Localidad.findById(direccion.ubicacion?.localidad._id);
+
+    const ubicacionPaciente: any = {};
+    if (direccion.ubicacion?.localidad?._id) {
+        const _localidad: any = await Localidad.findById(direccion.ubicacion?.localidad._id);
+        if (_localidad) {
+            ubicacionPaciente.localidad = {
+                id: _localidad.id,
+                nombre: _localidad.nombre
+            };
+            if (_localidad.zona) {
+                ubicacionPaciente.zona = {
+                    id: _localidad.zona?._id,
+                    nombre: _localidad.zona?.nombre
+                };
+            }
+        }
+    }
     paciente.contacto = paciente.contacto || [];
     const celular = paciente.contacto.find(c => c.tipo === 'celular');
     const email = paciente.contacto.find(c => c.tipo === 'email');
@@ -128,14 +144,7 @@ export async function sincronizarVacunas(pacienteID: string) {
         sexo: paciente.sexo,
         email: email?.valor,
         telefono: celular?.valor || telefono?.valor,
-        localidad: {
-            id: _localidad.id,
-            nombre: _localidad.nombre
-        },
-        zona: {
-            id: _localidad.zona?._id,
-            nombre: _localidad.zona?.nombre
-        }
+        ...ubicacionPaciente
     };
 
     carnetVacuna.aplicaciones = vacunas;
