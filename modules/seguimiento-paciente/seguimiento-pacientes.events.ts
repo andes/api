@@ -20,7 +20,7 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
         if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
             const mpiSections = data.secciones.find(s => s.name === 'Mpi');
             const contactosEstrechos = data.secciones.find(s => s.name === 'Contactos Estrechos');
-            const patientGeoRef = (data.paciente.direccion && data.paciente.direccion[0].geoReferencia) ? data.paciente.direccion[0].geoReferencia.reverse() : defaultPointReference; // default reference
+            const patientGeoRef = (data.paciente.direccion && data.paciente.direccion[0].geoReferencia?.length) ? data.paciente.direccion[0].geoReferencia.reverse() : defaultPointReference; // default reference
             const location = {
                 type: 'Point',
                 coordinates: [...patientGeoRef]
