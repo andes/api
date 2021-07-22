@@ -1,6 +1,7 @@
 import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
+import { FormsHistory } from './forms-history.schema';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
 
 export const FormsEpidemiologiaSchema = new mongoose.Schema({
@@ -62,6 +63,10 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
         EventCore.emitAsync('epidemiologia:seguimiento:create', ficha);
     }
     next();
+});
+
+FormsEpidemiologiaSchema.post('save', function (doc) {
+    new FormsHistory({ ficha: doc });
 });
 
 
