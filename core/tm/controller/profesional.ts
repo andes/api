@@ -164,10 +164,14 @@ export async function searchMatriculas(profesionalId) {
         formacionPosgrado = _profesional.formacionPosgrado ?
             _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
     } else {
-        formacionGrado = [{
-            nombre: _profesional.profesionExterna.nombre,
-            numero: _profesional.matriculaExterna
-        }];
+        if (_profesional.matriculaExterna && _profesional.profesionExterna) {
+            formacionGrado = [{
+                nombre: _profesional.profesionExterna.nombre,
+                numero: _profesional.matriculaExterna
+            }];
+        } else {
+            formacionGrado = [];
+        }
         formacionPosgrado = [];
     }
 
