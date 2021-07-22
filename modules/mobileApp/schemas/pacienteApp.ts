@@ -111,7 +111,9 @@ PacienteAppSchema.index({
 });
 PacienteAppSchema.index({
     email: 1,
-    documento: 1
+});
+PacienteAppSchema.index({
+    documento: 1,
 });
 PacienteAppSchema.index({
     profesionalId: 1
