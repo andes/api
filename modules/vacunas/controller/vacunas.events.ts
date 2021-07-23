@@ -11,6 +11,9 @@ import { services } from '../../../services';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { VacunasPacientes } from '../schemas/vacunas-pacientes.schema';
 import { exportCovid19 } from './vacunas.controller';
+import { sisa } from '../../../config.private';
+import { handleHttpRequest } from '../../../utils/requestHandler';
+import moment = require('moment');
 
 EventCore.on('mobile:patient:login', async (account) => {
     await exportCovid19(null, account.pacientes[0].id);
@@ -18,6 +21,28 @@ EventCore.on('mobile:patient:login', async (account) => {
 
 EventCore.on('rup:prestaciones:vacunacion', async (prestacion) => {
     await sincronizarVacunas(prestacion.paciente.id);
+    if (prestacion.estadoActual.tipo === 'ejecucion') {
+        // Consulta las vacunas del paciente en webservice de sisa
+        const requestVacunas = await consultaVacunasCiudadano(prestacion.paciente);
+        if (requestVacunas[0] === 200) {
+            const vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
+            // Busca la vacuna según código y dosis
+            const registroSelected = requestVacunas[1].aplicacionesVacunasCiudadano?.aplicacionVacunaCiudadano?.find(vac =>
+                vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && vac.sniDosisOrden === vacunaPrestacion.dosis.orden.toString());
+            if (registroSelected) {
+                const establecimiento = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
+                const a = await bajaVacunaNomivac(registroSelected, establecimiento.codigo.sisa);
+                 await VacunasPacientes.update(
+                    {
+                        'aplicaciones.idPrestacion': Types.ObjectId(prestacion.id)
+                    }, 
+                    {
+                        $pull: { aplicaciones: { idPrestacion: Types.ObjectId(prestacion.id) } }
+                    }
+                );
+            }
+        }
+    }
 });
 
 EventCore.on('mpi:pacientes:link', async ({ source, target }) => {
@@ -29,6 +54,50 @@ EventCore.on('mpi:pacientes:unlink', async ({ source, target }) => {
     await sincronizarVacunas(source);
     await sincronizarVacunas(target);
 });
+
+export async function consultaVacunasCiudadano(paciente) {
+    const headers = {
+        app_id: sisa.consulta.APP_ID,
+        app_key: sisa.consulta.APP_KEY
+    };
+    const data = {
+        idTipoDoc: 1,
+        nroDoc: paciente.documento,
+        sexo: paciente.sexo === 'masculino' ? 'M' : 'F'
+    };
+    const options = {
+        url: sisa.consulta.url,
+        headers,
+        method: 'POST',
+        json: true,
+        body: data
+    };
+    return await handleHttpRequest(options);
+}
+
+export async function bajaVacunaNomivac(vacuna: any, establecimiento: String) {
+    const headers = {
+        app_id: sisa.baja.APP_ID,
+        app_key: sisa.baja.APP_KEY
+    };
+    const fechaDate = new Date(vacuna.fechaAplicacion);
+    const data = {
+        aplicacionVacuna: {
+            fechaAplicacion: moment(fechaDate).format('DD-MM-YYYY'),
+            idSniAplicacion: vacuna.idSniAplicacion,
+            establecimiento,
+            vacuna: vacuna.idSniVacuna
+        }
+    };
+    const options = {
+        url: sisa.baja.url,
+        headers,
+        method: 'DELETE',
+        json: true,
+        body: data
+    };
+    return await handleHttpRequest(options);
+}
 
 export async function sincronizarVacunas(pacienteID: string) {
 
