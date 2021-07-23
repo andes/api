@@ -9,10 +9,11 @@ import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { services } from '../../../services';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { VacunasPacientes } from '../schemas/vacunas-pacientes.schema';
+import { exportCovid19 } from './vacunas.controller';
 
-// EventCore.on('mobile:patient:login', async (account) => {
-//     await exportCovid19(null, account.pacientes[0]._id);
-// });
+EventCore.on('mobile:patient:login', async (account) => {
+    await exportCovid19(null, account.pacientes[0].id);
+});
 
 EventCore.on('rup:prestaciones:vacunacion', async (prestacion) => {
     await sincronizarVacunas(prestacion.paciente.id);

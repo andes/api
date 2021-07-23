@@ -56,6 +56,11 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
     if (pacienteId) {
         match['paciente.id'] = mongoose.Types.ObjectId(pacienteId);
     }
+
+    if (!match['paciente.id'] && !match['ejecucion.fecha']) {
+        throw new Error('exportCovid19 necesita paciente o fecha');
+    }
+
     const pipelineVacunaCovid19 = [
         {
             $match: match
