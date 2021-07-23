@@ -41,25 +41,39 @@ EventCore.on('mpi:pacientes:unlink', async ({ source, target }) => {
 
 export async function deleteVacunasFromNomivac(prestacion) {
     try {
-        const response = await services.get('nomivac-consulta-vacunas').exec({
+        // Consulta las vacunas del paciente en webservice de sisa
+        const requestVacunas = await services.get('nomivac-consulta-vacunas').exec({
             documento: prestacion.paciente.documento,
             sexo: prestacion.paciente.sexo === 'masculino' ? 'M' : 'F'
         });
-        const vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
-        const vacuna = response.aplicacionesVacunasCiudadano?.aplicacionVacunaCiudadano?.find(
-            vac => vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && vac.sniDosisOrden === vacunaPrestacion.dosis.orden
-        );
-        if (vacuna) {
-            const establecimiento = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
-            await services.get('nomivac-baja-vacuna').exec({
-                fecha: moment(vacuna.fechaAplicacion).format('DD-MM-YYYY'),
-                codigoVacuna: vacuna.idSniVacuna,
-                id: vacuna.idSniAplicacion,
-                organizacion: establecimiento.codigo.sisa
-            });
+        if (requestVacunas[0] === 200) {
+            const vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
+            // Busca la vacuna según código y dosis
+            const vacuna = requestVacunas[1].aplicacionesVacunasCiudadano?.aplicacionVacunaCiudadano?.find(vac =>
+                vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && vac.sniDosisOrden === vacunaPrestacion.dosis.orden.toString());
+            
+                if (vacuna) {
+                const establecimiento = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
+                const fechaDate = new Date(vacuna.fechaAplicacion);
+                
+                await services.get('nomivac-baja-vacuna').exec({
+                    fechaAplicacion: moment(fechaDate).format('DD-MM-YYYY'),
+                    idSniAplicacion: vacuna.idSniAplicacion,
+                    establecimiento,
+                    vacuna: vacuna.idSniVacuna
+                });
+                await VacunasPacientes.update(
+                    {
+                        'aplicaciones.idPrestacion': Types.ObjectId(prestacion.id)
+                    },
+                    {
+                        $pull: { aplicaciones: { idPrestacion: Types.ObjectId(prestacion.id) } }
+                    }
+                );
+            }
         }
     } catch (err) {
-        // Por ahora no haceos nada, hay que implementar algun sistema de re-try...
+        // Por ahora no hace nada, hay que implementar algun sistema de re-try...
     }
 }
 
