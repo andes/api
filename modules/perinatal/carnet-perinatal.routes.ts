@@ -22,7 +22,10 @@ class CarnetPerinatalResource extends ResourceBase {
                 ]
             };
         },
-        organizacion: MongoQuery.matchString.withField('controles.organizacion.nombre'),
+        organizacion: {
+            field: 'controles.organizacion.id',
+            fn: (value) => mongoose.Types.ObjectId(value)
+        },
         profesional: {
             field: 'controles.profesional.id',
             fn: (value) => mongoose.Types.ObjectId(value)
