@@ -1,19 +1,19 @@
 
+import { EventCore } from '@andes/event-bus';
+import * as debug from 'debug';
 import * as express from 'express';
-import { Agenda } from '../schemas/agenda';
-import * as mongoose from 'mongoose';
-import { Auth } from './../../../auth/auth.class';
 import * as moment from 'moment';
-import * as agendaCtrl from '../controller/agenda';
-import * as prestacionCtrl from '../../rup/controllers/prestacion';
-import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
-import { getResumenDiarioMensual, getPlanillaC1 } from '../controller/reportesDiariosController';
+import * as mongoose from 'mongoose';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
+import * as prestacionCtrl from '../../rup/controllers/prestacion';
 import { agendaLog } from '../citasLog';
-
+import * as agendaCtrl from '../controller/agenda';
+import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import * as AgendasEstadisticas from '../controller/estadisticas';
-import { EventCore } from '@andes/event-bus';
+import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
+import { Agenda } from '../schemas/agenda';
+import { Auth } from './../../../auth/auth.class';
 
 const router = express.Router();
 
@@ -493,7 +493,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                 };
                                 agendaLog.info('update', objetoLog, req);
                                 if (error) {
-                                    return next(error);
+                                    debug('andes')(error);
                                 }
                                 EventCore.emitAsync('citas:agenda:update', data[0]);
                             });
@@ -520,7 +520,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                     // PAra probar ahora
                                     EventCore.emitAsync('citas:agenda:update', data2[0]);
                                     if (error) {
-                                        return next(error);
+                                        debug('andes')(error);
                                     }
                                 });
                                 return res.json(data2[0]);
