@@ -173,6 +173,9 @@ router.get('/profesionales/guia', async (req, res, next) => {
     if (req.query.numeroMatricula) {
         opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
     }
+    if (req.query.nombreProfesion) {
+        opciones['formacionGrado.profesion.nombre'] = req.query.nombreProfesion;
+    }
     if (req.query.apellido) {
         opciones['apellido'] = utils.makePattern(req.query.apellido);
     }
