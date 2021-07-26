@@ -1,13 +1,13 @@
-import { CarnetPerinatal } from './../schemas/carnet-perinatal.schema';
-import { CarnetPerinatalCtr } from './../carnet-perinatal.routes';
 import { EventCore } from '@andes/event-bus';
-import { userScheduler } from '../../../config.private';
-import moment = require('moment');
 import { Types } from 'mongoose';
+import { userScheduler } from '../../../config.private';
+import { CarnetPerinatalCtr } from './../carnet-perinatal.routes';
+import { CarnetPerinatal } from './../schemas/carnet-perinatal.schema';
+import moment = require('moment');
 
 // Al validar la prestacion de vacunacion, inserta la fecha de vacunacion en la inscripcion
 EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) => {
-    if (registro) {
+    if (registro && registro.valor) {
         const embarazo = registro.valor;
         let primeriza;
         if (embarazo.conceptId === '199719009'
