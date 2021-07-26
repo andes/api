@@ -61,6 +61,7 @@ export const InscripcionVacunaSchema = new Schema({
     localidadDeclarada: String,
     fechaCertificado: Date,
     idPrestacionCertificado: Types.ObjectId,
+    fechaProximoLlamado: Date,
     asignado: {
         fechaAsignacion: Date,
         usuario: {

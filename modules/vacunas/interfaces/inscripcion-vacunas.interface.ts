@@ -57,4 +57,16 @@ export interface IInscripcionVacunas {
     idPrestacionCertificado?: Types.ObjectId;
     llamados?: Types.ObjectId[];
     numeroIdentificacion?: String;
+    fechaProximoLlamado?: Date;
+    asignado?: {
+        fechaAsignacion: Date,
+        usuario: {
+            id: Types.ObjectId,
+            nombreCompleto: String,
+            nombre: String,
+            apellido: String,
+            username: String,
+            documento: String
+        }
+    };
 }
