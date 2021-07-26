@@ -25,6 +25,7 @@ export let SemanticTag = {
         'medio ambiente',
         'medicamento clínico',
         'fármaco de uso clínico',
-        'persona'
+        'persona',
+        'plan'
     ]
 };
