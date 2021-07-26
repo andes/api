@@ -69,9 +69,8 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
 
 EventCore.on('epidemiologia:prestaciones:validate', async (data) => {
     try {
-        const seguimientos = await SeguimientoPaciente.find({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
-        if (seguimientos) {
-            const lastSeguimiento = seguimientos[0];
+        const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
+        if (lastSeguimiento) {
             const prestacion = {
                 idPrestacion: data._id,
                 tipoPrestacion: data.solicitud.tipoPrestacion.term,
@@ -88,9 +87,8 @@ EventCore.on('epidemiologia:prestaciones:validate', async (data) => {
 
 
 EventCore.on('epidemiologia:prestaciones:romperValidacion', async (data) => {
-    const seguimientos = await SeguimientoPaciente.find({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
-    if (seguimientos) {
-        const lastSeguimiento: any = seguimientos[0];
+    const lastSeguimiento: any = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
+    if (lastSeguimiento) {
         const indexPrestacion = lastSeguimiento.llamados.findIndex(field => field.idPrestacion.toString() === data._id.toString());
         if (indexPrestacion !== -1 || lastSeguimiento.ultimoEstado.idPrestacion.toString() === data._id.toString()) {
             if (indexPrestacion !== -1) {
