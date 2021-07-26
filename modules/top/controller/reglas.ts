@@ -35,12 +35,12 @@ export async function checkRegla(params: CheckReglaParams) {
         query['destino.prestacion.conceptId'] = params.prestacionDestino;
     }
     const regla = await ReglasTOP.findOne(query);
-
-    if (params.prestacionDestino) {
-        if (Array.isArray(regla.destino.prestacion)) {
-            regla.destino.prestacion = regla.destino.prestacion.find(p => p.conceptId === params.prestacionDestino);
+    if (regla) {
+        if (params.prestacionDestino) {
+            if (Array.isArray(regla.destino.prestacion)) {
+                regla.destino.prestacion = regla.destino.prestacion.find(p => p.conceptId === params.prestacionDestino);
+            }
         }
     }
-
     return regla;
 }
