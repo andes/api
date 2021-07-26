@@ -1,6 +1,6 @@
-import './apm';
-import * as express from 'express';
 import * as debug from 'debug';
+import * as express from 'express';
+import './apm';
 import { initAPI } from './initialize';
 import { Websockets } from './websockets';
 
@@ -16,9 +16,9 @@ const server = app.listen(3002, () => debug('andes')('listening on port %s', por
 Websockets.initialize(server);
 
 // Muestra mensaje y línea de un error dentro de una promise ;-)
-if (process.env.NODE_ENV !== 'production') {
-    process.on('unhandledRejection', r => debug('andes')(r));
-}
+
+process.on('unhandledRejection', r => debug('andes')(r));
+
 
 /**
  * Gracefull shutdown
