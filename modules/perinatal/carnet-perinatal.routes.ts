@@ -2,6 +2,7 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { EventCore } from '@andes/event-bus/';
 import { CarnetPerinatal } from './schemas/carnet-perinatal.schema';
+import * as mongoose from 'mongoose';
 
 class CarnetPerinatalResource extends ResourceBase {
     Model = CarnetPerinatal;
@@ -21,6 +22,14 @@ class CarnetPerinatalResource extends ResourceBase {
                 ]
             };
         },
+        organizacion: {
+            field: 'controles.organizacion.id',
+            fn: (value) => mongoose.Types.ObjectId(value)
+        },
+        profesional: {
+            field: 'controles.profesional.id',
+            fn: (value) => mongoose.Types.ObjectId(value)
+        }
     };
     eventBus = EventCore;
 }
