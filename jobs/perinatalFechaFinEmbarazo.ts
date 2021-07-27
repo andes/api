@@ -15,27 +15,24 @@ const fechaFinEmbLog = perinatalFechaFinEmbarazoLog.startTrace();
  */
 export async function updatePerinatalFechaFinEmbarazo() {
     // se obtienen los registros de pacientes que no contengan fecha fin embarazo
-    const query = {
-        $or: [
-            { fechaFinEmbarazo: { $exists: false } },
-            { fechaFinEmbarazo: { $eq: null } }]
-    };
+    const query = { fechaFinEmbarazo: null };
 
     let listaCarnetPerinatal: any = await CarnetPerinatal.find(query);
-
     for (let regPerinatal of listaCarnetPerinatal) {
         try {
-            await actualizarFechaFin(regPerinatal);
+            await actualizarRegistro(regPerinatal);
         } catch (err) {
-            await fechaFinEmbLog.error('carnet-perinatal-updated', { id: regPerinatal._id }, err, userScheduler);
+            await fechaFinEmbLog.error('job-carnet-perinatal-updated', { id: regPerinatal._id }, err, userScheduler);
         }
     }
 }
 
-export async function actualizarFechaFin(registroPer: any) {
+
+export async function actualizarRegistro(registroPer: any) {
     let documento = registroPer.paciente.documento;
     if (documento) {
         const resultSP = await getPacienteSP({ documento });
+
         const pacienteSP = resultSP ? resultSP.paciente : null;
 
         if (pacienteSP && registroPer.embarazo && pacienteSP['pregnancies']) {
@@ -43,16 +40,52 @@ export async function actualizarFechaFin(registroPer: any) {
             const numGesta = getNumGesta(registroPer.embarazo).toString() || null;
 
             let embarazoSP = numGesta ? pacienteSP['pregnancies'][numGesta] : null;
-            if (embarazoSP) {
 
+            if (embarazoSP) {
+                // se actualiza fechaFinEmbarazo
                 // "0182": tipo de finalización del embarazo (0=> parto / 1=> aborto)
                 const finEmbarazo = [0, 1].includes(embarazoSP['0182']);
 
                 // "0183" : fecha de finalización del embarazo
-                const fechaFinEmb = embarazoSP['0183'] ? moment(embarazoSP['0183'], 'DD/MM/YY') : null;
+                const fechaFinEmb = embarazoSP['0183'] ? moment(embarazoSP['0183'], 'DD/MM/YY') : '';
 
-                if (finEmbarazo && fechaFinEmb) {
+                const updatefechaFinEmb = finEmbarazo && fechaFinEmb.toString();
+
+                if (updatefechaFinEmb) {
                     registroPer.fechaFinEmbarazo = fechaFinEmb;
+                }
+
+                // se actualiza fecha de Proximo Control embarazo
+                let updateFechaProxCtrl = false;
+
+                if (registroPer.fechaUltimoControl) {
+                    let fechaProxCtrol = null;
+
+                    const fechaUltimoCtrl = moment(registroPer.fechaUltimoControl).format('DD/MM/YY');
+
+                    // verificamos si ya existe el control de embarazo en sip-plus
+                    const controlesEmb = Object.keys(embarazoSP['prenatal']).map(key => ({ key, valor: embarazoSP['prenatal'][key] }));
+
+                    const ultimoCtrl = controlesEmb ? controlesEmb.find(ctrl => ctrl.valor['0116'] && ctrl.valor['0116'] === fechaUltimoCtrl) : null;
+                    // fecha del próximo control
+                    const diaProxCtrl = ultimoCtrl.valor['0128']; // dia del próximo control (NUMERIC)
+                    const mesProxCtrl = ultimoCtrl.valor['0129']; // mes del próximo control (NUMERIC)
+                    if (diaProxCtrl && mesProxCtrl) {
+                        const proxAnio = moment(fechaUltimoCtrl, 'DD/MM/YY').format('YY');
+                        fechaProxCtrol = moment(diaProxCtrl + '/' + mesProxCtrl + '/' + proxAnio, 'DD/MM/YY');
+                        // si la fecha actual es menor a un año, entonces resto un año
+                        if (fechaProxCtrol < fechaUltimoCtrl) {
+                            fechaProxCtrol = moment(fechaProxCtrol).subtract(1, 'year');
+                        }
+                    }
+                    const fechaProxPer = registroPer.fechaProximoControl;
+                    updateFechaProxCtrl = fechaProxCtrol && (!fechaProxPer || (fechaProxPer && fechaProxPer < fechaProxCtrol));
+
+                    if (updateFechaProxCtrl) {
+                        registroPer.fechaProximoControl = fechaProxCtrol;
+                    }
+                }
+                if (updatefechaFinEmb || updateFechaProxCtrl) {
                     await CarnetPerinatalCtr.update(registroPer.id, registroPer, userScheduler as any);
                 }
             }
