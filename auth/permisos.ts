@@ -557,6 +557,11 @@ export default [
                 key: 'dacion-turnos',
                 title: 'Dación de turnos',
                 type: 'boolean'
+            },
+            {
+                key: 'desasignar-inscriptos',
+                title: 'Desasignar Inscriptos',
+                type: 'boolean'
             }
         ]
     },

@@ -156,7 +156,7 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
             if (inscripto.paciente === null) {
                 inscripcion.paciente = undefined;
             }
-            if (inscripto.fechaProximoLlamado) {
+            if (inscripto.fechaProximoLlamado || !inscripto.asignado) {
                 inscripcion.asignado = undefined;
             } else {
                 inscripcion.fechaProximoLlamado = undefined;
@@ -165,6 +165,7 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
                     usuario: req.user.usuario
                 };
             }
+
             Auth.audit(inscripcion, req);
             await inscripcion.save();
             return res.json(inscripcion);
