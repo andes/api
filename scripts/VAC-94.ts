@@ -20,7 +20,6 @@ async function run(done) {
             const registroExistente = await VacunasPacientes.findOne({ 'paciente.id': idPaciente });
             if (!registroExistente) {
                 await sincronizarVacunas(idPaciente.toString());
-                await Prestacion.findOneAndRemove({ 'paciente.id': idPaciente });
             }
         } catch (err) {
             // tslint:disable-next-line:no-console
