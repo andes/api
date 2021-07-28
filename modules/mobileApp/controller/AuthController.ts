@@ -71,20 +71,21 @@ export async function enviarCodigoVerificacion(user, password, device_fcm_token?
     // Enviamos email
     sendEmail(mailOptions);
 
+    if (device_fcm_token) {
 
-    // Notificación Push
-    const notification: IPushNotification = {
-        title: '¡Bienvenido/a a Andes!',
-        body: `Tu código de verificación es ${password}. Tocá esta notificación para completar tu registro.`,
-        extraData: replacements
-    };
+        // Notificación Push
+        const notification: IPushNotification = {
+            title: '¡Bienvenido/a a Andes!',
+            body: `Tu código de verificación es ${password}. Tocá esta notificación para completar tu registro.`,
+            extraData: replacements
+        };
 
-    // Enviamos notificación Push
-    const device = [
-        { device_fcm_token }
-    ];
-    await sendPushNotification(device, notification);
-
+        // Enviamos notificación Push
+        const device = [
+            { device_fcm_token }
+        ];
+        await sendPushNotification(device, notification);
+    }
 
     // let sms: ISms = {
     //     message: 'ANDES :: Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,

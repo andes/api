@@ -261,9 +261,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
                 }],
                     req.body.password = passw;
                 inscripcion = await PacienteAppCtr.create(req.body, req);
-                if (fcmToken) {
-                    enviarCodigoVerificacion(inscripcion, passw, fcmToken);
-                }
+                enviarCodigoVerificacion(inscripcion, passw, fcmToken);
             }
             return res.json(inscripcion);
         } else {
