@@ -15,6 +15,7 @@ export let VacunasPacientesSchema = new Schema({
         email: String,
         localidad: NombreSchemaV2,
         zona: NombreSchemaV2,
+        areaPrograma: NombreSchemaV2
     },
     aplicaciones: [{
         idPrestacion: SchemaTypes.ObjectId,
@@ -48,6 +49,10 @@ export let VacunasPacientesSchema = new Schema({
                 nombre: String,
             },
             zona: {
+                id: SchemaTypes.ObjectId,
+                nombre: String,
+            },
+            areaPrograma: {
                 id: SchemaTypes.ObjectId,
                 nombre: String,
             }

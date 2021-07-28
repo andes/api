@@ -1,5 +1,6 @@
 import { ObjectId } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
+import { AreaProgramaProvincialCtr } from '../../../core/tm/areaProgramaProvincial';
 import { Types } from 'mongoose';
 import { IPacienteDoc } from '../../../core-v2/mpi/paciente/paciente.interface';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
@@ -73,6 +74,14 @@ export async function sincronizarVacunas(pacienteID: string) {
                     nombre: _localidad.zona?.nombre
                 };
             }
+            const areaPaciente = await AreaProgramaProvincialCtr.findOne({ idLocalidad: _localidad.id });
+            if (areaPaciente) {
+                ubicacionPaciente.areaPrograma = {
+                    id: areaPaciente.id,
+                    nombre: areaPaciente.areaPrograma
+                };
+
+            }
         }
     }
     paciente.contacto = paciente.contacto || [];
@@ -90,7 +99,7 @@ export async function sincronizarVacunas(pacienteID: string) {
             const organizacion = await Organizacion.findById(organizacionID);
             const localidad: any = await Localidad.findById(organizacion.direccion.ubicacion.localidad.id);
             const zona = localidad.zona || {};
-
+            const area = await AreaProgramaProvincialCtr.findOne({ idLocalidad: localidad.id });
             const edad = calcularEdad(paciente.fechaNacimiento, vacunaValor.fechaAplicacion);
             const rango = Math.floor(edad / 5) * 5;
 
@@ -129,6 +138,10 @@ export async function sincronizarVacunas(pacienteID: string) {
                     zona: {
                         id: zona._id,
                         nombre: zona.nombre
+                    },
+                    areaPrograma: {
+                        id: area.id,
+                        nombre: area.areaPrograma
                     }
                 }
 
