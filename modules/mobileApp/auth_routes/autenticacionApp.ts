@@ -221,6 +221,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         const documento = req.body.documento;
         const sexo = req.body.sexo;
         const email = req.body.email;
+        const fcmToken = req.body.fcmToken;
 
         const cuenta = await PacienteAppCtr.findOne({ documento: String(documento), sexo });
         const usrprof = cuenta && (cuenta.email === cuenta.documento);
@@ -260,7 +261,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
                 }],
                     req.body.password = passw;
                 inscripcion = await PacienteAppCtr.create(req.body, req);
-                enviarCodigoVerificacion(inscripcion, passw);
+                enviarCodigoVerificacion(inscripcion, passw, fcmToken);
             }
             return res.json(inscripcion);
         } else {

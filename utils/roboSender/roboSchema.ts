@@ -45,6 +45,9 @@ export const RoboSchema = new mongoose.Schema({
         required: false
     },
 
+    // Tokens FCM registrado en pacienteApp
+    device_fcm_token: String,
+
     // Campo para pushNotifications
     notificationData: {
         title: String,

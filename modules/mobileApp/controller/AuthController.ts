@@ -5,6 +5,7 @@ import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { sendEmail, IEmail, ISms, sendSms } from '../../../utils/roboSender';
+import { IPushNotification, sendPushNotification } from './PushClientFCM';
 
 const log = debug('AuthController');
 
@@ -45,14 +46,16 @@ export function enviarCodigoCambioPassword(user) {
 
 }
 
-export function enviarCodigoVerificacion(user, password) {
+export async function enviarCodigoVerificacion(user, password, device_fcm_token?) {
 
     const replacements = {
         username: user.apellido + ', ' + user.nombre,
         userEmail: user.email,
-        codigo: password
+        codigo: password,
+        action: 'codigoVerificacion'
     };
 
+    // Email
     const mailOptions: IEmail = {
         email: user.email,
         subject: 'ANDES - Código de Activación app móvil',
@@ -65,8 +68,23 @@ export function enviarCodigoVerificacion(user, password) {
         `,
     };
 
-    // enviamos email
+    // Enviamos email
     sendEmail(mailOptions);
+
+
+    // Notificación Push
+    const notification: IPushNotification = {
+        title: '¡Bienvenido/a a Andes!',
+        body: `Tu código de verificación es ${password}. Tocá esta notificación para completar tu registro.`,
+        extraData: replacements
+    };
+
+    // Enviamos notificación Push
+    const device = [
+        { device_fcm_token }
+    ];
+    await sendPushNotification(device, notification);
+
 
     // let sms: ISms = {
     //     message: 'ANDES :: Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
@@ -253,7 +271,7 @@ export function updateAccount(account: IPacienteAppDoc, data) {
                     }
                     if (isMatch) {
                         account.password = data.password;
-                        return resolvePassword();
+                        return resolvePassword(true);
                     } else {
                         return rejectPassword({ password: 'wrong_password' });
                     }
@@ -270,7 +288,7 @@ export function updateAccount(account: IPacienteAppDoc, data) {
             promise = new Promise((resolveEmail, rejectEmail) => {
                 PacienteApp.findOne({ email: data.email }, (err, acts) => {
                     if (!acts) {
-                        resolveEmail();
+                        resolveEmail(true);
                     } else {
                         rejectEmail({ email: 'account_exists' });
                     }
