@@ -1,3 +1,31 @@
+# [5.56.0](https://github.com/andes/api/compare/v5.55.0...v5.56.0) (2021-07-28)
+
+
+### Bug Fixes
+
+* **citas:**  error de doble respuesta ([18700e4](https://github.com/andes/api/commit/18700e46fb12c5529432c1e03aa9b681abcf117b))
+* **mpi:** handler de error de foto ([22f7f1e](https://github.com/andes/api/commit/22f7f1ecc80fa4294c584142585c4d080745af97))
+* **perinatal:** Cannot read property 'conceptId' of null ([f49946b](https://github.com/andes/api/commit/f49946b32940f39215ec49f07abfbfb76d7495ca))
+* **seguimiento:** control al crear un seguimiento ([#1486](https://github.com/andes/api/issues/1486)) ([093e48f](https://github.com/andes/api/commit/093e48f80eff88976ec3c198b7d3994887ae095f))
+* **snomed:** agrega semantictag plan ([76a27a2](https://github.com/andes/api/commit/76a27a2cf9c2234f19d1dabf528740442b9f5a3e))
+* **tm:** ajuste matricula profesional ([#1480](https://github.com/andes/api/issues/1480)) ([cb5b106](https://github.com/andes/api/commit/cb5b106a7522e5c131e507af32daaa3f558f8f5e))
+* **top:** chequeo de reglas ([b6164fe](https://github.com/andes/api/commit/b6164fed2493f56e4e93a03d7523323f545da18d))
+* **vacunas:**  elimina link hasta mañana ([7d6bcfe](https://github.com/andes/api/commit/7d6bcfeba627680a125fbf829bb81c95848f20fd))
+* **vacunas:** error en localidades ([#1481](https://github.com/andes/api/issues/1481)) ([6d3dd5c](https://github.com/andes/api/commit/6d3dd5c4e24221bd70f79b327fad3bf25a77451a))
+
+
+### Features
+
+* **AM:** agrega evento en modulo de vacunacion para exportar a nomivac en el login de la mobile ([#1463](https://github.com/andes/api/issues/1463)) ([b3fde11](https://github.com/andes/api/commit/b3fde11ea8027efc69095103aa4b3e9467467c4a))
+* **chore:** handler errors ([cb9f0a4](https://github.com/andes/api/commit/cb9f0a455996becdadfdee92871b0d097c34201c))
+* **core:** handler bugs ([58f8cf1](https://github.com/andes/api/commit/58f8cf1fd28989d39ddb2c899ca057c3fc939adc))
+* **job:** actualizar datos de vacunación en inscriptos ([#1454](https://github.com/andes/api/issues/1454)) ([681e144](https://github.com/andes/api/commit/681e144034fee14ce21909ef9dcf5eb21344ac0f))
+* **PER:** en job perinatal actualizacion fecha prox control embarazo ([#1466](https://github.com/andes/api/issues/1466)) ([21cfef4](https://github.com/andes/api/commit/21cfef4310587d08f9d491248f70baae5c29f37a))
+* **PER-32:** agregar nuevos filtros al modulo perinatal ([#1474](https://github.com/andes/api/issues/1474)) ([697f689](https://github.com/andes/api/commit/697f689705f62380584c2013946f4d9886623fd4))
+* **tm:** firma de profesional ([#1465](https://github.com/andes/api/issues/1465)) ([b5ec752](https://github.com/andes/api/commit/b5ec7522e06330115c1d533f180d2488cb110145))
+* **VAC:** agrega permiso especial para desasignar inscriptos ([#1473](https://github.com/andes/api/issues/1473)) ([3fae974](https://github.com/andes/api/commit/3fae9747e1c7da68f05103570f2688f66782f70a))
+* **vacunas:** ajuste de proceso covid ([#1487](https://github.com/andes/api/issues/1487)) ([6deb396](https://github.com/andes/api/commit/6deb3962dd373772fca3049fecfe778ac40af693))
+
 # [5.55.0](https://github.com/andes/api/compare/v5.54.0...v5.55.0) (2021-07-21)
 
 
