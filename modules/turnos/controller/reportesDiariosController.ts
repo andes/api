@@ -336,11 +336,12 @@ export async function getPlanillaC1(params: any) {
 
     let firstMatch = {
         $match: {
+            'solicitud.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
+            'solicitud.ambitoOrigen': 'ambulatorio',
             'ejecucion.fecha': {
                 $gte: fechaDesde,
                 $lt: fechaHasta
             },
-            'ejecucion.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
             'solicitud.tipoPrestacion.conceptId': params['prestacion'],
         }
     };
