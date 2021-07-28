@@ -1,10 +1,10 @@
 import { ObjectId } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
-import { AreaProgramaProvincialCtr } from '../../../core/tm/areaProgramaProvincial';
 import { Types } from 'mongoose';
 import { IPacienteDoc } from '../../../core-v2/mpi/paciente/paciente.interface';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { AreaProgramaProvincialCtr } from '../../../core/tm/areaProgramaProvincial';
 import * as Localidad from '../../../core/tm/schemas/localidad';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { services } from '../../../services';
@@ -99,7 +99,7 @@ export async function sincronizarVacunas(pacienteID: string) {
             const organizacion = await Organizacion.findById(organizacionID);
             const localidad: any = await Localidad.findById(organizacion.direccion.ubicacion.localidad.id);
             const zona = localidad.zona || {};
-            const area = await AreaProgramaProvincialCtr.findOne({ idLocalidad: localidad.id });
+            const area = (await AreaProgramaProvincialCtr.findOne({ idLocalidad: localidad.id })) || {};
             const edad = calcularEdad(paciente.fechaNacimiento, vacunaValor.fechaAplicacion);
             const rango = Math.floor(edad / 5) * 5;
 
