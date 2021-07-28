@@ -9,13 +9,13 @@ export function sendPushNotification(devices, notification: IPushNotification): 
 
     const servicio = 'push-notifications-default';
 
-    if (devices.length > 0) {
-        for (const device of devices) {
+    for (const device of devices) {
+        if (device.device_fcm_token) {
             const payload = {
                 title: notification.title || 'Andes Salud',
                 body: notification.body,
                 extraData: notification.extraData,
-                to: (device as any).device_fcm_token,
+                to: device.device_fcm_token,
                 priority: 'high',
                 restricted_package_name: '',
                 time_to_live: 0,
