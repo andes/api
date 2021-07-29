@@ -15,7 +15,7 @@ export class NotificationService {
             const idPaciente = turno.paciente.id;
             moment.locale('es');
             const date = moment(turno.horaInicio).format('DD [de] MMMM');
-            const body = 'Su turno del ' + date + ' fue reasignado. Haz click para más información.';
+            const body = 'Su turno del ' + date + ' fue reasignado.';
             const notificacion = { body, extraData: { action: 'reasignar' } };
 
             this.sendByPaciente(idPaciente, notificacion);
