@@ -15,7 +15,7 @@ export class NotificationService {
             const idPaciente = turno.paciente.id;
             moment.locale('es');
             const date = moment(turno.horaInicio).format('DD [de] MMMM');
-            const body = 'Su turno del ' + date + ' fue reasignado.';
+            const body = 'Tu turno del ' + date + ' fue reasignado. Comunicate con tu centro de salud u hospital.';
             const notificacion = { body, extraData: { action: 'reasignar' } };
 
             this.sendByPaciente(idPaciente, notificacion);
@@ -28,7 +28,7 @@ export class NotificationService {
             const idPaciente = turno.paciente.id;
             moment.locale('es');
             const date = moment(turno.horaInicio).format('DD [de] MMMM [a las] HH:mm');
-            const body = 'Su turno del ' + date + ' fue suspendido.';
+            const body = 'Tu turno del ' + date + ' fue suspendido.';
             const notificacion = { body, extraData: { action: 'suspender' } };
             this.sendByPaciente(idPaciente, notificacion);
         }
