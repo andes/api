@@ -86,7 +86,9 @@ export class NotificationService {
     public static async sendNotification(account, notification: IPushNotification) {
         const devices = account.devices.map(item => item.device_id);
         new PushClient().send(devices, notification);
-        await sendPushNotification(devices, notification);
+
+        const tokens = account.devices.filter(item => item.device_fcm_token);
+        await sendPushNotification(tokens, notification);
     }
 
     /**
@@ -96,11 +98,14 @@ export class NotificationService {
      */
 
     private static sendByPaciente(pacienteId, notification) {
+        pacienteId = new mongoose.Types.ObjectId(pacienteId);
         PacienteApp.find({ 'pacientes.id': pacienteId }, (err, docs: any[]) => {
             docs.forEach(async (user) => {
                 const devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
-                await sendPushNotification(devices, notification);
+
+                const tokens = user.devices.filter(item => item.device_fcm_token);
+                await sendPushNotification(tokens, notification);
             });
         });
     }
@@ -119,7 +124,7 @@ export class NotificationService {
                 const devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
 
-                const tokens = user.devices.filter(item => ({ device_fcm_token: item.device_fcm_token }));
+                const tokens = user.devices.filter(item => item.device_fcm_token);
                 await sendPushNotification(tokens, notification);
             });
         });
