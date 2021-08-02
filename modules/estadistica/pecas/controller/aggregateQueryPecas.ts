@@ -1,5 +1,5 @@
-import { Agenda } from '../../../../modules/turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
+import { Agenda } from '../../../../modules/turnos/schemas/agenda';
 import { Pecas } from '../schemas/pecas';
 
 export async function pecasExport(start, end) {
@@ -88,7 +88,7 @@ export async function pecasExport(start, end) {
                                             }
                                         }
                                     ]
-                                }, 86400000 /* 365252460601 */]
+                                }, 86400000]
                             }
                         },
                         in: {
@@ -632,8 +632,8 @@ export async function pecasExport(start, end) {
                                                 case: {
 
                                                     $and: [{ $eq: ['$isAnyTrue0', true] },
-                                                    { $ne: [{ $in: [{ $type: '$codificacion0.codificacionAuditoria' }, ['missing', 'null', 'undefined']] }, true] },
-                                                    { $ne: ['$codificacion0.codificacionAuditoria.codigo', null] }]
+                                                           { $ne: [{ $in: [{ $type: '$codificacion0.codificacionAuditoria' }, ['missing', 'null', 'undefined']] }, true] },
+                                                           { $ne: ['$codificacion0.codificacionAuditoria.codigo', null] }]
                                                 },
                                                 then: 'Auditado'
                                             },
@@ -728,7 +728,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.tipoPrestacion'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -744,7 +744,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.documento'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -760,7 +760,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.apellido'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -776,7 +776,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.nombre'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -792,7 +792,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_HC.nroCarpeta'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -833,7 +833,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.sexo'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -849,7 +849,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.fechaNacimiento'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -874,7 +874,7 @@ export async function pecasExport(start, end) {
                                     $in: [{
                                         $type: '$_bloques.turnos.paciente.obraSocial'
                                     },
-                                    ['array']
+                                          ['array']
                                     ]
                                 }, true]
                             }, {
@@ -882,7 +882,7 @@ export async function pecasExport(start, end) {
                                     $in: [{
                                         $type: '$_bloques.turnos.paciente.obraSocial.codigoFinanciador'
                                     },
-                                    ['missing', 'null', 'undefined']
+                                          ['missing', 'null', 'undefined']
                                     ]
                                 }, true]
                             }]
@@ -899,7 +899,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.obraSocial.financiador'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -915,7 +915,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente._id'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -931,7 +931,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.telefono'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1042,7 +1042,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.asistencia'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1067,7 +1067,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.cie10.codigo'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1083,7 +1083,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.cie10.nombre'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1099,7 +1099,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionAuditoria.codigo'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1115,7 +1115,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionAuditoria.nombre'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1131,7 +1131,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.snomed.semanticTag'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1147,7 +1147,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.snomed.conceptId'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1163,7 +1163,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.snomed.term'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1204,7 +1204,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.cie10.codigo'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1220,7 +1220,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.cie10.nombre'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1236,7 +1236,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionAuditoria.codigo'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1252,7 +1252,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionAuditoria.nombre'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1268,7 +1268,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.snomed.semanticTag'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1284,7 +1284,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.snomed.conceptId'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1300,7 +1300,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.snomed.term'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1341,7 +1341,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.cie10.codigo'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1357,7 +1357,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.cie10.nombre'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1373,7 +1373,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionAuditoria.codigo'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1389,7 +1389,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionAuditoria.nombre'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1405,7 +1405,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.snomed.semanticTag'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1421,7 +1421,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.snomed.conceptId'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1437,7 +1437,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.snomed.term'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1494,7 +1494,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$espacioFisico.servicio.nombre'
                                 },
-                                ['missing', 'null', 'undefined']
+                                      ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },

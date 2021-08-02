@@ -1,6 +1,6 @@
 import { EventCore } from '@andes/event-bus/';
-import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
 import * as mongoose from 'mongoose';
+import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
 
 export async function updateField(id, body) {
     const { seccion, fields } = body;

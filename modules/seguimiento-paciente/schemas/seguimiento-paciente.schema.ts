@@ -21,10 +21,10 @@ export const seguimientoPacienteSchema = new Schema(
             type: Date,
             default: Date.now(),
         },
-        origen: {     // El origen podría ser: Una ficha, fuente de datos externa, etc.
+        origen: { // El origen podría ser: Una ficha, fuente de datos externa, etc.
             id: Types.ObjectId,
             nombre: String,
-            tipo: String  // autoseguimiento, seguimiento externo, etc.
+            tipo: String // autoseguimiento, seguimiento externo, etc.
         },
         score: {
             value: Number,

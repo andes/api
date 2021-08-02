@@ -1,21 +1,21 @@
-import { SnomedConcept, ISnomedConcept } from './../../rup/schemas/snomed-concept';
-import { Document, Schema, Model, model } from 'mongoose';
+import { Document, Model, model, Schema } from 'mongoose';
 import * as edificioSchema from '../../../core/tm/schemas/edificio';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import { ISnomedConcept, SnomedConcept } from './../../rup/schemas/snomed-concept';
 
 export interface IEspacioFisico extends Document {
     nombre: String;
     detalle: String;
     descripcion: String;
-    organizacion: { nombre: String; };
-    edificio: { nombre: String; };
-    sector: { nombre: String; };
-    servicio: { nombre: String; };
+    organizacion: { nombre: String };
+    edificio: { nombre: String };
+    sector: { nombre: String };
+    servicio: { nombre: String };
     equipamiento: [ISnomedConcept];
     activo: Boolean;
     estado: {
-        type: String,
-        enum: ['disponible', 'mantenimiento', 'clausurado', 'baja permanente']
+        type: String;
+        enum: ['disponible', 'mantenimiento', 'clausurado', 'baja permanente'];
     };
 }
 

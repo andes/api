@@ -1,8 +1,8 @@
-import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { Agenda } from '../schemas/agenda';
+import * as mongoose from 'mongoose';
 import { toArray } from '../../../utils/utils';
 import { Codificacion } from '../../rup/schemas/codificacion';
+import { Agenda } from '../schemas/agenda';
 
 /*
 function getAge(dateString) {
@@ -117,46 +117,46 @@ export function getDiagnosticos(params) {
                 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
             }
         },
-        {
-            $unwind: '$bloques'
-        },
-        {
-            $unwind: '$bloques.turnos'
-        },
-        {
-            $match: {
-                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-                'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
-                horaInicio: { $gte: new Date(params.horaInicio) },
-                horaFin: { $lte: new Date(params.horaFin) },
-                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
-            }
-        },
+                    {
+                        $unwind: '$bloques'
+                    },
+                    {
+                        $unwind: '$bloques.turnos'
+                    },
+                    {
+                        $match: {
+                            'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+                            'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
+                            horaInicio: { $gte: new Date(params.horaInicio) },
+                            horaFin: { $lte: new Date(params.horaFin) },
+                            'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
+                        }
+                    },
 
-        {
-            $project: {
-                paciente: '$bloques.turnos.paciente',
-                diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
-                codificacionesAuditoria: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria',
-            }
-        },
-        {
-            $unwind: '$codificacionesAuditoria'
-        },
-        {
-            $match: {
-                'codificacionesAuditoria.c2': true
-            }
-        },
-        {
-            $group: {
-                _id: '$codificacionesAuditoria.nombre',
-                codigo: {
-                    $first: '$codificacionesAuditoria'
-                },
-                paciente: { $push: '$paciente' }
-            }
-        }];
+                    {
+                        $project: {
+                            paciente: '$bloques.turnos.paciente',
+                            diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
+                            codificacionesAuditoria: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria',
+                        }
+                    },
+                    {
+                        $unwind: '$codificacionesAuditoria'
+                    },
+                    {
+                        $match: {
+                            'codificacionesAuditoria.c2': true
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: '$codificacionesAuditoria.nombre',
+                            codigo: {
+                                $first: '$codificacionesAuditoria'
+                            },
+                            paciente: { $push: '$paciente' }
+                        }
+                    }];
 
         let pipeline1 = [];
         pipeline1 = [{
@@ -168,46 +168,46 @@ export function getDiagnosticos(params) {
                 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
             }
         },
-        {
-            $unwind: '$sobreturnos'
-        },
-        {
-            $unwind: '$sobreturnos.diagnostico.codificaciones'
-        },
-        {
-            $match: {
-                'sobreturnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
-                'sobreturnos.diagnostico.codificaciones.primeraVez': true,
-                horaInicio: { $gte: new Date(params.horaInicio) },
-                horaFin: { $lte: new Date(params.horaFin) },
-                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
-            }
-        },
-        {
-            $project: {
-                paciente: '$sobreturnos.paciente',
-                diagnosticoCodificaciones: '$sobreturnos.diagnostico.codificaciones',
-                codificacionesAuditoria: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria',
-            }
-        },
-        {
-            $unwind: '$codificacionesAuditoria'
-        },
-        {
-            $match: {
-                'codificacionesAuditoria.c2': true
-            }
+                     {
+                         $unwind: '$sobreturnos'
+                     },
+                     {
+                         $unwind: '$sobreturnos.diagnostico.codificaciones'
+                     },
+                     {
+                         $match: {
+                             'sobreturnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
+                             'sobreturnos.diagnostico.codificaciones.primeraVez': true,
+                             horaInicio: { $gte: new Date(params.horaInicio) },
+                             horaFin: { $lte: new Date(params.horaFin) },
+                             'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
+                         }
+                     },
+                     {
+                         $project: {
+                             paciente: '$sobreturnos.paciente',
+                             diagnosticoCodificaciones: '$sobreturnos.diagnostico.codificaciones',
+                             codificacionesAuditoria: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria',
+                         }
+                     },
+                     {
+                         $unwind: '$codificacionesAuditoria'
+                     },
+                     {
+                         $match: {
+                             'codificacionesAuditoria.c2': true
+                         }
 
-        },
-        {
-            $group: {
-                _id: '$codificacionesAuditoria.nombre',
-                codigo: {
-                    $first: '$codificacionesAuditoria'
-                },
-                paciente: { $push: '$paciente' }
-            }
-        }];
+                     },
+                     {
+                         $group: {
+                             _id: '$codificacionesAuditoria.nombre',
+                             codigo: {
+                                 $first: '$codificacionesAuditoria'
+                             },
+                             paciente: { $push: '$paciente' }
+                         }
+                     }];
 
         // Se buscan las prestaciones fuera de agenda codificados con algun diagnostico c2
         let pipeline2 = [];
@@ -359,7 +359,7 @@ export function getDiagnosticos(params) {
                     SECPM: []
                 };
 
-                function sumaSexo(sexo, tipo) {
+                const sumaSexo = (sexo, tipo) => {
                     switch (tipo) {
                         case 'botulismo':
                             sexo.botulismo++;
@@ -389,7 +389,7 @@ export function getDiagnosticos(params) {
                             sexo.bronquiolitis++;
                             break;
                     }
-                }
+                };
 
                 function actualizarContador(paciente, tipo) {
                     const edad = calculoEdad(paciente.fechaNacimiento);
@@ -503,7 +503,7 @@ export function getDiagnosticos(params) {
                                             tipo.default++;
                                         }
                                     } else {
-                                        if (elem.codigo.codigo === 'A17.0') {  // Meningitis Tuberculosa
+                                        if (elem.codigo.codigo === 'A17.0') { // Meningitis Tuberculosa
                                             if ((edad.unidad === 'años' && edad.valor < 5) || (edad.unidad === 'meses') || (edad.unidad === 'días')) { // Paciente menor a 5 años
                                                 sumaMeningitis++;
                                                 pacientes.meningitis.push(paciente);

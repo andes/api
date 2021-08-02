@@ -82,9 +82,9 @@ router.get('/agenda/candidatas', async (req, res, next) => {
                         const horaIni = moment(t.horaInicio).format('HH:mm');
                         if (
                             b.tipoPrestaciones.findIndex(x => String(x.conceptId) === String(turno.tipoPrestacion.conceptId)) >= 0
-                            &&  // mismo tipo de prestacion
+                            && // mismo tipo de prestacion
                             (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno))
-                            &&  // turno disponible o al que se reasigno
+                            && // turno disponible o al que se reasigno
                             (typeof req.query.horario !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
                             && // si filtro por horario verifico que sea el mismo
                             (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true) // si filtro por duracion verifico que sea la mismo
@@ -103,7 +103,9 @@ router.get('/agenda/candidatas', async (req, res, next) => {
 
             out.sort(sortCandidatas);
             res.json(out);
-        } catch (err) { return next(err); }
+        } catch (error) {
+            return next(error);
+        }
     });
 });
 

@@ -1,10 +1,10 @@
+import { EventCore, EventSocket } from '@andes/event-bus';
 import * as express from 'express';
-import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { TurneroPantalla } from '../schemas/turneroPantalla';
+import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import { EventSocket, EventCore } from '@andes/event-bus';
 import { Packet, Websockets } from '../../../websockets';
+import { TurneroPantalla } from '../schemas/turneroPantalla';
 
 const ObjectId = mongoose.Types.ObjectId;
 const router = express.Router();
@@ -141,7 +141,7 @@ router.post('/pantalla/activate', async (req, res, next) => {
             };
             token = Auth.generateAppToken(pantalla, organizacion, ['turnos:*', 'mpi:*'], 'totem-token');
         } else {
-            token = Auth.generateAppToken(pantalla, {}, [`turnero:${pantalla.id}`], `turnero-token`);
+            token = Auth.generateAppToken(pantalla, {}, [`turnero:${pantalla.id}`], 'turnero-token');
         }
         res.send({ token });
         EventCore.emitAsync(`${pantalla.tipo}-activated`, { pantalla });

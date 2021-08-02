@@ -13,8 +13,8 @@ export interface IInscripcionVacunas {
     fechaNacimiento: Date;
     sexo: String;
     grupo: {
-        id: Schema.Types.ObjectId,
-        nombre: String
+        id: Schema.Types.ObjectId;
+        nombre: String;
     };
     email: String;
     telefono: String;
@@ -31,7 +31,7 @@ export interface IInscripcionVacunas {
         telefono: String;
         sexo: String;
         fechaNacimiento: Date;
-        addAt: Date
+        addAt: Date;
     };
     nota?: String;
     cud?: String;
@@ -59,14 +59,14 @@ export interface IInscripcionVacunas {
     numeroIdentificacion?: String;
     fechaProximoLlamado?: Date;
     asignado?: {
-        fechaAsignacion: Date,
+        fechaAsignacion: Date;
         usuario: {
-            id: Types.ObjectId,
-            nombreCompleto: String,
-            nombre: String,
-            apellido: String,
-            username: String,
-            documento: String
-        }
+            id: Types.ObjectId;
+            nombreCompleto: String;
+            nombre: String;
+            apellido: String;
+            username: String;
+            documento: String;
+        };
     };
 }

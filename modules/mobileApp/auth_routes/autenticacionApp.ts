@@ -1,15 +1,15 @@
-import { PacienteApp } from '../schemas/pacienteApp';
-import * as express from 'express';
-import * as authController from '../controller/AuthController';
-import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
-import * as SendEmail from './../../../utils/roboSender/sendEmail';
+import * as express from 'express';
+import { Auth } from '../../../auth/auth.class';
 import * as configPrivate from '../../../config.private';
-import { validar } from '../../../core-v2/mpi/validacion';
-import { findOrCreate, extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { extractFoto, findOrCreate } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { validar } from '../../../core-v2/mpi/validacion';
+import * as authController from '../controller/AuthController';
+import { enviarCodigoVerificacion, generarCodigoVerificacion } from '../controller/AuthController';
 import { PacienteAppCtr } from '../pacienteApp.routes';
-import { generarCodigoVerificacion, enviarCodigoVerificacion } from '../controller/AuthController';
+import { PacienteApp } from '../schemas/pacienteApp';
+import * as SendEmail from './../../../utils/roboSender/sendEmail';
 
 const router = express.Router();
 
@@ -258,8 +258,8 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
                     id: paciente.id,
                     relacion: 'principal',
                     addedAt: new Date()
-                }],
-                    req.body.password = passw;
+                }];
+                req.body.password = passw;
                 inscripcion = await PacienteAppCtr.create(req.body, req);
                 enviarCodigoVerificacion(inscripcion, passw, fcmToken);
             }

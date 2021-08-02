@@ -222,7 +222,7 @@ async function searchByExpression({ text, languageCode, expression, semanticTags
     return [];
 }
 
-type SearchTermParams = { semanticTags?: String[], languageCode?: 'es' | 'en', expression?: string };
+type SearchTermParams = { semanticTags?: String[]; languageCode?: 'es' | 'en'; expression?: string };
 export async function searchTerms(text, { semanticTags, languageCode, expression }: SearchTermParams, conceptIds: string[] = null) {
     languageCode = languageCode || 'es';
     let items;

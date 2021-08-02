@@ -5,8 +5,8 @@ export class OrganizationBuilder extends BaseBuilder {
 
     public build(org: Organization) {
         const custodian = builder.create('custodian')
-                               .ele('assignedCustodian')
-                               .ele('representedCustodianOrganization');
+            .ele('assignedCustodian')
+            .ele('representedCustodianOrganization');
         this.createNode(custodian, 'id', org.id());
         this.createNode(custodian, 'name', null, org.name());
 

@@ -1,8 +1,8 @@
+import { EventSocket } from '@andes/event-bus';
 import * as debug from 'debug';
 import { Server } from 'http';
 import { Auth } from './auth/auth.class';
 import { RedisWebSockets } from './config.private';
-import { EventSocket } from '@andes/event-bus';
 
 let log = debug('websocket');
 

@@ -1,12 +1,12 @@
-import { Types } from 'mongoose';
-import { ISalaComun, SalaComunID, SalaComunSnapshot } from './sala-comun.schema';
-import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
-import { SalaComunMovimientos, SalaComunAccion } from './sala-comun-movimientos.schema';
-import { Auth } from '../../../../auth/auth.class';
-import { InternacionExtras } from '../cama-estados.schema';
+import { ObjectId } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
+import { Types } from 'mongoose';
+import { Auth } from '../../../../auth/auth.class';
 import { UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
+import { InternacionExtras } from '../cama-estados.schema';
+import { SalaComunAccion, SalaComunMovimientos } from './sala-comun-movimientos.schema';
+import { ISalaComun, SalaComunID, SalaComunSnapshot } from './sala-comun.schema';
 
 export type SalaComunCreate = Pick<ISalaComun, 'nombre' | 'organizacion' | 'capacidad' | 'ambito' | 'estado' | 'sectores' | 'unidadOrganizativas'>;
 
@@ -108,13 +108,13 @@ export interface ListarOptions {
 
 export type SalaComunOcupacion = Pick<ISalaComun, 'id' | 'nombre' | 'organizacion' | 'ambito' | 'sectores' | 'unidadOrganizativas'> & {
     paciente: any;
-    idInternacion: ObjectId,
+    idInternacion: ObjectId;
     fecha: Date;
     extras?: InternacionExtras;
-    createdBy: any,
-    createdAt: Date,
-    updatedBy: any,
-    updatedAt: Date
+    createdBy: any;
+    createdAt: Date;
+    updatedBy: any;
+    updatedAt: Date;
 };
 
 

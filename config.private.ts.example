@@ -297,7 +297,7 @@ export const emailListString = '';
 
 export const logDatabase = {
     log: {
-        host: getEnv('MONGO_LOGS', `mongodb://localhost:27017/andesLogs`),
+        host: getEnv('MONGO_LOGS', 'mongodb://localhost:27017/andesLogs'),
         options: {
             reconnectTries: Number.MAX_VALUE,
             reconnectInterval: 1500,
@@ -314,7 +314,7 @@ export const urlDatosGestion = '';
 export const FHIR = {
     domain: getEnv('FHIR_DOMAIN', 'http://app.andes.gob.ar'),
     ips_host: getEnv('IPS_HOST', 'https://testapp.hospitalitaliano.org.ar'),
-    secret: getEnv('IPS_SECRET', ``)
+    secret: getEnv('IPS_SECRET', '')
 };
 
 export const IPS = {

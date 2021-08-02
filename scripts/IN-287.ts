@@ -1,8 +1,8 @@
 import * as moment from 'moment';
-import { Prestacion } from '../modules/rup/schemas/prestacion';
 import { Types } from 'mongoose';
 import { CamaEstados } from '../modules/rup/internacion/cama-estados.schema';
 import { InternacionResumen } from '../modules/rup/internacion/resumen/internacion-resumen.schema';
+import { Prestacion } from '../modules/rup/schemas/prestacion';
 
 async function run(done) {
     const desde = moment().subtract(6, 'month').startOf('month').toDate();
@@ -17,7 +17,7 @@ async function run(done) {
     let i = 0;
     for await (const prestacion of prestaciones) {
         i++;
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         if (i % 10 === 0) { console.log(i); }
 
         await CamaEstados.update(
@@ -47,7 +47,7 @@ async function run(done) {
 
     for await (const internacion of internaciones) {
         i++;
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         if (i % 10 === 0) { console.log(i); }
 
         await CamaEstados.update(

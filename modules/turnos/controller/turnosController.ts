@@ -1,16 +1,16 @@
-import * as mongoose from 'mongoose';
 import * as moment from 'moment';
+import * as mongoose from 'mongoose';
+import { checkCarpeta } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { Agenda } from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
-import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { Auth } from './../../../auth/auth.class';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { checkCarpeta } from '../../../core-v2/mpi/paciente/paciente.controller';
 
-type Agenda = any;
+type IAgenda = any;
 
 export async function getTurnoById(turnoId: string | mongoose.Types.ObjectId) {
-    const agendaEncontrada: Agenda = await Agenda.findOne({
+    const agendaEncontrada: IAgenda = await Agenda.findOne({
         $or: [
             { 'bloques.turnos._id': turnoId },
             { 'sobreturnos._id': turnoId }
@@ -45,34 +45,34 @@ export function getTurno(req) {
                     estado: 'publicada'
                 }
             },
-            // Unwind cada array
-            { $unwind: '$bloques' },
-            { $unwind: '$bloques.turnos' },
-            // Filtra los elementos que matchean
-            {
-                $match: {
-                    estado: 'publicada'
-                }
-            },
-            {
-                $group: {
-                    _id: { id: '$_id', bloqueId: '$bloques._id' },
-                    agenda_id: { $first: '$_id' },
-                    organizacion: { $first: '$organizacion' },
-                    profesionales: { $first: '$profesionales' },
-                    turnos: { $push: '$bloques.turnos' }
-                }
-            },
-            {
-                $group: {
-                    _id: '$_id.id',
-                    agenda_id: { $first: '$agenda_id' },
-                    bloque_id: { $first: '$_id.bloqueId' },
-                    organizacion: { $first: '$organizacion' },
-                    profesionales: { $first: '$profesionales' },
-                    bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } }
-                }
-            }];
+                // Unwind cada array
+                             { $unwind: '$bloques' },
+                             { $unwind: '$bloques.turnos' },
+                // Filtra los elementos que matchean
+                             {
+                                 $match: {
+                                     estado: 'publicada'
+                                 }
+                             },
+                             {
+                                 $group: {
+                                     _id: { id: '$_id', bloqueId: '$bloques._id' },
+                                     agenda_id: { $first: '$_id' },
+                                     organizacion: { $first: '$organizacion' },
+                                     profesionales: { $first: '$profesionales' },
+                                     turnos: { $push: '$bloques.turnos' }
+                                 }
+                             },
+                             {
+                                 $group: {
+                                     _id: '$_id.id',
+                                     agenda_id: { $first: '$agenda_id' },
+                                     bloque_id: { $first: '$_id.bloqueId' },
+                                     organizacion: { $first: '$organizacion' },
+                                     profesionales: { $first: '$profesionales' },
+                                     bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } }
+                                 }
+                             }];
             // ver llamado, req.query
             if (req.query && mongoose.Types.ObjectId.isValid(req.query.id)) {
 

@@ -1,7 +1,7 @@
-import { Institucion, IInstitucion } from './institucion.schema';
 import { MongoQuery, ResourceBase } from '@andes/core';
+import { IInstitucion, Institucion } from './institucion.schema';
 
-class InstitucionResource extends ResourceBase<IInstitucion>  {
+class InstitucionResource extends ResourceBase<IInstitucion> {
     Model = Institucion;
     resourceName = 'institucion';
     searchFileds = {

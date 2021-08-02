@@ -1,6 +1,6 @@
 import * as base64_stream from 'base64-stream';
-import * as stream from 'stream';
 import * as mongoose from 'mongoose';
+import * as stream from 'stream';
 
 const { createBucket } = require('mongoose-gridfs');
 const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
@@ -11,7 +11,7 @@ export function makeFs(name) {
         bucketName: name,
         mongooseConnection: mongoose.connection
     });
-  // obtain a model
+    // obtain a model
     return FilesSchema;
 }
 
@@ -26,12 +26,13 @@ export function storeFile(base64, metadata, name) {
         const decoder64 = base64_stream.decode();
         const File = makeFs(name);
 
-        File.writeFile({
-            _id: uniqueId,
-            filename: uniqueId + '.' + mime.split('/')[1],
-            contentType: mime,
-            metadata
-        },
+        File.writeFile(
+            {
+                _id: uniqueId,
+                filename: uniqueId + '.' + mime.split('/')[1],
+                contentType: mime,
+                metadata
+            },
             input.pipe(decoder64),
             (error, createdFile) => {
                 resolve(createdFile);

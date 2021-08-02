@@ -1,22 +1,22 @@
+import { EventCore } from '@andes/event-bus';
+import { log } from '@andes/log';
+import * as moment from 'moment';
+import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
+import * as request from 'request';
+import { Auth } from '../../../auth/auth.class';
+import { logKeys } from '../../../config';
+import { userScheduler } from '../../../config.private';
+import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
+import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
+import { toArray } from '../../../utils/utils';
+import * as prestacionController from '../../rup/controllers/prestacion';
+import { Codificacion } from '../../rup/schemas/codificacion';
+import { Prestacion } from '../../rup/schemas/prestacion';
+import { Agenda } from '../../turnos/schemas/agenda';
+import { agendaLog } from '../citasLog';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
-import { Agenda } from '../../turnos/schemas/agenda';
-import * as moment from 'moment';
-import { Auth } from '../../../auth/auth.class';
-import { userScheduler } from '../../../config.private';
-import { log } from '@andes/log';
-import { logKeys } from '../../../config';
-import { Prestacion } from '../../rup/schemas/prestacion';
-import * as prestacionController from '../../rup/controllers/prestacion';
-import * as request from 'request';
-import * as mongoose from 'mongoose';
-import { toArray } from '../../../utils/utils';
-import { EventCore } from '@andes/event-bus';
-import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
-import { Codificacion } from '../../rup/schemas/codificacion';
-import { Types } from 'mongoose';
-import { agendaLog } from '../citasLog';
-import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -108,7 +108,7 @@ export async function liberarTurno(req, data, turno) {
         turno.tipoPrestacion = null;
         turno.nota = null;
         turno.confirmedAt = null;
-        turno.reasignado = undefined;  // Esto es necesario cuando se libera un turno reasignado
+        turno.reasignado = undefined; // Esto es necesario cuando se libera un turno reasignado
         turno.updatedAt = new Date();
         turno.updatedBy = req.user.usuario || req.user;
         let cant = 1;
@@ -315,7 +315,7 @@ export function guardarNotaTurno(req, data, tid = null) {
 }
 
 // Turno
-export function darTurnoDoble(req, data, tid = null) {   // NUEVO
+export function darTurnoDoble(req, data, tid = null) { // NUEVO
     const position = getPosition(req, data, tid); // Obtiene la posición actual del turno seleccionado
     const agenda = data;
     let turnoAnterior;
@@ -1204,50 +1204,50 @@ export function getConsultaDiagnostico(params) {
                 ]
             }
         },
-        {
-            $unwind: '$bloques'
-        },
-        {
-            $project: {
-                bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
-            }
-        },
-        {
-            $unwind: '$bloqueTurnos'
-        },
-        {
-            $project: {
-                estado: '$bloqueTurnos.estado',
-                paciente: '$bloqueTurnos.paciente',
-                tipoPrestacion: '$bloqueTurnos.tipoPrestacion',
-                diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
-                codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
-            }
-        },
-        {
-            $match: {
-                estado: 'asignado'
-            }
-        },
-        {
-            $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
-        },
-        {
-            $project: {
-                estado: '$estado',
-                nombrePaciente: '$paciente.nombre',
-                apellidoPaciente: '$paciente.apellido',
-                documentoPaciente: '$paciente.documento',
-                tipoPrestacion: '$tipoPrestacion.conceptId',
-                descripcionPrestacion: '$tipoPrestacion.term',
-                auditoriaCodigo: '$diagnosticoCodificaciones.codificacionAuditoria.codigo',
-                auditoriaNombre: '$diagnosticoCodificaciones.codificacionAuditoria.nombre',
-                codProfesionalCie10Codigo: '$diagnosticoCodificaciones.codificacionProfesional.cie10.codigo',
-                codrofesionalCie10Nombre: '$diagnosticoCodificaciones.codificacionProfesional.cie10.nombre',
-                codProfesionalSnomedCodigo: '$diagnosticoCodificaciones.codificacionProfesional.snomed.conceptId',
-                codProfesionalSnomedNombre: '$diagnosticoCodificaciones.codificacionProfesional.snomed.term',
-            }
-        },
+                    {
+                        $unwind: '$bloques'
+                    },
+                    {
+                        $project: {
+                            bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
+                        }
+                    },
+                    {
+                        $unwind: '$bloqueTurnos'
+                    },
+                    {
+                        $project: {
+                            estado: '$bloqueTurnos.estado',
+                            paciente: '$bloqueTurnos.paciente',
+                            tipoPrestacion: '$bloqueTurnos.tipoPrestacion',
+                            diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
+                            codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
+                        }
+                    },
+                    {
+                        $match: {
+                            estado: 'asignado'
+                        }
+                    },
+                    {
+                        $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
+                    },
+                    {
+                        $project: {
+                            estado: '$estado',
+                            nombrePaciente: '$paciente.nombre',
+                            apellidoPaciente: '$paciente.apellido',
+                            documentoPaciente: '$paciente.documento',
+                            tipoPrestacion: '$tipoPrestacion.conceptId',
+                            descripcionPrestacion: '$tipoPrestacion.term',
+                            auditoriaCodigo: '$diagnosticoCodificaciones.codificacionAuditoria.codigo',
+                            auditoriaNombre: '$diagnosticoCodificaciones.codificacionAuditoria.nombre',
+                            codProfesionalCie10Codigo: '$diagnosticoCodificaciones.codificacionProfesional.cie10.codigo',
+                            codrofesionalCie10Nombre: '$diagnosticoCodificaciones.codificacionProfesional.cie10.nombre',
+                            codProfesionalSnomedCodigo: '$diagnosticoCodificaciones.codificacionProfesional.snomed.conceptId',
+                            codProfesionalSnomedNombre: '$diagnosticoCodificaciones.codificacionProfesional.snomed.term',
+                        }
+                    },
         ];
 
         const pipeline2 = [
@@ -1352,50 +1352,50 @@ export function getCantidadConsultaXPrestacion(params) {
                 ]
             }
         },
-        {
-            $unwind: '$bloques'
-        },
-        {
-            $project: {
-                idBloque: '$bloques._id',
-                bloqueTurnos: {
-                    $concatArrays: ['$sobreturnos', '$bloques.turnos']
-                }
-            }
-        },
+                    {
+                        $unwind: '$bloques'
+                    },
+                    {
+                        $project: {
+                            idBloque: '$bloques._id',
+                            bloqueTurnos: {
+                                $concatArrays: ['$sobreturnos', '$bloques.turnos']
+                            }
+                        }
+                    },
 
 
-        {
-            $unwind: '$bloqueTurnos'
-        },
-        {
-            $project: {
-                hora: '$bloqueTurnos.horaInicio',
-                estado: '$bloqueTurnos.estado',
-                tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
-            }
-        },
-        {
-            $match: {
-                estado: 'asignado'
-            }
-        },
-        {
-            $group: {
-                _id: '$tipoPrestacion.term',
-                nombrePrestacion: {
-                    $first: '$tipoPrestacion.term'
-                },
-                conceptId: {
-                    $first: '$tipoPrestacion.conceptId'
-                },
-                total: {
-                    $sum: 1
-                },
-            }
+                    {
+                        $unwind: '$bloqueTurnos'
+                    },
+                    {
+                        $project: {
+                            hora: '$bloqueTurnos.horaInicio',
+                            estado: '$bloqueTurnos.estado',
+                            tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+                        }
+                    },
+                    {
+                        $match: {
+                            estado: 'asignado'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: '$tipoPrestacion.term',
+                            nombrePrestacion: {
+                                $first: '$tipoPrestacion.term'
+                            },
+                            conceptId: {
+                                $first: '$tipoPrestacion.conceptId'
+                            },
+                            total: {
+                                $sum: 1
+                            },
+                        }
 
 
-        }
+                    }
 
         ];
 
@@ -1502,7 +1502,7 @@ export async function verificarSolapamiento(data) {
                     }
                 }
                 if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
-                    response += ` Uno o más profesionales están asignados a otra agenda en ese horario. `;
+                    response += ' Uno o más profesionales están asignados a otra agenda en ese horario. ';
                     profesionales.forEach((prof, idx) => {
                         response += `<br><br>Profesional: <strong>${prof.nombre} ${prof.apellido} </strong> <br>Centro de Salud: <strong>${org[idx]} </strong> <br> Prestacion: <strong>${prestacionesAgenda[idx]}</strong> <br>Creada por: <strong>${agendaCreadaPor[idx]} </strong>`;
                     });

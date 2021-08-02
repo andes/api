@@ -8,6 +8,6 @@ export function makeFs() {
         bucketName: 'ProfesionalesImagenes',
         mongooseConnection: mongoose.connection
     });
-  // obtain a model
+    // obtain a model
     return ProfesionalesFilesSchema;
 }

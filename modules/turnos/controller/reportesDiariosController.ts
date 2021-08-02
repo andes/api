@@ -1,6 +1,6 @@
 
-import { Prestacion } from '../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
+import { Prestacion } from '../../rup/schemas/prestacion';
 
 export async function getResumenDiarioMensual(params: any) {
 

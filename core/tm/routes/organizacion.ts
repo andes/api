@@ -1,14 +1,14 @@
 import * as express from 'express';
 import * as https from 'https';
-import { Organizacion } from '../schemas/organizacion';
-import * as utils from '../../../utils/utils';
-import { toArray } from '../../../utils/utils';
-import * as configPrivate from '../../../config.private';
+import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { AuthUsers } from '../../../auth/schemas/authUsers';
+import * as configPrivate from '../../../config.private';
 import * as CamasController from '../../../modules/rup/internacion/camas.controller';
-import { validarOrganizacionSisa, obtenerOfertaPrestacional, addSector, changeSector, deleteSector, getConfiguracion } from '../controller/organizacion';
-import { Types } from 'mongoose';
+import * as utils from '../../../utils/utils';
+import { toArray } from '../../../utils/utils';
+import { addSector, changeSector, deleteSector, getConfiguracion, obtenerOfertaPrestacional, validarOrganizacionSisa } from '../controller/organizacion';
+import { Organizacion } from '../schemas/organizacion';
 
 const GeoJSON = require('geojson');
 const router = express.Router();
@@ -123,7 +123,7 @@ router.get('/organizaciones/sisa/:id', async (req, res, next) => {
             if (statusOferta === 200) {
                 let prestaciones = [];
                 if (bodyOferta && bodyOferta.prestaciones && bodyOferta.prestaciones.length) { // valido mucho porque viene de SISA, podría cambiar la estructura y no queremos que pinche
-                    bodyOferta.prestaciones.forEach((prest: { id: Number, disponible: String, nombre: String }) => {
+                    bodyOferta.prestaciones.forEach((prest: { id: Number; disponible: String; nombre: String }) => {
                         if (prest.disponible === 'SI') {
                             prestaciones.push({ idSisa: prest.id, nombre: prest.nombre });
                         }
@@ -278,7 +278,7 @@ router.delete('/organizaciones/:id', Auth.authenticate(), async (req, res, next)
     }
 });
 
-/****************
+/** **************
 *** SECTORES  ***
 *****************/
 router.get('/organizaciones/:id/sectores', async (req, res, next) => {

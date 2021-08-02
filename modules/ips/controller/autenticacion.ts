@@ -4,7 +4,7 @@ import { handleHttpRequest } from '../../../utils/requestHandler';
 export class SaludDigitalClient {
     static SystemPatient = 'https://federador.msal.gob.ar/patient-id';
 
-    private expiresIn = 60 * 15 * 1000;  /* 15 min */
+    private expiresIn = 60 * 15 * 1000; /* 15 min */
     private token: string;
     private host: string;
     private dominio: string;

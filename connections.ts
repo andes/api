@@ -36,7 +36,7 @@ export class Connections {
         }
 
         if (process.env.NODE_ENV === 'test') {
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.log('TESTING MODE');
             configPrivate.hosts.mongoDB_main.host = 'mongodb://localhost:27066/andes';
             configPrivate.hosts.mongoDB_puco.host = 'mongodb://localhost:27066/andes';

@@ -1,6 +1,6 @@
+import { Matching } from '@andes/match';
 import * as config from '../config';
 import * as configPrivate from '../config.private';
-import { Matching } from '@andes/match';
 
 const soap = require('soap');
 const url = configPrivate.anses.url;
@@ -58,7 +58,7 @@ export function getServicioAnses(paciente) {
 
                             if (registrosAdicionales) {
                                 if (registrosAdicionales[0].sexo) {
-                                    (registrosAdicionales[0].sexo === 'M') ? sex = 'masculino' : sex = 'femenino';
+                                    if (registrosAdicionales[0].sexo === 'M') { sex = 'masculino';} else { sex = 'femenino'; };
                                 }
                             }
                             const pacienteAnses = {

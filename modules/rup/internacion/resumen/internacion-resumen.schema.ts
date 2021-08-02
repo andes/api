@@ -25,8 +25,8 @@ export interface IInternacionResumen {
     deletedAt?: Date;
 
     ingreso: {
-        elementoRUP: ObjectId,
-        registros: [any]
+        elementoRUP: ObjectId;
+        registros: [any];
     };
     prioridad?: {
         id: number;

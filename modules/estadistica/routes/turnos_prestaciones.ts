@@ -1,6 +1,6 @@
 import * as express from 'express';
-import { Auth } from '../../../auth/auth.class';
 import * as mongoose from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
 import * as agendaController from './../controller/procesarAgendas';
 import * as fueraDeAgendaController from './../controller/procesarFueraDeAgenda';
 

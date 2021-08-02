@@ -11,8 +11,8 @@ export interface IInstitucion extends Document {
     direccion: { valor: String };
     activo: Boolean;
     estado: {
-        type: String,
-        enum: ['disponible', 'mantenimiento', 'clausurado', 'baja permanente']
+        type: String;
+        enum: ['disponible', 'mantenimiento', 'clausurado', 'baja permanente'];
     };
 }
 

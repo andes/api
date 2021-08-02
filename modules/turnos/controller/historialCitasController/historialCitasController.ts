@@ -9,7 +9,7 @@ export async function getHistorial(req) {
     } else {
         const turnos = getHistorialPaciente(req);
         const liberados = getLiberadosPaciente(req);
-        const fueraAgendas =  getHistorialFueraAgendas(req.query.pacienteId);
+        const fueraAgendas = getHistorialFueraAgendas(req.query.pacienteId);
         const result = await Promise.all([turnos, liberados, fueraAgendas]);
         historial = [...result[0], ...result[1], ...result[2]];
     }

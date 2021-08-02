@@ -1,13 +1,13 @@
 import * as express from 'express';
-import { IPuco } from '../schemas/puco';
-import { ObraSocial } from '../schemas/obraSocial';
-import * as pucoController from '../controller/puco';
-import * as profeController from '../controller/profe';
-import * as sumarController from '../controller/sumar';
-import * as obrasocialController from '../controller/obraSocial';
-import { Profe } from '../schemas/profe';
 import { Auth } from '../../../auth/auth.class';
 import { obraSocialLog } from '../../../modules/obraSocial/obraSocialLog';
+import * as obrasocialController from '../controller/obraSocial';
+import * as profeController from '../controller/profe';
+import * as pucoController from '../controller/puco';
+import * as sumarController from '../controller/sumar';
+import { ObraSocial } from '../schemas/obraSocial';
+import { Profe } from '../schemas/profe';
+import { IPuco } from '../schemas/puco';
 
 const router = express.Router();
 
@@ -37,7 +37,7 @@ router.get('/obrasSociales', async (req, res, next) => {
     }
 });
 
-/**Obtiene las el listado de prepagas */
+/** Obtiene las el listado de prepagas */
 
 router.get('/prepagas', async (req, res, next) => {
     try {
@@ -48,7 +48,7 @@ router.get('/prepagas', async (req, res, next) => {
     }
 });
 
-/**Verifica si el paciente se encuentra en el programa SUMAR */
+/** Verifica si el paciente se encuentra en el programa SUMAR */
 
 router.get('/padronSumar', Auth.authenticate(), async (req, res, next) => {
     try {
@@ -109,7 +109,7 @@ router.get('/puco', Auth.authenticate(), async (req, res, next) => {
     }
 });
 
-/**Obtiene las versiones del padron PUCO */
+/** Obtiene las versiones del padron PUCO */
 
 router.get('/puco/padrones', Auth.authenticate(), async (req, res, next) => {
     try {
@@ -120,7 +120,7 @@ router.get('/puco/padrones', Auth.authenticate(), async (req, res, next) => {
     }
 });
 
-/**Obtiene la obra social de un paciente (Usado en el punto de inicio de CITAS) */
+/** Obtiene la obra social de un paciente (Usado en el punto de inicio de CITAS) */
 
 router.get('/obraSocial/:documento', Auth.authenticate(), async (req, res, next) => {
     if (req.params.documento) {
@@ -146,7 +146,7 @@ router.get('/profe', Auth.authenticate(), async (req, res, next) => {
     }
 });
 
-/**Obtiene los padrones del padron PROFE */
+/** Obtiene los padrones del padron PROFE */
 
 router.get('/profe/padrones', Auth.authenticate(), async (req, res, next) => {
     try {

@@ -17,9 +17,9 @@ export interface IPacsConfig {
     host: string;
     visualizador_host: string;
     auth: {
-        host: string,
-        clientId: string,
-        clientSecret: string,
+        host: string;
+        clientId: string;
+        clientSecret: string;
     };
 }
 

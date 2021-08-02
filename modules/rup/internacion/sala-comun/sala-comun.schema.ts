@@ -1,12 +1,12 @@
-import { SchemaTypes, Schema, model } from 'mongoose';
-import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
-import { SnomedConcept } from '../../schemas/snomed-concept';
+import { ObjectId } from '@andes/core';
+import { AndesDocWithAudit, AuditPlugin } from '@andes/mongoose-plugin-audit';
+import * as moment from 'moment';
+import { model, Schema, SchemaTypes } from 'mongoose';
 import { OrganizacionRef, UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
 import { ISectores } from '../../../../core/tm/interfaces/ISectores';
-import { ObjectId } from '@andes/core';
-import * as moment from 'moment';
-import { InternacionExtrasSchema } from '../cama-estados.schema';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
+import { SnomedConcept } from '../../schemas/snomed-concept';
+import { InternacionExtrasSchema } from '../cama-estados.schema';
 
 export type SalaComunID = ObjectId;
 
@@ -24,10 +24,10 @@ export interface ISalaComun {
 export type SalaComunDocument = AndesDocWithAudit<ISalaComun>;
 
 export type SalaComunOcupacionItem = {
-    paciente: any,
-    ambito: String,
-    idInternacion: ObjectId,
-    desde: Date,
+    paciente: any;
+    ambito: String;
+    idInternacion: ObjectId;
+    desde: Date;
     createdBy: any;
     createdAt: Date;
     updatedBy?: any;

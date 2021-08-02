@@ -8,7 +8,7 @@ async function run(done) {
     let i = 0;
     for await (const codificacion of codificaciones) {
         i++;
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         if (i % 100 === 0) { console.log(i); }
 
         const prestacion = await Prestacion.findById(codificacion.idPrestacion) as IPrestacionDoc;

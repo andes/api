@@ -33,7 +33,7 @@ export async function actualizarFrecuentes(data) {
                 } else {
 
                     if (resultado.frecuentes[indexConcepto].frecuencia) {
-                        resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia as any, 0) + 1;
+                        resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia as any, 10) + 1;
                     } else {
                         resultado.frecuentes[indexConcepto].frecuencia = 1;
                     }

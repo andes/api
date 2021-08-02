@@ -1,14 +1,14 @@
 import * as moment from 'moment';
-import { GrupoPoblacionalCtr } from './../../../core/tm/grupo-poblacional.routes';
-import { PacienteCtr, replaceChars } from './../../../core-v2/mpi';
-import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
+import { mpi } from '../../../config';
 import { provincia as provinciaActual } from '../../../config.private';
+import { extractFoto, findOrCreate, matching, updateContacto } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { validar } from '../../../core-v2/mpi/validacion';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { PersonalSaludCtr } from '../../../modules/personalSalud';
-import { mpi } from '../../../config';
-import { findOrCreate, extractFoto, matching, updateContacto } from '../../../core-v2/mpi/paciente/paciente.controller';
-import { validar } from '../../../core-v2/mpi/validacion';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
+import { PacienteCtr, replaceChars } from './../../../core-v2/mpi';
+import { GrupoPoblacionalCtr } from './../../../core/tm/grupo-poblacional.routes';
 
 export interface IEstadoInscripcion {
     titulo: String;
@@ -33,8 +33,8 @@ export async function mensajeEstadoInscripcion(documento: String, sexo: String) 
     }, { sort: '-fechaRegistro' });
     let estadoInscripcion: IEstadoInscripcion = { titulo: '', subtitulo: '', body: '', status: 'warning' };
     if (!inscripto) {
-        estadoInscripcion.titulo = `Inscripción inexistente`;
-        estadoInscripcion.subtitulo = `Su inscripción no se encuentra registrada`;
+        estadoInscripcion.titulo = 'Inscripción inexistente';
+        estadoInscripcion.subtitulo = 'Su inscripción no se encuentra registrada';
         estadoInscripcion.body = `Usted realizó la búsqueda con el documento ${documento} - ${sexo},
         Si desea inscribirse dirijase a la página del Ministerio de Salud de Neuquén `;
         estadoInscripcion.status = 'fail';
@@ -202,7 +202,11 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
         }
         const domicilio = await validarDomicilio(inscriptoValidado);
         if (domicilio) {
-            inscripcion.validaciones?.length ? inscripcion.validaciones.push('domicilio') : inscripcion.validaciones = ['domicilio'];
+            if (inscripcion.validaciones?.length) {
+                inscripcion.validaciones.push('domicilio');
+            } else {
+                inscripcion.validaciones = ['domicilio'];
+            }
         }
     }
     let paciente = null;

@@ -1,32 +1,31 @@
-import { Schema, Document, model } from 'mongoose';
-import { ISnomedConcept, SnomedConcept } from '../../rup/schemas/snomed-concept';
-import { SemanticTag } from '../../rup/schemas/semantic-tag';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObjectId } from '@andes/core';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { Document, model, Schema } from 'mongoose';
 import { ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { ISnomedConcept, SnomedConcept } from '../../rup/schemas/snomed-concept';
 
 export interface IReglasTOP {
     origen: {
         estado?: String;
         organizacion: {
-            id: ObjectId,
-            nombre: string
-        },
+            id: ObjectId;
+            nombre: string;
+        };
         prestaciones: {
-            prestacion: ISnomedConcept,
-            auditable: boolean,
-        }[]
+            prestacion: ISnomedConcept;
+            auditable: boolean;
+        }[];
     };
     destino: {
         organizacion: {
-            id: ObjectId,
-            nombre: string
+            id: ObjectId;
+            nombre: string;
         };
-        prestacion: ISnomedConcept,
-        inicio: string,
-        servicioIntermedioId: ObjectId,
-        turneable: boolean,
-        agendas: [ITipoPrestacion],
+        prestacion: ISnomedConcept;
+        inicio: string;
+        servicioIntermedioId: ObjectId;
+        turneable: boolean;
+        agendas: [ITipoPrestacion];
         informe?: 'none' | 'optional' | 'required';
 
     };

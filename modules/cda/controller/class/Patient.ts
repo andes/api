@@ -8,7 +8,7 @@ export class Patient {
     private id: IID;
     private documento: String;
 
-    constructor () {
+    constructor() {
 
     }
 

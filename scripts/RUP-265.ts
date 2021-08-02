@@ -18,7 +18,7 @@ async function run(done) {
             await Prestacion.remove({ _id: prestacion.id });
 
         } catch (err) {
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.error(err);
         }
     };

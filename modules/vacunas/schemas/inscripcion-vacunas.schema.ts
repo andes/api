@@ -1,8 +1,8 @@
 
-import { Schema, Types, model, SchemaTypes } from 'mongoose';
-import * as nombreSchema from '../../../core/tm/schemas/nombre';
-import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
+import { AndesDocWithAudit, AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ITokenSearch, TokenSearch } from '@andes/mongoose-token-search';
+import { model, Schema, SchemaTypes, Types } from 'mongoose';
+import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { IVacunasInscripcion } from '../inscripcion-vacunas.interface';
 
 export const InscripcionVacunaSchema = new Schema({

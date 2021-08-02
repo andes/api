@@ -1,12 +1,12 @@
 import * as express from 'express';
-import { Auth } from './../auth.class';
+import * as mongoose from 'mongoose';
+import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
+import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser } from '../auth.controller';
+import { checkPassword } from '../ldap.controller';
 import { AuthUsers } from '../schemas/authUsers';
 import { Organizacion } from './../../core/tm/schemas/organizacion';
-import * as mongoose from 'mongoose';
+import { Auth } from './../auth.class';
 
-import { checkPassword } from '../ldap.controller';
-import { findUser, updateUser, checkMobile, generateTokenPayload, setValidationTokenAndNotify, reset } from '../auth.controller';
-import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
 
 const sha1Hash = require('sha1');
 const shiroTrie = require('shiro-trie');
@@ -187,7 +187,11 @@ router.post('/setValidationTokenAndNotify', async (req, res, next) => {
         const username = req.body.username;
         if (username) {
             const result = await setValidationTokenAndNotify(username);
-            result ? res.json({status: 'ok'}) : res.json({status: 'redirectOneLogin'});
+            if (result) {
+                return res.json({status: 'ok'});
+            } else {
+                return res.json({status: 'redirectOneLogin'});
+            }
         } else {
             return next(403);
         }
@@ -201,7 +205,11 @@ router.post('/resetPassword', async (req, res, next) => {
         const {token, password} = req.body;
         if (token && password) {
             const result = await reset(token, password);
-            result ? res.json({status: 'ok'}) : next(404);
+            if (result) {
+                return res.json({status: 'ok'});
+            } else {
+                return next(404);
+            }
         } else {
             return next(403);
         }
