@@ -567,7 +567,13 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             }
             opciones['formacionGrado.matriculado'] = req.query.estado;
         }
-
+        if (req.query.profesion) {
+            const profesionSearch = parseInt(req.query.profesion, 10);
+            opciones['$or'] = [
+                { 'formacionGrado.profesion.codigo': profesionSearch },
+                { 'formacionPosrado.profesion.codigo': profesionSearch }
+            ];
+        }
         if (req.query.estadoE) {
             if (req.query.estadoE === 'Vigentes') {
                 req.query.estadoE = true;
