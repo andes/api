@@ -9,6 +9,8 @@ import { Connections } from '../connections';
 const path = require('path');
 
 Connections.initialize();
+const { setupServices } = require('../services');
+setupServices();
 
 const done = () => {
     process.exit(0);
