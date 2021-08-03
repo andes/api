@@ -57,10 +57,8 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
     let clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
 
     if (clasificacionfinal === 'Confirmado') {
-
         const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento, ficha.createdAt);
         const comorbilidades = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields.find(f => f.presenta)?.presenta;
-
         ficha.score = {
             value: edadPaciente >= 60 && comorbilidades ? 10 : comorbilidades ? 6 : 3,
             fecha: new Date()
