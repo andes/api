@@ -87,6 +87,10 @@ EventCore.on('epidemiologia:prestaciones:validate', async (data) => {
 
 
 EventCore.on('epidemiologia:prestaciones:romperValidacion', async (data) => {
+    if (!data.paciente) {
+        // tslint:disable-next-line:no-console
+        console.log('seguimiento', data);
+    }
     const lastSeguimiento: any = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
     if (lastSeguimiento) {
         const indexPrestacion = lastSeguimiento.llamados.findIndex(field => field.idPrestacion.toString() === data._id.toString());
