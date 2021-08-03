@@ -1,5 +1,6 @@
 import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 import * as mongoose from 'mongoose';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
 
@@ -28,33 +29,38 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
     }
 });
 
+const assertUniquePCR = async function (next) {
+    let ficha: any = this;
+    if (ficha.type.name === 'covid19') {
+        const identificadorpcr = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final')?.fields.find(f => f.identificadorpcr)?.identificadorpcr;
+        if (identificadorpcr) {
+            const found = await FormsEpidemiologia.findOne({ 'secciones.fields.identificadorpcr': identificadorpcr, _id: { $ne: ficha._id }});
+            if (found) {
+                return next('El identificador PCR ya fue registrado en el sistema');
+            }
+        }
+    }
+
+    return next();
+};
+
 export const FormsEpidemiologiaCloneSchema = FormsEpidemiologiaSchema.clone();
 
 FormsEpidemiologiaSchema.plugin(AuditPlugin);
 
+FormsEpidemiologiaSchema.pre('validate', assertUniquePCR);
+
 FormsEpidemiologiaSchema.pre('save', function (next) {
     let ficha: any = this;
-    const calcularEdad = (fecha) => {
-        let edad = null;
-        if (fecha) {
-            const birthDate = new Date(fecha);
-            const currentDate = new Date();
-            let years = (currentDate.getFullYear() - birthDate.getFullYear());
-            if (currentDate.getMonth() < birthDate.getMonth() ||
-                currentDate.getMonth() === birthDate.getMonth() && currentDate.getDate() < birthDate.getDate()) {
-                years--;
-            }
-            edad = years;
-        }
-        return edad;
-    };
 
     const seccionClasificacion = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final');
     let clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
-    const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento);
-    const comorbilidades = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields.find(f => f.presenta)?.presenta;
 
     if (clasificacionfinal === 'Confirmado') {
+
+        const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento, ficha.createdAt);
+        const comorbilidades = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields.find(f => f.presenta)?.presenta;
+
         ficha.score = {
             value: edadPaciente >= 60 && comorbilidades ? 10 : comorbilidades ? 6 : 3,
             fecha: new Date()
