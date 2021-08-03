@@ -1,3 +1,4 @@
+import { seccionClasificacionName } from '../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 import * as moment from 'moment';
 import { InformacionExportada } from '../core/log/schemas/logExportaInformacion';
 import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-epidemiologia-schema';
@@ -108,7 +109,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
         },
         {
             $match: {
-                'secciones.name': { $regex: 'Tipo de confirmación y Clasificación Final' }
+                'secciones.name': { $regex: seccionClasificacionName }
             }
         },
         {

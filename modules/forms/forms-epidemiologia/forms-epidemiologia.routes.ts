@@ -1,12 +1,16 @@
 import { asyncHandler } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
+import { EventCore } from '@andes/event-bus/';
 import { Auth } from '../../../auth/auth.class';
-import { updateField } from './controller/forms-epidemiologia.controller';
+import { emitCasoConfirmado, updateField } from './controller/forms-epidemiologia.controller';
 import { FormsEpidemiologia } from './forms-epidemiologia-schema';
 
 class FormsEpidemiologiaResource extends ResourceBase {
     Model = FormsEpidemiologia;
+    resourceModule = 'epidemiologia';
     resourceName = 'formEpidemiologia';
+    routesEnable = ['get', 'search'];
+
     middlewares = [Auth.authenticate()];
     searchFileds = {
         type: {
@@ -58,7 +62,6 @@ class FormsEpidemiologiaResource extends ResourceBase {
             field: 'secciones.fields.seguimiento.ultimoEstado.key',
             fn: (value) => (value !== 'activo' ? { $eq: value } : { $not: { $in: ['alta', 'fallecido'] } })
         },
-        fechaEstadoActual: MongoQuery.matchDate.withField('score.fecha'),
         documento: {
             field: 'paciente.documento',
             fn: MongoQuery.equalMatch
@@ -68,22 +71,37 @@ class FormsEpidemiologiaResource extends ResourceBase {
             fn: MongoQuery.equalMatch
         }
     };
+
+    eventBus = EventCore;
 }
 
 export const FormEpidemiologiaCtr = new FormsEpidemiologiaResource();
 export const FormEpidemiologiaRouter = FormEpidemiologiaCtr.makeRoutes();
 
-export const patchField = async (req, res) => {
-    const body = req.body;
-    const id = req.params.id;
-    const ficha = await updateField(id, body);
 
-    Auth.audit(ficha, req);
-    const response = await FormEpidemiologiaCtr.update(id, ficha, req);
-
-    return res.json(response);
+const post = async (req, res) => {
+    const ficha = await FormEpidemiologiaCtr.create(req.body, req);
+    await emitCasoConfirmado(ficha, Auth.getProfesional(req));
+    res.json(ficha);
 };
 
+const patch = async (req, res) => {
+    const id = req.params.id;
+    const dto = req.body;
+    const ficha = await FormEpidemiologiaCtr.update(id, dto, req);
+    await emitCasoConfirmado(ficha, Auth.getProfesional(req));
+    res.json(ficha);
+};
+
+const patchField = async (req, res) => {
+    const dto = req.body;
+    const id = req.params.id;
+    let ficha = await updateField(id, dto);
+    Auth.audit(ficha, req);
+    ficha = await FormEpidemiologiaCtr.update(id, ficha, req);
+    await emitCasoConfirmado(ficha, Auth.getProfesional(req));
+    return res.json(ficha);
+};
 
 FormEpidemiologiaRouter.get('/types', Auth.authenticate(), async (req, res, next) => {
     try {
@@ -94,4 +112,6 @@ FormEpidemiologiaRouter.get('/types', Auth.authenticate(), async (req, res, next
     }
 });
 
+FormEpidemiologiaRouter.post('/formEpidemiologia', Auth.authenticate(), asyncHandler(post));
+FormEpidemiologiaRouter.patch('/formEpidemiologia/:id?', Auth.authenticate(), asyncHandler(patch));
 FormEpidemiologiaRouter.patch('/formEpidemiologia/:id/secciones/fields', Auth.authenticate(), asyncHandler(patchField));

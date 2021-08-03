@@ -1,4 +1,3 @@
-import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 import * as mongoose from 'mongoose';
@@ -60,32 +59,5 @@ export const FormsEpidemiologiaCloneSchema = FormsEpidemiologiaSchema.clone();
 FormsEpidemiologiaSchema.plugin(AuditPlugin);
 
 FormsEpidemiologiaSchema.pre('validate', assertUniquePCR);
-
-FormsEpidemiologiaSchema.pre('save', function (next) {
-    const ficha: any = this;
-
-    const seccionClasificacion = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final');
-    const clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
-
-    if (clasificacionfinal === 'Confirmado') {
-        const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento, ficha.createdAt);
-        const comorbilidades = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields.find(f => f.presenta)?.presenta;
-        ficha.score = {
-            value: edadPaciente >= 60 && comorbilidades ? 10 : comorbilidades ? 6 : 3,
-            fecha: new Date()
-        };
-        EventCore.emitAsync('epidemiologia:seguimiento:create', ficha);
-    }
-    next();
-});
-
-FormsEpidemiologiaSchema.post('save', (ficha: any) => {
-    const { FormsHistory } = require('./forms-history.schema');
-    const history = new FormsHistory(ficha.toJSON());
-    history._id = new mongoose.Types.ObjectId();
-
-    history.save();
-});
-
 
 export const FormsEpidemiologia = mongoose.model('formsEpidemiologia', FormsEpidemiologiaSchema, 'formsEpidemiologia');

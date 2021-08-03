@@ -1,5 +1,6 @@
 import { EventCore } from '@andes/event-bus';
 import { userScheduler } from '../../../config.private';
+import { getSeccionClasificacion } from './controller/forms-epidemiologia.controller';
 import { FormEpidemiologiaCtr } from './forms-epidemiologia.routes';
 
 const dataLog: any = new Object(userScheduler);
@@ -19,18 +20,18 @@ EventCore.on('notification:fichaEpidemiologica:laboratory', async (info) => {
             };
             const lastFicha = fichasOrdenadas[0];
             try {
-                lastFicha.secciones.forEach(s => {
-                    if (s.name === 'Tipo de confirmación y Clasificación Final') {
-                        const cfi = s.fields.findIndex(x => x.clasificacionfinal);
-                        s.fields[cfi] = { clasificacionfinal: resultadoLabo };
-                        const pcri = s.fields.findIndex(x => x.pcr);
-                        if (pcri > -1) {
-                            s.fields[pcri] = resultadoPCR;
-                        } else {
-                            s.fields.push(resultadoPCR);
-                        }
+
+                const s = getSeccionClasificacion(lastFicha);
+                if (s) {
+                    const cfi = s.fields.findIndex(x => x.clasificacionfinal);
+                    s.fields[cfi] = { clasificacionfinal: resultadoLabo };
+                    const pcri = s.fields.findIndex(x => x.pcr);
+                    if (pcri > -1) {
+                        s.fields[pcri] = resultadoPCR;
+                    } else {
+                        s.fields.push(resultadoPCR);
                     }
-                });
+                }
                 return await FormEpidemiologiaCtr.update(lastFicha.id, lastFicha, dataLog);
             } catch (error) {
                 return error;
