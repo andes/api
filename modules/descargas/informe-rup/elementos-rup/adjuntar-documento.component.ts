@@ -6,7 +6,7 @@ import { getArchivoAdjunto } from '../../../../modules/rup/controllers/rup';
 
 export class AdjuntarDocumentoComponent extends HTMLComponent {
     template = `
-            <div style="page-break-before: always; page-break-after: always;">
+            <div style="page-break-before: auto; page-break-after: auto;">
                 <div class="nivel-1" >
                     <p>
                         {{ registro.concepto.term }}
