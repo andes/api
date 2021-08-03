@@ -5,7 +5,7 @@ import { matching } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { InformacionExportada } from '../../../core/log/schemas/logExportaInformacion';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { handleHttpRequest } from '../../../utils/requestHandler';
-import { vacunas } from '../../mobileApp/schemas/vacunas';
+import { vacunas } from '../schemas/vacunas';
 import { IPaciente } from './../../../core-v2/mpi/paciente/paciente.interface';
 
 export async function getVacunas(paciente) {

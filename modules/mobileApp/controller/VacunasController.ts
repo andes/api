@@ -1,4 +1,4 @@
-import { vacunas } from '../schemas/vacunas';
+import { vacunas } from '../../vacunas/schemas/vacunas';
 import { Matching } from '@andes/match';
 import { weightsVaccine } from '../../../config';
 
