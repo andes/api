@@ -1,3 +1,23 @@
+# [5.57.0](https://github.com/andes/api/compare/v5.56.0...v5.57.0) (2021-08-04)
+
+
+### Bug Fixes
+
+* control push ([#1495](https://github.com/andes/api/issues/1495)) ([4f70f98](https://github.com/andes/api/commit/4f70f98c4df1a537733b91682b2be68eb35c511d))
+* **epidemiologia:** control en seguimiento ([677fbb5](https://github.com/andes/api/commit/677fbb53f845fc9aeeb743836e84eec1bace2232))
+* **job:** quita control de casos en export de nexos ([#1498](https://github.com/andes/api/issues/1498)) ([ba13f91](https://github.com/andes/api/commit/ba13f91b7e5a541a57989e22a496cf0cdc1e1f88))
+* **mpi:** actualizacion georeferencia ([#1484](https://github.com/andes/api/issues/1484)) ([945bc9f](https://github.com/andes/api/commit/945bc9f57f0bdfa9386aa557a1983648878da53e))
+* **PER:** se corrige cambio error al disparar evento en la validacion de prestación ([#1472](https://github.com/andes/api/issues/1472)) ([28109e0](https://github.com/andes/api/commit/28109e0f680fb48071eb9908a496ad022141c2d7))
+* **registro:** no enviar push en versiones legacy ([#1493](https://github.com/andes/api/issues/1493)) ([12a98d1](https://github.com/andes/api/commit/12a98d150e953a8c416f8b7a502d9e598745ac76))
+* **rup:** informe-pdf, imágenes adjuntas ([#1488](https://github.com/andes/api/issues/1488)) ([93ba89c](https://github.com/andes/api/commit/93ba89c180c234540191c07fae6c161cc5c952bf))
+* **scripts:** agregar inicialización de setup de servicios ([#1500](https://github.com/andes/api/issues/1500)) ([7e0097a](https://github.com/andes/api/commit/7e0097adf3d948155e109480b681435c91687681))
+
+
+### Features
+
+* **EP:** identificador PCR unico ([#1468](https://github.com/andes/api/issues/1468)) ([c418bb3](https://github.com/andes/api/commit/c418bb34a080b6ff264e1d27cbb066c132f5de6e))
+* **vacunas:** no todas las localidades tienen area programa ([#1494](https://github.com/andes/api/issues/1494)) ([7b6090f](https://github.com/andes/api/commit/7b6090f20ea8cfc17d48979dc71b5fb3715825fb))
+
 # [5.56.0](https://github.com/andes/api/compare/v5.55.0...v5.56.0) (2021-07-28)
 
 
