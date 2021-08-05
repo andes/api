@@ -1,7 +1,7 @@
+import { ObjectId } from '@andes/core';
+import { AndesDoc, AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { ISnomedConcept, SnomedConcept } from './snomed-concept';
-import { AndesDoc, AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { ObjectId } from '@andes/core';
 
 export interface IElementoRUP {
     nombre: string;
@@ -29,6 +29,7 @@ export interface IElementoRUP {
         method: string;
     }[];
     tags?: string[];
+    tabs?: string[];
 }
 
 export type IElementoRUPDoc = AndesDoc<IElementoRUP>;
@@ -163,7 +164,8 @@ export const ElementoRUPSchema = new mongoose.Schema({
         event: String,
         method: String
     }],
-    tags: [String]
+    tags: [String],
+    tabs: [String]
 });
 
 ElementoRUPSchema.plugin(AuditPlugin);
