@@ -7,8 +7,8 @@ class FormsHistoryResource extends ResourceBase {
     resourceName = 'formsHistory';
     middlewares = [Auth.authenticate()];
     searchFileds = {
-        idFicha: {
-            field: 'ficha._id',
+        id: {
+            field: 'id',
             fn: MongoQuery.equalMatch
         },
     };
