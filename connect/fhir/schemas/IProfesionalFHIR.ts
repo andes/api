@@ -1,8 +1,8 @@
 export interface ProfesionalFHIR {
     resourceType: String; // Practitioner
     identifier: [{
-        system: String,
-        value: String
+        system: String;
+        value: String;
     }];
     active: boolean; // Whether this practitioner's record is in active use
     name: [{
@@ -15,7 +15,7 @@ export interface ProfesionalFHIR {
         value: String;
         rank: Number;
         use: String;
-        system: String // phone | email
+        system: String; // phone | email
     }];
     address: [{
         resourceType: String; // Address

@@ -158,7 +158,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                     calle: unaPrestacion.direccion ? unaPrestacion.direccion : '',
                     pais: 200,
                     provincia: 15,
-                    departamento: 365  // Confluencia, luego updetear por el que corresponda
+                    departamento: 365 // Confluencia, luego updetear por el que corresponda
                 },
                 aplicacionVacuna:
                 {
@@ -169,7 +169,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                     condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
                     vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
                     ordenDosis: unaPrestacion.vacunas[0].dosis.orden,
-                    referenciaSistemaProvincial: '32342'   // faltaría ver bien que es esto, aunque no es obligatorio
+                    referenciaSistemaProvincial: '32342' // faltaría ver bien que es esto, aunque no es obligatorio
                 }
             };
             const dto = {

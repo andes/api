@@ -1,18 +1,18 @@
-import { farmaciasEndpoints } from '../../../config.private';
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
+import { farmaciasEndpoints } from '../../../config.private';
+import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
 
 const request = require('request');
 const cheerio = require('cheerio');
 const moment = require('moment');
 
-import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
 
 export async function findAddress(localidad, farmacia) {
     const data: any = await farmaciasTurnos.find({
         nombre: farmacia.nombre,
         direccion: farmacia.direccion,
-        fecha: {$exists: false}
+        fecha: { $exists: false }
     }).limit(1);
 
     if (data.length) {
@@ -21,7 +21,7 @@ export async function findAddress(localidad, farmacia) {
             lng: data[0].longitud
         });
     } else {
-        const geo: any =  await geocodeFarmacia(farmacia, localidad);
+        const geo: any = await geocodeFarmacia(farmacia, localidad);
 
         const t = new farmaciasTurnos({
             nombre: farmacia.nombre,
@@ -82,11 +82,11 @@ export function geocodeFarmacia(farmacia, localidad) {
 }
 
 export function donwloadData(desde, hasta) {
-    return getLocalidades().then( async (data: any) => {
+    return getLocalidades().then(async (data: any) => {
         const localidades = data.localidades;
         await farmaciasLocalidades.remove({});
 
-        await farmaciasTurnos.remove({ fecha: {$exists: true} });
+        await farmaciasTurnos.remove({ fecha: { $exists: true } });
 
         for (const item of localidades) {
             await (new farmaciasLocalidades({
@@ -189,37 +189,37 @@ export function getTurnos(data, localidad, desde, hasta) {
             }
         },
 
-            (error, response, html) => {
-                if (!error) {
-                    const $ = cheerio.load(html);
-                    const hijos = $('#download-container').children().slice(2);
-                    let fecha = null;
-                    const farmacias = [];
-                    $(hijos).each((i, elem) => {
-                        if (elem.name === 'br') {
-                            // continue;
-                        } else {
-                            if ($(elem).attr('class') && $(elem).attr('class').indexOf('title-turno') > -1) {
-                                fecha = moment($(elem).text().substr(-10, 10), 'DD/MM/YYYY').format('YYYY-MM-DD');
-                            } else if (elem.name === 'div') {
-                                const $els = $(elem).children();
-                                const nombre = $($els[0]).text();
-                                const direccion = $($els[1]).text();
-                                const phone = $($els[2]).text();
-                                farmacias.push({
-                                    fecha,
-                                    nombre,
-                                    direccion,
-                                    telefono: phone
-                                });
-                            }
+        (error, response, html) => {
+            if (!error) {
+                const $ = cheerio.load(html);
+                const hijos = $('#download-container').children().slice(2);
+                let fecha = null;
+                const farmacias = [];
+                $(hijos).each((i, elem) => {
+                    if (elem.name === 'br') {
+                        // continue;
+                    } else {
+                        if ($(elem).attr('class') && $(elem).attr('class').indexOf('title-turno') > -1) {
+                            fecha = moment($(elem).text().substr(-10, 10), 'DD/MM/YYYY').format('YYYY-MM-DD');
+                        } else if (elem.name === 'div') {
+                            const $els = $(elem).children();
+                            const nombre = $($els[0]).text();
+                            const direccion = $($els[1]).text();
+                            const phone = $($els[2]).text();
+                            farmacias.push({
+                                fecha,
+                                nombre,
+                                direccion,
+                                telefono: phone
+                            });
                         }
+                    }
 
-                    });
-                    resolve(farmacias);
-                } else {
-                    reject(error);
-                }
-            });
+                });
+                resolve(farmacias);
+            } else {
+                reject(error);
+            }
+        });
     });
 }

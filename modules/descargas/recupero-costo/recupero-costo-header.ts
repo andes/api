@@ -1,5 +1,5 @@
-import { loadImage } from '../model/informe.class';
 import { HTMLComponent } from '../model/html-component.class';
+import { loadImage } from '../model/informe.class';
 
 export class RecuperoCostoHeader extends HTMLComponent {
     template = `<div class="login-header">
@@ -11,8 +11,8 @@ export class RecuperoCostoHeader extends HTMLComponent {
         super();
 
         this.data = {
-            logo: loadImage(`templates/recupero-costo/img/logo.png`),
-            logoSalud: loadImage(`templates/recupero-costo/img/logosalud.png`)
+            logo: loadImage('templates/recupero-costo/img/logo.png'),
+            logoSalud: loadImage('templates/recupero-costo/img/logosalud.png')
         };
     }
 }

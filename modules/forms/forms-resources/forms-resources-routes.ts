@@ -1,6 +1,6 @@
-import { FormResource } from './forms-resources-schema';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../../auth/auth.class';
+import { FormResource } from './forms-resources-schema';
 
 class FormResourceResource extends ResourceBase {
     Model = FormResource;

@@ -46,7 +46,7 @@ let mailOptions = {
  * @returns resultado
  */
 export async function fueraAgendaPecas(start, end, done) {
-    // tslint:disable-next-line: no-console
+    // eslint-disable-next-line no-console
     console.log('start ', start, 'end ', end);
     try {
         poolPrestaciones = await new sql.ConnectionPool(config).connect();

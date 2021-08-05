@@ -34,7 +34,7 @@ export class ArancelamientoFooter extends HTMLComponent {
         super();
         const provincia = configPrivate.provincia || 'neuquen';
         this.data = {
-            logoPDP: loadImage(`templates/rup/informes/img/logo-pdp.png`)
+            logoPDP: loadImage('templates/rup/informes/img/logo-pdp.png')
         };
     }
 }

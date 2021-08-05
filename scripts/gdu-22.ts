@@ -4,8 +4,8 @@ import { AuthUsers } from '../auth/schemas/authUsers';
 async function run(done) {
     const permiso = 'usuarios:*';
     const permisosUsuarios = ['usuarios:read',
-        'usuarios:write',
-        'usuarios:perfiles',
+                              'usuarios:write',
+                              'usuarios:perfiles',
     ];
     const usuarios = AuthUsers.find({ 'organizaciones.permisos': permiso }).cursor({ batchSize: 200 });
 

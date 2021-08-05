@@ -341,7 +341,7 @@ test('Censo diario - Paciente ingresa y tiene alta', async () => {
         cama: idCama
     }, estadoOcupada(
         moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
-        REQMock
+    REQMock
     );
 
     await CamasEstadosController.store({

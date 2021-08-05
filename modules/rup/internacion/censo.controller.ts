@@ -1,10 +1,10 @@
-import * as mongoose from 'mongoose';
 import * as moment from 'moment';
+import * as mongoose from 'mongoose';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { Prestacion } from '../schemas/prestacion';
+import * as CamasEstadosController from './cama-estados.controller';
 import { Camas } from './camas.schema';
 import { Censo } from './censos.schema';
-import * as CamasEstadosController from './cama-estados.controller';
-import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 /**
  * Agrupa por cierta key. Por cada valor genera un array de esos elementos

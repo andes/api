@@ -2,7 +2,7 @@ import { pacientePuco } from '../controller/puco';
 import { getPacienteSumar } from '../controller/sumar';
 import { IObraSocial, ObraSocial } from '../schemas/obraSocial';
 
-/*Lo cambiamos porque las prepagas no se consultan de la tabla */
+/* Lo cambiamos porque las prepagas no se consultan de la tabla */
 export async function getObraSocial(paciente) {
     if (!paciente.documento) { return []; }
 

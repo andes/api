@@ -1,4 +1,4 @@
-import { model, Model, Types, SchemaTypes, Schema, Document } from 'mongoose';
+import { Document, model, Model, Schema, SchemaTypes, Types } from 'mongoose';
 
 export interface IPantalla extends Document {
     nombre: String;
@@ -10,7 +10,7 @@ export interface IPantalla extends Document {
         type: {
             id: Types.ObjectId;
             nombre: String;
-        }
+        };
     };
     playlist?: String;
     bloqueada: Boolean;

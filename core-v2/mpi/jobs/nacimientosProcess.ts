@@ -1,15 +1,15 @@
-import { Paciente } from '../paciente/paciente.schema';
-import { PacienteCtr } from '../paciente/paciente.routes';
-import { validar } from '../validacion';
+import { Types } from 'mongoose';
 import { registroProvincialData, userScheduler } from '../../../config.private';
-import { mpiNacimientosLog } from '../mpi.log';
+import { extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { ParentescoCtr } from '../../../core-v2/mpi/parentesco/parentesco.routes';
 import { handleHttpRequest } from '../../../utils/requestHandler';
+import { mpiNacimientosLog } from '../mpi.log';
 import { IPaciente } from '../paciente/paciente.interface';
+import { PacienteCtr } from '../paciente/paciente.routes';
+import { Paciente } from '../paciente/paciente.schema';
+import { validar } from '../validacion';
 import moment = require('moment');
 import debug = require('debug');
-import { ParentescoCtr } from '../../../core-v2/mpi/parentesco/parentesco.routes';
-import { Types } from 'mongoose';
-import { extractFoto } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 const nacimientosLog = mpiNacimientosLog.startTrace();
 const deb = debug('nacimientosJob');
@@ -86,7 +86,11 @@ async function relacionar(mama, bebe) {
             fotoId: mama.fotoId ? mama.fotoId : null,
             fechaFallecimiento: mama.fechaFallecimiento ? mama.fechaFallecimiento : null
         };
-        bebe.relaciones?.length ? bebe.relaciones.push(mamaRelacion) : bebe.relaciones = [mamaRelacion];
+        if (bebe.relaciones?.length) {
+            bebe.relaciones.push(mamaRelacion);
+        } else {
+            bebe.relaciones = [mamaRelacion];
+        }
     }
 
     // Insertamos/actualizamos al bebé
@@ -112,7 +116,11 @@ async function relacionar(mama, bebe) {
             fotoId: bebeAndes.fotoId ? bebeAndes.fotoId : null,
             fechaFallecimiento: bebeAndes.fechaFallecimiento ? bebeAndes.fechaFallecimiento : null
         };
-        mama.relaciones?.length ? mama.relaciones.push(bebeRelacion) : mama.relaciones = [bebeRelacion];
+        if (mama.relaciones?.length) {
+            mama.relaciones.push(bebeRelacion);
+        } else {
+            mama.relaciones = [bebeRelacion];
+        }
     }
 
     const mamaUpdated = await PacienteCtr.update(mama.id, mama, userScheduler as any);
@@ -202,7 +210,7 @@ async function validarPaciente(dataPaciente) {
     if (!dataPaciente.direccion?.[0] && resultado.direccion && resultado.direccion[0]) {
         dataPaciente.direccion = resultado.direccion;
     }
-    if (resultado.direccion?.[1]) {  // direccion legal
+    if (resultado.direccion?.[1]) { // direccion legal
         dataPaciente.direccion[1] = resultado.direccion[1];
     }
     return dataPaciente;

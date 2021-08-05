@@ -12,7 +12,7 @@ async function run(done) {
     let i = 0;
     for await (const prestacion of prestaciones) {
         i++;
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         if (i % 100 === 0) { console.log(i); }
 
         const $set: any = {

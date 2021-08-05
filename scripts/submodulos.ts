@@ -35,7 +35,7 @@ async function run(done) {
     // Inserta los datos
     Modulos.db.collection(modulosNEW).insertMany(jsonRaw, async (err) => {
         if (err) {
-            // tslint:disable-next-line: no-console
+            // eslint-disable-next-line no-console
             console.log(err);
         } else {
             // Renombra actual a AUX

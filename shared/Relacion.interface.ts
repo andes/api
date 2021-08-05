@@ -2,9 +2,9 @@ import { Document } from 'mongoose';
 
 export interface IRelacion {
     relacion: {
-        id: string,
-        nombre: string,
-        opuesto: string
+        id: string;
+        nombre: string;
+        opuesto: string;
     };
     referencia: string;
     nombre: string;

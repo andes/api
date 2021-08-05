@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as cie10 from '../../../core/term/schemas/cie10';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 

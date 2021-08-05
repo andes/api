@@ -1,8 +1,8 @@
 import * as express from 'express';
-import * as turno from '../schemas/turno';
-import { Profesional } from '../../../core/tm/schemas/profesional';
-import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
+import { Profesional } from '../../../core/tm/schemas/profesional';
+import * as turno from '../schemas/turno';
+import { turnoSolicitado } from '../schemas/turnoSolicitado';
 let router = express.Router();
 
 
@@ -92,8 +92,8 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
     if (!Auth.check(request, 'matriculaciones:turnos:*')) {
         return errorHandler(403);
     }
-    const offset = parseInt(request.query.offset, 0);
-    const chunkSize = parseInt(request.query.size, 0);
+    const offset = parseInt(request.query.offset, 10);
+    const chunkSize = parseInt(request.query.size, 10);
 
     const responseData = {
         totalPages: null,
@@ -247,15 +247,15 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
     };
     // matchObj['anulado'] = { $exists: false };
     if (req.query.anio) {
-        matchObj['anio'] = parseInt(req.query.anio, 0);
+        matchObj['anio'] = parseInt(req.query.anio, 10);
     }
 
     if (req.query.mes) {
-        matchObj['mes'] = parseInt(req.query.mes, 0);
+        matchObj['mes'] = parseInt(req.query.mes, 10);
     }
 
     if (req.query.dia) {
-        matchObj['dia'] = parseInt(req.query.dia, 0);
+        matchObj['dia'] = parseInt(req.query.dia, 10);
     }
 
     if (!req.query.dia) {

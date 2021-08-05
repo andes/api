@@ -1,22 +1,22 @@
+import { ObjectId } from '@andes/core';
+import { AndesDrive } from '@andes/drive';
+import * as base64_stream from 'base64-stream';
+import * as moment from 'moment';
 import { Types } from 'mongoose';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import * as Stream from 'stream';
+import { Auth } from '../../../auth/auth.class';
+import { CDA as CDAConfig } from '../../../config.private';
 import { isMatchingAlto, suggest } from '../../../core-v2/mpi/paciente/paciente.controller';
-import { CDA } from './class/CDA';
-import { Patient } from './class/Patient';
-import { Organization } from './class/Organization';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { readFile as readFileBase } from '../../../core/tm/controller/file-storage';
+import { makeFs } from '../schemas/CDAFiles';
+import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
+import { CDABuilder } from './builder/CdaBuilder';
 import { Author } from './class/Author';
 import { Body, Component, ImageComponent } from './class/Body';
-import { CDABuilder } from './builder/CdaBuilder';
-import * as base64_stream from 'base64-stream';
-import { makeFs } from '../schemas/CDAFiles';
-import * as Stream from 'stream';
-import * as moment from 'moment';
-import { CDA as CDAConfig } from '../../../config.private';
-import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
-import { Auth } from '../../../auth/auth.class';
-import { AndesDrive } from '@andes/drive';
-import { readFile as readFileBase } from '../../../core/tm/controller/file-storage';
-import { ObjectId } from '@andes/core';
+import { CDA } from './class/CDA';
+import { Organization } from './class/Organization';
+import { Patient } from './class/Patient';
 
 /**
  * Matcheamos los datos del paciente.
@@ -222,18 +222,18 @@ export function storeFile({
             contentType: mimeType,
             metadata
         },
-            stream,
-            (error, createdFile) => {
-                if (error) {
-                    return reject(error);
-                }
-                return resolve({
-                    id: createdFile._id,
-                    data: createdFile.filename,
-                    mime: mimeType,
-                    is64: false
-                });
+        stream,
+        (error, createdFile) => {
+            if (error) {
+                return reject(error);
             }
+            return resolve({
+                id: createdFile._id,
+                data: createdFile.filename,
+                mime: mimeType,
+                is64: false
+            });
+        }
         );
     });
 }
@@ -253,14 +253,14 @@ export function storePdfFile(pdf) {
             filename: String(uniqueId) + '.pdf',
             contentType: mime
         },
-            input.pipe(pdf),
-            (error, createdFile) => {
-                resolve({
-                    id: createdFile._id,
-                    data: 'files/' + createdFile.filename,
-                    mime
-                });
-            }
+        input.pipe(pdf),
+        (error, createdFile) => {
+            resolve({
+                id: createdFile._id,
+                data: 'files/' + createdFile.filename,
+                mime
+            });
+        }
         );
     });
 }
@@ -283,10 +283,10 @@ export function storeCDA(objectID, cdaXml, metadata) {
             contentType: 'application/xml',
             metadata
         },
-            input,
-            (error, createdFile) => {
-                resolve(createdFile);
-            }
+        input,
+        (error, createdFile) => {
+            resolve(createdFile);
+        }
         );
 
         input.end(cdaXml);
@@ -685,45 +685,45 @@ export function checkAndExtract(xmlDom) {
             require: true
         },
         {
-            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:given`,
+            key: '//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:given',
             many: true,
             as: 'paciente.nombre',
             require: true
         },
         {
-            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:family`,
+            key: '//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:family',
             many: true,
             as: 'paciente.apellido',
             require: true
         },
         {
-            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code`,
+            key: '//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code',
             as: 'paciente.sexo',
             require: true
         },
         {
-            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value`,
+            key: '//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value',
             as: 'paciente.fechaNacimiento',
             require: true
         },
 
         {
-            key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@root`,
+            key: '//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@root',
             match: CDAConfig.rootOID
         },
         {
-            key: `//x:ClinicalDocument/x:documentationOf/x:serviceEvent/x:code/@code`,
+            key: '//x:ClinicalDocument/x:documentationOf/x:serviceEvent/x:code/@code',
             as: 'prestacion',
             require: true
         },
 
         {
-            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:representedOrganization/x:id/@extension`,
+            key: '//x:ClinicalDocument/x:author/x:assignedAuthor/x:representedOrganization/x:id/@extension',
             as: 'organizacion.id',
             require: true
         },
         {
-            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:representedOrganization/x:name`,
+            key: '//x:ClinicalDocument/x:author/x:assignedAuthor/x:representedOrganization/x:name',
             as: 'organizacion.name',
             require: true
         },
@@ -734,19 +734,19 @@ export function checkAndExtract(xmlDom) {
             require: true
         },
         {
-            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given`,
+            key: '//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given',
             many: true,
             as: 'profesional.nombre',
             require: true
         },
         {
-            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:family`,
+            key: '//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:family',
             many: true,
             as: 'profesional.apellido'
         },
 
         {
-            key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`,
+            key: '//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value',
             as: 'adjunto'
         },
 

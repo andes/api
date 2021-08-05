@@ -1,7 +1,7 @@
-import { Agenda } from '../schemas/agenda';
-import * as mongoose from 'mongoose';
 import * as moment from 'moment';
+import * as mongoose from 'mongoose';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { Agenda } from '../schemas/agenda';
 
 const ObjectId = mongoose.Types.ObjectId;
 

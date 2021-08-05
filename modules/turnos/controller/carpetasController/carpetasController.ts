@@ -1,12 +1,12 @@
-import * as utils from './utils';
-import * as config from './config';
-import * as sql from 'mssql';
-import { Organizacion } from '../../../../core/tm/schemas/organizacion';
-import * as carpetaPaciente from '../../../carpetas/schemas/carpetaPaciente';
-import * as configPrivate from '../../../../config.private';
-import { LoggerJobs } from '../../../../utils/loggerJobs';
-
 import * as debug from 'debug';
+import * as sql from 'mssql';
+import * as configPrivate from '../../../../config.private';
+import { Organizacion } from '../../../../core/tm/schemas/organizacion';
+import { LoggerJobs } from '../../../../utils/loggerJobs';
+import * as carpetaPaciente from '../../../carpetas/schemas/carpetaPaciente';
+import * as config from './config';
+import * as utils from './utils';
+
 const logger = debug('carpetasJob');
 
 let organizacion;
@@ -130,7 +130,7 @@ export async function migrar() {
                 logger('Error SQL---->', err);
             });
 
-            const querySips = `select idEfector from dbo.sys_Efector as efector WHERE codigoSisa=` + `'` + String(efector.codigo.sisa) + `'`;
+            const querySips = `select idEfector from dbo.sys_Efector as efector WHERE codigoSisa='${String(efector.codigo.sisa)}'`;
             let resultado = await connectionPool.request()
                 .query(querySips);
             resultado = resultado.recordset[0];

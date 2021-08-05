@@ -32,7 +32,7 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
                 origen: {
                     id: data.id, // id de la ficha a la que hace referencia
                     nombre: 'Ficha de epidemiología',
-                    tipo: data.type.name   // Esto es variable por si algún día viene la de hanta, etc.
+                    tipo: data.type.name // Esto es variable por si algún día viene la de hanta, etc.
                 },
                 score: {
                     value: parseInt(data.score.value, 10),
@@ -68,6 +68,9 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
 
 
 EventCore.on('epidemiologia:prestaciones:validate', async (data) => {
+    if (!data.paciente) {
+        return;
+    }
     try {
         const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
         if (lastSeguimiento) {
@@ -88,8 +91,7 @@ EventCore.on('epidemiologia:prestaciones:validate', async (data) => {
 
 EventCore.on('epidemiologia:prestaciones:romperValidacion', async (data) => {
     if (!data.paciente) {
-        // tslint:disable-next-line:no-console
-        console.log('seguimiento', data);
+        return;
     }
     const lastSeguimiento: any = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
     if (lastSeguimiento) {

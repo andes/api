@@ -1,5 +1,5 @@
-import { SchemaTypes, Schema, model, Types, Model, Document } from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { Document, model, Model, Schema, SchemaTypes, Types } from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 
 const EstadoKey = String;
@@ -9,10 +9,10 @@ export interface IEstados {
     organizacion: Types.ObjectId;
     ambito: String;
     capa: String;
-    estados: { key: IEstadoKey, label: String, color: String, icon: String }[];
-    relaciones: { origen: IEstadoKey, destino: IEstadoKey }[];
+    estados: { key: IEstadoKey; label: String; color: String; icon: String }[];
+    relaciones: { origen: IEstadoKey; destino: IEstadoKey }[];
     historialMedico: boolean;
-    configPases: { sala: Types.ObjectId, allowCama: boolean };
+    configPases: { sala: Types.ObjectId; allowCama: boolean };
 }
 
 export interface IEstadosDocument extends Document, IEstados { }

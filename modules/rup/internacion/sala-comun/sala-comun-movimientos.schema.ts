@@ -1,10 +1,11 @@
-import { SchemaTypes, Schema, model, Types } from 'mongoose';
-import { AuditPlugin, AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
-import { InternacionExtrasSchema } from '../cama-estados.schema';
-import { SnomedConcept } from '../../schemas/snomed-concept';
+import { AndesDocWithAudit, AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
+import { SnomedConcept } from '../../schemas/snomed-concept';
+import { InternacionExtrasSchema } from '../cama-estados.schema';
 
+// eslint-disable-next-line no-shadow
 export enum SalaComunAccion {
     IN = 'IN',
     OUT = 'OUT'

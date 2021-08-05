@@ -1,5 +1,5 @@
-import { Schema, SchemaTypes, Types, Model, model, Document } from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { Document, Model, model, Schema, SchemaTypes, Types } from 'mongoose';
 
 export const HudsAccesoSchema = new Schema({
     paciente: {
@@ -71,10 +71,10 @@ export interface IHudsAccesos extends Document {
             os: String;
             platform: String;
             source: String;
-        }
+        };
     };
     servidor: {
-        ip: String
+        ip: String;
     };
 }
 

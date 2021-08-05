@@ -1,10 +1,10 @@
 import * as express from 'express';
-import * as listaEspera from '../schemas/listaEspera';
-import { Agenda } from '../schemas/agenda';
-import * as utils from '../../../utils/utils';
-import { defaultLimit, maxLimit } from './../../../config';
 import * as moment from 'moment';
 import { Logger } from '../../../utils/logService';
+import * as utils from '../../../utils/utils';
+import { Agenda } from '../schemas/agenda';
+import * as listaEspera from '../schemas/listaEspera';
+import { defaultLimit, maxLimit } from './../../../config';
 
 const async = require('async');
 const router = express.Router();
@@ -74,7 +74,7 @@ router.put('/listaEspera/:id', (req, res, next) => {
     });
 });
 
-/*Si viene un id es porque se están enviando pacientes a la lista de espera desde una agenda suspendida*/
+/* Si viene un id es porque se están enviando pacientes a la lista de espera desde una agenda suspendida*/
 router.post('/listaEspera/IdAgenda/:id', (req, res, next) => {
     Agenda.findById(req.params._id, (err, data) => {
         if (err) {

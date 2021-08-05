@@ -7,7 +7,7 @@ async function run(done) {
         try {
             inscripcion._createTokens();
             if (i % 100 === 0) {
-                // tslint:disable-next-line:no-console
+                // eslint-disable-next-line no-console
                 console.log(i++);
             }
             await InscripcionVacuna.update(
@@ -19,7 +19,7 @@ async function run(done) {
                 }
             );
         } catch (e) {
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             console.error(inscripcion.id, e);
         }
 

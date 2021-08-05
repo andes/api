@@ -1,19 +1,19 @@
-import { Types } from 'mongoose';
-import { ValidateDarTurno } from './../../../utils/validateDarTurno';
-import * as express from 'express';
-import { Agenda } from '../schemas/agenda';
-import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-import { NotificationService } from '../../mobileApp/controller/NotificationService';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import * as turnosController from '../controller/turnosController';
-import * as moment from 'moment';
-import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
+import * as debug from 'debug';
+import * as express from 'express';
+import * as moment from 'moment';
+import { Types } from 'mongoose';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
+import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
 import { turnosLog } from '../citasLog';
 import { getHistorial } from '../controller/historialCitasController/historialCitasController';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import * as turnosController from '../controller/turnosController';
+import { Agenda } from '../schemas/agenda';
+import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 
 
 const router = express.Router();
@@ -107,7 +107,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             };
         }
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        Agenda.findOneAndUpdate(query, update, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
+        Agenda.findOneAndUpdate(query, update, { new: true }, (err4, doc2: any, writeOpResult) => {
             if (err4) {
                 return next(err4);
             }
@@ -309,7 +309,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         query[etiquetaEstado] = 'disponible';
 
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        Agenda.findOneAndUpdate(query, { $set: update }, { new: true }, async function actualizarAgenda(err4, doc2: any, writeOpResult) {
+        Agenda.findOneAndUpdate(query, { $set: update }, { new: true }, async (err4, doc2: any, writeOpResult) => {
             if (err4) {
                 return next(err4);
             }
@@ -458,31 +458,30 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
 
         update[etiquetaTurno] = req.body.turno;
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        Agenda.findOneAndUpdate(query, update, { new: true },
-            function actualizarAgenda(err2, doc2: any, writeOpResult) {
-                if (err2) {
-                    return next(err2);
-                }
-                if (writeOpResult && writeOpResult.value === null) {
-                    return next('No se pudo actualizar los datos del turno');
-                } else {
-                    const datosOp = {
-                        turno: update[etiquetaTurno]
-                    };
-                    turnosLog.info('update', datosOp, req);
-                }
-                // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-                // Donde doc2 es el documeto de la Agenda actualizado
-                // Fin de insert cache
-                res.json(doc2);
-                if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
-                    const turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
-                    const idBloque = req.params.idBloque !== '-1' ? null : Types.ObjectId(req.params.idBloque);
-                    LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, idBloque, req.params.idAgenda);
-                    NotificationService.notificarReasignar(req.params);
-                }
+        Agenda.findOneAndUpdate(query, update, { new: true }, (err2, doc2: any, writeOpResult) => {
+            if (err2) {
+                return next(err2);
+            }
+            if (writeOpResult && writeOpResult.value === null) {
+                return next('No se pudo actualizar los datos del turno');
+            } else {
+                const datosOp = {
+                    turno: update[etiquetaTurno]
+                };
+                turnosLog.info('update', datosOp, req);
+            }
+            // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+            // Donde doc2 es el documeto de la Agenda actualizado
+            // Fin de insert cache
+            res.json(doc2);
+            if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
+                const turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                const idBloque = req.params.idBloque !== '-1' ? null : Types.ObjectId(req.params.idBloque);
+                LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, idBloque, req.params.idAgenda);
+                NotificationService.notificarReasignar(req.params);
+            }
 
-            });
+        });
     } else {
         return next('Los datos del paciente son inválidos');
     }

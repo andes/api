@@ -1,31 +1,34 @@
-import { defaultLimit, maxLimit } from './../../../config';
-import * as express from 'express';
-import { Profesional } from '../schemas/profesional';
-import { profesion } from '../schemas/profesion_model';
-import * as utils from '../../../utils/utils';
-import * as fs from 'fs';
-import { makeFs } from '../schemas/imagenes';
-import { makeFsFirma } from '../schemas/firmaProf';
-import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
-import * as stream from 'stream';
+import { EventCore } from '@andes/event-bus';
+import { log } from '@andes/log';
 import * as base64 from 'base64-stream';
+import * as express from 'express';
+import * as fs from 'fs';
+import * as stream from 'stream';
 import { Auth } from '../../../auth/auth.class';
 import { getTemporyTokenCOVID } from '../../../auth/auth.controller';
-import { formacionCero, matriculaCero, migrarTurnos, saveTituloFormacionGrado, saveTituloFormacionPosgrado, saveFirma } from '../controller/profesional';
-import { sendSms } from '../../../utils/roboSender/sendSms';
-import { toArray } from '../../../utils/utils';
-import { log } from '@andes/log';
-import { EventCore } from '@andes/event-bus';
-import moment = require('moment');
-import { streamToBase64 } from '../controller/file-storage';
 import { services } from '../../../services';
+import { sendSms } from '../../../utils/roboSender/sendSms';
+import * as utils from '../../../utils/utils';
+import { toArray } from '../../../utils/utils';
+import { streamToBase64 } from '../controller/file-storage';
+import { formacionCero, matriculaCero, migrarTurnos, saveFirma, saveTituloFormacionGrado, saveTituloFormacionPosgrado } from '../controller/profesional';
+import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
+import { makeFsFirma } from '../schemas/firmaProf';
+import { makeFs } from '../schemas/imagenes';
+import { Profesional } from '../schemas/profesional';
+import { profesion } from '../schemas/profesion_model';
+import { defaultLimit, maxLimit } from './../../../config';
+import moment = require('moment');
 
 let router = express.Router();
 
 router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
-    let query = [{ $unwind: '$formacionPosgrado' },
-    { $unwind: '$formacionPosgrado.matriculacion' },
-    { $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 } }, { $limit: 1 }];
+    let query = [
+        { $unwind: '$formacionPosgrado' },
+        { $unwind: '$formacionPosgrado.matriculacion' },
+        { $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 } },
+        { $limit: 1 }
+    ];
     let data = await toArray(Profesional.aggregate(query).cursor({}).exec());
     let ultimoNumero = data[0].formacionPosgrado.matriculacion.matriculaNumero;
     res.json(ultimoNumero);
@@ -481,18 +484,18 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         if (req.query.matriculasPorVencer) {
             if (req.query.tipoMatricula === 'grado') {
                 match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
-                { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                                  { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
             } else {
                 match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
-                { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                                  { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
             }
         } else if (req.query.matriculasPorVencer === false) {
             if (req.query.tipoMatricula === 'grado') {
                 match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+                                  { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
             } else {
                 match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+                                  { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
             }
         }
     }
@@ -871,10 +874,10 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
                     idProfesional: req.body.imagen.idProfesional,
                 }
             },
-                input.pipe(decoder),
-                (error, createdFile) => {
-                    res.json(createdFile);
-                });
+            input.pipe(decoder),
+            (error, createdFile) => {
+                res.json(createdFile);
+            });
             input.end(_base64);
         }
         if (req.body.firma) {
@@ -1119,9 +1122,9 @@ router.post('/profesionales/validar', async (req, res, next) => {
         if (profesional) {
             return res.json({ profesional, token });
         }
-        return next(`El profesional no se encuentra registrado en Andes.`);
+        return next('El profesional no se encuentra registrado en Andes.');
     } else {
-        return next(`No se pudo validar el profesional. Por favor revise los datos ingresados.`);
+        return next('No se pudo validar el profesional. Por favor revise los datos ingresados.');
     }
 });
 

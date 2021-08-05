@@ -9,24 +9,24 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 export interface IPrestamo extends Document {
     paciente: any;
     numero: String;
-    organizacion: { nombre: String; };
+    organizacion: { nombre: String };
     estado: String;
     datosPrestamo: {
         observaciones: String;
         agendaId: Types.ObjectId;
         turno: {
             id: Types.ObjectId;
-            profesionales: [{ nombre: String; apellido: String; }];
+            profesionales: [{ nombre: String; apellido: String }];
             tipoPrestacion: ITipoPrestacion;
             espacioFisico: IEspacioFisico;
-        }
+        };
     };
     datosDevolucion: {
-        observaciones: String,
+        observaciones: String;
         estado: {
-            type: String,
-            enum: ['Normal', 'En mal estado', 'Fuera de término', 'Hojas o documentación faltante']
-        }
+            type: String;
+            enum: ['Normal', 'En mal estado', 'Fuera de término', 'Hojas o documentación faltante'];
+        };
     };
     datosSolicitudManual: {
         espacioFisico: IEspacioFisico;

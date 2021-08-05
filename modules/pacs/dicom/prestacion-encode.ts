@@ -1,6 +1,6 @@
 import { IPrestacion } from '../../rup/prestaciones.interface';
 import * as moment from 'moment';
-/***
+/** *
  *
  * https://www.dicomlibrary.com/dicom/dicom-tags/
  * http://dicom.nema.org/dicom/2013/output/chtml/part05/sect_6.2.html

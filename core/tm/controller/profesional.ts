@@ -227,17 +227,19 @@ export async function saveFirma(data, admin = false) {
     }
     // Inserta en la bd en files y chunks
     return new Promise((resolve, reject) => {
-        firma.writeFile({
-            filename: admin ? 'firmaAdmin.png' : 'firma.png',
-            contentType: 'image/jpeg',
-            metadata: metadataWrite
-        }, input.pipe(decoder),
+        firma.writeFile(
+            {
+                filename: admin ? 'firmaAdmin.png' : 'firma.png',
+                contentType: 'image/jpeg',
+                metadata: metadataWrite
+            }, input.pipe(decoder),
             (error, createdFile) => {
                 if (error) {
                     reject(error);
                 }
                 resolve(createdFile);
-            });
+            }
+        );
         input.end(_base64);
     });
 }

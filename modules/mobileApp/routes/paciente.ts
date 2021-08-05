@@ -1,10 +1,10 @@
 import * as express from 'express';
-import * as cdaCtr from '../../cda/controller/CDAPatient';
-import { xmlToJson } from '../../../utils/utils';
+import { agregarHijo, extractFoto, findById, findOrCreate } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { validar } from '../../../core-v2/mpi/validacion';
-import { findById, findOrCreate, extractFoto, agregarHijo } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { validar } from '../../../core-v2/mpi/validacion';
+import { xmlToJson } from '../../../utils/utils';
+import * as cdaCtr from '../../cda/controller/CDAPatient';
 const router = express.Router();
 
 /**
@@ -146,8 +146,8 @@ router.get('/laboratorios/(:id)', async (req: any, res, next) => {
         if (!paciente) {
             return next({ message: 'no existe el paciente' });
         }
-        let limit = parseInt(req.query.limit || 10, 0);
-        let skip = parseInt(req.query.skip || 0, 0);
+        let limit = parseInt(req.query.limit || 10, 10);
+        let skip = parseInt(req.query.skip || 0, 10);
         let cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip });
         for (let cda of cdas) {
             let _xml = await cdaCtr.loadCDA(cda.cda_id);

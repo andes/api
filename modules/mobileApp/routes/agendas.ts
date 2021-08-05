@@ -40,10 +40,10 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
                 'bloques.restantesMobile': { $gt: 0 },
             },
             {
-                'tipoPrestaciones.conceptId': { $in:  reglas  }
+                'tipoPrestaciones.conceptId': { $in:  reglas }
             }
         ];
-        fieldRegla =  {
+        fieldRegla = {
             cumpleRegla: {
                 $not: [{$eq: [{$size: { $setIntersection: ['$tipoPrestaciones.conceptId', reglas]}}, 0]}]
             }

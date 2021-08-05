@@ -8,6 +8,7 @@ const fechaFinEmbarazoLog = perinatalFechaFinEmbarazoLog.startTrace();
 export async function getPaciente(paciente: any) {
 
     const documento = paciente.documento || '';
+
     if (documento) {
         try {
             const options = {

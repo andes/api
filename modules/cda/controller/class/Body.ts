@@ -1,13 +1,13 @@
-import { IID, ICode, ITemplateId } from './interfaces';
-import { ImageComponentBuilder, ComponentBuilder } from '../builder/ComponentBuilder';
+import { ComponentBuilder, ImageComponentBuilder } from '../builder/ComponentBuilder';
+import { ICode, IID, ITemplateId } from './interfaces';
 export class Body {
     public components: Component[] = [];
 
-    addComponent (comp) {
+    addComponent(comp) {
         this.components.push(comp);
     }
 
-    component () {
+    component() {
         return this.components;
     }
 }
@@ -28,7 +28,7 @@ export class Component {
         return this.templateId;
     }
 
-    addTemplateId (root) {
+    addTemplateId(root) {
         this.templateId.push({ root });
     }
 
@@ -44,7 +44,7 @@ export class Component {
         if (code) { this._code = code; return this; } else { return this._code; }
     }
 
-    text (text = null) {
+    text(text = null) {
         if (text) { this._text = text; return this; } else { return this._text; }
     }
 }
@@ -69,7 +69,7 @@ export class ImageComponent extends Component {
         }
     }
 
-    file (value = null) {
+    file(value = null) {
         if (value) {
             this.file64 = value;
             return this;
@@ -78,7 +78,7 @@ export class ImageComponent extends Component {
         }
     }
 
-    type (value = null) {
+    type(value = null) {
         if (value) {
             this.mimeType = value;
             return this;

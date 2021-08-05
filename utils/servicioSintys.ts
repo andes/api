@@ -1,7 +1,7 @@
 import { Matching } from '@andes/match';
-import * as configPrivate from '../config.private';
-import * as config from '../config';
 import * as https from 'https';
+import * as config from '../config';
+import * as configPrivate from '../config.private';
 
 const to_json = require('xmljson').to_json;
 
@@ -9,7 +9,7 @@ export function getPersonaSintys(nroDocumento: string) {
     let xml = '';
     const pathSintys = configPrivate.sintys.path + 'dni=' + nroDocumento;
     const optionsgetmsg = {
-        /*Este servicio debe ser llamado directamente desde los WS
+        /* Este servicio debe ser llamado directamente desde los WS
         que están publicados en el servidor 10.1.232.8 ya que por cuestiones
         de seguridad de Sintys, sólo nos dejan consumir datos desde este servidor.
         */

@@ -9,7 +9,7 @@ export async function registroToHTML(prestacion, registro, depth: number) {
     };
 
     if (!elementoRUP) {
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         console.warn(`INFORME-RUP: Prestacion ${prestacion && prestacion.id}|${registro && registro.id} no tiene elemento RUP`);
         return '';
     }
@@ -21,7 +21,7 @@ export async function registroToHTML(prestacion, registro, depth: number) {
         await componenteHTML.process();
         return componenteHTML.render();
     } else {
-        // tslint:disable-next-line:no-console
+        // eslint-disable-next-line no-console
         console.warn(`INFORME-RUP: Componente ${elementoRUP.componente} no tiene implementacion`);
         return '';
     }

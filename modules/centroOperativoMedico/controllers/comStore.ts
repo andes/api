@@ -22,10 +22,10 @@ export function storeFile(base64, metadata) {
             contentType: mime,
             metadata
         },
-            input.pipe(decoder64),
-            (error, createdFile) => {
-                resolve(createdFile);
-            }
+        input.pipe(decoder64),
+        (error, createdFile) => {
+            resolve(createdFile);
+        }
         );
         input.end(data);
     });

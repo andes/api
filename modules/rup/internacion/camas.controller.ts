@@ -56,7 +56,7 @@ export interface ICama {
     especialidades: ISnomedConcept[];
     createdAt: Date;
     createdBy: Object;
-    organizacion: { _id: ObjectId, nombre: String };
+    organizacion: { _id: ObjectId; nombre: String };
     ambito: String;
     unidadOrganizativaOriginal: ISnomedConcept;
     sectores: Object[];
@@ -133,7 +133,7 @@ function wrapOrganizacion(organizacion) {
     return organizacion.id || organizacion._id || organizacion;
 }
 
-export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha: Date, organizacion: INombre, ambito: String, capa: String }) {
+export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha: Date; organizacion: INombre; ambito: String; capa: String }) {
 
     const $match = {};
     if (fecha) {

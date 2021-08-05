@@ -97,7 +97,7 @@ export class ConstanciaPucoBody extends HTMLComponent {
             nombre: _data.nombre,
             dni: _data.dni,
             financiador: `${_data.codigoFinanciador} ${_data.financiador}`,
-            claveBeneficiario: _data.claveBeneficiario ? `Clave de Beneficiario: ${_data.claveBeneficiario}` : ``,
+            claveBeneficiario: _data.claveBeneficiario ? `Clave de Beneficiario: ${_data.claveBeneficiario}` : '',
             textFooter,
             fechaActual
         };

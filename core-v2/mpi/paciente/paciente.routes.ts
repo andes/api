@@ -181,7 +181,7 @@ export const getFoto = async (req: Request, res: Response, next) => {
                         // 'Content-Length': stream.length
                     });
                     stream.on('error', (error) => {
-                        // tslint:disable-next-line:no-console
+                        // eslint-disable-next-line no-console
                         console.error(`paciente ${pacienteBuscado.id} tiene foto incorrecta`);
                     });
                     return stream.pipe(res);

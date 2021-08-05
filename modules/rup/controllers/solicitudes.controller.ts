@@ -98,7 +98,7 @@ export async function buscarYCrearSolicitudes(prestacion: IPrestacionDoc, req: R
  * @param planes
  * @param organizacionID
  */
-async function matchReglas(prestacion: IPrestacion, planes: IPrestacionRegistro[], organizacionID: ObjectId): Promise<{ regla: any, solicitud: any }[]> {
+async function matchReglas(prestacion: IPrestacion, planes: IPrestacionRegistro[], organizacionID: ObjectId): Promise<{ regla: any; solicitud: any }[]> {
     const ps = planes.map(async (solicitud) => {
         const valorRegistro = solicitud.valor || {};
         if (valorRegistro.solicitudPrestacion?.organizacionDestino || valorRegistro.solicitudPrestacion?.autocitado) {

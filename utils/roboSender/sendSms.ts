@@ -1,5 +1,5 @@
-import { SMSendpoints } from '../../config.private';
 import * as debug from 'debug';
+import { SMSendpoints } from '../../config.private';
 import * as utils from '../utils';
 const log = debug('sendSMS');
 const soap = require('soap');

@@ -33,7 +33,7 @@ export interface IPacienteApp {
 }
 
 export type IPacienteAppDoc = AndesDoc<IPacienteApp> & {
-    comparePassword(password: string, cb: Function)
+    comparePassword(password: string, cb: Function);
 };
 
 

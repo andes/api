@@ -10,7 +10,7 @@ export class EventBus extends Emitter {
 
     emitAsync (name: String, ...params: any[]);
 
-    emitAsync () {
+    emitAsync() {
         process.nextTick(() => {
             this.emit.apply(this, arguments);
         });

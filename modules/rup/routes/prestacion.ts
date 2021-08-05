@@ -24,7 +24,7 @@ import { parseDate } from './../../../shared/parse';
 
 const router = express.Router();
 
-/***
+/** *
  *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
  *
  * @param idPaciente: id mongo del paciente
@@ -260,7 +260,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             tipoPrestaciones = Array.isArray(tipoPrestaciones) ? tipoPrestaciones : [tipoPrestaciones];
             match.$and.push({
                 $or: [{ 'solicitud.tipoPrestacion.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } },
-                { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
+                      { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
             });
         }
 
@@ -693,7 +693,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     frecuentes: registros
                 };
                 frecuentescrl.actualizarFrecuentes(dto).catch((errFrec) => {
-                    // tslint:disable-next-line:no-console
+                    // eslint-disable-next-line no-console
                     return console.error(errFrec);
                 });
 

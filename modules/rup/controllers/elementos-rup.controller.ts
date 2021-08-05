@@ -11,7 +11,7 @@ export type ElementoRUPSet = {
 
 export async function getElementosRUP(): Promise<IElementoRUPDoc[]> {
 
-    const key = `elementos-rup`;
+    const key = 'elementos-rup';
     const elementosRUPCache = await AppCache.get(key);
     if (elementosRUPCache) {
         return elementosRUPCache;

@@ -26,7 +26,7 @@ let fechaPrimerHistorial;
  * Actualiza las keys del historial
  */
 async function actualizarKeys() {
-    // tslint:disable:no-console
+    /* eslint-disable no-console */
 
     console.log('INICIO actualizarKeys');
     const solicitudes = findSolicitudes().cursor({ batchSize: 200 });

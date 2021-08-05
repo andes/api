@@ -12,7 +12,7 @@ export async function obtenerVersiones() {
     if (!checkConnection()) {
         return [];
     }
-    let versiones = await Puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
+    let versiones = await Puco.distinct('version').exec(); // esta consulta obtiene un arreglo de strings
     for (let i = 0; i < versiones.length; i++) {
         versiones[i] = { version: versiones[i] };
     }

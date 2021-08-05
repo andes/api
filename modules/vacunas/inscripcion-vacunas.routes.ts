@@ -1,15 +1,15 @@
-import { MongoQuery, ResourceBase } from '@andes/core';
 import { Request } from '@andes/api-tool';
-import { Auth } from '../../auth/auth.class';
-import { InscripcionVacuna } from './schemas/inscripcion-vacunas.schema';
+import { MongoQuery, ResourceBase } from '@andes/core';
 import { EventCore } from '@andes/event-bus/';
-import { validar } from '../../core-v2/mpi/validacion';
-import { matching } from '../../core-v2/mpi/paciente/paciente.controller';
+import { Auth } from '../../auth/auth.class';
 import { mpi } from '../../config';
+import { matching } from '../../core-v2/mpi/paciente/paciente.controller';
+import { validar } from '../../core-v2/mpi/validacion';
 import { handleHttpRequest } from '../../utils/requestHandler';
 import { captcha, userScheduler } from './../../config.private';
 import { mensajeEstadoInscripcion, validarDomicilio, validarInscripcion } from './controller/inscripcion.vacunas.controller';
 import { IInscripcionVacunas } from './interfaces/inscripcion-vacunas.interface';
+import { InscripcionVacuna } from './schemas/inscripcion-vacunas.schema';
 
 class InscripcionVacunasResource extends ResourceBase {
     Model = InscripcionVacuna;
@@ -138,7 +138,11 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
             if (!inscripto.validaciones?.includes('domicilio')) {
                 const domicilio = await validarDomicilio(inscripto);
                 if (domicilio) {
-                    inscripto.validaciones?.length ? inscripto.validaciones.push('domicilio') : inscripto.validaciones = ['domicilio'];
+                    if (inscripto.validaciones?.length) {
+                        inscripto.validaciones.push('domicilio');
+                    } else {
+                        inscripto.validaciones = ['domicilio'];
+                    }
                 }
             }
             if (!inscripto.validaciones?.includes('domicilio') || inscripto.validado === false) {

@@ -1,9 +1,9 @@
-import * as mongoose from 'mongoose';
-import moment = require('moment');
-import { CamaEstados } from './cama-estados.schema';
-import { ObjectId } from '@andes/core';
 import { Request } from '@andes/api-tool';
+import { ObjectId } from '@andes/core';
 import { AuditDocument } from '@andes/mongoose-plugin-audit';
+import * as mongoose from 'mongoose';
+import { CamaEstados } from './cama-estados.schema';
+import moment = require('moment');
 
 export async function snapshotEstados({ fecha, organizacion, ambito, capa }, filtros) {
     const fechaSeleccionada = moment(fecha).toDate();

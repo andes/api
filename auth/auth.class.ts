@@ -1,16 +1,16 @@
-import { AppToken } from './schemas/app-token.interface';
-import { UserToken } from './schemas/user-token.interface';
-import { PacienteToken } from './schemas/paciente-token.interface';
-import { authApps } from './schemas/authApps';
+import { Request, Response } from '@andes/api-tool';
+import { ObjectId } from '@andes/core';
 import * as express from 'express';
+import * as jwt from 'jsonwebtoken';
 import * as mongoose from 'mongoose';
 import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
-import * as jwt from 'jsonwebtoken';
 import * as configPrivate from '../config.private';
-import { Request, Response } from '@andes/api-tool';
-import { ObjectId } from '@andes/core';
 import { handleHttpRequest } from '../utils/requestHandler';
+import { AppToken } from './schemas/app-token.interface';
+import { authApps } from './schemas/authApps';
+import { PacienteToken } from './schemas/paciente-token.interface';
+import { UserToken } from './schemas/user-token.interface';
 
 const shiroTrie = require('shiro-trie');
 
@@ -23,7 +23,7 @@ export class Auth {
      * @memberOf Auth
      */
 
-    static expiresIn = 60 * 60 * 24 * 10;  /* 10 días */
+    static expiresIn = 60 * 60 * 24 * 10; /* 10 días */
     static expiresInTemporaly = 60 * 5;
 
     /**
@@ -310,7 +310,7 @@ export class Auth {
             }
             return next();
         };
-    }
+    };
 
     /**
      * Obtiene todos los permisos para el string Shiro indicado

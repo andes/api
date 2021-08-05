@@ -1,5 +1,5 @@
 import { userScheduler } from '../config.private';
-import { PacienteCtr, replaceChars, Paciente } from '../core-v2/mpi';
+import { Paciente, PacienteCtr, replaceChars } from '../core-v2/mpi';
 
 const dataLog = {
     ...userScheduler,

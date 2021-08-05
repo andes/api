@@ -16,16 +16,16 @@ export interface IPrestacion {
         telefono: string;
         sexo: string;
         fechaNacimiento: Date;
-        obraSocial: IFinanciador,
-        idPacienteValidado?: ObjectId
+        obraSocial: IFinanciador;
+        idPacienteValidado?: ObjectId;
     };
     inicio: 'top' | 'agenda' | 'fuera-agenda' | 'internacion';
     noNominalizada: boolean;
     estadoFacturacion?: {
-        tipo: String,
-        numero: Number,
-        numeroComprobante: string,
-        estado: String
+        tipo: String;
+        numero: Number;
+        numeroComprobante: string;
+        estado: String;
     };
     estadoActual: IPrestacionEstado;
     estados: IPrestacionEstado[];
@@ -38,7 +38,7 @@ export interface IPrestacion {
     solicitud: IPrestacionSolicitud;
     tags?: any;
     unidadOrganizativa?: ISnomedConcept;
-    metadata?: { key: string, valor: any }[];
+    metadata?: { key: string; valor: any }[];
 
 }
 
@@ -62,7 +62,7 @@ export interface IPrestacionRegistro {
     esDiagnosticoPrincipal: boolean;
     isEmpty: boolean;
     privacy?: {
-        scope: 'private' | 'public' | 'termOnly'
+        scope: 'private' | 'public' | 'termOnly';
     };
     esPrimeraVez: boolean;
     valor?: any;
