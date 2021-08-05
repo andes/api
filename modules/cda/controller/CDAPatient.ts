@@ -441,7 +441,7 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
         const CDAFiles = makeFs();
         const conditions: any = {
             'metadata.paciente': { $in: ids },
-            'metadata.cdaId': { $exists: false }
+            'metadata.cdaId': null
         };
         if (prestacion) {
             conditions['metadata.prestacion.snomed.conceptId'] = prestacion;
