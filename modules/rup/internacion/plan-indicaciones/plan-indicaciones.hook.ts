@@ -40,7 +40,7 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
                 concepto: registro.concepto,
                 valor: registro.valor,
                 estados: [{
-                    tipo: 'activo',
+                    tipo: 'active',
                     fecha
                 }],
 
@@ -56,7 +56,7 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
                 if (indicacionModificada) {
                     indicacionModificada.fechaBaja = fecha;
                     indicacionModificada.estados.push({
-                        tipo: 'modificado',
+                        tipo: 'edited',
                         fecha
                     });
                     Auth.audit(indicacionModificada, user as any);

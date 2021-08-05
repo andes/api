@@ -20,6 +20,7 @@ export interface IPlanIndicaciones {
 export type IPlanIndicacionesDoc = AndesDoc<IPlanIndicaciones>;
 
 export const PlanIndicacionesEstadoSchema = new Schema({
+    // active | on-hold | cancelled | completed | entered-in-error | stopped | draft | unknown | edited
     tipo: String,
     fecha: Date
 }, { _id: false });
@@ -43,7 +44,10 @@ export const PlanIndicacionesSchema = new Schema({
     nombre: String,
 
     fechaInicio: Date,
-    fechaBaja: { type: Date, default: null },
+    fechaBaja: {
+        type: Date,
+        default: null
+    },
 
     valor: SchemaTypes.Mixed,
 
@@ -59,7 +63,8 @@ PlanIndicacionesSchema.plugin(AuditPlugin);
 PlanIndicacionesSchema.pre('save', function (next) {
     const indicacion: any = this as any;
     indicacion.estadoActual = indicacion.estados[indicacion.estados.length - 1];
-    if (indicacion.estadoActual.tipo === 'suspendido' || indicacion.estadoActual.tipo === 'completado') {
+    const completedStates = ['stopped', 'cancelled', 'completed'];
+    if (completedStates.includes(indicacion.estadoActual.tipo)) {
         indicacion.fechaBaja = indicacion.estadoActual.fecha;
     }
     next();
