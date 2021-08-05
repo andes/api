@@ -562,6 +562,11 @@ export default [
                 key: 'desasignar-inscriptos',
                 title: 'Desasignar Inscriptos',
                 type: 'boolean'
+            },
+            {
+                key: 'crear-dosis-lote',
+                title: 'crear lote y dosis',
+                type: 'boolean'
             }
         ]
     },
