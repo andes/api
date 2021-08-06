@@ -1,12 +1,12 @@
 import * as moment from 'moment';
-import { handleHttpRequest } from 'utils/requestHandler';
 import { mpi } from '../../../config';
-import { provincia as provinciaActual } from '../../../config.private';
+import { provincia as provinciaActual, userScheduler } from '../../../config.private';
 import { extractFoto, findOrCreate, matching, updateContacto } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { validar } from '../../../core-v2/mpi/validacion';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { PersonalSaludCtr } from '../../../modules/personalSalud';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { services } from '../../../services';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { PacienteCtr, replaceChars } from './../../../core-v2/mpi';
 import { GrupoPoblacionalCtr } from './../../../core/tm/grupo-poblacional.routes';
@@ -251,35 +251,25 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
 }
 
 
-export async function updateInsriptosFallecidos(req) {
+export async function updateInsriptosFallecidos() {
+    const req: any = userScheduler;
     try {
-        const url = `${XROAD_SERVICES.fallecidos_covid.server}/r1/roksnet/GOV/70000101/GP-SALUD/WS_Fallecidos_Covid`;
-        const headers = XROAD_SERVICES.fallecidos_covid.headers;
-        const options = {
-            uri: url,
-            method: 'GET',
-            headers,
-            json: true
-        };
-        const [status, body] = await handleHttpRequest(options);
-        if (status >= 200 && status <= 299) {
-            if (body && body.resultado1) {
-                const fallecidos = JSON.parse(body.resultado1);
-                // se buscan los inscriptos
-                for (let i = 0; i < fallecidos.length; i++) {
-                    const inscripto = fallecidos[i];
-                    const sexo = inscripto['Sexo'] === 'F' ? 'femenino' : 'masculino';
-                    const inscriptos = await InscripcionVacunasCtr.search({ documento: inscripto['DNI'].toString(), sexo });
-                    for (let x = 0; x < inscriptos.length; x++) {
-                        const paciente = inscriptos[x];
-                        await InscripcionVacunasCtr.update((paciente as any).id, { estado: 'fallecido' }, req);
-                    }
+        const resultado = await services.get('xroad-fallecidos').exec({});
+        if (resultado && resultado.resultado1) {
+            const fallecidos = JSON.parse(resultado.resultado1);
+            for (const fallecido of fallecidos) {
+                const sexo = fallecido['Sexo'] === 'F' ? 'femenino' : 'masculino';
+                const documento = fallecido['DNI'].toString();
+                const inscriptos = await InscripcionVacunasCtr.search({ documento, sexo });
+                for (const inscripto of inscriptos) {
+                    await InscripcionVacunasCtr.update(
+                        inscripto.id,
+                        { estado: 'fallecido' },
+                        req
+                    );
                 }
-                return true;
             }
         }
-        return false;
     } catch (err) {
-        return err;
     }
 }
