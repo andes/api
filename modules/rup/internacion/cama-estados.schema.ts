@@ -1,6 +1,7 @@
 import { ObjectId } from '@andes/core';
 import { SchemaTypes, Schema, model } from 'mongoose';
 import { ISnomedConcept, SnomedConcept } from '../schemas/snomed-concept';
+import { DispositivoSchema } from '../../dispositivo/dispositivo.schema';
 
 export interface InternacionExtras {
     egreso?: boolean;
@@ -9,8 +10,8 @@ export interface InternacionExtras {
     idInternacion?: ObjectId;
     unidadOrganizativaOrigen?: ISnomedConcept;
     idMovimiento?: ObjectId;
-
 }
+
 export const InternacionExtrasSchema = new Schema(
     {
         egreso: { type: Boolean, required: false },
@@ -18,8 +19,7 @@ export const InternacionExtrasSchema = new Schema(
         tipo_egreso: { type: String, required: false },
         idInternacion: { type: SchemaTypes.ObjectId, required: false }, // idInternacion al egresar,
         unidadOrganizativaOrigen: { type: SnomedConcept, required: false },
-        idMovimiento: { type: SchemaTypes.ObjectId, required: false },
-
+        idMovimiento: { type: SchemaTypes.ObjectId, required: false }
     },
     { _id: false }
 );
@@ -70,6 +70,12 @@ const CamaEstadosSchema = new Schema({
             required: false
         },
         equipamiento: [SnomedConcept],
+        respiradores: [{
+            dispositivo: DispositivoSchema,
+            fechaDesde: Date,
+            fechaHasta: Date,
+            required: false
+        }],
         extras: { type: InternacionExtrasSchema, required: false },
         nota: { type: String, required: false },
         createdAt: { type: Date, required: false },

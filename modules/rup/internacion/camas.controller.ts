@@ -63,6 +63,11 @@ export interface ICama {
     nombre: String;
     tipoCama: ISnomedConcept;
     equipamiento: ISnomedConcept[];
+    respiradores?: [{
+        dispositivo: any;
+        fechaDesde: Date;
+        fechaHasta: Date;
+    }];
     capa: String;
     paciente?: {
         _id: ObjectId;
@@ -201,7 +206,18 @@ export async function patch(data: Partial<ICama>, req: Request) {
         delete data['estado'];
         delete data['paciente'];
     }
-
+    if (data.respiradores) {
+        // En caso de que se agregue o quite un respirador
+        return await CamasEstadosController.setRespirador({
+            organizacion: estadoCama.organizacion._id,
+            ambito: estadoCama.ambito,
+            capa: estadoCama.capa,
+            cama: estadoCama._id
+        },
+        estadoCama.fecha,
+        data.respiradores
+        );
+    }
     if (cambioPermitido) {
         if ((data as any).idCama || (data as any).createdAt) {
             // La APP debería mandar solo lo que quiere modificar
@@ -213,7 +229,9 @@ export async function patch(data: Partial<ICama>, req: Request) {
             delete data['updatedBy'];
         }
 
-        estadoCama.extras = null; // Los extras no se transfieren entre estados
+        // Los extras y respiradores no se transfieren entre estados
+        estadoCama.extras = null;
+        delete estadoCama.respiradores;
         // Si la cama esta ocupada, registro el movimiento como un cambio legal.
         const registraMovimiento = data.esMovimiento || determinarMovimiento(estadoCama, data);
         const nuevoEstado = {

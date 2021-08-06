@@ -420,7 +420,6 @@ export async function patch({ organizacion, ambito, capa, cama }, from: Date, to
             idCama: mongoose.Types.ObjectId(cama),
             start: { $lte: from },
             end: { $gte: from }
-
         },
         {
             $set: { 'estados.$[elemento].fecha': to }
@@ -463,7 +462,6 @@ export async function deshacerEstadoCama({ organizacion, ambito, capa, cama }, d
             idCama: wrapObjectId(cama),
             start: { $lte: date },
             end: { $gte: date }
-
         },
         {
             $set: {
@@ -474,6 +472,30 @@ export async function deshacerEstadoCama({ organizacion, ambito, capa, cama }, d
         {
             arrayFilters: [{
                 'elemento.fecha': date,
+            }]
+        }
+    );
+    return result.nModified > 0 && result.ok === 1;
+}
+
+export async function setRespirador({ organizacion, ambito, capa, cama }, date: Date, data) {
+    const result = await CamaEstados.update(
+        {
+            idOrganizacion: organizacion,
+            ambito,
+            capa,
+            idCama: cama,
+            start: { $lte: date },
+            end: { $gte: date }
+        },
+        {
+            $set: {
+                'estados.$[elemento].respiradores': data
+            }
+        },
+        {
+            arrayFilters: [{
+                'elemento.fecha': date
             }]
         }
     );
