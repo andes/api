@@ -8,10 +8,10 @@ async function run(done) {
         // Fechas entre las que hubo problema con pacientes SUMAR
         $and: [
             { horaInicio: { $gte: new Date('2021-07-15T00:00:00.000-03:00') } },
-            { horaInicio: { $lte: new Date('2021-08-02T00:00:00.000-03:00') } }
+            { horaInicio: { $lte: new Date('2021-08-04T00:00:00.000-03:00') } }
         ]
     };
-    const agendas = Agenda.find(ultimasAgendas).cursor();
+    const agendas = Agenda.find(ultimasAgendas).cursor({ batchSize: 100 });
     const obraSocial = {
         codigoPuco: null,
         nombre: 'SUMAR',
