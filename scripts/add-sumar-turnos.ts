@@ -5,8 +5,9 @@ import { Types } from 'mongoose';
 
 async function run(done) {
     const ultimasAgendas = {
+        // Fechas entre las que hubo problema con pacientes SUMAR
         $and: [
-            { horaInicio: { $gte: new Date('2021-07-22T00:00:00.000-03:00') } },
+            { horaInicio: { $gte: new Date('2021-07-15T00:00:00.000-03:00') } },
             { horaInicio: { $lte: new Date('2021-08-02T00:00:00.000-03:00') } }
         ]
     };
