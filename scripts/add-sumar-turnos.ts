@@ -6,10 +6,10 @@ import { Types } from 'mongoose';
 async function run(done) {
     const ultimasAgendas = {
         // Fechas entre las que hubo problema con pacientes SUMAR
-        $and: [
-            { horaInicio: { $gte: new Date('2021-07-15T00:00:00.000-03:00') } },
-            { horaInicio: { $lte: new Date('2021-08-04T00:00:00.000-03:00') } }
-        ]
+        horaInicio: {
+            $gte: new Date('2021-07-15T00:00:00.000-03:00'),
+            $lte: new Date('2021-08-04T00:00:00.000-03:00')
+        }
     };
     const agendas = Agenda.find(ultimasAgendas).cursor({ batchSize: 100 });
     const obraSocial = {
@@ -18,15 +18,11 @@ async function run(done) {
         financiador: 'SUMAR',
     };
     for await (const agenda of agendas) {
-        for await (const bloque of agenda.bloques) {
-            for await (const turno of bloque.turnos) {
+        for (const bloque of agenda.bloques) {
+            for (const turno of bloque.turnos) {
                 if (turno.estado === 'asignado') {
                     if (!turno.paciente.obraSocial) {
-                        const pacienteSumar = await sumar.find({
-                            $and: [
-                                { activo: 'S ' }, { afidni: turno.paciente.documento }
-                            ]
-                        });
+                        const pacienteSumar = await sumar.find({ activo: 'S ', afidni: turno.paciente.documento });
                         if (pacienteSumar.length) {
                             await Agenda.update(
                                 { _id: agenda.id },
