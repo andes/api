@@ -69,4 +69,11 @@ export interface IInscripcionVacunas {
             documento: String;
         };
     };
+    turno?: {
+        organizacion: {
+            id: Types.ObjectId;
+            nombre: String;
+        };
+        fechaYHora: Date;
+    };
 }
