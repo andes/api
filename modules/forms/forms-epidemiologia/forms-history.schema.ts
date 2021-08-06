@@ -1,13 +1,12 @@
 import * as mongoose from 'mongoose';
 import { FormsEpidemiologiaCloneSchema } from './forms-epidemiologia-schema';
 
-
 const FormsHistorySchema = FormsEpidemiologiaCloneSchema.clone();
 FormsHistorySchema.add({
     createdAt: Date,
-    createdBy: { nombreCompleto: String, username: String },
+    createdBy: mongoose.Schema.Types.Mixed,
     updatedAt: Date,
-    updatedBy: { nombreCompleto: String, username: String },
+    updatedBy: mongoose.Schema.Types.Mixed,
     id: mongoose.Types.ObjectId
 });
 
