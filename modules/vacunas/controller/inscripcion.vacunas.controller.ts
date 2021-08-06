@@ -1,11 +1,12 @@
 import * as moment from 'moment';
 import { mpi } from '../../../config';
-import { provincia as provinciaActual } from '../../../config.private';
+import { provincia as provinciaActual, userScheduler } from '../../../config.private';
 import { extractFoto, findOrCreate, matching, updateContacto } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { validar } from '../../../core-v2/mpi/validacion';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { PersonalSaludCtr } from '../../../modules/personalSalud';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { services } from '../../../services';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { PacienteCtr, replaceChars } from './../../../core-v2/mpi';
 import { GrupoPoblacionalCtr } from './../../../core/tm/grupo-poblacional.routes';
@@ -247,4 +248,28 @@ export async function validarInscripcion(inscripcion, inscriptoValidado, req) {
     await verificarExistenciaCertificado(inscripcion);
     return inscripcion;
 
+}
+
+
+export async function updateInsriptosFallecidos() {
+    const req: any = userScheduler;
+    try {
+        const resultado = await services.get('xroad-fallecidos').exec({});
+        if (resultado && resultado.resultado1) {
+            const fallecidos = JSON.parse(resultado.resultado1);
+            for (const fallecido of fallecidos) {
+                const sexo = fallecido['Sexo'] === 'F' ? 'femenino' : 'masculino';
+                const documento = fallecido['DNI'].toString();
+                const inscriptos = await InscripcionVacunasCtr.search({ documento, sexo });
+                for (const inscripto of inscriptos) {
+                    await InscripcionVacunasCtr.update(
+                        inscripto.id,
+                        { estado: 'fallecido' },
+                        req
+                    );
+                }
+            }
+        }
+    } catch (err) {
+    }
 }
