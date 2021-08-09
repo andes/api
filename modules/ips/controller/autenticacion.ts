@@ -1,11 +1,11 @@
 import * as jwt from 'jsonwebtoken';
+import { IPS } from '../../../config.private';
 import { handleHttpRequest } from '../../../utils/requestHandler';
-
 export class SaludDigitalClient {
     // static SystemPatient = 'https://federador.msal.gob.ar/patient-id';
 
-    private expiresIn = 60 * 15 * 1000;  /* 15 min */
-    private token: string;
+    private expiresIn = 60 * 15 * 1000; /* 15 min */
+    private token = 'jwt';
     private host: string;
     private hostBus: string;
     private dominio: string;
@@ -41,6 +41,9 @@ export class SaludDigitalClient {
      * Obtención de token de autenticacion
      */
     async obtenerToken(payload) {
+        if (!IPS.auth) {
+            return null;
+        }
         const token: any = this.generacionTokenAut(payload);
         const url = `${this.host}/bus-auth/auth`;
         const options = {
@@ -55,7 +58,8 @@ export class SaludDigitalClient {
             },
         };
         const [status, body] = await handleHttpRequest(options);
-        return body;
+        this.token = body.accessToken;
+        return this.token;
     }
 
     /**
@@ -84,7 +88,8 @@ export class SaludDigitalClient {
             json: true,
             body: patient,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${this.token}`
             }
         };
         const [status, body] = await handleHttpRequest(options);
@@ -102,7 +107,7 @@ export class SaludDigitalClient {
             json: true,
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: 'bearer ' + token
+                Authorization: `Bearer ${this.token}`
             }
         };
         const [status, bundle] = await handleHttpRequest(options);
@@ -115,7 +120,7 @@ export class SaludDigitalClient {
             url,
             method: 'GET',
             headers: {
-                Authorization: ''
+                Authorization: `Bearer ${this.token}`
             }
         };
         const [status, body] = await handleHttpRequest(options);
@@ -130,6 +135,7 @@ export class SaludDigitalClient {
                     };
                 });
             }
+        } else {
         }
         return [];
 
@@ -148,7 +154,7 @@ export class SaludDigitalClient {
                 url,
                 method: 'GET',
                 headers: {
-                    Authorization: 'Bearer TOKEN'  // Queda pendiente el token
+                    Authorization: `Bearer ${this.token}`
                 }
             };
             const [status, body] = await handleHttpRequest(options);
@@ -175,12 +181,12 @@ export class SaludDigitalClient {
     }
 
     async getBinary(urlBinary) {
-        const url = `${this.hostBus}${urlBinary}`;
+        const url = `${this.hostBus}/${urlBinary}`;
         const options = {
             url,
             method: 'GET',
             headers: {
-                Authorization: 'Bearer TOKEN'
+                Authorization: `Bearer ${this.token}`
             }
         };
         const [status, body] = await handleHttpRequest(options);
@@ -190,3 +196,10 @@ export class SaludDigitalClient {
     }
 }
 
+
+/**
+ * Otra consulta con el host y las url:
+https://testapp.hospitalitaliano.org.ar/masterfile-federacion-service/fhir/Patient
+https://testapp.hospitalitaliano.org.ar/fhir/DocumentReference
+https://testapp.hospitalitaliano.org.ar/masterfile-federacion-service/fhir/Patient/$patient-location
+ */

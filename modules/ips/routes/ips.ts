@@ -1,14 +1,14 @@
 import * as express from 'express';
-import { FHIR as fhirConf } from '../../../config.private';
+import { FHIR as fhirConf, IPS } from '../../../config.private';
 import { SaludDigitalClient } from '../controller/autenticacion';
 
 const router = express.Router();
 
-router.get('/getDomains/:id', async (req, res, next) => {
+router.get('/dominios/:id', async (req, res, next) => {
     try {
         const idPaciente = req.params.id;
         if (idPaciente) {
-            const sdClient = new SaludDigitalClient(fhirConf.domain, fhirConf.ips_host, fhirConf.secret);
+            const sdClient = await getClient();
             const dominios = await sdClient.getDominios(idPaciente);
             res.json(dominios);
         }
@@ -17,13 +17,12 @@ router.get('/getDomains/:id', async (req, res, next) => {
     }
 });
 
-router.get('/getDocuments', async (req, res, next) => {
+router.get('/documentos', async (req, res, next) => {
     try {
         const custodian = req.query.custodian;
         const idPaciente = req.query.id;
         if (custodian && idPaciente) {
-            const sdClient = new SaludDigitalClient(fhirConf.domain, fhirConf.ips_host, fhirConf.secret);
-            // Le dejo posiblidad de filtrar por fechas
+            const sdClient = await getClient();
             const docRef = await sdClient.solicitud({ custodian, fechaDesde: null, fechaHasta: null, patient: idPaciente, loinc: '60591-5' });
             if (docRef && docRef.length > 0) {
                 for (let d of docRef) {
@@ -41,5 +40,19 @@ router.get('/getDocuments', async (req, res, next) => {
     }
 
 });
+
+async function getClient() {
+    const sdClient = new SaludDigitalClient(fhirConf.domain, fhirConf.ips_host, fhirConf.secret);
+    if (IPS.auth) {
+        const payload = {
+            name: IPS.name,
+            role: IPS.role,
+            ident: IPS.ident,
+            sub: IPS.sub
+        };
+        await sdClient.obtenerToken(payload);
+    }
+    return sdClient;
+}
 
 export = router;
