@@ -1,5 +1,6 @@
 import { ObjectId } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
+import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { IPacienteDoc } from '../../../core-v2/mpi/paciente/paciente.interface';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
@@ -11,29 +12,20 @@ import { services } from '../../../services';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { VacunasPacientes } from '../schemas/vacunas-pacientes.schema';
 import { exportCovid19 } from './vacunas.controller';
-import { sisa } from '../../../config.private';
-import { handleHttpRequest } from '../../../utils/requestHandler';
-import moment = require('moment');
 
 EventCore.on('mobile:patient:login', async (account) => {
     await exportCovid19(null, account.pacientes[0].id);
 });
 
 EventCore.on('rup:prestaciones:vacunacion', async (prestacion) => {
+    if (!prestacion.paciente) {
+        // Cuando se utiliza el concepto como registro y no prestación.
+        return;
+    }
     await sincronizarVacunas(prestacion.paciente.id);
+
     if (prestacion.estadoActual.tipo === 'ejecucion') {
-        // Consulta las vacunas del paciente en webservice de sisa
-        const requestVacunas = await consultaVacunasCiudadano(prestacion.paciente);
-        if (requestVacunas[0] === 200) {
-            const vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
-            // Busca la vacuna según código y dosis
-            const registroSelected = requestVacunas[1].aplicacionesVacunasCiudadano?.aplicacionVacunaCiudadano?.find(vac =>
-                vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && vac.sniDosisOrden === vacunaPrestacion.dosis.orden);
-            if (registroSelected) {
-                const establecimiento = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
-                // await bajaVacunaNomivac(registroSelected, establecimiento.codigo.sisa);
-            }
-        }
+        await deleteVacunasFromNomivac(prestacion);
     }
 });
 
@@ -47,46 +39,28 @@ EventCore.on('mpi:pacientes:unlink', async ({ source, target }) => {
     await sincronizarVacunas(target);
 });
 
-export async function consultaVacunasCiudadano(paciente) {
-    const headers = {
-        app_id: sisa.consulta.APP_ID,
-        app_key: sisa.consulta.APP_KEY
-    };
-    const data = {
-        idTipoDoc: 1,
-        nroDoc: paciente.documento,
-        sexo: paciente.sexo === 'masculino' ? 'M' : 'F'
-    };
-    const options = {
-        url: sisa.consulta.url,
-        headers,
-        method: 'POST',
-        json: true,
-        body: data
-    };
-    return await handleHttpRequest(options);
-}
-
-export async function bajaVacunaNomivac(vacuna: any, establecimiento: String) {
-    const headers = {
-        app_id: sisa.baja.APP_ID,
-        app_key: sisa.baja.APP_KEY
-    };
-    const data = {
-        idTipoDoc: 1,
-        fechaAplicacion: moment(vacuna.fechaAplicacion).format('DD-MM-YYYY'),
-        idSniAplicacion: vacuna.idSniAplicacion,
-        establecimiento,
-        vacuna: vacuna.idSniVacuna
-    };
-    const options = {
-        url: sisa.baja.url,
-        headers,
-        method: 'DELETE',
-        json: true,
-        body: data
-    };
-    return await handleHttpRequest(options);
+export async function deleteVacunasFromNomivac(prestacion) {
+    try {
+        const response = await services.get('nomivac-consulta-vacunas').exec({
+            documento: prestacion.paciente.documento,
+            sexo: prestacion.paciente.sexo === 'masculino' ? 'M' : 'F'
+        });
+        const vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
+        const vacuna = response.aplicacionesVacunasCiudadano?.aplicacionVacunaCiudadano?.find(
+            vac => vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && vac.sniDosisOrden === vacunaPrestacion.dosis.orden
+        );
+        if (vacuna) {
+            const establecimiento = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
+            await services.get('nomivac-baja-vacuna').exec({
+                fecha: moment(vacuna.fechaAplicacion).format('DD-MM-YYYY'),
+                codigoVacuna: vacuna.idSniVacuna,
+                id: vacuna.idSniAplicacion,
+                organizacion: establecimiento.codigo.sisa
+            });
+        }
+    } catch (err) {
+        // Por ahora no haceos nada, hay que implementar algun sistema de re-try...
+    }
 }
 
 export async function sincronizarVacunas(pacienteID: string) {

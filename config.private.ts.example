@@ -88,18 +88,9 @@ export const sisa = {
     url_snvs: getEnv('SISA_URL_SNVS', ''),
     url_snvs_covid: getEnv('SNVS_COVID_URL', ''),
     user_snvs_covid: getEnv('SNVS_COVID_USER', ''),
-    pass_snvs_covid: getEnv('SNVS_COVID_PASS', ''),
-    baja: {
-        url: 'https://apisalud.msal.gob.ar/nomivacWs205/v1/aplicaciones/baja',
-        APP_ID: '',
-        APP_KEY: ''
-    },
-    consulta: {
-        url: 'https://apisalud.msal.gob.ar/nomivacWs201/v1/api/aplicacionesVacunasCiudadano',
-        APP_ID: '',
-        APP_KEY: ''
-    }
+    pass_snvs_covid: getEnv('SNVS_COVID_PASS', '')
 };
+
 // Configuración servicio ANSES
 export const anses = {
     Usuario: getEnv('ANSES_USERNAME', ''),
