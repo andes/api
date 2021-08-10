@@ -9,6 +9,8 @@ import { Request } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import { InternacionResumen } from './resumen/internacion-resumen.schema';
+import { prestacionAnuladaLog } from './internacion.log';
+
 
 export async function obtenerPrestaciones(organizacion, filtros) {
     const fechaIngresoDesde = (filtros.fechaIngresoDesde) ? moment(filtros.fechaIngresoDesde).toDate() : moment().subtract(1, 'month').toDate();
@@ -77,67 +79,77 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
     let fechaDesde;
     let internacion;
 
-    if (capa === 'estadistica') {
-        internacion = await Prestacion.findById(idInternacion);
-        fechaDesde = internacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso;
-    } else { // capa médica
-        internacion = await InternacionResumen.findById(idInternacion);
-        fechaDesde = internacion?.fechaIngreso || moment().subtract(-12, 'months').toDate();
-    }
-
-    if (internacion) {
-        let movimientos = await CamasEstadosController.searchEstados(
-            { desde: fechaDesde, hasta: new Date(), organizacion, capa, ambito },
-            { internacion: internacion.id, esMovimiento: true }
-        );
-        movimientos.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
-
-        if (!completo) {
-            movimientos = movimientos.slice(-1);
+    try {
+        if (capa === 'estadistica') {
+            internacion = await Prestacion.findById(idInternacion);
+            fechaDesde = internacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso;
+        } else { // capa médica
+            internacion = await InternacionResumen.findById(idInternacion);
+            fechaDesde = internacion?.fechaIngreso || moment().subtract(-12, 'months').toDate();
         }
 
-
-        const ps = movimientos.map(async mov => {
-            if (mov.extras?.idMovimiento) {
-                const ms = await CamasEstadosController.searchEstados(
-                    { desde: mov.fecha, hasta: mov.fecha, organizacion, capa, ambito },
-                    { movimiento: mov.extras.idMovimiento, estado: 'disponible' }
-                );
-                return ms[0];
-            }
-        });
-        const movs = await Promise.all(ps);
-
-        movimientos = [
-            ...movimientos,
-            ...movs.filter(m => m)
-        ];
-
-        if (movimientos.length === 1) {
-            completo = true;
-        }
-
-        const deshacerEstados = movimientos.map(mov => {
-            return CamasEstadosController.deshacerEstadoCama({
-                organizacion,
-                ambito,
-                capa,
-                cama: mov.idCama
-            },
-            mov.fecha,
-            usuario
+        if (internacion) {
+            let movimientos = await CamasEstadosController.searchEstados(
+                { desde: fechaDesde, hasta: new Date(), organizacion, capa, ambito },
+                { internacion: internacion.id, esMovimiento: true }
             );
-        });
+            movimientos.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
-        await Promise.all(deshacerEstados);
-        if (completo) {
-            EventCore.emitAsync('mapa-camas:paciente:undo', {
-                fecha: fechaDesde,
-                idInternacion: internacion.id
+            if (!completo) {
+                movimientos = movimientos.slice(-1);
+            }
+
+            const ps = movimientos.map(async mov => {
+                if (mov.extras?.idMovimiento) {
+                    const ms = await CamasEstadosController.searchEstados(
+                        { desde: mov.fecha, hasta: mov.fecha, organizacion, capa, ambito },
+                        { movimiento: mov.extras.idMovimiento, estado: 'disponible' }
+                    );
+                    return ms[0];
+                }
             });
-        }
+            const movs = await Promise.all(ps);
 
-        return completo;
+            movimientos = [
+                ...movimientos,
+                ...movs.filter(m => m)
+            ];
+
+            if (movimientos.length === 1) {
+                completo = true;
+            }
+
+            const deshacerEstados = movimientos.map(mov => {
+                return CamasEstadosController.deshacerEstadoCama({
+                    organizacion,
+                    ambito,
+                    capa,
+                    cama: mov.idCama
+                },
+                mov.fecha,
+                usuario
+                );
+            });
+
+            await Promise.all(deshacerEstados);
+            if (completo) {
+                EventCore.emitAsync('mapa-camas:paciente:undo', {
+                    fecha: fechaDesde,
+                    idInternacion: internacion.id
+                });
+            }
+
+            return completo;
+        }
+        return false;
+    } catch (err) {
+        const dataLog = {
+            idInternacion,
+            capa,
+            usuario: req.user,
+            organizacion
+        };
+        prestacionAnuladaLog.error('deshacerInternacion', dataLog, err, req);
+        return false;
     }
-    return false;
 }
