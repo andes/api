@@ -1,3 +1,22 @@
+# [5.58.0](https://github.com/andes/api/compare/v5.57.0...v5.58.0) (2021-08-11)
+
+
+### Features
+
+* **EP:** guardar history post save ([#1491](https://github.com/andes/api/issues/1491)) ([2ed7816](https://github.com/andes/api/commit/2ed781632ce949dc96ff5e993236527ebce983ff))
+* **forms-epidemio:** nuevo filtro clasificacionFinal ([#1502](https://github.com/andes/api/issues/1502)) ([7ebd67e](https://github.com/andes/api/commit/7ebd67e5faf01d8d9b25e474b81ce6d4e491e7e9))
+* **jobs:** consulta a web services de fallecidos ([#1458](https://github.com/andes/api/issues/1458)) ([587a869](https://github.com/andes/api/commit/587a869454ac812947c0cc5dc362066221cf031b))
+* **MISC:** semaforo priorizacion ([#1450](https://github.com/andes/api/issues/1450)) ([51449b9](https://github.com/andes/api/commit/51449b949305d8dca8c0c8c73ec5ffef212afed0))
+* **MOBILE:** agregar texto en email de codigo de activacion ([#1504](https://github.com/andes/api/issues/1504)) ([4faaf3e](https://github.com/andes/api/commit/4faaf3eef0a4e4f3464b09afb05f6f9d302efc45))
+* **mpi:** script actualizar relaciones ([#1429](https://github.com/andes/api/issues/1429)) ([94e693c](https://github.com/andes/api/commit/94e693c6b62ed21143da755942bc22979f2ebcfe))
+* **rup:** script migracion prestaciones modificadas-anuladas ([#1479](https://github.com/andes/api/issues/1479)) ([8f00c59](https://github.com/andes/api/commit/8f00c59d8266449d10c06af35e375e4e4a74e4fd))
+* **VAC-88:** mostrar esquemas y condiciones de una dosis ([#1506](https://github.com/andes/api/issues/1506)) ([aa2ad91](https://github.com/andes/api/commit/aa2ad914e867410642d43a07bc5184c42457773c))
+
+
+### Performance Improvements
+
+* **cda:** "optimiza" find de CDA ([#1505](https://github.com/andes/api/issues/1505)) ([9e5b737](https://github.com/andes/api/commit/9e5b737b6147332f9ca784b8526a643169b5fa1f))
+
 # [5.57.0](https://github.com/andes/api/compare/v5.56.0...v5.57.0) (2021-08-04)
 
 
