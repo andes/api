@@ -155,9 +155,7 @@ router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
 });
 
 router.get('/agenda/diagnosticos', async (req, res, next) => {
-    const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     const params = req.query;
-    params['organizacion'] = organizacion;
     try {
         const resultado = await diagnosticosCtrl.getDiagnosticos(params);
         res.json(resultado);
