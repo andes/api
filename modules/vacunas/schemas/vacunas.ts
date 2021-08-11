@@ -4,9 +4,10 @@ export let vacunasSchema = new mongoose.Schema({
     idvacuna: Number,
     codigo: String,
     vacuna: String,
-    codigoEsquema: String,
-    codigoCondicion: String,
-    dosis: Number,
+    esquema: String,
+    condicion: String,
+    dosis: String,
+    ordenDosis: Number,
     fechaAplicacion: Date,
     documento: String,
     apellido: String,
@@ -16,10 +17,9 @@ export let vacunasSchema = new mongoose.Schema({
         type: String,
         enum: ['masculino', 'femenino']
     },
-    efector: {
-        codigo: String,
-        nombre: String
-    }
+    codigoEsquema: Number,
+    codigoCondicion: Number,
+    efector: String
 });
 
 vacunasSchema.index({ documento: 1 });
