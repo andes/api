@@ -2,6 +2,13 @@ import * as mongoose from 'mongoose';
 
 export let vacunasSchema = new mongoose.Schema({
     idvacuna: Number,
+    codigo: String,
+    vacuna: String,
+    esquema: String,
+    condicion: String,
+    dosis: String,
+    ordenDosis: Number,
+    fechaAplicacion: Date,
     documento: String,
     apellido: String,
     nombre: String,
@@ -10,9 +17,8 @@ export let vacunasSchema = new mongoose.Schema({
         type: String,
         enum: ['masculino', 'femenino']
     },
-    vacuna: String,
-    dosis: String,
-    fechaAplicacion: Date,
+    codigoEsquema: Number,
+    codigoCondicion: Number,
     efector: String
 });
 

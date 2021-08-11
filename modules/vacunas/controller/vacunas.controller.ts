@@ -5,7 +5,7 @@ import { matching } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { InformacionExportada } from '../../../core/log/schemas/logExportaInformacion';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { handleHttpRequest } from '../../../utils/requestHandler';
-import { vacunasApi } from '../schemas/vacunasApi';
+import { vacunas } from '../schemas/vacunas';
 import { IPaciente } from './../../../core-v2/mpi/paciente/paciente.interface';
 
 export async function getVacunas(paciente) {
@@ -13,7 +13,7 @@ export async function getVacunas(paciente) {
         documento: paciente.documento
     };
     const sort = { fechaAplicacion: -1 };
-    const resultados = await vacunasApi.find(conditions).sort(sort);
+    const resultados = await vacunas.find(conditions).sort(sort);
     resultados.forEach(async (vacuna: any, index) => {
         const pacienteVacuna: IPaciente = {
             nombre: vacuna.nombre,
