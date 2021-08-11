@@ -36,6 +36,20 @@ async function run(done) {
                 }
             }
         }
+        for (const sobreturno of agenda.sobreturnos) {
+            if (!sobreturno.paciente.obraSocial) {
+                const pacienteSumar = await sumar.find({ activo: 'S ', afidni: sobreturno.paciente.documento });
+                if (pacienteSumar.length) {
+                    await Agenda.update(
+                        { _id: agenda.id },
+                        {
+                            $set: { 'sobreturnos.$[elemento].paciente.obraSocial': obraSocial }
+                        },
+                        { arrayFilters: [{ 'elemento._id': Types.ObjectId(sobreturno.id) }] }
+                    );
+                }
+            }
+        }
     };
     done();
 }
