@@ -66,8 +66,14 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
 
     const seccionClasificacion = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final');
     const clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
-
+    const muestraPcr = seccionClasificacion?.fields.find(f => f.pcrM)?.pcrM;
+    const seccionUsuario = ficha.secciones.find(s => s.name === 'Usuario');
     if (clasificacionfinal === 'Confirmado') {
+        const usuarioConfirma = seccionClasificacion?.fields.find(f => f.usuarioconfirma)?.usuarioconfirma;
+        if (!usuarioConfirma) {
+            const user = seccionUsuario.fields.find(f => f.responsable)?.responsable;
+            seccionClasificacion.fields.push({ usuarioconfirma: user });
+        }
         const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento, ficha.createdAt);
         const comorbilidades = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields.find(f => f.presenta)?.presenta;
         ficha.score = {
@@ -75,6 +81,13 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
             fecha: new Date()
         };
         EventCore.emitAsync('epidemiologia:seguimiento:create', ficha);
+    }
+    if (muestraPcr) {
+        const usuarioPcr = seccionClasificacion?.fields.find(f => f.usuarioconfirma)?.usuarioconfirma;
+        if (!usuarioPcr) {
+            const user = seccionUsuario.fields.find(f => f.responsable)?.responsable;
+            seccionClasificacion.fields.push({ usuariopcr: user });
+        }
     }
     next();
 });
