@@ -11,7 +11,8 @@ initAPI(app);
 // Inicia el servidor HTTP
 const port = 3002;
 const server = app.listen(3002, () => debug('andes')('listening on port %s', port));
-
+server.keepAliveTimeout = 65 * 1000;
+server.headersTimeout = 61 * 1000;
 // Inicializa Websockets
 Websockets.initialize(server);
 
