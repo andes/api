@@ -1,14 +1,15 @@
-import * as mongoose from 'mongoose';
-import * as moment from 'moment';
-import { historial as historialCamas } from './camas.controller';
-import { historial as historialSalas } from './sala-comun/sala-comun.controller';
+import { Request } from '@andes/api-tool';
 import { ObjectId } from '@andes/core';
+import { EventCore } from '@andes/event-bus';
+import * as moment from 'moment';
+import * as mongoose from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
 import * as CamasEstadosController from './cama-estados.controller';
-import { Request } from '@andes/api-tool';
-import { Auth } from '../../../auth/auth.class';
-import { EventCore } from '@andes/event-bus';
+import { historial as historialCamas } from './camas.controller';
 import { InternacionResumen } from './resumen/internacion-resumen.schema';
+import { historial as historialSalas } from './sala-comun/sala-comun.controller';
+
 
 export async function obtenerPrestaciones(organizacion, filtros) {
     const fechaIngresoDesde = (filtros.fechaIngresoDesde) ? moment(filtros.fechaIngresoDesde).toDate() : moment().subtract(1, 'month').toDate();
@@ -79,6 +80,9 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
 
     if (capa === 'estadistica') {
         internacion = await Prestacion.findById(idInternacion);
+        if (!internacion) {
+            return false;
+        }
         fechaDesde = internacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso;
     } else { // capa médica
         internacion = await InternacionResumen.findById(idInternacion);
@@ -95,7 +99,6 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
         if (!completo) {
             movimientos = movimientos.slice(-1);
         }
-
 
         const ps = movimientos.map(async mov => {
             if (mov.extras?.idMovimiento) {
