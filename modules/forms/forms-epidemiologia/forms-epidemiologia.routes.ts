@@ -23,7 +23,7 @@ class FormsEpidemiologiaResource extends ResourceBase {
             fn: MongoQuery.partialString
         },
         organizacion: {
-            field: 'secciones.fields.organizacion',
+            field: 'secciones.fields.organizacion.id',
             fn: MongoQuery.partialString
         },
         zonaSanitaria: {

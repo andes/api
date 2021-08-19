@@ -36,7 +36,7 @@ const assertUniquePCR = async function (next) {
     if (ficha.type.name === 'covid19') {
         const identificadorpcr = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final')?.fields.find(f => f.identificadorpcr)?.identificadorpcr;
         if (identificadorpcr) {
-            const found = await FormsEpidemiologia.findOne({ 'secciones.fields.identificadorpcr': identificadorpcr, _id: { $ne: ficha._id }});
+            const found = await FormsEpidemiologia.findOne({ 'secciones.fields.identificadorpcr': identificadorpcr, _id: { $ne: ficha._id } });
             if (found) {
                 return next('El identificador PCR ya fue registrado en el sistema');
             }
@@ -45,6 +45,13 @@ const assertUniquePCR = async function (next) {
 
     return next();
 };
+FormsEpidemiologiaSchema.index({
+    createdAt: -1
+});
+
+FormsEpidemiologiaSchema.index({
+    'secciones.fields.identificadorpcr': 1
+}, { sparse: true });
 
 export const FormsEpidemiologiaCloneSchema = FormsEpidemiologiaSchema.clone();
 
@@ -71,7 +78,7 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
 });
 
 FormsEpidemiologiaSchema.post('save', (ficha: any) => {
-    const { FormsHistory } = require ('./forms-history.schema');
+    const { FormsHistory } = require('./forms-history.schema');
     const history = new FormsHistory(ficha.toJSON());
     history._id = new mongoose.Types.ObjectId();
 
