@@ -68,6 +68,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         // ultimo movimiento en la unidad organizativa que se esta filtrando
         const ultimoMovimientoUO = allMovimientos.slice().reverse().find(m => m.unidadOrganizativa.conceptId === unidadOrganizativa);
         const prestacion = prestaciones.find(p => String(p.id) === String(ultimoMovimiento.idInternacion));
+        if (!prestacion) {
+            return;
+        }
         const informesInternacion: any = getInformesInternacion(prestacion);
         const fechaEgreso = informesInternacion.egreso ? informesInternacion.egreso.fechaEgreso : null;
         const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
