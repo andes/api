@@ -453,8 +453,8 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
-
-                    NotificationService.notificarSuspension(turno);
+                    const efector = data.organizacion.nombre;
+                    NotificationService.notificarSuspension(turno, efector);
 
                 });
             });
@@ -1217,50 +1217,50 @@ export function getCantidadConsultaXPrestacion(params) {
                 ]
             }
         },
-                    {
-                        $unwind: '$bloques'
-                    },
-                    {
-                        $project: {
-                            idBloque: '$bloques._id',
-                            bloqueTurnos: {
-                                $concatArrays: ['$sobreturnos', '$bloques.turnos']
-                            }
-                        }
-                    },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $project: {
+                idBloque: '$bloques._id',
+                bloqueTurnos: {
+                    $concatArrays: ['$sobreturnos', '$bloques.turnos']
+                }
+            }
+        },
 
 
-                    {
-                        $unwind: '$bloqueTurnos'
-                    },
-                    {
-                        $project: {
-                            hora: '$bloqueTurnos.horaInicio',
-                            estado: '$bloqueTurnos.estado',
-                            tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
-                        }
-                    },
-                    {
-                        $match: {
-                            estado: 'asignado'
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: '$tipoPrestacion.term',
-                            nombrePrestacion: {
-                                $first: '$tipoPrestacion.term'
-                            },
-                            conceptId: {
-                                $first: '$tipoPrestacion.conceptId'
-                            },
-                            total: {
-                                $sum: 1
-                            },
-                        }
+        {
+            $unwind: '$bloqueTurnos'
+        },
+        {
+            $project: {
+                hora: '$bloqueTurnos.horaInicio',
+                estado: '$bloqueTurnos.estado',
+                tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+            }
+        },
+        {
+            $match: {
+                estado: 'asignado'
+            }
+        },
+        {
+            $group: {
+                _id: '$tipoPrestacion.term',
+                nombrePrestacion: {
+                    $first: '$tipoPrestacion.term'
+                },
+                conceptId: {
+                    $first: '$tipoPrestacion.conceptId'
+                },
+                total: {
+                    $sum: 1
+                },
+            }
 
 
-                    }
+        }
 
         ];
 
