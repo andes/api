@@ -1,6 +1,7 @@
 import { PushClient } from './PushClient';
 import { PacienteApp } from '../schemas/pacienteApp';
 import { Agenda } from '../../turnos/schemas/agenda';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
@@ -16,25 +17,26 @@ export class NotificationService {
             moment.locale('es');
             const date = moment(turno.horaInicio).format('DD [de] MMMM [a las] HH:mm [hs]');
             const prestacion = turno.tipoPrestacion.term;
-            const body = 'Tu turno del ' + date + ' fue reasignado. Tocá para más información.';
+            const body = 'Tu turno del ' + date + ' para ' + prestacion + ' fue reasignado. Tocá para más información.';
             const notificacion = { body, extraData: { action: 'reasignar', turno: datosTurno } };
-
             this.sendByPaciente(idPaciente, notificacion);
 
         }).catch(() => { log('ERROR'); });
     }
 
-    public static notificarSuspension(turno, efector) {
+    public static async notificarSuspension(turno, efector) {
         if (turno.paciente) {
             const idPaciente = turno.paciente.id;
             moment.locale('es');
             const date = moment(turno.horaInicio).format('DD [de] MMMM [a las] HH:mm [hs]');
             const prestacion = turno.tipoPrestacion.term;
-            const body = 'Tu turno del ' + date + ' para ' + prestacion + ' en ' + efector + ' fue suspendido. Tocá para más información.';
-            const notificacion = { body, extraData: { action: 'suspender', turno } };
+            const organizacion = await Organizacion.findById(efector._id);
+            const body = 'Tu turno del ' + date + ' para ' + prestacion + ' en ' + organizacion.nombre + ' fue suspendido. Tocá para más información.';
+            const notificacion = { body, extraData: { action: 'suspender', turno, organizacion } };
             this.sendByPaciente(idPaciente, notificacion);
         }
     }
+
 
     /**
      * Envía notificación de campaña de salud

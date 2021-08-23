@@ -162,6 +162,8 @@ export function suspenderTurno(req, data, turno) {
     if (turno.estado !== 'turnoDoble') {
         turno.estado = 'suspendido';
     }
+    const datosTurno = turno;
+    const efector = data.organizacion;
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
@@ -203,6 +205,9 @@ export function suspenderTurno(req, data, turno) {
             }
         }
     }
+
+    NotificationService.notificarSuspension(datosTurno, efector);
+
 }
 
 // Turno
@@ -453,8 +458,10 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
-                    const efector = data.organizacion.nombre;
-                    NotificationService.notificarSuspension(turno, efector);
+                    if (turno.paciente) {
+                        const efector = data.organizacion;
+                        NotificationService.notificarSuspension(turno, efector);
+                    }
 
                 });
             });
@@ -1207,60 +1214,59 @@ export function getCantidadConsultaXPrestacion(params) {
 
     return new Promise(async (resolve, reject) => {
         let pipeline = [];
-        pipeline = [{
-            $match: {
-                $and: [
-                    { horaInicio: { $gte: new Date(params.horaInicio) } },
-                    { horaFin: { $lte: new Date(params.horaFin) } },
-                    { 'organizacion._id': { $eq: Types.ObjectId(params.organizacion) } },
-                    { 'bloques.turnos.estado': 'asignado' }
-                ]
-            }
-        },
-        {
-            $unwind: '$bloques'
-        },
-        {
-            $project: {
-                idBloque: '$bloques._id',
-                bloqueTurnos: {
-                    $concatArrays: ['$sobreturnos', '$bloques.turnos']
+        pipeline = [
+            {
+                $match: {
+                    $and: [
+                        { horaInicio: { $gte: new Date(params.horaInicio) } },
+                        { horaFin: { $lte: new Date(params.horaFin) } },
+                        { 'organizacion._id': { $eq: Types.ObjectId(params.organizacion) } },
+                        { 'bloques.turnos.estado': 'asignado' }
+                    ]
+                }
+            },
+            {
+                $unwind: '$bloques'
+            },
+            {
+                $project: {
+                    idBloque: '$bloques._id',
+                    bloqueTurnos: {
+                        $concatArrays: ['$sobreturnos', '$bloques.turnos']
+                    }
+                }
+            },
+
+
+            {
+                $unwind: '$bloqueTurnos'
+            },
+            {
+                $project: {
+                    hora: '$bloqueTurnos.horaInicio',
+                    estado: '$bloqueTurnos.estado',
+                    tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+                }
+            },
+            {
+                $match: {
+                    estado: 'asignado'
+                }
+            },
+            {
+                $group: {
+                    _id: '$tipoPrestacion.term',
+                    nombrePrestacion: {
+                        $first: '$tipoPrestacion.term'
+                    },
+                    conceptId: {
+                        $first: '$tipoPrestacion.conceptId'
+                    },
+                    total: {
+                        $sum: 1
+                    },
                 }
             }
-        },
-
-
-        {
-            $unwind: '$bloqueTurnos'
-        },
-        {
-            $project: {
-                hora: '$bloqueTurnos.horaInicio',
-                estado: '$bloqueTurnos.estado',
-                tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
-            }
-        },
-        {
-            $match: {
-                estado: 'asignado'
-            }
-        },
-        {
-            $group: {
-                _id: '$tipoPrestacion.term',
-                nombrePrestacion: {
-                    $first: '$tipoPrestacion.term'
-                },
-                conceptId: {
-                    $first: '$tipoPrestacion.conceptId'
-                },
-                total: {
-                    $sum: 1
-                },
-            }
-
-
-        }
 
         ];
 
