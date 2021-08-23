@@ -3,7 +3,8 @@ import * as vacunaCtr from '../controller/vacunas.controller';
 import { asyncHandler } from '@andes/api-tool';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Auth } from '../../../auth/auth.class';
-import { vacunasApi } from '../schemas/vacunasApi';
+import { vacunas as vacunasModel} from '../schemas/vacunas';
+import { VacunasPacientes } from '../schemas/vacunas-pacientes.schema';
 
 const router = express.Router();
 
@@ -28,7 +29,12 @@ router.post('/paciente', Auth.authenticate(), asyncHandler(async (req: any, res,
 
 router.delete('/:idVacuna', Auth.authenticate(), asyncHandler(async (req: any, res, next) => {
     const idVacuna = req.params.idVacuna;
-    await vacunasApi.findOneAndRemove({ idvacuna: idVacuna });
+    await vacunasModel.findOneAndRemove({ idvacuna: idVacuna });
+    await VacunasPacientes.findOneAndRemove({
+        'paciente.id': req.query.idPaciente,
+        'aplicaciones.vacuna.codigo': req.query.codigo,
+        'aplicaciones.vacuna.dosis.orden' : req.query.orden
+    });
     return res.json({ success: true });
 }));
 
