@@ -700,8 +700,11 @@ export default [
             },
             {
                 key: 'seguimiento',
-                title: 'Seguimiento de casos',
-                type: 'boolean'
+                title: 'Seguimiento de casos epidemiológicos',
+                child: [
+                    { key: 'auditoria', title: 'Auditoría de casos', type: 'boolean' },
+                    { key: 'update', title: 'Seguimiento de casos', type: 'boolean' }
+                ]
             }
         ]
     }
