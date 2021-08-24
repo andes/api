@@ -172,19 +172,31 @@ router.get('/organizaciones', async (req, res, next) => {
         filtros['codigo.sisa'] = req.query.sisa;
     }
     filtros['activo'] = req.query.activo !== null && req.query.activo !== undefined ? req.query.activo : true;
+
     if (req.query.tipoEstablecimiento) {
         filtros['tipoEstablecimiento.nombre'] = {
             $regex: utils.makePattern(req.query.tipoEstablecimiento)
         };
     }
+
+    if (req.query.user) {
+        const user = await AuthUsers.findOne({ usuario: req.query.user });
+        const organizaciones = user.organizaciones
+            .filter(x => x.activo)
+            .map((item: any) => new Types.ObjectId(item._id));
+        filtros['_id'] = { $in: organizaciones };
+    }
+
     if (req.query.ids) {
         filtros['_id'] = { $in: req.query.ids };
     }
+
     if (req.query.internaciones) {
         filtros = {
             $or: [{ nombre: { $regex: utils.makePattern('hospital') } }, { nombre: { $regex: utils.makePattern('clinica') } }]
         };
     }
+
     const query = Organizacion.find(filtros);
     if (req.query.fields) {
         query.select(req.query.fields);
