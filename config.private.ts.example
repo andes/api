@@ -90,6 +90,7 @@ export const sisa = {
     user_snvs_covid: getEnv('SNVS_COVID_USER', ''),
     pass_snvs_covid: getEnv('SNVS_COVID_PASS', '')
 };
+
 // Configuración servicio ANSES
 export const anses = {
     Usuario: getEnv('ANSES_USERNAME', ''),

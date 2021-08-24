@@ -1,5 +1,6 @@
 import { ObjectId } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
+import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { IPacienteDoc } from '../../../core-v2/mpi/paciente/paciente.interface';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
@@ -17,7 +18,15 @@ EventCore.on('mobile:patient:login', async (account) => {
 });
 
 EventCore.on('rup:prestaciones:vacunacion', async (prestacion) => {
+    if (!prestacion.paciente) {
+        // Cuando se utiliza el concepto como registro y no prestación.
+        return;
+    }
     await sincronizarVacunas(prestacion.paciente.id);
+
+    if (prestacion.estadoActual.tipo === 'ejecucion') {
+        await deleteVacunasFromNomivac(prestacion);
+    }
 });
 
 EventCore.on('mpi:pacientes:link', async ({ source, target }) => {
@@ -29,6 +38,30 @@ EventCore.on('mpi:pacientes:unlink', async ({ source, target }) => {
     await sincronizarVacunas(source);
     await sincronizarVacunas(target);
 });
+
+export async function deleteVacunasFromNomivac(prestacion) {
+    try {
+        const response = await services.get('nomivac-consulta-vacunas').exec({
+            documento: prestacion.paciente.documento,
+            sexo: prestacion.paciente.sexo === 'masculino' ? 'M' : 'F'
+        });
+        const vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
+        const vacuna = response.aplicacionesVacunasCiudadano?.aplicacionVacunaCiudadano?.find(
+            vac => vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && vac.sniDosisOrden === vacunaPrestacion.dosis.orden
+        );
+        if (vacuna) {
+            const establecimiento = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
+            await services.get('nomivac-baja-vacuna').exec({
+                fecha: moment(vacuna.fechaAplicacion).format('DD-MM-YYYY'),
+                codigoVacuna: vacuna.idSniVacuna,
+                id: vacuna.idSniAplicacion,
+                organizacion: establecimiento.codigo.sisa
+            });
+        }
+    } catch (err) {
+        // Por ahora no haceos nada, hay que implementar algun sistema de re-try...
+    }
+}
 
 export async function sincronizarVacunas(pacienteID: string) {
 
