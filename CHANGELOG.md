@@ -1,3 +1,16 @@
+# [5.59.0](https://github.com/andes/api/compare/v5.58.1...v5.59.0) (2021-08-25)
+
+
+### Bug Fixes
+
+* **int:** handlea error en deshacer internacion ([#1511](https://github.com/andes/api/issues/1511)) ([1752e61](https://github.com/andes/api/commit/1752e616b6cf2d580ea557402184d95820ef18c9))
+
+
+### Features
+
+* **tm:** carga de organizaciones por usuario ([#1516](https://github.com/andes/api/issues/1516)) ([0fc1456](https://github.com/andes/api/commit/0fc14568a29a6bd792b9bef3d78347c7164196e1))
+* **vac:** elimina registro de nomivac al romper validacion ([#1489](https://github.com/andes/api/issues/1489)) ([c685a24](https://github.com/andes/api/commit/c685a24ee4ef8e425ed02f2094ac19bfc6941c07))
+
 ## [5.58.1](https://github.com/andes/api/compare/v5.58.0...v5.58.1) (2021-08-18)
 
 # [5.58.0](https://github.com/andes/api/compare/v5.57.0...v5.58.0) (2021-08-11)
