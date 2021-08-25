@@ -676,6 +676,8 @@ export default [
     {
         key: 'epidemiologia',
         title: 'Epidemiología',
+        avoidAll: true,
+        visibility: 'restricted',
         comment: '',
         child: [
             {
@@ -701,8 +703,9 @@ export default [
             {
                 key: 'seguimiento',
                 title: 'Seguimiento de casos epidemiológicos',
+                avoidAll: true,
                 child: [
-                    { key: 'auditoria', title: 'Auditoría de casos', type: 'boolean' },
+                    { key: 'auditoria', title: 'Auditoría de casos', type: 'boolean', visibility: 'restricted' },
                     { key: 'update', title: 'Seguimiento de casos', type: 'boolean' }
                 ]
             }
