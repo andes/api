@@ -1,8 +1,9 @@
 import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
-import * as mongoose from 'mongoose';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
+const mongoose = require('mongoose');
+
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -12,19 +13,18 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         name: String
     },
     paciente: {
-        type: {
-            id: { type: ObjectId, ref: 'paciente' },
-            documento: String,
-            nombre: String,
-            apellido: String,
-            sexo: String,
-            estado: String,
-            alias: String,
-            tipoIdentificacion: String,
-            numeroIdentificacion: String,
-            direccion: Object,
-            fechaNacimiento: Date
-        }
+        id: { type: ObjectId, ref: 'paciente' },
+        documento: String,
+        nombre: String,
+        apellido: String,
+        sexo: String,
+        genero: String,
+        estado: String,
+        alias: String,
+        tipoIdentificacion: String,
+        numeroIdentificacion: String,
+        direccion: Object,
+        fechaNacimiento: Date
     },
     secciones: [mongoose.Schema.Types.Mixed],
     zonaSanitaria: zonaSanitariasSchema,
