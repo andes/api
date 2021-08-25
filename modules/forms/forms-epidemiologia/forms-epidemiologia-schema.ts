@@ -11,21 +11,20 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         id: ObjectId,
         name: String
     },
-    paciente: {
-        type: {
-            id: { type: ObjectId, ref: 'paciente' },
-            documento: String,
-            nombre: String,
-            apellido: String,
-            sexo: String,
-            estado: String,
-            alias: String,
-            tipoIdentificacion: String,
-            numeroIdentificacion: String,
-            direccion: Object,
-            fechaNacimiento: Date
-        }
-    },
+    paciente: new mongoose.Schema({
+        id: { type: ObjectId, ref: 'paciente' },
+        documento: String,
+        nombre: String,
+        apellido: String,
+        sexo: String,
+        genero: String,
+        estado: String,
+        alias: String,
+        tipoIdentificacion: String,
+        numeroIdentificacion: String,
+        direccion: Object,
+        fechaNacimiento: Date
+    }, { _id: false }),
     secciones: [mongoose.Schema.Types.Mixed],
     zonaSanitaria: zonaSanitariasSchema,
     score: {
