@@ -796,3 +796,26 @@ export async function getCdaAdjunto(cda, fileID: string) {
         }
     }
 }
+
+
+function deleteCDA(id) {
+    const cdaFiles = makeFs();
+    return new Promise((resolve, reject) => {
+        cdaFiles.unlink(id, () => { return resolve(); });
+    });
+}
+
+export async function deleteCda(idCda, idPaciente){
+    const conceptId_vacunas = '33879002';
+    if (idCda) {
+        await deleteCDA(idCda);
+    }
+    if (idPaciente) {
+        const cdasPaciente = await searchByPatient(idPaciente, conceptId_vacunas, { skip: 0, limit: 100 });
+        for (let item of cdasPaciente) {
+            await deleteCDA(item.cda_id);
+        }
+    }
+    return { success: true };
+}
+

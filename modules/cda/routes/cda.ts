@@ -10,6 +10,7 @@ import { EventCore } from '@andes/event-bus';
 import { AndesDrive } from '@andes/drive';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { vacunas } from '../../vacunas/schemas/vacunas';
 
 const ObjectId = Types.ObjectId;
 
@@ -125,10 +126,14 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
  * Emite un evento para generar los CDA de un paciente
  */
 
-router.post('/paciente', (req: any, res, next) => {
+router.post('/paciente', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
+    // elimina vacunas y cdas previos antes de generar nuevos
+    await vacunas.deleteMany({ documento: req.body.paciente.documento });
+    await cdaCtr.deleteCda(null, req.body.paciente.id);
+
     EventCore.emitAsync('monitoreo:cda:create', req.body);
     res.json({ status: 'ok' });
 });
@@ -410,17 +415,5 @@ router.get('/:id/:name', async (req: any, res, next) => {
     }
 });
 
-
-router.delete('/:idCda', async (req: any, res, next) => {
-    const idCda = ObjectId(req.params.idCda);
-    const cdaFile = makeFs();
-    const file = await cdaFile.findOne({ _id: idCda });
-    if (file && file._id) {
-        cdaFile.unlink(file._id, (error) => {
-            if (error) { return next(error); }
-            return res.json({ success: true });
-        });
-    }
-});
 
 export = router;
