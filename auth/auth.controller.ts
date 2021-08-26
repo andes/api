@@ -87,10 +87,10 @@ export async function generateTokenPayload(username, organizacion: ObjectId, acc
  */
 
 export async function getTokenPayload(token, userData) {
-    const payload = await AuthCache.get(token);
-    if (payload) {
-        return payload;
-    }
+    // const payload = await AuthCache.get(token);
+    // if (payload) {
+    //     return payload;
+    // }
     const data = await findTokenData(userData.usuario, userData.organizacion);
     const tokenPayload = createPayload(data.usuario, data.organizacion, data.profesional);
 
@@ -98,7 +98,7 @@ export async function getTokenPayload(token, userData) {
 }
 
 /**
- * Recupera los datos necesarios de un Usuario.
+ * Recupera los datos necesarios de un Usuario.git
  * User y Profesional
  */
 
