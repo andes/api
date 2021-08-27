@@ -3,6 +3,7 @@ import * as vacunaCtr from '../controller/vacunas.controller';
 import { asyncHandler } from '@andes/api-tool';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Auth } from '../../../auth/auth.class';
+import { vacunas as vacunasModel} from '../schemas/vacunas';
 
 const router = express.Router();
 
@@ -19,13 +20,9 @@ router.get('/paciente/:id', Auth.authenticate(), asyncHandler(async (req: any, r
 
 
 router.post('/paciente', Auth.authenticate(), asyncHandler(async (req: any, res, next) => {
-    try {
-        const pacienteId = req.body.paciente.id;
-        await vacunaCtr.exportCovid19(null, pacienteId);
-        return res.json({ success: true });
-    } catch (err) {
-        return next(err);
-    }
+    const pacienteId = req.body.paciente.id;
+    await vacunaCtr.exportCovid19(null, pacienteId);
+    return res.json({ success: true });
 }));
 
 export const VacunasRouter = router;

@@ -10,6 +10,7 @@ import { EventCore } from '@andes/event-bus';
 import { AndesDrive } from '@andes/drive';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { vacunas } from '../../vacunas/schemas/vacunas';
 
 const ObjectId = Types.ObjectId;
 
@@ -125,10 +126,14 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
  * Emite un evento para generar los CDA de un paciente
  */
 
-router.post('/paciente', (req: any, res, next) => {
+router.post('/paciente', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
+    // elimina vacunas y cdas previos antes de generar nuevos
+    await vacunas.deleteMany({ documento: req.body.paciente.documento });
+    await cdaCtr.deleteCda(null, req.body.paciente.id);
+
     EventCore.emitAsync('monitoreo:cda:create', req.body);
     res.json({ status: 'ok' });
 });
@@ -144,7 +149,6 @@ router.post('/', async (req: any, res, next) => {
 
     const cdaStream: any = cdaCtr.base64toStream(cda64);
     const cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
-
 
     if (cdaXml.length > 0) {
         cdaCtr.validateSchemaCDA(cdaXml).then(async (dom) => {
