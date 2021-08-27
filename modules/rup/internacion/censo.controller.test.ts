@@ -148,7 +148,7 @@ test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        diasEstada: 2,
+        diasEstada: 1,
         disponibles: 1
     });
 });
@@ -185,7 +185,7 @@ test('Censo diario - Paciente desde 0hs tiene alta', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        diasEstada: 2,
+        diasEstada: 1,
         disponibles: 1
     });
 });
@@ -218,7 +218,7 @@ test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
         existenciaALas24: 0,
         ingresosYEgresos: 0,
         pacientesDia: 0,
-        diasEstada: 2,
+        diasEstada: 1,
         disponibles: 1
     });
 });
@@ -293,7 +293,7 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        diasEstada: 2,
+        diasEstada: 1,
         disponibles: 1
     });
 });
@@ -482,7 +482,7 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', 
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        diasEstada: 2,
+        diasEstada: 1,
         disponibles: 1
     });
 });
@@ -524,7 +524,7 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene alta'
         existenciaALas24: 0,
         ingresosYEgresos: 1,
         pacientesDia: 1,
-        diasEstada: 2,
+        diasEstada: 1,
         disponibles: 1
     });
 });
@@ -568,7 +568,7 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defun
         existenciaALas24: 0,
         ingresosYEgresos: 1,
         pacientesDia: 1,
-        diasEstada: 2,
+        diasEstada: 1,
         disponibles: 1
     });
 });

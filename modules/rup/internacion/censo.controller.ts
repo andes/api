@@ -59,24 +59,67 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
 
     const tablaPacientes = {};
 
-    Object.keys(internaciones).map(async idInter => {
-        if (!internaciones) {
+    const idInternaciones = Object.keys(internaciones);
+    const dataInternaciones = {};
+
+    for (const idInter of idInternaciones) {
+        dataInternaciones[idInter] = {};
+        const filtros = { internacion: idInter };
+        const ambito = 'internacion';
+        const capa = 'estadistica';
+        const allMovimientos = internaciones[idInter];
+        const organizacion = allMovimientos[0].organizacion._id;
+        const ultimoMovimientoUO = allMovimientos.slice().reverse().find(m => m.unidadOrganizativa.conceptId === unidadOrganizativa);
+
+        const prestacion = prestaciones.find(p => String(p.id) === String(allMovimientos[0].idInternacion));
+        if (prestacion) {
+            const informesInternacion: any = getInformesInternacion(prestacion);
+            const desde = informesInternacion.ingreso.fechaIngreso;
+
+            dataInternaciones[idInter] = {};
+            dataInternaciones[idInter]['informesInternacion'] = informesInternacion;
+            if (ultimoMovimientoUO) {
+                // obtengo movimientos desde la fecha de ingreso hasta el día del censo
+                const estadosInter = await CamasEstadosController.searchEstados({ desde, hasta: timestampEnd, organizacion, ambito, capa }, filtros);
+
+                const movimientosUO = estadosInter.filter(e => e.unidadOrganizativa.conceptId === unidadOrganizativa);
+                // verificamos si hubo cambios de UO
+                const movCambUO = movimientosUO.filter(e => e.extras && e.extras.unidadOrganizativaOrigen &&
+                    e.extras.unidadOrganizativaOrigen.conceptId !== unidadOrganizativa);
+                movimientosUO.sort((a, b) => (a.fecha - b.fecha));
+                let fechaIngresoUO = movimientosUO[0].fecha;
+                if (movCambUO.length) { // obtengo el ultimo ingreso a la UO
+                    movCambUO.sort((a, b) => (b.fecha - a.fecha));
+                    fechaIngresoUO = movCambUO[0].fecha;
+                }
+                dataInternaciones[idInter]['allMovimientos'] = allMovimientos;
+                dataInternaciones[idInter]['ultimoMovimientoUO'] = ultimoMovimientoUO;
+                dataInternaciones[idInter]['fechaIngresoUO'] = fechaIngresoUO;
+                dataInternaciones[idInter]['prestacion'] = prestacion;
+            }
+        }
+    }
+
+    idInternaciones.map(async idInter => {
+        const allMovimientos = dataInternaciones[idInter]['allMovimientos'];
+        if (!internaciones || !allMovimientos) {
             return;
         }
-        const allMovimientos = internaciones[idInter];
+
         const ultimoMovimiento = allMovimientos[allMovimientos.length - 1];
-        // ultimo movimiento en la unidad organizativa que se esta filtrando
-        const ultimoMovimientoUO = allMovimientos.slice().reverse().find(m => m.unidadOrganizativa.conceptId === unidadOrganizativa);
-        const prestacion = prestaciones.find(p => String(p.id) === String(ultimoMovimiento.idInternacion));
+        // ultimo movimiento en la unidad organizativa que se está filtrando
+        const ultimoMovimientoUO = dataInternaciones[idInter]['ultimoMovimientoUO'];
+        const prestacion = dataInternaciones[idInter]['prestacion'];
         if (!prestacion) {
             return;
         }
-        const informesInternacion: any = getInformesInternacion(prestacion);
+        const informesInternacion = dataInternaciones[idInter]['informesInternacion'];
         const fechaEgreso = informesInternacion.egreso ? informesInternacion.egreso.fechaEgreso : null;
         const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
         const primerUO = allMovimientos[0].unidadOrganizativa.conceptId;
         const ultimaUO = ultimoMovimiento.unidadOrganizativa.conceptId;
         let ingresoEgresoCargado = false;
+        let diasEstadaUO = 0;
 
         function checkPaciente(movimiento) {
             if (!tablaPacientes[movimiento.paciente.id]) {
@@ -93,6 +136,11 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                 };
             }
         }
+        const fechaIngresoUO = dataInternaciones[idInter]['fechaIngresoUO'];
+        if (fechaIngresoUO) {
+            diasEstadaUO = timestampEnd.diff(fechaIngresoUO, 'days');
+            diasEstadaUO = (diasEstadaUO === 0) ? 1 : diasEstadaUO;
+        }
 
         if (!ultimoMovimiento.esCensable && !(prestacion as any).ejecucion.registros[0].esCensable) {
             return;
@@ -107,7 +155,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         ingreso: 'SI',
                         fechaIngreso,
                         egreso: informesInternacion.egreso.tipoEgreso.id,
-                        diasEstada: timestampEnd.diff(moment(ultimoMovimiento.fecha), 'days') + 1,
+                        diasEstada: diasEstadaUO
                     });
                 }
             }
@@ -123,7 +171,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                             fechaIngreso,
                             egreso: informesInternacion.egreso.tipoEgreso.id,
-                            diasEstada: timestampEnd.diff(moment(ultimoMovimiento.fecha), 'days') + 1,
+                            diasEstada: diasEstadaUO
                         });
                     }
                 }
@@ -140,7 +188,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     paseDe: null,
                     egreso: null,
                     paseA: null,
-                    diasEstada: timestampEnd.diff(moment(ultimoMovimientoUO.fecha), 'days') + 1,
+                    diasEstada: diasEstadaUO
                 });
             } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
                 ingresos++;
@@ -149,7 +197,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     tablaPacientes[ultimoMovimientoUO.paciente.id].actividad.push({
                         ingreso: 'SI',
                         fechaIngreso,
-                        diasEstada: timestampEnd.diff(moment(ultimoMovimientoUO.fecha), 'days') + 1,
+                        diasEstada: diasEstadaUO
                     });
                 }
             }
@@ -160,11 +208,12 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             if (movimientoAnterior && movimientoAnterior.unidadOrganizativa.conceptId !== movimiento.unidadOrganizativa.conceptId) {
                 if (movimientoAnterior.unidadOrganizativa.conceptId !== unidadOrganizativa && movimiento.unidadOrganizativa.conceptId === unidadOrganizativa) {
                     pasesDe++;
+                    diasEstadaUO = timestampEnd.diff(moment(movimiento.fecha), 'days') + 1;
                     checkPaciente(movimiento);
                     tablaPacientes[movimiento.paciente.id].actividad.push({
                         paseDe: movimientoAnterior.unidadOrganizativa.term,
                         fechaIngreso,
-                        diasEstada: timestampEnd.diff(moment(movimiento.fecha), 'days') + 1,
+                        diasEstada: diasEstadaUO
                     });
                 } else {
                     if (movimientoAnterior.unidadOrganizativa.conceptId === unidadOrganizativa && movimiento.unidadOrganizativa.conceptId !== unidadOrganizativa) {
@@ -173,19 +222,14 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         tablaPacientes[movimiento.paciente.id].actividad.push({
                             paseA: movimiento.unidadOrganizativa.term,
                             fechaIngreso,
-                            diasEstada: timestampEnd.diff(moment(movimientoAnterior.fecha), 'days') + 1,
+                            diasEstada: diasEstadaUO
                         });
                     }
                 }
             }
-
-            if (movimiento.esMovimiento && movimiento.unidadOrganizativa.conceptId === unidadOrganizativa) {
-                const dias = timestampEnd.diff(moment(movimiento.fecha), 'days') + 1;
-                diasEstada += dias;
-            }
-
             movimientoAnterior = movimiento;
         }
+        diasEstada += diasEstadaUO;
     });
 
     existenciaALas24 = existenciaALas0 + ingresos + pasesDe - altas - defunciones - pasesA;
@@ -279,7 +323,7 @@ export async function censoMensual({ organizacion, unidadOrganizativa, fechaDesd
     for (const bucket of bucketsCensos) {
         const censos = bucket.censos.filter(censo =>
             (moment(censo.fecha).isSameOrAfter(fechaDesde, 'day')
-                && moment(censo.fecha).isSameOrBefore(fechaHasta, 'day')));
+            && moment(censo.fecha).isSameOrBefore(fechaHasta, 'day')));
         resultado.push(...censos);
     }
     resultado.sort((a, b) => (a.fecha - b.fecha));
