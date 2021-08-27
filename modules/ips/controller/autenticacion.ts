@@ -11,10 +11,10 @@ export class SaludDigitalClient {
     private dominio: string;
     private secret: string;
 
-    constructor(dominio, host, secret) {
+    constructor({dominio, host, secret, federador}) {
         this.dominio = dominio;
         this.host = host;
-        this.hostBus = 'http://mhd.sisa.msal.gov.ar/fhir';
+        this.hostBus = federador;
         this.secret = secret;
     }
 
