@@ -181,10 +181,12 @@ router.get('/organizaciones', async (req, res, next) => {
 
     if (req.query.user) {
         const user = await AuthUsers.findOne({ usuario: req.query.user });
-        const organizaciones = user.organizaciones
-            .filter(x => x.activo)
-            .map((item: any) => new Types.ObjectId(item._id));
-        filtros['_id'] = { $in: organizaciones };
+        if (!user.permisosGlobales.some(p => p === 'global:organizaciones:write')){
+            const organizaciones = user.organizaciones
+                .filter(x => x.activo)
+                .map((item: any) => new Types.ObjectId(item._id));
+            filtros['_id'] = { $in: organizaciones };
+        }
     }
 
     if (req.query.ids) {
@@ -197,7 +199,13 @@ router.get('/organizaciones', async (req, res, next) => {
         };
     }
 
-    const query = Organizacion.find(filtros);
+    const skip = parseInt(req.query.skip, 10) || 0;
+    const limit = parseInt(req.query.limit, 10) || 15;
+    const query = Organizacion.find(filtros)
+        .skip(skip)
+        .limit(limit)
+        .sort({ nombre: 1 });
+
     if (req.query.fields) {
         query.select(req.query.fields);
     }
