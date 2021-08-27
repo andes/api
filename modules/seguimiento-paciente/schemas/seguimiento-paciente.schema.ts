@@ -58,7 +58,19 @@ export const seguimientoPacienteSchema = new Schema(
             clave: String,
             valor: Date
         },
-        contactosEstrechos: [contactoEstrechoSchema]
+        contactosEstrechos: [contactoEstrechoSchema],
+        asignaciones: [
+            {
+                profesional: {
+                    _id: Types.ObjectId,
+                    nombre: String,
+                    apellido: String,
+                    documento: String
+                },
+                fecha: Date
+            }
+        ],
+        internacion: Boolean
     });
 
 seguimientoPacienteSchema.plugin(AuditPlugin);
