@@ -10,6 +10,7 @@ router.get('/dominios/:id', async (req, res, next) => {
         if (idPaciente) {
             const sdClient = await getClient();
             const dominios = await sdClient.getDominios(idPaciente);
+
             res.json(dominios);
         }
     } catch (err) {
@@ -25,15 +26,14 @@ router.get('/documentos', async (req, res, next) => {
             const sdClient = await getClient();
             const docRef = await sdClient.solicitud({ custodian, fechaDesde: null, fechaHasta: null, patient: idPaciente, loinc: '60591-5' });
             if (docRef && docRef.length > 0) {
-                for (let d of docRef) {
-                    const ips = await sdClient.getBinary(d.urlBinary);
-                    res.json(ips);
-                }
+                const d = docRef[0];
+                const ips = await sdClient.getBinary(d.urlBinary);
+                res.json(ips);
             } else {
-                res.send([]);
+                res.send({});
             }
         } else {
-            res.send([]);
+            res.send({});
         }
     } catch (err) {
         return next(err);
@@ -42,7 +42,12 @@ router.get('/documentos', async (req, res, next) => {
 });
 
 async function getClient() {
-    const sdClient = new SaludDigitalClient(fhirConf.domain, fhirConf.ips_host, fhirConf.secret);
+    const sdClient = new SaludDigitalClient({
+        dominio: fhirConf.domain,
+        host: fhirConf.ips_host,
+        secret: fhirConf.secret,
+        federador: fhirConf.federador_host
+    });
     if (IPS.auth) {
         const payload = {
             name: IPS.name,
