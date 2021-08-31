@@ -21,7 +21,7 @@ export class PatientBuilder extends BaseBuilder {
 
         const patientNode = recordTarget.ele('patient');
 
-        let nameNode = patientNode.ele('name');
+        const nameNode = patientNode.ele('name');
         nameNode.com('Nombre del paciente');
         this.createNode(nameNode, 'given', null, patient.getFirstname());
         nameNode.com('Apellido del paciente');

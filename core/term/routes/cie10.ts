@@ -30,10 +30,10 @@ router.get('/cie10', async (req, res, next) => {
 
     if (req.query.filtroRango) {
         whereConditions['$and'] = [];
-        let orRango = {};
+        const orRango = {};
         orRango['$or'] = [];
-        let filtroRango = JSON.parse(req.query.filtroRango);
-        for (let rango of filtroRango) {
+        const filtroRango = JSON.parse(req.query.filtroRango);
+        for (const rango of filtroRango) {
             orRango['$or'].push({ codigo: { $gt: rango.desde, $lt: rango.hasta } });
         }
         whereConditions['$and'].push(conditions);
@@ -47,7 +47,7 @@ router.get('/cie10', async (req, res, next) => {
     query.skip(skip);
     query.limit(limit);
     try {
-        let codigoCie = await query.exec();
+        const codigoCie = await query.exec();
         res.json(codigoCie);
     } catch (err) {
         return next(err);

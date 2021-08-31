@@ -200,9 +200,9 @@ router.post('/mailGenerico', async (req, res, next) => {
     // req.body['usuario'] = usuario.usuario.username ? usuario.usuario.username : '';
     // req.body['organizacion'] = usuario.organizacion.nombre ? usuario.organizacion.nombre : '';
     // renderizacion del email
-    let html = await SendEmail.renderHTML('emails/emailGenerico.html', body);
+    const html = await SendEmail.renderHTML('emails/emailGenerico.html', body);
 
-    let adjuntos = body.adjuntos.map(x => {
+    const adjuntos = body.adjuntos.map(x => {
         x.content = x.content.split('base64,')[1];
     });
     const data = {
@@ -212,7 +212,7 @@ router.post('/mailGenerico', async (req, res, next) => {
         attachments: body.adjuntos
     };
 
-    let respuesta = await SendEmail.sendMail(data);
+    const respuesta = await SendEmail.sendMail(data);
     return res.json(respuesta);
 });
 

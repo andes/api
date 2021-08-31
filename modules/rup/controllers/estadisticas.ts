@@ -73,7 +73,7 @@ export async function estadisticaDemografica(ids) {
     const data = await Prestacion.aggregate(pipeline);
 
     const { pacientes, demografia } = data[0];
-    let idPacientes = pacientes.map(paciente => ObjectId(paciente._id));
+    const idPacientes = pacientes.map(paciente => ObjectId(paciente._id));
 
     const andes = await PacienteCtr.search({ ids: idPacientes }, { fields: 'direccion' });
 
@@ -315,7 +315,7 @@ export async function dashboardSolicitudes(filtros, user) {
     const matchSolicitudSalida: any = {};
     const matchInicial: any = {};
     const matchFiltros: any = {};
-    let matchEstados: any = {};
+    const matchEstados: any = {};
 
     /* Condición para filtrar prestaciones que son solicitudes */
     matchInicial['estados.0.tipo'] = {
@@ -329,7 +329,7 @@ export async function dashboardSolicitudes(filtros, user) {
     matchSolicitudSalida['solicitud.organizacionOrigen.id'] = new ObjectId(usuarioOrganizacion._id);
 
     if (filtros.solicitudDesde && filtros.solicitudHasta) {
-        let fechaCondicion = {
+        const fechaCondicion = {
             $gte: moment(filtros.solicitudDesde).startOf('day').toDate(),
             $lte: moment(filtros.solicitudHasta).endOf('day').toDate()
         };
@@ -376,14 +376,14 @@ export async function dashboardSolicitudes(filtros, user) {
         };
     }
 
-    let pipelineEntrada = [
+    const pipelineEntrada = [
         /* Filtros */
         { $match: matchInicial },
         { $match: matchSolicitudEntrada },
         { $match: matchFiltros },
         { $facet: makeFacet('entrada') }
     ];
-    let pipelineSalida = [
+    const pipelineSalida = [
         /* Filtros */
         { $match: matchInicial },
         { $match: matchSolicitudSalida },

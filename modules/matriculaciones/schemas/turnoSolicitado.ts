@@ -49,7 +49,7 @@ const direccionSchema = new mongoose.Schema({
 });
 
 
-export let turnoSolicitadoSchema = new mongoose.Schema({
+export const turnoSolicitadoSchema = new mongoose.Schema({
     // Persona
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
@@ -151,4 +151,4 @@ turnoSolicitadoSchema.virtual('fallecido').get(function () {
 //     })[0];
 // });
 
-export let turnoSolicitado = mongoose.model('turnoSolicitado', turnoSolicitadoSchema, 'turnoSolicitado');
+export const turnoSolicitado = mongoose.model('turnoSolicitado', turnoSolicitadoSchema, 'turnoSolicitado');

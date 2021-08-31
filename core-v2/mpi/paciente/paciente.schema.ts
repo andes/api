@@ -9,7 +9,7 @@ import { ParentescoSchema } from '../parentesco/parentesco.schema';
 import { IPacienteDoc } from './paciente.interface';
 
 
-let ObjectId = mongoose.Types.ObjectId;
+const ObjectId = mongoose.Types.ObjectId;
 const mongoose_fuzzy_searching = require('mongoose-fuzzy-searching');
 
 export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
@@ -119,7 +119,7 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
 
 PacienteSchema.pre('save', function (next) {
     const user: any = this;
-    let words = [];
+    const words = [];
     if (user.isModified('nombre')) {
         user.nombre = user.nombre.toUpperCase();
     }
@@ -167,7 +167,7 @@ PacienteSchema.pre('save', function (next) {
 
 PacienteSchema.virtual('vinculos').get(function () {
     if (this.identificadores) {
-        let identificadores = this.identificadores.filter(i => i.entidad === 'ANDES').map(i => ObjectId(i.valor));
+        const identificadores = this.identificadores.filter(i => i.entidad === 'ANDES').map(i => ObjectId(i.valor));
         return [this._id, ...identificadores];
     } else {
         return [this._id];

@@ -195,7 +195,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                             description: 'No se recibió ningún resultado'
                         };
                     }
-                    let info = new InformacionExportada(log);
+                    const info = new InformacionExportada(log);
                     await info.save();
 
                 } catch (error) {
@@ -204,7 +204,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                         id_caso: '',
                         description: error.toString()
                     };
-                    let info = new InformacionExportada(log);
+                    const info = new InformacionExportada(log);
                     await info.save();
                 }
             }

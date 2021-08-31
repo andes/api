@@ -5,7 +5,7 @@ export class SeaweedAdapter implements IAdapter {
     private seaweedfs;
 
     constructor({ server, port }) {
-        let weedClient = require('node-seaweedfs');
+        const weedClient = require('node-seaweedfs');
         this.seaweedfs = new weedClient({ server, port });
     }
 

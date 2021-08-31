@@ -11,4 +11,4 @@ const padronPrepagasSchema = new mongoose.Schema({
     idPrepaga: String
 });
 
-export let padronPrepagas: any = mongoose.model('padronPrepagas', padronPrepagasSchema, 'padronPrepagas');
+export const padronPrepagas: any = mongoose.model('padronPrepagas', padronPrepagasSchema, 'padronPrepagas');

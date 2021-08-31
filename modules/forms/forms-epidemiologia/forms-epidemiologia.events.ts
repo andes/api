@@ -2,7 +2,7 @@ import { EventCore } from '@andes/event-bus';
 import { userScheduler } from '../../../config.private';
 import { FormEpidemiologiaCtr } from './forms-epidemiologia.routes';
 
-let dataLog: any = new Object(userScheduler);
+const dataLog: any = new Object(userScheduler);
 
 // Descripción: Al recibir una notficación del laboratorio se actualiza el estado de la PCR en la ficha de epidemiología
 EventCore.on('notification:fichaEpidemiologica:laboratory', async (info) => {
@@ -17,7 +17,7 @@ EventCore.on('notification:fichaEpidemiologica:laboratory', async (info) => {
                     nombre: resultadoLabo === 'Confirmado' ? 'SE DETECTA GENOMA DE SARS-CoV-2' : 'NO SE DETECTA GENOMA DE SARS-CoV-2'
                 }
             };
-            let lastFicha = fichasOrdenadas[0];
+            const lastFicha = fichasOrdenadas[0];
             try {
                 lastFicha.secciones.forEach(s => {
                     if (s.name === 'Tipo de confirmación y Clasificación Final') {

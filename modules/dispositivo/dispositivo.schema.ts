@@ -10,4 +10,4 @@ export const DispositivoSchema = new mongoose.Schema({
 });
 
 DispositivoSchema.plugin(AuditPlugin);
-export let Dispositivo = mongoose.model('dispositivo', DispositivoSchema, 'dispositivo');
+export const Dispositivo = mongoose.model('dispositivo', DispositivoSchema, 'dispositivo');

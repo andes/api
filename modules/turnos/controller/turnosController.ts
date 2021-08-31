@@ -175,8 +175,8 @@ export async function getHistorialPaciente(req) {
         const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
         const paciente: any = await PacienteCtr.findById(idPaciente);
         try {
-            let pipelineTurno = [];
-            let pipelineSobreturno = [];
+            const pipelineTurno = [];
+            const pipelineSobreturno = [];
             if (req.query.turnosProximos) {
                 pipelineTurno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
                 pipelineSobreturno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
@@ -382,7 +382,7 @@ export async function getLiberadosPaciente(req) {
  * @returns
  */
 export async function actualizarCarpeta(req: any, res: any, next: any, paciente: any, carpetas) {
-    let carpetasAux = (carpetas && carpetas.length > 0) ? (carpetas[0] as any).carpetaEfectores : [];
+    const carpetasAux = (carpetas && carpetas.length > 0) ? (carpetas[0] as any).carpetaEfectores : [];
     if (paciente) {
         if (paciente.carpetaEfectores.length) {
             if (carpetasAux.length < paciente.carpetaEfectores.length) {

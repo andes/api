@@ -81,14 +81,14 @@ export class SnomedCIE10Mapping {
                 /**
                  * Chequeamos regla a regla cual es la primera que se cumple
                  */
-                let arreglo: any[] = [];
+                const arreglo: any[] = [];
                 for (let i = 0; i < mapping.length; i++) {
                     const rules = mapping[i] as any;
                     const rule = rules.mapRule;
 
                     if (this.check(rule)) {
                         if (rules.mapTarget.length > 0) {
-                            let prom = cie10.model.findOne({
+                            const prom = cie10.model.findOne({
                                 codigo: rules.mapTarget
                             });
                             arreglo.push(prom);
@@ -96,9 +96,9 @@ export class SnomedCIE10Mapping {
                     }
                 }
                 // Guarda cada una de las promesas incluidas las que son null
-                let promesas = await Promise.all(arreglo);
+                const promesas = await Promise.all(arreglo);
 
-                let docsRespuesta = promesas.filter(x => !!x);
+                const docsRespuesta = promesas.filter(x => !!x);
 
                 if (docsRespuesta.length) {
                     return resolve(docsRespuesta[0].codigo);

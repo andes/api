@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let vacunasSchema = new mongoose.Schema({
+export const vacunasSchema = new mongoose.Schema({
     idvacuna: Number,
     codigo: String,
     vacuna: String,
@@ -25,4 +25,4 @@ export let vacunasSchema = new mongoose.Schema({
 vacunasSchema.index({ documento: 1 });
 vacunasSchema.index({ idvacuna: 1 });
 
-export let vacunas = mongoose.model('vacunas', vacunasSchema, 'nomivac');
+export const vacunas = mongoose.model('vacunas', vacunasSchema, 'nomivac');

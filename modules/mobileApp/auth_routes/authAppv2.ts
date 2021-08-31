@@ -160,7 +160,7 @@ router.post('/v2/registrar', (req, res, next) => {
  */
 
 router.post('/check-update', (req, res, next) => {
-    let app_version = req.body.app_version;
+    const app_version = req.body.app_version;
 
     if (app_version > mobileExpiredVersion) {
         return res.json({ status: 'ok' });

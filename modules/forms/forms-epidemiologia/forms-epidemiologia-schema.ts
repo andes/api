@@ -34,7 +34,7 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
 });
 
 const assertUniquePCR = async function (next) {
-    let ficha: any = this;
+    const ficha: any = this;
     if (ficha.type.name === 'covid19') {
         const identificadorpcr = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final')?.fields.find(f => f.identificadorpcr)?.identificadorpcr;
         if (identificadorpcr) {
@@ -62,10 +62,10 @@ FormsEpidemiologiaSchema.plugin(AuditPlugin);
 FormsEpidemiologiaSchema.pre('validate', assertUniquePCR);
 
 FormsEpidemiologiaSchema.pre('save', function (next) {
-    let ficha: any = this;
+    const ficha: any = this;
 
     const seccionClasificacion = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final');
-    let clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
+    const clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
 
     if (clasificacionfinal === 'Confirmado') {
         const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento, ficha.createdAt);

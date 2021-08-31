@@ -263,7 +263,7 @@ function filtrosFaltantes(filtros, data) {
 
     if (filtros.profesional) {
         filtros.profesional.forEach((pr: any) => {
-            let hayProfesional = data.profesionales.find(prof => prof._id.toString() === pr.id);
+            const hayProfesional = data.profesionales.find(prof => prof._id.toString() === pr.id);
             if (hayProfesional === undefined) {
                 data.profesionales.push({ _id: pr.id, count: 0, nombre: pr.nombre });
             }
@@ -272,7 +272,7 @@ function filtrosFaltantes(filtros, data) {
 
     if (filtros.prestacion) {
         filtros.prestacion.forEach((prestacion: any) => {
-            let hayPrestacion = data.prestacion.find(prest => prest._id.toString() === prestacion.id);
+            const hayPrestacion = data.prestacion.find(prest => prest._id.toString() === prestacion.id);
             if (hayPrestacion === undefined) {
                 data.prestacion.push({ _id: prestacion._id, count: 0, nombre: prestacion.nombre });
             }
@@ -281,7 +281,7 @@ function filtrosFaltantes(filtros, data) {
 
     if (filtros.tipoTurno) {
         filtros.tipoTurno.forEach((tt: any) => {
-            let hayTipoTurno = data.tipoTurno.find(datatt => datatt._id === tt);
+            const hayTipoTurno = data.tipoTurno.find(datatt => datatt._id === tt);
             if (hayTipoTurno === undefined) {
                 data.tipoTurno.push({ _id: tt, count: 0, nombre: tt });
             }
@@ -290,7 +290,7 @@ function filtrosFaltantes(filtros, data) {
 
     if (filtros.estado_turno) {
         filtros.estado_turno.forEach((et: any) => {
-            let hayEstadoTurno = data.estado_turno.find(dataET => dataET._id === et);
+            const hayEstadoTurno = data.estado_turno.find(dataET => dataET._id === et);
             if (hayEstadoTurno === undefined) {
                 data.estado_turno.push({ _id: et, count: 0, nombre: et });
             }
@@ -299,7 +299,7 @@ function filtrosFaltantes(filtros, data) {
 
     if (filtros.estado_agenda) {
         filtros.estado_agenda.forEach((ea: any) => {
-            let hayEstadoAgenda = data.estado_agenda.find(dataEA => dataEA._id === ea);
+            const hayEstadoAgenda = data.estado_agenda.find(dataEA => dataEA._id === ea);
             if (hayEstadoAgenda === undefined) {
                 data.estado_agenda.push({ _id: ea, count: 0, nombre: ea });
             }
@@ -422,7 +422,7 @@ export async function filtroPorCiudad(filtros, permisos) {
         { $match: makeSecondaryMatch(filtros, permisos) }
     ];
     const turnosAsignados = await Agenda.aggregate(pipelineAsignados);
-    let idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
+    const idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
 
     const pipelineUbicacionPacientes = [
         {

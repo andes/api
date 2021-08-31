@@ -3,7 +3,7 @@ import * as campania from '../schemas/campaniasSalud';
 import * as campaniaCtrl from '../controller/campaniasSalud';
 import * as moment from 'moment';
 
-let router = express.Router();
+const router = express.Router();
 
 /*
 * Devuelve los datos de la campaña con misma id que el valor pasado por params
@@ -27,9 +27,9 @@ router.get('/campania/:id', (req: any, res, next) => {
  */
 router.get('/campanias', async (req, res, next) => {
     try {
-        let fechaDesde = req.query.fechaDesde ? req.query.fechaDesde : moment().startOf('day').toDate();
+        const fechaDesde = req.query.fechaDesde ? req.query.fechaDesde : moment().startOf('day').toDate();
 
-        let docs: any = await campaniaCtrl.campaniasVigentes(fechaDesde, req.query.fechaHasta);
+        const docs: any = await campaniaCtrl.campaniasVigentes(fechaDesde, req.query.fechaHasta);
         res.json(docs);
     } catch (e) {
         return next(e);
@@ -41,7 +41,7 @@ router.get('/campanias', async (req, res, next) => {
 */
 router.put('/campanias/:id', async (req, res, next) => {
     try {
-        let campaniaEncontrada: any = await campania.findById(req.params.id);
+        const campaniaEncontrada: any = await campania.findById(req.params.id);
         // campos obligatorios
         campaniaEncontrada.asunto = req.body.asunto;
         campaniaEncontrada.cuerpo = req.body.cuerpo;
@@ -97,7 +97,7 @@ router.put('/campanias/:id', async (req, res, next) => {
 */
 router.post('/campanias', async (req, res, next) => {
     try {
-        let campaniaParametro = req.body;
+        const campaniaParametro = req.body;
         if (campaniaParametro.target) {
             if (!campaniaParametro.target.sexo) {
                 delete campaniaParametro.target.sexo;
@@ -115,7 +115,7 @@ router.post('/campanias', async (req, res, next) => {
             delete campaniaParametro.textoAccion;
         }
 
-        let campaniaNueva = new campania(campaniaParametro);
+        const campaniaNueva = new campania(campaniaParametro);
         await campaniaNueva.save();
         res.json(campaniaNueva);
     } catch (e) {

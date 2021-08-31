@@ -14,9 +14,9 @@ import { vacunas } from '../../vacunas/schemas/vacunas';
 
 const ObjectId = Types.ObjectId;
 
-let path = require('path');
-let router = express.Router();
-let to_json = require('xmljson').to_json;
+const path = require('path');
+const router = express.Router();
+const to_json = require('xmljson').to_json;
 
 router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
@@ -39,12 +39,12 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         const dataProfesional = req.body.profesional;
 
         // Devuelve un Loinc asociado al código SNOMED
-        let prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
+        const prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
         if (!prestacion) {
             // Es obligatorio que posea prestación
             return next({ error: `prestacion_invalida ${req.body.tipoPrestacion}` });
         }
-        let cie10Code = req.body.cie10;
+        const cie10Code = req.body.cie10;
         const file: string = req.body.file;
         const texto = req.body.texto;
         // Terminar de decidir esto
@@ -112,7 +112,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
                 organizacion: organizacion._id
             }
         };
-        let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
+        const obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
         res.json({ cda: uniqueId, paciente: paciente._id });
 
         EventCore.emitAsync('huds:cda:create', { cda: uniqueId, paciente: paciente._id });
@@ -180,7 +180,7 @@ router.post('/', async (req: any, res, next) => {
                     return next({ error: 'prestacion_invalida' });
                 }
 
-                let pacientec = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
+                const pacientec = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
 
                 let fileData, adjuntos;
                 if (cdaData.adjunto && adjunto64) {
@@ -193,7 +193,7 @@ router.post('/', async (req: any, res, next) => {
                     fileData = await cdaCtr.storeFile(fileObj);
                     adjuntos = [{ path: fileData.data, id: fileData.id }];
                 }
-                let metadata = {
+                const metadata = {
                     paciente: pacientec._id,
                     prestacion,
                     organizacion,
@@ -205,7 +205,7 @@ router.post('/', async (req: any, res, next) => {
                         organizacion: ObjectId(orgId)
                     }
                 };
-                let obj = await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
+                const obj = await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
 
                 res.json({ cda: uniqueId, paciente: pacientec._id });
 
@@ -265,15 +265,15 @@ router.get('/paciente/', async (req: any, res, next) => {
     }
 
     try {
-        let lista = [];
+        const lista = [];
         let list = [];
         const documento = req.query.documento;
         const sexo = req.query.sexo;
         const resultado = await PacienteCtr.search({ documento, sexo }, {}, req);
 
         for (let i = 0; i < resultado.length; i++) {
-            let pac: any = resultado[i];
-            let pacienteID = pac._id;
+            const pac: any = resultado[i];
+            const pacienteID = pac._id;
             list = await cdaCtr.searchByPatient(pacienteID, null, { skip: 0, limit: 100 });
             lista.push(list);
         }
@@ -361,12 +361,12 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     }
 
     if (ObjectId.isValid(req.params.id)) {
-        let pacienteID = req.params.id;
-        let prestacion = req.query.prestacion;
-        let paciente: any = await PacienteCtr.findById(pacienteID, {});
+        const pacienteID = req.params.id;
+        const prestacion = req.query.prestacion;
+        const paciente: any = await PacienteCtr.findById(pacienteID, {});
 
         if (paciente) {
-            let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
+            const list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
             return res.json(list);
         }
     }

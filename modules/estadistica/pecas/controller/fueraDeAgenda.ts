@@ -18,7 +18,7 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
-let logRequest = {
+const logRequest = {
     user: {
         usuario: { nombre: 'pecasFueraDeAgenda', apellido: 'pecasFueraDeAgenda' },
         app: 'jobPecas',
@@ -30,7 +30,7 @@ let logRequest = {
     }
 };
 
-let mailOptions = {
+const mailOptions = {
     from: 'info@andes.gob.ar',
     to: emailListString,
     subject: 'Error pecas fuera de agenda',
@@ -54,7 +54,7 @@ export async function fueraAgendaPecas(start, end, done) {
         return (ex);
     }
 
-    let orgExcluidas = organizacionesExcluidas();
+    const orgExcluidas = organizacionesExcluidas();
 
 
     let pipeline2 = [];
@@ -96,17 +96,17 @@ export async function fueraAgendaPecas(start, end, done) {
 }
 
 async function auxiliar(pres: any) {
-    let prestacion: any = {};
+    const prestacion: any = {};
     let efector: any = {};
     try {
-        let org: any = await getEfector(pres.createdBy.organizacion._id);
+        const org: any = await getEfector(pres.createdBy.organizacion._id);
         efector = {
             tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
             codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
         };
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
-        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
-        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
+        const idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
+        const tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
         prestacion.tipoPrestacion = pres.prestacion.solicitud.tipoPrestacion.term;
         prestacion.idEfector = idEfector;
         prestacion.Organizacion = pres.createdBy.organizacion.nombre;
@@ -303,9 +303,9 @@ async function auxiliar(pres: any) {
         prestacion.Longitud = '';
         prestacion.Latitud = '';
         prestacion.telefono = pres.paciente && pres.paciente.telefono ? pres.paciente.telefono : '';
-        let fechaNac = (prestacion.FechaNacimiento && moment(prestacion.FechaNacimiento).year()) > 1900 ? `'${prestacion.FechaNacimiento}'` : null;
+        const fechaNac = (prestacion.FechaNacimiento && moment(prestacion.FechaNacimiento).year()) > 1900 ? `'${prestacion.FechaNacimiento}'` : null;
 
-        let queryInsert = 'INSERT INTO ' + configPrivate.fueraAgendaPecas.table.fueraAgenda +
+        const queryInsert = 'INSERT INTO ' + configPrivate.fueraAgendaPecas.table.fueraAgenda +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'FechaConsulta, Periodo, Tipodeconsulta, estadoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
             'HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
@@ -346,7 +346,7 @@ async function auxiliar(pres: any) {
 }
 
 function organizacionesExcluidas() {
-    let organizaciones = [];
+    const organizaciones = [];
     const medicoIntegral = '5a5e3f7e0bd5677324737244';
     organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
     return organizaciones;
@@ -354,7 +354,7 @@ function organizacionesExcluidas() {
 
 async function eliminaPrestacion(idPrestacion: string) {
     const result = new sql.Request(poolPrestaciones);
-    let query = `DELETE FROM ${configPrivate.fueraAgendaPecas.table.fueraAgenda} WHERE idPrestacion='${idPrestacion}'`;
+    const query = `DELETE FROM ${configPrivate.fueraAgendaPecas.table.fueraAgenda} WHERE idPrestacion='${idPrestacion}'`;
     return executeQuery(query);
 }
 
@@ -426,7 +426,7 @@ async function executeQuery(query: any) {
         await new sql.Request(poolPrestaciones).query(query);
     } catch (err) {
         await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, err);
-        let options = mailOptions;
+        const options = mailOptions;
         options.text = `'error al insertar en sql fuera Agenda: ${query}'`;
         sendMail(mailOptions);
         return err;

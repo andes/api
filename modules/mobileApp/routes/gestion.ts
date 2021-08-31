@@ -7,7 +7,7 @@ const urlGestion = urlDatosGestion;
 
 
 router.get('/datosGestion/', (req, res, next) => {
-    let options = {
+    const options = {
         method: 'GET',
         uri: urlGestion,
         body: {},

@@ -8,7 +8,7 @@ async function run(done) {
     const cursor = Paciente.find({ $and: [{ 'relaciones.foto': { $exists: true } }, { 'relaciones.foto': /data:image/ }] }).cursor({ batchSize: 100 });
     const updatePatient = async (pac) => {
         try {
-            let data = { relaciones: pac.relaciones.toObject() };
+            const data = { relaciones: pac.relaciones.toObject() };
             data.relaciones.forEach(rel => {
                 if (rel.foto !== undefined) {
                     delete rel.foto;

@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let schema = new mongoose.Schema({
+const schema = new mongoose.Schema({
     // nomencladorRecuperoFinanciero: String,
     // snomed: [{ term: String, conceptId: String }],
     // idServicio: String,
@@ -27,5 +27,5 @@ let schema = new mongoose.Schema({
     }
 });
 
-let model = mongoose.model('configFacturacionAutomatica', schema, 'configFacturacionAutomatica');
+const model = mongoose.model('configFacturacionAutomatica', schema, 'configFacturacionAutomatica');
 export = model;

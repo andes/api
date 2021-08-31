@@ -23,4 +23,4 @@ export const nomivacLoteSchema = new mongoose.Schema({
 nomivacLoteSchema.index({
     codigo: 1
 });
-export let nomivacLotes = mongoose.model('nomivacLotes', nomivacLoteSchema, 'nomivacLotes');
+export const nomivacLotes = mongoose.model('nomivacLotes', nomivacLoteSchema, 'nomivacLotes');

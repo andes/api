@@ -11,8 +11,8 @@ const router = express.Router();
 
 router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
     try {
-        let organizacion = Auth.getOrganization(req);
-        let opciones = {
+        const organizacion = Auth.getOrganization(req);
+        const opciones = {
             organizacion: ObjectId(organizacion)
         };
         if (req.query.nombre) {
@@ -21,11 +21,11 @@ router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
         if (req.query.tipo) {
             opciones['tipo'] = req.query.tipo;
         }
-        let query = TurneroPantalla.find(opciones);
+        const query = TurneroPantalla.find(opciones);
         if (req.query.fields) {
             query.select(req.query.fields);
         }
-        let pantallas = await query;
+        const pantallas = await query;
         return res.json(pantallas);
     } catch (e) {
         return next(e);
@@ -43,8 +43,8 @@ router.get('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) => 
 
 export const generarToken = () => {
     let codigo = '';
-    let length = 6;
-    let caracteres = '0123456789';
+    const length = 6;
+    const caracteres = '0123456789';
     for (let i = 0; i < length; i++) {
         codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
@@ -53,10 +53,10 @@ export const generarToken = () => {
 
 router.post('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
     try {
-        let pantallaData = req.body;
-        let organizacion = Auth.getOrganization(req);
+        const pantallaData = req.body;
+        const organizacion = Auth.getOrganization(req);
 
-        let pantalla: any = new TurneroPantalla(pantallaData);
+        const pantalla: any = new TurneroPantalla(pantallaData);
 
         pantalla.organizacion = ObjectId(organizacion);
         pantalla.token = generarToken();
@@ -73,9 +73,9 @@ router.post('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
 
 router.post('/pantalla/:id/retoken', Auth.authenticate(), async (req: any, res, next) => {
     try {
-        let id = req.params.id;
-        let organizacion = Auth.getOrganization(req);
-        let query = {
+        const id = req.params.id;
+        const organizacion = Auth.getOrganization(req);
+        const query = {
             _id: ObjectId(id),
             organizacion: ObjectId(organizacion)
         };
@@ -121,15 +121,15 @@ router.delete('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) 
 });
 
 router.post('/pantalla/activate', async (req, res, next) => {
-    let codigo = req.body.codigo;
-    let tipoPantalla = req.body.tipo;
-    let pantallas = await TurneroPantalla.find({
+    const codigo = req.body.codigo;
+    const tipoPantalla = req.body.tipo;
+    const pantallas = await TurneroPantalla.find({
         token: codigo,
         tipo: tipoPantalla,
         expirationTime: { $gt: new Date() },
     });
     if (pantallas.length) {
-        let pantalla: any = pantallas[0];
+        const pantalla: any = pantallas[0];
         pantalla.token = null;
         pantalla.expirationTime = null;
         await pantalla.save();

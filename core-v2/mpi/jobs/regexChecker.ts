@@ -17,15 +17,15 @@ import * as config from '../../../config';
  */
 export async function regexChecker(done) {
     try {
-        let cursor = Paciente.find({ $or: [{ nombre: { $regex: regtest } }, { apellido: { $regex: regtest } }] }).limit(100).cursor();
+        const cursor = Paciente.find({ $or: [{ nombre: { $regex: regtest } }, { apellido: { $regex: regtest } }] }).limit(100).cursor();
         let countPacienteError = 0;
 
         await cursor.eachAsync(async (pac: any) => {
             const pacienteOld = pac.toObject();
             countPacienteError = countPacienteError + 1;
-            let pacienteSisa: any = await sisa(pac, sisaConfig, sisaToAndes);
+            const pacienteSisa: any = await sisa(pac, sisaConfig, sisaToAndes);
             if (pacienteSisa) {
-                let match = new Matching();
+                const match = new Matching();
                 const weights = config.mpi.weightsDefault;
                 const porcentajeMatcheo: number = match.matchPersonas(pacienteOld, pacienteSisa, weights, config.algoritmo);
 

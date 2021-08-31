@@ -8,7 +8,7 @@ export class MongoAdapter implements IAdapter {
     constructor({ host, collectionName = 'AndesDriveStore' }) {
         const mongoose = require('mongoose');
 
-        let conn = mongoose.createConnection(host);
+        const conn = mongoose.createConnection(host);
         conn.once('open', () => {
 
             this.gfs = new mongo.GridFSBucket(conn.db, {

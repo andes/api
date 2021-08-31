@@ -4,7 +4,7 @@
  */
 import * as mongoose from 'mongoose';
 
-export let schema = new mongoose.Schema({
+export const schema = new mongoose.Schema({
     paciente: mongoose.Schema.Types.ObjectId,
     prestacion: mongoose.Schema.Types.ObjectId,
     profesional: mongoose.Schema.Types.ObjectId,
@@ -17,4 +17,4 @@ export let schema = new mongoose.Schema({
     createdAt:  mongoose.Schema.Types.Date
 });
 
-export let model = mongoose.model('prestacion-adjuntos', schema, 'prestaciones-adjuntos');
+export const model = mongoose.model('prestacion-adjuntos', schema, 'prestaciones-adjuntos');

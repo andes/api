@@ -25,7 +25,7 @@ function identidadSinAcentos(ciudadano) {
 
 export async function validar(documento: string, sexo: string) {
 
-    let ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
+    const ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
     try {
         if (ciudadanoRenaper) {
             // Valida el tamaño de la foto
@@ -74,16 +74,16 @@ async function resizeFoto(foto) {
     try {
         const base64Image = foto;
 
-        let parts = base64Image.split(';');
-        let mimType = parts[0].split(':')[1];
-        let imageData = parts[1].split(',')[1];
+        const parts = base64Image.split(';');
+        const mimType = parts[0].split(':')[1];
+        const imageData = parts[1].split(',')[1];
 
-        let img = Buffer.from(imageData, 'base64');
+        const img = Buffer.from(imageData, 'base64');
         const semiTransparentRedPng = await sharp(img)
             .resize(600, 600)
             .toBuffer();
-        let resizedImageData = semiTransparentRedPng.toString('base64');
-        let resizedBase64 = `data:${mimType};base64,${resizedImageData}`;
+        const resizedImageData = semiTransparentRedPng.toString('base64');
+        const resizedBase64 = `data:${mimType};base64,${resizedImageData}`;
         return resizedBase64;
     } catch (error) {
         return null;

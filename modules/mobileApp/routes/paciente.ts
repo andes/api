@@ -51,12 +51,12 @@ router.get('/paciente/:id/relaciones', async (req: any, res, next) => {
 router.get('/relaciones', async (req: any, res, next) => {
     try {
         const paciente: any = await findById(req.query.id);
-        let arrayRelaciones = [];
+        const arrayRelaciones = [];
         let pacienteRel;
         if (paciente.relaciones) {
-            for (let rel of paciente.relaciones) {
+            for (const rel of paciente.relaciones) {
                 if (rel.relacion) {
-                    let objRelacion = rel.toObject();
+                    const objRelacion = rel.toObject();
                     pacienteRel = await findById(rel.referencia as any);
                     pacienteRel = pacienteRel.toObject({ virtuals: true });
                     objRelacion.id = pacienteRel.id;
@@ -79,7 +79,7 @@ router.get('/relaciones', async (req: any, res, next) => {
 
 router.put('/paciente/:id', async (req: any, res, next) => {
     const idPaciente = req.params.id;
-    let paciente = await findById(idPaciente);
+    const paciente = await findById(idPaciente);
     const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
     let esFamiliar;
     if (index < 0) {
@@ -114,7 +114,7 @@ router.patch('/pacientes/:id', async (req: any, res, next) => {
 
     if (index >= 0) {
         try {
-            let paciente = await findById(req.params.id);
+            const paciente = await findById(req.params.id);
             if (paciente) {
                 const updated = await PacienteCtr.update(paciente.id, req.body, req);
                 return res.json(updated);
@@ -133,7 +133,7 @@ router.patch('/pacientes/:id', async (req: any, res, next) => {
 
 router.get('/laboratorios/(:id)', async (req: any, res, next) => {
     const idPaciente = req.params.id;
-    let paciente: any = await findById(idPaciente);
+    const paciente: any = await findById(idPaciente);
     const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
     let esFamiliar;
     if (index < 0) {
@@ -146,12 +146,12 @@ router.get('/laboratorios/(:id)', async (req: any, res, next) => {
         if (!paciente) {
             return next({ message: 'no existe el paciente' });
         }
-        let limit = parseInt(req.query.limit || 10, 10);
-        let skip = parseInt(req.query.skip || 0, 10);
-        let cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip });
-        for (let cda of cdas) {
-            let _xml = await cdaCtr.loadCDA(cda.cda_id);
-            let dom: any = xmlToJson(_xml);
+        const limit = parseInt(req.query.limit || 10, 10);
+        const skip = parseInt(req.query.skip || 0, 10);
+        const cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip });
+        for (const cda of cdas) {
+            const _xml = await cdaCtr.loadCDA(cda.cda_id);
+            const dom: any = xmlToJson(_xml);
             cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
             cda.title = dom.ClinicalDocument.title['#text'];
             cda.organizacion = dom.ClinicalDocument.author.assignedAuthor.representedOrganization.name['#text'];
@@ -166,7 +166,7 @@ router.get('/laboratorios/(:id)', async (req: any, res, next) => {
 router.post('/registro-familiar/:id', async (req: any, res, next) => {
     try {
         const idPaciente = req.params.id;
-        let pacienteActual: any = await findById(idPaciente);
+        const pacienteActual: any = await findById(idPaciente);
         const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
         if (index >= 0) {
             const documento = req.body.documento;

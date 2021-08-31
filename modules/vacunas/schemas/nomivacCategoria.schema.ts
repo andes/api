@@ -15,4 +15,4 @@ export const nomivacCategoriaSchema = new mongoose.Schema({
 nomivacCategoriaSchema.index({
     codigo: 1
 });
-export let nomivacCategoria = mongoose.model('nomivacCategoriasAplicacion', nomivacCategoriaSchema, 'nomivacCategoriasAplicacion');
+export const nomivacCategoria = mongoose.model('nomivacCategoriasAplicacion', nomivacCategoriaSchema, 'nomivacCategoriasAplicacion');

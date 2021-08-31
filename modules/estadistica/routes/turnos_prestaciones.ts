@@ -27,11 +27,11 @@ router.get('/turnos_prestaciones', async (req, res, next) => {
     };
     try {
         // Procesa los turnos aplicando los filtros
-        let _turnos = parametros?.ambito === 'internacion' ? [] : agendaController.procesar(parametros);
+        const _turnos = parametros?.ambito === 'internacion' ? [] : agendaController.procesar(parametros);
         // Procesa las prestaciones fuera de agenda
-        let _prestaciones = fueraDeAgendaController.procesar(parametros);
-        let [turnos, prestaciones] = await Promise.all([_turnos, _prestaciones]);
-        let resultado: any = turnos.concat(prestaciones);
+        const _prestaciones = fueraDeAgendaController.procesar(parametros);
+        const [turnos, prestaciones] = await Promise.all([_turnos, _prestaciones]);
+        const resultado: any = turnos.concat(prestaciones);
         res.json(resultado);
     } catch (error) {
         return next(error);

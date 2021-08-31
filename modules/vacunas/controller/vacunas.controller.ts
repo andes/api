@@ -43,7 +43,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
     const urlSisa = sisa.url_nomivac;
     const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
     const end = hasta ? moment(hasta).toDate() : moment().toDate();
-    let match = {
+    const match = {
         'estadoActual.tipo': 'validada',
         'ejecucion.registros.concepto.conceptId': '840534001'
     };
@@ -144,7 +144,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
         }
     ];
     const prestaciones = await Prestacion.aggregate(pipelineVacunaCovid19);
-    for (let unaPrestacion of prestaciones) {
+    for (const unaPrestacion of prestaciones) {
         try {
             const data = {
                 ciudadano:
@@ -177,7 +177,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                 aplicacionVacuna: data.aplicacionVacuna
             };
 
-            let log = {
+            const log = {
                 fecha: new Date(),
                 sistema: 'Nomivac',
                 key: unaPrestacion.tipo,
@@ -212,7 +212,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                     description: 'No se recibió ningún resultado'
                 };
             }
-            let info = new InformacionExportada(log);
+            const info = new InformacionExportada(log);
             await info.save();
 
         } catch (error) {
@@ -227,7 +227,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                     description: error
                 }
             };
-            let info = new InformacionExportada(logEspecial);
+            const info = new InformacionExportada(logEspecial);
             await info.save();
         }
     }

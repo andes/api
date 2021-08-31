@@ -20,25 +20,25 @@ import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import moment = require('moment');
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
-    let query = [
+    const query = [
         { $unwind: '$formacionPosgrado' },
         { $unwind: '$formacionPosgrado.matriculacion' },
         { $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 } },
         { $limit: 1 }
     ];
-    let data = await toArray(Profesional.aggregate(query).cursor({}).exec());
-    let ultimoNumero = data[0].formacionPosgrado.matriculacion.matriculaNumero;
+    const data = await toArray(Profesional.aggregate(query).cursor({}).exec());
+    const ultimoNumero = data[0].formacionPosgrado.matriculacion.matriculaNumero;
     res.json(ultimoNumero);
 });
 
 router.get('/profesionales/estadisticas', async (req, res, next) => {
-    let estadisticas = {};
-    let total = Profesional.count({ profesionalMatriculado: true });
-    let totalMatriculados = Profesional.count({ rematriculado: 0, profesionalMatriculado: true });
-    let totalRematriculados = Profesional.count({ rematriculado: 1, profesionalMatriculado: true });
+    const estadisticas = {};
+    const total = Profesional.count({ profesionalMatriculado: true });
+    const totalMatriculados = Profesional.count({ rematriculado: 0, profesionalMatriculado: true });
+    const totalRematriculados = Profesional.count({ rematriculado: 1, profesionalMatriculado: true });
     Promise.all([total, totalMatriculados, totalRematriculados]).then(values => {
         estadisticas['total'] = values[0];
         estadisticas['totalMatriculados'] = values[1];
@@ -53,9 +53,9 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
     }
     const fechaDesde = req.query.fechaDesde;
     const fechaHasta = req.query.fechaHasta;
-    let profesionaleSisaTotal = [];
+    const profesionaleSisaTotal = [];
 
-    let datos = await Profesional.aggregate(
+    const datos = await Profesional.aggregate(
         [
             {
                 $match: {
@@ -85,7 +85,7 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
         ]);
 
     for (let index = 0; index < datos.length; index++) {
-        let profesionalSisa = {};
+        const profesionalSisa = {};
 
         const unProfesional = datos[index];
         profesionalSisa['ID_PROFESIONAL'] = '';
@@ -127,15 +127,15 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
         profesionalSisa['EMAIL'] = email ? email.valor : '';
         profesionalSisa['EMAIL2'] = '';
         profesionalSisa['CUIL'] = unProfesional.cuit ? unProfesional.cuit : '';
-        let fallecido = unProfesional.fechaFallecimiento ? 'SI' : 'NO';
+        const fallecido = unProfesional.fechaFallecimiento ? 'SI' : 'NO';
         profesionalSisa['FALLECIDO'] = fallecido;
         profesionalSisa['FECHA_FALLECIDO'] = fallecido === 'SI' ? unProfesional.fecha_fallecido : '';
         profesionalSisa['HABILITADO'] = 'SI';
-        let profesionDeReferencia: any = await profesion.findOne({ codigo: unProfesional.formacionGrado.profesion.codigo });
+        const profesionDeReferencia: any = await profesion.findOne({ codigo: unProfesional.formacionGrado.profesion.codigo });
         profesionalSisa['ID_PROFESION_REFERENCIA'] = (profesionDeReferencia && profesionDeReferencia.profesionCodigoRef) ? profesionDeReferencia.profesionCodigoRef : '';
         profesionalSisa['ID_PROFESION'] = (unProfesional.formacionGrado && unProfesional.formacionGrado.profesion) ? unProfesional.formacionGrado.profesion.codigo : '';
         profesionalSisa['TITULO'] = unProfesional.formacionGrado ? unProfesional.formacionGrado.titulo : '';
-        let codigoInstitucion = unProfesional.formacionGrado ? unProfesional.formacionGrado.entidadFormadora.codigo : '0';
+        const codigoInstitucion = unProfesional.formacionGrado ? unProfesional.formacionGrado.entidadFormadora.codigo : '0';
         profesionalSisa['ID_INSTITUCION_FORMADORA'] = codigoInstitucion;
         profesionalSisa['FECHA_TITULO'] = moment(unProfesional.formacionGrado.fechaEgreso).format('DD/MM/YYYY');
         profesionalSisa['ID_INSTITUCION_SEDE'] = '';
@@ -188,8 +188,8 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['formacionGrado.matriculacion'] = { $ne: null };
         opciones['profesionalMatriculado'] = true;
 
-        let datosGuia: any = await Profesional.find(opciones);
-        let resultado = [];
+        const datosGuia: any = await Profesional.find(opciones);
+        const resultado = [];
 
         if (datosGuia.length > 0) {
             datosGuia.forEach(element => {
@@ -219,8 +219,8 @@ router.get('/profesionales/matching', async (req, res, next) => {
 
     if (Object.keys(opciones).length !== 0) {
         opciones['profesionalMatriculado'] = true;
-        let profEncontrados: any = await Profesional.find(opciones);
-        let arrayProf = [];
+        const profEncontrados: any = await Profesional.find(opciones);
+        const arrayProf = [];
         let resultado;
         if (profEncontrados) {
             profEncontrados.forEach(element => {
@@ -281,15 +281,15 @@ router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, ne
 
         }
         if (req.query.firmaAdmin) {
-            let idAdmin = req.query.firmaAdmin;
-            let fotoAdmin = makeFsFirmaAdmin();
+            const idAdmin = req.query.firmaAdmin;
+            const fotoAdmin = makeFsFirmaAdmin();
             const file = await fotoAdmin.findOne({ 'metadata.idSupervisor': idAdmin });
             if (file) {
                 const idFile = file._id;
                 const readStream = await fotoAdmin.readFile({ _id: idFile });
                 const _img = await streamToBase64(readStream);
                 if (_img) {
-                    let firmaAdmin = {
+                    const firmaAdmin = {
                         firma: _img,
                         administracion: file.metadata.administracion
                     };
@@ -500,7 +500,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         }
     }
 
-    let pipeline = [];
+    const pipeline = [];
     pipeline.push({ $match: match });
     pipeline.push({ $unwind: unwindOptions });
     pipeline.push({ $project: projections });
@@ -523,7 +523,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         }
     } else {
         const matriculas = await toArray(Profesional.aggregate(pipeline).cursor({}).exec());
-        let responseArray = createResponseArray(matriculas, req);
+        const responseArray = createResponseArray(matriculas, req);
         res.status(201).json(responseArray);
     }
 });
@@ -653,9 +653,9 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             if (!req.query.exportarPlanillaCalculo) {
                 res.json(data);
             } else {
-                let profesionales = [];
+                const profesionales = [];
                 for (let i = 0; i < data.length; i++) {
-                    let prof = {};
+                    const prof = {};
 
                     prof['nombre'] = data[i].nombre;
                     prof['apellido'] = data[i].apellido;
@@ -673,8 +673,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     prof['entidadFormadora1'] = data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].entidadFormadora ? data[i].formacionGrado[0].entidadFormadora.nombre : '';
                     prof['fechaEgreso1'] = data[i].formacionGrado && data[i].formacionGrado[0] ? data[i].formacionGrado[0].fechaEgreso : '';
                     if (data[i].formacionGrado && data[i].formacionGrado[0] && data[i].formacionGrado[0].matriculado && data[i].formacionGrado[0].matriculacion) {
-                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[0].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionGrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[0].matriculacion.map(matricula => matricula.inicio));
+                        const ultimaMatricula = data[i].formacionGrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero1'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                         prof['fechaInicio1'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
                         prof['fechaFin1'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
@@ -694,8 +694,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     prof['entidadFormadora2'] = data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].entidadFormadora ? data[i].formacionGrado[1].entidadFormadora.nombre : '';
                     prof['fechaEgreso2'] = data[i].formacionGrado && data[i].formacionGrado[1] ? data[i].formacionGrado[1].fechaEgreso : '';
                     if (data[i].formacionGrado && data[i].formacionGrado[1] && data[i].formacionGrado[1].matriculado && data[i].formacionGrado[1].matriculacion) {
-                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[1].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionGrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[1].matriculacion.map(matricula => matricula.inicio));
+                        const ultimaMatricula = data[i].formacionGrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                         prof['fechaInicio2'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
                         prof['fechaFin2'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
@@ -715,8 +715,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     prof['entidadFormadora3'] = data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].entidadFormadora ? data[i].formacionGrado[2].entidadFormadora.nombre : '';
                     prof['fechaEgreso3'] = data[i].formacionGrado && data[i].formacionGrado[2] ? data[i].formacionGrado[2].fechaEgreso : '';
                     if (data[i].formacionGrado && data[i].formacionGrado[2] && data[i].formacionGrado[2].matriculado && data[i].formacionGrado[2].matriculacion) {
-                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[2].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionGrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionGrado[2].matriculacion.map(matricula => matricula.inicio));
+                        const ultimaMatricula = data[i].formacionGrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaGNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                         prof['fechaInicio3'] = ultimaMatricula ? moment(ultimaMatricula.inicio).format('DD/MM/YYYY') : '';
                         prof['fechaFin3'] = ultimaMatricula ? moment(ultimaMatricula.fin).format('DD/MM/YYYY') : '';
@@ -734,8 +734,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // formacionPosgrado1
                     prof['especialidad1'] = data[i].formacionPosgrado && data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].especialidad.nombre : '';
                     if (data[i].formacionPosgrado && data[i].formacionPosgrado[0] && data[i].formacionPosgrado[0].matriculado && data[i].formacionPosgrado[0].matriculacion) {
-                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[0].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionPosgrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[0].matriculacion.map(matricula => matricula.inicio));
+                        const ultimaMatricula = data[i].formacionPosgrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaPNumero1'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                     } else {
                         prof['matriculaPNumero1'] = '';
@@ -744,8 +744,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // formacionPosgrado2
                     prof['especialidad2'] = data[i].formacionPosgrado && data[i].formacionPosgrado[1] ? data[i].formacionPosgrado[1].especialidad.nombre : '';
                     if (data[i].formacionPosgrado && data[i].formacionPosgrado[1] && data[i].formacionPosgrado[1].matriculado && data[i].formacionPosgrado[1].matriculacion) {
-                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[1].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionPosgrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[1].matriculacion.map(matricula => matricula.inicio));
+                        const ultimaMatricula = data[i].formacionPosgrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaPNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                     } else {
                         prof['matriculaPNumero2'] = '';
@@ -755,8 +755,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // formacionPosgrado3
                     prof['especialidad3'] = data[i].formacionPosgrado && data[i].formacionPosgrado[2] ? data[i].formacionPosgrado[2].especialidad.nombre : '';
                     if (data[i].formacionPosgrado && data[i].formacionPosgrado[2] && data[i].formacionPosgrado[2].matriculado && data[i].formacionPosgrado[2].matriculacion) {
-                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[2].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionPosgrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[2].matriculacion.map(matricula => matricula.inicio));
+                        const ultimaMatricula = data[i].formacionPosgrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaPNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                     } else {
                         prof['matriculaPNumero3'] = '';
@@ -765,8 +765,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // formacionPosgrado4
                     prof['especialidad4'] = data[i].formacionPosgrado && data[i].formacionPosgrado[3] ? data[i].formacionPosgrado[3].especialidad.nombre : '';
                     if (data[i].formacionPosgrado && data[i].formacionPosgrado[3] && data[i].formacionPosgrado[3].matriculado && data[i].formacionPosgrado[3].matriculacion) {
-                        let fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[3].matriculacion.map(matricula => matricula.inicio));
-                        let ultimaMatricula = data[i].formacionPosgrado[3].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
+                        const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[3].matriculacion.map(matricula => matricula.inicio));
+                        const ultimaMatricula = data[i].formacionPosgrado[3].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
                         prof['matriculaPNumero4'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
                     } else {
                         prof['matriculaPNumero4'] = '';
@@ -776,8 +776,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     // prof['fechasDeAltas1'] = data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].fe ? 'Si' : 'No' : '';
                     // TODO: que hago con fechasDeAltas?
 
-                    let fechaUltimaSancion = data[i].sanciones ? Math.max.apply(null, data[i].sanciones.map(sancion => sancion.fecha)) : null;
-                    let ultimaSancion = fechaUltimaSancion ? data[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; }) : null;
+                    const fechaUltimaSancion = data[i].sanciones ? Math.max.apply(null, data[i].sanciones.map(sancion => sancion.fecha)) : null;
+                    const ultimaSancion = fechaUltimaSancion ? data[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; }) : null;
                     prof['sancionNumero'] = ultimaSancion ? ultimaSancion.numero : '';
                     prof['sancionMotivo'] = ultimaSancion ? ultimaSancion.motivo : '';
                     prof['sancionnormaLegal'] = ultimaSancion ? ultimaSancion.normaLegal : '';
@@ -806,26 +806,26 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                     prof['localidad3'] = data[i].domicilios && data[i].domicilios[2] && data[i].domicilios[2].ubicacion && data[i].domicilios[2].ubicacion.localidad ? data[i].domicilios[2].ubicacion.localidad.nombre : '';
 
                     if (data[i].contactos) {
-                        let celulares = data[i].contactos.filter(contacto => contacto.tipo === 'celular');
+                        const celulares = data[i].contactos.filter(contacto => contacto.tipo === 'celular');
                         if (celulares) {
-                            let minRanking = Math.min.apply(null, celulares.map(cel => cel.ranking));
-                            let celular = minRanking ? celulares.find(cel => cel.ranking === minRanking) : celulares[0];
+                            const minRanking = Math.min.apply(null, celulares.map(cel => cel.ranking));
+                            const celular = minRanking ? celulares.find(cel => cel.ranking === minRanking) : celulares[0];
                             prof['celular'] = celular ? celular.valor : '';
                         } else {
                             prof['celular'] = '';
                         }
-                        let emails = data[i].contactos.filter(contacto => contacto.tipo === 'email');
+                        const emails = data[i].contactos.filter(contacto => contacto.tipo === 'email');
                         if (emails) {
-                            let minRanking = Math.min.apply(null, emails.map(mail => mail.ranking));
-                            let email = minRanking ? emails.find(mail => mail.ranking === minRanking) : emails[0];
+                            const minRanking = Math.min.apply(null, emails.map(mail => mail.ranking));
+                            const email = minRanking ? emails.find(mail => mail.ranking === minRanking) : emails[0];
                             prof['email'] = email ? email.valor : '';
                         } else {
                             prof['email'] = '';
                         }
-                        let fijos = data[i].contactos.filter(contacto => contacto.tipo === 'fijo');
+                        const fijos = data[i].contactos.filter(contacto => contacto.tipo === 'fijo');
                         if (fijos) {
-                            let minRanking = Math.min.apply(null, fijos.map(fij => fij.ranking));
-                            let fijo = minRanking ? fijos.find(fij => fij.ranking === minRanking) : fijos[0];
+                            const minRanking = Math.min.apply(null, fijos.map(fij => fij.ranking));
+                            const fijo = minRanking ? fijos.find(fij => fij.ranking === minRanking) : fijos[0];
                             prof['fijo'] = fijo ? fijo.valor : '';
                         } else {
                             prof['fijo'] = '';
@@ -923,7 +923,7 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
     }
     try {
         if (req.body.id) {
-            let resultado: any = await Profesional.findById(req.body.id);
+            const resultado: any = await Profesional.findById(req.body.id);
 
 
             const profesionalOriginal = resultado.toObject();
@@ -989,7 +989,7 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
 router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
     try {
         let profesionalOriginal;
-        let resultado: any = await Profesional.findById(req.params.id);
+        const resultado: any = await Profesional.findById(req.params.id);
         profesionalOriginal = resultado.toObject();
         if (resultado) {
             switch (req.body.op) {
@@ -1087,13 +1087,13 @@ router.post('/profesionales/migrarTurnos', async (req, res, next) => {
 });
 
 router.post('/profesionales/matriculaCero', async (req, res, next) => {
-    let ress = await matriculaCero();
+    const ress = await matriculaCero();
     res.json(ress);
 
 });
 
 router.post('/profesionales/formacionCero', async (req, res, next) => {
-    let ress = await formacionCero();
+    const ress = await formacionCero();
     res.json(ress);
 
 });
@@ -1137,9 +1137,9 @@ router.post('/profesionales/validar', async (req, res, next) => {
 export = router;
 
 function createResponseArray(matriculas: any[], req: any) {
-    let responseArray = [];
+    const responseArray = [];
     for (let i = 0; i < matriculas.length; i++) {
-        let prof = {};
+        const prof = {};
         prof['nombre'] = matriculas[i].nombre;
         prof['apellido'] = matriculas[i].apellido;
         prof['tipoDocumento'] = matriculas[i].tipoDocumento;
@@ -1169,8 +1169,8 @@ function createResponseArray(matriculas: any[], req: any) {
             prof['tieneVencimiento1'] = matriculas[i].formacionPosgrado && matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.tieneVencimiento ? 'Si' : 'No' : '';
             prof['fechasDeAltas1'] = matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.fe ? 'Si' : 'No' : '';
         }
-        let fechaUltimaSancion = matriculas[i].sanciones ? Math.max.apply(null, matriculas[i].sanciones.map(sancion => sancion.fecha)) : null;
-        let ultimaSancion = fechaUltimaSancion ? matriculas[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; }) : null;
+        const fechaUltimaSancion = matriculas[i].sanciones ? Math.max.apply(null, matriculas[i].sanciones.map(sancion => sancion.fecha)) : null;
+        const ultimaSancion = fechaUltimaSancion ? matriculas[i].sanciones.find(sancion => { return sancion.inicio === fechaUltimaSancion; }) : null;
         prof['sancionNumero'] = ultimaSancion ? ultimaSancion.numero : '';
         prof['sancionMotivo'] = ultimaSancion ? ultimaSancion.motivo : '';
         prof['sancionnormaLegal'] = ultimaSancion ? ultimaSancion.normaLegal : '';
@@ -1195,26 +1195,26 @@ function createResponseArray(matriculas: any[], req: any) {
         prof['provincia3'] = matriculas[i].domicilios && matriculas[i].domicilios[2] && matriculas[i].domicilios[2].ubicacion && matriculas[i].domicilios[2].ubicacion.provincia ? matriculas[i].domicilios[2].ubicacion.provincia.nombre : '';
         prof['localidad3'] = matriculas[i].domicilios && matriculas[i].domicilios[2] && matriculas[i].domicilios[2].ubicacion && matriculas[i].domicilios[2].ubicacion.localidad ? matriculas[i].domicilios[2].ubicacion.localidad.nombre : '';
         if (matriculas[i].contactos) {
-            let celulares = matriculas[i].contactos.filter(contacto => contacto.tipo === 'celular');
+            const celulares = matriculas[i].contactos.filter(contacto => contacto.tipo === 'celular');
             if (celulares) {
-                let minRanking = Math.min.apply(null, celulares.map(cel => cel.ranking));
-                let celular = minRanking ? celulares.find(cel => cel.ranking === minRanking) : celulares[0];
+                const minRanking = Math.min.apply(null, celulares.map(cel => cel.ranking));
+                const celular = minRanking ? celulares.find(cel => cel.ranking === minRanking) : celulares[0];
                 prof['celular'] = celular ? celular.valor : '';
             } else {
                 prof['celular'] = '';
             }
-            let emails = matriculas[i].contactos.filter(contacto => contacto.tipo === 'email');
+            const emails = matriculas[i].contactos.filter(contacto => contacto.tipo === 'email');
             if (emails) {
-                let minRanking = Math.min.apply(null, emails.map(mail => mail.ranking));
-                let email = minRanking ? emails.find(mail => mail.ranking === minRanking) : emails[0];
+                const minRanking = Math.min.apply(null, emails.map(mail => mail.ranking));
+                const email = minRanking ? emails.find(mail => mail.ranking === minRanking) : emails[0];
                 prof['email'] = email ? email.valor : '';
             } else {
                 prof['email'] = '';
             }
-            let fijos = matriculas[i].contactos.filter(contacto => contacto.tipo === 'fijo');
+            const fijos = matriculas[i].contactos.filter(contacto => contacto.tipo === 'fijo');
             if (fijos) {
-                let minRanking = Math.min.apply(null, fijos.map(fij => fij.ranking));
-                let fijo = minRanking ? fijos.find(fij => fij.ranking === minRanking) : fijos[0];
+                const minRanking = Math.min.apply(null, fijos.map(fij => fij.ranking));
+                const fijo = minRanking ? fijos.find(fij => fij.ranking === minRanking) : fijos[0];
                 prof['fijo'] = fijo ? fijo.valor : '';
             } else {
                 prof['fijo'] = '';

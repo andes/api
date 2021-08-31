@@ -2,7 +2,7 @@ import { EventCore } from '@andes/event-bus';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { userScheduler } from '../../../config.private';
 import { validarInscripcion } from './inscripcion.vacunas.controller';
-let dataLog: any = new Object(userScheduler);
+const dataLog: any = new Object(userScheduler);
 dataLog.body = { _id: null };
 dataLog.method = null;
 

@@ -11,7 +11,7 @@ import { HudsAcceso } from './hudsAccesos.schema';
 
 export async function search(filtros) {
     const match = {};
-    let fechas = [];
+    const fechas = [];
 
     if (filtros.fechaDesde) {
         fechas.push({ 'accesos.fecha': { $gte: new Date(filtros.fechaDesde) } });

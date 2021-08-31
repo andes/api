@@ -15,7 +15,7 @@ import { Auth } from './../../../auth/auth.class';
  */
 export async function vencimientoMatriculaGrado(done) {
     // let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
-    let profesionales: any = await Profesional.find({ 'formacionGrado.matriculacion.fin': { $lte: new Date() }, 'formacionGrado.matriculado': true, profesionalMatriculado: true });
+    const profesionales: any = await Profesional.find({ 'formacionGrado.matriculacion.fin': { $lte: new Date() }, 'formacionGrado.matriculado': true, profesionalMatriculado: true });
 
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
@@ -38,7 +38,7 @@ export async function vencimientoMatriculaGrado(done) {
 }
 
 export async function vencimientoMatriculaPosgrado(done) {
-    let profesionales: any = await Profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true, 'formacionPosgrado.tieneVencimiento': true }, (data: any) => { return data; });
+    const profesionales: any = await Profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true, 'formacionPosgrado.tieneVencimiento': true }, (data: any) => { return data; });
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             if (profesionales[_n].formacionPosgrado) {
@@ -69,10 +69,10 @@ async function actualizar(unProfesional) {
 }
 
 export async function migrarTurnos() {
-    let profesionales: any = await Profesional.find({ turno: { $gte: new Date() } }, (data: any) => { return data; });
+    const profesionales: any = await Profesional.find({ turno: { $gte: new Date() } }, (data: any) => { return data; });
     profesionales.forEach(unProfesional => {
         let tipoDeTurno;
-        let turnoSolicitud = {
+        const turnoSolicitud = {
             nombre: unProfesional.nombre,
             apellido: unProfesional.apellido,
             documento: unProfesional.documento,
@@ -81,17 +81,17 @@ export async function migrarTurnos() {
         };
 
 
-        let formacionGrado = unProfesional.formacionGrado;
+        const formacionGrado = unProfesional.formacionGrado;
         if (formacionGrado.length === 1 && formacionGrado[formacionGrado.length - 1].matriculacion === null) {
             tipoDeTurno = 'matriculacion';
         } else {
             tipoDeTurno = 'renovacion';
         }
 
-        let newTurnoSolicitado = new turnoSolicitado(turnoSolicitud);
-        let unTurno: any = newTurnoSolicitado.save((err2) => {
+        const newTurnoSolicitado = new turnoSolicitado(turnoSolicitud);
+        const unTurno: any = newTurnoSolicitado.save((err2) => {
 
-            let nTurno = new turno({
+            const nTurno = new turno({
                 notificado: false,
                 sePresento: false,
                 fecha: unProfesional.turno,
@@ -109,9 +109,9 @@ export async function migrarTurnos() {
 }
 
 export async function matriculaCero() {
-    let profesionales: any = await Profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; });
+    const profesionales: any = await Profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; });
     profesionales.forEach((unProfesional, i) => {
-        let formacionGrado = unProfesional.formacionGrado;
+        const formacionGrado = unProfesional.formacionGrado;
         formacionGrado.forEach((element, n) => {
             if (element.matriculacion[element.matriculacion.length - 1].matriculaNumero === 0) {
                 unProfesional.formacionGrado[n].matriculacion = null;
@@ -123,7 +123,7 @@ export async function matriculaCero() {
 
 
 export async function formacionCero() {
-    let profesionales: any = await Profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; });
+    const profesionales: any = await Profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; });
     return profesionales;
 }
 
@@ -185,7 +185,7 @@ export async function searchMatriculas(profesionalId) {
 
 export async function saveTituloFormacionGrado(data) {
     const _profesional: any = await Profesional.findById(data.profesionalId);
-    let formacionGrado: any = _profesional.formacionGrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
+    const formacionGrado: any = _profesional.formacionGrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
 
     formacionGrado.tituloFileId = data.fileId;
     return await actualizar(_profesional);
@@ -193,7 +193,7 @@ export async function saveTituloFormacionGrado(data) {
 
 export async function saveTituloFormacionPosgrado(data) {
     const _profesional: any = await Profesional.findById(data.profesionalId);
-    let formacionPosgrado: any = _profesional.formacionPosgrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
+    const formacionPosgrado: any = _profesional.formacionPosgrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
 
     formacionPosgrado.tituloFileId = data.fileId;
     return await actualizar(_profesional);

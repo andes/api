@@ -2,7 +2,7 @@ import * as express from 'express';
 import { EventCore } from '@andes/event-bus';
 import { getConfigFacturacionAutomatica } from '../controller/facturacionAutomaticaController';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Obtiene los datos de la obra social asociada a un paciente
@@ -17,7 +17,7 @@ router.get('/configFacturacionAutomatica/', async (req, res, next) => {
 });
 
 router.post('/facturaArancelamiento', async (req, res, next) => {
-    let turno = req.body;
+    const turno = req.body;
 
     if (turno) {
         EventCore.emitAsync('facturacion:factura:buscador', turno);

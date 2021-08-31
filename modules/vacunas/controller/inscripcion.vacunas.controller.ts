@@ -162,12 +162,12 @@ export async function verificarExistenciaCertificado(inscripcion) {
     try {
         // se verifica el domicilio del paciente asociado a la inscripción
         if (inscripcion.paciente && inscripcion.paciente.id) {
-            let query = {
+            const query = {
                 'paciente.id': inscripcion.paciente.id,
                 'estadoActual.tipo': 'validada',
                 'ejecucion.registros.concepto.conceptId': '2171000246104'
             };
-            let prestacion: any = await Prestacion.findOne(query);
+            const prestacion: any = await Prestacion.findOne(query);
             if (prestacion) {
                 inscripcion.fechaCertificado = prestacion.ejecucion.fecha;
                 inscripcion.idPrestacionCertificado = prestacion._id;

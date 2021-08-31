@@ -18,7 +18,7 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
-let logRequest = {
+const logRequest = {
     user: {
         usuario: { nombre: 'pecasConsolidadoJob', apellido: 'pecasConsolidadoJob' },
         app: 'jobPecas',
@@ -30,7 +30,7 @@ let logRequest = {
     }
 };
 
-let mailOptions = {
+const mailOptions = {
     from: 'info@andes.gob.ar',
     to: emailListString,
     subject: 'Error pecas',
@@ -55,11 +55,11 @@ export async function consultaPecas(done, start, end) {
         await pecasExport(start, end);
         await exportDinamicasSinTurnos(start, end);
 
-        let pecasData: any = await Pecas.find({});
-        let insertsArray = [];
-        let cantidadRegistros = pecasData.length;
-        let conjunto = pecasData.map(data => data.idAgenda);
-        let idsAgendas = [...new Set(conjunto)];
+        const pecasData: any = await Pecas.find({});
+        const insertsArray = [];
+        const cantidadRegistros = pecasData.length;
+        const conjunto = pecasData.map(data => data.idAgenda);
+        const idsAgendas = [...new Set(conjunto)];
         await Promise.all(
             idsAgendas.map(eliminaAgenda)
         );
@@ -67,9 +67,9 @@ export async function consultaPecas(done, start, end) {
         // Realizamos le proceso de insertado a pecas SQL
         if (cantidadRegistros > 0) {
             for (let i = 0; i < cantidadRegistros; i++) {
-                let doc = pecasData[i];
-                let org = await getEfector(doc.idEfector);
-                let idEfectorSips = org.codigo && org.codigo.sips ? org.codigo.sips : null;
+                const doc = pecasData[i];
+                const org = await getEfector(doc.idEfector);
+                const idEfectorSips = org.codigo && org.codigo.sips ? org.codigo.sips : null;
                 insertsArray.push(insertCompleto(doc, idEfectorSips));
             }
             await Promise.all(insertsArray);
@@ -86,26 +86,26 @@ export async function consultaPecas(done, start, end) {
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function insertCompleto(turno: any, idEfectorSips) {
     // Chequeos necesarios
-    let fechaNac = (turno.FechaNacimiento && moment(turno.FechaNacimiento).year()) > 1900 ? `'${turno.FechaNacimiento}'` : null;
-    let FechaConsulta = turno.FechaConsulta ? `'${turno.FechaConsulta}'` : null;
-    let reasignado = turno.reasignado ? `'${turno.reasignado}'` : null;
-    let periodo = turno.periodo ? `'${turno.periodo}'` : null;
+    const fechaNac = (turno.FechaNacimiento && moment(turno.FechaNacimiento).year()) > 1900 ? `'${turno.FechaNacimiento}'` : null;
+    const FechaConsulta = turno.FechaConsulta ? `'${turno.FechaConsulta}'` : null;
+    const reasignado = turno.reasignado ? `'${turno.reasignado}'` : null;
+    const periodo = turno.periodo ? `'${turno.periodo}'` : null;
 
-    let dni = turno.DNI !== '' ? turno.DNI : null;
-    let profesional = turno.Profesional ? turno.Profesional.replace('\'', '\'\'') : null;
-    let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
-    let pacienteNombres = turno.Nombres ? turno.Nombres.replace('\'', '\'\'') : null;
-    let pacienteObraSocial = turno.ObraSocial ? turno.ObraSocial.replace('\'', '\'\'') : null;
-    let calle = turno.Calle ? turno.Calle.replace(/'/g, '\'\'') : null;
-    let turnosDelDia = turno.turnosDelDia ? turno.turnosDelDia : null;
-    let turnosLlaves = turno.turnosLlaves ? turno.turnosLlaves : null;
-    let pacienteTelefono = turno.Telefono ? turno.Telefono : null;
-    let turnosProfesional = turno.turnosProfesional ? turno.turnosProfesional : null;
-    let turnosProgramados = turno.turnosProgramados ? turno.turnosProgramados : null;
-    let numeroBloque = turno.sobreturno === 'SI' ? -1 : turno.numeroBloque;
+    const dni = turno.DNI !== '' ? turno.DNI : null;
+    const profesional = turno.Profesional ? turno.Profesional.replace('\'', '\'\'') : null;
+    const pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
+    const pacienteNombres = turno.Nombres ? turno.Nombres.replace('\'', '\'\'') : null;
+    const pacienteObraSocial = turno.ObraSocial ? turno.ObraSocial.replace('\'', '\'\'') : null;
+    const calle = turno.Calle ? turno.Calle.replace(/'/g, '\'\'') : null;
+    const turnosDelDia = turno.turnosDelDia ? turno.turnosDelDia : null;
+    const turnosLlaves = turno.turnosLlaves ? turno.turnosLlaves : null;
+    const pacienteTelefono = turno.Telefono ? turno.Telefono : null;
+    const turnosProfesional = turno.turnosProfesional ? turno.turnosProfesional : null;
+    const turnosProgramados = turno.turnosProgramados ? turno.turnosProgramados : null;
+    const numeroBloque = turno.sobreturno === 'SI' ? -1 : turno.numeroBloque;
 
 
-    let queryInsert = 'INSERT INTO ' + configPrivate.consolidadoPecas.table.pecasTable +
+    const queryInsert = 'INSERT INTO ' + configPrivate.consolidadoPecas.table.pecasTable +
         '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
         'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, tipoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
         'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
@@ -144,7 +144,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
         ',\'' + profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
         '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
     try {
-        let resultado = await executeQuery(queryInsert);
+        const resultado = await executeQuery(queryInsert);
         return resultado;
     } catch (error) {
         await log(logRequest, 'andes:pecas:bi', null, 'insert', error, null);
@@ -153,7 +153,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
 }
 
 async function eliminaAgenda(idAgenda) {
-    let query = `DELETE FROM ${configPrivate.consolidadoPecas.table.pecasTable} WHERE idAgenda ='${idAgenda}'`;
+    const query = `DELETE FROM ${configPrivate.consolidadoPecas.table.pecasTable} WHERE idAgenda ='${idAgenda}'`;
     try {
         return executeQuery(query);
     } catch (err) {

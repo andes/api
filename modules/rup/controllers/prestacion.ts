@@ -25,7 +25,7 @@ export async function liberarRefTurno(turno, req) {
                 { 'solicitud.turno': Types.ObjectId(turno.id) }
             ]
         });
-        let prestacion: any = await query.exec();
+        const prestacion: any = await query.exec();
         if (!prestacion) {
             return { err: 'No se encontro prestacion para el turno' };
         } else if (prestacion.solicitud) {
@@ -69,18 +69,18 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
         solicitud.historial = [];
     }
 
-    let registroHistorial: any = {
+    const registroHistorial: any = {
         organizacion: solicitud.organizacion,
         tipoPrestacion: solicitud.tipoPrestacion
     };
 
     /** La accion de historial es el tipo de PATCH que se realiza.
      * Si el PATCH es es un push de estado, la acción es el tipo de estado que se pushea */
-    let _accion = datos.op === 'estadoPush' ? datos.estado.tipo : datos.op;
+    const _accion = datos.op === 'estadoPush' ? datos.estado.tipo : datos.op;
     registroHistorial.accion = descripcionesAccion[_accion] === undefined ? 'indefinida' : _accion;
     registroHistorial.descripcion = descripcionesAccion[registroHistorial.accion];
 
-    let observaciones = datos.op === 'estadoPush' || datos.op === 'citar' ? datos.estado.observaciones : datos.observaciones;
+    const observaciones = datos.op === 'estadoPush' || datos.op === 'citar' ? datos.estado.observaciones : datos.observaciones;
     if (observaciones) {
         registroHistorial.observaciones = observaciones;
     }
@@ -95,7 +95,7 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
 
 
 export async function enEjecucion(turno) {
-    let prestacion: any = await Prestacion.findOne({ 'solicitud.turno': turno._id }).exec();
+    const prestacion: any = await Prestacion.findOne({ 'solicitud.turno': turno._id }).exec();
     return (prestacion && prestacion.ejecucion && prestacion.ejecucion.fecha);
 }
 
@@ -155,8 +155,8 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
 export async function updatePrestacionPatient(sourcePatient, idPaciente, idPacientePrincipal) {
     try {
         const query = { 'estadoActual.tipo': 'validada', 'paciente.id': idPaciente };
-        let prestaciones: any = await Prestacion.find(query);
-        let promises = prestaciones.map((p) => {
+        const prestaciones: any = await Prestacion.find(query);
+        const promises = prestaciones.map((p) => {
             p.paciente = {
                 id: p.paciente.id,
                 nombre: sourcePatient.nombre,

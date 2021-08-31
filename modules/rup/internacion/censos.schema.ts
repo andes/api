@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 
-export let CensoSchema = new mongoose.Schema({
+export const CensoSchema = new mongoose.Schema({
     idOrganizacion: mongoose.Types.ObjectId,
     unidadOrganizativa: String,
     start: Date,

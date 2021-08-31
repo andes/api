@@ -52,4 +52,4 @@ const organizacionCacheSchema = new mongoose.Schema({
     integracionActiva: Boolean
 }, { validateBeforeSave: true });
 
-export let organizacionCache = mongoose.model('organizacionCache', organizacionCacheSchema, 'organizacionCache');
+export const organizacionCache = mongoose.model('organizacionCache', organizacionCacheSchema, 'organizacionCache');

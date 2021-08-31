@@ -41,7 +41,7 @@ router.get('/obrasSociales', async (req, res, next) => {
 
 router.get('/prepagas', async (req, res, next) => {
     try {
-        let prepagas = await ObraSocial.find({ prepaga: true }).exec();
+        const prepagas = await ObraSocial.find({ prepaga: true }).exec();
         res.json(prepagas);
     } catch (error) {
         return next(error);
@@ -52,7 +52,7 @@ router.get('/prepagas', async (req, res, next) => {
 
 router.get('/padronSumar', Auth.authenticate(), async (req, res, next) => {
     try {
-        let arrayOSSumar = await sumarController.getPacienteSumar(req.query.dni);
+        const arrayOSSumar = await sumarController.getPacienteSumar(req.query.dni);
         if (arrayOSSumar) {
             res.json(arrayOSSumar);
         } else {
@@ -113,7 +113,7 @@ router.get('/puco', Auth.authenticate(), async (req, res, next) => {
 
 router.get('/puco/padrones', Auth.authenticate(), async (req, res, next) => {
     try {
-        let resp = await pucoController.obtenerVersiones();
+        const resp = await pucoController.obtenerVersiones();
         res.json(resp);
     } catch (error) {
         return next(error);
@@ -124,7 +124,7 @@ router.get('/puco/padrones', Auth.authenticate(), async (req, res, next) => {
 
 router.get('/obraSocial/:documento', Auth.authenticate(), async (req, res, next) => {
     if (req.params.documento) {
-        let resp = await obrasocialController.getObraSocial(req.params);
+        const resp = await obrasocialController.getObraSocial(req.params);
         res.json(resp);
     } else {
         return next('Parámetros incorrectos');
@@ -136,7 +136,7 @@ router.get('/obraSocial/:documento', Auth.authenticate(), async (req, res, next)
 router.get('/profe', Auth.authenticate(), async (req, res, next) => {
     try {
         if (req.query.dni && req.query.periodo) {
-            let os = await Profe.find({ dni: Number.parseInt(req.query.dni, 10), version: req.query.periodo });
+            const os = await Profe.find({ dni: Number.parseInt(req.query.dni, 10), version: req.query.periodo });
             res.json(os);
         } else {
             res.status(400).json({ msg: 'Parámetros incorrectos' });
@@ -150,7 +150,7 @@ router.get('/profe', Auth.authenticate(), async (req, res, next) => {
 
 router.get('/profe/padrones', Auth.authenticate(), async (req, res, next) => {
     try {
-        let resp = await profeController.obtenerVersiones();
+        const resp = await profeController.obtenerVersiones();
         res.json(resp);
     } catch (error) {
         return next(error);

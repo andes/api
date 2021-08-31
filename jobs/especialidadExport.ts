@@ -2,7 +2,7 @@ import * as configPrivate from './../config.private';
 import { log as andesLog } from '@andes/log';
 import { handleHttpRequest } from './../utils/requestHandler';
 
-let logRequest = {
+const logRequest = {
     user: {
         usuario: { nombre: 'especialidadExport', apellido: 'especialidadExport' },
         app: 'jobExportEspecialidad',
@@ -19,7 +19,7 @@ export async function exportEspecialidad(done) {
     const params = {
         fecha: new Date()
     };
-    let delete_especialidades = configPrivate.hosts.BI_QUERY + '/queries/profesionales-especialidad/delete';
+    const delete_especialidades = configPrivate.hosts.BI_QUERY + '/queries/profesionales-especialidad/delete';
     try {
         await handleHttpRequest({
             method: 'POST',
@@ -32,7 +32,7 @@ export async function exportEspecialidad(done) {
         await andesLog(logRequest, 'andes:profesionalesEspecialidad:bi', null, 'delete', null, null, 'Error eliminando especialidad de profesionales');
         return (done(error));
     }
-    let url_especialidades = configPrivate.hosts.BI_QUERY + '/queries/profesionales-especialidad/export';
+    const url_especialidades = configPrivate.hosts.BI_QUERY + '/queries/profesionales-especialidad/export';
     try {
         await handleHttpRequest({
             method: 'POST',

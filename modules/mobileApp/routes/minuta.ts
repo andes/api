@@ -8,7 +8,7 @@ router.post('/minuta', async (req, res, next) => {
     try {
         const newMinuta = new Minuta(req.body);
         Auth.audit(newMinuta, req);
-        let respuesta = await newMinuta.save();
+        const respuesta = await newMinuta.save();
         res.json(respuesta);
     } catch (error) {
         return next(error);
@@ -17,7 +17,7 @@ router.post('/minuta', async (req, res, next) => {
 
 router.get('/minuta', async (req: any, res, next) => {
     try {
-        let data = await Minuta.find({});
+        const data = await Minuta.find({});
         res.json(data);
     } catch (error) {
         return next(error);

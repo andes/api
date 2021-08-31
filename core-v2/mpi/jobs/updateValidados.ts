@@ -16,7 +16,7 @@ export async function updateValidados(done) {
 
         for (const pac of pacientes) {
             persona_validada = await validar(pac.documento, pac.sexo);
-            let data: any = {};
+            const data: any = {};
             if (persona_validada) {
                 // data.foto = persona_validada.foto;
                 await extractFoto(extractFoto, userScheduler);

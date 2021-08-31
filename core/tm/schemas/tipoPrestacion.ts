@@ -10,7 +10,7 @@ export interface ITipoPrestacion extends Document {
 }
 
 
-export let tipoPrestacionSchema = new Schema({
+export const tipoPrestacionSchema = new Schema({
     conceptId: String,
     term: String,
     fsn: String,
@@ -31,5 +31,5 @@ tipoPrestacionSchema.virtual('nombre').get(function () {
     return this.term;
 });
 
-export let tipoPrestacion: Model<ITipoPrestacion> = model('tipoPrestacion', tipoPrestacionSchema, 'conceptoTurneable');
+export const tipoPrestacion: Model<ITipoPrestacion> = model('tipoPrestacion', tipoPrestacionSchema, 'conceptoTurneable');
 

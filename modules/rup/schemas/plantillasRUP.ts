@@ -23,7 +23,7 @@ export interface IPlantillasRUP extends Document {
     }];
 }
 
-export let PlantillasRUPSchema = new Schema({
+export const PlantillasRUPSchema = new Schema({
     esSolicitud: Boolean,
     expression: String,
     conceptos: [SnomedConcept],
@@ -50,4 +50,4 @@ export let PlantillasRUPSchema = new Schema({
 PlantillasRUPSchema.plugin(AuditPlugin);
 
 
-export let PlantillasRUP: Model<IPlantillasRUP> = model<IPlantillasRUP>('plantillasRUP', PlantillasRUPSchema, 'plantillasRUP');
+export const PlantillasRUP: Model<IPlantillasRUP> = model<IPlantillasRUP>('plantillasRUP', PlantillasRUPSchema, 'plantillasRUP');

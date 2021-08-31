@@ -23,7 +23,7 @@ async function run(done) {
     });
 
     // Actualizo los permisos
-    let organizaciones: any = AuthUsers.aggregate([
+    const organizaciones: any = AuthUsers.aggregate([
         {
             $project: {
                 organizaciones: 1,

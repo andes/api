@@ -9,4 +9,4 @@ const schema = new mongoose.Schema({
     }
 });
 // export let ocupacionSchema = schema;
-export let model = mongoose.model('ocupaciones', schema, 'ocupaciones');
+export const model = mongoose.model('ocupaciones', schema, 'ocupaciones');

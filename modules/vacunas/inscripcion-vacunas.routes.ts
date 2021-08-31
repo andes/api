@@ -116,7 +116,7 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas/consultas', async (req: Reque
 InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async (req: Request, res, next) => {
     try {
         const options = req.apiOptions();
-        let conditions = { ...req.query };
+        const conditions = { ...req.query };
         Object.keys(options).map(opt => delete conditions[opt]);
         let inscriptos;
         if (conditions.paciente) {
@@ -184,7 +184,7 @@ InscripcionVacunasRouter.patch('/inscripcion-vacunas/:id', Auth.authenticate(), 
 
 InscripcionVacunasRouter.post('/inscripcion-vacunas/asignacion', Auth.authenticate(), async (req: Request, res, next) => {
     try {
-        let conditions = { ...req.body.params };
+        const conditions = { ...req.body.params };
         conditions.estados = ['pendiente', 'habilitado'];
         conditions.incluirVacunados = false;
         conditions.validado = true;

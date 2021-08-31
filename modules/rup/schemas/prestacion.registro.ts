@@ -7,7 +7,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 // y los valores generados por los elementos RUP correspondientes.
 // Esto permite que múltiples usuarios generen registros para la ejecución de una prestación
 // Ej: en "Control de niño sano" el médico, el odontólogo y el enfermero generan tres registros.
-export let schema = new mongoose.Schema();
+export const schema = new mongoose.Schema();
 schema.add({
     // Indica el nombre del registro, calculado por el elementoRUP.
     // Ejemplo: 'Prescripción de novalgina'

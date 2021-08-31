@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let SnomedMappingSchema = new mongoose.Schema({
+export const SnomedMappingSchema = new mongoose.Schema({
     conceptId: String,
     mapGroup: Number,
     mapPriority: Number,
@@ -13,4 +13,4 @@ SnomedMappingSchema.index({
     mapGroup: 1,
     mapPriority: 1
 });
-export let SnomedMapping = mongoose.model('snomed-cie10', SnomedMappingSchema, 'snomed-cie10');
+export const SnomedMapping = mongoose.model('snomed-cie10', SnomedMappingSchema, 'snomed-cie10');

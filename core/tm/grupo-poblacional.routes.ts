@@ -19,7 +19,7 @@ export const GrupoPoblacionalCtr = new GrupoPoblacionalResource({});
 export const GrupoPoblacionalRouter = GrupoPoblacionalCtr.makeRoutes();
 
 async function verificarExcepcionGrupo(grupo, paciente) {
-    let engine = new Engine();
+    const engine = new Engine();
     if (grupo && grupo.excepciones) {
         engine.addRule({ conditions: grupo.excepciones, event: { type: 'valid' } });
         engine.addFact('paciente', async () => {

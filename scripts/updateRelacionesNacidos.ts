@@ -3,7 +3,7 @@ import { userScheduler } from '../config.private';
 import { PacienteCtr } from '../core-v2/mpi/paciente/paciente.routes';
 import { ParentescoCtr } from '../core-v2/mpi/parentesco/parentesco.routes';
 
-let dataLog: any = new Object(userScheduler);
+const dataLog: any = new Object(userScheduler);
 dataLog.body = { _id: null };
 dataLog.method = null;
 
@@ -21,13 +21,13 @@ async function run(done) {
 
     const updateRelacion = async (paciente: any) => {
         try {
-            let relaciones = paciente.relaciones.map(async (unaRel: any, posRelBebe: any) => {
+            const relaciones = paciente.relaciones.map(async (unaRel: any, posRelBebe: any) => {
 
                 let parentezcoRelacion = null;
                 if (!unaRel.relacion && unaRel.referencia) {
                     // si no tiene una relacion asociada
                     // creamos la relacion hijo/otro para el familiar relacionado
-                    let pacParentezco = await PacienteCtr.findById(unaRel.referencia);
+                    const pacParentezco = await PacienteCtr.findById(unaRel.referencia);
 
                     if (pacParentezco) {
                         const hijoRelacion: any = {
@@ -41,7 +41,7 @@ async function run(done) {
                         };
 
                         if (pacParentezco.relaciones?.length) {
-                            let indexRelProg = pacParentezco.relaciones.findIndex(r => r.referencia.toString() === paciente.id.toString());
+                            const indexRelProg = pacParentezco.relaciones.findIndex(r => r.referencia.toString() === paciente.id.toString());
                             if (indexRelProg > -1) {
                                 pacParentezco.relaciones[indexRelProg] = hijoRelacion;
                             } else {

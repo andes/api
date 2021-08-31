@@ -120,9 +120,9 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
         let i = 1;
         for (const file of value) {
             if (file.ext && file.plain64) {
-                let parts = file.plain64.split(';');
-                let mimType = parts[0].split(':')[1];
-                let fileData = parts[1].split(',')[1];
+                const parts = file.plain64.split(';');
+                const mimType = parts[0].split(':')[1];
+                const fileData = parts[1].split(',')[1];
                 const fileDataBuffer = Buffer.from(fileData, 'base64');
                 const fileStream = intoStream(fileDataBuffer);
                 const metadata: FileMetadata = {

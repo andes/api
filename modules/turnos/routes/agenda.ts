@@ -131,7 +131,7 @@ router.get('/agenda/cantidadConsultaXPrestacion', async (req, res, next) => {
 
 // reportesDiarios
 router.get('/agenda/reporteResumenDiarioMensuals', async (req, res, next) => {
-    let params = req.query;
+    const params = req.query;
 
     try {
         const resultado = await getResumenDiarioMensual(params);
@@ -143,7 +143,7 @@ router.get('/agenda/reporteResumenDiarioMensuals', async (req, res, next) => {
 });
 
 router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
-    let params = req.query;
+    const params = req.query;
 
     try {
         const resultado = await getPlanillaC1(params);
@@ -175,7 +175,7 @@ router.get('/agenda/:id?', (req, res, next) => {
             res.json(data);
         });
     } else {
-        let query = Agenda.find({});
+        const query = Agenda.find({});
 
         query.where('estado').ne('borrada'); // No devuelve agendas borradas
 
@@ -296,7 +296,7 @@ router.post('/agenda', async (req, res, next) => {
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
         if (!mensajesSolapamiento) {
-            let dataSaved = await data.save();
+            const dataSaved = await data.save();
             const objetoLog = {
                 accion: 'Crear Agenda',
                 ruta: req.url,
@@ -432,7 +432,7 @@ router.put('/agenda/:id', async (req, res, next) => {
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
         if (!mensajesSolapamiento) {
-            let data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            const data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
             const objetoLog = {
                 accion: 'Editar Agenda en estado Planificación',
                 ruta: req.url,
@@ -566,7 +566,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)?._id, data);
                         await prestacionCtrl.liberarRefTurno(turno, req);
-                        let liberado = await agendaCtrl.liberarTurno(req, data, turno);
+                        const liberado = await agendaCtrl.liberarTurno(req, data, turno);
                         if (!liberado) {
                             return next('Turno en ejecución');
                         }
@@ -718,7 +718,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
 router.post('/dashboard', async (req, res, next) => {
     const permisos: any = {};
-    let tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
+    const tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
     if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
         permisos.tipoPrestacion = tipoPrestacion;
     }
@@ -734,7 +734,7 @@ router.post('/dashboard', async (req, res, next) => {
 router.post('/dashboard/descargarCsv', async (req, res, next) => {
     const csv = require('fast-csv');
     const fs = require('fs');
-    let ws = fs.createWriteStream('/tmp/dashboard.csv', { encoding: 'utf8' });
+    const ws = fs.createWriteStream('/tmp/dashboard.csv', { encoding: 'utf8' });
 
     try {
         csv
@@ -774,7 +774,7 @@ router.post('/dashboard/descargarCsv', async (req, res, next) => {
 
 router.post('/dashboard/localidades', async (req, res, next) => {
     const permisos: any = {};
-    let tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
+    const tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
     if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
         permisos.tipoPrestacion = tipoPrestacion;
     }

@@ -37,4 +37,4 @@ nomivacDosisSchema.index({
     'vacuna._id': 1,
     'esquema._id': 1
 });
-export let nomivacDosis = mongoose.model('nomivacDosis', nomivacDosisSchema, 'nomivacDosis');
+export const nomivacDosis = mongoose.model('nomivacDosis', nomivacDosisSchema, 'nomivacDosis');

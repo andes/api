@@ -9,7 +9,7 @@ router.get('/noticias/:name', async (req, res) => {
     const feedName = req.params.name;
     if (feedName === 'puntosaludable') {
         const client = new Twitter(TwitterConfig);
-        let params: any = {
+        const params: any = {
             screen_name: 'PSaludableNqn',
             count: 200,
             tweet_mode: 'extended'

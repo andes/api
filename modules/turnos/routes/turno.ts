@@ -162,12 +162,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
     if (continues.valid) {
-        let agendaRes: any = await getAgenda(req.body.idAgenda);
+        const agendaRes: any = await getAgenda(req.body.idAgenda);
         if (agendaRes.estado === 'pausada' || agendaRes.estado === 'suspendida') {
             return next('La agenda ya no está disponible');
         }
         try {
-            let user = (req as any).user;
+            const user = (req as any).user;
             if (user.organizacion) {
                 let arrPrueba = [];
                 if (pacienteTurno.carpetaEfectores) {
@@ -342,7 +342,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     await prepagasController.actualizarPadronPrepagas(documento, sexo, obraSocial);
                 }
                 turnosLog.info('asignarTurno', datosOp, req);
-                let turno = doc2.bloques.id(req.body.idBloque).turnos.id(req.body.idTurno);
+                const turno = doc2.bloques.id(req.body.idBloque).turnos.id(req.body.idTurno);
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.body.idBloque, req.body.idAgenda);
 

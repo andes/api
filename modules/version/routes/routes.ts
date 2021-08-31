@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as config from '../../../config.private';
-let router = express.Router();
+const router = express.Router();
 
 router.get('/', async (req, res) => {
     res.json({

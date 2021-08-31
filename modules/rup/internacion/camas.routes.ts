@@ -117,12 +117,12 @@ router.patch('/camas/changeTime/:id', Auth.authenticate(), capaMiddleware, async
             _id: Auth.getOrganization(req),
             nombre: Auth.getOrganization(req, 'nombre')
         };
-        let idCama = req.params.id;
-        let capa = req.body.capa;
-        let ambito = req.body.ambito;
-        let fecha = new Date(req.body.fechaActualizar);
-        let nuevafecha = new Date(req.body.nuevaFecha);
-        let idInternacion = req.body.idInternacion;
+        const idCama = req.params.id;
+        const capa = req.body.capa;
+        const ambito = req.body.ambito;
+        const fecha = new Date(req.body.fechaActualizar);
+        const nuevafecha = new Date(req.body.nuevaFecha);
+        const idInternacion = req.body.idInternacion;
 
         const cambiaEstado = await CamasController.changeTime(
             {

@@ -160,7 +160,7 @@ export function removeDiacritics(str: string): string {
 *
 **/
 
-export let toArray = (stream): Promise<any[]> => {
+export const toArray = (stream): Promise<any[]> => {
     const array = [];
     return new Promise((resolve, reject) => {
         stream.on('data', (doc) => {

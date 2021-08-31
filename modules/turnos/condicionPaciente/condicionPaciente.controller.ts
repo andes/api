@@ -4,9 +4,9 @@ import * as mongoose from 'mongoose';
 
 export async function verificarCondicionPaciente(condicion, pacienteId, organizacionId?) {
     if (condicion && condicion.rules) {
-        let condicionPaciente = condicion.toObject();
-        let idPaciente = mongoose.Types.ObjectId(pacienteId);
-        let params = {
+        const condicionPaciente = condicion.toObject();
+        const idPaciente = mongoose.Types.ObjectId(pacienteId);
+        const params = {
             id: new mongoose.Types.ObjectId(idPaciente)
         };
         if (organizacionId) {
@@ -16,7 +16,7 @@ export async function verificarCondicionPaciente(condicion, pacienteId, organiza
             condicionPaciente.contexto,
             params
         );
-        let engine = new Engine();
+        const engine = new Engine();
         engine.addRule({ conditions: condicion.rules, event: { type: 'valid' } });
         Object.keys(contexto).forEach(
             key => engine.addFact(key, contexto[key])

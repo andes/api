@@ -6,10 +6,10 @@ export async function getResumenDiarioMensual(params: any) {
 
     let pipeline = [];
 
-    let y = params['anio'];
-    let m = params['mes'] - 1;
-    let firstDay = new Date(y, m, 1);
-    let lastDay = new Date(y, m + 1, 1);
+    const y = params['anio'];
+    const m = params['mes'] - 1;
+    const firstDay = new Date(y, m, 1);
+    const lastDay = new Date(y, m + 1, 1);
 
     const dividirTurno = params['dividir'];
 
@@ -202,18 +202,18 @@ export async function getResumenDiarioMensual(params: any) {
 }
 
 function formatData(data: any, anio: number, mes: number) {
-    let res = [];
+    const res = [];
 
     const numOfDays = new Date(anio, mes + 1, 0).getDate();
 
     for (let i = 0; i < numOfDays; i++) {
-        let reg = new Linea();
+        const reg = new Linea();
         let strDia = '';
         reg.dia = new Date(anio, mes, i + 1);
         strDia = reg.dia.getDate().toString().padStart(2, '0') + '-' + (reg.dia.getMonth() + 1).toString().padStart(2, '0') + '-' + reg.dia.getFullYear().toString();
 
         // Filtro solo los del dia correspondiente
-        let currData = data.filter(r => r.fecha === strDia);
+        const currData = data.filter(r => r.fecha === strDia);
 
         // Mapeo con rango eteario y sexo correspondiente
         if (currData.length > 0) {
@@ -314,19 +314,19 @@ class Linea {
 }
 
 function sumar(currData, sexo, edad) {
-    let cantidad = currData.filter(r => r.sexo === sexo && r.edad === edad);
+    const cantidad = currData.filter(r => r.sexo === sexo && r.edad === edad);
     return cantidad.length > 0 ? cantidad[0]['total'] : 0;
 }
 
 function sumarTotal(currData, sexo) {
-    let cantidad = currData.filter(r => r.sexo === sexo);
+    const cantidad = currData.filter(r => r.sexo === sexo);
     return cantidad.length > 0 ? cantidad.map(r => { return r.total; }).reduce((a, b) => { return a + b; }) : 0;
 }
 
 export async function getPlanillaC1(params: any) {
     let pipeline = [];
-    let paramFecha = params['fecha'];
-    let fechaDesde = new Date(paramFecha);
+    const paramFecha = params['fecha'];
+    const fechaDesde = new Date(paramFecha);
     let fechaHasta;
     fechaDesde.setHours(0);
     fechaDesde.setMinutes(0);
@@ -334,7 +334,7 @@ export async function getPlanillaC1(params: any) {
     fechaDesde.setMilliseconds(0);
     fechaHasta = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate() + 1);
 
-    let firstMatch = {
+    const firstMatch = {
         $match: {
             'ejecucion.fecha': {
                 $gte: fechaDesde,
@@ -486,7 +486,7 @@ export async function getPlanillaC1(params: any) {
         }
     ];
 
-    let data = await Prestacion.aggregate(pipeline);
+    const data = await Prestacion.aggregate(pipeline);
 
     return data;
 }

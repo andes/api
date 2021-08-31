@@ -89,7 +89,7 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                 if (isPacienteDestino && organizacion.esCOM) {
                     const organizacionDestino = organizacionId !== derivacion.organizacionDestino.id ? await Organizacion.findById(derivacion.organizacionDestino.id) : null;
 
-                    let destinatarios = [];
+                    const destinatarios = [];
                     const emailDestino = organizacionDestino?.configuraciones?.emails?.find(e => e.nombre === 'comDerivacionesRecupero')?.email;
                     const emailCOM = organizacion.configuraciones?.emails?.find(e => e.nombre === 'comDerivacionesRecupero')?.email;
 

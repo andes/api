@@ -16,7 +16,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     const pipelineAgendas = [];
     const matchAgendas = {};
     const condiciones: any = await CondicionPaciente.find({activo: true});
-    let reglas = [];
+    const reglas = [];
     let fieldRegla;
     if (req.query.idPaciente) {
         for (const condicion of condiciones) {

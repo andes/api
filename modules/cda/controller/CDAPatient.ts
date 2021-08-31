@@ -345,12 +345,12 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
     }
     cda.patient(patientCDA);
     // mover a config.private en algún momento
-    let custodianCDA = new Organization();
+    const custodianCDA = new Organization();
     custodianCDA.id(buildID('59380153db8e90fe4602ec02'));
     custodianCDA.name('SUBSECRETARIA DE SALUD');
     cda.custodian(custodianCDA);
 
-    let orgCDA = new Organization();
+    const orgCDA = new Organization();
     orgCDA.id(buildID(organization._id));
     orgCDA.name(organization.nombre);
 
@@ -437,7 +437,7 @@ export async function CDAExists(id, fecha, orgId) {
 
 export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
-        let ids = Array.isArray(pacienteId) ? pacienteId : [Types.ObjectId(pacienteId)];
+        const ids = Array.isArray(pacienteId) ? pacienteId : [Types.ObjectId(pacienteId)];
         const CDAFiles = makeFs();
         const conditions: any = {
             'metadata.paciente': { $in: ids },
@@ -453,7 +453,7 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
             skip = 0;
         }
         try {
-            let list = [];
+            const list = [];
             for await (const item of CDAFiles.find(conditions).sort({
                 'metadata.fecha': -1
             }).limit(limit).skip(skip)) {
@@ -812,7 +812,7 @@ export async function deleteCda(idCda, idPaciente){
     }
     if (idPaciente) {
         const cdasPaciente = await searchByPatient(idPaciente, conceptId_vacunas, { skip: 0, limit: 100 });
-        for (let item of cdasPaciente) {
+        for (const item of cdasPaciente) {
             await deleteCDA(item.cda_id);
         }
     }

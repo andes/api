@@ -246,7 +246,7 @@ export async function searchTerms(text, { semanticTags, languageCode, expression
 
 
 function getBranches() {
-    let branchName: string = snomed.snowstormBranch;
+    const branchName: string = snomed.snowstormBranch;
     let index = branchName.indexOf('/');
     const branches = [];
     while (index >= 0) {

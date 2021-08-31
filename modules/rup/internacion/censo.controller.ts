@@ -57,7 +57,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
     let ingresosYEgresos = 0;
     let diasEstada = 0;
 
-    let tablaPacientes = {};
+    const tablaPacientes = {};
 
     Object.keys(internaciones).map(async idInter => {
         if (!internaciones) {
@@ -254,9 +254,9 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
 }
 
 function getInformesInternacion(prestacion) {
-    let registros = prestacion.ejecucion.registros;
-    let egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
-    let ingresoExiste = registros.find(registro => registro.concepto.conceptId === '721915006');
+    const registros = prestacion.ejecucion.registros;
+    const egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
+    const ingresoExiste = registros.find(registro => registro.concepto.conceptId === '721915006');
     const response = {};
     if (egresoExiste) {
         response['egreso'] = egresoExiste.valor.InformeEgreso;

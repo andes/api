@@ -67,8 +67,8 @@ router.post('/snomed/map', (req, res, next) => {
         if (target) {
             // Como los mapeos oficiles traen códigos tales como H47.019, S91.001?, ...
             // busca las opciones H47.19, S91.1?, ...
-            let target2 = target.replace('.00', '.');
-            let target3 = target.replace('.0', '.');
+            const target2 = target.replace('.00', '.');
+            const target3 = target.replace('.0', '.');
             cie10.model.findOne({ codigo: { $in: [target, target2, target3] } }).then(cie => {
                 res.json(cie);
             }).catch(err => {

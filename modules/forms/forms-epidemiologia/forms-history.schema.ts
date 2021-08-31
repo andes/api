@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { FormsEpidemiologiaCloneSchema } from './forms-epidemiologia-schema';
 
 
-let FormsHistorySchema = FormsEpidemiologiaCloneSchema.clone();
+const FormsHistorySchema = FormsEpidemiologiaCloneSchema.clone();
 FormsHistorySchema.add({
     createdAt: Date,
     createdBy: { nombreCompleto: String, username: String },

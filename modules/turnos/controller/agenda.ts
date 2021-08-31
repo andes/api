@@ -97,7 +97,7 @@ export function quitarTurnoDoble(req, data, tid = null) {
 // Turno
 export async function liberarTurno(req, data, turno) {
     const position = getPosition(req, data, turno._id);
-    let enEjecucion = await prestacionController.enEjecucion(turno);
+    const enEjecucion = await prestacionController.enEjecucion(turno);
     if (enEjecucion) {
         return false;
     }
@@ -238,9 +238,9 @@ export function codificarTurno(req, data, tid) {
                         let codigoCie10: any = {
                             codigo: 'Mapeo no disponible'
                         };
-                        let target = await map.transform(parametros.conceptId);
+                        const target = await map.transform(parametros.conceptId);
                         if (target) {
-                            let cie = await cie10.model.findOne({
+                            const cie = await cie10.model.findOne({
                                 codigo: (target as String).substring(0, 5)
                             });
                             if (cie != null) {
@@ -867,7 +867,7 @@ export async function prestacionesDisponibles(params) {
         }
 
     ];
-    let prestaciones = await Agenda.aggregate(pipelinePrestaciones);
+    const prestaciones = await Agenda.aggregate(pipelinePrestaciones);
     return prestaciones;
 }
 
@@ -940,7 +940,7 @@ export async function turnosDisponibles(prestacion, organizacion) {
             }
         }
     ];
-    let agendas = await Agenda.aggregate(pipelineAgendas);
+    const agendas = await Agenda.aggregate(pipelineAgendas);
     return agendas;
 
 }
@@ -1021,7 +1021,7 @@ export function actualizarTurnosMobile() {
         'bloques.restantesMobile': { $gt: 0 }
     };
     const cursor = Agenda.find(condicion).cursor();
-    let logRequest = {
+    const logRequest = {
         user: {
             usuario: { nombre: 'actualizarTurnosMobileJob', apellido: 'actualizarTurnosMobileJob' },
             app: 'citas',
@@ -1094,7 +1094,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
             const agenda: any = await Agenda.findOne({ $or: [{ 'bloques.turnos._id': { $eq: idTurno, $exists: true } }, { 'sobreturnos._id': { $eq: idTurno, $exists: true } }] });
             const noAsistionConceptos = await getConceptosNoAsistio();
 
-            let filtroRegistros = prestacion.ejecucion.registros.filter(x => noAsistionConceptos.find(y => y.conceptId === x.concepto.conceptId));
+            const filtroRegistros = prestacion.ejecucion.registros.filter(x => noAsistionConceptos.find(y => y.conceptId === x.concepto.conceptId));
             let turno, event;
             const user = Auth.getUserFromResource(prestacion);
 
@@ -1113,7 +1113,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
                 EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
             }
         } catch (err) {
-            let data = {
+            const data = {
                 turno: idTurno,
                 paciente: prestacion.paciente.id,
                 prestacion: prestacion.id,
@@ -1300,7 +1300,7 @@ export function getConsultaDiagnostico(params) {
         const p1 = toArray(Agenda.aggregate(pipeline).cursor({}).exec());
         const p2 = toArray(Codificacion.aggregate(pipeline2).cursor({}).exec());
 
-        let [diagnosticosTurnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2]);
+        const [diagnosticosTurnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2]);
 
         let data = diagnosticosTurnos.concat(diagnosticosFueraAgenda);
 
@@ -1333,7 +1333,7 @@ export async function getDatosTurnos(idTurno) {
         { $project: { _id: 0, idAgenda: '$_id', idBloque: '$bloques._id' } }
     ];
 
-    let data = await Agenda.aggregate(pipeline);
+    const data = await Agenda.aggregate(pipeline);
     return data;
 
 }
@@ -1452,7 +1452,7 @@ export async function verificarSolapamiento(data) {
     if (espacioFisicoId || (profesionalesIds && profesionalesIds.length)) {
 
         // Se buscan las agendas que se solapen con la actual en algún punto
-        let $match: any = {
+        const $match: any = {
             $and: [
                 {
                     $or: [
@@ -1470,7 +1470,7 @@ export async function verificarSolapamiento(data) {
             ]
         };
 
-        let $or = [];
+        const $or = [];
 
         if (profesionalesIds && profesionalesIds.length) {
             $or.push({ 'profesionales._id': { $in: profesionalesIds.map(id => Types.ObjectId(id)) } });
@@ -1493,11 +1493,11 @@ export async function verificarSolapamiento(data) {
                 let org = []; // nombre de la organizacion
                 let agendaCreadaPor = [];
                 let prestacionesAgenda = [];
-                for (let resultado of resultados) {
+                for (const resultado of resultados) {
                     profesionales = profesionales.concat(resultado.profesionales);
                     org = org.concat(resultado.organizacion.nombre);
                     agendaCreadaPor = agendaCreadaPor.concat(resultado.createdBy.nombreCompleto);
-                    for (let prestacionAg of resultado.tipoPrestaciones) {
+                    for (const prestacionAg of resultado.tipoPrestaciones) {
                         prestacionesAgenda = prestacionesAgenda.concat(prestacionAg.term);
                     }
                 }

@@ -4,7 +4,7 @@ import { Server } from 'http';
 import { Auth } from './auth/auth.class';
 import { RedisWebSockets } from './config.private';
 
-let log = debug('websocket');
+const log = debug('websocket');
 
 export class Packet {
     private io;
@@ -44,7 +44,7 @@ export class Websockets {
 
     static onAuth(socket, token) {
 
-        let user = Auth.validateToken(token);
+        const user = Auth.validateToken(token);
         if (user) {
             socket.user = user;
 
@@ -57,7 +57,7 @@ export class Websockets {
                     socket.join(`turnero-pantalla-${user.app.id}`);
                     break;
                 case 'paciente-token':
-                    for (let paciente of user.pacientes) {
+                    for (const paciente of user.pacientes) {
                         socket.join(`paciente-${paciente.id}`);
                     }
                     break;
@@ -112,8 +112,8 @@ export class Websockets {
 
     static initialize(server: Server) {
         log('Websocket start');
-        let redis = require('socket.io-redis');
-        let socketIO = require('socket.io');
+        const redis = require('socket.io-redis');
+        const socketIO = require('socket.io');
         this.io = socketIO(server, { path: '/ws', transports: ['websocket', 'polling'] });
         if (RedisWebSockets.active) {
             this.io.adapter(redis({ host: RedisWebSockets.host, port: RedisWebSockets.port }));
@@ -123,12 +123,12 @@ export class Websockets {
             log('onConnection');
             socket.use((packet, next) => {
                 // Handler
-                let [event, data] = packet;
+                const [event, data] = packet;
                 log(event, data);
 
                 switch (event) {
                     case 'auth':
-                        let token = data.token;
+                        const token = data.token;
                         this.onAuth(socket, token);
                         break;
                     case 'room':
@@ -138,7 +138,7 @@ export class Websockets {
                         this.onLeave(socket, data);
                         break;
                     default:
-                        let p = new Packet(this.io, socket, event, data);
+                        const p = new Packet(this.io, socket, event, data);
                         EventSocket.emitAsync(event, p);
                         break;
                 }

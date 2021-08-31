@@ -52,5 +52,5 @@ const campaniasSaludSchema = new Schema({
         default: true
     }
 });
-let campania = model('campanias', campaniasSaludSchema, 'campanias');
+const campania = model('campanias', campaniasSaludSchema, 'campanias');
 export = campania;

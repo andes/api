@@ -84,8 +84,8 @@ export async function suggest(query: any) {
     if (query && query.documento) {
         const documento = query.documento.toString();
         // @ts-ignore: fuzzySearch
-        let pacientes = await Paciente.fuzzySearch({ query: documento, minSize: 3 }, { activo: { $eq: true } }).limit(30);
-        let suggested = [];
+        const pacientes = await Paciente.fuzzySearch({ query: documento, minSize: 3 }, { activo: { $eq: true } }).limit(30);
+        const suggested = [];
         pacientes.forEach((paciente) => {
             const value = matching(paciente, query);
             if (value > config.mpi.cotaMatchMin) {
@@ -162,7 +162,7 @@ export async function multimatch(searchText: string, filter: any, options?: any)
     let words: any = searchText.replace(ExpRegFilter, '');
     words = replaceChars(words);
     words = words.trim().toLowerCase().split(' ');
-    let andQuery = [];
+    const andQuery = [];
     words.forEach(w => {
         andQuery.push({ tokens: RegExp(`^${w}`) });
     });
@@ -249,15 +249,15 @@ export async function linkPacientesDuplicados(req, paciente) {
 
 export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
     try {
-        let direccion: any = paciente.direccion;
+        const direccion: any = paciente.direccion;
         // (valores de direccion fueron modificados): están completos?
         if (direccion[0].valor && direccion[0].ubicacion.localidad && direccion[0].ubicacion.provincia) {
-            let dir = direccion[0].valor + ', ' + direccion[0].ubicacion.localidad.nombre + ', ' + direccion[0].ubicacion.provincia.nombre;
+            const dir = direccion[0].valor + ', ' + direccion[0].ubicacion.localidad.nombre + ', ' + direccion[0].ubicacion.provincia.nombre;
             const geoRef: any = await geoReferenciar(dir, configPrivate.geoKey);
             // georeferencia exitosa?
             if (geoRef && Object.keys(geoRef).length) {
                 direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                let nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, configPrivate.geoNode.auth.user, configPrivate.geoNode.auth.password);
+                const nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, configPrivate.geoNode.auth.user, configPrivate.geoNode.auth.password);
                 // consulta exitosa?
                 if (nombreBarrio) {
                     const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));
@@ -339,7 +339,7 @@ export async function extractFoto(paciente, req) {
 
 export async function updateContacto(contactos, paciente, req) {
     if (contactos.length > 0) {
-        let contactosPaciente = paciente.contacto || [];
+        const contactosPaciente = paciente.contacto || [];
         contactos.forEach((contacto) => {
             let contactoFound = null;
             if (paciente.contacto && paciente.contacto.length >= 0) {
@@ -372,7 +372,7 @@ export async function agregarHijo(progenitor, hijo, req) {
     if (!poseeFamiliar) {
         // agrego relacion al hijo
         const parentescoProgenitor = await ParentescoCtr.findOne({ nombre: '^progenitor' }, {}, req);
-        let progenitorRelacion = {
+        const progenitorRelacion = {
             relacion: parentescoProgenitor,
             referencia: progenitor._id,
             nombre: progenitor.nombre,
@@ -389,7 +389,7 @@ export async function agregarHijo(progenitor, hijo, req) {
         await PacienteCtr.update(hijo.id, hijo, req);
         // agrego relacion al padre
         const parentescoHijo = await ParentescoCtr.findOne({ nombre: '^hijo' }, {}, req);
-        let familiarRelacion = {
+        const familiarRelacion = {
             relacion: parentescoHijo,
             referencia: hijo._id,
             nombre: hijo.nombre,

@@ -13,7 +13,7 @@ export class AuthorBuilder extends BaseBuilder {
     }
 
     public build(doctor: Author) {
-        let author = builder.create('author');
+        const author = builder.create('author');
         this.createNode(author, 'time', { value: this.fromDate(new Date()) });
 
         const assignedAuthor = author.ele('assignedAuthor');
@@ -39,8 +39,8 @@ export class AuthorBuilder extends BaseBuilder {
             this.createNode(assignedAuthor, 'id', doctor.id());
         }
 
-        let assignedPerson = assignedAuthor.ele('assignedPerson');
-        let nameNode = assignedPerson.ele('name');
+        const assignedPerson = assignedAuthor.ele('assignedPerson');
+        const nameNode = assignedPerson.ele('name');
         nameNode.com('Nombre del profesional');
         this.createNode(nameNode, 'given', null, doctor.firstname());
         nameNode.com('Apellido del profesional');
