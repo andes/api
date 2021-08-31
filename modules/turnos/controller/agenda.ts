@@ -562,13 +562,9 @@ export function getTurnoAnterior(req, agenda, idTurno = null) {
 
 export function combinarFechas(fecha1, fecha2) {
     if (fecha1 && fecha2) {
-        let horas: number;
-        let minutes: number;
-        let auxiliar: Date;
-
-        auxiliar = new Date(fecha1);
-        horas = fecha2.getHours();
-        minutes = fecha2.getMinutes();
+        const auxiliar = new Date(fecha1);
+        const horas = fecha2.getHours();
+        const minutes = fecha2.getMinutes();
         auxiliar.setHours(horas, minutes, 0, 0);
         return auxiliar;
     } else {
@@ -578,14 +574,13 @@ export function combinarFechas(fecha1, fecha2) {
 
 export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
 
-    let countBloques;
     let esHoy = false;
     // Ver si el día de la agenda coincide con el día de hoy
     if (agenda.horaInicio >= moment(new Date()).startOf('day').toDate() && agenda.horaInicio <= moment(new Date()).endOf('day').toDate()) {
         esHoy = true;
     }
 
-    countBloques = {
+    const countBloques = {
         delDia: esHoy ? (
             (agenda.bloques[posBloque].restantesDelDia as number) +
             (agenda.bloques[posBloque].restantesProgramados as number) +

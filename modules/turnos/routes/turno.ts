@@ -185,13 +185,11 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         } catch (err) {
             return next(err);
         }
-        let posBloque: number;
         let posTurno: number;
 
-        let countBloques;
         let esHoy = false;
 
-        posBloque = (agendaRes as any).bloques.findIndex(item => item._id.toString() === req.body.idBloque.toString());
+        const posBloque = (agendaRes as any).bloques.findIndex(item => item._id.toString() === req.body.idBloque.toString());
 
         // Ver si el día de la agenda coincide con el día de hoy
         if ((agendaRes as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (agendaRes as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
@@ -200,7 +198,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
 
         const contieneBloqueSoloGestion = agendaRes.bloques.some((bloque: any) => bloque.reservadoGestion > 0 && bloque.accesoDirectoDelDia === 0 && bloque.accesoDirectoProgramado === 0 && bloque.reservadoProfesional === 0);
         // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
-        countBloques = {
+        const countBloques = {
             delDia: esHoy && !contieneBloqueSoloGestion ? (
                 ((agendaRes as any).bloques[posBloque].restantesDelDia as number) +
                 ((agendaRes as any).bloques[posBloque].restantesProgramados as number)

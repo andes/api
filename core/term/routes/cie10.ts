@@ -6,7 +6,6 @@ import { defaultLimit, maxLimit } from './../../../config';
 const router = express.Router();
 
 router.get('/cie10', async (req, res, next) => {
-    let query;
     const conditions = {};
     let termino: String = '';
     // conditions['$and'] = [];
@@ -41,7 +40,7 @@ router.get('/cie10', async (req, res, next) => {
     } else {
         whereConditions = conditions;
     }
-    query = cie10.model.find(whereConditions);
+    const query = cie10.model.find(whereConditions);
     const skip = parseInt(req.query.skip || 0, 10);
     const limit = Math.min(parseInt(req.query.limit || defaultLimit, 15), maxLimit);
     query.skip(skip);

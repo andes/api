@@ -75,8 +75,7 @@ router.get('/barrios/:id*?', (req, res, next) => {
             res.json(data);
         });
     } else {
-        let query;
-        query = barrio.find({}).sort({ nombre: 1 });
+        const query = barrio.find({}).sort({ nombre: 1 });
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }

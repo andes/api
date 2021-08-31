@@ -118,13 +118,12 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async 
         const options = req.apiOptions();
         const conditions = { ...req.query };
         Object.keys(options).map(opt => delete conditions[opt]);
-        let inscriptos;
         if (conditions.paciente) {
             const tokensQuery = InscripcionVacuna.search(conditions.paciente);
             delete conditions.paciente;
             conditions.tokens = tokensQuery;
         }
-        inscriptos = await InscripcionVacunasCtr.search(conditions, options, req);
+        const inscriptos = await InscripcionVacunasCtr.search(conditions, options, req);
         return res.json(inscriptos);
     } catch (err) {
         return next(err);

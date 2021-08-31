@@ -107,8 +107,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
                 }
                 if (req.query.nombreMedicamento) {
                     try {
-                        let data;
-                        data = await formularioTerapeutico.find({ descripcion: RegExp('^.*' + req.query.nombreMedicamento + '.*$', 'i') });
+                        const data = await formularioTerapeutico.find({ descripcion: RegExp('^.*' + req.query.nombreMedicamento + '.*$', 'i') });
                         res.json(data);
                     } catch (error) {
                         return next(error);

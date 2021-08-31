@@ -192,20 +192,14 @@ export function calcularEdad(fecha, fechaFallecimiento) {
 export function calcularEdadReal(fecha, fechaFallecimiento) {
     // Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
     let edad: Object;
-    let fechaNac: any;
     const fechaActual: Date = fechaFallecimiento ? new Date(fechaFallecimiento) : new Date();
-    let fechaAct: any;
-    let difAnios: any;
-    let difDias: any;
-    let difMeses: any;
-    let difHs: any;
 
-    fechaNac = moment(fecha, 'YYYY-MM-DD HH:mm:ss');
-    fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
-    difDias = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
-    difAnios = Math.floor(difDias / 365.25);
-    difMeses = Math.floor(difDias / 30.4375);
-    difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
+    const fechaNac = moment(fecha, 'YYYY-MM-DD HH:mm:ss');
+    const fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
+    const difDias = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
+    const difAnios = Math.floor(difDias / 365.25);
+    const difMeses = Math.floor(difDias / 30.4375);
+    const difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
 
     if (difAnios !== 0) {
         edad = {

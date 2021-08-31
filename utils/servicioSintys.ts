@@ -58,6 +58,7 @@ export function getPersonaSintys(nroDocumento: string) {
 export function formatearDatosSintys(datosSintys) {
     let ciudadano;
     let fecha;
+    // eslint-disable-next-line prefer-const
     ciudadano = new Object();
     // console.log('DATOSSINTYS----------->', datosSintys);
 

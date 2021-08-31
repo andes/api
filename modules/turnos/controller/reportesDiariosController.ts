@@ -249,8 +249,7 @@ function formatData(data: any, anio: number, mes: number) {
         res.push(reg);
     }
 
-    let totalMes: any;
-    totalMes = {
+    const totalMes = {
         ['30']: {
             m: res.map(r => { return r['30'].m; }).reduce((a, b) => { return a + b; }),
             f: res.map(r => { return r['30'].f; }).reduce((a, b) => { return a + b; }),
@@ -327,12 +326,11 @@ export async function getPlanillaC1(params: any) {
     let pipeline = [];
     const paramFecha = params['fecha'];
     const fechaDesde = new Date(paramFecha);
-    let fechaHasta;
     fechaDesde.setHours(0);
     fechaDesde.setMinutes(0);
     fechaDesde.setSeconds(0);
     fechaDesde.setMilliseconds(0);
-    fechaHasta = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate() + 1);
+    const fechaHasta = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate() + 1);
 
     const firstMatch = {
         $match: {

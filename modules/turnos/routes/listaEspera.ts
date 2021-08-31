@@ -10,7 +10,6 @@ const async = require('async');
 const router = express.Router();
 
 router.get('/listaEspera/:id*?', (req, res, next) => {
-    let query;
     const opciones = {};
 
     if (req.params.id) {
@@ -41,7 +40,7 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
     const radix = 10;
     const skip: number = parseInt(req.query.skip || 0, radix);
     const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-    query = listaEspera.find(opciones).skip(skip).limit(limit);
+    const query = listaEspera.find(opciones).skip(skip).limit(limit);
     query.exec((err, data) => {
         if (err) { return next(err); }
         res.json(data);

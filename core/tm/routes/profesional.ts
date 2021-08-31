@@ -988,9 +988,8 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
 
 router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
     try {
-        let profesionalOriginal;
         const resultado: any = await Profesional.findById(req.params.id);
-        profesionalOriginal = resultado.toObject();
+        const profesionalOriginal = resultado.toObject();
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
@@ -1059,6 +1058,7 @@ router.get('/resumen', (req, res, next) => {
         opciones['documento'] = req.query.documento;
     }
     opciones['profesionalMatriculado'] = true;
+    // eslint-disable-next-line prefer-const
     query = Profesional.find(opciones);
     query.exec((err, data) => {
         if (err) {

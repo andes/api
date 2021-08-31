@@ -16,8 +16,7 @@ const router = express.Router();
  * @returns array de obras sociales
  */
 router.get('/obrasSociales', async (req, res, next) => {
-    let query;
-    query = ObraSocial.find({});
+    const query = ObraSocial.find({});
     if (req.query.nombre) {
         query.where('nombre').equals(RegExp(`^.*${req.query.nombre}.*$`, 'i'));
     }
