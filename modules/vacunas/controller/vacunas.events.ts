@@ -47,7 +47,7 @@ export async function deleteVacunasFromNomivac(prestacion) {
         });
         const vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
         const vacuna = response.aplicacionesVacunasCiudadano?.aplicacionVacunaCiudadano?.find(
-            vac => vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && vac.sniDosisOrden === vacunaPrestacion.dosis.orden
+            vac => vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && parseInt(vac.sniDosisOrden, 10) === vacunaPrestacion.dosis.orden
         );
         if (vacuna) {
             const establecimiento = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
