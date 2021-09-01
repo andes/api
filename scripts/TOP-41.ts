@@ -80,7 +80,7 @@ async function updateHistorialPrestaciones() {
             prestacion.solicitud.historial = [];
         }
 
-        let estados = [
+        const estados = [
             ...prestacion.estados.filter((e) => e.tipo === 'asignada'),
             ...prestacion.estados.filter((e) => e.tipo === 'rechazada'),
             ...prestacion.estados.filter((e) => e.tipo === 'anulada'),
@@ -88,7 +88,7 @@ async function updateHistorialPrestaciones() {
         ];
         if (prestacion.solicitud.turno) {
             const resultado = await turnosController.getTurnoById(prestacion.solicitud.turno);
-            let registro = {
+            const registro = {
                 tipo: 'asignarTurno',
                 observaciones: resultado.turno.nota,
                 createdAt: resultado.turno.fechaHoraDacion ? resultado.turno.fechaHoraDacion : resultado.turno.updatedAt,
@@ -107,8 +107,8 @@ async function updateHistorialPrestaciones() {
             estados.push(validacion);
         }
 
-        let crearRegistro = (estado) => {
-            let reg: any = {
+        const crearRegistro = (estado) => {
+            const reg: any = {
                 organizacion: estado.createdBy.organizacion,
                 accion: estado.tipo,
                 createdAt: estado.createdAt,
@@ -163,7 +163,7 @@ function findSolicitudes() { // busca las prestaciones desde la fecha correspond
 
 // Obtiene el primer registro en historial de solicitudes para traer la fecha desde la cual correr el script
 async function ObtenerFechaInicioScript() {
-    let prestaciones = await Prestacion.find({
+    const prestaciones = await Prestacion.find({
         $and: [
             { 'solicitud.historial': { $exists: true } }, { 'solicitud.historial': { $ne: [] } }, { inicio: 'top' }
         ]

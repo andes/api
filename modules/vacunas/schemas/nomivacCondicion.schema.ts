@@ -22,4 +22,4 @@ export const nomivacCondicionSchema = new mongoose.Schema({
 nomivacCondicionSchema.index({
     codigo: 1
 });
-export let nomivacCondicion = mongoose.model('nomivacCondiciones', nomivacCondicionSchema, 'nomivacCondiciones');
+export const nomivacCondicion = mongoose.model('nomivacCondiciones', nomivacCondicionSchema, 'nomivacCondiciones');

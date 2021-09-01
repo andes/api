@@ -10,7 +10,7 @@ import { IOrganizacion } from '../interfaces/IOrganizacion';
 import { TipoTrasladoSchema } from '../../../modules/centroOperativoMedico/schemas/tipoTraslado.schema';
 import { zonaSanitariasSchema } from './zonaSanitarias';
 
-export let MapaSectoresSchema = new Schema({
+export const MapaSectoresSchema = new Schema({
     tipoSector: SnomedConcept,
     unidadConcept: {
         type: SnomedConcept,
@@ -20,7 +20,7 @@ export let MapaSectoresSchema = new Schema({
 });
 MapaSectoresSchema.add({ hijos: [MapaSectoresSchema] });
 
-let CodigoSchema = new Schema({
+const CodigoSchema = new Schema({
     sisa: {
         type: String,
         required: true

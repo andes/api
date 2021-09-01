@@ -45,11 +45,11 @@ export async function procesar(parametros: any) {
     try {
         const prestaciones = Prestacion.aggregate([{ $match: match }]).cursor({ batchSize: 100 }).exec();
         const resultado = [];
-        let os = parametros.financiador ? parametros.financiador : 'todos';
-        let filtroEstado = parametros.estado ? parametros.estado : 'todos';
+        const os = parametros.financiador ? parametros.financiador : 'todos';
+        const filtroEstado = parametros.estado ? parametros.estado : 'todos';
         await prestaciones.eachAsync(async (prestacion) => {
             let filtroOS = false;
-            let dtoPrestacion = {
+            const dtoPrestacion = {
                 fecha: prestacion.ejecucion.fecha,
                 paciente: prestacion.paciente,
                 financiador: prestacion.paciente && prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial : null,

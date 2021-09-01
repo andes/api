@@ -83,7 +83,7 @@ function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
 }
 
 async function armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, unaOrganizacion) {
-    let ultimoCDA = await searchByPatient(_turno.paciente.id, '2881000013106', { limit: 1, skip: null });
+    const ultimoCDA = await searchByPatient(_turno.paciente.id, '2881000013106', { limit: 1, skip: null });
 
     return {
         fecha: _turno.horaInicio,
@@ -107,8 +107,8 @@ async function armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, 
 }
 
 async function getRegistrosSolicitudCarpetas(query, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
-    let mostrarPrestamos = query.mostrarPrestamos;
-    let registrosSolicitudesAutomaticas = [];
+    const mostrarPrestamos = query.mostrarPrestamos;
+    const registrosSolicitudesAutomaticas = [];
     agendas.forEach(unaAgenda => {
         unaAgenda.forEach(_agenda => {
             _agenda.turnos.forEach(_turno => {
@@ -138,7 +138,7 @@ async function getRegistrosSolicitudCarpetas(query, unaOrganizacion, agendas, ca
                     estadoCarpetaManual = carpeta.estado;
                 }
             });
-            let ultimoCDA = await searchByPatient(element.paciente.id, '2881000013106', { limit: 1, skip: null });
+            const ultimoCDA = await searchByPatient(element.paciente.id, '2881000013106', { limit: 1, skip: null });
             return {
                 fecha: element.fecha,
                 paciente: element.paciente,

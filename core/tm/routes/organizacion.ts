@@ -121,7 +121,7 @@ router.get('/organizaciones/sisa/:id', async (req, res, next) => {
 
         if (statusSisa === 200) {
             if (statusOferta === 200) {
-                let prestaciones = [];
+                const prestaciones = [];
                 if (bodyOferta && bodyOferta.prestaciones && bodyOferta.prestaciones.length) { // valido mucho porque viene de SISA, podría cambiar la estructura y no queremos que pinche
                     bodyOferta.prestaciones.forEach((prest: { id: Number; disponible: String; nombre: String }) => {
                         if (prest.disponible === 'SI') {
@@ -139,7 +139,7 @@ router.get('/organizaciones/sisa/:id', async (req, res, next) => {
 });
 router.get('/organizaciones/:id', async (req, res, next) => {
     try {
-        let org = await Organizacion.findById(req.params.id);
+        const org = await Organizacion.findById(req.params.id);
         res.json(org);
     } catch (err) {
         return next(err);
@@ -249,7 +249,7 @@ router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
         await newOrganization.save();
 
         // Al crearse una nueva organizacion, se le asigna al usuario que la creo
-        let user: any = await AuthUsers.findById(req.user.usuario.id).exec();
+        const user: any = await AuthUsers.findById(req.user.usuario.id).exec();
         user.organizaciones.push({
             _id: newOrganization.id,
             nombre: newOrganization.nombre,
@@ -271,7 +271,7 @@ router.put('/organizaciones/:id', Auth.authenticate(), async (req, res, next) =>
         return next(403);
     }
     try {
-        let org = await Organizacion.findByIdAndUpdate(req.params.id, req.body);
+        const org = await Organizacion.findByIdAndUpdate(req.params.id, req.body);
         return res.json(org);
     } catch (err) {
         return next(err);
@@ -283,7 +283,7 @@ router.delete('/organizaciones/:id', Auth.authenticate(), async (req, res, next)
         return next(403);
     }
     try {
-        let org = await Organizacion.findByIdAndRemove(req.params._id);
+        const org = await Organizacion.findByIdAndRemove(req.params._id);
         return res.json(org);
     } catch (err) {
         return next(err);
@@ -311,7 +311,7 @@ router.post('/organizaciones/:id/sectores', async (req, res, next) => {
         const org: any = await Organizacion.findById(id, { mapaSectores: 1, unidadesOrganizativas: 1 });
 
         if (padre) {
-            let newMap = [];
+            const newMap = [];
             for (const itemSector of org.mapaSectores) {
                 newMap.push(addSector(itemSector, sector, padre));
             }
@@ -347,7 +347,7 @@ router.patch('/organizaciones/:id/sectores/:idSector', async (req, res, next) =>
         const sector = req.body.sector;
         const org: any = await Organizacion.findById(id, { mapaSectores: 1, unidadesOrganizativas: 1 });
 
-        let newMap = [];
+        const newMap = [];
         for (const itemSector of org.mapaSectores) {
             newMap.push(changeSector(itemSector, sector));
         }
@@ -378,7 +378,7 @@ router.delete('/organizaciones/:id/sectores/:idSector', async (req, res, next) =
         const canDelete = await CamasController.checkSectorDelete(id, idSector);
         if (canDelete) {
             const org: any = await Organizacion.findById(id, { mapaSectores: 1 });
-            let newMap = [];
+            const newMap = [];
             for (const itemSector of org.mapaSectores) {
                 const item = deleteSector(itemSector, { _id: idSector });
                 if (item) {

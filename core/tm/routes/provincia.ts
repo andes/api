@@ -80,8 +80,7 @@ router.get('/provincias', (req, res, next) => {
             res.json(data);
         });
     } else {
-        let consulta;
-        consulta = provincia.find({}).sort({ nombre: 1 });
+        const consulta = provincia.find({}).sort({ nombre: 1 });
 
         if (req.query.nombre) {
             consulta.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));

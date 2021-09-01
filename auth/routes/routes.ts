@@ -95,7 +95,7 @@ router.post('/login', async (req, res, next) => {
         if (req.body.mobile) {
             if (prof && prof._id) {
                 try {
-                    let account: any = await checkMobile(prof._id);
+                    const account: any = await checkMobile(prof._id);
                     await updateAccount(account, { lastLogin: new Date() });
                     return res.json({
                         token: Auth.generateUserToken(user, null, [], prof, account._id),
@@ -160,7 +160,7 @@ router.post('/refreshToken', Auth.authenticate(), async (req, res, next) => {
         usuario['usuario'] = usuario.username;
         usuario['_id'] = usuario.id;
         const organizacion = req.body.organizacion ? req.body.organizacion : null;
-        let refreshToken = Auth.refreshToken(oldToken, usuario, [], organizacion);
+        const refreshToken = Auth.refreshToken(oldToken, usuario, [], organizacion);
         if (refreshToken) {
             return res.json({
                 token: refreshToken

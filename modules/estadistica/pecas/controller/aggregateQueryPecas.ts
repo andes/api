@@ -3,7 +3,7 @@ import { Agenda } from '../../../../modules/turnos/schemas/agenda';
 import { Pecas } from '../schemas/pecas';
 
 export async function pecasExport(start, end) {
-    let orgExcluidas = organizacionesExcluidas();
+    const orgExcluidas = organizacionesExcluidas();
 
     const pipeline = [
         {
@@ -1536,7 +1536,7 @@ export async function pecasExport(start, end) {
 }
 
 export async function exportDinamicasSinTurnos(start, end) {
-    let orgExcluidas = organizacionesExcluidas();
+    const orgExcluidas = organizacionesExcluidas();
     const pipeline = [
         {
             $match: {
@@ -1743,15 +1743,15 @@ export async function exportDinamicasSinTurnos(start, end) {
         }
     ];
 
-    let documentos = await Agenda.aggregate(pipeline);
+    const documentos = await Agenda.aggregate(pipeline);
     await Promise.all(documentos.map(documento => {
-        let nuevoItem = new Pecas(documento);
+        const nuevoItem = new Pecas(documento);
         return nuevoItem.save();
     }));
 }
 
 function organizacionesExcluidas() {
-    let organizaciones = [];
+    const organizaciones = [];
     const medicoIntegral = '5a5e3f7e0bd5677324737244';
     organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
     return organizaciones;

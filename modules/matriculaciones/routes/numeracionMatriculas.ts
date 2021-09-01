@@ -133,7 +133,6 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
  */
 router.post('/numeraciones', (request, response, errorHandler) => {
     const opciones = {};
-    let query;
 
     if (request.body.profesion) {
         opciones['profesion._id'] = request.body.profesion._id;
@@ -144,8 +143,7 @@ router.post('/numeraciones', (request, response, errorHandler) => {
     }
 
 
-    query = NumeracionMatriculas.find(opciones);
-
+    const query = NumeracionMatriculas.find(opciones);
 
     query.exec((err, data) => {
         if (data.length > 0) {

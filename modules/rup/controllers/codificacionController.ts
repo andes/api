@@ -41,9 +41,9 @@ export function codificarPrestacion(unaPrestacion: any) {
                         let codigoCie10: any = {
                             codigo: 'Mapeo no disponible'
                         };
-                        let target = await map.transform(parametros.conceptId);
+                        const target = await map.transform(parametros.conceptId);
                         if (target) {
-                            let cie = await cie10.model.findOne({
+                            const cie = await cie10.model.findOne({
                                 codigo: (target as String).substring(0, 5)
                             });
                             if (cie != null) {

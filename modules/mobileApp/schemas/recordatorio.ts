@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let recordatorioSchema = new mongoose.Schema({
+export const recordatorioSchema = new mongoose.Schema({
     idTurno: {
         type: mongoose.Schema.Types.ObjectId,
         // unique: true
@@ -23,4 +23,4 @@ export let recordatorioSchema = new mongoose.Schema({
     }
 });
 
-export let recordatorio = mongoose.model('recordatorio', recordatorioSchema, 'recordatorio');
+export const recordatorio = mongoose.model('recordatorio', recordatorioSchema, 'recordatorio');

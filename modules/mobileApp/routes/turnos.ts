@@ -42,7 +42,7 @@ router.get('/turnos', async (req: any, res, next) => {
     } else {
         pacienteId = req.user.pacientes[0].id;
     }
-    let paciente: any = await PacienteCtr.findById(pacienteId);
+    const paciente: any = await PacienteCtr.findById(pacienteId);
     if (!paciente) {
         throw new PatientNotFound();
     }
@@ -175,7 +175,7 @@ router.get('/turnos', async (req: any, res, next) => {
 router.get('/turnos/ubicacion/organizacion/:id', async (req, res, next) => {
     const idOrganizacion = req.params.id;
     const org: any = await Organizacion.findById(idOrganizacion);
-    let efector = (Object as any).assign({}, org);
+    const efector = (Object as any).assign({}, org);
     if (org.codigo && org.codigo.sisa) {
         efector['coordenadasDeMapa'] = { latitud: org.direccion.geoReferencia[0], longitud: org.direccion.geoReferencia[1] };
         efector['domicilio'] = org.direccion.valor;
@@ -216,7 +216,7 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
         if (turno && turno.estado === 'asignado') {
             if (String(turno.paciente.id) === pacienteId) {
                 LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
-                let liberado = await agendaCtrl.liberarTurno(req, agendaObj, turno);
+                const liberado = await agendaCtrl.liberarTurno(req, agendaObj, turno);
                 if (!liberado) {
                     return next('Turno en ejecución');
                 }

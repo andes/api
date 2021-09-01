@@ -13,4 +13,4 @@ export const NovedadSchema = new mongoose.Schema({
     activa: Boolean
 });
 
-export let Novedades = mongoose.model('novedades', NovedadSchema, 'novedades');
+export const Novedades = mongoose.model('novedades', NovedadSchema, 'novedades');

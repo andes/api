@@ -153,7 +153,7 @@ export class ArancelamientoBody extends HTMLComponent {
         const getNroCarpeta = (turno) => {
             let numeroCarpeta;
             if (turno.paciente && turno.paciente.carpetaEfectores && turno.paciente.carpetaEfectores.length) {
-                let resultado = turno.paciente.carpetaEfectores.filter(
+                const resultado = turno.paciente.carpetaEfectores.filter(
                     carpeta => (String(carpeta.organizacion._id) === _data.organizacionId && carpeta.nroCarpeta)
                 );
                 if (resultado && resultado.length) {

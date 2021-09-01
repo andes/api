@@ -8,7 +8,7 @@ router.post('/problemas', async (req, res, next) => {
     try {
         const newProblema = new Problema(req.body);
         Auth.audit(newProblema, req);
-        let respuesta = await newProblema.save();
+        const respuesta = await newProblema.save();
         res.json(respuesta);
     } catch (error) {
         return next(error);
@@ -17,7 +17,7 @@ router.post('/problemas', async (req, res, next) => {
 
 router.get('/problemas', async (req: any, res, next) => {
     try {
-        let data = await Problema.find({});
+        const data = await Problema.find({});
         res.json(data);
     } catch (error) {
         return next(error);
@@ -26,7 +26,7 @@ router.get('/problemas', async (req: any, res, next) => {
 
 router.patch('/problemas/:id', async (req, res, next) => {
     try {
-        let problema: any = await Problema.findById(req.params.id);
+        const problema: any = await Problema.findById(req.params.id);
         if (req.body.estado) {
             problema.estado = req.body.estado;
             problema.resueltoPorId = req.body.resueltoPorId;

@@ -57,20 +57,20 @@ export class CDABuilder extends BaseBuilder {
 
         if (cda.author()) {
             xml.com('Datos del Autor del Informe ');
-            let authorBuilder = new AuthorBuilder();
-            let template = authorBuilder.build(cda.author() as Author);
+            const authorBuilder = new AuthorBuilder();
+            const template = authorBuilder.build(cda.author() as Author);
             xml.importDocument(template);
         }
 
         if (cda.custodian()) {
             xml.com('Datos de la custodia');
-            let orgBuilder = new OrganizationBuilder();
-            let template = orgBuilder.build(cda.custodian() as Organization);
+            const orgBuilder = new OrganizationBuilder();
+            const template = orgBuilder.build(cda.custodian() as Organization);
             xml.importDocument(template);
         }
 
-        let date = cda.date() as Date;
-        let serviceEvent = xml.ele('documentationOf').ele('serviceEvent', { classCode: 'PCPR' });
+        const date = cda.date() as Date;
+        const serviceEvent = xml.ele('documentationOf').ele('serviceEvent', { classCode: 'PCPR' });
         serviceEvent.com('Datos de la prestación Snomed ');
         if (cda.type()) {
             this.createNode(serviceEvent, 'code', cda.type());
@@ -83,7 +83,7 @@ export class CDABuilder extends BaseBuilder {
 
 
         if (date) {
-            let elem = xml.ele('componentOf').ele('encompassingEncounter');
+            const elem = xml.ele('componentOf').ele('encompassingEncounter');
             elem.ele('effectiveTime').ele('low', { value: this.fromDate(date) });
         }
 
@@ -93,7 +93,7 @@ export class CDABuilder extends BaseBuilder {
         const assignedEntity = performer.ele('assignedEntity');
 
         if (cda.author()) {
-            let doctor = cda.author() as Author;
+            const doctor = cda.author() as Author;
 
             if (doctor.documento()) {
                 this.createNode(assignedEntity, 'id', {
@@ -101,14 +101,14 @@ export class CDABuilder extends BaseBuilder {
                     extension: doctor.documento()
                 });
             }
-            let assignedPerson = assignedEntity.ele('assignedPerson');
-            let nameNode = assignedPerson.ele('name');
+            const assignedPerson = assignedEntity.ele('assignedPerson');
+            const nameNode = assignedPerson.ele('name');
             this.createNode(nameNode, 'given', null, doctor.firstname());
             this.createNode(nameNode, 'family', null, doctor.lastname());
 
             if (doctor.organization()) {
-                let org = doctor.organization() as Organization;
-                let representedOrganization = assignedEntity.ele('representedOrganization');
+                const org = doctor.organization() as Organization;
+                const representedOrganization = assignedEntity.ele('representedOrganization');
                 this.createNode(representedOrganization, 'id', org.id());
                 this.createNode(representedOrganization, 'name', null, org.name());
             }
@@ -117,7 +117,7 @@ export class CDABuilder extends BaseBuilder {
         const body: Body = cda.body() as Body;
         if (body) {
             xml.com(' Cuerpo de CDA ');
-            let mainComponent = xml.ele('component').ele('structuredBody');
+            const mainComponent = xml.ele('component').ele('structuredBody');
             body.component().forEach(item => {
                 const builderComponent = item.builderFactory();
                 const template = builderComponent.build(item);

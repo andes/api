@@ -30,7 +30,7 @@ export interface IProfesionalMeta extends mongoose.Document {
     }];
 }
 
-export let ProfesionalMetaSchema = new mongoose.Schema({
+export const ProfesionalMetaSchema = new mongoose.Schema({
     profesional: {
         id: mongoose.SchemaTypes.ObjectId,
         nombre: String,

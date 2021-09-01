@@ -52,11 +52,11 @@ export function convertToObjectId(obj, property: string) {
  * @returns {any[]} Prestaciones que matcheen con los conceptos ingresados por parametro
  */
 export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
-    let data = [];
+    const data = [];
 
     // recorremos prestaciones
     prestaciones.forEach((prestacion: any) => {
-        let registros = [];
+        const registros = [];
         let registrosAux = [];
         let motivoConsulta;
         // recorremos los registros de cada prestacion del paciente.
@@ -124,11 +124,11 @@ export function filtrarRegistros(prestaciones: any[], { semanticTags }) {
  * @returns {any} Array con todos los conceptos que matchearon
  */
 export function registrosProfundidad(registro, conceptos) {
-    let data = [];
+    const data = [];
 
     if (registro.registros && registro.registros.length) {
         registro.registros.forEach((reg: any) => {
-            let dataAux = registrosProfundidad(reg, conceptos);
+            const dataAux = registrosProfundidad(reg, conceptos);
             dataAux.forEach(elto => {
                 data.push(elto);
             });
@@ -148,7 +148,7 @@ export function registrosProfundidad(registro, conceptos) {
 
 
 export function buscarEnHuds(prestaciones, conceptos) {
-    let data = [];
+    const data = [];
 
     // recorremos prestaciones
     prestaciones.forEach((prestacion: any) => {
@@ -166,7 +166,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
                 });
             }
             // verificamos si el registro de la prestacion tiene alguno de los conceptos en su array de registros
-            let resultado: any = matchConcepts(unRegistro, conceptos);
+            const resultado: any = matchConcepts(unRegistro, conceptos);
 
             if (resultado && resultado.id !== unRegistro.id) {
                 // agregamos el resultado a a devolver

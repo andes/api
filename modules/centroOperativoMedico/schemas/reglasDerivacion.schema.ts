@@ -16,4 +16,4 @@ export const ReglasDerivacionSchema = new mongoose.Schema({
     defineGravedad: Boolean
 });
 
-export let ReglasDerivacion = mongoose.model('reglasDerivacion', ReglasDerivacionSchema, 'reglasDerivacion');
+export const ReglasDerivacion = mongoose.model('reglasDerivacion', ReglasDerivacionSchema, 'reglasDerivacion');

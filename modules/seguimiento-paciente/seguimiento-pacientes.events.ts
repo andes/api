@@ -6,7 +6,7 @@ import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 import { SeguimientoPacienteCtr } from './seguimiento-paciente.route';
 import moment = require('moment');
 
-let dataLog: any = new Object(userScheduler);
+const dataLog: any = new Object(userScheduler);
 
 
 function moreThan14Days(seguimientos) {

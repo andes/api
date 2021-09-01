@@ -8,7 +8,7 @@ export async function getVacunas(paciente) {
         conditions['documento'] = paciente.documento;
         const sort = { fechaAplicacion: -1 };
 
-        let resultados = await vacunas.find(conditions).sort(sort);
+        const resultados = await vacunas.find(conditions).sort(sort);
         if (resultados.length > 0) {
             resultados.forEach((vacuna: any, index) => {
                 const pacienteVacuna = {
@@ -39,15 +39,15 @@ export async function getVacunas(paciente) {
 }
 
 export async function getCount(paciente) {
-    let cantidad = await vacunas.find({ documento: paciente.documento }).count();
+    const cantidad = await vacunas.find({ documento: paciente.documento }).count();
     return cantidad;
 }
 
 export async function getVacuna(id) {
-    let doc = await vacunas.findOne({ idvacuna: id });
+    const doc = await vacunas.findOne({ idvacuna: id });
     return doc;
 }
 export async function createVacuna(vacuna) {
-    let doc = new vacunas(vacuna);
+    const doc = new vacunas(vacuna);
     return await doc.save();
 }

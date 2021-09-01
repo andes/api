@@ -27,4 +27,4 @@ export const nomivacVacunaSchema = new mongoose.Schema({
 nomivacVacunaSchema.index({
     codigo: 1
 });
-export let nomivacVacunas = mongoose.model('nomivacVacunas', nomivacVacunaSchema, 'nomivacVacunas');
+export const nomivacVacunas = mongoose.model('nomivacVacunas', nomivacVacunaSchema, 'nomivacVacunas');

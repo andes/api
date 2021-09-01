@@ -2,7 +2,7 @@ import { Profe } from '../schemas/profe';
 
 // obtiene las versiones de todos los padrones cargados (PROFE)
 export async function obtenerVersiones() {
-    let versiones = await Profe.distinct('version').exec(); // esta consulta obtiene un arreglo de strings
+    const versiones = await Profe.distinct('version').exec(); // esta consulta obtiene un arreglo de strings
     for (let i = 0; i < versiones.length; i++) {
         versiones[i] = { version: versiones[i] };
     }

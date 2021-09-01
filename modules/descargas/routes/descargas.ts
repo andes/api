@@ -18,7 +18,7 @@ const router = express.Router();
 
 router.post('/reporteDerivacion', Auth.authenticate(), async (req: any, res, next) => {
     try {
-        let derivacion = new Derivacion(req);
+        const derivacion = new Derivacion(req);
         const opciones = { header: { height: '3cm' } };
         const fileName: any = await derivacion.informe(opciones);
         res.download(fileName);
@@ -32,7 +32,7 @@ router.post('/reporteDerivacion', Auth.authenticate(), async (req: any, res, nex
  * que van a ser parte del archivo
  */
 router.post('/censo', async (req: any, res, next) => {
-    let docCenso = new InformeCenso('diario', req);
+    const docCenso = new InformeCenso('diario', req);
     const fileName: any = await docCenso.informe();
 
     return res.download(fileName);
@@ -40,14 +40,14 @@ router.post('/censo', async (req: any, res, next) => {
 
 
 router.post('/censoMensual', async (req: any, res, next) => {
-    let docCenso = new InformeCenso('mensual', req);
+    const docCenso = new InformeCenso('mensual', req);
     const fileName: any = await docCenso.informe();
 
     return res.download(fileName);
 });
 
 router.post('/anexo-dos', async (req: any, res) => {
-    let docRecupero = new RecuperoCosto(req);
+    const docRecupero = new RecuperoCosto(req);
     const opciones = { header: { height: '3cm' } };
     const fileName: any = await docRecupero.informe(opciones);
 
@@ -172,7 +172,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
 
 
 router.post('/constanciaPuco/:tipo?', Auth.authenticate(), async (req: any, res) => {
-    let docPuco = new ConstanciaPuco(req);
+    const docPuco = new ConstanciaPuco(req);
     const opciones = { header: { height: '3cm' } };
     const fileName: any = await docPuco.informe(opciones);
 

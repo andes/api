@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let configuracionPrestacionSchema = new mongoose.Schema({
+export const configuracionPrestacionSchema = new mongoose.Schema({
     snomed: {
         conceptId: String,
         term: String,
@@ -23,4 +23,4 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
     }]
 });
 
-export let configuracionPrestacionModel = mongoose.model('configuracionPrestacion', configuracionPrestacionSchema, 'configuracionPrestacion');
+export const configuracionPrestacionModel = mongoose.model('configuracionPrestacion', configuracionPrestacionSchema, 'configuracionPrestacion');

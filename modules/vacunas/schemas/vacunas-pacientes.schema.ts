@@ -1,7 +1,7 @@
 import { model, Schema, SchemaTypes } from 'mongoose';
 import { ESTADO, NombreSchemaV2 } from '../../../shared/schemas';
 
-export let VacunasPacientesSchema = new Schema({
+export const VacunasPacientesSchema = new Schema({
     paciente: {
         id: SchemaTypes.ObjectId,
         nombre: String,

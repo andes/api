@@ -5,9 +5,7 @@ const router = express.Router();
 
 router.get('/organizacionesCache', (req, res, next) => {
 
-    let query;
-
-    query = organizacionCache.organizacionCache.find({}, {
+    const query = organizacionCache.organizacionCache.find({}, {
         coordenadasDeMapa: 1,
         nombre: 1,
         localidad: 1,

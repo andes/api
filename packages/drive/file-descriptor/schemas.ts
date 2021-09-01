@@ -12,7 +12,7 @@ export interface IFileDescriptor {
 
 export interface FileDescriptorDocument extends Document, IFileDescriptor { }
 
-export let FileDescriptorSchema: Schema = new Schema({
+export const FileDescriptorSchema: Schema = new Schema({
     adapter: String,
     real_id: String,
     mimetype: String,
@@ -22,4 +22,4 @@ export let FileDescriptorSchema: Schema = new Schema({
 });
 
 FileDescriptorSchema.plugin(AuditPlugin);
-export let FileDescriptorModel: Model<FileDescriptorDocument> = model('AndesDriveMetadata', FileDescriptorSchema, 'AndesDriveMetadata');
+export const FileDescriptorModel: Model<FileDescriptorDocument> = model('AndesDriveMetadata', FileDescriptorSchema, 'AndesDriveMetadata');

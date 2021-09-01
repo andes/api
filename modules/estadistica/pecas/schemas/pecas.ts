@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let _schema = new mongoose.Schema({
+const _schema = new mongoose.Schema({
     idEfector: String,
     Efector: String,
     TipoEfector: String,

@@ -8,7 +8,7 @@ import { TipoTrasladoSchema } from './tipoTraslado.schema';
 
 export const ESTADOS_DERIVACION = ['solicitada', 'habilitada', 'inhabilitada', 'asignada', 'rechazada', 'aceptada', 'finalizada', 'encomendada'];
 
-let DerivacionHistorialSchema = new mongoose.Schema({
+const DerivacionHistorialSchema = new mongoose.Schema({
     estado: {
         type: String,
         enum: ESTADOS_DERIVACION
@@ -111,4 +111,4 @@ DerivacionSchema.index({
     'organizacionDestino.id': 1,
     'organizacionOrigen.id': 1
 });
-export let Derivaciones = mongoose.model('derivaciones', DerivacionSchema, 'derivaciones');
+export const Derivaciones = mongoose.model('derivaciones', DerivacionSchema, 'derivaciones');

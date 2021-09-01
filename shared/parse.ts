@@ -1,12 +1,12 @@
 export function parseDate(data: any): any {
-    let rvalidchars = /^[\],:{}\s]*$/;
-    let rvalidescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g;
-    let rvalidtokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
-    let rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g;
-    let dateISO = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[.,]\d+)?Z/i;
-    let dateNet = /\/Date\((-?\d+)(?:-\d+)?\)\//i;
+    const rvalidchars = /^[\],:{}\s]*$/;
+    const rvalidescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g;
+    const rvalidtokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
+    const rvalidbraces = /(?:^|:|,)(?:\s*\[)+/g;
+    const dateISO = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[.,]\d+)?Z/i;
+    const dateNet = /\/Date\((-?\d+)(?:-\d+)?\)\//i;
 
-    let replacer = (key, value) => {
+    const replacer = (key, value) => {
         if (typeof (value) === 'string') {
             if (dateISO.test(value)) {
                 return new Date(value);

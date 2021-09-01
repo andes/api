@@ -17,7 +17,7 @@ async function run(done) {
     const updatePatient = async (pac) => {
         try {
             if (pac.tokens?.length) {
-                let data = [];
+                const data = [];
                 pac.tokens.forEach(t => {
                     if (t.length) {
                         data.push(replaceChars(t));

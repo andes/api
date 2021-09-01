@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let logJobsSchema = new mongoose.Schema({
+export const logJobsSchema = new mongoose.Schema({
     job: {
         type: String,
         enum: [
@@ -15,4 +15,4 @@ export let logJobsSchema = new mongoose.Schema({
 
 });
 
-export let logJobs = mongoose.model('logJobs', logJobsSchema, 'logJobs');
+export const logJobs = mongoose.model('logJobs', logJobsSchema, 'logJobs');

@@ -4,7 +4,7 @@ import { NombreApellidoSchema } from './../../tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 import * as turnoSchema from '../../../modules/turnos/schemas/turno';
 
-export let logPacienteSchema = new mongoose.Schema({
+export const logPacienteSchema = new mongoose.Schema({
     paciente: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'paciente'
@@ -56,4 +56,4 @@ logPacienteSchema.index({
 logPacienteSchema.index({
     operacion: 1
 });
-export let logPaciente = mongoose.model('logPaciente', logPacienteSchema, 'logPaciente');
+export const logPaciente = mongoose.model('logPaciente', logPacienteSchema, 'logPaciente');

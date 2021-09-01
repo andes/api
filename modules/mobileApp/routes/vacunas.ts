@@ -49,9 +49,9 @@ router.post('/nomivac', async (req: any, res, next) => {
     }
     try {
         const vacuna = req.body;
-        let result = await vacunasCtr.getVacuna(vacuna.idvacuna);
+        const result = await vacunasCtr.getVacuna(vacuna.idvacuna);
         if (!result) {
-            let doc = await vacunasCtr.createVacuna(vacuna);
+            const doc = await vacunasCtr.createVacuna(vacuna);
             return res.json(doc);
         } else {
             return res.json(result);

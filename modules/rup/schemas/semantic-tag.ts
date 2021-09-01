@@ -1,4 +1,4 @@
-export let SemanticTag = {
+export const SemanticTag = {
     type: String,
     enum: [
         'objeto físico',

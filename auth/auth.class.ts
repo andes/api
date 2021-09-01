@@ -97,7 +97,7 @@ export class Auth {
 
     static validateToken(token) {
         try {
-            let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+            const tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
             if (tokenData) {
                 return tokenData;
             }
@@ -182,7 +182,7 @@ export class Auth {
     static appTokenProtected() {
         return async (req, res, next) => {
             if (req.user.type === 'app-token') {
-                let app: any = await authApps.findOne({ _id: req.user.app.id });
+                const app: any = await authApps.findOne({ _id: req.user.app.id });
                 let token;
                 if (req.headers && req.headers.authorization) {
                     token = req.headers.authorization.substring(4);

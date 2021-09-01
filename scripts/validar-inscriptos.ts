@@ -9,7 +9,7 @@ import { provincia as provinciaActual } from '../config.private';
 import { findOrCreate, } from './../core-v2/mpi/paciente/paciente.controller';
 import { replaceChars } from './../core-v2/mpi';
 
-let dataLog: any = new Object(userScheduler);
+const dataLog: any = new Object(userScheduler);
 dataLog.body = { _id: null };
 dataLog.method = null;
 
@@ -18,7 +18,7 @@ async function run(done) {
 
     const validarInscriptos = async (inscripto) => {
         try {
-            let inscripcion = inscripto;
+            const inscripcion = inscripto;
             const inscriptoValidado = await validar(inscripto.documento, inscripto.sexo);
             if (inscriptoValidado) {
 

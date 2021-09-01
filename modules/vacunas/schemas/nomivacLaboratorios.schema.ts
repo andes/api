@@ -23,4 +23,4 @@ export const nomivacLaboratorioSchema = new mongoose.Schema({
     habilitado: Boolean
 });
 
-export let nomivacLaboratorio = mongoose.model('nomivacLaboratorios', nomivacLaboratorioSchema, 'nomivacLaboratorios');
+export const nomivacLaboratorio = mongoose.model('nomivacLaboratorios', nomivacLaboratorioSchema, 'nomivacLaboratorios');

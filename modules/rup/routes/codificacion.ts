@@ -35,7 +35,7 @@ router.post('/codificacion', asyncHandler(async (req, res) => {
 router.patch('/codificacion/:id', async (req, res, next) => {
     const unaCodificacion = await Codificacion.findById(req.params.id);
     (unaCodificacion as any).diagnostico.codificaciones = req.body.codificaciones;
-    let data = new Codificacion(unaCodificacion);
+    const data = new Codificacion(unaCodificacion);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
@@ -68,7 +68,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
         const unaCodificacion = await Codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {
-        let filtros = {
+        const filtros = {
             'createdBy.organizacion.id': req.user.organizacion.id,
             createdAt: {
                 $gte: new Date(req.query.fechaDesde),
@@ -80,7 +80,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
             filtros['diagnostico.codificaciones.codificacionAuditoria.codigo'] = { $exists: req.query.auditadas };
         }
 
-        let pipeline = [
+        const pipeline = [
             {
                 $match: filtros
             },

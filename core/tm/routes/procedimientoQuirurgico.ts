@@ -4,12 +4,11 @@ const router = express.Router();
 import { defaultLimit, maxLimit } from './../../../config';
 
 router.get('/procemientosQuirurgicos', (req, res, next) => {
-    let query;
     const conditions = {};
     conditions['$or'] = [];
     conditions['$or'].push({ codigo: RegExp('^' + req.query.nombre + '$', 'i') });
     conditions['$or'].push({ nombre: RegExp('^.*' + req.query.nombre + '.*$', 'i') });
-    query = procedimientosQuirurgicos.model.find(conditions);
+    const query = procedimientosQuirurgicos.model.find(conditions);
     const skip = parseInt(req.query.skip || 0, 10);
     const limit = Math.min(parseInt(req.query.limit || defaultLimit, 15), maxLimit);
     query.skip(skip);

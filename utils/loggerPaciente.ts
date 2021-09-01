@@ -3,7 +3,7 @@ import { logPaciente } from '../core/log/schemas/logPaciente';
 export class LoggerPaciente {
 
     public static logTurno(req, op, paciente, turno, bloque, agenda, callback?): any {
-        let model: any = {
+        const model: any = {
             operacion: op,
             paciente: (paciente && paciente.id) ? paciente.id : null, // Un turno puede tener o no tener paciente
             createdAt: new Date(),

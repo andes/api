@@ -15,8 +15,7 @@ router.get('/especialidadFT/:id?', (req, res, next) => {
             res.json(data);
         });
     } else {
-        let query;
-        query = especialidad.find({});
+        const query = especialidad.find({});
 
         query.sort({ descripcion: 1 });
 

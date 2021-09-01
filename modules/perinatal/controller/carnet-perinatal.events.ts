@@ -34,7 +34,7 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
                 carnetExistente.controles = [];
             }
 
-            let indexControl = carnetExistente.controles.findIndex(item => String(item.idPrestacion) === String(prestacion.id));
+            const indexControl = carnetExistente.controles.findIndex(item => String(item.idPrestacion) === String(prestacion.id));
             if (indexControl < 0) {
                 carnetExistente.controles.push({
                     fechaControl: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
@@ -50,10 +50,10 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
             await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
         } else {
-            let fechaUltimaMenstruacion = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007');
-            let pesoPrevio = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003');
-            let talla = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009');
-            let fechaProbableDeParto = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006');
+            const fechaUltimaMenstruacion = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007');
+            const pesoPrevio = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003');
+            const talla = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009');
+            const fechaProbableDeParto = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006');
 
             const carnet: any = {
                 fecha: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),

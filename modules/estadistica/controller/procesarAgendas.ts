@@ -9,7 +9,7 @@ import * as mongoose from 'mongoose';
 
 
 export async function procesar(parametros: any) {
-    let match = {
+    const match = {
         estado: { $nin: ['planificacion', 'borrada', 'suspendida', 'pausada'] },
         'organizacion._id': parametros.organizacion,
         bloques: {
@@ -20,8 +20,8 @@ export async function procesar(parametros: any) {
         },
         $or: [{ 'bloques.turnos.estado': 'asignado' }, { 'sobreturnos.estado': 'asignado' }]
     };
-    let matchTurno = {};
-    let matchEstado = {};
+    const matchTurno = {};
+    const matchEstado = {};
     if (parametros.estadoFacturacion) {
         match['bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
         matchTurno['_bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
@@ -54,7 +54,7 @@ export async function procesar(parametros: any) {
         matchTurno['_bloques.turnos.paciente.documento'] = parametros.documento;
     }
 
-    let matchOS = {};
+    const matchOS = {};
 
     if (parametros.financiador) {
 

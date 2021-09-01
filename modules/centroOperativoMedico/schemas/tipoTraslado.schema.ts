@@ -6,4 +6,4 @@ export const TipoTrasladoSchema = new mongoose.Schema({
 });
 
 TipoTrasladoSchema.plugin(AuditPlugin);
-export let TipoTraslado = mongoose.model('tipoTraslado', TipoTrasladoSchema, 'tipoTraslado');
+export const TipoTraslado = mongoose.model('tipoTraslado', TipoTrasladoSchema, 'tipoTraslado');

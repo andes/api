@@ -117,7 +117,7 @@ export const find = async (req: Request, res: Response) => {
 export const get = async (req: Request, res: Response) => {
     const options = req.apiOptions();
     if (req.query.search) {
-        let conditions = { ...req.query };
+        const conditions = { ...req.query };
         delete conditions.search;
         Object.keys(options).map(opt => delete conditions[opt]);
         const pacientes = await multimatch(req.query.search, conditions, options);

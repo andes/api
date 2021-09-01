@@ -7,7 +7,7 @@ export interface ISnomedConcept {
     semanticTag: string;
 }
 
-export let SnomedConcept = {
+export const SnomedConcept = {
     conceptId: String,
     term: String,
     fsn: String,

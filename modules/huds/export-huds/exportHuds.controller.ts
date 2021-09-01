@@ -18,7 +18,7 @@ export async function createFile(idExportHuds) {
         if (peticionExport.prestaciones.length) {
             prestaciones = await Prestacion.find({ _id: { $in: peticionExport.prestaciones } });
         } else {
-            let query = {
+            const query = {
                 'paciente.id': peticionExport.pacienteId,
                 'estadoActual.tipo': 'validada'
             };
@@ -34,7 +34,7 @@ export async function createFile(idExportHuds) {
             }
             prestaciones = await Prestacion.find(query);
 
-            let queryCda = {
+            const queryCda = {
                 'metadata.paciente': peticionExport.pacienteId,
                 'metadata.adjuntos': { $exists: true }
             };
@@ -90,8 +90,8 @@ export async function createFile(idExportHuds) {
         const getData = () => {
             return Promise.all(prestaciones.map(async (prestacion: any) => {
                 try {
-                    let informe = new InformeRUP(prestacion.id, null, peticionExport.user);
-                    let archivo = await informe.informe();
+                    const informe = new InformeRUP(prestacion.id, null, peticionExport.user);
+                    const archivo = await informe.informe();
                     const nombreArchivo = peticionExport.prestaciones.length ? prestacion.paciente.documento : prestacion.solicitud.tipoPrestacion.term;
                     const fechaArchivo = moment(prestacion.solicitud.fecha).format('YYYY-MM-DD');
                     archive.file(`${archivo}`, { name: `${fechaArchivo} - ${nombreArchivo}.pdf` });

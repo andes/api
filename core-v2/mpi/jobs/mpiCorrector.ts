@@ -34,7 +34,7 @@ async function consultarSisa(persona: any) {
         const pacienteSisa = await sisa(persona, sisaConfig, sisaToAndes);
 
         if (pacienteSisa) {
-            let match = new Matching();
+            const match = new Matching();
             const weights = config.mpi.weightsDefault;
             const valorMatching = match.matchPersonas(persona, pacienteSisa, weights, config.algoritmo); // Valor del matcheo de sisa
             const datosAnteriores = { nombre: persona.nombre, apellido: persona.apellido };

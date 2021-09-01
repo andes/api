@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-export let MinutaSchema = new mongoose.Schema({
+export const MinutaSchema = new mongoose.Schema({
     idMinuta: {
         type: String
     },
@@ -35,4 +35,4 @@ export let MinutaSchema = new mongoose.Schema({
 });
 
 MinutaSchema.plugin(AuditPlugin);
-export let Minuta = mongoose.model('minuta', MinutaSchema, 'minuta');
+export const Minuta = mongoose.model('minuta', MinutaSchema, 'minuta');

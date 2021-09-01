@@ -62,7 +62,7 @@ module.exports = {
                     "requireLast": false
                 }
             }
-        ], 
+        ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-inferrable-types": "error",
         "@typescript-eslint/no-shadow": [
@@ -71,7 +71,7 @@ module.exports = {
                 "hoist": "all"
             }
 
-            
+
         ],
         "@typescript-eslint/no-unused-expressions": "error",
         "@typescript-eslint/quotes": [
@@ -99,7 +99,7 @@ module.exports = {
         "guard-for-in": "off",
         "id-blacklist": "off",
         "id-match": "off",
-        "import/no-extraneous-dependencies": "error", 
+        "import/no-extraneous-dependencies": "error",
         "max-len": [
             "off",
             {
@@ -131,10 +131,14 @@ module.exports = {
         "no-unused-expressions": "error",
         "no-unused-labels": "error",
         "no-var": "error",
+        "prefer-const": ["error", {
+            "destructuring": "any",
+            "ignoreReadBeforeAssign": false
+        }],
         "object-shorthand": "error",
-        "prefer-arrow-callback": [ 
-            "error", 
-            { "allowUnboundThis": true, "allowNamedFunctions": true } 
+        "prefer-arrow-callback": [
+            "error",
+            { "allowUnboundThis": true, "allowNamedFunctions": true }
         ],
         "prefer-object-spread": "error",
         "quote-props": [
@@ -162,7 +166,7 @@ module.exports = {
             }
         ],
         "array-bracket-spacing": [
-            "error", 
+            "error",
             "never",
             {
                 "singleValue": false,
@@ -170,7 +174,7 @@ module.exports = {
                 "arraysInArrays": false
             }
         ],
-        "no-irregular-whitespace": ["error", { "skipComments": true }], 
-        "no-multi-spaces": "error"         
+        "no-irregular-whitespace": ["error", { "skipComments": true }],
+        "no-multi-spaces": "error"
     }
 };

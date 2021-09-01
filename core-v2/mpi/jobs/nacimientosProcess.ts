@@ -29,7 +29,7 @@ async function getInfoPacientes(queryPath = '') {
         return [];
     }
     try {
-        let dataNacimientos = await handleHttpRequest(queryPath);
+        const dataNacimientos = await handleHttpRequest(queryPath);
 
         // Transformamos la respuesta en un array JSON correcto
         const lastChar = dataNacimientos[1].lastIndexOf(',');
@@ -63,7 +63,7 @@ const getRelacionNacimiento = async (relaciones: any[], fechaNac) => {
 async function relacionar(mama, bebe) {
 
     // buscamos entre las relaciones de la mamá al bebé por fecha de nacimiento
-    let bebeFound: IPaciente = await getRelacionNacimiento(mama.relaciones, bebe.fechaNacimiento);
+    const bebeFound: IPaciente = await getRelacionNacimiento(mama.relaciones, bebe.fechaNacimiento);
     if (bebeFound) {
         bebeFound.certificadoRenaper = bebe.certificadoRenaper;
         bebe = bebeFound;
@@ -76,7 +76,7 @@ async function relacionar(mama, bebe) {
     // Incluimos a la mamá en las relaciones del bebe en caso de no estarlo
     if (!incluyeRelacion(bebe.relaciones, mama.id)) {
         const progenitor = await ParentescoCtr.findOne({ nombre: '^progenitor' }, {}, userScheduler as any);
-        let mamaRelacion = {
+        const mamaRelacion = {
             relacion: progenitor,
             referencia: mama._id,
             nombre: mama.nombre,
@@ -106,7 +106,7 @@ async function relacionar(mama, bebe) {
     if (!mama.relaciones?.length || !bebeFound) {
 
         const hijo = await ParentescoCtr.findOne({ nombre: '^hijo' }, {}, userScheduler as any);
-        let bebeRelacion = {
+        const bebeRelacion = {
             relacion: hijo,
             referencia: bebeAndes['id'],
             nombre: bebeAndes.nombre,
@@ -129,7 +129,7 @@ async function relacionar(mama, bebe) {
 
 
 function parsearPacientes(importedData) {
-    let parsedData = {
+    const parsedData = {
         bebe: {
             nombre: importedData.nnombres.trim(),
             apellido: importedData.napellidos.trim(),
@@ -183,8 +183,8 @@ function parsearPacientes(importedData) {
         });
     }
 
-    let bebe = new Paciente(parsedData.bebe);
-    let mama = new Paciente(parsedData.mama);
+    const bebe = new Paciente(parsedData.bebe);
+    const mama = new Paciente(parsedData.mama);
     return { bebe, mama };
 }
 
@@ -218,7 +218,7 @@ async function validarPaciente(dataPaciente) {
 
 
 async function procesarDataNacimientos(nacimiento) {
-    let resultadoParse: any = parsearPacientes(nacimiento);
+    const resultadoParse: any = parsearPacientes(nacimiento);
     deb('PARSER RESULT--->', resultadoParse);
     try {
         let mama = resultadoParse.mama;
@@ -251,15 +251,15 @@ async function procesarDataNacimientos(nacimiento) {
 }
 
 export async function importarNacimientos() {
-    let fecha = fechaPrueba || moment().format('YYYY-MM-DD');
-    let queryFechaPath = registroProvincialData.queryFechaPath + fecha;
+    const fecha = fechaPrueba || moment().format('YYYY-MM-DD');
+    const queryFechaPath = registroProvincialData.queryFechaPath + fecha;
     const infoNacimientosArray = await getInfoPacientes(queryFechaPath);
-    for (let nacimiento of infoNacimientosArray) {
+    for (const nacimiento of infoNacimientosArray) {
         deb('Elemento ----->', nacimiento);
         try {
             await procesarDataNacimientos(nacimiento);
         } catch (err) {
-            let sexoTutor = nacimiento.ntiposexo === '1' ? 'masculino' : 'femenino';
+            const sexoTutor = nacimiento.ntiposexo === '1' ? 'masculino' : 'femenino';
             await nacimientosLog.error('nacimiento-updated', { dniTutor: nacimiento.nrodoc, sexo: sexoTutor }, err, userScheduler);
         }
     }
@@ -272,10 +272,10 @@ export async function importarNacimientos() {
 export async function importarDocumentosAsignados() {
     try {
         // Buscamos en andes los bebes que aún no tienen documento
-        let resultadoBusqueda: any = await PacienteCtr.search({ documento: '', certificadoRenaper: { $exists: true }, activo: true }, {}, userScheduler as any);
-        for (let pacienteBebe of resultadoBusqueda) {
+        const resultadoBusqueda: any = await PacienteCtr.search({ documento: '', certificadoRenaper: { $exists: true }, activo: true }, {}, userScheduler as any);
+        for (const pacienteBebe of resultadoBusqueda) {
             const certificadoFechaPath = registroProvincialData.queryNacidoByCertificado + pacienteBebe.certificadoRenaper;
-            let bebe = await getInfoPacientes(certificadoFechaPath);
+            const bebe = await getInfoPacientes(certificadoFechaPath);
             await updateDatosPaciente(bebe[0], pacienteBebe);
         }
     } catch (error) {
@@ -299,10 +299,10 @@ export async function obtenerModificaciones(fecha: string = null) {
         const queryPath = registroProvincialData.queryNacidoByFechaModificacion + fecha;
         const resultadoBusqueda = await getInfoPacientes(queryPath);
 
-        for (let bebeMod of resultadoBusqueda) {
+        for (const bebeMod of resultadoBusqueda) {
             const pacientes = await PacienteCtr.search({ certificadoRenaper: bebeMod.nrocertificado, activo: true, estado: 'temporal' }, { limit: 1 }, userScheduler as any);
             if (pacientes.length && pacientes[0]._id) {
-                let bebe = pacientes[0];
+                const bebe = pacientes[0];
                 bebe.id = bebe._id;
                 await updateDatosPaciente(bebeMod, bebe);
             }

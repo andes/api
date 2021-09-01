@@ -11,7 +11,7 @@ import { ZonaSanitaria } from '../schemas/zonaSanitarias';
  * @param searchLocalidad string de localidad
  */
 export async function matchUbicacion(searchProvincia: string, searchLocalidad: string) {
-    let alg = new MatchingAndes();
+    const alg = new MatchingAndes();
     let match = 0;
     let matchLocalidad: any = [0, ''];
     let matchProvincia: any = [0, ''];

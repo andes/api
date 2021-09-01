@@ -13,8 +13,7 @@ router.get('/configPrestacion/:id*?', (req, res, next) => {
             res.json(data);
         });
     } else {
-        let query;
-        query = configPrestacion.find({}); // Trae todos
+        const query = configPrestacion.find({}); // Trae todos
 
         if (req.query.prestacion) {
             query.where('prestacion.nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));

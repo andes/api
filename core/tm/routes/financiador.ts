@@ -65,13 +65,12 @@ router.get('/financiadores/:id*?', (req, res, next) => {
             res.json(data);
         });
     } else {
-        let query;
-        query = financiador.find({});
+        const query = financiador.find({});
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         query.exec((err, data) => {
-            if (err) {return next(err); }
+            if (err) { return next(err); }
             res.json(data);
         });
     }

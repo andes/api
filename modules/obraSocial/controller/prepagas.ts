@@ -2,7 +2,7 @@ import { padronPrepagas } from '../schemas/padronPrepagas';
 import { dirname } from 'path';
 
 export async function pacientePrepaga(documento, sexo) {
-    let rta: any = await padronPrepagas.findOne({ dni: documento, sexo }).exec();
+    const rta: any = await padronPrepagas.findOne({ dni: documento, sexo }).exec();
     const resultOS = [];
     if (rta) {
         resultOS[0] = { codigoPuco: null, nombre: rta.nombre, financiador: null };
@@ -12,8 +12,8 @@ export async function pacientePrepaga(documento, sexo) {
 
 
 export async function actualizarPadronPrepagas(documento, sexo, obraSocial) {
-    let rta = await padronPrepagas.findOne({ dni: documento, sexo }).exec();
-    let prepagas = new padronPrepagas({
+    const rta = await padronPrepagas.findOne({ dni: documento, sexo }).exec();
+    const prepagas = new padronPrepagas({
         dni: documento,
         sexo,
         idObraSocial: obraSocial.idObraSocial,
@@ -58,7 +58,7 @@ export async function actualizarPadronPrepagas(documento, sexo, obraSocial) {
 }
 
 export async function getPaciente(documento, sexo) {
-    let rta: any = await padronPrepagas.findOne({ dni: documento, sexo }).exec();
+    const rta: any = await padronPrepagas.findOne({ dni: documento, sexo }).exec();
     let resultOS;
     if (rta) {
         resultOS = { codigoPuco: null, nombre: null, financiador: rta.nombre, idObraSocial: rta.idObraSocial, prepaga: true, numeroAfiliado: rta.numeroAfiliado, id: rta.idPrepaga };

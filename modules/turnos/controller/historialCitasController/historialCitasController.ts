@@ -24,7 +24,7 @@ async function getHistorialFueraAgendas(pacienteId) {
         'solicitud.turno' : null
     };
     const fueraAgendas = await searchPrestaciones(paramsFueraAgenda);
-    let historialFueraAgendas = fueraAgendas.map((elem: any) => ({
+    const historialFueraAgendas = fueraAgendas.map((elem: any) => ({
         estado: 'fuera-agenda',
         horaInicio: elem.ejecucion.fecha,
         organizacion: elem.solicitud.organizacion,

@@ -26,4 +26,4 @@ const sumarSchema = new mongoose.Schema({
     embarazoactual: String
 });
 
-export let sumar: any = mongoose.model('sumar', sumarSchema, 'sumar');
+export const sumar: any = mongoose.model('sumar', sumarSchema, 'sumar');

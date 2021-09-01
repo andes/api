@@ -41,9 +41,8 @@ router.get('/operaciones/:module?', asyncHandler(async (req, res, next) => {
     if (!Auth.check(req, 'log:get')) {
         return next(403);
     }
-    let query;
 
-    query = log.find({});
+    const query = log.find({});
 
     if (req.params.module) {
         query.where('modulo').equals(req.params.module).sort({ fecha: -1 });

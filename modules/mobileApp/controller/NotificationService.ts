@@ -45,7 +45,7 @@ export class NotificationService {
                 campania: datosCampania.campania
             }
         };
-        let idPaciente = mongoose.Types.ObjectId(datosCampania.account.pacientes[0].id);
+        const idPaciente = mongoose.Types.ObjectId(datosCampania.account.pacientes[0].id);
         this.sendByPaciente(idPaciente, notificacion);
     }
 

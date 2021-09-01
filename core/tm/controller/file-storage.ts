@@ -67,7 +67,7 @@ export function streamToBase64(streamData) {
             chunks.push(chunk);
         });
         streamData.on('end', () => {
-            let result = Buffer.concat(chunks);
+            const result = Buffer.concat(chunks);
             return resolve(result.toString('base64'));
         });
         streamData.on('error', (err) => {

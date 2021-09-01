@@ -11,4 +11,4 @@ const schema = new mongoose.Schema({
     token: String
 });
 
-export let authApps = mongoose.model('authApps', schema, 'authApps');
+export const authApps = mongoose.model('authApps', schema, 'authApps');

@@ -103,8 +103,7 @@ router.get('/especialidades/:id*?', (req, res, next) => {
         const radix = 10;
         const skip: number = parseInt(req.query.skip || 0, radix);
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-        let query;
-        query = especialidad.find({}).skip(skip).limit(limit); // Trae todos
+        const query = especialidad.find({}).skip(skip).limit(limit); // Trae todos
         if (req.query.codigoSisa) { query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', 'i')); }
         if (req.query.nombre) { query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i')); }
         query.exec((err, data) => {

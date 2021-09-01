@@ -58,6 +58,7 @@ export function getPersonaSintys(nroDocumento: string) {
 export function formatearDatosSintys(datosSintys) {
     let ciudadano;
     let fecha;
+    // eslint-disable-next-line prefer-const
     ciudadano = new Object();
     // console.log('DATOSSINTYS----------->', datosSintys);
 
@@ -88,7 +89,7 @@ export function formatearDatosSintys(datosSintys) {
 }
 
 export async function getPacienteSintys(nroDocumento) {
-    let resultado = getPersonaSintys(nroDocumento);
+    const resultado = getPersonaSintys(nroDocumento);
     if (resultado) {
         return formatearDatosSintys(JSON.parse(resultado[1])[0]);
     }

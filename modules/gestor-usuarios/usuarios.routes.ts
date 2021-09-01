@@ -168,7 +168,7 @@ UsuariosRouter.post('/usuarios/:usuario/disclaimers/:disclaimer', Auth.authentic
     try {
         const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
         if (user) {
-            let disclaimer: any = {};
+            const disclaimer: any = {};
             disclaimer.createdAt = new Date();
             disclaimer._id = req.params.disclaimer;
             user.disclaimers.push(disclaimer);

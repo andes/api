@@ -30,4 +30,4 @@ nomivacEsquemaSchema.index({
     'vacuna._id': 1,
     'condicion._id': 1
 });
-export let nomivacEsquema = mongoose.model('nomivacEsquemas', nomivacEsquemaSchema, 'nomivacEsquemas');
+export const nomivacEsquema = mongoose.model('nomivacEsquemas', nomivacEsquemaSchema, 'nomivacEsquemas');

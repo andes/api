@@ -280,7 +280,7 @@ export async function exportSisa(done, horas) {
                 };
             }
 
-            let info = new InformacionExportada(log);
+            const info = new InformacionExportada(log);
             await info.save();
 
         } catch (error) {
@@ -289,7 +289,7 @@ export async function exportSisa(done, horas) {
                 id_caso: '',
                 description: error.toString()
             };
-            let info = new InformacionExportada(log);
+            const info = new InformacionExportada(log);
             await info.save();
         }
 

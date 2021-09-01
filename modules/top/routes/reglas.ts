@@ -19,8 +19,8 @@ router.post('/reglas', async (req, res, next) => {
             };
             await ReglasTOP.deleteMany(params);
         }
-        let grabarReglas = ArrReglas.map(async (regla) => {
-            let unaRegla = new ReglasTOP(regla);
+        const grabarReglas = ArrReglas.map(async (regla) => {
+            const unaRegla = new ReglasTOP(regla);
             Auth.audit(unaRegla, req);
             return unaRegla.save();
         });

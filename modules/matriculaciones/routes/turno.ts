@@ -3,7 +3,7 @@ import { Auth } from '../../../auth/auth.class';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import * as turno from '../schemas/turno';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
-let router = express.Router();
+const router = express.Router();
 
 
 router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
@@ -61,7 +61,7 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                 if (error) {
                     return errorHandler(error);
                 }
-                let data2 = data.filter((x: any) => x.profesional !== null);
+                const data2 = data.filter((x: any) => x.profesional !== null);
 
                 if (data2) {
                     res.send(data2);
@@ -71,13 +71,13 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                 }
             });
         } else {
-            let data = await turno.find({ fecha: { $gte: new Date() }, anulado: { $exists: false } }).populate({
+            const data = await turno.find({ fecha: { $gte: new Date() }, anulado: { $exists: false } }).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento }
             });
-            let data2 = data.filter((x: any) => x.profesional !== null);
+            const data2 = data.filter((x: any) => x.profesional !== null);
 
-            let match = data2.length > 0 ? data2[0] : [];
+            const match = data2.length > 0 ? data2[0] : [];
 
             res.send(match);
 
@@ -199,9 +199,9 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
 router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
     if (req.query.fecha) {
         const fecha = new Date(req.query.fecha);
-        let anio = fecha.getFullYear();
-        let mes = fecha.getMonth() + 1;
-        let aggregate = await turno.aggregate(
+        const anio = fecha.getFullYear();
+        const mes = fecha.getMonth() + 1;
+        const aggregate = await turno.aggregate(
             [
                 {
                     $match: {
@@ -241,7 +241,7 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
 
 
     }
-    let matchObj = {
+    const matchObj = {
         // comentado para diferenciar los diferentes tipo de turnos y filtrar por lo mismo
         // tipo: request.params.tipo
     };
@@ -259,7 +259,7 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
     }
 
     if (!req.query.dia) {
-        let aggregate = await turno.aggregate(
+        const aggregate = await turno.aggregate(
             [
                 {
                     $match: {
@@ -297,7 +297,7 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
         response.json(aggregate);
 
     } else {
-        let aggregate = await turno.aggregate(
+        const aggregate = await turno.aggregate(
             [
                 {
                     $match: {

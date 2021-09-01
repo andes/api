@@ -1,7 +1,7 @@
 import { Paciente } from '../core-v2/mpi/paciente/paciente.schema';
 import { PacienteCtr } from '../core-v2/mpi/paciente/paciente.routes';
 import { userScheduler } from '../config.private';
-let dataLog: any = new Object(userScheduler);
+const dataLog: any = new Object(userScheduler);
 dataLog.body = { _id: null };
 dataLog.method = null;
 
@@ -11,7 +11,7 @@ async function run(done) {
     const updatePatient = async (pac) => {
         try {
             if (!pac.foto || !pac.foto.length && pac.fotoId) {
-                let data = { fotoId: undefined };
+                const data = { fotoId: undefined };
                 await PacienteCtr.update(pac.id, data, dataLog);
             }
         } catch (error) {

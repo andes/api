@@ -17,8 +17,8 @@ export async function updatePerinatalFechaFinEmbarazo() {
     // se obtienen los registros de pacientes que no contengan fecha fin embarazo
     const query = { fechaFinEmbarazo: null };
 
-    let listaCarnetPerinatal: any = await CarnetPerinatal.find(query);
-    for (let regPerinatal of listaCarnetPerinatal) {
+    const listaCarnetPerinatal: any = await CarnetPerinatal.find(query);
+    for (const regPerinatal of listaCarnetPerinatal) {
         try {
             await actualizarRegistro(regPerinatal);
         } catch (err) {
@@ -29,7 +29,7 @@ export async function updatePerinatalFechaFinEmbarazo() {
 
 
 export async function actualizarRegistro(registroPer: any) {
-    let documento = registroPer.paciente.documento;
+    const documento = registroPer.paciente.documento;
     if (documento) {
         const resultSP = await getPacienteSP({ documento });
 
@@ -39,7 +39,7 @@ export async function actualizarRegistro(registroPer: any) {
 
             const numGesta = getNumGesta(registroPer.embarazo).toString() || null;
 
-            let embarazoSP = numGesta ? pacienteSP['pregnancies'][numGesta] : null;
+            const embarazoSP = numGesta ? pacienteSP['pregnancies'][numGesta] : null;
 
             if (embarazoSP) {
                 // se actualiza fechaFinEmbarazo

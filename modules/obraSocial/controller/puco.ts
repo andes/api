@@ -12,7 +12,7 @@ export async function obtenerVersiones() {
     if (!checkConnection()) {
         return [];
     }
-    let versiones = await Puco.distinct('version').exec(); // esta consulta obtiene un arreglo de strings
+    const versiones = await Puco.distinct('version').exec(); // esta consulta obtiene un arreglo de strings
     for (let i = 0; i < versiones.length; i++) {
         versiones[i] = { version: versiones[i] };
     }
@@ -21,7 +21,7 @@ export async function obtenerVersiones() {
 }
 
 export async function pacientePuco(documento, sexo) {
-    let resultOS = [];
+    const resultOS = [];
     const osPuco = await getOSPuco(documento, sexo);
     if (osPuco.length > 0) {
         // genera un array con todas las obras sociales para una version de padron dada

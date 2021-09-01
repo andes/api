@@ -9,7 +9,7 @@ export async function sendMailComprobanteDerivacion(derivacion, to) {
     const fileName: any = await comprobante.informe(opciones);
     const fechaFinalizacion = moment(derivacion.historial.createdAt).format('DD/MM/YYYY');
 
-    let attachments = [{
+    const attachments = [{
         filename: `comprobante derivacion ${derivacion.paciente.nombre}${derivacion.paciente.apellido}-${fechaFinalizacion}.pdf`,
         path: fileName
     }];

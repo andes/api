@@ -3,7 +3,7 @@ import { ProfesionalBaseSchema } from './../../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-export let PrestacionSolicitudHistorialschema = new mongoose.Schema({
+export const PrestacionSolicitudHistorialschema = new mongoose.Schema({
     accion: String,
     descripcion: String,
     profesional: ProfesionalBaseSchema,

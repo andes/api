@@ -318,7 +318,7 @@ export async function changeTime({ organizacion, capa, ambito }: InternacionConf
  * Chequea la integridad de los estados de las camas.
  */
 export async function integrityCheck({ organizacion, capa, ambito }: InternacionConfig, { cama, from, to }) {
-    let res = [];
+    const res = [];
     let start = from || moment('1900-01-01').toDate();
     let end = to || moment().toDate();
     if (start.getTime() > end.getTime()) {

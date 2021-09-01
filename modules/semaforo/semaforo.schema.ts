@@ -19,4 +19,4 @@ export const SemaforoSchema = new mongoose.Schema({
 });
 
 SemaforoSchema.plugin(AuditPlugin);
-export let Semaforo = mongoose.model('semaforo', SemaforoSchema, 'semaforo');
+export const Semaforo = mongoose.model('semaforo', SemaforoSchema, 'semaforo');

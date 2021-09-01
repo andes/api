@@ -10,7 +10,7 @@ export async function storeFile(base64, metadata) {
         const match = base64.match(base64RegExp);
         const mime = match[1];
         const data = match[2];
-        let writePromise = new Promise((resolve) => {
+        const writePromise = new Promise((resolve) => {
             const uniqueId = new Types.ObjectId();
             const input = new stream.PassThrough();
             const decoder64 = base64_stream.decode();
@@ -28,7 +28,7 @@ export async function storeFile(base64, metadata) {
             );
             input.end(data);
         });
-        let result = await writePromise;
+        const result = await writePromise;
         return result;
     } catch (e) {
         return e;

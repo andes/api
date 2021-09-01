@@ -153,7 +153,7 @@ export const checkMobile = (profesionalId) => {
  */
 export async function setValidationTokenAndNotify(username) {
     try {
-        let usuario = await AuthUsers.findOne({ usuario: username });
+        const usuario = await AuthUsers.findOne({ usuario: username });
         if (usuario && usuario.tipo === 'temporal' && usuario.email) {
             usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
             usuario.audit(userScheduler);
@@ -191,7 +191,7 @@ export async function setValidationTokenAndNotify(username) {
  */
 export async function reset(token, password) {
     try {
-        let usuario = await AuthUsers.findOne({ validationToken: token });
+        const usuario = await AuthUsers.findOne({ validationToken: token });
         if (usuario) {
             usuario.validationToken = null;
             usuario.password = sha1Hash(password);
@@ -213,7 +213,7 @@ export async function updateUserPermisos(req) {
     const permisos = getPermisosByType(req.body.tipoPermisos);
 
     if (permisos && permisos.length) {
-        let organizacionPermisos = user.organizaciones;
+        const organizacionPermisos = user.organizaciones;
         if (organizacionPermisos && organizacionPermisos.length) {
             permisos.forEach(e => {
                 organizacionPermisos.forEach(op => {
@@ -236,7 +236,7 @@ export async function updateUserPermisos(req) {
 }
 
 export async function createUser(data) {
-    let user = new AuthUsers();
+    const user = new AuthUsers();
     user.usuario = data.documento;
     user.documento = data.documento;
     user.activo = true;

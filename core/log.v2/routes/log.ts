@@ -3,7 +3,7 @@ import * as logger from '@andes/log';
 import * as mongoose from 'mongoose';
 import * as config from '../../../config';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/', async (req, res, next) => {
     // Disable Auth for tests
@@ -15,11 +15,11 @@ router.get('/', async (req, res, next) => {
     }
 
     // Paginado
-    let skip = parseInt(req.query.skip || 0, 10);
-    let limit = Math.min(parseInt(req.query.limit || config.defaultLimit, 15), config.maxLimit);
+    const skip = parseInt(req.query.skip || 0, 10);
+    const limit = Math.min(parseInt(req.query.limit || config.defaultLimit, 15), config.maxLimit);
     // Ejecuta la consulta
     try {
-        let data = await logger.query(req.query.key || (req.query.keyRegEx && new RegExp(req.query.key, 'g')),
+        const data = await logger.query(req.query.key || (req.query.keyRegEx && new RegExp(req.query.key, 'g')),
             req.query.paciente && mongoose.Types.ObjectId(req.query.paciente),
             req.query.desde,
             req.query.hasta,

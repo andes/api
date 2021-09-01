@@ -6,7 +6,6 @@ import { defaultLimit, maxLimit } from './../../../config';
 const router = express.Router();
 
 router.get('/cie10', async (req, res, next) => {
-    let query;
     const conditions = {};
     let termino: String = '';
     // conditions['$and'] = [];
@@ -30,10 +29,10 @@ router.get('/cie10', async (req, res, next) => {
 
     if (req.query.filtroRango) {
         whereConditions['$and'] = [];
-        let orRango = {};
+        const orRango = {};
         orRango['$or'] = [];
-        let filtroRango = JSON.parse(req.query.filtroRango);
-        for (let rango of filtroRango) {
+        const filtroRango = JSON.parse(req.query.filtroRango);
+        for (const rango of filtroRango) {
             orRango['$or'].push({ codigo: { $gt: rango.desde, $lt: rango.hasta } });
         }
         whereConditions['$and'].push(conditions);
@@ -41,13 +40,13 @@ router.get('/cie10', async (req, res, next) => {
     } else {
         whereConditions = conditions;
     }
-    query = cie10.model.find(whereConditions);
+    const query = cie10.model.find(whereConditions);
     const skip = parseInt(req.query.skip || 0, 10);
     const limit = Math.min(parseInt(req.query.limit || defaultLimit, 15), maxLimit);
     query.skip(skip);
     query.limit(limit);
     try {
-        let codigoCie = await query.exec();
+        const codigoCie = await query.exec();
         res.json(codigoCie);
     } catch (err) {
         return next(err);

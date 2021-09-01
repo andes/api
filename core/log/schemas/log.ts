@@ -13,7 +13,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
  *
  */
 
-export let logSchema = new mongoose.Schema({
+export const logSchema = new mongoose.Schema({
     fecha: {
         type: Date
     },
@@ -64,4 +64,4 @@ export let logSchema = new mongoose.Schema({
 
 logSchema.index({ modulo: 1, operacion: 1 });
 
-export let log = mongoose.model('log', logSchema, 'log');
+export const log = mongoose.model('log', logSchema, 'log');

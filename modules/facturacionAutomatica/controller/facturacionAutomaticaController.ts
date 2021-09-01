@@ -1,7 +1,7 @@
 import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutomatica';
 
 export async function getConfigFacturacionAutomatica(query) {
-    let params = {};
+    const params = {};
     if ((query.idPrestacionEjecutada) && (query.idPrestacionEjecutada !== 'undefined') && (query.idPrestacionEjecutada !== 'null')) {
         params['prestacionSnomed.conceptId'] = query.idPrestacionEjecutada;
     }

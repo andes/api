@@ -16,7 +16,7 @@ export interface IInstitucion extends Document {
     };
 }
 
-export let InstitucionSchema = new Schema({
+export const InstitucionSchema = new Schema({
     nombre: String,
     detalle: String,
     tipo: String,

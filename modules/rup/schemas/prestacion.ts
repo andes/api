@@ -192,32 +192,32 @@ PrestacionHistorialSchema.plugin(AuditPlugin);
 
 // Valida el esquema
 PrestacionSchema.pre('save', function (next) {
-    let prestacion: any = this;
+    const prestacion: any = this;
     if (!prestacion.inicio) {
         prestacion.inicio = getInicioPrestacion(prestacion);
     }
 
     if (!prestacion.solicitud.tipoPrestacion.noNominalizada && !prestacion.paciente.id) {
-        let err = new Error('Debe seleccionar el paciente');
+        const err = new Error('Debe seleccionar el paciente');
         return next(err);
     }
 
     // Prestación debe tener organización asignada
     // Solicitudes deben tener organización origen asignada
     if (!prestacion.solicitud.organizacion.id && (prestacion.solicitud.tipoPrestacionOrigen.conceptId && prestacion.solicitud.organizacionOrigen.id)) {
-        let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
+        const err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
         return next(err);
     }
 
     prestacion.estadoActual = prestacion.estados[prestacion.estados.length - 1];
     if (prestacion.estadoActual.tipo === 'ejecucion') {
         if (!prestacion.ejecucion.fecha && !prestacion.createdAt) {
-            let err = new Error('Debe seleccionar la fecha en que se solicita');
+            const err = new Error('Debe seleccionar la fecha en que se solicita');
             return next(err);
         }
 
         if (!prestacion.ejecucion.organizacion && !prestacion.solicitud.organizacion.id) {
-            let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
+            const err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }
     }

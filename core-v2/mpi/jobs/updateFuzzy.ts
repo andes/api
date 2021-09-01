@@ -27,7 +27,7 @@ export const generateTokensPatient = async (done) => {
     const cursor = Paciente.find({ tokens: { $exists: false } }).cursor({ batchSize: 100 });
     const updatePatient = async (data) => {
         try {
-            let words = [];
+            const words = [];
             if (data.documento) {
                 words.push(data.documento.toLowerCase());
             }

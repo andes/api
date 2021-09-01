@@ -19,7 +19,7 @@ router.get('/configuracionPrestaciones/:id*?', (req, res, next) => {
                 res.json(data);
             });
     } else {
-        let query = configuracionPrestacion.configuracionPrestacionModel.find({});
+        const query = configuracionPrestacion.configuracionPrestacionModel.find({});
         if (req.query.snomed) {
             query.where({ 'snomed.conceptId': req.query.snomed });
         }

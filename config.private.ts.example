@@ -57,10 +57,10 @@ export const hosts = {
     }
 };
 // Mongoose config
-export let mongooseDebugMode = false;
+export const mongooseDebugMode = false;
 
 // Swagger config
-export let enableSwagger = false;
+export const enableSwagger = false;
 
 // Configuración de Google Geocoding
 export const geoKey = getEnv('GOOGLE_MAP_KEY', 'GOOGLE_MAP_KEY');
