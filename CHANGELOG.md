@@ -1,3 +1,10 @@
+## [5.59.1](https://github.com/andes/api/compare/v5.59.0...v5.59.1) (2021-09-01)
+
+
+### Bug Fixes
+
+* **VAC:** Corrige error de tipos en evento que elimina vacuna de nomivac ([#1525](https://github.com/andes/api/issues/1525)) ([d466975](https://github.com/andes/api/commit/d4669751f2868687deb5a23e3e21fbae1de6d149))
+
 # [5.59.0](https://github.com/andes/api/compare/v5.58.1...v5.59.0) (2021-08-25)
 
 
