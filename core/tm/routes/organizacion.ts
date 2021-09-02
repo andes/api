@@ -13,7 +13,6 @@ import { Organizacion } from '../schemas/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
-
 router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     if (req.params.id) {
         Organizacion
@@ -199,13 +198,14 @@ router.get('/organizaciones', async (req, res, next) => {
         };
     }
 
-    const skip = parseInt(req.query.skip, 10) || 0;
-    const limit = parseInt(req.query.limit, 10) || 15;
-    const query = Organizacion.find(filtros)
-        .skip(skip)
-        .limit(limit)
-        .sort({ nombre: 1 });
+    const query = Organizacion.find(filtros).sort({ nombre: 1 });
 
+    if (req.query.skip){
+        query.skip(parseInt(req.query.skip, 10));
+    }
+    if(req.query.limit){
+        query.limit(parseInt(req.query.limit, 10));
+    }
     if (req.query.fields) {
         query.select(req.query.fields);
     }
