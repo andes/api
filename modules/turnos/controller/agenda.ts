@@ -225,12 +225,20 @@ export function codificarTurno(req, data, tid) {
                     err: 'No se encontro prestacion para el turno'
                 });
             }
-            const arrPrestacion = data1 as any;
+            const arrPrestaciones = data1 as any;
             const codificaciones = [];
-            if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
-                const prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                    return f.concepto.semanticTag !== 'elemento de registro';
+            let prestaciones = [];
+            const esEjecucion = arrPrestaciones.every(prestacion => prestacion.ejecucion);
+
+            if (arrPrestaciones.length > 0 && esEjecucion) {
+
+                arrPrestaciones.forEach(arrPrestacion => {
+                    const presta = arrPrestacion.ejecucion.registros.filter(f =>
+                        f.concepto.semanticTag !== 'elemento de registro'
+                    );
+                    prestaciones = [...prestaciones, ...presta];
                 });
+
                 prestaciones.forEach(async registro => {
                     const parametros = {
                         conceptId: registro.concepto.conceptId,
@@ -568,9 +576,13 @@ export function getTurnoAnterior(req, agenda, idTurno = null) {
 
 export function combinarFechas(fecha1, fecha2) {
     if (fecha1 && fecha2) {
-        const auxiliar = new Date(fecha1);
-        const horas = fecha2.getHours();
-        const minutes = fecha2.getMinutes();
+        let horas: number;
+        let minutes: number;
+        let auxiliar: Date;
+
+        auxiliar = new Date(fecha1);
+        horas = fecha2.getHours();
+        minutes = fecha2.getMinutes();
         auxiliar.setHours(horas, minutes, 0, 0);
         return auxiliar;
     } else {
@@ -580,13 +592,14 @@ export function combinarFechas(fecha1, fecha2) {
 
 export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
 
+    let countBloques;
     let esHoy = false;
     // Ver si el día de la agenda coincide con el día de hoy
     if (agenda.horaInicio >= moment(new Date()).startOf('day').toDate() && agenda.horaInicio <= moment(new Date()).endOf('day').toDate()) {
         esHoy = true;
     }
 
-    const countBloques = {
+    countBloques = {
         delDia: esHoy ? (
             (agenda.bloques[posBloque].restantesDelDia as number) +
             (agenda.bloques[posBloque].restantesProgramados as number) +
