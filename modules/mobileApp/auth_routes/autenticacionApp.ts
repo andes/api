@@ -223,50 +223,45 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         const email = req.body.email;
         const fcmToken = req.body.fcmToken;
 
-        const cuenta = await PacienteAppCtr.findOne({ documento: String(documento), sexo });
-        const usrprof = cuenta && (cuenta.email === cuenta.documento);
-        if (!usrprof && cuenta && String(cuenta.email) !== email) {
-            return res.status(404).send('Ya existe una cuenta asociada a su documento');
+        const cuentas = await PacienteAppCtr.search({ documento: String(documento), sexo, activacionApp: true });
+        // Verifica si el paciente se encuentra registrado y activo en la app mobile
+        const cuentaPaciente = cuentas.filter(c => {return c.pacientes.length;});
+        if (cuentaPaciente.length > 0) {
+            return res.status(404).send('Ya existe una cuenta activa asociada a su documento');
         }
-        // Verifica si se encuentra inscripto previamente
-        const pacienteApp = await PacienteAppCtr.findOne({ email });
-        if (!pacienteApp) {
-            req.body.validado = false;
-            req.body.estado = 'pendiente';
-            // Realiza la búsqueda en Renaper
-            const pacienteValidado = await validar(documento, sexo);
-            if (pacienteValidado) {
-                const tramite = Number(req.body.tramite);
-                // Verifica el número de trámite
-                if (pacienteValidado.idTramite !== tramite) {
-                    return res.status(404).send('Número de trámite inválido');
-                }
-                req.body.nombre = pacienteValidado.nombre;
-                req.body.apellido = pacienteValidado.apellido;
-                req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
-                req.body.validado = true;
-            } else {
-                return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
+        req.body.validado = false;
+        req.body.estado = 'pendiente';
+        // Realiza la búsqueda en Renaper
+        const pacienteValidado = await validar(documento, sexo);
+        if (pacienteValidado) {
+            const tramite = Number(req.body.tramite);
+            // Verifica el número de trámite
+            if (pacienteValidado.idTramite !== tramite) {
+                return res.status(404).send('Número de trámite inválido');
             }
-            // Busca el paciente y si no existe lo guarda
-            await extractFoto(pacienteValidado, configPrivate.userScheduler);
-            const paciente = await findOrCreate(pacienteValidado, configPrivate.userScheduler);
-            let inscripcion = {};
-            if (paciente && paciente.id) {
-                const passw = generarCodigoVerificacion();
-                req.body.pacientes = [{
-                    id: paciente.id,
-                    relacion: 'principal',
-                    addedAt: new Date()
-                }];
-                req.body.password = passw;
-                inscripcion = await PacienteAppCtr.create(req.body, req);
-                enviarCodigoVerificacion(inscripcion, passw, fcmToken);
-            }
-            return res.json(inscripcion);
+            req.body.nombre = pacienteValidado.nombre;
+            req.body.apellido = pacienteValidado.apellido;
+            req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
+            req.body.validado = true;
         } else {
-            return res.status(404).send('Ya existe una cuenta registrada con el email ingresado');
+            return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
         }
+        // Busca el paciente y si no existe lo guarda
+        await extractFoto(pacienteValidado, configPrivate.userScheduler);
+        const paciente = await findOrCreate(pacienteValidado, configPrivate.userScheduler);
+        let registro = {};
+        if (paciente && paciente.id) {
+            const passw = generarCodigoVerificacion();
+            req.body.pacientes = [{
+                id: paciente.id,
+                relacion: 'principal',
+                addedAt: new Date()
+            }];
+            req.body.password = passw;
+            registro = await PacienteAppCtr.create(req.body, req);
+            enviarCodigoVerificacion(registro, passw, fcmToken);
+        }
+        return res.json(registro);
     } catch (err) {
         return next(err);
     }
