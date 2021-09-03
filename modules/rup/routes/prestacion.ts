@@ -113,7 +113,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, ne
 
         // Para cada prestación del paciente se busca si contiene una 'consultaPrincipal'
         prestaciones.forEach((prestacion: any) => {
-            let registros = [];
+            const registros = [];
             let motivoConsulta;
             let resultBusqueda = [];
             // recorremos los registros de cada prestacion del paciente.
@@ -175,8 +175,8 @@ router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
 router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
         let indice = 'TOP-ENTRADA';
-        let pipeline = [];
-        let match: any = { $and: [] };
+        const pipeline = [];
+        const match: any = { $and: [] };
 
         if (!req.query.idPaciente) {
             match.$and.push({ inicio: 'top' });
@@ -269,7 +269,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
         pipeline.push({ $match: match });
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
-        let project = {
+        const project = {
             $project: {
                 id: '$_id',
                 inicio: 1,
@@ -305,7 +305,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                     $match: { 'paciente.id': Types.ObjectId(req.query.paciente) }
                 });
             } else {
-                let conditions = {};
+                const conditions = {};
                 conditions['$and'] = [];
                 const words = req.query.paciente.toUpperCase().split(' ');
                 words.forEach((word) => {
@@ -320,7 +320,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             }
         }
 
-        let sort = {};
+        const sort = {};
         sort['esPrioritario'] = 1;
 
         if (req.query.ordenFecha || req.query.ordenFechaAsc) {
@@ -510,7 +510,7 @@ router.get('/prestaciones', async (req: any, res, next) => {
 
 router.post('/prestaciones', async (req, res, next) => {
     try {
-        let dto = parseDate(JSON.stringify(req.body));
+        const dto = parseDate(JSON.stringify(req.body));
 
         if (dto.inicio === 'top') {
             updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
@@ -757,7 +757,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
         }
     }
     const registros = prestacion.getRegistros(true);
-    let tags = {};
+    const tags = {};
     for (const reg of registros) {
         if (reg.elementoRUP) {
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);
