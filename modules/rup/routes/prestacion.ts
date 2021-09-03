@@ -113,7 +113,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, ne
 
         // Para cada prestación del paciente se busca si contiene una 'consultaPrincipal'
         prestaciones.forEach((prestacion: any) => {
-            const registros = [];
+            let registros = [];
             let motivoConsulta;
             let resultBusqueda = [];
             // recorremos los registros de cada prestacion del paciente.
@@ -175,8 +175,8 @@ router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
 router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
         let indice = 'TOP-ENTRADA';
-        const pipeline = [];
-        const match: any = { $and: [] };
+        let pipeline = [];
+        let match: any = { $and: [] };
 
         if (!req.query.idPaciente) {
             match.$and.push({ inicio: 'top' });
@@ -260,7 +260,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             tipoPrestaciones = Array.isArray(tipoPrestaciones) ? tipoPrestaciones : [tipoPrestaciones];
             match.$and.push({
                 $or: [{ 'solicitud.tipoPrestacion.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } },
-                      { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
+                { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
             });
         }
 
@@ -269,7 +269,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         }
         pipeline.push({ $match: match });
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
-        const project = {
+        let project = {
             $project: {
                 id: '$_id',
                 inicio: 1,
@@ -305,7 +305,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                     $match: { 'paciente.id': Types.ObjectId(req.query.paciente) }
                 });
             } else {
-                const conditions = {};
+                let conditions = {};
                 conditions['$and'] = [];
                 const words = req.query.paciente.toUpperCase().split(' ');
                 words.forEach((word) => {
@@ -320,7 +320,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             }
         }
 
-        const sort = {};
+        let sort = {};
         sort['esPrioritario'] = 1;
 
         if (req.query.ordenFecha || req.query.ordenFechaAsc) {
@@ -510,14 +510,15 @@ router.get('/prestaciones', async (req: any, res, next) => {
 
 router.post('/prestaciones', async (req, res, next) => {
     try {
-        const dto = parseDate(JSON.stringify(req.body));
+        let dto = parseDate(JSON.stringify(req.body));
 
         if (dto.inicio === 'top') {
             updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
         }
 
         const estado = dto.estados[dto.estados.length - 1].tipo;
-        if (dto.solicitud.turno && estado !== 'modificada') {
+
+        if (dto.solicitud.turno && estado !== 'modificada' && !dto.groupId) {
             const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno, 'estadoActual.tipo': { $ne: 'modificada' } });
             if (prestacionIniciada > 0) {
                 return next('ya_iniciada');
@@ -756,7 +757,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
         }
     }
     const registros = prestacion.getRegistros(true);
-    const tags = {};
+    let tags = {};
     for (const reg of registros) {
         if (reg.elementoRUP) {
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);
