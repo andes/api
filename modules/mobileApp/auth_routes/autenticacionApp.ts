@@ -229,39 +229,45 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         if (cuentaPaciente.length > 0) {
             return res.status(404).send('Ya existe una cuenta activa asociada a su documento');
         }
-        req.body.validado = false;
-        req.body.estado = 'pendiente';
-        // Realiza la búsqueda en Renaper
-        const pacienteValidado = await validar(documento, sexo);
-        if (pacienteValidado) {
-            const tramite = Number(req.body.tramite);
-            // Verifica el número de trámite
-            if (pacienteValidado.idTramite !== tramite) {
-                return res.status(404).send('Número de trámite inválido');
+        const pacienteApp = await PacienteAppCtr.findOne({ email });
+        if (!pacienteApp) {
+            req.body.validado = false;
+            req.body.estado = 'pendiente';
+            // Realiza la búsqueda en Renaper
+            const pacienteValidado = await validar(documento, sexo);
+            if (pacienteValidado) {
+                const tramite = Number(req.body.tramite);
+                // Verifica el número de trámite
+                if (pacienteValidado.idTramite !== tramite) {
+                    return res.status(404).send('Número de trámite inválido');
+                }
+                req.body.nombre = pacienteValidado.nombre;
+                req.body.apellido = pacienteValidado.apellido;
+                req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
+                req.body.validado = true;
+            } else {
+                return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
             }
-            req.body.nombre = pacienteValidado.nombre;
-            req.body.apellido = pacienteValidado.apellido;
-            req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
-            req.body.validado = true;
+            // Busca el paciente y si no existe lo guarda
+            await extractFoto(pacienteValidado, configPrivate.userScheduler);
+            const paciente = await findOrCreate(pacienteValidado, configPrivate.userScheduler);
+            let registro = {};
+            if (paciente && paciente.id) {
+                const passw = generarCodigoVerificacion();
+                req.body.pacientes = [{
+                    id: paciente.id,
+                    relacion: 'principal',
+                    addedAt: new Date()
+                }];
+                req.body.password = passw;
+                registro = await PacienteAppCtr.create(req.body, req);
+                enviarCodigoVerificacion(registro, passw, fcmToken);
+            }
+            return res.json(registro);
         } else {
-            return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
+            // eslint-disable-next-line no-console
+            console.log('verificar si es el mismo mail y en dicho caso actualizar');
         }
-        // Busca el paciente y si no existe lo guarda
-        await extractFoto(pacienteValidado, configPrivate.userScheduler);
-        const paciente = await findOrCreate(pacienteValidado, configPrivate.userScheduler);
-        let registro = {};
-        if (paciente && paciente.id) {
-            const passw = generarCodigoVerificacion();
-            req.body.pacientes = [{
-                id: paciente.id,
-                relacion: 'principal',
-                addedAt: new Date()
-            }];
-            req.body.password = passw;
-            registro = await PacienteAppCtr.create(req.body, req);
-            enviarCodigoVerificacion(registro, passw, fcmToken);
-        }
-        return res.json(registro);
     } catch (err) {
         return next(err);
     }
