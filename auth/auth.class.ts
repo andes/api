@@ -141,7 +141,7 @@ export class Auth {
      */
 
     static optionalAuth() {
-        return (req, res, next) => {
+        return [(req, res, next) => {
             try {
                 const extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
                 const token = extractor(req);
@@ -153,7 +153,9 @@ export class Auth {
             } catch (e) {
                 next();
             }
-        };
+        },
+                this.recovertPayloadMiddleware()
+        ];
     }
 
     /**

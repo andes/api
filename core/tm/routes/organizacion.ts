@@ -145,7 +145,7 @@ router.get('/organizaciones/:id', async (req, res, next) => {
     }
 });
 
-router.get('/organizaciones', async (req, res, next) => {
+router.get('/organizaciones', Auth.optionalAuth(), async (req, res, next) => {
     let filtros = {};
     if (req.query.nombre) {
         filtros['nombre'] = {
@@ -179,8 +179,8 @@ router.get('/organizaciones', async (req, res, next) => {
     }
 
     if (req.query.user) {
-        const user = await AuthUsers.findOne({ usuario: req.query.user });
-        if (!user.permisosGlobales.some(p => p === 'global:organizaciones:write')){
+        const user: any = await AuthUsers.findOne({ usuario: req.query.user });
+        if (!Auth.check(req, 'global:organizaciones:write')){
             const organizaciones = user.organizaciones
                 .filter(x => x.activo)
                 .map((item: any) => new Types.ObjectId(item._id));
