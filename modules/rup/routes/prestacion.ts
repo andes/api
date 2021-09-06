@@ -260,7 +260,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             tipoPrestaciones = Array.isArray(tipoPrestaciones) ? tipoPrestaciones : [tipoPrestaciones];
             match.$and.push({
                 $or: [{ 'solicitud.tipoPrestacion.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } },
-                { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
+                      { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
             });
         }
 
