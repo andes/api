@@ -29,6 +29,7 @@ export const ProfesionalBaseSchema = new mongoose.Schema({
 
 export const ProfesionalSchema = ProfesionalBaseSchema.clone();
 ProfesionalSchema.add({
+    activo: { type: Boolean, required: false },
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
     apellido: { type: String, required: false },
