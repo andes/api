@@ -5,7 +5,6 @@ import * as turno from '../schemas/turno';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 const router = express.Router();
 
-
 router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
 
     turno.findByIdAndUpdate(request.params.turnoId, request.body, { new: true }, (err, res) => {
@@ -24,26 +23,34 @@ router.post('/turnos/:tipo/:profesionalId/', async (req, res, next) => {
     // Convert date to user datetime.
     try {
         const fechaTurno = new Date(req.body.turno.fecha);
-        if (req.body.sobreTurno) {
-            const datos = await Profesional.findById(req.params.profesionalId);
-            const nTurno = new turno({
-                fecha: fechaTurno,
-                tipo: req.body.turno.tipo,
-                profesional: datos
-            });
-            await nTurno.save();
-            return res.json(nTurno);
+        const busquedaTurno = {
+            $and: [
+                { anulado: { $exists: false } },
+                { fecha: fechaTurno }
+            ]
+        };
+        const turnos = await turno.find(busquedaTurno);
+        if (!turnos.length) {
+            let datos = null;
+            const profesionalId = req.params.profesionalId;
+
+            if (req.body.sobreTurno) {
+                datos = await Profesional.findById(profesionalId);
+            } else {
+                datos = await turnoSolicitado.findById(profesionalId);
+            }
+
+            if (datos) {
+                const nTurno = new turno({
+                    fecha: fechaTurno,
+                    tipo: req.body.turno.tipo,
+                    profesional: datos
+                });
+                await nTurno.save();
+                return res.json(nTurno);
+            }
         } else {
-            const datos = await turnoSolicitado.findById(req.params.profesionalId);
-            const nTurno = new turno({
-                fecha: fechaTurno,
-                tipo: req.body.turno.tipo,
-                profesional: datos
-            });
-
-            await nTurno.save();
-            return res.json(nTurno);
-
+            return next('El horario seleccionado ya no se encuentra disponible.');
         }
     } catch (err) {
         return next(err);
