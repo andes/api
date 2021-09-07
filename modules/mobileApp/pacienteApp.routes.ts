@@ -12,6 +12,7 @@ class PacienteAppResource extends ResourceBase {
         documento: MongoQuery.partialString,
         email: MongoQuery.partialString,
         sexo: MongoQuery.partialString,
+        activacionApp: MongoQuery.equalMatch,
         search: ['documento', 'email']
     };
 }
