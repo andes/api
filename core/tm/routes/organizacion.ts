@@ -13,7 +13,6 @@ import { Organizacion } from '../schemas/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
-
 router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     if (req.params.id) {
         Organizacion
@@ -146,7 +145,7 @@ router.get('/organizaciones/:id', async (req, res, next) => {
     }
 });
 
-router.get('/organizaciones', async (req, res, next) => {
+router.get('/organizaciones', Auth.optionalAuth(), async (req, res, next) => {
     let filtros = {};
     if (req.query.nombre) {
         filtros['nombre'] = {
@@ -180,11 +179,13 @@ router.get('/organizaciones', async (req, res, next) => {
     }
 
     if (req.query.user) {
-        const user = await AuthUsers.findOne({ usuario: req.query.user });
-        const organizaciones = user.organizaciones
-            .filter(x => x.activo)
-            .map((item: any) => new Types.ObjectId(item._id));
-        filtros['_id'] = { $in: organizaciones };
+        const user: any = await AuthUsers.findOne({ usuario: req.query.user });
+        if (!Auth.check(req, 'global:organizaciones:write')){
+            const organizaciones = user.organizaciones
+                .filter(x => x.activo)
+                .map((item: any) => new Types.ObjectId(item._id));
+            filtros['_id'] = { $in: organizaciones };
+        }
     }
 
     if (req.query.ids) {
@@ -197,7 +198,14 @@ router.get('/organizaciones', async (req, res, next) => {
         };
     }
 
-    const query = Organizacion.find(filtros);
+    const query = Organizacion.find(filtros).sort({ nombre: 1 });
+
+    if (req.query.skip){
+        query.skip(parseInt(req.query.skip, 10));
+    }
+    if(req.query.limit){
+        query.limit(parseInt(req.query.limit, 10));
+    }
     if (req.query.fields) {
         query.select(req.query.fields);
     }
