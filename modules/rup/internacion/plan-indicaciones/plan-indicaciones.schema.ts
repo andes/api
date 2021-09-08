@@ -54,7 +54,9 @@ export const PlanIndicacionesSchema = new Schema({
     estados: [PlanIndicacionesEstadoSchema],
     estadoActual: PlanIndicacionesEstadoSchema,
 
-    turneable: Boolean
+    turneable: Boolean,
+
+    seccion: SnomedConcept
 
 });
 
@@ -70,7 +72,7 @@ PlanIndicacionesSchema.pre('save', function (next) {
     next();
 });
 
-export const PlanIndicaciones = model('internacionPlanIndicaciones', PlanIndicacionesSchema, 'internacionPlaIndicaciones');
+export const PlanIndicaciones = model('internacionPlanIndicaciones', PlanIndicacionesSchema, 'internacionPlanIndicaciones');
 
 
 export const PlanIndicacionesEventosSchema = new Schema({

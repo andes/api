@@ -296,7 +296,15 @@ PrestacionSchema.methods.getRegistros = function (all = false) {
             if (reg.hasSections) {
                 reg.registros.forEach(seccion => {
                     if (seccion.isSection && !seccion.noIndex) {
-                        registrosInternos = [...registrosInternos, ...seccion.registros];
+                        registrosInternos = [
+                            ...registrosInternos,
+                            ...seccion.registros.map(r => {
+                                return {
+                                    ...r.toJSON(),
+                                    seccion: seccion.concepto
+                                };
+                            })
+                        ];
                     }
                 });
             }

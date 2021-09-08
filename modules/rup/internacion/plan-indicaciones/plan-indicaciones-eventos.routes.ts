@@ -1,5 +1,4 @@
-import { asyncHandler } from '@andes/api-tool';
-import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
+import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../../../auth/auth.class';
 import { PlanIndicacionesEventos } from './plan-indicaciones.schema';
 
@@ -17,5 +16,5 @@ class PlanIndicacionesEventosController extends ResourceBase {
 
 }
 
-export const PlanIndicaionesEventosCtr = new PlanIndicacionesEventosController({});
-export const PlanIndicacionesEventosRouter = PlanIndicaionesEventosCtr.makeRoutes();
+export const PlanIndicacionesEventosCtr = new PlanIndicacionesEventosController({});
+export const PlanIndicacionesEventosRouter = PlanIndicacionesEventosCtr.makeRoutes();
