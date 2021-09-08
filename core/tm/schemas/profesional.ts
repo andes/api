@@ -156,6 +156,11 @@ ProfesionalSchema.index({
     nombre: 1
 });
 
+ProfesionalSchema.index({
+    'formacionGrado.profesion.codigo': 1,
+    'formacionPosgrado.profesion.codigo': 1
+});
+
 export type IProfesionalDoc = AndesDocWithAudit<IProfesional>;
 
 export const Profesional = mongoose.model<IProfesionalDoc, ITokenSearch<IProfesionalDoc>>('profesional', ProfesionalSchema, 'profesional');
