@@ -571,7 +571,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             const profesionSearch = parseInt(req.query.profesion, 10);
             opciones['$or'] = [
                 { 'formacionGrado.profesion.codigo': profesionSearch },
-                { 'formacionPosrado.profesion.codigo': profesionSearch }
+                { 'formacionPosgrado.profesion.codigo': profesionSearch }
             ];
         }
         if (req.query.estadoE) {
