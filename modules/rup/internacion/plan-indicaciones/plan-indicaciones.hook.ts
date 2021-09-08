@@ -6,6 +6,7 @@ import { PlanIndicaciones } from './plan-indicaciones.schema';
 
 EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
 
+
     prestacion = new Prestacion(prestacion);
     const registros = prestacion.getRegistros();
 
@@ -18,6 +19,7 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
 
         const idEvolucion = registro.idEvolucion;
         const indicacion = await PlanIndicaionesCtr.findOne({ prestacion: prestacion.id, registro: idRegistro });
+
 
         if (indicacion) {
             indicacion.valor = registro.valor;
@@ -44,7 +46,8 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
                     fecha
                 }],
 
-                elementoRUP: registro.elementoRUP
+                elementoRUP: registro.elementoRUP,
+                seccion: registro.seccion
 
             });
             const user = Auth.getUserFromResource(prestacion);
