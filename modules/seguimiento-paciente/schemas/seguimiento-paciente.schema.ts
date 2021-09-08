@@ -70,6 +70,15 @@ export const seguimientoPacienteSchema = new Schema(
                 fecha: Date
             }
         ],
+        ultimaAsignacion: {
+            profesional: {
+                _id: Types.ObjectId,
+                nombre: String,
+                apellido: String,
+                documento: String
+            },
+            fecha: Date
+        },
         internacion: Boolean
     });
 

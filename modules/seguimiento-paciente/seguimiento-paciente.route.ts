@@ -28,6 +28,10 @@ class SeguimientoPacienteResource extends ResourceBase {
                 ]
             };
         },
+        profesional: {
+            field: 'ultimaAsignacion.profesional._id',
+            fn: MongoQuery.equalMatch
+        },
         estado: {
             field: 'ultimoEstado.clave',
             fn: MongoQuery.partialString
@@ -48,7 +52,10 @@ const patchAsignacion = async (req, res, next) => {
         const { seguimientos, profesional } = req.body;
         const result = await SeguimientoPaciente.update(
             { _id: { $in: (seguimientos.length ? seguimientos : [seguimientos]).map(e => mongoose.Types.ObjectId(e)) } },
-            { $push: { asignaciones: { profesional, fecha: new Date() } } },
+            {
+                $push: { asignaciones: { profesional, fecha: new Date() } },
+                $set: { ultimaAsignacion: { profesional, fecha: new Date() } }
+            },
             { multi: true }
         );
         res.json(result);
