@@ -23,7 +23,7 @@ export const InscripcionVacunaSchema = new Schema({
     estado: {
         type: String,
         required: true,
-        enum: ['pendiente', 'habilitado', 'inhabilitado', 'fallecido']
+        enum: ['pendiente', 'habilitado', 'inhabilitado', 'fallecido', 'noCompletaEsquema']
     },
     validado: Boolean,
     personal_salud: Boolean,
