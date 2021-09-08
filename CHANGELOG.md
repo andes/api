@@ -1,3 +1,11 @@
+# [5.60.0](https://github.com/andes/api/compare/v5.59.1...v5.60.0) (2021-09-08)
+
+
+### Features
+
+* **AM:** Permitir el registro de usuarios que tienen cuenta sin activar  ([#1529](https://github.com/andes/api/issues/1529)) ([16a4ff2](https://github.com/andes/api/commit/16a4ff2e7fcff6bbd13365a99f3d93d969bf8cd7))
+* **mat:** antes de guardar un turno nuevo, verificar que no existe uno ocupado en el mismo dia/horario ([#1379](https://github.com/andes/api/issues/1379)) ([de9ac24](https://github.com/andes/api/commit/de9ac247cd6fe12e5c612c2c6248ce53df45f5aa))
+
 ## [5.59.1](https://github.com/andes/api/compare/v5.59.0...v5.59.1) (2021-09-01)
 
 
