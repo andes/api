@@ -141,20 +141,21 @@ export class Auth {
      */
 
     static optionalAuth() {
-        return [(req, res, next) => {
-            try {
-                const extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
-                const token = extractor(req);
-                const tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
-                if (tokenData) {
-                    req.user = tokenData;
+        return [
+            (req, res, next) => {
+                try {
+                    const extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
+                    const token = extractor(req);
+                    const tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+                    if (tokenData) {
+                        req.user = tokenData;
+                    }
+                    next();
+                } catch (e) {
+                    next();
                 }
-                next();
-            } catch (e) {
-                next();
-            }
-        },
-                this.recovertPayloadMiddleware()
+            },
+            this.recovertPayloadMiddleware()
         ];
     }
 
@@ -208,7 +209,7 @@ export class Auth {
      */
     static recovertPayloadMiddleware() {
         return async (req, res, next) => {
-            if (req.user.type === 'user-token-2' && req.user.organizacion) {
+            if (req.user && req.user.type === 'user-token-2' && req.user.organizacion) {
                 const { getTokenPayload } = require('./auth.controller');
                 const payload = await getTokenPayload(req.token, req.user);
                 req.user = {
