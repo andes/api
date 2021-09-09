@@ -172,7 +172,7 @@ export default [
             { key: 'inicio', title: 'Punto de inicio', type: 'boolean' },
             { key: 'mapaDeCamas', title: 'Mapa de camas', type: 'boolean' },
             { key: 'descargarListado', title: 'Descargar listado internación', type: 'boolean' },
-            { key: 'registros', title: 'Ver registros', type: 'boolean' },
+            { key: 'registros', title: 'Ver registros de la internación', type: 'boolean' },
         ]
 
     },
