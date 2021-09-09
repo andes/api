@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { logPaciente } from '../schemas/logPaciente';
-import * as mongoose from 'mongoose';
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import { Types } from 'mongoose';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 router.get('/paciente', (req, res, next) => {
     let query;
     if (req.params.id) {
-        if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (Types.ObjectId.isValid(req.params.id)) {
             query = logPaciente.findById(req.params.id, (err, data) => {
                 if (err) {
                     return next(err);
@@ -19,7 +20,7 @@ router.get('/paciente', (req, res, next) => {
     } else {
         query = logPaciente.find({}); // Trae todos
         if (req.query.idPaciente) {
-            query.where('paciente').equals(mongoose.Types.ObjectId(req.query.idPaciente));
+            query.where('paciente').equals(Types.ObjectId(req.query.idPaciente));
         }
         if (req.query.operacion) {
             query.where('operacion').equals(req.query.operacion);
@@ -39,9 +40,16 @@ router.get('/paciente', (req, res, next) => {
             res.json(data);
         });
     }
-
 });
 
+router.post('/paciente', (req, res, next) => {
+    if(req.body.paciente){
+        const idPaciente = Types.ObjectId(req.body.paciente);
+        const log = LoggerPaciente.logReporteError(req, req.body.operacion, idPaciente, req.body.descripcion);
+        return res.json(log);
+    }
+    return next('Ha ocurrido un error en la operación');
+});
 
 export = router;
 
