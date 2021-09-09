@@ -27,6 +27,26 @@ export interface ISeguimientoPaciente {
         nombre: string;
         codigoSisa: string;
     };
+    asignaciones?: [
+        {
+            profesional: {
+                _id: string;
+                nombre: string;
+                apellido: string;
+                documento: string;
+            };
+            fecha: Date;
+        }
+    ];
+    ultimaAsignacion?: {
+        profesional: {
+            _id: string;
+            nombre: string;
+            apellido: string;
+            documento: string;
+        };
+        fecha: Date;
+    };
     ultimoEstado: {
         clave: string;
         valor: Date;
