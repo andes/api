@@ -157,8 +157,7 @@ ProfesionalSchema.index({
 });
 
 ProfesionalSchema.index({
-    'formacionGrado.profesion.codigo': 1,
-    'formacionPosgrado.profesion.codigo': 1
+    'formacionGrado.profesion.codigo': 1
 });
 
 export type IProfesionalDoc = AndesDocWithAudit<IProfesional>;
