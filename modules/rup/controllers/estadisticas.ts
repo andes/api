@@ -313,14 +313,9 @@ function makeFacet(condicion) {
 export async function dashboardSolicitudes(filtros, user) {
     const matchSolicitudEntrada: any = {};
     const matchSolicitudSalida: any = {};
-    const matchInicial: any = {};
+    const matchInicial: any = { inicio: 'top' };
     const matchFiltros: any = {};
     const matchEstados: any = {};
-
-    /* Condición para filtrar prestaciones que son solicitudes */
-    matchInicial['estados.0.tipo'] = {
-        $in: ['pendiente', 'auditoria']
-    };
 
     /* Match inicial para filtrar solicitudes
        según la organización del usuario logueado */
@@ -333,7 +328,7 @@ export async function dashboardSolicitudes(filtros, user) {
             $gte: moment(filtros.solicitudDesde).startOf('day').toDate(),
             $lte: moment(filtros.solicitudHasta).endOf('day').toDate()
         };
-        matchInicial['solicitud.fecha'] = fechaCondicion;
+        matchInicial['createdAt'] = fechaCondicion;
     }
 
     /* Filtro por organización destino */
