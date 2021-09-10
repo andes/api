@@ -1,6 +1,8 @@
+import { asyncHandler } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
+import * as mongoose from 'mongoose';
 
 class SeguimientoPacienteResource extends ResourceBase {
     Model = SeguimientoPaciente;
@@ -26,6 +28,10 @@ class SeguimientoPacienteResource extends ResourceBase {
                 ]
             };
         },
+        profesional: {
+            field: 'ultimaAsignacion.profesional.id',
+            fn: MongoQuery.equalMatch
+        },
         estado: {
             field: 'ultimoEstado.clave',
             fn: MongoQuery.partialString
@@ -41,5 +47,24 @@ class SeguimientoPacienteResource extends ResourceBase {
     };
 }
 
+const patchAsignacion = async (req, res, next) => {
+    try {
+        const { seguimientos, profesional } = req.body;
+        const result = await SeguimientoPaciente.update(
+            { _id: { $in: (seguimientos.length ? seguimientos : [seguimientos]).map(e => mongoose.Types.ObjectId(e)) } },
+            {
+                $push: { asignaciones: { profesional, fecha: new Date() } },
+                $set: { ultimaAsignacion: { profesional, fecha: new Date() } }
+            },
+            { multi: true }
+        );
+        res.json(result);
+    } catch (e) {
+        next(e);
+    }
+};
+
 export const SeguimientoPacienteCtr = new SeguimientoPacienteResource({});
-export const SeguimientoPacienteRouter = SeguimientoPacienteCtr.makeRoutes();
+const seguimientoPacienteRouter = SeguimientoPacienteCtr.makeRoutes();
+seguimientoPacienteRouter.post('/seguimientoPaciente/asignaciones', Auth.authenticate(), asyncHandler(patchAsignacion));
+export const SeguimientoPacienteRouter = seguimientoPacienteRouter;;
