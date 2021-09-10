@@ -29,7 +29,7 @@ class SeguimientoPacienteResource extends ResourceBase {
             };
         },
         profesional: {
-            field: 'ultimaAsignacion.profesional._id',
+            field: 'ultimaAsignacion.profesional.id',
             fn: MongoQuery.equalMatch
         },
         estado: {

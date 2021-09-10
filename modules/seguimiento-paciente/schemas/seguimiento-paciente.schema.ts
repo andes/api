@@ -62,7 +62,7 @@ export const seguimientoPacienteSchema = new Schema(
         asignaciones: [
             {
                 profesional: {
-                    _id: Types.ObjectId,
+                    id: Types.ObjectId,
                     nombre: String,
                     apellido: String,
                     documento: String
@@ -72,7 +72,7 @@ export const seguimientoPacienteSchema = new Schema(
         ],
         ultimaAsignacion: {
             profesional: {
-                _id: Types.ObjectId,
+                id: Types.ObjectId,
                 nombre: String,
                 apellido: String,
                 documento: String
