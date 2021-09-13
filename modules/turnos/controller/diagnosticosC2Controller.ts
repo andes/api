@@ -1,6 +1,5 @@
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
-import { toArray } from '../../../utils/utils';
 import { Codificacion } from '../../rup/schemas/codificacion';
 import { Agenda } from '../schemas/agenda';
 
@@ -100,14 +99,19 @@ export function getDiagnosticos(params) {
     return new Promise(async (resolve, reject) => {
         // Se buscan las agendas que tengan turnos o sobreturnos codificados con algun diagnostico c2
         let pipeline = [];
+        const matchAgedas = {
+            'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+            'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
+            horaInicio: { $gte: new Date(params.horaInicio) },
+            horaFin: { $lte: new Date(params.horaFin) },
+        };
+
+        if (params.organizacion) {
+            matchAgedas['organizacion._id'] = { $eq: mongoose.Types.ObjectId(params.organizacion) };
+        }
+
         pipeline = [{
-            $match: {
-                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-                'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
-                horaInicio: { $gte: new Date(params.horaInicio) },
-                horaFin: { $lte: new Date(params.horaFin) },
-                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
-            }
+            $match: matchAgedas
         },
                     {
                         $unwind: '$bloques'
@@ -116,13 +120,7 @@ export function getDiagnosticos(params) {
                         $unwind: '$bloques.turnos'
                     },
                     {
-                        $match: {
-                            'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-                            'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
-                            horaInicio: { $gte: new Date(params.horaInicio) },
-                            horaFin: { $lte: new Date(params.horaFin) },
-                            'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
-                        }
+                        $match: matchAgedas
                     },
 
                     {
@@ -151,14 +149,19 @@ export function getDiagnosticos(params) {
                     }];
 
         let pipeline1 = [];
+        const matchSobreturnos = {
+            'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+            'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
+            horaInicio: { $gte: new Date(params.horaInicio) },
+            horaFin: { $lte: new Date(params.horaFin) },
+        };
+
+        if (params.organizacion) {
+            matchSobreturnos['organizacion._id'] = { $eq: mongoose.Types.ObjectId(params.organizacion) };
+        }
+
         pipeline1 = [{
-            $match: {
-                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-                'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
-                horaInicio: { $gte: new Date(params.horaInicio) },
-                horaFin: { $lte: new Date(params.horaFin) },
-                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
-            }
+            $match: matchSobreturnos
         },
                      {
                          $unwind: '$sobreturnos'
@@ -167,13 +170,7 @@ export function getDiagnosticos(params) {
                          $unwind: '$sobreturnos.diagnostico.codificaciones'
                      },
                      {
-                         $match: {
-                             'sobreturnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
-                             'sobreturnos.diagnostico.codificaciones.primeraVez': true,
-                             horaInicio: { $gte: new Date(params.horaInicio) },
-                             horaFin: { $lte: new Date(params.horaFin) },
-                             'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
-                         }
+                         $match: matchSobreturnos
                      },
                      {
                          $project: {
@@ -203,18 +200,30 @@ export function getDiagnosticos(params) {
 
         // Se buscan las prestaciones fuera de agenda codificados con algun diagnostico c2
         let pipeline2 = [];
+        const matchCodificacion1 = {
+            'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+            'diagnostico.codificaciones.codificacionAuditoria.c2': true,
+            'diagnostico.codificaciones.primeraVez': true,
+            createdAt: {
+                $lte: new Date(params.horaFin),
+                $gte: new Date(params.horaInicio)
+            }
+        };
+
+        const matchCodificacion2 = {
+            'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+            'diagnostico.codificaciones.codificacionAuditoria.c2': true,
+            'diagnostico.codificaciones.primeraVez': true,
+        };
+
+        if (params.organizacion) {
+            matchCodificacion1['createdBy.organizacion._id'] = { $eq: mongoose.Types.ObjectId(params.organizacion) };
+            matchCodificacion2['prestacion.solicitud.organizacion.id'] = { $eq: mongoose.Types.ObjectId(params.organizacion) };
+        }
+
         pipeline2 = [
             {
-                $match: {
-                    'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
-                    'diagnostico.codificaciones.codificacionAuditoria.c2': true,
-                    'diagnostico.codificaciones.primeraVez': true,
-                    'createdBy.organizacion._id': String(params.organizacion),
-                    createdAt: {
-                        $lte: new Date(params.horaFin),
-                        $gte: new Date(params.horaInicio)
-                    }
-                }
+                $match: matchCodificacion1
             },
             {
                 $lookup: {
@@ -231,12 +240,7 @@ export function getDiagnosticos(params) {
                 $unwind: '$prestacion',
             },
             {
-                $match: {
-                    'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
-                    'diagnostico.codificaciones.codificacionAuditoria.c2': true,
-                    'diagnostico.codificaciones.primeraVez': true,
-                    'prestacion.solicitud.organizacion.id': { $eq: mongoose.Types.ObjectId(params.organizacion) },
-                }
+                $match: matchCodificacion2
             },
             {
                 $group: {
@@ -250,9 +254,9 @@ export function getDiagnosticos(params) {
             }
         ];
 
-        const p1 = toArray(Agenda.aggregate(pipeline).cursor({}).exec());
-        const p2 = toArray(Agenda.aggregate(pipeline1).cursor({}).exec());
-        const p3 = toArray(Codificacion.aggregate(pipeline2).cursor({}).exec());
+        const p1 = Agenda.aggregate(pipeline);
+        const p2 = Agenda.aggregate(pipeline1);
+        const p3 = Codificacion.aggregate(pipeline2);
 
         const [diagnosticosTurnos, diagnosticosSobreturnos, diagnosticosFueraAgenda] = await Promise.all([p1, p2, p3]);
 
