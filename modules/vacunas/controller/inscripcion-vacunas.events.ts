@@ -2,6 +2,8 @@ import { EventCore } from '@andes/event-bus';
 import { InscripcionVacunasCtr } from '../inscripcion-vacunas.routes';
 import { userScheduler } from '../../../config.private';
 import { validarInscripcion } from './inscripcion.vacunas.controller';
+import { sincronizarVacunas, deleteVacunasFromNomivac } from './vacunas.events';
+
 const dataLog: any = new Object(userScheduler);
 dataLog.body = { _id: null };
 dataLog.method = null;
@@ -20,6 +22,7 @@ EventCore.on('vacunas:inscripcion:vacunado', async ({ prestacion }) => {
         inscripto.fechaVacunacion = prestacion.ejecucion.fecha;
         inscripto.idPrestacionVacuna = prestacion._id;
         await InscripcionVacunasCtr.update(inscripto.id, inscripto, dataLog);
+        await sincronizarVacunas(prestacion.paciente.id);
     }
 });
 
@@ -30,7 +33,18 @@ EventCore.on('vacunas:inscripcion:cancelar-vacunado', async ({ prestacion }) => 
         inscripto.fechaVacunacion = null;
         inscripto.idPrestacionVacuna = null;
         await InscripcionVacunasCtr.update(inscripto.id, inscripto, dataLog);
+        await sincronizarVacunas(prestacion.paciente.id);
+
+        if (prestacion.estadoActual.tipo === 'ejecucion') {
+            const data = {
+                paciente: prestacion.paciente,
+                ejecucion : { registros: prestacion.ejecucion.registros.filter(reg => reg.concepto.conceptId === '840534001' )},
+                organizacion: prestacion.organizacion
+            };
+            await deleteVacunasFromNomivac(data);
+        }
     }
+
 });
 
 // Al validar la prestacion de certificación de paciente con riesgo aumentado de COVID-19, inserta la fecha de certificado en la inscripcion
