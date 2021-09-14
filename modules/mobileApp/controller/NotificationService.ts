@@ -32,7 +32,21 @@ export class NotificationService {
             const prestacion = turno.tipoPrestacion.term;
             const organizacion = await Organizacion.findById(efector._id);
             const body = 'Tu turno del ' + date + ' para ' + prestacion + ' en ' + organizacion.nombre + ' fue suspendido. Tocá para más información.';
-            const notificacion = { body, extraData: { action: 'suspender', turno, organizacion } };
+            const turnoPush = {
+                paciente: turno.paciente,
+                motivoSuspension: turno.motivoSuspension,
+                horaInicio: turno.horaInicio,
+                tipoPrestacion: prestacion,
+                profesionales: turno.profesionales
+            };
+            const organizacionPush = {
+                nombre: organizacion.nombre,
+                provincia: organizacion.direccion.ubicacion.provincia.nombre,
+                localidad: organizacion.direccion.ubicacion.localidad.nombre,
+                direccion: organizacion.direccion.valor,
+                telefonos: organizacion.contacto.filter(contacto => contacto.tipo !== 'email')
+            };
+            const notificacion = { body, extraData: { action: 'suspender-turno', turno: turnoPush, organizacion: organizacionPush } };
             this.sendByPaciente(idPaciente, notificacion);
         }
     }
