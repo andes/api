@@ -40,6 +40,12 @@ class SeguimientoPacienteResource extends ResourceBase {
         organizacionSeguimiento: {
             field: 'organizacionSeguimiento.id',
             fn: MongoQuery.equalMatch
+        },
+        asignados: {
+            field: 'ultimaAsignacion',
+            fn: () => {
+                return { $eq: null };
+            }
         }
     };
 }

@@ -30,7 +30,7 @@ export interface ISeguimientoPaciente {
     asignaciones?: [
         {
             profesional: {
-                _id: string;
+                id: string;
                 nombre: string;
                 apellido: string;
                 documento: string;
@@ -40,7 +40,7 @@ export interface ISeguimientoPaciente {
     ];
     ultimaAsignacion?: {
         profesional: {
-            _id: string;
+            id: string;
             nombre: string;
             apellido: string;
             documento: string;
