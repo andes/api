@@ -32,10 +32,7 @@ class SeguimientoPacienteResource extends ResourceBase {
             field: 'ultimaAsignacion.profesional.id',
             fn: MongoQuery.equalMatch
         },
-        estado: {
-            field: 'ultimoEstado.clave',
-            fn: MongoQuery.partialString
-        },
+        estado: MongoQuery.inArray.withField('ultimoEstado.clave'),
         organizacionSisa: {
             field: 'organizacion.codigoSisa',
             fn: MongoQuery.partialString
