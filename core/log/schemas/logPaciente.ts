@@ -23,9 +23,9 @@ export const logPacienteSchema = new mongoose.Schema({
             'notificacion:email',
             'notificacion:push',
             'error:reportar',
-            'portal:error:registrosSalud',
-            'portal:error:datosPersonales',
-            'portal:error:otro'
+            'error:registrosSalud',
+            'error:datosPersonales',
+            'error:otro'
         ]
     },
     observaciones: {
