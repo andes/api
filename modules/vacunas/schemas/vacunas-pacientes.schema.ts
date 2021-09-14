@@ -41,6 +41,7 @@ export const VacunasPacientesSchema = new Schema({
             codigo: String,
         },
         lote: String,
+        enDomicilio: Boolean,
         organizacion: {
             id: SchemaTypes.ObjectId,
             nombre: String,
