@@ -21,9 +21,19 @@ async function getHistorialFueraAgendas(pacienteId) {
         'paciente.id': pacienteId,
         'estadoActual.tipo': 'validada',
         'ejecucion.fecha': { $gt: moment().subtract(6, 'months') },
-        'solicitud.turno' : null
+        'solicitud.turno': null
+    };
+
+    const paramsFueraAgendaVinculada = {
+        'paciente.idPacienteValidado': pacienteId,
+        'estadoActual.tipo': 'validada',
+        'ejecucion.fecha': { $gt: moment().subtract(6, 'months') },
+        'solicitud.turno': null
     };
     const fueraAgendas = await searchPrestaciones(paramsFueraAgenda);
+
+    const fueraAgendasVinculada = await searchPrestaciones(paramsFueraAgendaVinculada);
+
     const historialFueraAgendas = fueraAgendas.map((elem: any) => ({
         estado: 'fuera-agenda',
         horaInicio: elem.ejecucion.fecha,
@@ -32,5 +42,19 @@ async function getHistorialFueraAgendas(pacienteId) {
         paciente: elem.paciente,
         tipoPrestacion: elem.solicitud.tipoPrestacion
     }));
-    return historialFueraAgendas;
+
+    if (fueraAgendasVinculada.length) {
+        const historialFueraAgendasVinculada = fueraAgendasVinculada.map((elem: any) => ({
+            estado: 'fuera-agenda',
+            horaInicio: elem.ejecucion.fecha,
+            organizacion: elem.solicitud.organizacion,
+            profesionales: [elem.solicitud.profesional],
+            paciente: elem.paciente,
+            tipoPrestacion: elem.solicitud.tipoPrestacion
+        }));
+        const fueraDeAgendasTotal = historialFueraAgendas.concat(historialFueraAgendasVinculada);
+        return fueraDeAgendasTotal;
+    } else {
+        return historialFueraAgendas;
+    }
 }
