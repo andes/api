@@ -1,3 +1,17 @@
+# [5.61.0](https://github.com/andes/api/compare/v5.60.0...v5.61.0) (2021-09-15)
+
+
+### Bug Fixes
+
+* **MAT:** elimina indice posgrado ([#1536](https://github.com/andes/api/issues/1536)) ([4a1a2f6](https://github.com/andes/api/commit/4a1a2f694574a6bae5ddb21a9c1067ea9baf728f))
+* **tm:** no se puede acceder a organizaciones ([#1537](https://github.com/andes/api/issues/1537)) ([60359b9](https://github.com/andes/api/commit/60359b9ee1d61e7d738f1493cd923bca456522f7))
+
+
+### Features
+
+* **CORE:** filtro solicitudes dashboard ([#1527](https://github.com/andes/api/issues/1527)) ([7cdc148](https://github.com/andes/api/commit/7cdc14817d3b8e7d3626e07ebc5c47b1c10de4e9))
+* **EP:** filtrar c2 x organizacion ([#1512](https://github.com/andes/api/issues/1512)) ([d75df04](https://github.com/andes/api/commit/d75df0463ba1c0a6ce34a85e2f863bae0e31fd63))
+
 # [5.60.0](https://github.com/andes/api/compare/v5.59.1...v5.60.0) (2021-09-08)
 
 
