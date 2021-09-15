@@ -79,6 +79,14 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
     next();
 });
 
+FormsEpidemiologiaSchema.post('remove', (ficha: any) => {
+    const { FormsHistory } = require('./forms-history.schema');
+    const history = new FormsHistory(ficha.toJSON());
+    history._id = new mongoose.Types.ObjectId();
+    history.id = null;
+    history.save();
+});
+
 FormsEpidemiologiaSchema.post('save', (ficha: any) => {
     const { FormsHistory } = require('./forms-history.schema');
     const history = new FormsHistory(ficha.toJSON());
