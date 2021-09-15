@@ -109,16 +109,6 @@ router.get('/agenda/candidatas', async (req, res, next) => {
     });
 });
 
-router.get('/agenda/consultaDiagnostico', async (req, res, next) => {
-    const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    const params = req.query;
-    params['organizacion'] = organizacion;
-    agendaCtrl.getConsultaDiagnostico(params).then((resultado) => {
-        res.json(resultado);
-    });
-
-});
-
 router.get('/agenda/cantidadConsultaXPrestacion', async (req, res, next) => {
     const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     const params = req.query;
