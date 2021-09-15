@@ -1,6 +1,7 @@
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Codificacion } from '../../rup/schemas/codificacion';
+import { find as findOrganizaciones } from '../../../core/tm/controller/organizacion';
 import { Agenda } from '../schemas/agenda';
 
 /*
@@ -96,9 +97,22 @@ function sumarCodigos(codigos) {
 export function getDiagnosticos(params) {
     let resultados = [];
     const promises = [];
+    let organizaciones;
+    let organizacionesStrings;
     return new Promise(async (resolve, reject) => {
         // Se buscan las agendas que tengan turnos o sobreturnos codificados con algun diagnostico c2
         let pipeline = [];
+
+        if (params.organizacion) {
+            organizacionesStrings = [params.organizacion];
+            organizaciones = [mongoose.Types.ObjectId(params.organizacion)];
+        } else if (params.zonaSanitaria) {
+            const query = { 'zonaSanitaria._id': params.zonaSanitaria };
+            const result = await findOrganizaciones(query);
+            organizacionesStrings = result.map(o => o.id);
+            organizaciones = result.map(o => mongoose.Types.ObjectId(o.id));
+        }
+
         const matchAgedas = {
             'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
             'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
@@ -106,8 +120,8 @@ export function getDiagnosticos(params) {
             horaFin: { $lte: new Date(params.horaFin) },
         };
 
-        if (params.organizacion) {
-            matchAgedas['organizacion._id'] = { $eq: mongoose.Types.ObjectId(params.organizacion) };
+        if (organizaciones) {
+            matchAgedas['organizacion._id'] = { $in: organizaciones };
         }
 
         pipeline = [{
@@ -156,8 +170,8 @@ export function getDiagnosticos(params) {
             horaFin: { $lte: new Date(params.horaFin) },
         };
 
-        if (params.organizacion) {
-            matchSobreturnos['organizacion._id'] = { $eq: mongoose.Types.ObjectId(params.organizacion) };
+        if (organizaciones) {
+            matchSobreturnos['organizacion._id'] = { $in: organizaciones };
         }
 
         pipeline1 = [{
@@ -216,9 +230,9 @@ export function getDiagnosticos(params) {
             'diagnostico.codificaciones.primeraVez': true,
         };
 
-        if (params.organizacion) {
-            matchCodificacion1['createdBy.organizacion._id'] = { $eq: mongoose.Types.ObjectId(params.organizacion) };
-            matchCodificacion2['prestacion.solicitud.organizacion.id'] = { $eq: mongoose.Types.ObjectId(params.organizacion) };
+        if (organizaciones) {
+            matchCodificacion1['createdBy.organizacion._id'] = { $in: organizacionesStrings };
+            matchCodificacion2['prestacion.solicitud.organizacion.id'] = { $in: organizaciones };
         }
 
         pipeline2 = [
