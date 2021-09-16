@@ -30,7 +30,7 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
             if (patientGeoRef) {
                 coordinates = patientGeoRef;
             } else {
-                let organizacionCreatedBy = await Organizacion.findById(data.createdBy.organizacion.id);
+                const organizacionCreatedBy = await Organizacion.findById(data.createdBy.organizacion.id);
                 coordinates = organizacionCreatedBy.direccion?.geoReferencia?.reverse();
             }
 
@@ -38,7 +38,7 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
             if (coordinates) {
                 organizacionSeguimiento = await getOrganizacionAreaByLocationPoint({ type: 'Point', coordinates });
             } else {
-                const organizacionDefecto = await Organizacion.findOne({ asignaSeguimientoPaciente: true });
+                const organizacionDefecto = await Organizacion.findOne({ defaultSeguimiento: true });
                 organizacionSeguimiento = {
                     id: organizacionDefecto._id,
                     nombre: organizacionDefecto.nombre,
