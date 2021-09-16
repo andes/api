@@ -77,6 +77,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             estado: 'asignado',
             tipoTurno,
             nota: req.body.nota,
+            link: req.body.link,
             motivoConsulta: req.body.motivoConsulta,
             paciente: req.body.paciente,
             tipoPrestacion: req.body.tipoPrestacion,
@@ -124,6 +125,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
                     prestacion: doc2.tipoPrestacion,
                     tipoTurno: doc2.tipoTurno,
                     nota: doc2.nota,
+                    link: doc2.link,
                     motivoConsulta: doc2.motivoConsulta
                 };
                 turnosLog.info('asignarTurno', datosOp, req);
@@ -270,6 +272,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
         const etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
         const etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
+        const etiquetaLink: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.link';
         const etiquetaEmitidoPor: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.emitidoPor';
         const etiquetaMotivoConsulta: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.motivoConsulta';
         const estadoFacturacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estadoFacturacion';
@@ -287,6 +290,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
 
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;
+        update[etiquetaLink] = req.body.link;
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
         update[estadoFacturacion] = req.body.estadoFacturacion;
@@ -323,6 +327,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     prestacion: update[etiquetaPrestacion],
                     tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
                     nota: update[etiquetaNota],
+                    link: update[etiquetaLink],
                     emitidoPor: update[etiquetaEmitidoPor], // agregamos el emitidoPor
                     motivoConsulta: update[etiquetaMotivoConsulta],
                     usuarioDacion: update[etiquetaUsuarioDacion],

@@ -21,6 +21,8 @@ export const AgendaSchema = new mongoose.Schema({
     espacioFisico: {
         type: espacioFisicoSchema
     },
+
+    link: String,
     otroEspacioFisico: {
         type: InstitucionSchema,
         required: false
