@@ -176,8 +176,8 @@ export async function sincronizarVacunas(pacienteID: string) {
                         id: area.id,
                         nombre: area.areaPrograma
                     }
-                }
-
+                },
+                enDomicilio: vacunaValor.enDomicilio
             };
         })
     );
