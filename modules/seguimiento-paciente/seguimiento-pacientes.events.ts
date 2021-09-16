@@ -1,7 +1,8 @@
 import { EventCore } from '@andes/event-bus';
-import { defaultPointReference, userScheduler } from '../../config.private';
+import { userScheduler } from '../../config.private';
 import { getOrganizacionAreaByLocationPoint } from './../georeferencia/controller/areasPrograma';
 import { ISeguimientoPaciente } from './interfaces/seguimiento-paciente.interface';
+import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 import { SeguimientoPacienteCtr } from './seguimiento-paciente.route';
 import moment = require('moment');
@@ -20,13 +21,31 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
         if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
             const mpiSections = data.secciones.find(s => s.name === 'Mpi');
             const contactosEstrechos = data.secciones.find(s => s.name === 'Contactos Estrechos');
-            const patientGeoRef = (data.paciente.direccion && data.paciente.direccion[0].geoReferencia?.length) ? data.paciente.direccion[0].geoReferencia.reverse() : defaultPointReference; // default reference
-            const location = {
-                type: 'Point',
-                coordinates: [...patientGeoRef]
-            };
 
-            const organizacionSeguimiento = await getOrganizacionAreaByLocationPoint(location);
+            const patientGeoRef = (data.paciente.direccion && data.paciente.direccion[0]?.geoReferencia?.length) ? data.paciente.direccion[0].geoReferencia.reverse() : null;
+
+            let location;
+            let coordinates;
+
+            if (patientGeoRef) {
+                coordinates = patientGeoRef;
+            } else {
+                const organizacionCreatedBy = await Organizacion.findById(data.createdBy.organizacion.id);
+                coordinates = organizacionCreatedBy.direccion?.geoReferencia?.reverse();
+            }
+
+            let organizacionSeguimiento;
+            if (coordinates) {
+                organizacionSeguimiento = await getOrganizacionAreaByLocationPoint({ type: 'Point', coordinates });
+            } else {
+                const organizacionDefecto = await Organizacion.findOne({ defaultSeguimiento: true });
+                organizacionSeguimiento = {
+                    id: organizacionDefecto._id,
+                    nombre: organizacionDefecto.nombre,
+                    codigoSisa: organizacionDefecto.codigo.sisa.toString()
+                };
+            }
+
             const seguimiento: ISeguimientoPaciente = {
                 fechaInicio: new Date(),
                 origen: {
