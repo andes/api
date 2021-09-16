@@ -1498,8 +1498,8 @@ export async function verificarSolapamiento(data) {
                 }
                 if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
                     response += ' Uno o más profesionales están asignados a otra agenda en ese horario. ';
-                    profesionales.forEach((prof, idx) => {
-                        response += `<br><br>Profesional: <strong>${prof.nombre} ${prof.apellido} </strong> <br>Centro de Salud: <strong>${org[idx]} </strong> <br> Prestacion: <strong>${prestacionesAgenda[idx]}</strong> <br>Creada por: <strong>${agendaCreadaPor[idx]} </strong>`;
+                    profesionales.map((prof) => {
+                        response += `<br><br>Profesional: <strong>${prof.nombre} ${prof.apellido} </strong> <br>Centro de Salud: <strong>${org[0]} </strong> <br> Prestacion: <strong>${prestacionesAgenda[0]}</strong> <br>Creada por: <strong>${agendaCreadaPor[0]} </strong>`;
                     });
                 }
             }
