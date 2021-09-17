@@ -315,13 +315,19 @@ export const urlDatosGestion = '';
 export const FHIR = {
     domain: getEnv('FHIR_DOMAIN', 'http://app.andes.gob.ar'),
     ips_host: getEnv('IPS_HOST', 'https://testapp.hospitalitaliano.org.ar'),
+    federador_host: getEnv('IPS_HOST', 'http://mhd.sisa.msal.gov.ar/fhir'),
     secret: getEnv('IPS_SECRET', '')
 };
 
 export const IPS = {
     auth: getEnv('IPS_AUTH', false),
-    enabled: getEnv('IPS_ENABLED', false)
+    enabled: getEnv('IPS_ENABLED', true),
+    name: getEnv('IPS_NAME', 'Andes'),
+    role: getEnv('IPS_ROLE', 'federador'),
+    ident: getEnv('IPS_IDENT', '1'),
+    sub : getEnv('IPS_SUB', 'Ministerio de Salud example')
 };
+
 export const APP_DOMAIN = 'http://localhost:4200';
 
 export const provincia = getEnv('PROVINCIA', 'neuquen');

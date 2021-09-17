@@ -1,18 +1,20 @@
 import * as jwt from 'jsonwebtoken';
+import { IPS } from '../../../config.private';
 import { handleHttpRequest } from '../../../utils/requestHandler';
-
 export class SaludDigitalClient {
-    static SystemPatient = 'https://federador.msal.gob.ar/patient-id';
+    // static SystemPatient = 'https://federador.msal.gob.ar/patient-id';
 
     private expiresIn = 60 * 15 * 1000; /* 15 min */
-    private token: string;
+    private token = 'jwt';
     private host: string;
+    private hostBus: string;
     private dominio: string;
     private secret: string;
 
-    constructor(dominio, host, secret) {
+    constructor({dominio, host, secret, federador}) {
         this.dominio = dominio;
         this.host = host;
+        this.hostBus = federador;
         this.secret = secret;
     }
 
@@ -39,6 +41,9 @@ export class SaludDigitalClient {
      * Obtención de token de autenticacion
      */
     async obtenerToken(payload) {
+        if (!IPS.auth) {
+            return null;
+        }
         const token: any = this.generacionTokenAut(payload);
         const url = `${this.host}/bus-auth/auth`;
         const options = {
@@ -53,10 +58,8 @@ export class SaludDigitalClient {
             },
         };
         const [status, body] = await handleHttpRequest(options);
-        const response = JSON.parse(body);
-        this.token = response.accessToken;
+        this.token = body.accessToken;
         return this.token;
-
     }
 
     /**
@@ -85,26 +88,30 @@ export class SaludDigitalClient {
             json: true,
             body: patient,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${this.token}`
             }
         };
         const [status, body] = await handleHttpRequest(options);
         return status >= 200 && status <= 299;
     }
 
-    async search(params: any) {
-        const url = `${this.host}/masterfile-federacion-service/fhir/Patient/`;
+    // Search provisorio
+    async search(params: any, token: any) {
+        const url = `${this.host}/masterfile-federacion-service/fhir/Patient/$match`;
         const options = {
             url,
-            method: 'GET',
-            qs: params,
+            method: 'POST',
+            // qs: params,
+            body: params,
             json: true,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${this.token}`
             }
         };
         const [status, bundle] = await handleHttpRequest(options);
-        return (bundle.total > 0 ? bundle.entry.map(e => e.resource) : []);
+        return (bundle.total > 0 ? bundle.entry.map(e => e) : []);
     }
 
     async getDominios(idPaciente) {
@@ -113,10 +120,9 @@ export class SaludDigitalClient {
             url,
             method: 'GET',
             headers: {
-                Authorization: ''
+                Authorization: `Bearer ${this.token}`
             }
         };
-        // https://bus.msal.gov.ar/dominios
         const [status, body] = await handleHttpRequest(options);
         if (status >= 200 && status <= 399) {
             const bundle = JSON.parse(body);
@@ -129,58 +135,58 @@ export class SaludDigitalClient {
                     };
                 });
             }
+        } else {
         }
         return [];
 
     }
 
     async solicitud({ custodian = null, fechaDesde = null, fechaHasta = null, patient, loinc }) {
-        // let url = `${this.host}/fhir/DocumentReference?subject:identifier=${this.dominio}|${patient}&class=https://loinc.org/|${loinc}`;
-        let url = 'https://demo5647849.mockable.io/repositorio-documentos/fhir/DocumentReference%3Fsubject:Patient.identifier=http://www.hospitalitaliano.org.ar%7C540153&class=https://loinc.org/%7C60591-5';
-
-        if (custodian) {
-            url += `&custodian=${custodian}`;
-        }
-        if (fechaDesde) {
-            url += `&date=ge${fechaDesde}`;
-        }
-        if (fechaHasta) {
-            url += `&date=le${fechaHasta}`;
-        }
-        const options = {
-            url,
-            method: 'GET',
-            headers: {
-                Authorization: ''
+        try {
+            let url = `${this.hostBus}/DocumentReference?subject:identifier=${this.dominio}|${patient}&custodian=${custodian}&type=https://loinc.org|${loinc}`;
+            if (fechaDesde) {
+                url += `&date=ge${fechaDesde}`;
             }
-        };
-
-        const [status, body] = await handleHttpRequest(options);
-        if (status >= 200 && status <= 399) {
-            const bundle = JSON.parse(body);
-            if (bundle.total > 0) {
-                const resp = bundle.entry.map((r) => {
-                    return {
-                        id: r.resource.id,
-                        identifier: r.resource.identifier,
-                        custodian: r.custodian,
-                        urlBinary: r.content[0].attachment.url
-                    };
-                });
-
-                return resp;
+            if (fechaHasta) {
+                url += `&date=le${fechaHasta}`;
             }
-        }
-        return [];
+            const options = {
+                url,
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${this.token}`
+                }
+            };
+            const [status, body] = await handleHttpRequest(options);
+            if (status >= 200 && status <= 399) {
+                const bundle = JSON.parse(body);
+                if (bundle.entry.length > 0) {
+                    const resp = bundle.entry.map((r) => {
+                        return {
+                            id: r.resource.id,
+                            identifier: r.resource.identifier,
+                            custodian,
+                            urlBinary: r.resource.content[0].attachment.url
+                        };
+                    });
+                    return resp;
+                }
+            } else {
+                return [];
+            }
 
+        } catch (err) {
+            return err;
+        }
     }
+
     async getBinary(urlBinary) {
-        const url = `${urlBinary}`;
+        const url = `${this.hostBus}/${urlBinary}`;
         const options = {
             url,
             method: 'GET',
             headers: {
-                Authorization: ''
+                Authorization: `Bearer ${this.token}`
             }
         };
         const [status, body] = await handleHttpRequest(options);
@@ -189,25 +195,11 @@ export class SaludDigitalClient {
         }
     }
 }
+
+
 /**
- * IPS
- *
- * # Autenticacion
- *  - [OK] Generar token
- *  - [OK] Login
- *  - [OK] Verificar token
- *
- * # Profesional
- *  - [OK] Login
- *  - Consulta si el paciente esta federado:
- *      - NO: federa el paciente y guarda el id en identifier
- *      - SI: nada
- *  - [OK] Consulta dominios
- *  - [OK]Consulta DocumentReference
- *  - [OK]Descarga archivo Binary
- *  - Visualización
- *
- *  # BUS DE INTEROPERABILIDAD
- *   - Consulta DocumentReference por paciente
- *   - Responder con un IPS Generado
+ * Otra consulta con el host y las url:
+https://testapp.hospitalitaliano.org.ar/masterfile-federacion-service/fhir/Patient
+https://testapp.hospitalitaliano.org.ar/fhir/DocumentReference
+https://testapp.hospitalitaliano.org.ar/masterfile-federacion-service/fhir/Patient/$patient-location
  */
