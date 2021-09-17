@@ -41,8 +41,8 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     };
     const direccionOriginal = paciente._original.direccion[0] || null;
     const direccionActual = paciente.direccion[0] || null;
-    const addressChanged = direccionOriginal?.valor !== direccionActual?.valor;
-    if (addressChanged) {
+    // Verifica si hubo algun cambio en direccion, localidad y/o provincia
+    if (addressChanged(direccionOriginal, direccionActual)) {
         await updateGeoreferencia(paciente);
     }
     // Verifica si se realizó alguna operación de vinculación de pacientes
@@ -81,3 +81,11 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     }
 });
 
+
+function addressChanged(addOld, newAdd) {
+    const changeDir = addOld?.valor !== newAdd?.valor;
+    const changeLoc = addOld?.ubicacion.localidad?.nombre !== newAdd?.ubicacion.localidad?.nombre;
+    const changeProv = addOld?.ubicacion.provincia?.nombre !== newAdd?.ubicacion.provincia?.nombre;
+
+    return changeDir || changeLoc || changeProv;
+}
