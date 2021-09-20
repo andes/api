@@ -7,6 +7,7 @@ import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { handleHttpRequest } from '../../../utils/requestHandler';
 import { vacunas } from '../schemas/vacunas';
 import { IPaciente } from './../../../core-v2/mpi/paciente/paciente.interface';
+import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 export async function getVacunas(paciente) {
     const conditions = {
@@ -69,11 +70,6 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
             $project: {
                 _id: 0,
                 idPaciente: '$paciente.id',
-                dni: '$paciente.documento',
-                sexo: '$paciente.sexo',
-                nombre: '$paciente.nombre',
-                apellido: '$paciente.apellido',
-                fechaNacimiento: '$paciente.fechaNacimiento',
                 fecha: '$solicitud.fecha',
                 idEfector: '$solicitud.organizacion.id',
                 vacuna: '$ejecucion.registros.valor.vacuna'
@@ -89,40 +85,9 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
         },
         { $unwind: '$organizacion' },
         {
-            $lookup: {
-                from: 'paciente',
-                localField: 'idPaciente',
-                foreignField: '_id',
-                as: 'dirPaciente'
-            }
-        },
-        { $unwind: '$dirPaciente' },
-        {
-            $addFields: {
-                direccion: {
-                    $arrayElemAt: [
-                        '$dirPaciente.direccion',
-                        0
-                    ]
-                }
-            }
-        },
-        {
             $project: {
                 tipo: 'vacuna',
                 idPaciente: '$idPaciente',
-                dni: '$dni',
-                sexo: '$sexo',
-                nombre: '$nombre',
-                apellido: '$apellido',
-                direccion: '$direccion.valor',
-                fechaNacimiento: {
-                    $dateToString: {
-                        date: '$fechaNacimiento',
-                        format: '%d-%m-%Y',
-                        timezone: 'America/Argentina/Buenos_Aires'
-                    }
-                },
                 fecha: {
                     $dateToString: {
                         date: '$fecha',
@@ -145,17 +110,21 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
     ];
     const prestaciones = await Prestacion.aggregate(pipelineVacunaCovid19);
     for (const unaPrestacion of prestaciones) {
+        let paciente: any = await Paciente.findById(unaPrestacion.idPaciente);
+        if (!paciente.activo && paciente.idPacientePrincipal) {
+            paciente = await Paciente.findById(paciente.idPacientePrincipal);
+        }
         try {
             const data = {
                 ciudadano:
                 {
                     tipoDocumento: 1,
-                    numeroDocumento: unaPrestacion.dni,
-                    sexo: unaPrestacion.sexo === 'femenino' ? 'F' : (unaPrestacion.sexo === 'masculino') ? 'M' : '',
-                    nombre: unaPrestacion.nombre,
-                    apellido: unaPrestacion.apellido,
-                    fechaNacimiento: unaPrestacion.fechaNacimiento,
-                    calle: unaPrestacion.direccion ? unaPrestacion.direccion : '',
+                    numeroDocumento: paciente.documento,
+                    sexo: paciente.sexo === 'femenino' ? 'F' : (paciente.sexo === 'masculino') ? 'M' : '',
+                    nombre: paciente.nombre,
+                    apellido: paciente.apellido,
+                    fechaNacimiento: moment(paciente.fechaNacimiento).format('DD-MM-YYYY'),
+                    calle: paciente.direccion && paciente.direccion[0] ? paciente.direccion[0].valor : '',
                     pais: 200,
                     provincia: 15,
                     departamento: 365 // Confluencia, luego updetear por el que corresponda
@@ -220,7 +189,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                 fecha: new Date(),
                 sistema: 'Nomivac',
                 key: unaPrestacion.tipo,
-                idPaciente: unaPrestacion.idPaciente,
+                idPaciente: paciente.id,
                 resultado: {
                     resultado: 'ERROR EN LOS DATOS',
                     status: 500,
