@@ -1,8 +1,8 @@
 import * as express from 'express';
-import { logPaciente } from '../schemas/logPaciente';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { Types } from 'mongoose';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import { logPaciente } from '../schemas/logPaciente';
 
 const router = express.Router();
 
@@ -43,7 +43,7 @@ router.get('/paciente', (req, res, next) => {
 });
 
 router.post('/paciente', (req, res, next) => {
-    if(req.body.paciente){
+    if (req.body.paciente) {
         const idPaciente = Types.ObjectId(req.body.paciente);
         const log = LoggerPaciente.logReporteError(req, req.body.operacion, idPaciente, req.body.descripcion);
         return res.json(log);

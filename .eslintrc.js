@@ -148,6 +148,8 @@ module.exports = {
         "quotes": ["error", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],
         "radix": "error",
         "semi": "error",
+        "keyword-spacing": ["error", { "after": true, "before": true }],
+        "space-before-blocks": ["error", { "functions": "always", "keywords": "always", "classes": "always" }],
         "space-before-function-paren": [
             "error",
             {

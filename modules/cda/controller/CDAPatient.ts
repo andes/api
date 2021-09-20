@@ -805,7 +805,7 @@ function deleteCDA(id) {
     });
 }
 
-export async function deleteCda(idCda, idPaciente){
+export async function deleteCda(idCda, idPaciente) {
     const conceptId_vacunas = '33879002';
     if (idCda) {
         await deleteCDA(idCda);

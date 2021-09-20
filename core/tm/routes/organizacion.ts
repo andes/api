@@ -180,7 +180,7 @@ router.get('/organizaciones', Auth.optionalAuth(), async (req, res, next) => {
 
     if (req.query.user) {
         const user: any = await AuthUsers.findOne({ usuario: req.query.user });
-        if (!Auth.check(req, 'global:organizaciones:write')){
+        if (!Auth.check(req, 'global:organizaciones:write')) {
             const organizaciones = user.organizaciones
                 .filter(x => x.activo)
                 .map((item: any) => new Types.ObjectId(item._id));
@@ -200,10 +200,10 @@ router.get('/organizaciones', Auth.optionalAuth(), async (req, res, next) => {
 
     const query = Organizacion.find(filtros).sort({ nombre: 1 });
 
-    if (req.query.skip){
+    if (req.query.skip) {
         query.skip(parseInt(req.query.skip, 10));
     }
-    if(req.query.limit){
+    if (req.query.limit) {
         query.limit(parseInt(req.query.limit, 10));
     }
     if (req.query.fields) {
