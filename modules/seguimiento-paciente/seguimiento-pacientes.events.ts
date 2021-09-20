@@ -135,3 +135,21 @@ EventCore.on('epidemiologia:prestaciones:romperValidacion', async (data) => {
         }
     }
 });
+
+EventCore.on('rup:paciente:fallecido', async (data) => {
+    try {
+        const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': data.prestacion.paciente.id }).sort({ createdAt: -1 });
+        if (lastSeguimiento) {
+            const prestacion = {
+                idPrestacion: data.prestacion._id,
+                tipoPrestacion: data.prestacion.solicitud.tipoPrestacion.term,
+                fecha: data.prestacion.createdAt
+            };
+            lastSeguimiento.ultimoEstado = { clave: 'fallecido', valor: prestacion.fecha };
+            lastSeguimiento.llamados.push(prestacion);
+            return await SeguimientoPacienteCtr.update(lastSeguimiento.id, lastSeguimiento, dataLog);
+        }
+    } catch (err) {
+        return err;
+    }
+});
