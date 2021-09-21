@@ -14,18 +14,30 @@ import { Auth } from './../../../auth/auth.class';
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
  */
 export async function vencimientoMatriculaGrado(done) {
-    // let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
-    const profesionales: any = await Profesional.find({ 'formacionGrado.matriculacion.fin': { $lte: new Date() }, 'formacionGrado.matriculado': true, profesionalMatriculado: true });
+    const profesionales: any = await Profesional.aggregate([
+        { $match: { 'formacionGrado.matriculado':true, profesionalMatriculado: true }},
+        { $unwind: '$formacionGrado'},
+        { $addFields: { lastMatriculacion: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] }}},
+        { $match: { 'lastMatriculacion.fin': {$lte: new Date() }}}
+    ]);
+    for (const profesional of profesionales) {
+        if (profesional.habilitado) {
+            if (profesional.formacionGrado.matriculacion) {
+                if (profesional.formacionGrado.matriculado && profesional.formacionGrado.matriculacion[profesional.formacionGrado.matriculacion.length - 1].fin <= new Date()) {
+                    profesional.formacionGrado.matriculado = false;
+                    profesional.formacionGrado.papelesVerificados = false;
 
-    for (let _n = 0; _n < profesionales.length; _n++) {
-        if (profesionales[_n].habilitado === true) {
-            for (let _i = 0; _i < profesionales[_n].formacionGrado.length; _i++) {
-                if (profesionales[_n].formacionGrado[_i].matriculacion) {
-                    if (profesionales[_n].formacionGrado[_i].matriculado === true && profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].fin <= new Date()) {
-                        profesionales[_n].formacionGrado[_i].matriculado = false;
-                        profesionales[_n].formacionGrado[_i].papelesVerificados = false;
-                        await actualizar(profesionales[_n]);
-                    }
+                    await Profesional.update(
+                        {
+                            _id: profesional._id
+                        },
+
+                        { $set: { 'formacionGrado.$[elemento]': profesional.formacionGrado } },
+
+                        {
+                            arrayFilters: [{ 'elemento._id': profesional.formacionGrado._id }]
+                        }
+                    );
                 }
             }
         }
