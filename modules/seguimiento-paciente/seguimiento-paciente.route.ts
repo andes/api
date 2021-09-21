@@ -43,9 +43,7 @@ class SeguimientoPacienteResource extends ResourceBase {
         },
         asignados: {
             field: 'ultimaAsignacion',
-            fn: () => {
-                return { $eq: null };
-            }
+            fn: (value) => (value ? { $ne: null } : { $eq: null })
         }
     };
 }
