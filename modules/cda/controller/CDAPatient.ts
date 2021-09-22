@@ -222,18 +222,18 @@ export function storeFile({
             contentType: mimeType,
             metadata
         },
-            stream,
-            (error, createdFile) => {
-                if (error) {
-                    return reject(error);
-                }
-                return resolve({
-                    id: createdFile._id,
-                    data: createdFile.filename,
-                    mime: mimeType,
-                    is64: false
-                });
+        stream,
+        (error, createdFile) => {
+            if (error) {
+                return reject(error);
             }
+            return resolve({
+                id: createdFile._id,
+                data: createdFile.filename,
+                mime: mimeType,
+                is64: false
+            });
+        }
         );
     });
 }
@@ -253,14 +253,14 @@ export function storePdfFile(pdf) {
             filename: String(uniqueId) + '.pdf',
             contentType: mime
         },
-            input.pipe(pdf),
-            (error, createdFile) => {
-                resolve({
-                    id: createdFile._id,
-                    data: 'files/' + createdFile.filename,
-                    mime
-                });
-            }
+        input.pipe(pdf),
+        (error, createdFile) => {
+            resolve({
+                id: createdFile._id,
+                data: 'files/' + createdFile.filename,
+                mime
+            });
+        }
         );
     });
 }
@@ -283,10 +283,10 @@ export function storeCDA(objectID, cdaXml, metadata) {
             contentType: 'application/xml',
             metadata
         },
-            input,
-            (error, createdFile) => {
-                resolve(createdFile);
-            }
+        input,
+        (error, createdFile) => {
+            resolve(createdFile);
+        }
         );
 
         input.end(cdaXml);
