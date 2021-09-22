@@ -1,3 +1,20 @@
+# [5.62.0](https://github.com/andes/api/compare/v5.61.0...v5.62.0) (2021-09-22)
+
+
+### Bug Fixes
+
+* **cit:** error al liberar turno ([#1544](https://github.com/andes/api/issues/1544)) ([8afe374](https://github.com/andes/api/commit/8afe374a785ba94a45a990dd163dcf0fdb1398b8))
+* **CIT:** solapamiento de agendas ([#1533](https://github.com/andes/api/issues/1533)) ([525e72d](https://github.com/andes/api/commit/525e72dd7c67f26a294a57ec2939305a3e11e9ce))
+* **vac:** arreglo de script VAC-41 ([#1549](https://github.com/andes/api/issues/1549)) ([cfa976f](https://github.com/andes/api/commit/cfa976f8144755c740d1c6f3a3edc4ef2bb0bc5c))
+
+
+### Features
+
+* **CIT:** se agrega la propiedad link ([#1510](https://github.com/andes/api/issues/1510)) ([5875b9d](https://github.com/andes/api/commit/5875b9db135af304a5bfe43e6d6839bba4b1acc5))
+* **EP:** filtrar seguimientos activos ([#1541](https://github.com/andes/api/issues/1541)) ([3419f24](https://github.com/andes/api/commit/3419f24df8bba5f0efffdb9ddb9428712656b0eb))
+* **form-epidemio:** save usuarioconfirma y usuariopcr ([#1513](https://github.com/andes/api/issues/1513)) ([e453632](https://github.com/andes/api/commit/e453632c26dddbb2d06eb9259d7a76de9b41ce3d))
+* **vac:** nuevo campo enDomicilio para vacunas-paciente ([#1542](https://github.com/andes/api/issues/1542)) ([cdc744c](https://github.com/andes/api/commit/cdc744cf89656b1b4c7cefc4c000a653b5e0f473))
+
 # [5.61.0](https://github.com/andes/api/compare/v5.60.0...v5.61.0) (2021-09-15)
 
 
