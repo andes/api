@@ -14,33 +14,26 @@ import { Auth } from './../../../auth/auth.class';
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
  */
 export async function vencimientoMatriculaGrado(done) {
-    const profesionales: any = await Profesional.aggregate([
-        { $match: { 'formacionGrado.matriculado':true, profesionalMatriculado: true }},
+    const profesionales: any = Profesional.aggregate([
+        { $match: { 'formacionGrado.matriculado': true, profesionalMatriculado: true, habilitado: true }},
         { $unwind: '$formacionGrado'},
         { $addFields: { lastMatriculacion: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] }}},
         { $match: { 'lastMatriculacion.fin': {$lte: new Date() }}}
-    ]);
-    for (const profesional of profesionales) {
-        if (profesional.habilitado) {
-            if (profesional.formacionGrado.matriculacion) {
-                if (profesional.formacionGrado.matriculado && profesional.formacionGrado.matriculacion[profesional.formacionGrado.matriculacion.length - 1].fin <= new Date()) {
-                    profesional.formacionGrado.matriculado = false;
-                    profesional.formacionGrado.papelesVerificados = false;
+    ]).cursor({ batchSize: 100 });
+    for await (const profesional of profesionales) {
+        profesional.formacionGrado.matriculado = false;
+        profesional.formacionGrado.papelesVerificados = false;
+        await Profesional.update(
+            {
+                _id: profesional._id
+            },
 
-                    await Profesional.update(
-                        {
-                            _id: profesional._id
-                        },
+            { $set: { 'formacionGrado.$[elemento]': profesional.formacionGrado } },
 
-                        { $set: { 'formacionGrado.$[elemento]': profesional.formacionGrado } },
-
-                        {
-                            arrayFilters: [{ 'elemento._id': profesional.formacionGrado._id }]
-                        }
-                    );
-                }
+            {
+                arrayFilters: [{ 'elemento._id': profesional.formacionGrado._id }]
             }
-        }
+        );
     }
     done();
 }
