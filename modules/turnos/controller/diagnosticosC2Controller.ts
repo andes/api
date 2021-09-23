@@ -134,7 +134,12 @@ export function getDiagnosticos(params) {
                         $unwind: '$bloques.turnos'
                     },
                     {
-                        $match: matchAgedas
+                        $match: {
+                            'bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
+                            'bloques.turnos.diagnostico.codificaciones.primeraVez': true,
+                            horaInicio: { $gte: new Date(params.horaInicio) },
+                            horaFin: { $lte: new Date(params.horaFin) },
+                        }
                     },
 
                     {
@@ -184,7 +189,12 @@ export function getDiagnosticos(params) {
                          $unwind: '$sobreturnos.diagnostico.codificaciones'
                      },
                      {
-                         $match: matchSobreturnos
+                         $match: {
+                             'sobreturnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
+                             'sobreturnos.diagnostico.codificaciones.primeraVez': true,
+                             horaInicio: { $gte: new Date(params.horaInicio) },
+                             horaFin: { $lte: new Date(params.horaFin) },
+                         }
                      },
                      {
                          $project: {
