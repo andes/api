@@ -11,7 +11,6 @@ import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 import { toArray } from '../../../utils/utils';
 import * as prestacionController from '../../rup/controllers/prestacion';
-import { Codificacion } from '../../rup/schemas/codificacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { Agenda } from '../../turnos/schemas/agenda';
 import { agendaLog } from '../citasLog';
@@ -1194,8 +1193,7 @@ export function updatePaciente(pacienteModified, turno) {
 
 /* Devuelve el idAgenda y idBloque de un turno dado */
 export async function getDatosTurnos(idTurno) {
-    let pipeline = [];
-    pipeline = [
+    const pipeline = [
         {
             $match: {
                 'bloques.turnos._id': Types.ObjectId(idTurno)
@@ -1213,8 +1211,7 @@ export async function getDatosTurnos(idTurno) {
 export function getCantidadConsultaXPrestacion(params) {
 
     return new Promise(async (resolve, reject) => {
-        let pipeline = [];
-        pipeline = [
+        const pipeline = [
             {
                 $match: {
                     $and: [

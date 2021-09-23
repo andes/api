@@ -6,51 +6,68 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 import { IPushNotification, sendPushNotification } from './PushClientFCM';
+import { IOrganizacion } from 'core/tm/interfaces/IOrganizacion';
 
 const log = debug('NotificationService');
 
 export class NotificationService {
 
-    public static notificarReasignar(datosTurno) {
-        this.findTurno(datosTurno).then((turno: any) => {
+    public static async notificarReasignar(datosTurno, efector) {
+        try {
+            const turno: any = await this.findTurno(datosTurno);
             const idPaciente = turno.paciente.id;
             moment.locale('es');
             const date = moment(turno.horaInicio).format('DD [de] MMMM [a las] HH:mm [hs]');
             const prestacion = turno.tipoPrestacion.term;
             const body = 'Tu turno del ' + date + ' para ' + prestacion + ' fue reasignado. Tocá para más información.';
-            const notificacion = { body, extraData: { action: 'reasignar', turno: datosTurno } };
-            this.sendByPaciente(idPaciente, notificacion);
 
-        }).catch(() => { log('ERROR'); });
+            const organizacion = await Organizacion.findById(efector._id);
+            const turnoPush = NotificationService.datosTurnoPush(turno, prestacion);
+            const organizacionPush = NotificationService.datosOrganizacionPush(organizacion);
+            const notificacion = { body, extraData: { action: 'reasignar-turno', turno: turnoPush, organizacion: organizacionPush } };
+            this.sendByPaciente(idPaciente, notificacion);
+        } catch (err) {
+            log(err);
+        }
     }
 
     public static async notificarSuspension(turno, efector) {
-        if (turno.paciente) {
+        try {
             const idPaciente = turno.paciente.id;
             moment.locale('es');
             const date = moment(turno.horaInicio).format('DD [de] MMMM [a las] HH:mm [hs]');
             const prestacion = turno.tipoPrestacion.term;
             const organizacion = await Organizacion.findById(efector._id);
             const body = 'Tu turno del ' + date + ' para ' + prestacion + ' en ' + organizacion.nombre + ' fue suspendido. Tocá para más información.';
-            const turnoPush = {
-                paciente: turno.paciente,
-                motivoSuspension: turno.motivoSuspension,
-                horaInicio: turno.horaInicio,
-                tipoPrestacion: prestacion,
-                profesionales: turno.profesionales
-            };
-            const organizacionPush = {
-                nombre: organizacion.nombre,
-                provincia: organizacion.direccion.ubicacion.provincia.nombre,
-                localidad: organizacion.direccion.ubicacion.localidad.nombre,
-                direccion: organizacion.direccion.valor,
-                telefonos: organizacion.contacto.filter(contacto => contacto.tipo !== 'email')
-            };
+            const turnoPush = NotificationService.datosTurnoPush(turno, prestacion);
+            const organizacionPush = NotificationService.datosOrganizacionPush(organizacion);
             const notificacion = { body, extraData: { action: 'suspender-turno', turno: turnoPush, organizacion: organizacionPush } };
             this.sendByPaciente(idPaciente, notificacion);
+        } catch (err) {
+            log(err);
         }
+
     }
 
+    private static datosTurnoPush(turno: any, prestacion: any) {
+        return {
+            paciente: turno.paciente,
+            motivoSuspension: turno.motivoSuspension ? turno.motivoSuspension : null,
+            horaInicio: turno.horaInicio,
+            tipoPrestacion: prestacion,
+            profesionales: turno.profesionales
+        };
+    }
+
+    private static datosOrganizacionPush(organizacion: IOrganizacion & mongoose.Document) {
+        return {
+            nombre: organizacion.nombre,
+            provincia: organizacion.direccion.ubicacion.provincia.nombre,
+            localidad: organizacion.direccion.ubicacion.localidad.nombre,
+            direccion: organizacion.direccion.valor,
+            telefonos: organizacion.contacto.filter(contacto => contacto.tipo !== 'email')
+        };
+    }
 
     /**
      * Envía notificación de campaña de salud
@@ -106,7 +123,7 @@ export class NotificationService {
         new PushClient().send(devices, notification);
 
         const tokens = account.devices.filter(item => item.device_fcm_token);
-        await sendPushNotification(tokens, notification);
+        sendPushNotification(tokens, notification);
     }
 
     /**
@@ -123,7 +140,7 @@ export class NotificationService {
                 new PushClient().send(devices, notification);
 
                 const tokens = user.devices.filter(item => item.device_fcm_token);
-                await sendPushNotification(tokens, notification);
+                sendPushNotification(tokens, notification);
             });
         });
     }
@@ -143,7 +160,7 @@ export class NotificationService {
                 new PushClient().send(devices, notification);
 
                 const tokens = user.devices.filter(item => item.device_fcm_token);
-                await sendPushNotification(tokens, notification);
+                sendPushNotification(tokens, notification);
             });
         });
     }

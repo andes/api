@@ -493,7 +493,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
                 const turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
                 const idBloque = req.params.idBloque !== '-1' ? null : Types.ObjectId(req.params.idBloque);
                 LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, idBloque, req.params.idAgenda);
-                NotificationService.notificarReasignar(req.params);
+                NotificationService.notificarReasignar(req.params, usuario.organizacion);
             }
 
         });
