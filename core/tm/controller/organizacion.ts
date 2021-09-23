@@ -90,3 +90,7 @@ export async function getConfiguracion(id) {
     const org: any = await Organizacion.findById(id, { configuraciones: 1 });
     return org.configuraciones || {};
 }
+
+export function find(params) {
+    return Organizacion.find(params);
+}
