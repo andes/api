@@ -40,6 +40,10 @@ class SeguimientoPacienteResource extends ResourceBase {
         organizacionSeguimiento: {
             field: 'organizacionSeguimiento.id',
             fn: MongoQuery.equalMatch
+        },
+        asignados: {
+            field: 'ultimaAsignacion',
+            fn: (value) => (value ? { $ne: null } : { $eq: null })
         }
     };
 }
@@ -64,4 +68,4 @@ const patchAsignacion = async (req, res, next) => {
 export const SeguimientoPacienteCtr = new SeguimientoPacienteResource({});
 const seguimientoPacienteRouter = SeguimientoPacienteCtr.makeRoutes();
 seguimientoPacienteRouter.post('/seguimientoPaciente/asignaciones', Auth.authenticate(), asyncHandler(patchAsignacion));
-export const SeguimientoPacienteRouter = seguimientoPacienteRouter;;
+export const SeguimientoPacienteRouter = seguimientoPacienteRouter;
