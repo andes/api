@@ -21,15 +21,11 @@ export async function vencimientoMatriculaGrado(done) {
         if (profesionales[_n].habilitado === true) {
             for (let _i = 0; _i < profesionales[_n].formacionGrado.length; _i++) {
                 if (profesionales[_n].formacionGrado[_i].matriculacion) {
-
                     if (profesionales[_n].formacionGrado[_i].matriculado === true && profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].fin <= new Date()) {
                         profesionales[_n].formacionGrado[_i].matriculado = false;
                         profesionales[_n].formacionGrado[_i].papelesVerificados = false;
                         await actualizar(profesionales[_n]);
-
-
                     }
-
                 }
             }
         }
