@@ -480,22 +480,44 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             profesionalMatriculado: 1
         };
     }
-    if (req.query.fechaDesde && req.query.fechaHasta) {
-        if (req.query.matriculasPorVencer) {
-            if (req.query.tipoMatricula === 'grado') {
-                match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
-                                  { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
-            } else {
-                match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
-                                  { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
+    if (req.query.matriculasPorVencer) {
+        if (req.query.tipoMatricula === 'grado') {
+            if (req.query.fechaDesde) {
+                if (req.query.fechaHasta) {
+                    match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
+                                      { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                } else {
+                    match2['ultimaMatricula.fin'] = { $gte: new Date(req.query.fechaDesde) };
+                }
             }
-        } else if (req.query.matriculasPorVencer === false) {
-            if (req.query.tipoMatricula === 'grado') {
-                match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                                  { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
-            } else {
-                match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                                  { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+        } else {
+            if (req.query.fechaDesde) {
+                if (req.query.fechaHasta) {
+                    match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
+                                      { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                } else {
+                    match2['ultimaMatriculaPosgrado.fin'] = { $gte: new Date(req.query.fechaDesde) };
+                }
+            }
+        }
+    } else {
+        if (req.query.tipoMatricula === 'grado') {
+            if (req.query.fechaDesde) {
+                if (req.query.fechaHasta) {
+                    match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
+                                      { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+                } else {
+                    match2['ultimaMatricula.inicio'] = { $gte: new Date(req.query.fechaDesde) };
+                }
+            }
+        } else {
+            if (req.query.fechaDesde) {
+                if (req.query.fechaHasta) {
+                    match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
+                                      { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+                } else {
+                    match2['ultimaMatriculaPosgrado.inicio'] = { $gte: new Date(req.query.fechaDesde) };
+                }
             }
         }
     }
