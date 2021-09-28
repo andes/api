@@ -10,7 +10,9 @@ export const schema = new mongoose.Schema({
     sinonimo: String,
     c2: Boolean,
     reporteC2: String,
-    ficha: String
+    ficha: String,
+    evento: String,
+    clasificacionManualCaso: String
 });
 
 /**

@@ -472,6 +472,12 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
                     turno: update[etiquetaTurno]
                 };
                 turnosLog.info('update', datosOp, req);
+
+                // Si posee diagnostico nominalizable, se emite evento de reporte de diagnosticos
+                if (req.body.turno.codificaciones && req.body.turno.codificaciones[0].codificacionAuditoria.c2) {
+                    EventCore.emitAsync('citas:turno:reportar', { turno: req.body.turno, agenda: agendaRes });
+                }
+
             }
             // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
             // Donde doc2 es el documeto de la Agenda actualizado
