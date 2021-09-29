@@ -14,9 +14,7 @@ router.get('/profesiones/', asyncHandler(async (req, res, next) => {
     if (req.query.codigo) {
         query.codigo = req.query.codigo;
     }
-    if(req.query.habilitado){
-        query.habilitado = req.query.habilitado;
-    }
+    query.habilitado=true;
 
     const profesiones = await profesion.find(query).sort({ codigoSISA: 1 });
     res.json(profesiones);
