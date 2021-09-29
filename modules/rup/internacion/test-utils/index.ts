@@ -268,7 +268,7 @@ export function createInternacionPrestacion(organizacion, fechaEgreso = null) {
     };
 }
 
-export function estadoOcupada(fecha: Date, idInternacion = null, unidadOrganizativa = null) {
+export function estadoOcupada(fecha: Date, idInternacion = null, unidadOrganizativa = null, extras = null) {
     unidadOrganizativa = unidadOrganizativa || {
         fsn: 'servicio de adicciones (medio ambiente)',
         term: 'servicio de adicciones',
@@ -305,6 +305,7 @@ export function estadoOcupada(fecha: Date, idInternacion = null, unidadOrganizat
             fechaNacimiento: '2000-11-01T03:00:00.000Z',
         },
         idInternacion: idInternacion || getObjectId('internacion'),
+        extras,
         observaciones: null,
         esMovimiento: true,
         sugierePase: null
