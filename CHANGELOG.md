@@ -1,3 +1,18 @@
+# [5.63.0](https://github.com/andes/api/compare/v5.62.0...v5.63.0) (2021-09-29)
+
+
+### Bug Fixes
+
+* **mpi:** georeferencia con cambio de localidad y provincia ([#1550](https://github.com/andes/api/issues/1550)) ([89777b1](https://github.com/andes/api/commit/89777b13f6a48f67eb4648f38a1f25d108b1ba53))
+* **reporteC2:** cambio en match de agendas ([#1559](https://github.com/andes/api/issues/1559)) ([678a9fd](https://github.com/andes/api/commit/678a9fdd784d3671c706c3450faa98492a0996a1))
+
+
+### Features
+
+* **BI:** filtro de zona para reportes ([#1545](https://github.com/andes/api/issues/1545)) ([6e7dc11](https://github.com/andes/api/commit/6e7dc11d91c86ff27c6bbd128deba9de266c6abf))
+* **BI:** limpieza codigo reportes ([#1547](https://github.com/andes/api/issues/1547)) ([0f4d3c4](https://github.com/andes/api/commit/0f4d3c4529734e2fb4e0484a66ceccab396445f4))
+* **mapa-camsa:** se agrega permiso para ver registros ([#1535](https://github.com/andes/api/issues/1535)) ([fb897ad](https://github.com/andes/api/commit/fb897ad76dba52b182ae12139170f05eb53cd552))
+
 # [5.62.0](https://github.com/andes/api/compare/v5.61.0...v5.62.0) (2021-09-22)
 
 
