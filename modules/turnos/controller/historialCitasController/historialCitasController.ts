@@ -1,6 +1,7 @@
 import { search as searchPrestaciones } from '../../../../modules/rup/controllers/prestacion';
 import { getHistorialPaciente, getLiberadosPaciente } from '../../controller/turnosController';
 import moment = require('moment');
+import { PacienteCtr } from '../../../../core-v2/mpi/paciente/paciente.routes';
 
 export async function getHistorial(req) {
     let historial;
@@ -17,13 +18,17 @@ export async function getHistorial(req) {
 }
 
 async function getHistorialFueraAgendas(pacienteId) {
+    const paciente = await PacienteCtr.findById(pacienteId);
+
     const paramsFueraAgenda = {
-        'paciente.id': pacienteId,
+        'paciente.id': { $in: paciente.vinculos },
         'estadoActual.tipo': 'validada',
         'ejecucion.fecha': { $gt: moment().subtract(6, 'months') },
-        'solicitud.turno' : null
+        'solicitud.turno': null
     };
+
     const fueraAgendas = await searchPrestaciones(paramsFueraAgenda);
+
     const historialFueraAgendas = fueraAgendas.map((elem: any) => ({
         estado: 'fuera-agenda',
         horaInicio: elem.ejecucion.fecha,
@@ -32,5 +37,6 @@ async function getHistorialFueraAgendas(pacienteId) {
         paciente: elem.paciente,
         tipoPrestacion: elem.solicitud.tipoPrestacion
     }));
+
     return historialFueraAgendas;
 }
