@@ -8,7 +8,7 @@ import { SeguimientoPacienteCtr } from './seguimiento-paciente.route';
 import moment = require('moment');
 
 const dataLog: any = new Object(userScheduler);
-
+const altaCid = '201000246105';
 
 function moreThan14Days(seguimientos) {
     const ultimoSeguimiento = seguimientos.sort((a, b) => b.fechaInicio - a.fechaInicio)[0];
@@ -93,13 +93,18 @@ EventCore.on('epidemiologia:prestaciones:validate', async (data) => {
     try {
         const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
         if (lastSeguimiento) {
+            const pacienteAlta = data.ejecucion.registros.some(registro => registro.concepto.conceptId === altaCid);
             const prestacion = {
                 idPrestacion: data._id,
                 tipoPrestacion: data.solicitud.tipoPrestacion.term,
                 fecha: data.createdAt
             };
+            if (pacienteAlta) {
+                lastSeguimiento.ultimoEstado = { clave: 'alta', valor: prestacion.fecha };
+            } else {
+                lastSeguimiento.ultimoEstado = { clave: 'seguimiento', valor: prestacion.fecha };
+            }
             lastSeguimiento.llamados.push(prestacion);
-            lastSeguimiento.ultimoEstado = { clave: 'seguimiento', valor: prestacion.fecha };
             return await SeguimientoPacienteCtr.update(lastSeguimiento.id, lastSeguimiento, dataLog);
         }
     } catch (err) {
@@ -128,5 +133,23 @@ EventCore.on('epidemiologia:prestaciones:romperValidacion', async (data) => {
             }
             return await SeguimientoPacienteCtr.update(lastSeguimiento.id, lastSeguimiento, dataLog);
         }
+    }
+});
+
+EventCore.on('rup:paciente:fallecido', async (data) => {
+    try {
+        const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': data.prestacion.paciente.id }).sort({ createdAt: -1 });
+        if (lastSeguimiento) {
+            const prestacion = {
+                idPrestacion: data.prestacion._id,
+                tipoPrestacion: data.prestacion.solicitud.tipoPrestacion.term,
+                fecha: data.prestacion.createdAt
+            };
+            lastSeguimiento.ultimoEstado = { clave: 'fallecido', valor: prestacion.fecha };
+            lastSeguimiento.llamados.push(prestacion);
+            return await SeguimientoPacienteCtr.update(lastSeguimiento.id, lastSeguimiento, dataLog);
+        }
+    } catch (err) {
+        return err;
     }
 });
