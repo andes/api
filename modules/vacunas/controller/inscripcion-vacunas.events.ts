@@ -22,8 +22,8 @@ EventCore.on('vacunas:inscripcion:vacunado', async ({ prestacion }) => {
         inscripto.fechaVacunacion = prestacion.ejecucion.fecha;
         inscripto.idPrestacionVacuna = prestacion._id;
         await InscripcionVacunasCtr.update(inscripto.id, inscripto, dataLog);
-        await sincronizarVacunas(prestacion.paciente.id);
     }
+    await sincronizarVacunas(prestacion.paciente.id);
 });
 
 // Quita la fecha de vacunacion si se rompe la validacion
