@@ -7,6 +7,9 @@ export const SemaforoSchema = new mongoose.Schema({
         {
             id: Number,
             priority: Number,
+            min: Number,
+            max: Number,
+            value: mongoose.Schema.Types.Mixed,
             label: String,
             color: String,
             itemRowStyle: {

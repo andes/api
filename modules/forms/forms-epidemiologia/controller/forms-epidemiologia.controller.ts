@@ -1,8 +1,10 @@
 import { EventCore } from '@andes/event-bus/';
+import { calcularEdad } from 'core-v2/mpi/paciente/paciente.schema';
 import * as mongoose from 'mongoose';
 import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
 import { FormEpidemiologiaCtr } from '../forms-epidemiologia.routes';
 import { userScheduler } from '../../../../config.private';
+import { FormCtr } from '../../../../modules/forms/forms.routes';
 
 export async function updateField(id, body) {
     const { seccion, fields } = body;
@@ -27,7 +29,7 @@ export async function getLAMPPendientes() {
 
 export async function importLAMPResults() {
     const lamps = await this.getLAMPPendientes();
-    EventCore.emitAsync('notificacion:epidemio:lamp', { lamps } );
+    EventCore.emitAsync('notificacion:epidemio:lamp', { lamps });
 }
 
 export async function updateFichaCodigoSisa(fichaId, _codigoSisa) {
@@ -54,4 +56,47 @@ export async function updateFichaCodigoSisa(fichaId, _codigoSisa) {
     fieldSisa.codigoSisa = _codigoSisa;
 
     return FormEpidemiologiaCtr.update(fichaId, ficha, userScheduler as any);
+}
+
+async function getScoreComorbilidades(ficha) {
+    const enfermedadesFields = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields;
+    const presentaComorbilidades = enfermedadesFields?.find(f => f.presenta)?.presenta;
+    let score = 0;
+
+    if (presentaComorbilidades) {
+        const fichaTemplate: any = await FormCtr.findOne({ 'type.name': 'covid19' });
+        const fieldsScores = {};
+        fichaTemplate.sections.find(s => s.name === 'Enfermedades Previas')?.fields.forEach(f => {
+            const field = JSON.parse(JSON.stringify(f));
+            if (field.extras?.puntosScore) {
+                fieldsScores[field.key] = field.extras.puntosScore;
+            }
+        });
+
+        const comorbilidades = enfermedadesFields?.filter(f => !f.presenta);
+        comorbilidades.forEach(f => {
+            const valor = fieldsScores[Object.keys(f)[0]];
+            score += valor ? valor : 0;
+        });
+    }
+    return score;
+}
+
+function getScoreEdad(edad) {
+    if (edad >= 50 && edad < 60) {
+        return 1;
+    } else if (edad >= 60 && edad < 70) {
+        return 2;
+    } else if (edad >= 70) {
+        return 3;
+    }
+
+    return 0;
+}
+
+export async function getScoreValue(ficha) {
+    const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento, ficha.createdAt);
+    const scoreComorbilidades = await getScoreComorbilidades(ficha);
+    const scoreEdad = getScoreEdad(edadPaciente);
+    return scoreComorbilidades + scoreEdad;
 }

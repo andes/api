@@ -1,6 +1,5 @@
 import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 import * as mongoose from 'mongoose';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
 
@@ -26,11 +25,7 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         fechaNacimiento: Date
     }, { _id: false }),
     secciones: [mongoose.Schema.Types.Mixed],
-    zonaSanitaria: zonaSanitariasSchema,
-    score: {
-        value: String,
-        fecha: Date
-    }
+    zonaSanitaria: zonaSanitariasSchema
 });
 
 const assertUniquePCR = async function (next) {
@@ -74,12 +69,7 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
             const user = seccionUsuario.fields.find(f => f.responsable)?.responsable;
             seccionClasificacion.fields.push({ usuarioconfirma: user });
         }
-        const edadPaciente = calcularEdad(ficha.paciente.fechaNacimiento, ficha.createdAt);
-        const comorbilidades = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields.find(f => f.presenta)?.presenta;
-        ficha.score = {
-            value: edadPaciente >= 60 && comorbilidades ? 10 : comorbilidades ? 6 : 3,
-            fecha: new Date()
-        };
+
         EventCore.emitAsync('epidemiologia:seguimiento:create', ficha);
     }
     if (muestraPcr) {
