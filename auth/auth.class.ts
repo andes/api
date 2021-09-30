@@ -23,7 +23,7 @@ export class Auth {
      * @memberOf Auth
      */
 
-    static expiresIn = 60 * 60 * 24 * 10; /* 10 días */
+    static expiresIn = 60 * 60 * 8; /* 8 Horas */
     static expiresInTemporaly = 60 * 5;
 
     /**
