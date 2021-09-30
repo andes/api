@@ -43,9 +43,7 @@ router.get('/siisa/entidadesformadoras', (req, resp, errorHandler) => {
  */
 router.get('/siisa/profesion', (req, resp, errorHandler) => {
     const query: any = {};
-    if (req.query.habilitado) {
-        query.habilitado = req.query.habilitado;
-    }
+    query.gestionaColegio = false;
     SIISA.Profesion.find(query, (error, datos) => {
         if (error) {
             return errorHandler(error);

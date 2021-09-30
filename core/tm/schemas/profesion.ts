@@ -13,7 +13,6 @@ const profesionSchema = new mongoose.Schema({
         required: true,
         default: []
     },
-    habilitado: Boolean
 });
 
 export = profesionSchema;
