@@ -132,16 +132,35 @@ const facets = {
     tipoTurno: [
         {
             $match: {
-                'turno.estado': 'asignado',
-                estado: { $ne: 'suspendida' },
-                'turno.tipoTurno': { $ne: null }
+                $or:[{'turno.estado':'asignado'},{'turno.estado':'disponible'}],
+                estado:{$ne:'suspendida'},
+            }
+        },
+        {
+            $addFields: {
+                tipo:{
+                    $cond:{
+                        if:{
+                            $ne: [
+                                {
+                                    $in: [
+                                        { $type: '$turno.tipoTurno' },
+                                        ['missing', 'null', 'undefined']
+                                    ]
+                                },
+                                true]
+                        },
+                        then:'$turno.tipoTurno',
+                        else:'Sin tipo'
+                    }
+                }
             }
         },
         {
             $group: {
-                _id: '$turno.tipoTurno',
+                _id: '$tipo',
                 count: { $sum: 1 },
-                nombre: { $first: '$turno.tipoTurno' }
+                nombre: { $first: '$tipo' }
             }
         },
         { $sort: { count: -1 } }
