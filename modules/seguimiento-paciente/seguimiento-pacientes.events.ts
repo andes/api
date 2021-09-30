@@ -24,26 +24,31 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
 
             const patientGeoRef = (data.paciente.direccion && data.paciente.direccion[0]?.geoReferencia?.length) ? data.paciente.direccion[0].geoReferencia.reverse() : null;
 
-            let location;
             let coordinates;
+            let organizacionSeguimiento;
 
             if (patientGeoRef) {
                 coordinates = patientGeoRef;
             } else {
                 const organizacionCreatedBy = await Organizacion.findById(data.createdBy.organizacion.id);
-                coordinates = organizacionCreatedBy.direccion?.geoReferencia?.reverse();
+                if (organizacionCreatedBy.configuraciones?.organizacionSeguimiento) {
+                    organizacionSeguimiento = organizacionCreatedBy.configuraciones.organizacionSeguimiento;
+                } else {
+                    coordinates = organizacionCreatedBy.direccion?.geoReferencia?.reverse();
+                }
             }
 
-            let organizacionSeguimiento;
-            if (coordinates) {
-                organizacionSeguimiento = await getOrganizacionAreaByLocationPoint({ type: 'Point', coordinates });
-            } else {
-                const organizacionDefecto = await Organizacion.findOne({ defaultSeguimiento: true });
-                organizacionSeguimiento = {
-                    id: organizacionDefecto._id,
-                    nombre: organizacionDefecto.nombre,
-                    codigoSisa: organizacionDefecto.codigo.sisa.toString()
-                };
+            if (!organizacionSeguimiento) {
+                if (coordinates) {
+                    organizacionSeguimiento = await getOrganizacionAreaByLocationPoint({ type: 'Point', coordinates });
+                } else {
+                    const organizacionDefecto = await Organizacion.findOne({ defaultSeguimiento: true });
+                    organizacionSeguimiento = {
+                        id: organizacionDefecto._id,
+                        nombre: organizacionDefecto.nombre,
+                        codigoSisa: organizacionDefecto.codigo.sisa.toString()
+                    };
+                }
             }
 
             const seguimiento: ISeguimientoPaciente = {
@@ -66,7 +71,6 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
                     direccionActual: mpiSections.fields.find(f => f.direccioncaso).direccioncaso,
                     sexo: data.paciente.sexo,
                     foto: '',
-                    location,
                     fechaNacimiento: data.paciente.fechaNacimiento
                 },
                 organizacionSeguimiento,

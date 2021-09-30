@@ -19,7 +19,6 @@ export interface ISeguimientoPaciente {
         sexo: string;
         foto: string;
         fechaNacimiento: Date;
-        location: object;
     };
     llamados: any[];
     organizacionSeguimiento: {

@@ -39,8 +39,7 @@ export const seguimientoPacienteSchema = new Schema(
             direccionActual: String,
             sexo: String,
             foto: String,
-            fechaNacimiento: Date,
-            location: pointSchema
+            fechaNacimiento: Date
         },
         organizacionSeguimiento: {
             id: Types.ObjectId,

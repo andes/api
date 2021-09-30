@@ -45,12 +45,7 @@ export interface IOrganizacion {
      * @memberof IOrganizacion
      */
     showMapa?: boolean;
-    configuraciones?: {
-        emails: [{
-            email: string;
-            nombre: string;
-        }];
-    };
+    configuraciones?: any;
     esCOM: Boolean;
 }
 
