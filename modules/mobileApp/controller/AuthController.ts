@@ -19,7 +19,7 @@ export function verificarCodigo(codigoIngresado, codigo) {
     }
 }
 
-export function enviarCodigoCambioPassword(user) {
+export function enviarCodigoCambioPassword(user, origen = 'app móvil') {
     log('Enviando mail...');
     const replacements = {
         username: user.apellido + ', ' + user.nombre,
@@ -28,7 +28,7 @@ export function enviarCodigoCambioPassword(user) {
 
     const mailOptions: IEmail = {
         email: user.email,
-        subject: 'ANDES - Restablecer contraseña app móvil',
+        subject: `ANDES - Restablecer contraseña ${origen}`,
         template: 'emails/reset-password.html',
         extras: replacements,
         plainText: 'El código de verificación para restaurar su contraseña es: ' + user.restablecerPassword.codigo,
@@ -46,7 +46,7 @@ export function enviarCodigoCambioPassword(user) {
 
 }
 
-export async function enviarCodigoVerificacion(user, password, device_fcm_token?) {
+export async function enviarCodigoVerificacion(user, password, device_fcm_token?, origen = 'app móvil') {
 
     const replacements = {
         username: user.apellido + ', ' + user.nombre,
@@ -58,7 +58,7 @@ export async function enviarCodigoVerificacion(user, password, device_fcm_token?
     // Email
     const mailOptions: IEmail = {
         email: user.email,
-        subject: 'ANDES - Código de Activación app móvil',
+        subject: `ANDES - Código de Activación ${origen}`,
         template: 'emails/active-app-code.html',
         extras: replacements,
         plainText: `
