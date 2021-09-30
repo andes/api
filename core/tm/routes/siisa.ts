@@ -42,12 +42,11 @@ router.get('/siisa/entidadesformadoras', (req, resp, errorHandler) => {
  * Profesiones
  */
 router.get('/siisa/profesion', (req, resp, errorHandler) => {
-    const query: any = {};
-    query.gestionaColegio = false;
-    SIISA.Profesion.find(query, (error, datos) => {
+    SIISA.Profesion.find({}, (error, datos) => {
         if (error) {
             return errorHandler(error);
         }
+
         return resp.status(201).jsonp(datos);
     });
 });
@@ -55,6 +54,7 @@ router.get('/siisa/profesion', (req, resp, errorHandler) => {
 router.post('/siisa/profesion', (req, resp, errorHandler) => {
     const total = req.body.length;
     const saved = [];
+
     req.body.forEach(element => {
         const siisa_p = new SIISA.Profesion(element);
 
