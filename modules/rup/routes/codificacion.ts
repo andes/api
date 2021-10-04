@@ -72,8 +72,9 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
             'createdBy.organizacion.id': req.user.organizacion.id,
             createdAt: {
                 $gte: new Date(req.query.fechaDesde),
-                $lte: new Date(req.query.fechaHasta),
-            }
+                $lte: new Date(req.query.fechaHasta)
+            },
+            ambitoPrestacion: 'ambulatorio'
         };
 
         if (!req.query.auditadas) {
