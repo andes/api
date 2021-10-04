@@ -1,9 +1,9 @@
 import { EventCore } from '@andes/event-bus/';
-import { calcularEdad } from 'core-v2/mpi/paciente/paciente.schema';
-import * as mongoose from 'mongoose';
+import { calcularEdad } from './../../../../core-v2/mpi/paciente/paciente.schema';
 import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
 import { FormEpidemiologiaCtr } from '../forms-epidemiologia.routes';
 import { userScheduler } from '../../../../config.private';
+import * as mongoose from 'mongoose';
 import { FormCtr } from '../../../../modules/forms/forms.routes';
 
 export async function updateField(id, body) {
@@ -81,6 +81,7 @@ async function getScoreComorbilidades(ficha) {
     }
     return score;
 }
+
 
 function getScoreEdad(edad) {
     if (edad >= 50 && edad < 60) {

@@ -1,8 +1,6 @@
 import { EventCore } from '@andes/event-bus';
 import { userScheduler } from '../../config.private';
-import { getOrganizacionAreaByLocationPoint } from './../georeferencia/controller/areasPrograma';
 import { ISeguimientoPaciente } from './interfaces/seguimiento-paciente.interface';
-import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 import { SeguimientoPacienteCtr } from './seguimiento-paciente.route';
 import moment = require('moment');
