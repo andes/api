@@ -222,7 +222,8 @@ const facets = {
                 count: { $sum: 1 },
                 nombre: { $first: '$solicitud.tipoPrestacion.term' }
             }
-        }
+        },
+        { $sort: { count: -1 } }
     ],
 
     solicitudesOrigen: [
@@ -232,7 +233,8 @@ const facets = {
                 count: { $sum: 1 },
                 nombre: { $first: '$solicitud.tipoPrestacionOrigen.term' }
             }
-        }
+        },
+        { $sort: { count: -1 } }
     ],
 
     organizacionesEntrada: [
@@ -252,7 +254,8 @@ const facets = {
                 count: { $sum: 1 },
                 nombre: { $first: '$solicitud.organizacion.nombre' }
             }
-        }
+        },
+        { $sort: { count: -1 } }
     ],
 
     profesionalesOrigen: [
@@ -262,7 +265,8 @@ const facets = {
                 count: { $sum: 1 },
                 nombre: { $addToSet: { $concat: ['$solicitud.profesionalOrigen.nombre', ' ', '$solicitud.profesionalOrigen.apellido'] } }
             }
-        }
+        },
+        { $sort: { count: -1 } }
     ],
 
     profesionalesDestino: [
@@ -272,7 +276,8 @@ const facets = {
                 count: { $sum: 1 },
                 nombre: { $addToSet: { $concat: ['$solicitud.profesional.nombre', ' ', '$solicitud.profesional.apellido'] } }
             }
-        }
+        },
+        { $sort: { count: -1 } }
     ],
 
     estados: [
