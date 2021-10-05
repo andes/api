@@ -108,7 +108,7 @@ router.post('/olvide-password', (req, res, next) => {
 
             EventCore.emitAsync('mobile:patient:reset-password', user);
             // enviamos email de reestablecimiento de password
-            authController.enviarCodigoCambioPassword(datosUsuario);
+            authController.enviarCodigoCambioPassword(datosUsuario, req.body.origen);
 
             res.status(200).json({
                 valid: true
@@ -148,7 +148,7 @@ router.post('/reestablecer-password', (req, res, next) => {
         }
 
         if (!datosUsuario) {
-            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
+            return res.status(422).send({ error: 'El e-mail ingresado no existe o venció el plazo para su activación.' });
         }
 
         const codigo = req.body.codigo;
@@ -156,7 +156,7 @@ router.post('/reestablecer-password', (req, res, next) => {
 
         if (datosUsuario.restablecerPassword) {
             if (datosUsuario.restablecerPassword.codigo !== codigo) {
-                return res.status(422).send({ error: 'El codigo ingresado no existe.' });
+                return res.status(422).send({ error: 'El codigo ingresado no existe o ya fue utilizado.' });
             }
 
             const hoy = new Date();
