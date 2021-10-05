@@ -33,6 +33,9 @@ export async function obtenerPrestaciones(organizacion, filtros) {
     if (filtros.idProfesional) {
         $match['solicitud.profesional.id'] = filtros.idProfesional;
     }
+    if (filtros.idPaciente) {
+        $match['paciente.id'] = filtros.idPaciente;
+    }
 
     return Prestacion.find({
         'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
@@ -127,8 +130,8 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
                 capa,
                 cama: mov.idCama
             },
-            mov.fecha,
-            usuario
+                mov.fecha,
+                usuario
             );
         });
 
