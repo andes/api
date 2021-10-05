@@ -1,13 +1,33 @@
+import { asyncHandler, Request } from '@andes/api-tool';
+import { ResourceNotFound } from '@andes/core';
 import * as express from 'express';
-import { ReglasTOP } from '../schemas/reglas';
-import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 import { ConceptosTurneablesCtr } from '../../../core/tm/conceptos-turneables.routes';
-import { asyncHandler, Request } from '@andes/api-tool';
 import { ISnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
-import { ResourceNotFound } from '@andes/core';
+import { ReglasTOP } from '../schemas/reglas';
+import { Auth } from './../../../auth/auth.class';
 
 const router = express.Router();
+
+router.post('/reglas-v2', asyncHandler(async (req, res, next) => {
+    const body = req.body;
+    const regla = new ReglasTOP(body);
+    Auth.audit(regla, req);
+    await regla.save();
+    return res.json(regla);
+}));
+
+router.patch('/reglas/:id', asyncHandler(async (req, res, next) => {
+    const id = req.params.id;
+    const regla = await ReglasTOP.findById(id);
+    if (regla) {
+        regla.set(req.body);
+        Auth.audit(regla, req);
+        await regla.save();
+        return res.json(regla);
+    }
+    throw new ResourceNotFound();
+}));
 
 router.post('/reglas', async (req, res, next) => {
     const ArrReglas = req.body.reglas;
@@ -43,8 +63,19 @@ router.get('/reglas/:id', asyncHandler(async (req: Request, res) => {
 router.get('/reglas', async (req: Request, res, next) => {
     let prestacionesPermisos: ISnomedConcept[];
     const query = ReglasTOP.find({});
+    const raw = req.query.raw || false;
+    const esServicioIntermedio = req.query.esServicioIntermedio;
+
     if (req.query.organizacionOrigen) {
         query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
+    }
+
+    if (esServicioIntermedio !== undefined) {
+        if (esServicioIntermedio) {
+            query.where('destino.inicio').equals('servicio-intermedio');
+        } else {
+            query.where('destino.inicio', { $exist: false });
+        }
     }
 
     if (req.query.prestacionOrigen) {
@@ -67,13 +98,13 @@ router.get('/reglas', async (req: Request, res, next) => {
         query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
     }
     const reglas = await query.exec();
-    if (prestacionesPermisos) {
+    if (prestacionesPermisos && !raw) {
         reglas.forEach(regla => {
             regla.origen.prestaciones = regla.origen.prestaciones.filter(p => prestacionesPermisos.find(pp => pp.conceptId === p.prestacion.conceptId));
         });
     }
 
-    if (req.query.prestacionDestino) {
+    if (req.query.prestacionDestino && !raw) {
         reglas.forEach(regla => {
             if (Array.isArray(regla.destino.prestacion)) {
                 regla.destino.prestacion = regla.destino.prestacion.find(p => p.conceptId === req.query.prestacionDestino);

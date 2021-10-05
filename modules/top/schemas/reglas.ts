@@ -2,6 +2,7 @@ import { ObjectId } from '@andes/core';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { Document, model, Schema } from 'mongoose';
 import { ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { SemanticTag } from '../../../modules/rup/schemas/semantic-tag';
 import { ISnomedConcept, SnomedConcept } from '../../rup/schemas/snomed-concept';
 
 export interface IReglasTOP {
@@ -15,6 +16,7 @@ export interface IReglasTOP {
             prestacion: ISnomedConcept;
             auditable: boolean;
         }[];
+        query: string;
     };
     destino: {
         organizacion: {
@@ -27,7 +29,7 @@ export interface IReglasTOP {
         turneable: boolean;
         agendas: [ITipoPrestacion];
         informe?: 'none' | 'optional' | 'required';
-
+        query: string;
     };
 }
 
@@ -47,6 +49,7 @@ export const ReglasTOPSchema = new Schema({
                 }
             }
         ],
+        query: String
     },
     destino: {
         organizacion: {
@@ -67,10 +70,19 @@ export const ReglasTOPSchema = new Schema({
             type: Boolean,
             default: false
         },
+        agendas: [{
+            id: Schema.Types.ObjectId,
+            conceptId: String,
+            term: String,
+            fsn: String,
+            semanticTag: SemanticTag,
+            nombre: String
+        }],
         informe: {
             type: String,
             require: false
-        }
+        },
+        query: String
     }
 });
 
