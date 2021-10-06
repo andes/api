@@ -130,8 +130,8 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
                 capa,
                 cama: mov.idCama
             },
-                mov.fecha,
-                usuario
+            mov.fecha,
+            usuario
             );
         });
 
