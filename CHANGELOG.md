@@ -1,3 +1,19 @@
+# [5.64.0](https://github.com/andes/api/compare/v5.63.0...v5.64.0) (2021-10-06)
+
+
+### Bug Fixes
+
+* **CIT:** evita traer registros de internacion ([#1566](https://github.com/andes/api/issues/1566)) ([eef266e](https://github.com/andes/api/commit/eef266e023e7a9fe0bec6b8109d8b860d1a9019d))
+* **CIT-118:** Error al mostrar datos de pacientes unificados ([#1543](https://github.com/andes/api/issues/1543)) ([0de6d18](https://github.com/andes/api/commit/0de6d184ebb6a93e48093fc4f5bc2c24579c0773))
+* **Dashboards:** Agrega en el gráfico de tipos de turnos los que están sin clasificar. ([#1556](https://github.com/andes/api/issues/1556)) ([4ec1996](https://github.com/andes/api/commit/4ec1996c4d3d906e607e1e93a7898185ba256822))
+* **mat:** filtrar matricula por fechas aisladas ([#1560](https://github.com/andes/api/issues/1560)) ([ea519f4](https://github.com/andes/api/commit/ea519f46f02774f2135f430ad37c6e045136da1c))
+
+
+### Features
+
+* **top:** filtros de reglas servicio intermedio ([#1531](https://github.com/andes/api/issues/1531)) ([27a5972](https://github.com/andes/api/commit/27a597233a5b5a84c0c71094d00d8335792b4f27))
+* **vac:** modificación de proceso para exportar vacunas ([#1554](https://github.com/andes/api/issues/1554)) ([0360e3f](https://github.com/andes/api/commit/0360e3fe410133ecb5cf4e107b683d88dc6ae505))
+
 # [5.63.0](https://github.com/andes/api/compare/v5.62.0...v5.63.0) (2021-09-29)
 
 
