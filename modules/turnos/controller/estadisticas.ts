@@ -116,6 +116,13 @@ const facets = {
                         then: { $cond: { if: { $ne: ['$turno.reasignado.siguiente', null] }, then: 'reasignado', else: 'suspendida' } },
                         else: '$turno.estado'
                     }
+                },
+                asistio: {
+                    $cond: {
+                        if: { $eq: ['$turno.asistencia', 'asistio'] },
+                        then: 1,
+                        else: 0
+                    }
                 }
             }
         },
@@ -123,8 +130,32 @@ const facets = {
             $group: {
                 _id: '$real-state',
                 count: { $sum: 1 },
-                nombre: { $first: '$real-state' }
+                nombre: { $first: '$real-state' },
+                asistencias : { $sum: '$asistio' }
             }
+        },
+        {
+            $addFields: {
+                extras: {
+                    $cond: {
+                        if: { $eq: ['$nombre', 'asignado']},
+                        then: [
+                            {
+                                nombre: 'Asistencias',
+                                count: '$asistencias'
+                            },
+                            {
+                                nombre: 'Inasistencias',
+                                count: { $subtract: ['$count', '$asistencias'] }
+                            }
+                        ],
+                        else: undefined
+                    }
+                }
+            }
+        },
+        {
+            $unset: 'asistencias'
         },
         { $sort: { count: -1 } }
     ],
