@@ -93,6 +93,10 @@ export class AndesDrive {
         return FileDescriptor.find(id);
     }
 
+    public static delete(id) {
+        return FileDescriptor.delete(id);
+    }
+
     public static async read(file: IFileDescriptor) {
         return await this.adapter.read(file.real_id);
     }

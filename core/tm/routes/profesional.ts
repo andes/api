@@ -11,7 +11,7 @@ import { sendSms } from '../../../utils/roboSender/sendSms';
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
-import { formacionCero, matriculaCero, migrarTurnos, saveFirma, saveTituloFormacionGrado, saveTituloFormacionPosgrado } from '../controller/profesional';
+import { formacionCero, matriculaCero, migrarTurnos, saveFirma, saveTituloFormacionGrado, saveTituloFormacionPosgrado, getTituloFormacionGrado, deleteTituloFormacionGrado } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { makeFs } from '../schemas/imagenes';
@@ -485,7 +485,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             if (req.query.fechaDesde) {
                 if (req.query.fechaHasta) {
                     match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
-                                      { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                    { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
                 } else {
                     match2['ultimaMatricula.fin'] = { $gte: new Date(req.query.fechaDesde) };
                 }
@@ -494,7 +494,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             if (req.query.fechaDesde) {
                 if (req.query.fechaHasta) {
                     match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
-                                      { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                    { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
                 } else {
                     match2['ultimaMatriculaPosgrado.fin'] = { $gte: new Date(req.query.fechaDesde) };
                 }
@@ -505,7 +505,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             if (req.query.fechaDesde) {
                 if (req.query.fechaHasta) {
                     match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                                      { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+                    { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
                 } else {
                     match2['ultimaMatricula.inicio'] = { $gte: new Date(req.query.fechaDesde) };
                 }
@@ -514,7 +514,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             if (req.query.fechaDesde) {
                 if (req.query.fechaHasta) {
                     match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                                      { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+                    { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
                 } else {
                     match2['ultimaMatriculaPosgrado.inicio'] = { $gte: new Date(req.query.fechaDesde) };
                 }
@@ -550,6 +550,20 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
     }
 });
 
+router.delete('/profesionales/formacionGrado/titulo/eliminar', async (req, res, next) => {
+    console.log('ENTRO Y TIENE: ', req.params.id);
+    // await deleteTituloFormacionGrado(req.query);
+});
+
+router.get('/profesionales/formacionGrado/titulo', async (req, res, next) => {
+    const titulos = await getTituloFormacionGrado(req.query);
+    res.json(titulos);
+});
+
+router.get('/profesionales/formacionPosgrado/titulo', async (req, res, next) => {
+    const titulos = await getTituloFormacionGrado(req.query);
+    res.json(titulos);
+});
 
 router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
@@ -902,10 +916,10 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
                     idProfesional: req.body.imagen.idProfesional,
                 }
             },
-            input.pipe(decoder),
-            (error, createdFile) => {
-                res.json(createdFile);
-            });
+                input.pipe(decoder),
+                (error, createdFile) => {
+                    res.json(createdFile);
+                });
             input.end(_base64);
         }
         if (req.body.firma) {
@@ -1002,6 +1016,7 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
+
 router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:deleteProfesional')) {
         return next(403);

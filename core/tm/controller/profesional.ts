@@ -9,6 +9,7 @@ import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { Profesional } from '../schemas/profesional';
 import { Auth } from './../../../auth/auth.class';
+import { AndesDrive } from '@andes/drive';
 
 /**
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
@@ -185,6 +186,15 @@ export async function saveTituloFormacionGrado(data) {
 
     formacionGrado.tituloFileId = data.fileId;
     return await actualizar(_profesional);
+}
+
+export async function getTituloFormacionGrado(data) {
+    const fileDrive = await AndesDrive.find(data.fileId);
+    return fileDrive;
+}
+
+export async function deleteTituloFormacionGrado(data) {
+    // await AndesDrive.delete(data.fileId);
 }
 
 export async function saveTituloFormacionPosgrado(data) {
