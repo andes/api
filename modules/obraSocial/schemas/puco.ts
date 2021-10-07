@@ -26,5 +26,10 @@ const PucoSchema = new mongoose.Schema({
 
 PucoSchema.index({ dni: 1, version: 1 });
 PucoSchema.index({ version: 1 });
-export const Puco = Connections.puco.model<IPucoDocument>(configPrivate.puco.database, PucoSchema, configPrivate.puco.database);
+
+// Atención necesario para correr los test. No es necesario copiar esto en otros modelos!!!.
+export const Puco = process.env.NODE_ENV === 'test'
+    ? mongoose.model<IPucoDocument>(configPrivate.puco.database, PucoSchema, configPrivate.puco.database)
+    : Connections.puco.model<IPucoDocument>(configPrivate.puco.database, PucoSchema, configPrivate.puco.database);
+
 

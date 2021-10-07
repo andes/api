@@ -1,8 +1,8 @@
+import { AndesCache } from '@andes/core';
+import { Connections as loggerConnections } from '@andes/log';
+import * as debug from 'debug';
 import * as mongoose from 'mongoose';
 import * as configPrivate from './config.private';
-import * as debug from 'debug';
-import { Connections as loggerConnections } from '@andes/log';
-import { AndesCache } from '@andes/core';
 
 function schemaDefaults(schema) {
     schema.set('toJSON', {
@@ -14,8 +14,8 @@ function schemaDefaults(schema) {
 export class Connections {
     static main: mongoose.Connection;
     static snomed: mongoose.Connection;
-    static puco: mongoose.Connection;
-    static logs: mongoose.Connection;
+    static puco: mongoose.Connection = mongoose.createConnection();
+    static logs: mongoose.Connection = mongoose.createConnection();
 
     /**
      * Inicializa las conexiones a MongoDB
