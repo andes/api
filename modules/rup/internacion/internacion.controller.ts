@@ -9,6 +9,7 @@ import * as CamasEstadosController from './cama-estados.controller';
 import { historial as historialCamas } from './camas.controller';
 import { InternacionResumen } from './resumen/internacion-resumen.schema';
 import { historial as historialSalas } from './sala-comun/sala-comun.controller';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 
 export async function obtenerPrestaciones(organizacion, filtros) {
@@ -32,6 +33,11 @@ export async function obtenerPrestaciones(organizacion, filtros) {
 
     if (filtros.idProfesional) {
         $match['solicitud.profesional.id'] = filtros.idProfesional;
+    }
+    if (filtros.idPaciente) {
+        $match['paciente.id'] = filtros.idPaciente;
+        const paciente = await PacienteCtr.findById(filtros.idPaciente);
+        $match['paciente.id'] = { $in: paciente.vinculos };
     }
 
     return Prestacion.find({

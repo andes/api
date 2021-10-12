@@ -1,18 +1,18 @@
 const mongoose = require('mongoose');
 
-import { store, patch, findById } from './camas.controller';
-import { ingresarPaciente } from './sala-comun/sala-comun.controller';
-import { Prestacion } from '../schemas/prestacion';
-import { Camas } from './camas.schema';
-import { CamaEstados } from './cama-estados.schema';
-import { SalaComun, SalaComunSnapshot } from './sala-comun/sala-comun.schema';
-import { SalaComunMovimientos } from './sala-comun/sala-comun-movimientos.schema';
-import * as InternacionController from './internacion.controller';
-import { SalaComunCtr } from './sala-comun/sala-comun.routes';
-import { Auth } from '../../../auth/auth.class';
-import * as moment from 'moment';
 import { getFakeRequest, setupUpMongo } from '@andes/unit-test';
+import * as moment from 'moment';
+import { Auth } from '../../../auth/auth.class';
+import { Prestacion } from '../schemas/prestacion';
+import { CamaEstados } from './cama-estados.schema';
+import { findById, patch, store } from './camas.controller';
+import { Camas } from './camas.schema';
 import { EstadosCtr } from './estados.routes';
+import * as InternacionController from './internacion.controller';
+import { SalaComunMovimientos } from './sala-comun/sala-comun-movimientos.schema';
+import { ingresarPaciente } from './sala-comun/sala-comun.controller';
+import { SalaComunCtr } from './sala-comun/sala-comun.routes';
+import { SalaComun, SalaComunSnapshot } from './sala-comun/sala-comun.schema';
 import { createPaciente, createUnidadOrganizativa } from './test-utils';
 
 const REQMock = getFakeRequest();

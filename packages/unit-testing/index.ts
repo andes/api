@@ -1,7 +1,9 @@
-import { Types } from 'mongoose';
 import { Request } from '@andes/api-tool';
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
+import { Connections } from '../../connections';
+
 
 const sha1 = require('sha1');
 
@@ -32,6 +34,7 @@ export function setupUpMongo() {
         mongoServer = new MongoMemoryServer();
         const mongoUri = await mongoServer.getConnectionString();
         mongoose.connect(mongoUri);
+        Connections.logs = mongoose.connection;
     });
 
     afterAll(async () => {
