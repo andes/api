@@ -88,14 +88,18 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     e.extras.unidadOrganizativaOrigen.conceptId !== unidadOrganizativa);
                 const movEgresaUO = estadosInter.filter(e => e.extras && e.extras.unidadOrganizativaOrigen &&
                     e.extras.unidadOrganizativaOrigen.conceptId === unidadOrganizativa);
-
-                movimientosUO.sort((a, b) => (a.fecha - b.fecha));
-                let fechaIngresoUO = movimientosUO[0].fecha;
-                let esPaseA = false;
-                if (movIngUO.length) { // obtengo el ultimo ingreso a la UO
-                    movIngUO.sort((a, b) => (b.fecha - a.fecha));
-                    fechaIngresoUO = movIngUO[0].fecha;
+                let fechaIngresoUO = null;
+                if (movimientosUO.length) {
+                    movimientosUO.sort((a, b) => (a.fecha - b.fecha));
+                    fechaIngresoUO = movimientosUO[0]?.fecha;
+                    if (movIngUO.length) { // obtengo el ultimo ingreso a la UO
+                        movIngUO.sort((a, b) => (b.fecha - a.fecha));
+                        fechaIngresoUO = movIngUO[0].fecha;
+                    }
                 }
+
+                let esPaseA = false;
+
                 if (movEgresaUO.length) {
                     movEgresaUO.sort((a, b) => (b.fecha - a.fecha));
                     // si se egresa de la UO el mismo dia de consulta en el censo
@@ -126,9 +130,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         }
         const esPaseA = dataInternaciones[idInter]['esPaseA'];
         const informesInternacion = dataInternaciones[idInter]['informesInternacion'];
-        const fechaIngresoUO = dataInternaciones[idInter]['fechaIngresoUO'];
         const fechaEgreso = informesInternacion.egreso ? informesInternacion.egreso.fechaEgreso : null;
         const fechaIngreso = informesInternacion.ingreso.fechaIngreso;
+        const fechaIngresoUO = dataInternaciones[idInter]['fechaIngresoUO'] || fechaIngreso;
         const primerUO = allMovimientos[0].unidadOrganizativa.conceptId;
         const ultimaUO = ultimoMovimiento.unidadOrganizativa.conceptId;
         let ingresoEgresoCargado = false;
