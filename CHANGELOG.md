@@ -1,3 +1,16 @@
+# [5.65.0](https://github.com/andes/api/compare/v5.64.0...v5.65.0) (2021-10-13)
+
+
+### Bug Fixes
+
+* **mapa-camas:** fix error de fecha en censo diario ([#1577](https://github.com/andes/api/issues/1577)) ([89c5894](https://github.com/andes/api/commit/89c5894387aa2f9e909855dfd11f05207870cb3f))
+
+
+### Features
+
+* **auth:** session de 8hs ([#1567](https://github.com/andes/api/issues/1567)) ([40993ee](https://github.com/andes/api/commit/40993eee4c59ad3dbc993cbef14b3f8812bd2296))
+* **bi:** ordenar resultados de dashboard de top de mayor a menor ([#1572](https://github.com/andes/api/issues/1572)) ([75a1ed0](https://github.com/andes/api/commit/75a1ed030d419a7a038ffcf76d68842d3292e2fb))
+
 # [5.64.0](https://github.com/andes/api/compare/v5.63.0...v5.64.0) (2021-10-06)
 
 
