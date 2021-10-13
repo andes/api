@@ -1,13 +1,13 @@
 import { EventCore } from '@andes/event-bus/';
 import { calcularEdad } from './../../../../core-v2/mpi/paciente/paciente.schema';
+import { SECCION_CLASIFICACION } from '../constantes';
 import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
 import { FormEpidemiologiaCtr } from '../forms-epidemiologia.routes';
 import { userScheduler } from '../../../../config.private';
 import * as mongoose from 'mongoose';
 import { FormCtr } from '../../../../modules/forms/forms.routes';
 
-export async function updateField(id, body) {
-    const { seccion, fields } = body;
+export async function updateField(id, seccion, fields) {
     const ficha: any = await FormsEpidemiologia.findById(mongoose.Types.ObjectId(id));
     const seccionObj = ficha.secciones.find(s => s.name === seccion);
 
@@ -99,4 +99,8 @@ export async function getScoreValue(ficha) {
     const scoreComorbilidades = await getScoreComorbilidades(ficha);
     const scoreEdad = getScoreEdad(edadPaciente);
     return scoreComorbilidades + scoreEdad;
+}
+
+export function getSeccionClasificacion(ficha) {
+    return ficha.secciones.find(s => s.name === SECCION_CLASIFICACION);
 }
