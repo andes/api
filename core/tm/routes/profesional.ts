@@ -11,7 +11,7 @@ import { sendSms } from '../../../utils/roboSender/sendSms';
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
-import { formacionCero, matriculaCero, migrarTurnos, saveFirma, saveTituloFormacionGrado, saveTituloFormacionPosgrado, getTituloFormacionGrado, deleteTituloFormacionGrado } from '../controller/profesional';
+import { formacionCero, matriculaCero, migrarTurnos, saveFirma, saveTituloFormacionGrado, saveTituloFormacionPosgrado, getTituloFormacionGrado, getTituloFormacionPosgrado, saveDocumento, getCertificado, eliminarDocumento } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { makeFs } from '../schemas/imagenes';
@@ -480,44 +480,22 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             profesionalMatriculado: 1
         };
     }
-    if (req.query.matriculasPorVencer) {
-        if (req.query.tipoMatricula === 'grado') {
-            if (req.query.fechaDesde) {
-                if (req.query.fechaHasta) {
-                    match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
-                    { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
-                } else {
-                    match2['ultimaMatricula.fin'] = { $gte: new Date(req.query.fechaDesde) };
-                }
+    if (req.query.fechaDesde && req.query.fechaHasta) {
+        if (req.query.matriculasPorVencer) {
+            if (req.query.tipoMatricula === 'grado') {
+                match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
+                                  { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+            } else {
+                match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
+                                  { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
             }
-        } else {
-            if (req.query.fechaDesde) {
-                if (req.query.fechaHasta) {
-                    match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
-                    { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
-                } else {
-                    match2['ultimaMatriculaPosgrado.fin'] = { $gte: new Date(req.query.fechaDesde) };
-                }
-            }
-        }
-    } else {
-        if (req.query.tipoMatricula === 'grado') {
-            if (req.query.fechaDesde) {
-                if (req.query.fechaHasta) {
-                    match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                    { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
-                } else {
-                    match2['ultimaMatricula.inicio'] = { $gte: new Date(req.query.fechaDesde) };
-                }
-            }
-        } else {
-            if (req.query.fechaDesde) {
-                if (req.query.fechaHasta) {
-                    match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                    { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
-                } else {
-                    match2['ultimaMatriculaPosgrado.inicio'] = { $gte: new Date(req.query.fechaDesde) };
-                }
+        } else if (req.query.matriculasPorVencer === false) {
+            if (req.query.tipoMatricula === 'grado') {
+                match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
+                                  { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+            } else {
+                match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
+                                  { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
             }
         }
     }
@@ -550,18 +528,18 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
     }
 });
 
-router.delete('/profesionales/formacionGrado/titulo/eliminar', async (req, res, next) => {
-    console.log('ENTRO Y TIENE: ', req.params.id);
-    // await deleteTituloFormacionGrado(req.query);
-});
-
 router.get('/profesionales/formacionGrado/titulo', async (req, res, next) => {
     const titulos = await getTituloFormacionGrado(req.query);
     res.json(titulos);
 });
 
+router.get('/profesionales/certificado', async (req, res, next) => {
+    const titulos = await getCertificado(req.query);
+    res.json(titulos);
+});
+
 router.get('/profesionales/formacionPosgrado/titulo', async (req, res, next) => {
-    const titulos = await getTituloFormacionGrado(req.query);
+    const titulos = await getTituloFormacionPosgrado(req.query);
     res.json(titulos);
 });
 
@@ -916,10 +894,10 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
                     idProfesional: req.body.imagen.idProfesional,
                 }
             },
-                input.pipe(decoder),
-                (error, createdFile) => {
-                    res.json(createdFile);
-                });
+            input.pipe(decoder),
+            (error, createdFile) => {
+                res.json(createdFile);
+            });
             input.end(_base64);
         }
         if (req.body.firma) {
@@ -1029,6 +1007,12 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     });
 });
 
+router.patch('/profesionales/documentos', async (req, res, next) => {
+    await eliminarDocumento(req.body);
+    const resultado: any = await Profesional.findById(req.body.profesionalId);
+    return res.json(resultado);
+});
+
 router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
     try {
         const resultado: any = await Profesional.findById(req.params.id);
@@ -1042,9 +1026,6 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                     resultado.sansiones.push(req.body.data);
                     break;
                 case 'updatePosGrado':
-                    if (!resultado.formacionPosgrado) {
-                        resultado.formacionPosgrado = [];
-                    }
                     resultado.formacionPosgrado.push(req.body.data);
                     break;
                 case 'updateGrado':
@@ -1145,6 +1126,12 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
     const ress = await formacionCero();
     res.json(ress);
 
+});
+
+router.post('/profesionales/documentos', async (req, res, next) => {
+    await saveDocumento(req.body);
+    const resultado: any = await Profesional.findById(req.body.profesionalId);
+    return res.json(resultado);
 });
 
 router.post('/profesionales/formacionGrado/titulo', async (req, res, next) => {
@@ -1279,4 +1266,3 @@ function createResponseArray(matriculas: any[], req: any) {
     }
     return responseArray;
 }
-

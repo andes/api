@@ -193,8 +193,31 @@ export async function getTituloFormacionGrado(data) {
     return fileDrive;
 }
 
-export async function deleteTituloFormacionGrado(data) {
-    // await AndesDrive.delete(data.fileId);
+export async function getTituloFormacionPosgrado(data) {
+    const fileDrive = await AndesDrive.find(data.fileId);
+    return fileDrive;
+}
+
+export async function getCertificado(data) {
+    const fileDrive = await AndesDrive.find(data.fileId);
+    return fileDrive;
+}
+
+export async function saveDocumento(data) {
+    const profesional: any = await Profesional.findById(data.profesionalId);
+    const documento = {
+        fecha: data.fecha,
+        tipo: data.tipo.label,
+        archivo: data.archivo
+    };
+    profesional.documentos.push(documento);
+    return await actualizar(profesional);
+}
+
+export async function eliminarDocumento(data) {
+    const profesional: any = await Profesional.findById(data.profesionalId);
+    profesional.documentos.splice(data.index, 1);
+    return await actualizar(profesional);
 }
 
 export async function saveTituloFormacionPosgrado(data) {

@@ -133,7 +133,15 @@ ProfesionalSchema.add({
     */
     profesionExterna: { type: ObjSIISASchema, required: false },
     matriculaExterna: { type: String, required: false },
-    observaciones: { type: String, required: false }
+    observaciones: { type: String, required: false },
+    documentos: [{
+        fecha: { type: Date, required: false },
+        tipo: { type: String, required: false },
+        archivo: {
+            id: String,
+            extension: String,
+        },
+    }],
 });
 
 // Virtuals
