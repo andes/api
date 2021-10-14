@@ -20,7 +20,7 @@ EventCore.on('mobile:patient:login', async (account) => {
 EventCore.on('rup:prestaciones:vacunacion', async (prestacion) => {
     if (!prestacion.paciente) {
         // Cuando se utiliza el concepto como registro y no prestación.
-        return;
+        prestacion = prestacion.prestacion;
     }
     await sincronizarVacunas(prestacion.paciente.id);
 
@@ -45,7 +45,12 @@ export async function deleteVacunasFromNomivac(prestacion) {
             documento: prestacion.paciente.documento,
             sexo: prestacion.paciente.sexo === 'masculino' ? 'M' : 'F'
         });
-        const vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
+        let vacunaPrestacion;
+        if (prestacion.ejecucion.registros[0].valor) {
+            vacunaPrestacion = prestacion.ejecucion.registros[0].valor.vacuna;
+        } else {
+            vacunaPrestacion = prestacion.ejecucion.registros[0].registros[0].valor.vacuna;
+        }
         const vacuna = response.aplicacionesVacunasCiudadano?.aplicacionVacunaCiudadano?.find(
             vac => vac.idSniVacuna === vacunaPrestacion.vacuna.codigo && parseInt(vac.sniDosisOrden, 10) === vacunaPrestacion.dosis.orden
         );
