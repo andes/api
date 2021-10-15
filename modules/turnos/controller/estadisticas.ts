@@ -123,6 +123,13 @@ const facets = {
                         then: 1,
                         else: 0
                     }
+                },
+                noAsistio: {
+                    $cond: {
+                        if: { $eq: ['$turno.asistencia', 'noAsistio'] },
+                        then: 1,
+                        else: 0
+                    }
                 }
             }
         },
@@ -131,7 +138,8 @@ const facets = {
                 _id: '$real-state',
                 count: { $sum: 1 },
                 nombre: { $first: '$real-state' },
-                asistencias : { $sum: '$asistio' }
+                asistencias : { $sum: '$asistio' },
+                inasistencias: { $sum: '$noAsistio' }
             }
         },
         {
@@ -146,7 +154,11 @@ const facets = {
                             },
                             {
                                 nombre: 'Inasistencias',
-                                count: { $subtract: ['$count', '$asistencias'] }
+                                count: '$inasistencias'
+                            },
+                            {
+                                nombre: 'Sin datos',
+                                count: { $subtract: ['$count', { $sum: ['$asistencias', '$inasistencias'] }] }
                             }
                         ],
                         else: undefined
@@ -155,7 +167,7 @@ const facets = {
             }
         },
         {
-            $unset: 'asistencias'
+            $unset: ['asistencias', 'inasistencias']
         },
         { $sort: { count: -1 } }
     ],
