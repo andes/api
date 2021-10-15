@@ -1,4 +1,4 @@
-import { Document, Schema, Model, model } from 'mongoose';
+import { Document, Model, model, Schema } from 'mongoose';
 
 export interface ITipoPrestacion extends Document {
     nombre?: string;
@@ -7,6 +7,13 @@ export interface ITipoPrestacion extends Document {
     fsn: string;
     semanticTag: 'procedimiento' | 'solicitud' | 'hallazgo' | 'trastorno' | 'antecedenteFamiliar' | 'régimen/tratamiento';
     codigoServSalud?: string;
+    multiprestacion?: {
+        nombre?: string;
+        conceptId: string;
+        term: string;
+        fsn: string;
+        semanticTag: String;
+    }[];
 }
 
 
@@ -23,6 +30,15 @@ export const tipoPrestacionSchema = new Schema({
     },
     codigoServSalud: {
         type: String,
+    },
+    multiprestacion: {
+        required: false,
+        type: [{
+            conceptId: String,
+            term: String,
+            fsn: String,
+            semanticTag: String,
+        }]
     }
 });
 
