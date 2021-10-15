@@ -42,6 +42,7 @@ export const CarnetPerinatalSchema = new Schema({
         fsn: String,
         semanticTag: String
     },
+    nota: String
 });
 
 CarnetPerinatalSchema.plugin(AuditPlugin);
