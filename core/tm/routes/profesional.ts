@@ -11,14 +11,17 @@ import { sendSms } from '../../../utils/roboSender/sendSms';
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
-import { formacionCero, matriculaCero, migrarTurnos, saveFirma, saveTituloFormacionGrado, saveTituloFormacionPosgrado, getTituloFormacionGrado, getTituloFormacionPosgrado, saveDocumento, getCertificado, eliminarDocumento } from '../controller/profesional';
+import { formacionCero, matriculaCero, migrarTurnos, saveFirma } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { makeFs } from '../schemas/imagenes';
 import { Profesional } from '../schemas/profesional';
 import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
+import { AndesDrive } from '@andes/drive';
 import moment = require('moment');
+import { userScheduler } from './../../../config.private';
+
 
 const router = express.Router();
 
@@ -528,25 +531,11 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
     }
 });
 
-router.get('/profesionales/formacionGrado/titulo', async (req, res, next) => {
-    const titulos = await getTituloFormacionGrado(req.query);
-    res.json(titulos);
-});
-
-router.get('/profesionales/certificado', async (req, res, next) => {
-    const titulos = await getCertificado(req.query);
-    res.json(titulos);
-});
-
-router.get('/profesionales/formacionPosgrado/titulo', async (req, res, next) => {
-    const titulos = await getTituloFormacionPosgrado(req.query);
-    res.json(titulos);
+router.get('/profesionales/documentos/:id', async (req, res, next) => {
+    res.json(await AndesDrive.find(req.params.id));
 });
 
 router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
-    // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
-    //     return next(403);
-    // }
     const opciones = {};
     let query;
     if (req.params.id) {
@@ -968,6 +957,17 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
 
 });
 
+router.delete('/profesionales/:id/documentos/:fileId', async (req: any, res, next) => {
+    const profesional: any = await Profesional.findById(req.params.id);
+    const fileId: any = req.params.fileId;
+    const index = profesional.documentos.findIndex(doc => doc.archivo.id === fileId);
+    profesional.documentos.splice(index, 1);
+    Auth.audit(profesional, (userScheduler as any));
+    await profesional.save();
+    res.json(profesional.documentos);
+});
+
+
 // El delete está correcto, tomar como modelo para la documentación
 /**
  * @swagger
@@ -994,7 +994,6 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-
 router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:deleteProfesional')) {
         return next(403);
@@ -1005,12 +1004,6 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
         }
         res.json(data);
     });
-});
-
-router.patch('/profesionales/documentos', async (req, res, next) => {
-    await eliminarDocumento(req.body);
-    const resultado: any = await Profesional.findById(req.body.profesionalId);
-    return res.json(resultado);
 });
 
 router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
@@ -1042,6 +1035,14 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                     break;
                 case 'updateHabilitado':
                     resultado.habilitado = req.body.data;
+                    break;
+                case 'updateDocumentos':
+                    const documento = {
+                        fecha: req.body.data.fecha,
+                        tipo: req.body.data.tipo.label,
+                        archivo: req.body.data.archivo
+                    };
+                    resultado.documentos.push(documento);
                     break;
             }
             if (req.body.agente) {
@@ -1126,22 +1127,6 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
     const ress = await formacionCero();
     res.json(ress);
 
-});
-
-router.post('/profesionales/documentos', async (req, res, next) => {
-    await saveDocumento(req.body);
-    const resultado: any = await Profesional.findById(req.body.profesionalId);
-    return res.json(resultado);
-});
-
-router.post('/profesionales/formacionGrado/titulo', async (req, res, next) => {
-    await saveTituloFormacionGrado(req.body);
-    res.json('OK');
-});
-
-router.post('/profesionales/formacionPosgrado/titulo', async (req, res, next) => {
-    await saveTituloFormacionPosgrado(req.body);
-    res.json('OK');
 });
 
 router.post('/profesionales/validar', async (req, res, next) => {

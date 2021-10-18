@@ -1,5 +1,5 @@
 
-import { vencimientoMatriculaGrado, vencimientoMatriculaPosgrado } from './../core/tm/controller/profesional';
+import { vencimientoMatriculaPosgrado } from './../core/tm/controller/profesional';
 
 async function run(done) {
     await vencimientoMatriculaPosgrado(done);

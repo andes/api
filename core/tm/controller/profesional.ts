@@ -9,7 +9,6 @@ import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { Profesional } from '../schemas/profesional';
 import { Auth } from './../../../auth/auth.class';
-import { AndesDrive } from '@andes/drive';
 
 /**
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
@@ -178,54 +177,6 @@ export async function searchMatriculas(profesionalId) {
         formacionGrado,
         formacionPosgrado
     };
-}
-
-export async function saveTituloFormacionGrado(data) {
-    const _profesional: any = await Profesional.findById(data.profesionalId);
-    const formacionGrado: any = _profesional.formacionGrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
-
-    formacionGrado.tituloFileId = data.fileId;
-    return await actualizar(_profesional);
-}
-
-export async function getTituloFormacionGrado(data) {
-    const fileDrive = await AndesDrive.find(data.fileId);
-    return fileDrive;
-}
-
-export async function getTituloFormacionPosgrado(data) {
-    const fileDrive = await AndesDrive.find(data.fileId);
-    return fileDrive;
-}
-
-export async function getCertificado(data) {
-    const fileDrive = await AndesDrive.find(data.fileId);
-    return fileDrive;
-}
-
-export async function saveDocumento(data) {
-    const profesional: any = await Profesional.findById(data.profesionalId);
-    const documento = {
-        fecha: data.fecha,
-        tipo: data.tipo.label,
-        archivo: data.archivo
-    };
-    profesional.documentos.push(documento);
-    return await actualizar(profesional);
-}
-
-export async function eliminarDocumento(data) {
-    const profesional: any = await Profesional.findById(data.profesionalId);
-    profesional.documentos.splice(data.index, 1);
-    return await actualizar(profesional);
-}
-
-export async function saveTituloFormacionPosgrado(data) {
-    const _profesional: any = await Profesional.findById(data.profesionalId);
-    const formacionPosgrado: any = _profesional.formacionPosgrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
-
-    formacionPosgrado.tituloFileId = data.fileId;
-    return await actualizar(_profesional);
 }
 
 export async function saveFirma(data, admin = false) {
