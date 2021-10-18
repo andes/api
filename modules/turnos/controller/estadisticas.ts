@@ -138,7 +138,7 @@ const facets = {
                 _id: '$real-state',
                 count: { $sum: 1 },
                 nombre: { $first: '$real-state' },
-                asistencias : { $sum: '$asistio' },
+                asistencias: { $sum: '$asistio' },
                 inasistencias: { $sum: '$noAsistio' }
             }
         },
@@ -146,7 +146,7 @@ const facets = {
             $addFields: {
                 extras: {
                     $cond: {
-                        if: { $eq: ['$nombre', 'asignado']},
+                        if: { $eq: ['$nombre', 'asignado'] },
                         then: [
                             {
                                 nombre: 'Asistencias',
@@ -210,30 +210,20 @@ const facets = {
     ]
 };
 
-function makePrimaryMatch(filtros, permisos) {
+function makePrimaryMatch(filtros) {
     const match: any = {};
-
     if (filtros.tipoDeFiltro === 'turnos') {
         match.estado = { $nin: ['planificacion', 'pausada', 'borrada'] };
-    } else {
-        // if (permisos.tipoPrestacion) {
-        //     console.log('permisos.tipoPrestacion.map ', permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)))
-        //     match['tipoPrestaciones._id'] = { $in: permisos.tipoPrestacion.map(tp => mongoose.Types.ObjectId(tp)) };
-        // }
     }
-
     if (filtros.fechaDesde) {
         match.horaInicio = { $gte: moment(filtros.fechaDesde).startOf('day').toDate() };
     }
-
     if (filtros.fechaHasta) {
         match.horaFin = { $lte: moment(filtros.fechaHasta).endOf('day').toDate() };
     }
-
     if (filtros.organizacion) {
         match['organizacion._id'] = ObjectId(filtros.organizacion);
     }
-
     return match;
 }
 
@@ -242,7 +232,7 @@ function makeSecondaryMatch(filtros, permisos) {
 
     if (filtros.profesional) {
         match['profesionales._id'] = {
-            $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr.id))
+            $in: filtros.profesional.map(pr => ObjectId(pr.id))
         };
     }
 
@@ -372,13 +362,13 @@ function filtrosFaltantes(filtros, data) {
 export async function estadisticas(filtros, permisos) {
     let pipeline;
     const pipelineAgendas = [
-        { $match: makePrimaryMatch(filtros, permisos) },
+        { $match: makePrimaryMatch(filtros) },
         { $match: makeSecondaryMatch(filtros, permisos) },
         { $facet: makeFacet(filtros) }
     ];
     const pipelineTurno = [
         /* Filtros iniciales */
-        { $match: makePrimaryMatch(filtros, permisos) },
+        { $match: makePrimaryMatch(filtros) },
         { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
         { $addFields: { _sobreturnos: [{ turnos: '$sobreturnos' }] } },
         { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] } } },
@@ -455,7 +445,7 @@ export async function estadisticas(filtros, permisos) {
  */
 export async function filtroPorCiudad(filtros, permisos) {
     const pipelineAsignados = [
-        { $match: makePrimaryMatch(filtros, permisos) },
+        { $match: makePrimaryMatch(filtros) },
         { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
         { $addFields: { _sobreturnos: [{ turnos: '$sobreturnos' }] } },
         { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] } } },
