@@ -2,7 +2,7 @@ import { VacunasPacientes } from '../modules/vacunas/schemas/vacunas-pacientes.s
 
 async function run(done) {
     const vacunasPacientes: any = VacunasPacientes.aggregate([
-        { $match: { 'aplicaciones.fechaAplicacion': { $gte: '2021-10-03' } } },
+        { $match: { 'aplicaciones.fechaAplicacion': { $gte: new Date('2021-10-03T00:00:00.000-03:00') } } },
         { $group: { _id: '$paciente.id', count: { $sum: 1 }, id: { $first: '$_id' } } },
         { $match: { _id: { $ne: null }, count: { $gt: 1 } } },
         { $project: { _id: '$id' } }
