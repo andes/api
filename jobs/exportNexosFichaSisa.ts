@@ -3,35 +3,11 @@ import { InformacionExportada } from '../core/log/schemas/logExportaInformacion'
 import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-epidemiologia-schema';
 import { handleHttpRequest } from '../utils/requestHandler';
 import { sisa } from './../config.private';
+import { updateFichaCodigoSisa } from '../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 
 const user = sisa.user_snvs;
 const clave = sisa.password_snvs;
 const urlSisa = sisa.url_snvs;
-
-async function getToken(usr: string, pass: string) {
-    const url = `${sisa.url_snvs_covid}/auth/realms/sisa/protocol/openid-connect/token`;
-    const formData = new URLSearchParams();
-    formData.append('grant_type', 'password');
-    formData.append('client_id', 'snvs-token');
-    formData.append('username', usr);
-    formData.append('password', pass);
-    const options = {
-        uri: url,
-        method: 'POST',
-        form: formData.toString(),
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        json: true,
-    };
-    const [status, resJson] = await handleHttpRequest(options);
-    if (status >= 200 && status <= 299) {
-        if (resJson.access_token) {
-            return resJson.access_token;
-        }
-    }
-    return null;
-}
 
 export async function exportSisaFicha(done, horas, desde, hasta) {
     const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
@@ -182,9 +158,15 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                     const [status, resJson] = await handleHttpRequest(options);
 
                     if (status >= 200 && status <= 299) {
+                        const id_caso = resJson.id_caso ? resJson.id_caso : '';
+
+                        if (id_caso) {
+                            await updateFichaCodigoSisa(unaFicha._id, id_caso);
+                        }
+
                         log.resultado = {
                             resultado: resJson.resultado ? resJson.resultado : '',
-                            id_caso: resJson.id_caso ? resJson.id_caso : '',
+                            id_caso,
                             description: resJson.description ? resJson.description : ''
                         };
 

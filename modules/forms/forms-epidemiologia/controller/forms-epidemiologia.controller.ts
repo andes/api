@@ -1,6 +1,8 @@
 import { EventCore } from '@andes/event-bus/';
 import * as mongoose from 'mongoose';
 import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
+import { FormEpidemiologiaCtr } from '../forms-epidemiologia.routes';
+import { userScheduler } from '../../../../config.private';
 
 export async function updateField(id, body) {
     const { seccion, fields } = body;
@@ -26,4 +28,30 @@ export async function getLAMPPendientes() {
 export async function importLAMPResults() {
     const lamps = await this.getLAMPPendientes();
     EventCore.emitAsync('notificacion:epidemio:lamp', { lamps } );
+}
+
+export async function updateFichaCodigoSisa(fichaId, _codigoSisa) {
+    const ficha: any = await FormsEpidemiologia.findById(fichaId);
+    const secciones = ficha.secciones;
+    let seccionOperaciones = secciones.find(s => s.name === 'Operaciones');
+
+    if (!seccionOperaciones) {
+        seccionOperaciones = {
+            name: 'Operaciones',
+            fields: []
+        };
+        secciones.push(seccionOperaciones);
+    }
+
+    let fieldSisa = seccionOperaciones.fields.find(f => f.codigoSisa);
+    if (!fieldSisa) {
+        fieldSisa = {
+            codigoSisa: null
+        };
+        seccionOperaciones.fields.push(fieldSisa);
+    }
+
+    fieldSisa.codigoSisa = _codigoSisa;
+
+    return FormEpidemiologiaCtr.update(fichaId, ficha, userScheduler as any);
 }
