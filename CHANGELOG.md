@@ -1,3 +1,15 @@
+# [5.66.0](https://github.com/andes/api/compare/v5.65.0...v5.66.0) (2021-10-20)
+
+
+### Bug Fixes
+
+* **vac:** se evita que se sincronicen vacunas al cargar el concepto como registro ([#1581](https://github.com/andes/api/issues/1581)) ([db10876](https://github.com/andes/api/commit/db10876b3fabdf1850bee90e9337f4ee4238df02))
+
+
+### Features
+
+* **per:** sumar nota al schema de carnet perinatal ([#1578](https://github.com/andes/api/issues/1578)) ([d2cee51](https://github.com/andes/api/commit/d2cee51d2000b5eebbfafd9c4879e2ed79c6d84e))
+
 # [5.65.0](https://github.com/andes/api/compare/v5.64.0...v5.65.0) (2021-10-13)
 
 
