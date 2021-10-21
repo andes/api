@@ -9,8 +9,7 @@ import { Auth } from '../../../auth/auth.class';
 import { getTemporyTokenCOVID } from '../../../auth/auth.controller';
 import { services } from '../../../services';
 import { sendSms } from '../../../utils/roboSender/sendSms';
-import * as utils from '../../../utils/utils';
-import { toArray } from '../../../utils/utils';
+import { makePattern, toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
 import { formacionCero, matriculaCero, migrarTurnos, saveFirma } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
@@ -19,6 +18,10 @@ import { makeFs } from '../schemas/imagenes';
 import { Profesional } from '../schemas/profesional';
 import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
+import { Organizacion } from '../schemas/organizacion';
+import * as turno from '../../../modules/matriculaciones/schemas/turno';
+import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
+import { Types } from 'mongoose';
 import { userScheduler } from './../../../config.private';
 import moment = require('moment');
 
@@ -177,10 +180,10 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
     }
     if (req.query.apellido) {
-        opciones['apellido'] = utils.makePattern(req.query.apellido);
+        opciones['apellido'] = makePattern(req.query.apellido);
     }
     if (req.query.nombre) {
-        opciones['nombre'] = utils.makePattern(req.query.nombre);
+        opciones['nombre'] = makePattern(req.query.nombre);
     }
 
     if (opciones['formacionGrado.profesion.codigo'] && Object.keys(opciones).length === 1) {
@@ -373,9 +376,16 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
     let unwindOptions = {};
     let projections = {};
     if (req.query.tipoMatricula === 'grado') {
-        match['formacionGrado.matriculado'] = true;
         match['formacionGrado.matriculacion.0'] = { $exists: true };
 
+        if (req.query.estado) {
+            if (req.query.estado === 'Vigentes') {
+                match['formacionGrado.matriculado'] = true;
+            }
+            if (req.query.estado === 'Suspendidas') {
+                match['formacionGrado.matriculado'] = false;
+            }
+        }
         if (req.query.vencidas) {
             match2['ultimaMatricula.fin'] = { $lte: new Date() };
         }
@@ -427,8 +437,16 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
 
     } else {
 
-        match['formacionPosgrado.matriculado'] = true;
         match['formacionPosgrado.matriculacion.0'] = { $exists: true };
+
+        if (req.query.estado) {
+            if (req.query.estado === 'Vigentes') {
+                match['formacionPosgrado.matriculado'] = true;
+            }
+            if (req.query.estado === 'Suspendidas') {
+                match['formacionPosgrado.matriculado'] = false;
+            }
+        }
         if (req.query.bajaMatricula) {
             match2['ultimaMatriculaPosgrado.baja.fecha'] = { $nin: [null, ''] };
         }
@@ -545,22 +563,106 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
     let query;
     if (req.query.nombre) {
         opciones['nombre'] = {
-            $regex: utils.makePattern(req.query.nombre)
+            $regex: makePattern(req.query.nombre)
         };
     }
+});
 
-    if (req.query.matriculacion) {
-        opciones['profesionalMatriculado'] = true;
+router.get('/profesionales/renovacion', Auth.authenticate(), async (req, res, next) => {
+    const turnoParams: any = {};
+    const solicitudParams: any = {};
+
+    if (req.query.fechaDesde) {
+        if (req.query.fechaHasta) {
+            turnoParams['$and'] = [
+                { fecha: { $gte: req.query.fechaDesde } },
+                { fecha: { $lte: req.query.fechaHasta } }
+            ];
+        } else {
+            turnoParams['fecha'] = { $gte: req.query.fechaDesde };
+        }
+    }
+    if (req.query.zonaSanitaria) {
+        let organizaciones = await Organizacion.find({ 'zonaSanitaria._id': Types.ObjectId(req.query.zonaSanitaria) });
+        organizaciones = organizaciones.map((org: any) => org._id.toString());
+        turnoParams['updatedBy.organizacion.id'] = { $in: organizaciones };
     }
 
+    turnoParams['tipo'] = 'renovacion';
+    const turnos = await turno.find(turnoParams);
+
+    if (!turnos.length) {
+        // Si no existen resultados para los filtros primarios se ignoran los demás
+        return res.json([]);
+    }
+    solicitudParams['_id'] = { $in: turnos.map((t: any) => t.profesional) };
+
+    if (req.query.documento) {
+        solicitudParams['documento'] = makePattern(req.query.documento);
+    }
     if (req.query.apellido) {
-        opciones['apellido'] = {
-            $regex: utils.makePattern(req.query.apellido)
-        };
+        solicitudParams['apellido'] = { $regex: makePattern(req.query.apellido) };
     }
-    if (req.query.estado) {
-        if (req.query.estado === 'Vigentes') {
-            req.query.estado = true;
+    if (req.query.nombre) {
+        solicitudParams['nombre'] = { $regex: makePattern(req.query.nombre) };
+    }
+    if (req.query.profesion) {
+        const profesionSearch = parseInt(req.query.profesion, 10);
+        solicitudParams['$or'] = [
+            { 'formacionGrado.profesion.codigo': profesionSearch },
+            { 'formacionPosgrado.profesion.codigo': profesionSearch }
+        ];
+    }
+    if (req.query.numeroMatriculaGrado) {
+        solicitudParams['formacionGrado.matriculacion.matriculaNumero'] =req.query.numeroMatriculaGrado;
+    }
+
+    const skip: number = parseInt(req.query.skip || 0, 10);
+    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
+    let turnosSolicitados: any = await turnoSolicitado.find(solicitudParams).skip(skip).limit(limit);
+    turnosSolicitados = turnosSolicitados.map((t: any) => Types.ObjectId(t.idRenovacion));
+    const profesionales = await Profesional.find({
+        _id: { $in: turnosSolicitados },
+        'formacionGrado.0.papelesVerificados': false
+    });
+    res.json(profesionales);
+});
+
+
+router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
+    const opciones = {};
+    let query;
+    if (req.params.id) {
+        Profesional.findById(req.params.id, (err, data) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+    } else {
+        if (req.query.nombre) {
+            opciones['nombre'] = {
+                $regex: makePattern(req.query.nombre)
+            };
+        }
+
+        if (req.query.matriculacion) {
+            opciones['profesionalMatriculado'] = true;
+        }
+
+        if (req.query.apellido) {
+            opciones['apellido'] = {
+                $regex: makePattern(req.query.apellido)
+            };
+        }
+        if (req.query.estado) {
+            if (req.query.estado === 'Vigentes') {
+                req.query.estado = true;
+            }
+            if (req.query.estado === 'Suspendidas') {
+                req.query.estado = false;
+            }
+            opciones['formacionGrado.matriculado'] = req.query.estado;
         }
         if (req.query.estado === 'Suspendidas') {
             req.query.estado = false;
@@ -588,7 +690,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
     }
 
     if (req.query.documento) {
-        opciones['documento'] = utils.makePattern(req.query.documento);
+        opciones['documento'] = makePattern(req.query.documento);
     }
     if (req.query.numeroMatriculaGrado) {
         opciones['formacionGrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaGrado;
@@ -624,7 +726,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
 
     if (req.query.especialidad) {
         opciones['especialidad.nombre'] = {
-            $regex: utils.makePattern(req.query.especialidad)
+            $regex: makePattern(req.query.especialidad)
         };
     }
 
@@ -1076,11 +1178,11 @@ router.get('/resumen', (req, res, next) => {
     const opciones = {};
     let query;
     if (req.query.nombre) {
-        opciones['nombre'] = utils.makePattern(req.query.nombre);
+        opciones['nombre'] = makePattern(req.query.nombre);
     }
 
     if (req.query.apellido) {
-        opciones['apellido'] = utils.makePattern(req.query.apellido);
+        opciones['apellido'] = makePattern(req.query.apellido);
 
     }
     if (req.query.documento !== '') {

@@ -9,7 +9,21 @@ const turnoSchena = new mongoose.Schema({
     notificado: { type: Boolean, default: false },
     sePresento: { type: Boolean, default: false },
     profesional: { type: mongoose.Schema.Types.ObjectId, ref: 'turnoSolicitado' },
-    anulado: Boolean
+    anulado: Boolean,
+    updatedBy: {
+        required: false,
+        usuario: {
+            id: String,
+            nombre: String,
+            apellido: String,
+            documento: String,
+            username: String
+        },
+        organizacion: {
+            id: String,
+            nombre: String
+        }
+    }
 });
 
 // Virtuals
