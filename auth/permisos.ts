@@ -469,9 +469,7 @@ export default [
                         key: 'citas', title: 'Dashboard Citas', child: [
                             { key: 'ver', title: 'Ver Dashboard Citas', type: 'boolean' },
                             { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean' },
-                            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' },
-                            { key: 'zonasSanitarias', title: 'Zonas sanitarias', type: 'zona-sanitaria' }
-                        ]
+                            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' }]
                     },
                     {
                         key: 'top', title: 'Dashboard TOP', child: [
@@ -495,6 +493,11 @@ export default [
                 key: 'totalOrganizaciones',
                 title: 'Todas las organizaciones',
                 type: 'boolean'
+            },
+            {
+                key: 'zonasSanitarias',
+                title: 'Zonas sanitarias',
+                type: 'zona-sanitaria'
             }
         ]
     },
