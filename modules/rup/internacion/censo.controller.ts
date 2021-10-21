@@ -88,6 +88,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     e.extras.unidadOrganizativaOrigen.conceptId !== unidadOrganizativa);
                 const movEgresaUO = estadosInter.filter(e => e.extras && e.extras.unidadOrganizativaOrigen &&
                     e.extras.unidadOrganizativaOrigen.conceptId === unidadOrganizativa);
+
                 let fechaIngresoUO = null;
                 if (movimientosUO.length) {
                     movimientosUO.sort((a, b) => (a.fecha - b.fecha));
@@ -104,8 +105,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     movEgresaUO.sort((a, b) => (b.fecha - a.fecha));
                     // si se egresa de la UO el mismo dia de consulta en el censo
                     esPaseA = moment(movEgresaUO[0].fecha).isSame(timestampEnd, 'day');
-
                 }
+
                 dataInternaciones[idInter]['allMovimientos'] = allMovimientos;
                 dataInternaciones[idInter]['ultimoMovimientoUO'] = ultimoMovimientoUO;
                 dataInternaciones[idInter]['fechaIngresoUO'] = fechaIngresoUO;
@@ -153,8 +154,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                 };
             }
         }
+        const egresaDiaCenso = fechaEgreso && (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate()));
 
-        if (fechaIngresoUO && (fechaEgreso || esPaseA)) {
+        if (fechaIngresoUO && (egresaDiaCenso || esPaseA)) {
             diasEstadaUO = timestampEnd.diff(fechaIngresoUO, 'days');
             diasEstadaUO = (diasEstadaUO === 0) ? 1 : diasEstadaUO;
         }
@@ -177,7 +179,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                 }
             }
             if (ultimaUO === String(unidadOrganizativa)) {
-                if (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate())) {
+                if (egresaDiaCenso) {
                     if (informesInternacion.egreso.tipoEgreso.id === 'Defunción') {
                         defunciones++;
                     } else {
