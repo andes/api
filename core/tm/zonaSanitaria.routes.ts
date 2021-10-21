@@ -6,7 +6,8 @@ class ZonasSanitariasResource extends ResourceBase {
     Model = ZonaSanitaria;
     resourceName = 'zonasSantiarias';
     searchFileds = {
-        nombre: MongoQuery.partialString
+        nombre: MongoQuery.partialString,
+        ids: MongoQuery.inArray.withField('_id')
     };
 }
 

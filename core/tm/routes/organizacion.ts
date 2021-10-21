@@ -164,6 +164,9 @@ router.get('/organizaciones', Auth.optionalAuth(), async (req, res, next) => {
     if (req.query.trasladosEspeciales) {
         filtros['trasladosEspeciales._id'] = Types.ObjectId(req.query.trasladosEspeciales);
     }
+    if (req.query.idsZonasSanitarias) {
+        filtros['zonaSanitaria._id'] = { $in: req.query.idsZonasSanitarias };
+    }
     if (req.query.cuie) {
         filtros['codigo.cuie'] = req.query.cuie;
     }
