@@ -16,6 +16,7 @@ export class CensoBody extends HTMLComponent {
                                 <th>Egreso</th>
                                 <th>Pase a</th>
                                 <th>Fecha de ingreso</th>
+                                <th>Días Estada</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -54,6 +55,11 @@ export class CensoBody extends HTMLComponent {
                                         {{ fechaIngreso }}
                                         {{/if}}
                                     </td>
+                                    <td>
+                                        {{#if diasEstada }}
+                                        {{ diasEstada }}
+                                        {{/if}}
+                                    </td>
                                 </tr>
                             {{/each}}
                         </tbody>
@@ -90,6 +96,9 @@ export class CensoBody extends HTMLComponent {
                                     <h6>Camas disponibles a las 0hs</h6>
                                 </th> -->
                                 <th rowspan="2">
+                                    <h6>Días estada</h6>
+                                </th>
+                                <th rowspan="2">
                                     <h6>Camas disponibles a las 24hs</h6>
                                 </th>
                             </tr>
@@ -114,6 +123,7 @@ export class CensoBody extends HTMLComponent {
                                     <td> {{ filaResumen.existencia24 }} </td>
                                     <td> {{ filaResumen.ingresoEgresoDia }} </td>
                                     <td> {{ filaResumen.pacientesDia }} </td>
+                                    <td> {{ filaResumen.diasEstada }} </td>
                                     <td> {{ filaResumen.disponibles24 }} </td>
                                 </tr>
                             {{/if}}
