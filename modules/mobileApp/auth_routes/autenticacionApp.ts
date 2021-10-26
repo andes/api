@@ -218,14 +218,20 @@ router.post('/mailGenerico', async (req, res, next) => {
 
 router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => {
     try {
-        const documento = req.body.documento;
-        const sexo = req.body.sexo;
+        const scanText = req.body.scanText;
         const email = req.body.email;
         const fcmToken = req.body.fcmToken;
+
+        if (!authController.isValid(scanText)) {
+            return res.status(400).send('Documento Inválido.');
+        }
+
+        const documentoScan: any = authController.scan(scanText);
+
         // TODO: Llevar funcionalidad a controller
-        const cuentas = await PacienteAppCtr.search({ documento: String(documento), sexo, activacionApp: true });
+        const cuentas = await PacienteAppCtr.search({ documento: documentoScan.documento, sexo: documentoScan.sexo, activacionApp: true });
         // Verifica si el paciente se encuentra registrado y activo en la app mobile
-        const cuentaPaciente = cuentas.filter(c => {return c.pacientes.length;});
+        const cuentaPaciente = cuentas.filter(c => { return c.pacientes.length; });
         if (cuentaPaciente.length > 0) {
             return res.status(404).send('Ya existe una cuenta activa asociada a su documento');
         }
@@ -241,8 +247,10 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         req.body.validado = false;
         req.body.estado = 'pendiente';
         // Realiza la búsqueda en Renaper
-        const pacienteValidado = await validar(documento, sexo);
-        if (pacienteValidado) {
+        const pacienteValidado = await validar(documentoScan.documento, documentoScan.sexo);
+        const usarNroTramite = false;
+
+        if (pacienteValidado && usarNroTramite) {
             const tramite = Number(req.body.tramite);
             // Verifica el número de trámite
             if (pacienteValidado.idTramite !== tramite) {
