@@ -390,7 +390,7 @@ export default [
             },
             {
                 key: 'reglasABM',
-                title: 'reglas ABM',
+                title: 'Crear y modificar reglas',
                 type: 'boolean'
             }
         ]
