@@ -14,6 +14,8 @@ import * as AgendasEstadisticas from '../controller/estadisticas';
 import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
 import { Agenda } from '../schemas/agenda';
 import { Auth } from './../../../auth/auth.class';
+import { Prestacion } from '../../rup/schemas/prestacion';
+import { liberarRefTurno } from '../../rup/controllers/prestacion';
 
 const router = express.Router();
 
@@ -665,7 +667,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                 }
             }
             Auth.audit(data, req);
-            data.save((error) => {
+            data.save(async (error) => {
                 EventCore.emitAsync('citas:agenda:update', data);
 
                 if (event.data) {
@@ -685,15 +687,31 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
                 if (req.body.op === 'suspendida') {
                     (data as any).bloques.forEach(bloque => {
-
                         // Loggear cada turno
-                        bloque.turnos.forEach(t => {
+                        bloque.turnos.forEach(async t => {
                             if (t.paciente && t.paciente.id) {
                                 LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
+
+                                if (t.tipoTurno === 'gestion') {
+                                    // Se desvincula la solicitud (prestación) de tu turno correspondiente y se registra la acción en el historial
+                                    req.body.observaciones = `Motivo: ${t.motivoSuspension}`;
+                                    await liberarRefTurno(t, req);
+                                }
                             }
                         });
-
                     });
+                }
+                if (req.body.op === 'suspenderTurno') {
+                    if (event.data.tipoTurno === 'gestion') {
+                        const prestacion: any = await Prestacion.findOne({ inicio: 'top', 'solicitud.turno': event.data.id });
+                        /* si el turno pertenecía a una solicitud ...
+                            1. se desvincula el turno
+                            2. actualiza el historial de la misma
+                            3. cambia el estado de la solicitud a 'pendiente'
+                         */
+                        req.body.observaciones = `Motivo: ${event.data.motivoSuspension}`;
+                        await liberarRefTurno(event.data, req);
+                    }
                 }
             });
 
