@@ -387,6 +387,11 @@ export default [
                 key: 'anular',
                 title: 'Anular Solicitudes',
                 type: 'boolean'
+            },
+            {
+                key: 'reglasABM',
+                title: 'reglas ABM',
+                type: 'boolean'
             }
         ]
     },
