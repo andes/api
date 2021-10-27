@@ -10,6 +10,7 @@ import { enviarCodigoVerificacion, generarCodigoVerificacion } from '../controll
 import { PacienteAppCtr } from '../pacienteApp.routes';
 import { PacienteApp } from '../schemas/pacienteApp';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
+import * as ScanParse from '../../../shared/scanParse';
 
 const router = express.Router();
 
@@ -222,11 +223,11 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         const email = req.body.email;
         const fcmToken = req.body.fcmToken;
 
-        if (!authController.isValid(scanText)) {
+        if (!ScanParse.isValid(scanText)) {
             return res.status(400).send('Documento Inválido.');
         }
 
-        const documentoScan: any = authController.scan(scanText);
+        const documentoScan: any = ScanParse.scan(scanText);
 
         // TODO: Llevar funcionalidad a controller
         const cuentas = await PacienteAppCtr.search({ documento: documentoScan.documento, sexo: documentoScan.sexo, activacionApp: true });
