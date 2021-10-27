@@ -228,6 +228,7 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
     const cama2 = await store(seedCama(1, 'y', otraUnidadOrganizativa) as any, REQMock);
     const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
 
     Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
     const internacion = await nuevaPrestacion.save();
@@ -245,27 +246,28 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         REQMock
     );
 
+    const extras = { unidadOrganizativaOrigen: cama.unidadOrganizativaOriginal };
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: String(cama2._id) },
-        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, otraUnidadOrganizativa),
+        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, otraUnidadOrganizativa, extras),
         REQMock
     );
 
-    // const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
-    // expect(resultado.censo).toEqual({
-    //     existenciaALas0: 1,
-    //     ingresos: 0,
-    //     pasesDe: 0,
-    //     altas: 0,
-    //     defunciones: 0,
-    //     pasesA: 1,
-    //     existenciaALas24: 0,
-    //     ingresosYEgresos: 0,
-    //     pacientesDia: 0,
-    //     disponibles: 1,
-    //     diasEstada: 2
-    // });
+    expect(resultado.censo).toEqual({
+        existenciaALas0: 1,
+        ingresos: 0,
+        pasesDe: 0,
+        altas: 0,
+        defunciones: 0,
+        pasesA: 1,
+        existenciaALas24: 0,
+        ingresosYEgresos: 0,
+        pacientesDia: 0,
+        disponibles: 1,
+        diasEstada: 1
+    });
 
     // const censoMan = await CensoController.censoDiario({ organizacion, timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa });
     const censoManUO = await CensoController.censoDiario({ organizacion, timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa: otraUnidadOrganizativa.conceptId });
@@ -294,7 +296,7 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         existenciaALas24: 1,
         ingresosYEgresos: 0,
         pacientesDia: 1,
-        diasEstada: 1,
+        diasEstada: 0,
         disponibles: 1
     });
 });
@@ -424,9 +426,10 @@ test('Censo diario - Paciente ingresa y tiene pase A', async () => {
     await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
         estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
 
+    const extras = { unidadOrganizativaOrigen: cama.unidadOrganizativaOriginal };
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: String(cama2._id) },
-        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, otraUnidadOrganizativa),
+        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, otraUnidadOrganizativa, extras),
         REQMock
     );
 
@@ -458,16 +461,16 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', 
         estadoOcupada(moment().subtract(4, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
         REQMock
     );
-
+    let extras = { unidadOrganizativaOrigen: cama.unidadOrganizativaOriginal };
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
-        estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, otraUnidadOrganizativa),
+        estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, otraUnidadOrganizativa, extras),
         REQMock
     );
-
+    extras = { unidadOrganizativaOrigen: otraUnidadOrganizativa };
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
-        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
+        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal, extras),
         REQMock
     );
 
@@ -544,16 +547,16 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defun
         estadoOcupada(moment().subtract(4, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
         REQMock
     );
-
+    let extras = { unidadOrganizativaOrigen: cama.unidadOrganizativaOriginal };
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
-        estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, otraUnidadOrganizativa),
+        estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, otraUnidadOrganizativa, extras),
         REQMock
     );
-
+    extras = { unidadOrganizativaOrigen: otraUnidadOrganizativa };
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
-        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
+        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal, extras),
         REQMock
     );
 
@@ -702,18 +705,20 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
         REQMock
     );
 
+    let extras = { unidadOrganizativaOrigen: otraUnidadOrganizativa };
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
-        estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
+        estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal, extras),
         REQMock
     );
 
     await CamasEstadosController.store({ organizacion, ambito, capa, cama: idCama },
         estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minutes'), REQMock);
 
+    extras = { unidadOrganizativaOrigen: cama.unidadOrganizativaOriginal };
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: cama2._id },
-        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, otraUnidadOrganizativa),
+        estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, otraUnidadOrganizativa, extras),
         REQMock
     );
 
