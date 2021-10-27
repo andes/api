@@ -6,6 +6,8 @@ import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 import { SeguimientoPacienteCtr } from './seguimiento-paciente.route';
 import moment = require('moment');
+import { Prestacion } from '../rup/schemas/prestacion';
+import { InternacionResumen } from '../rup/internacion/resumen/internacion-resumen.schema';
 
 const dataLog: any = new Object(userScheduler);
 const altaCid = '201000246105';
@@ -155,5 +157,37 @@ EventCore.on('rup:paciente:fallecido', async (data) => {
         }
     } catch (err) {
         return err;
+    }
+});
+
+EventCore.on('mapa-camas:paciente:ingreso', async (estado) => {
+    try {
+        const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': estado.paciente.id }).sort({ createdAt: -1 });
+        if (lastSeguimiento) {
+            return await SeguimientoPacienteCtr.update(lastSeguimiento.id, { internacion: true }, dataLog);
+        }
+    } catch (err) {
+        return err;
+    }
+});
+
+EventCore.on('mapa-camas:paciente:egreso', async (estado) => {
+    let idPaciente;
+    if (estado.extras?.idInternacion) {
+        if (estado.capa === 'estadistica') {
+            const prestacion: any = await Prestacion.findById(estado.extras.idInternacion);
+            idPaciente = prestacion.paciente.id;
+        } else if (estado.capa === 'medica') {
+            const resumen = await InternacionResumen.findById(estado.extras.idInternacion);
+            idPaciente = resumen.paciente.id;
+        }
+        try {
+            const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': idPaciente }).sort({ createdAt: -1 });
+            if (lastSeguimiento) {
+                return await SeguimientoPacienteCtr.update(lastSeguimiento.id, { internacion: false }, dataLog);
+            }
+        } catch (err) {
+            return err;
+        }
     }
 });
