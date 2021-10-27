@@ -1,3 +1,14 @@
+# [5.67.0](https://github.com/andes/api/compare/v5.66.0...v5.67.0) (2021-10-27)
+
+
+### Features
+
+* **bi:** filtros por organización y zona en dashboard de citas ([#1582](https://github.com/andes/api/issues/1582)) ([040f178](https://github.com/andes/api/commit/040f178a423f154970236389c0d568151a6e55b5))
+* **EP:** actualizacion codigo SISA alta ([#1573](https://github.com/andes/api/issues/1573)) ([74f6427](https://github.com/andes/api/commit/74f64271f2d72189317ba1991395b4de871813a4))
+* **EP:** seguimiento detectar ([#1564](https://github.com/andes/api/issues/1564)) ([98ae783](https://github.com/andes/api/commit/98ae783113d69531b65092a7b8a05895b133c164))
+* **mapa-camas:** censo diario se agrega días estada en  descarga pdf ([#1586](https://github.com/andes/api/issues/1586)) ([78e037a](https://github.com/andes/api/commit/78e037a247c854c589163234af7ee88079401ad3))
+* **seguimiento:** ingreso y egreso internacion paciente ([#1569](https://github.com/andes/api/issues/1569)) ([a6fc0d8](https://github.com/andes/api/commit/a6fc0d87e897b688c86bcea264308a3680a73f46))
+
 # [5.66.0](https://github.com/andes/api/compare/v5.65.0...v5.66.0) (2021-10-20)
 
 
