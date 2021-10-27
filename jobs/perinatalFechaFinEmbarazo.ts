@@ -17,7 +17,7 @@ export async function updatePerinatalFechaFinEmbarazo() {
     // se obtienen los registros de pacientes que no contengan fecha fin embarazo
     const query = { fechaFinEmbarazo: null };
 
-    const listaCarnetPerinatal: any = await CarnetPerinatal.find(query);
+    const listaCarnetPerinatal: any[] = await CarnetPerinatal.find(query);
     for (const regPerinatal of listaCarnetPerinatal) {
         try {
             await actualizarRegistro(regPerinatal);
@@ -64,12 +64,13 @@ export async function actualizarRegistro(registroPer: any) {
                     const fechaUltimoCtrl = moment(registroPer.fechaUltimoControl).format('DD/MM/YY');
 
                     // verificamos si ya existe el control de embarazo en sip-plus
-                    const controlesEmb = Object.keys(embarazoSP['prenatal']).map(key => ({ key, valor: embarazoSP['prenatal'][key] }));
+                    const keysPrenatal = embarazoSP['prenatal'] ? Object.keys(embarazoSP['prenatal']) : [];
+                    const controlesEmb = keysPrenatal.map(key => ({ key, valor: embarazoSP['prenatal'][key] }));
 
-                    const ultimoCtrl = controlesEmb ? controlesEmb.find(ctrl => ctrl.valor['0116'] && ctrl.valor['0116'] === fechaUltimoCtrl) : null;
+                    const ultimoCtrl = controlesEmb.find(ctrl => ctrl.valor['0116'] && ctrl.valor['0116'] === fechaUltimoCtrl);
                     // fecha del próximo control
-                    const diaProxCtrl = ultimoCtrl.valor['0128']; // dia del próximo control (NUMERIC)
-                    const mesProxCtrl = ultimoCtrl.valor['0129']; // mes del próximo control (NUMERIC)
+                    const diaProxCtrl = ultimoCtrl?.valor['0128']; // dia del próximo control (NUMERIC)
+                    const mesProxCtrl = ultimoCtrl?.valor['0129']; // mes del próximo control (NUMERIC)
                     if (diaProxCtrl && mesProxCtrl) {
                         const proxAnio = moment(fechaUltimoCtrl, 'DD/MM/YY').format('YY');
                         fechaProxCtrol = moment(diaProxCtrl + '/' + mesProxCtrl + '/' + proxAnio, 'DD/MM/YY');
