@@ -269,7 +269,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
             req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
             req.body.validado = true;
         } else {
-            return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
+            return res.status(404).send('No es posible verificar su identidad.');
         }
 
         // Busca el paciente y si no existe lo crea

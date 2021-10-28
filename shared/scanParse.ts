@@ -46,9 +46,9 @@ export const DocumentoEscaneados: DocumentoEscaneado[] = [
 ];
 
 export function scan(texto: string) {
-    const scanFormat = this.findFormat(texto);
+    const scanFormat = findFormat(texto);
     if (scanFormat) {
-        return this.parseDocumentoEscaneado(scanFormat, texto);
+        return parseDocumentoEscaneado(scanFormat, texto);
     }
     return null;
 }
@@ -63,7 +63,7 @@ export function findFormat(textoLibre): any {
 }
 
 export function isValid(scanText: string) {
-    return this.findFormat(scanText) !== null;
+    return findFormat(scanText) !== null;
 }
 
 export function parseDocumentoEscaneado(documento: any, textoLibre) {
