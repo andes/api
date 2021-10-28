@@ -11,6 +11,7 @@ import { PacienteAppCtr } from '../pacienteApp.routes';
 import { PacienteApp } from '../schemas/pacienteApp';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
 import * as ScanParse from '../../../shared/scanParse';
+import moment = require('moment');
 
 const router = express.Router();
 
@@ -231,6 +232,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
 
         // TODO: Llevar funcionalidad a controller
         const cuentas = await PacienteAppCtr.search({ documento: documentoScan.documento, sexo: documentoScan.sexo, activacionApp: true });
+
         // Verifica si el paciente se encuentra registrado y activo en la app mobile
         const cuentaPaciente = cuentas.filter(c => { return c.pacientes.length; });
         if (cuentaPaciente.length > 0) {
@@ -247,15 +249,20 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
 
         req.body.validado = false;
         req.body.estado = 'pendiente';
-        // Realiza la búsqueda en Renaper
-        const pacienteValidado = await validar(documentoScan.documento, documentoScan.sexo);
+
         const usarNroTramite = false;
 
-        if (pacienteValidado && usarNroTramite) {
-            const tramite = Number(req.body.tramite);
-            // Verifica el número de trámite
-            if (pacienteValidado.idTramite !== tramite) {
-                return res.status(404).send('Número de trámite inválido');
+        // Realiza la búsqueda en Renaper
+        const pacienteValidado = await validar(documentoScan.documento, documentoScan.sexo.toLocaleLowerCase());
+        if (pacienteValidado) {
+            if (usarNroTramite) {
+                const tramite = Number(documentoScan.tramite);
+                // Verifica el número de trámite
+                if (pacienteValidado.idTramite !== tramite) {
+                    return res.status(404).send('Número de trámite inválido');
+                }
+                // Guarda la foto de RENAPER en Andes
+                await extractFoto(pacienteValidado, configPrivate.userScheduler);
             }
             req.body.nombre = pacienteValidado.nombre;
             req.body.apellido = pacienteValidado.apellido;
@@ -264,9 +271,10 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         } else {
             return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
         }
-        // Busca el paciente y si no existe lo guarda
-        await extractFoto(pacienteValidado, configPrivate.userScheduler);
+
+        // Busca el paciente y si no existe lo crea
         const paciente = await findOrCreate(pacienteValidado, configPrivate.userScheduler);
+
         let registro = {};
         if (paciente && paciente.id) {
             const passw = generarCodigoVerificacion();
@@ -277,6 +285,8 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
             }];
             req.body.password = passw;
             registro = await PacienteAppCtr.create(req.body, req);
+
+            // Push Notification
             enviarCodigoVerificacion(registro, passw, fcmToken);
         }
         return res.json(registro);
