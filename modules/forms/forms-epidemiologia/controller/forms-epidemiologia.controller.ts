@@ -67,9 +67,8 @@ async function getScoreComorbilidades(ficha) {
         const fichaTemplate: any = await FormCtr.findOne({ 'type.name': 'covid19' });
         const fieldsScores = {};
         fichaTemplate.sections.find(s => s.name === 'Enfermedades Previas')?.fields.forEach(f => {
-            const field = JSON.parse(JSON.stringify(f));
-            if (field.extras?.puntosScore) {
-                fieldsScores[field.key] = field.extras.puntosScore;
+            if (f.extras?.puntosScore) {
+                fieldsScores[f.key] = f.extras.puntosScore;
             }
         });
 
