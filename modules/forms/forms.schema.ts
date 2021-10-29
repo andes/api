@@ -43,6 +43,7 @@ export const FieldSchema = new mongoose.Schema({
     snomedCodeOrQuery: String,
     required: Boolean,
     subfilter: Boolean,
+    extras: Object,
     resources: { type: String, required: false },
     preload: Boolean,
 

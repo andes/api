@@ -1,13 +1,13 @@
 import { EventCore } from '@andes/event-bus';
 import { userScheduler } from '../../config.private';
-import { getOrganizacionAreaByLocationPoint } from './../georeferencia/controller/areasPrograma';
 import { ISeguimientoPaciente } from './interfaces/seguimiento-paciente.interface';
-import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 import { SeguimientoPacienteCtr } from './seguimiento-paciente.route';
 import moment = require('moment');
 import { Prestacion } from '../rup/schemas/prestacion';
 import { InternacionResumen } from '../rup/internacion/resumen/internacion-resumen.schema';
+import { getOrganizacionSeguimiento } from './controller/seguimiento-paciente.controller';
+import { getScoreValue } from './../../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 
 const dataLog: any = new Object(userScheduler);
 const altaCid = '201000246105';
@@ -23,35 +23,12 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
         if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
             const mpiSections = data.secciones.find(s => s.name === 'Mpi');
             const contactosEstrechos = data.secciones.find(s => s.name === 'Contactos Estrechos');
-
-            const patientGeoRef = (data.paciente.direccion && data.paciente.direccion[0]?.geoReferencia?.length) ? data.paciente.direccion[0].geoReferencia.reverse() : null;
-
-            let coordinates;
-            let organizacionSeguimiento;
-
-            if (patientGeoRef) {
-                coordinates = patientGeoRef;
-            } else {
-                const organizacionCreatedBy = await Organizacion.findById(data.createdBy.organizacion.id);
-                if (organizacionCreatedBy.configuraciones?.organizacionSeguimiento) {
-                    organizacionSeguimiento = organizacionCreatedBy.configuraciones.organizacionSeguimiento;
-                } else {
-                    coordinates = organizacionCreatedBy.direccion?.geoReferencia?.reverse();
-                }
-            }
-
-            if (!organizacionSeguimiento) {
-                if (coordinates) {
-                    organizacionSeguimiento = await getOrganizacionAreaByLocationPoint({ type: 'Point', coordinates });
-                } else {
-                    const organizacionDefecto = await Organizacion.findOne({ defaultSeguimiento: true });
-                    organizacionSeguimiento = {
-                        id: organizacionDefecto._id,
-                        nombre: organizacionDefecto.nombre,
-                        codigoSisa: organizacionDefecto.codigo.sisa.toString()
-                    };
-                }
-            }
+            const organizacionSeguimiento = await getOrganizacionSeguimiento(data);
+            const scoreValue = await getScoreValue(data);
+            const score = {
+                value: scoreValue,
+                fecha: new Date()
+            };
 
             const seguimiento: ISeguimientoPaciente = {
                 fechaInicio: new Date(),
@@ -60,10 +37,7 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
                     nombre: 'Ficha de epidemiología',
                     tipo: data.type.name // Esto es variable por si algún día viene la de hanta, etc.
                 },
-                score: {
-                    value: parseInt(data.score.value, 10),
-                    fecha: data.score.fecha
-                },
+                score,
                 paciente: {
                     id: data.paciente.id,
                     nombre: data.paciente.nombre,
