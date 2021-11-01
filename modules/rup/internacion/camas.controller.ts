@@ -26,7 +26,7 @@ interface InternacionConfig {
      * Por el momento solo se va a usar internacion.
      */
 
-    ambito: String;
+    ambito?: String;
 
     /**
      * La vista del mapa de capa. enfermeria, medica, estadistica.

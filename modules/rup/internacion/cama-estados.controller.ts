@@ -10,12 +10,16 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
     const firstMatch = {};
     const secondMatch = {};
     const thirdMatch = {};
+    const ambitoMatch = {};
     if (filtros.cama) {
         firstMatch['idCama'] = mongoose.Types.ObjectId(filtros.cama);
     }
 
     if (filtros.paciente) {
         secondMatch['paciente.id'] = mongoose.Types.ObjectId(filtros.paciente);
+    }
+    if (ambito) {
+        ambitoMatch['ambito'] = ambito;
     }
 
     if (filtros.internacion) {
@@ -37,11 +41,14 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         {
             $match: {
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
-                ambito,
                 capa,
                 start: { $lte: fechaSeleccionada },
-                ...firstMatch
+                ...firstMatch,
+
             }
+        },
+        {
+            $match: ambitoMatch
         },
         {
             $unwind: '$estados',
@@ -74,7 +81,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                     {
                         $match: {
                             idOrganizacion: mongoose.Types.ObjectId(organizacion),
-                            ambito,
+
                             capa,
                             $or: [
                                 {
@@ -96,7 +103,10 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                                     },
                                 }
                             ]
-                        }
+                        },
+                    },
+                    {
+                        $match: ambitoMatch
                     },
                     {
                         $unwind: '$estados',
@@ -252,9 +262,14 @@ interface SearchEstadosParams {
 export async function searchEstados({ desde, hasta, organizacion, ambito, capa }, filtros: Partial<SearchEstadosParams> = {}) {
     const firstMatch = {};
     const secondMatch = {};
+    const ambitoMatch={};
 
     if (filtros.cama) {
         firstMatch['idCama'] = wrapObjectId(filtros.cama);
+    }
+
+    if (ambito) {
+        ambitoMatch['ambito'] = ambito;
     }
 
     if (filtros.movimiento) {
@@ -289,12 +304,14 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
         {
             $match: {
                 idOrganizacion: wrapObjectId(organizacion),
-                ambito,
                 capa,
                 start: { $lte: moment(hasta).toDate() },
                 end: { $gte: moment(desde).toDate() },
                 ...firstMatch
             }
+        },
+        {
+            $match: ambitoMatch
         },
         {
             $unwind: '$estados',
