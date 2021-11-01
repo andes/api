@@ -40,7 +40,7 @@ class FormsEpidemiologiaResource extends ResourceBase {
         },
         clasificacionFinal: {
             field: 'secciones.fields.clasificacionfinal',
-            fn: MongoQuery.equalMatch
+            fn: (value) => (value ? MongoQuery.equalMatch(value) : { $exists: false })
         },
         identificadorPcr: {
             field: 'secciones.fields.identificadorpcr',
@@ -61,10 +61,6 @@ class FormsEpidemiologiaResource extends ResourceBase {
         fechaEstadoActual: MongoQuery.matchDate.withField('score.fecha'),
         documento: {
             field: 'paciente.documento',
-            fn: MongoQuery.equalMatch
-        },
-        confirmacionFinal: {
-            field: 'secciones.fields.clasificacionfinal',
             fn: MongoQuery.equalMatch
         }
     };
