@@ -124,7 +124,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                     nombre: paciente.nombre,
                     apellido: paciente.apellido,
                     fechaNacimiento: moment(paciente.fechaNacimiento).format('DD-MM-YYYY'),
-                    calle: paciente.direccion && paciente.direccion[0] ? paciente.direccion[0].valor : '',
+                    calle: paciente?.direccion[0]?.valor ? paciente.direccion[0].valor : 'No especifica',
                     pais: 200,
                     provincia: 15,
                     departamento: 365 // Confluencia, luego updetear por el que corresponda
