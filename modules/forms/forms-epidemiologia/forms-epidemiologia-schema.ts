@@ -2,6 +2,7 @@ import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
+import { SECCION_CLASIFICACION } from './constantes';
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -31,7 +32,7 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
 const assertUniquePCR = async function (next) {
     const ficha: any = this;
     if (ficha.type.name === 'covid19') {
-        const identificadorpcr = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final')?.fields.find(f => f.identificadorpcr)?.identificadorpcr;
+        const identificadorpcr = ficha.secciones.find(s => s.name === SECCION_CLASIFICACION)?.fields.find(f => f.identificadorpcr)?.identificadorpcr;
         if (identificadorpcr) {
             const found = await FormsEpidemiologia.findOne({ 'secciones.fields.identificadorpcr': identificadorpcr, _id: { $ne: ficha._id } });
             if (found) {
@@ -59,7 +60,7 @@ FormsEpidemiologiaSchema.pre('validate', assertUniquePCR);
 FormsEpidemiologiaSchema.pre('save', function (next) {
     const ficha: any = this;
 
-    const seccionClasificacion = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final');
+    const seccionClasificacion = ficha.secciones.find(s => s.name === SECCION_CLASIFICACION);
     const clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
     const muestraPcr = seccionClasificacion?.fields.find(f => f.pcrM)?.pcrM;
     const seccionUsuario = ficha.secciones.find(s => s.name === 'Usuario');

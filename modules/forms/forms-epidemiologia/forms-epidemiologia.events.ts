@@ -1,5 +1,6 @@
 import { EventCore } from '@andes/event-bus';
 import { userScheduler } from '../../../config.private';
+import { SECCION_CLASIFICACION } from './constantes';
 import { FormEpidemiologiaCtr } from './forms-epidemiologia.routes';
 
 const dataLog: any = new Object(userScheduler);
@@ -20,7 +21,7 @@ EventCore.on('notification:fichaEpidemiologica:laboratory', async (info) => {
             const lastFicha = fichasOrdenadas[0];
             try {
                 lastFicha.secciones.forEach(s => {
-                    if (s.name === 'Tipo de confirmación y Clasificación Final') {
+                    if (s.name === SECCION_CLASIFICACION) {
                         const cfi = s.fields.findIndex(x => x.clasificacionfinal);
                         s.fields[cfi] = { clasificacionfinal: resultadoLabo };
                         const pcri = s.fields.findIndex(x => x.pcr);

@@ -4,6 +4,7 @@ import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-e
 import { handleHttpRequest } from '../utils/requestHandler';
 import { sisa } from './../config.private';
 import { updateFichaCodigoSisa } from '../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
+import { SECCION_CLASIFICACION } from '../modules/forms/forms-epidemiologia/constantes';
 
 const user = sisa.user_snvs;
 const clave = sisa.password_snvs;
@@ -84,7 +85,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
         },
         {
             $match: {
-                'secciones.name': { $regex: 'Tipo de confirmación y Clasificación Final' }
+                'secciones.name': { $regex: SECCION_CLASIFICACION }
             }
         },
         {
