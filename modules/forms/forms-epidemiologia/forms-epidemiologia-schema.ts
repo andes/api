@@ -2,7 +2,7 @@ import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
-import { SECCION_CLASIFICACION } from './constantes';
+import { SECCION_CLASIFICACION, SECCION_USUARIO } from './constantes';
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -63,7 +63,7 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
     const seccionClasificacion = ficha.secciones.find(s => s.name === SECCION_CLASIFICACION);
     const clasificacionfinal = seccionClasificacion?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
     const muestraPcr = seccionClasificacion?.fields.find(f => f.pcrM)?.pcrM;
-    const seccionUsuario = ficha.secciones.find(s => s.name === 'Usuario');
+    const seccionUsuario = ficha.secciones.find(s => s.name === SECCION_USUARIO);
     if (clasificacionfinal === 'Confirmado') {
         const usuarioConfirma = seccionClasificacion?.fields.find(f => f.usuarioconfirma)?.usuarioconfirma;
         if (!usuarioConfirma) {

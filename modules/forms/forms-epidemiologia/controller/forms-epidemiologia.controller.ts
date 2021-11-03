@@ -6,6 +6,7 @@ import { FormEpidemiologiaCtr } from '../forms-epidemiologia.routes';
 import { userScheduler } from '../../../../config.private';
 import * as mongoose from 'mongoose';
 import { FormCtr } from '../../../../modules/forms/forms.routes';
+import { SECCION_ENFERMEDADES_PREVIAS, SECCION_OPERACIONES } from '../constantes';
 
 export async function updateField(id, seccion, fields) {
     const ficha: any = await FormsEpidemiologia.findById(mongoose.Types.ObjectId(id));
@@ -35,11 +36,11 @@ export async function importLAMPResults() {
 export async function updateFichaCodigoSisa(fichaId, _codigoSisa) {
     const ficha: any = await FormsEpidemiologia.findById(fichaId);
     const secciones = ficha.secciones;
-    let seccionOperaciones = secciones.find(s => s.name === 'Operaciones');
+    let seccionOperaciones = secciones.find(s => s.name === SECCION_OPERACIONES);
 
     if (!seccionOperaciones) {
         seccionOperaciones = {
-            name: 'Operaciones',
+            name: SECCION_OPERACIONES,
             fields: []
         };
         secciones.push(seccionOperaciones);
@@ -59,14 +60,14 @@ export async function updateFichaCodigoSisa(fichaId, _codigoSisa) {
 }
 
 async function getScoreComorbilidades(ficha) {
-    const enfermedadesFields = ficha.secciones.find(s => s.name === 'Enfermedades Previas')?.fields;
+    const enfermedadesFields = ficha.secciones.find(s => s.name === SECCION_ENFERMEDADES_PREVIAS)?.fields;
     const presentaComorbilidades = enfermedadesFields?.find(f => f.presenta)?.presenta;
     let score = 0;
 
     if (presentaComorbilidades) {
         const fichaTemplate: any = await FormCtr.findOne({ 'type.name': 'covid19' });
         const fieldsScores = {};
-        fichaTemplate.sections.find(s => s.name === 'Enfermedades Previas')?.fields.forEach(f => {
+        fichaTemplate.sections.find(s => s.name === SECCION_ENFERMEDADES_PREVIAS)?.fields.forEach(f => {
             if (f.extras?.puntosScore) {
                 fieldsScores[f.key] = f.extras.puntosScore;
             }
