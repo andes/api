@@ -53,7 +53,13 @@ const EstadoSchema = new Schema({
     ingresos: SchemaTypes.Mixed,
     columns: SchemaTypes.Mixed,
     turnero: SchemaTypes.Mixed,
-    historialMedico: Boolean
+    historialMedico: Boolean,
+    planIndicaciones: {
+        required: false,
+        type: {
+            tipoPrestacion: SnomedConcept
+        }
+    }
 });
 
 EstadoSchema.methods.check = function (origen, destino) {
