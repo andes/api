@@ -120,11 +120,14 @@ export async function altaMuestra(dtoMuestra) {
 }
 
 export async function altaDeterminacion(dtoDeterminacion) {
+    let response = null;
     try {
-        const result = await services.get('SISA-WS76').exec(dtoDeterminacion);
-        return result;
+        response = await services.get('SISA-WS76').exec(dtoDeterminacion);
+        // Log info solo para fines de monitoreo inicial. Borrar una vez puesto a punto
+        await logSisa.info('sisa:export:determinacion', { params: dtoDeterminacion, response }, userScheduler);
+        return response;
     } catch (e) {
-        await logSisa.error('sisa:export:determinacion', null, e.message, userScheduler);
+        await logSisa.error('sisa:export:determinacion', { response }, e.message, userScheduler);
         return false;
     }
 }
