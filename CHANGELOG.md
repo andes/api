@@ -1,3 +1,18 @@
+# [5.68.0](https://github.com/andes/api/compare/v5.67.0...v5.68.0) (2021-11-03)
+
+
+### Bug Fixes
+
+* **mapa-camas:** censo diario - corrige ver días estada en internacion con egreso ([#1589](https://github.com/andes/api/issues/1589)) ([32c7f7d](https://github.com/andes/api/commit/32c7f7d3f7d6fbfebecceeee2d3ae35ae4da04fe))
+* **perinatal:** se arregla bug sobre job perinatal ([#1584](https://github.com/andes/api/issues/1584)) ([41c2d11](https://github.com/andes/api/commit/41c2d113caa6d02820a25733c57203d67492e21e))
+* **vac:** evita enviar calle sin contenido ([#1599](https://github.com/andes/api/issues/1599)) ([559ab37](https://github.com/andes/api/commit/559ab374e02c013516ff8a8522cef24954e6a75e))
+
+
+### Features
+
+* **bi:** nuevo permiso de zonas sanitarias en visualización ([#1587](https://github.com/andes/api/issues/1587)) ([5028ce8](https://github.com/andes/api/commit/5028ce8538ccc0e8524454fad8b485fc0e1f2dcf))
+* **EP:** export LAMP SISA ([#1579](https://github.com/andes/api/issues/1579)) ([9395aa3](https://github.com/andes/api/commit/9395aa3c69f8d6ab8aa5d8b21c55f6c66e315d3e))
+
 # [5.67.0](https://github.com/andes/api/compare/v5.66.0...v5.67.0) (2021-10-27)
 
 
