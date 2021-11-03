@@ -92,39 +92,42 @@ export async function altaDeterminacionCovid(idEventoMuestra, idEstablecimiento)
 }
 
 export async function altaEvento(altaEventoCasoNominal) {
-    let result = null;
+    let response = null;
     try {
-        result = await services.get('SISA-WS400').exec({ altaEventoCasoNominal });
-        if (result.resultado !== 'OK') {
-            throw new Error(result.description || 'error export SISA ws400');
+        response = await services.get('SISA-WS400').exec({ altaEventoCasoNominal });
+        if (response.resultado !== 'OK') {
+            throw new Error(response.description || 'error export SISA ws400');
         }
-        return result;
+        return response;
     } catch (e) {
-        await logSisa.error('sisa:export:evento', result, e.message, userScheduler);
+        await logSisa.error('sisa:export:evento', { params: altaEventoCasoNominal, response }, e.message, userScheduler);
         return false;
     }
 }
 
 export async function altaMuestra(dtoMuestra) {
-    let result = null;
+    let response = null;
     try {
-        result = await services.get('SISA-WS75').exec(dtoMuestra);
-        if (!result.id) {
+        response = await services.get('SISA-WS75').exec(dtoMuestra);
+        if (!response.id) {
             throw new Error('error export SISA ws75');
         }
-        return result;
+        return response;
     } catch (e) {
-        await logSisa.error('sisa:export:muestra', result, e.message, userScheduler);
+        await logSisa.error('sisa:export:muestra', { params: dtoMuestra, response }, e.message, userScheduler);
         return false;
     }
 }
 
 export async function altaDeterminacion(dtoDeterminacion) {
+    let response = null;
     try {
-        const result = await services.get('SISA-WS76').exec(dtoDeterminacion);
-        return result;
+        response = await services.get('SISA-WS76').exec(dtoDeterminacion);
+        // Log info solo para fines de monitoreo inicial. Borrar una vez puesto a punto
+        await logSisa.info('sisa:export:determinacion', { params: dtoDeterminacion, response }, userScheduler);
+        return response;
     } catch (e) {
-        await logSisa.error('sisa:export:determinacion', null, e.message, userScheduler);
+        await logSisa.error('sisa:export:determinacion', { response }, e.message, userScheduler);
         return false;
     }
 }
