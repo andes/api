@@ -701,6 +701,11 @@ export default [
                 type: 'boolean'
             },
             {
+                key: 'delete',
+                title: 'Eliminar ficha',
+                type: 'boolean'
+            },
+            {
                 key: 'historial',
                 title: 'Ver historial',
                 type: 'boolean'

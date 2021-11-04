@@ -8,6 +8,9 @@ import { altaEventoLAMP } from '../../../modules/sisa/controller/sisa.controller
 
 class FormsEpidemiologiaResource extends ResourceBase {
     Model = FormsEpidemiologia;
+    defaultParams = {
+        active: true
+    };
     resourceName = 'formEpidemiologia';
     middlewares = [Auth.authenticate()];
     searchFileds = {
@@ -64,7 +67,8 @@ class FormsEpidemiologiaResource extends ResourceBase {
         documento: {
             field: 'paciente.documento',
             fn: MongoQuery.equalMatch
-        }
+        },
+        active: (b) => b
     };
 }
 

@@ -26,7 +26,12 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         fechaNacimiento: Date
     }, { _id: false }),
     secciones: [mongoose.Schema.Types.Mixed],
-    zonaSanitaria: zonaSanitariasSchema
+    zonaSanitaria: zonaSanitariasSchema,
+    active: {
+        type: Boolean,
+        required: true,
+        default: true
+    }
 });
 
 const assertUniquePCR = async function (next) {
