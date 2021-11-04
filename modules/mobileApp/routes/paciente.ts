@@ -177,8 +177,9 @@ router.post('/registro-familiar/:id', async (req: any, res, next) => {
             const pacienteValidado = await validar(documento, sexo);
             if (pacienteValidado) {
                 const tramite = Number(req.body.tramite);
+                const usarNroTramite = false;
                 // Verifica el número de trámite
-                if (pacienteValidado.idTramite !== tramite) {
+                if (pacienteValidado.idTramite !== tramite && usarNroTramite) {
                     return res.status(404).send('Número de trámite inválido');
                 }
                 req.body.nombre = pacienteValidado.nombre;

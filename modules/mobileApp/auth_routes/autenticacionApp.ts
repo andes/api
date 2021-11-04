@@ -10,6 +10,8 @@ import { enviarCodigoVerificacion, generarCodigoVerificacion } from '../controll
 import { PacienteAppCtr } from '../pacienteApp.routes';
 import { PacienteApp } from '../schemas/pacienteApp';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
+import * as ScanParse from '../../../shared/scanParse';
+import moment = require('moment');
 
 const router = express.Router();
 
@@ -218,14 +220,21 @@ router.post('/mailGenerico', async (req, res, next) => {
 
 router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => {
     try {
-        const documento = req.body.documento;
-        const sexo = req.body.sexo;
+        const scanText = req.body.scanText;
         const email = req.body.email;
         const fcmToken = req.body.fcmToken;
+
+        if (!ScanParse.isValid(scanText)) {
+            return res.status(400).send('Documento Inválido.');
+        }
+
+        const documentoScan: any = ScanParse.scan(scanText);
+
         // TODO: Llevar funcionalidad a controller
-        const cuentas = await PacienteAppCtr.search({ documento: String(documento), sexo, activacionApp: true });
+        const cuentas = await PacienteAppCtr.search({ documento: documentoScan.documento, sexo: documentoScan.sexo, activacionApp: true });
+
         // Verifica si el paciente se encuentra registrado y activo en la app mobile
-        const cuentaPaciente = cuentas.filter(c => {return c.pacientes.length;});
+        const cuentaPaciente = cuentas.filter(c => { return c.pacientes.length; });
         if (cuentaPaciente.length > 0) {
             return res.status(404).send('Ya existe una cuenta activa asociada a su documento');
         }
@@ -240,24 +249,32 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
 
         req.body.validado = false;
         req.body.estado = 'pendiente';
+
+        const usarNroTramite = false;
+
         // Realiza la búsqueda en Renaper
-        const pacienteValidado = await validar(documento, sexo);
+        const pacienteValidado = await validar(documentoScan.documento, documentoScan.sexo.toLocaleLowerCase());
         if (pacienteValidado) {
-            const tramite = Number(req.body.tramite);
-            // Verifica el número de trámite
-            if (pacienteValidado.idTramite !== tramite) {
-                return res.status(404).send('Número de trámite inválido');
+            if (usarNroTramite) {
+                const tramite = Number(documentoScan.tramite);
+                // Verifica el número de trámite
+                if (pacienteValidado.idTramite !== tramite) {
+                    return res.status(404).send('Número de trámite inválido');
+                }
+                // Guarda la foto de RENAPER en Andes
+                await extractFoto(pacienteValidado, configPrivate.userScheduler);
             }
             req.body.nombre = pacienteValidado.nombre;
             req.body.apellido = pacienteValidado.apellido;
             req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
             req.body.validado = true;
         } else {
-            return res.status(404).send('No es posible verificar su identidad. Por favor verifique sus datos');
+            return res.status(404).send('No es posible verificar su identidad.');
         }
-        // Busca el paciente y si no existe lo guarda
-        await extractFoto(pacienteValidado, configPrivate.userScheduler);
+
+        // Busca el paciente y si no existe lo crea
         const paciente = await findOrCreate(pacienteValidado, configPrivate.userScheduler);
+
         let registro = {};
         if (paciente && paciente.id) {
             const passw = generarCodigoVerificacion();
@@ -268,6 +285,8 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
             }];
             req.body.password = passw;
             registro = await PacienteAppCtr.create(req.body, req);
+
+            // Push Notification
             enviarCodigoVerificacion(registro, passw, fcmToken);
         }
         return res.json(registro);
