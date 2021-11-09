@@ -118,9 +118,6 @@ router.post('/login', async (req, res, next) => {
         return next(403);
     }
 
-    const passwordSha1 = sha1Hash(req.body.password);
-    console.log(passwordSha1);
-
     try {
         const userResponse = await findUser(req.body.usuario);
         if (userResponse) {

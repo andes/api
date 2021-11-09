@@ -1,12 +1,12 @@
 import { EventCore } from '@andes/event-bus';
 import { InformeRUP } from '..//descargas/informe-rup/informe-rup';
-import { IPrestacion, IPrestacionDoc } from '../rup/prestaciones.interface';
+import { IPrestacion } from '../rup/prestaciones.interface';
 import { Prestacion } from '../rup/schemas/prestacion';
 import { DICOMInformePDF } from './dicom/informe-encode';
 import { DICOMPaciente } from './dicom/paciente-encode';
 import { DICOMPrestacion } from './dicom/prestacion-encode';
 import { PacsConfigController } from './pacs-config.controller';
-import { loginPacs, createPaciente, createWorkList, enviarInforme } from './pacs-network';
+import { createPaciente, createWorkList, enviarInforme, loginPacs } from './pacs-network';
 
 export async function syncWorkList(prestacion: IPrestacion) {
     try {
@@ -43,9 +43,12 @@ export async function syncWorkList(prestacion: IPrestacion) {
 
             await createPaciente(config, pacienteDICOM, token);
             await createWorkList(config, prestacionDICOM, token);
+            const query = prestacion.groupId ?
+                { groupId: prestacion.groupId } :
+                { _id: (prestacion as any)._id } ;
 
             await Prestacion.update(
-                { groupId: prestacion.groupId },
+                query,
                 {
                     $push: {
                         metadata: {

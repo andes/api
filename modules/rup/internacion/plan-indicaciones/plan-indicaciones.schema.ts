@@ -31,6 +31,7 @@ export const PlanIndicacionesSchema = new Schema({
     elementoRUP: SchemaTypes.ObjectId,
     paciente: PacienteSubSchema,
     ambito: String,
+    capa: String,
     organizacion: {
         type: NombreSchemaV2,
         required: true

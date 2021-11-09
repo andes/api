@@ -57,7 +57,13 @@ const EstadoSchema = new Schema({
     planIndicaciones: {
         required: false,
         type: {
-            tipoPrestacion: SnomedConcept
+            tipoPrestacion: SnomedConcept,
+            secciones: [{
+                concepto: SnomedConcept,
+                color: String,
+                icono: String,
+                registro: SnomedConcept
+            }]
         }
     }
 });

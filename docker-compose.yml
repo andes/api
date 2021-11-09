@@ -1,14 +1,14 @@
 version: '2'
 services:
- mongo:  
-  image: mongo:5.0
-  volumes:
-    - vmongo:/data/db
-  ports:
-    - "27017:27017" 
-  networks:
-    - backend  
+  mongo:
+    image: mongo:4.0
+    volumes:
+      - vmongo:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - backend
 volumes:
-  vmongo:
+  vmongo: null
 networks:
-  backend:
+  backend: null
