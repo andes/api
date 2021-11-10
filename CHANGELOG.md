@@ -1,3 +1,11 @@
+# [5.69.0](https://github.com/andes/api/compare/v5.68.0...v5.69.0) (2021-11-10)
+
+
+### Features
+
+* **EP:** log sisa params ([#1602](https://github.com/andes/api/issues/1602)) ([5087332](https://github.com/andes/api/commit/5087332d0bc9aa8b99f777133461b495a9d4abf8))
+* **vac:** se elimina el control de número de trámite en la inscripción. ([#1596](https://github.com/andes/api/issues/1596)) ([b9c63da](https://github.com/andes/api/commit/b9c63da011b516cc1ff8a99f161feeea9ad9821c))
+
 # [5.68.0](https://github.com/andes/api/compare/v5.67.0...v5.68.0) (2021-11-03)
 
 
