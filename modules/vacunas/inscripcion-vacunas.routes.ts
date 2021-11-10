@@ -223,15 +223,6 @@ InscripcionVacunasRouter.post('/inscripcion-vacunas/registro', async (req: Reque
                     // Realiza el match
                     const value = await matching(inscriptoValidado, req.body);
                     if (value < mpi.cotaMatchMax) {
-                        const tramite = Number(req.body.nroTramite);
-                        // Verifica el número de trámite sólo en caso que no matchee el paciente
-                        if (req.body.tieneTramite && inscriptoValidado.idTramite !== tramite) {
-                            return next('Número de Trámite inválido');
-                        }
-                        // Verifica el caso en que marca que no tiene numero de trámite pero si tiene
-                        if (!req.body.tieneTramite && inscriptoValidado.idTramite) {
-                            return next('Su documento registra un número de trámite, por favor verifique');
-                        }
                         return next('Datos inválidos, verifique sus datos personales');
                     }
                     req.body.validado = true;
