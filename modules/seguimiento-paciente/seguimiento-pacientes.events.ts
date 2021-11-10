@@ -8,6 +8,7 @@ import { Prestacion } from '../rup/schemas/prestacion';
 import { InternacionResumen } from '../rup/internacion/resumen/internacion-resumen.schema';
 import { getOrganizacionSeguimiento } from './controller/seguimiento-paciente.controller';
 import { getScoreValue } from './../../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
+import { SECCION_CONTACTOS_ESTRECHOS, SECCION_MPI } from '../../modules/forms/forms-epidemiologia/constantes';
 
 const dataLog: any = new Object(userScheduler);
 const altaCid = '201000246105';
@@ -21,8 +22,8 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
     try {
         const seguimientos = await SeguimientoPaciente.find({ 'paciente.id': data.paciente.id });
         if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
-            const mpiSections = data.secciones.find(s => s.name === 'Mpi');
-            const contactosEstrechos = data.secciones.find(s => s.name === 'Contactos Estrechos');
+            const mpiSections = data.secciones.find(s => s.name === SECCION_MPI);
+            const contactosEstrechos = data.secciones.find(s => s.name === SECCION_CONTACTOS_ESTRECHOS);
             const organizacionSeguimiento = await getOrganizacionSeguimiento(data);
             const scoreValue = await getScoreValue(data);
             const score = {
