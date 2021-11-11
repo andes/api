@@ -132,7 +132,8 @@ ProfesionalSchema.add({
     /* externa significa que no son matriculados con la app de matriculaciones como pueden ser los psicólogos, kinesiólogos, etc
     */
     profesionExterna: { type: ObjSIISASchema, required: false },
-    matriculaExterna: { type: String, required: false }
+    matriculaExterna: { type: String, required: false },
+    observaciones: { type: String, required: false }
 });
 
 // Virtuals

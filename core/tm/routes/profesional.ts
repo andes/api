@@ -1057,6 +1057,9 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
             if (req.body.matriculaExterna) {
                 resultado.matriculaExterna = req.body.matriculaExterna;
             }
+            if (req.body.observaciones) {
+                resultado.observaciones = req.body.observaciones;
+            }
             if (req.body.foto) {
                 resultado.foto = req.body.foto;
             }
