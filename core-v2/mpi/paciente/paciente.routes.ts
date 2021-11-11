@@ -100,7 +100,6 @@ export const find = async (req: Request, res: Response) => {
     const options = req.apiOptions();
     const paciente = await findById(id, options);
     if (paciente) {
-        paciente.financiador = await getObraSocial(paciente); // Se busca la obra social
         return res.json(paciente);
     }
     throw new PatientNotFound();
