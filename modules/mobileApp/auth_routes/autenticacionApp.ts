@@ -5,12 +5,14 @@ import * as configPrivate from '../../../config.private';
 import { extractFoto, findOrCreate } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { validar } from '../../../core-v2/mpi/validacion';
+import * as ScanParse from '../../../shared/scanParse';
 import * as authController from '../controller/AuthController';
 import { enviarCodigoVerificacion, generarCodigoVerificacion } from '../controller/AuthController';
 import { PacienteAppCtr } from '../pacienteApp.routes';
+import { registroMobileLog } from '../registroMobile.log';
 import { PacienteApp } from '../schemas/pacienteApp';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
-import * as ScanParse from '../../../shared/scanParse';
+
 import moment = require('moment');
 
 const router = express.Router();
@@ -269,6 +271,12 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
             req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
             req.body.validado = true;
         } else {
+            await registroMobileLog.error(
+                'validacion',
+                { documento: documentoScan.documento, sexo: documentoScan.sexo, scan: scanText },
+                'Error validando paciente al registrar cuenta',
+                req
+            );
             return res.status(404).send('No es posible verificar su identidad.');
         }
 

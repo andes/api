@@ -5,6 +5,7 @@ import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { validar } from '../../../core-v2/mpi/validacion';
 import { xmlToJson } from '../../../utils/utils';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
+import { registroMobileLog } from './../registroMobile.log';
 const router = express.Router();
 
 /**
@@ -191,6 +192,12 @@ router.post('/registro-familiar/:id', async (req: any, res, next) => {
                     return res.status(404).send('La edad del familiar a registrar no debe superar los 11 años');
                 }
             } else {
+                await registroMobileLog.error(
+                    'validacion',
+                    { documento, sexo },
+                    'Error validando paciente al registrar familiar',
+                    req
+                );
                 return res.status(404).send('No es posible verificar la identidad del familiar a registrar. Por favor verifique sus datos');
             }
             // Busca el paciente y si no existe lo guarda
