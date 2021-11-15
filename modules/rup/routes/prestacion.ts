@@ -762,9 +762,15 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
         if (reg.elementoRUP) {
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);
             if (elemento && elemento.dispatch) {
-                elemento.dispatch.forEach(hook => {
+                elemento.dispatch.forEach(async hook => {
                     if (hook.method === 'validar-prestacion') {
                         EventCore.emitAsync(hook.event, { prestacion, registro: reg });
+                    }
+                    if (hook.method === 'registro-respirador') {
+                        EventCore.emitAsync(hook.event, { prestacion, registro: reg });
+                    }
+                    if (hook.method === 'destete-respirador') {
+                        EventCore.emitAsync(hook.event, prestacion);
                     }
                 });
             }

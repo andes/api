@@ -5,7 +5,6 @@ import { InternacionResumen } from './internacion-resumen.schema';
 EventCore.on('mapa-camas:paciente:undo', async movimiento => {
     if (movimiento.capa && movimiento.capa === 'estadistica') { return; }
 
-
     await InternacionResumen.updateOne(
         { _id: Types.ObjectId(movimiento.idInternacion) },
         {
@@ -18,9 +17,7 @@ EventCore.on('mapa-camas:paciente:undo', async movimiento => {
 
 EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
     if (prestacion.trackId && prestacion.solicitud.ambitoOrigen === 'guardia') {
-
         const resumen = await InternacionResumen.findById(prestacion.trackId);
-
 
         switch (registro.valor.conceptId) {
             case '394848005':
@@ -33,11 +30,37 @@ EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
                 resumen.prioridad = { id: 100, label: 'ALTA', type: 'danger' };
                 break;
         }
-
         resumen.fechaAtencion = prestacion.ejecucion.fecha;
-
         await resumen.save();
+    }
+});
 
+EventCore.on('internacion:respirador:registro', async ({ prestacion, registro }) => {
+    if (prestacion.trackId && prestacion.solicitud.ambitoOrigen === 'internacion') {
+        await InternacionResumen.updateOne(
+            { _id: Types.ObjectId(prestacion.trackId) },
+            {
+                $set: {
+                    registros: {
+                        concepto: registro.concepto,
+                        valor: registro.valor
+                    }
+                }
+            }
+        );
+    }
+});
+
+EventCore.on('internacion:respirador:destete', async (prestacion) => {
+    if (prestacion.trackId && prestacion.solicitud.ambitoOrigen === 'internacion') {
+        await InternacionResumen.updateOne(
+            { _id: Types.ObjectId(prestacion.trackId) },
+            {
+                $set: {
+                    'registros.valor.fechaHasta': new Date()
+                }
+            }
+        );
     }
 });
 
