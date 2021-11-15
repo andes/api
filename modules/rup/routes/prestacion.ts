@@ -508,7 +508,7 @@ router.get('/prestaciones', async (req: any, res, next) => {
     });
 });
 
-router.post('/prestaciones', async (req, res, next) => {
+router.post('/prestaciones', async (req: Request, res, next) => {
     try {
         const dto = parseDate(JSON.stringify(req.body));
 

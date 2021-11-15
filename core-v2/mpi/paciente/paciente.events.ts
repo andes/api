@@ -1,5 +1,4 @@
 import { EventCore } from '@andes/event-bus';
-import { timeout } from 'async';
 import { AppCache } from '../../../connections';
 import { Types } from 'mongoose';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
@@ -7,6 +6,7 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { updatePrestacionPatient } from './../../../modules/rup/controllers/prestacion';
 import { findById, linkPacientesDuplicados, updateGeoreferencia } from './paciente.controller';
 import { IPacienteDoc } from './paciente.interface';
+import { registerInteraction } from '../mpi-pacientes-frecuentes/mpi-pacientes-frecuentes.controller';
 
 // TODO: Handlear errores
 EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
@@ -19,7 +19,7 @@ EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
             },
             body: paciente
         };
-        if (paciente.direccion?.length) {
+        if (paciente.direccion ?.length) {
             await updateGeoreferencia(paciente);
         }
         await linkPacientesDuplicados(patientRequest, paciente);
@@ -28,6 +28,19 @@ EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
             LoggerPaciente.logReporteError(patientRequest, 'error:reportar', paciente, paciente.notaError);
         }
     }
+    await registerInteraction(paciente, paciente.updatedBy);
+});
+
+EventCore.on('citas:turno:asignar', async (turno: any) => {
+    await registerInteraction(turno.paciente, turno.updatedBy);
+});
+
+EventCore.on('rup:prestacion:create', async (prestacion: any) => {
+    await registerInteraction(prestacion.paciente, prestacion.createdBy);
+});
+
+EventCore.on('mapa-camas:paciente:ingreso', async (estado: any) => {
+    await registerInteraction(estado.paciente, estado.createdBy);
 });
 
 EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[]) => {
@@ -79,8 +92,8 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
             }
         }
     }
+    await registerInteraction(paciente, paciente.updatedBy);
 });
-
 
 function addressChanged(addOld, newAdd) {
     const changeDir = addOld?.valor !== newAdd?.valor;

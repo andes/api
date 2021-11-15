@@ -3,6 +3,7 @@ import { AndesDocWithAudit, AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObjectId } from '@andes/core';
 
 export interface IAuthUsers {
+    id: ObjectId;
     usuario: number;
     activo: boolean;
     nombre: string;
