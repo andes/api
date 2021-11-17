@@ -371,6 +371,9 @@ export async function dashboardSolicitudes(filtros, user) {
     }
 
     if (filtros.estados) {
+        if (filtros.estados.length === 1 && filtros.estados[0] === 'pendiente') {
+            matchFiltros['solicitud.turno'] = { $eq: null };
+        }
         matchFiltros['estadoActual.tipo'] = {
             $in: filtros.estados
         };
