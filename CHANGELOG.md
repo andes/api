@@ -1,3 +1,15 @@
+# [5.70.0](https://github.com/andes/api/compare/v5.69.0...v5.70.0) (2021-11-17)
+
+
+### Bug Fixes
+
+* **CIT-130:** Obras sociales duplicadas ([#1601](https://github.com/andes/api/issues/1601)) ([128dfc6](https://github.com/andes/api/commit/128dfc642adbd58c225674ff8e815fc9bc68398f))
+
+
+### Features
+
+* **EPP:** eliminar ficha ([#1604](https://github.com/andes/api/issues/1604)) ([0fda567](https://github.com/andes/api/commit/0fda567eaf06f4d13ce357029040a7d2a1c6615b))
+
 # [5.69.0](https://github.com/andes/api/compare/v5.68.0...v5.69.0) (2021-11-10)
 
 
