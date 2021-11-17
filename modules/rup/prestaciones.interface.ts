@@ -68,6 +68,7 @@ export interface IPrestacionRegistro {
     valor?: any;
     registros?: IPrestacionRegistro[];
     relacionadoCon: any[];
+    idEvolucion?: ObjectId;
 }
 
 export interface IPrestacionSolicitud {

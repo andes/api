@@ -164,3 +164,9 @@ export type IProfesionalDoc = AndesDocWithAudit<IProfesional>;
 
 export const Profesional = mongoose.model<IProfesionalDoc, ITokenSearch<IProfesionalDoc>>('profesional', ProfesionalSchema, 'profesional');
 
+export const ProfesionalSubSchema = new mongoose.Schema({
+    id: mongoose.SchemaTypes.ObjectId,
+    nombre: String,
+    apellido: String,
+    documento: String
+}, { _id: false });
