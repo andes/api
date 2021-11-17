@@ -82,7 +82,8 @@ export const ReglasTOPSchema = new Schema({
             type: String,
             require: false
         },
-        query: String
+        query: String,
+        formulario: Schema.Types.Mixed
     }
 });
 
