@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { userScheduler } from '../../../config.private';
 import { CarnetPerinatalCtr } from './../carnet-perinatal.routes';
 import { CarnetPerinatal } from './../schemas/carnet-perinatal.schema';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import moment = require('moment');
 
 // Al validar la prestacion de "control embarazo", inserta el nuevo control por embarazo
@@ -26,9 +27,7 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
         }
         const carnetExistente: any = await CarnetPerinatal.findOne(query);
 
-        const proxControl = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '2471000246107')?.valor;
-        const fechaProximoControl = proxControl ? moment(proxControl).startOf('day').toDate() : null;
-
+        const fechaProximoControl = proximoCtrol(prestacion);
         if (carnetExistente) {
             if (!carnetExistente.controles) {
                 carnetExistente.controles = [];
@@ -109,10 +108,25 @@ EventCore.on('perinatal:control:cancelar-validacion', async ({ prestacion, regis
         if (carnetExistente) {
             carnetExistente.controles = carnetExistente.controles.filter(item => String(item.idPrestacion) !== String(prestacion.id));
             if (carnetExistente.controles.length) {
-                carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
+                // array de controles se generó ordenado por fecha de control
+                const ultControl = carnetExistente.controles[carnetExistente.controles.length - 1];
+                carnetExistente.fechaUltimoControl = ultControl.fechaControl;
+                const proxControl = proximoCtrol(prestacion);
+
+                if (!carnetExistente.fechaProximoControl || carnetExistente.fechaProximoControl <= proxControl) {
+                    const ultPrestacion = await Prestacion.findById(ultControl.idPrestacion);
+                    carnetExistente.fechaProximoControl = ultPrestacion ? proximoCtrol(ultPrestacion) : null;
+                }
+                await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
+            } else {
+                await CarnetPerinatalCtr.remove(carnetExistente.id);
             }
-            await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
+
         }
     }
 });
 
+export const proximoCtrol = (prestacion) => {
+    const proxControl = prestacion.ejecucion.registros.find(reg => reg.concepto.conceptId === '2471000246107')?.valor;
+    return proxControl ? moment(proxControl).startOf('day').toDate() : null;
+};
