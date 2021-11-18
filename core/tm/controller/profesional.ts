@@ -179,22 +179,6 @@ export async function searchMatriculas(profesionalId) {
     };
 }
 
-export async function saveTituloFormacionGrado(data) {
-    const _profesional: any = await Profesional.findById(data.profesionalId);
-    const formacionGrado: any = _profesional.formacionGrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
-
-    formacionGrado.tituloFileId = data.fileId;
-    return await actualizar(_profesional);
-}
-
-export async function saveTituloFormacionPosgrado(data) {
-    const _profesional: any = await Profesional.findById(data.profesionalId);
-    const formacionPosgrado: any = _profesional.formacionPosgrado.find(f => f.profesion.codigo === data.formacionGradoCodigo);
-
-    formacionPosgrado.tituloFileId = data.fileId;
-    return await actualizar(_profesional);
-}
-
 export async function saveFirma(data, admin = false) {
     const _base64 = data.firmaP || data.firma;
     const decoder = base64.decode();

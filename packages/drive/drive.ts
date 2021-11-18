@@ -71,6 +71,7 @@ export class AndesDrive {
         });
 
         router.delete('/:uuid', async (req: any, res, next) => {
+
             try {
                 const uuid = req.params.uuid;
                 const fd = await FileDescriptor.find(uuid);
