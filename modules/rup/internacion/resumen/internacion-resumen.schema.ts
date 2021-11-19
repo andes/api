@@ -33,6 +33,10 @@ export interface IInternacionResumen {
         label: string;
         type: string;
     };
+    diagnostico: {
+        principal: {};
+        registros: [any];
+    };
 }
 
 export type IInternacionResumenDoc = AndesDoc<IInternacionResumen>;
@@ -70,6 +74,10 @@ export const InternacionResumenSchema = new Schema({
             registros: [SchemaTypes.Mixed]
         },
         required: false
+    },
+    diagnostico: {
+        principal: {},
+        registros: []
     }
 
 });

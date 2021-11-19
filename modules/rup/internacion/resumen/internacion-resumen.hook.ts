@@ -40,3 +40,17 @@ EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
 
     }
 });
+
+EventCore.on('internacion:conceptos:agregar', async (prestacion) => {
+    const registros = prestacion.ejecucion.registros[0].registros[5].registros;
+    const query = { 'paciente.id': prestacion.paciente.id };
+
+    const resumenes = await InternacionResumen.find(query);
+    const resumen = resumenes[resumenes.length - 1];
+    resumen.diagnostico.registros = registros;
+    resumen.diagnostico.principal = registros.find(registro => registro.esDiagnosticoPrincipal);
+    await InternacionResumen.findOneAndUpdate({ _id: resumen._id }, resumen);
+
+});
+
+
