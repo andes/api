@@ -3,19 +3,21 @@ import { Auth } from '../../../auth/auth.class';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import * as turno from '../schemas/turno';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
+import { userScheduler } from '../../../config.private';
 const router = express.Router();
 
-router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
-
-    turno.findByIdAndUpdate(request.params.turnoId, request.body, { new: true }, (err, res) => {
-        if (err) {
-            return errorHandler(err);
+router.patch('/turnos/save/:turnoId', Auth.authenticate(), async (request, response, next) => {
+    try {
+        const turnoFound = await turno.findById(request.params.turnoId);
+        for (const key of Object.keys(request.body)) {
+            turnoFound[key] = request.body[key];
         }
-
-        response.status(201)
-            .json(res);
-    });
-
+        Auth.audit(turnoFound, request);
+        await turnoFound.save();
+        response.status(201).json(turnoFound);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 
@@ -46,6 +48,7 @@ router.post('/turnos/:tipo/:profesionalId/', async (req, res, next) => {
                     tipo: req.body.turno.tipo,
                     profesional: datos
                 });
+                Auth.audit(nTurno, userScheduler as any);
                 await nTurno.save();
                 return res.json(nTurno);
             }
@@ -342,5 +345,41 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
         response.json(aggregate);
     }
 });
+
+
+/**
+ * /turnos/:id
+ */
+router.get('/turnos/:id*?', Auth.authenticate(), (req, res, errorHandler) => {
+
+    if (!Auth.check(req, 'matriculaciones:turnos:getTurno')) {
+        return errorHandler(403);
+    }
+    if (req.params.id) {
+        turno.findById(req.params.id, (err, data) => {
+            if (err) {
+                return errorHandler(err);
+            }
+
+            res.json(data);
+        });
+
+    } else {
+        const opciones = {};
+
+        if (req.query.fecha) {
+            opciones['fecha'] = req.query.fecha;
+        }
+
+        turno.find(opciones).populate('profesional').sort({ fecha: 1, hora: 1 }).exec((error, data) => {
+            if (error) {
+                return errorHandler(error);
+            }
+
+            res.json(data);
+        });
+    }
+});
+
 
 export = router;

@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-const turnoSchena = new mongoose.Schema({
+const turnoSchema = new mongoose.Schema({
     fecha: { type: Date, required: true },
     tipo: {
         type: String,
@@ -9,26 +10,12 @@ const turnoSchena = new mongoose.Schema({
     notificado: { type: Boolean, default: false },
     sePresento: { type: Boolean, default: false },
     profesional: { type: mongoose.Schema.Types.ObjectId, ref: 'turnoSolicitado' },
-    anulado: Boolean,
-    updatedBy: {
-        required: false,
-        usuario: {
-            id: String,
-            nombre: String,
-            apellido: String,
-            documento: String,
-            username: String
-        },
-        organizacion: {
-            id: String,
-            nombre: String
-        }
-    }
+    anulado: Boolean
 });
 
 // Virtuals
 
-
-const turno = mongoose.model('turnoMatriculaciones', turnoSchena, 'turno');
+turnoSchema.plugin(AuditPlugin);
+const turno = mongoose.model('turnoMatriculaciones', turnoSchema, 'turno');
 
 export = turno;
