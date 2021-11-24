@@ -1,3 +1,19 @@
+# [5.71.0](https://github.com/andes/api/compare/v5.70.0...v5.71.0) (2021-11-24)
+
+
+### Bug Fixes
+
+* **bi:** filtra solicitudes pendientes con turno ([#1607](https://github.com/andes/api/issues/1607)) ([cc77074](https://github.com/andes/api/commit/cc7707438e3995c39c33bf9da7fa7b5af939b771))
+* **citas:** filtra prestaciones de internacion en historial de turnos ([#1616](https://github.com/andes/api/issues/1616)) ([bd5e3f7](https://github.com/andes/api/commit/bd5e3f7348f0f2034ff40cf2e5afe2b95f04ac36))
+* **per:** actualiza-elimina datos al romper validación ([#1613](https://github.com/andes/api/issues/1613)) ([0d6c0df](https://github.com/andes/api/commit/0d6c0df79e87481f48e53eca4d99831c4c470df0))
+
+
+### Features
+
+* **map-camas:** plan indicaciones ([#1565](https://github.com/andes/api/issues/1565)) ([0e35374](https://github.com/andes/api/commit/0e353743210c73bdef721c6fc25cb5fba144c43a))
+* **tm:** nuevo campo observaciones en profesional ([#1612](https://github.com/andes/api/issues/1612)) ([ddb0810](https://github.com/andes/api/commit/ddb081046ceab029de2724a86dae8e7723b7d0eb))
+* **top:** solicitudes con formularios dinamicos ([#1563](https://github.com/andes/api/issues/1563)) ([e63dc6a](https://github.com/andes/api/commit/e63dc6a354a65c4535a4dc360ebe52d4f35ad08c))
+
 # [5.70.0](https://github.com/andes/api/compare/v5.69.0...v5.70.0) (2021-11-17)
 
 
