@@ -1,7 +1,6 @@
 import { EventCore } from '@andes/event-bus';
 import { Types } from 'mongoose';
 import { InternacionResumen } from './internacion-resumen.schema';
-
 EventCore.on('mapa-camas:paciente:undo', async movimiento => {
     if (movimiento.capa && movimiento.capa === 'estadistica') { return; }
 
@@ -37,13 +36,18 @@ EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
 
 EventCore.on('internacion:respirador:registro', async ({ prestacion, registro }) => {
     if (prestacion.trackId && prestacion.solicitud.ambitoOrigen === 'internacion') {
+        const registroDispositivo = prestacion.ejecucion.registros.find(c => c.concepto.conceptId === '266700009');
         await InternacionResumen.updateOne(
             { _id: Types.ObjectId(prestacion.trackId) },
             {
-                $set: {
+                $push: {
                     registros: {
                         concepto: registro.concepto,
-                        valor: registro.valor
+                        valor: {
+                            fechaDesde: new Date(),
+                            fechaHasta: null,
+                            dispositivo: registroDispositivo.registros[0].valor.label
+                        }
                     }
                 }
             }
@@ -57,8 +61,13 @@ EventCore.on('internacion:respirador:destete', async (prestacion) => {
             { _id: Types.ObjectId(prestacion.trackId) },
             {
                 $set: {
-                    'registros.valor.fechaHasta': new Date()
+                    'registros.$[registro].valor.fechaHasta': new Date()
                 }
+            },
+            {
+                arrayFilters: [{
+                    'registro.valor.fechaHasta': { $eq: null }
+                }]
             }
         );
     }
@@ -72,7 +81,7 @@ EventCore.on('rup:internacion:valoracion-inicial', async (prestacion) => {
     const resumen = await InternacionResumen.findOne(query);
 
     if (registrosDiagnostico.registros.length) {
-        resumen.registros = resumen.registros || [];
+        (resumen.registros as any) = resumen.registros || [];
 
         const registros = registrosDiagnostico.registros.map(r => {
             return {
@@ -97,7 +106,7 @@ EventCore.on('rup:internacion:epicrisis', async (prestacion) => {
     const resumen = await InternacionResumen.findOne(query);
     if (registrosDiagnostico.registros.length) {
 
-        resumen.registros = resumen.registros || [];
+        (resumen.registros as any) = resumen.registros || [];
 
         const registros = registrosDiagnostico.registros.map(r => {
             return {

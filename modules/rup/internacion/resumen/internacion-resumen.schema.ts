@@ -32,13 +32,13 @@ export interface IInternacionResumen {
         label: string;
         type: string;
     };
-    registros: {
-        tipo: string;
-        idPrestacion: Types.ObjectId;
+    registros: [{
+        tipo?: string;
+        idPrestacion?: Types.ObjectId;
         concepto: ISnomedConcept;
-        valor: any;
-        esDiagnosticoPrincipal: boolean;
-    }[];
+        valor: Object;
+        esDiagnosticoPrincipal?: boolean;
+    }];
 }
 
 export type IInternacionResumenDoc = AndesDoc<IInternacionResumen>;
@@ -83,6 +83,7 @@ export const InternacionResumenSchema = new Schema({
         valor: SchemaTypes.Mixed,
         esDiagnosticoPrincipal: Boolean
     }]
+
 });
 
 InternacionResumenSchema.index({

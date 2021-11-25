@@ -21,6 +21,7 @@ import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
+import { IInternacionResumen } from '../internacion/resumen/internacion-resumen.schema';
 
 const router = express.Router();
 
@@ -762,7 +763,7 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
         if (reg.elementoRUP) {
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);
             if (elemento && elemento.dispatch) {
-                elemento.dispatch.forEach(async hook => {
+                elemento.dispatch.forEach(hook => {
                     if (hook.method === 'validar-prestacion') {
                         EventCore.emitAsync(hook.event, { prestacion, registro: reg });
                     }
