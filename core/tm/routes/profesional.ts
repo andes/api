@@ -19,8 +19,6 @@ import { Profesional } from '../schemas/profesional';
 import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { Organizacion } from '../schemas/organizacion';
-import * as turno from '../../../modules/matriculaciones/schemas/turno';
-import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
 import { Types } from 'mongoose';
 import { userScheduler } from './../../../config.private';
 import moment = require('moment');
@@ -553,49 +551,23 @@ router.get('/profesionales/documentos/:id', async (req, res, next) => {
     res.json(await AndesDrive.find(req.params.id));
 });
 
-router.get('/profesionales/:id', Auth.authenticate(), async (req, res, next) => {
-    const profesional = await Profesional.findById(req.params.id);
-    res.json(profesional);
-});
-
-router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
-    const opciones = {};
-    let query;
-    if (req.query.nombre) {
-        opciones['nombre'] = {
-            $regex: makePattern(req.query.nombre)
-        };
-    }
-});
 
 router.get('/profesionales/renovacion', Auth.authenticate(), async (req, res, next) => {
-    const turnoParams: any = {};
+    const profesionalParams: any = {};
     const solicitudParams: any = {};
 
-    if (req.query.fechaDesde) {
-        if (req.query.fechaHasta) {
-            turnoParams['$and'] = [
-                { fecha: { $gte: req.query.fechaDesde } },
-                { fecha: { $lte: req.query.fechaHasta } }
-            ];
-        } else {
-            turnoParams['fecha'] = { $gte: req.query.fechaDesde };
-        }
-    }
+    profesionalParams['$and'] = [
+        { updatedAt: { $gte: req.query.fechaDesde || moment().startOf('day').toDate() } },
+        { updatedAt: { $lte: req.query.fechaHasta || moment().endOf('day').toDate() } }
+    ];
+
     if (req.query.zonaSanitaria) {
         let organizaciones = await Organizacion.find({ 'zonaSanitaria._id': Types.ObjectId(req.query.zonaSanitaria) });
         organizaciones = organizaciones.map((org: any) => org._id.toString());
-        turnoParams['updatedBy.organizacion.id'] = { $in: organizaciones };
+        profesionalParams['updatedBy.organizacion.id'] = { $in: organizaciones };
     }
 
-    turnoParams['tipo'] = 'renovacion';
-    const turnos = await turno.find(turnoParams);
-
-    if (!turnos.length) {
-        // Si no existen resultados para los filtros primarios se ignoran los demás
-        return res.json([]);
-    }
-    solicitudParams['_id'] = { $in: turnos.map((t: any) => t.profesional) };
+    profesionalParams['formacionGrado.papelesVerificados'] = false;
 
     if (req.query.documento) {
         solicitudParams['documento'] = makePattern(req.query.documento);
@@ -619,50 +591,36 @@ router.get('/profesionales/renovacion', Auth.authenticate(), async (req, res, ne
 
     const skip: number = parseInt(req.query.skip || 0, 10);
     const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
-    let turnosSolicitados: any = await turnoSolicitado.find(solicitudParams).skip(skip).limit(limit);
-    turnosSolicitados = turnosSolicitados.map((t: any) => Types.ObjectId(t.idRenovacion));
-    const profesionales = await Profesional.find({
-        _id: { $in: turnosSolicitados },
-        'formacionGrado.0.papelesVerificados': false
-    });
-    res.json(profesionales);
+    const profesional = await Profesional.find(profesionalParams).skip(skip).limit(limit);
+    res.json(profesional);
 });
 
+router.get('/profesionales/:id', Auth.authenticate(), async (req, res, next) => {
+    const profesional = await Profesional.findById(req.params.id);
+    res.json(profesional);
+});
 
-router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
+router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
     const opciones = {};
     let query;
-    if (req.params.id) {
-        Profesional.findById(req.params.id, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-    } else {
-        if (req.query.nombre) {
-            opciones['nombre'] = {
-                $regex: makePattern(req.query.nombre)
-            };
-        }
+    if (req.query.nombre) {
+        opciones['nombre'] = {
+            $regex: makePattern(req.query.nombre)
+        };
+    }
 
-        if (req.query.matriculacion) {
-            opciones['profesionalMatriculado'] = true;
-        }
+    if (req.query.matriculacion) {
+        opciones['profesionalMatriculado'] = true;
+    }
 
-        if (req.query.apellido) {
-            opciones['apellido'] = {
-                $regex: makePattern(req.query.apellido)
-            };
-        }
-        if (req.query.estado) {
-            if (req.query.estado === 'Vigentes') {
-                req.query.estado = true;
-            }
-            if (req.query.estado === 'Suspendidas') {
-                req.query.estado = false;
-            }
-            opciones['formacionGrado.matriculado'] = req.query.estado;
+    if (req.query.apellido) {
+        opciones['apellido'] = {
+            $regex: makePattern(req.query.apellido)
+        };
+    }
+    if (req.query.estado) {
+        if (req.query.estado === 'Vigentes') {
+            req.query.estado = true;
         }
         if (req.query.estado === 'Suspendidas') {
             req.query.estado = false;
@@ -954,6 +912,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         }
     });
 });
+
 
 router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:postProfesional')) {
