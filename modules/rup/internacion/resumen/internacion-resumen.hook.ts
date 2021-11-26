@@ -1,7 +1,7 @@
 import { EventCore } from '@andes/event-bus';
+import { updateRegistroHistorialSolicitud } from 'modules/rup/controllers/prestacion';
 import { Types } from 'mongoose';
 import { InternacionResumen } from './internacion-resumen.schema';
-
 EventCore.on('mapa-camas:paciente:undo', async movimiento => {
     if (movimiento.capa && movimiento.capa === 'estadistica') { return; }
 
@@ -42,7 +42,9 @@ EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
 });
 
 EventCore.on('internacion:conceptos:agregar', async (prestacion) => {
-    const registros = prestacion.ejecucion.registros[0].registros[5].registros;
+
+    const registros = prestacion.ejecucion.registros.find(registro => registro.concepto.conceptId === '6451000013102'
+        && registro.registros.find(registroSeccion => registroSeccion.concepto.conceptId === '5961000013104'));
     const query = { 'paciente.id': prestacion.paciente.id };
 
     const resumenes = await InternacionResumen.find(query);

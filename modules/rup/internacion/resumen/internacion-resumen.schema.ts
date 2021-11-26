@@ -2,7 +2,8 @@ import { ObjectId } from '@andes/core';
 import { model, Schema, SchemaTypes } from 'mongoose';
 import { AndesDoc } from '@andes/mongoose-plugin-audit';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
-
+import * as registro from '../../schemas/prestacion.registro';
+import { ISnomedConcept } from 'modules/rup/schemas/snomed-concept';
 
 export interface IInternacionResumen {
     ambito: string;
@@ -34,7 +35,23 @@ export interface IInternacionResumen {
         type: string;
     };
     diagnostico: {
-        principal: {};
+        principal: {
+            nombre: String;
+            concepto: ISnomedConcept;
+            destacado: boolean;
+            esSolicitud: boolean;
+            esDiagnosticoPrincipal: boolean;
+            privacy: string;
+            esPrimeraVez: boolean;
+            valor: any;
+            registros: [any];
+            relacionadoCon: [any];
+            esCensable: boolean;
+            elementoRUP: ObjectId;
+            hasSections: boolean;
+            isSection: boolean;
+            noIndex: boolean;
+        };
         registros: [any];
     };
 }
@@ -76,8 +93,8 @@ export const InternacionResumenSchema = new Schema({
         required: false
     },
     diagnostico: {
-        principal: {},
-        registros: []
+        principal: registro.schema,
+        registros: [registro.schema]
     }
 
 });
