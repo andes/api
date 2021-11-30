@@ -133,8 +133,9 @@ router.get('/agenda/reporteResumenDiarioMensuals', async (req, res, next) => {
 });
 
 router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
+    // Cosas de San Juan
+    return res.json([]);
     const params = req.query;
-
     try {
         const resultado = await getPlanillaC1(params);
         res.json(resultado);
