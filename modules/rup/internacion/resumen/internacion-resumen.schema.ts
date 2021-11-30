@@ -84,7 +84,7 @@ export const InternacionResumenSchema = new Schema({
         concepto: SnomedConcept,
         valor: SchemaTypes.Mixed,
         esDiagnosticoPrincipal: Boolean
-    }]
+    }],
 
 });
 
