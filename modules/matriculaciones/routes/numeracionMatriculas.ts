@@ -5,22 +5,6 @@ import * as SIISA from './../../../core/tm/schemas/siisa';
 
 const router = express.Router();
 
-// router.get('/numeraciones/codigo', (request, response, errorHandler) => {
-//     console.log(request.params.codigo)
-//     NumeracionMatriculas.find({
-//         'profesion.id': request.params.codigo
-//     }).exec((error, numeraciones) => {
-
-//         if (error) {
-//             return errorHandler(error);
-//         }
-
-//         response.json(numeraciones[0]);
-
-
-//     });
-// })
-
 router.get('/numeraciones', (req, res, next) => {
     let resultado;
     if (req.query.especialidad || req.query.profesion) {
@@ -96,41 +80,6 @@ router.get('/numeraciones', (req, res, next) => {
     }
 });
 
-/**
- *
- */
-
-
-router.get('/numeracionesRestart', (req, resp, errorHandler) => {
-
-    SIISA.Profesion.find({})
-        .exec((err, profs) => {
-            if (err) {
-                return errorHandler(err);
-            }
-            profs.forEach((prof, i) => {
-                const numeracion = new NumeracionMatriculas({
-                    profesion: prof,
-                    proximoNumero: 1
-                });
-
-                numeracion.save((err2, res) => {
-                    if (err2) {
-                        return errorHandler(err2);
-                    }
-                    if (i === profs.length - 1) {
-                        resp.json('Reset');
-                    }
-                });
-
-            });
-        });
-});
-
-
-/**
- *
- */
 router.post('/numeraciones', (request, response, errorHandler) => {
     const opciones = {};
 
@@ -162,8 +111,6 @@ router.post('/numeraciones', (request, response, errorHandler) => {
             });
         }
     });
-
-
 });
 
 
@@ -176,8 +123,6 @@ router.put('/numeraciones', (request, response, errorHandler) => {
 
         response.json(numeracion);
     });
-
 });
-
 
 export = router;
