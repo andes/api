@@ -1,3 +1,16 @@
+# [5.72.0](https://github.com/andes/api/compare/v5.71.0...v5.72.0) (2021-12-01)
+
+
+### Bug Fixes
+
+* **citas:** elimina query planilla c1 ([06ac017](https://github.com/andes/api/commit/06ac017eee10e0e2ef50400d90ccff9795fdf259))
+* **matriculaciones:** error al cargar posgrado a profesional recién cargado ([#1619](https://github.com/andes/api/issues/1619)) ([c1501ef](https://github.com/andes/api/commit/c1501eff72f9c7a650278dc7a36927ae1785f742))
+
+
+### Features
+
+* **am:** registrar log en registro fallido ([#1611](https://github.com/andes/api/issues/1611)) ([8cebfb4](https://github.com/andes/api/commit/8cebfb413e5ecac25c5589649eef7be231c19afc))
+
 # [5.71.0](https://github.com/andes/api/compare/v5.70.0...v5.71.0) (2021-11-24)
 
 
