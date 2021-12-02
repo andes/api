@@ -41,17 +41,18 @@ EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
     }
 });
 
-EventCore.on('internacion:conceptos:agregar', async (prestacion) => {
+EventCore.on('internacion:conceptos:ingreso', async (prestacion) => {
 
-    const registros = prestacion.ejecucion.registros.find(registro => registro.concepto.conceptId === '6451000013102'
-        && registro.registros.find(registroSeccion => registroSeccion.concepto.conceptId === '5961000013104'));
-    const query = { 'paciente.id': prestacion.paciente.id };
+    const registroIngreso = prestacion.ejecucion.registros.find(registro => registro.concepto.conceptId === '6451000013102');
+    const registrosDiagnostico = registroIngreso.registros.find(registroSeccion => registroSeccion.concepto.conceptId === '5961000013104');
+    const query = { _id: prestacion.trackId };
+    const resumen = await InternacionResumen.findOne(query);
 
-    const resumenes = await InternacionResumen.find(query);
-    const resumen = resumenes[resumenes.length - 1];
-    resumen.diagnostico.registros = registros;
-    resumen.diagnostico.principal = registros.find(registro => registro.esDiagnosticoPrincipal);
-    await InternacionResumen.findOneAndUpdate({ _id: resumen._id }, resumen);
+    if (registrosDiagnostico.registros.length) {
+        resumen.diagnostico.registros = registrosDiagnostico.registros;
+        resumen.diagnostico.principal = registrosDiagnostico.registros.find(registro => registro.esDiagnosticoPrincipal);
+        await InternacionResumen.findOneAndUpdate({ _id: resumen._id }, resumen);
+    }
 
 });
 
