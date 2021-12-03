@@ -3,7 +3,6 @@ import { InformacionExportada } from '../core/log/schemas/logExportaInformacion'
 import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-epidemiologia-schema';
 import { handleHttpRequest } from '../utils/requestHandler';
 import { sisa } from './../config.private';
-import { updateFichaCodigoSisa } from '../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 import { SECCION_CLASIFICACION } from '../modules/forms/forms-epidemiologia/constantes';
 
 const user = sisa.user_snvs;
@@ -160,10 +159,6 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
 
                     if (status >= 200 && status <= 299) {
                         const id_caso = resJson.id_caso ? resJson.id_caso : '';
-
-                        if (id_caso) {
-                            await updateFichaCodigoSisa(unaFicha._id, id_caso);
-                        }
 
                         log.resultado = {
                             resultado: resJson.resultado ? resJson.resultado : '',
