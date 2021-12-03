@@ -32,7 +32,7 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             if (!carnetExistente.controles) {
                 carnetExistente.controles = [];
             }
-            if (carnetExistente.fecha > moment(prestacion.ejecucion.fecha).startOf('day').toDate()) {
+            if (moment(carnetExistente.fecha).isAfter(moment(prestacion.ejecucion.fecha).startOf('day').toDate())) {
                 carnetExistente.fecha = moment(prestacion.ejecucion.fecha).startOf('day').toDate();
             }
             const indexControl = carnetExistente.controles.findIndex(item => String(item.idPrestacion) === String(prestacion.id));
