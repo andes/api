@@ -33,32 +33,6 @@ export async function importLAMPResults() {
     EventCore.emitAsync('notificacion:epidemio:lamp', { lamps });
 }
 
-export async function updateFichaCodigoSisa(fichaId, _codigoSisa) {
-    const ficha: any = await FormsEpidemiologia.findById(fichaId);
-    const secciones = ficha.secciones;
-    let seccionOperaciones = secciones.find(s => s.name === SECCION_OPERACIONES);
-
-    if (!seccionOperaciones) {
-        seccionOperaciones = {
-            name: SECCION_OPERACIONES,
-            fields: []
-        };
-        secciones.push(seccionOperaciones);
-    }
-
-    let fieldSisa = seccionOperaciones.fields.find(f => f.codigoSisa);
-    if (!fieldSisa) {
-        fieldSisa = {
-            codigoSisa: null
-        };
-        seccionOperaciones.fields.push(fieldSisa);
-    }
-
-    fieldSisa.codigoSisa = _codigoSisa;
-
-    return FormEpidemiologiaCtr.update(fichaId, ficha, userScheduler as any);
-}
-
 async function getScoreComorbilidades(ficha) {
     const enfermedadesFields = ficha.secciones.find(s => s.name === SECCION_ENFERMEDADES_PREVIAS)?.fields;
     const presentaComorbilidades = enfermedadesFields?.find(f => f.presenta)?.presenta;
