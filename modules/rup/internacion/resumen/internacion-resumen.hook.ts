@@ -1,5 +1,4 @@
 import { EventCore } from '@andes/event-bus';
-import { updateRegistroHistorialSolicitud } from 'modules/rup/controllers/prestacion';
 import { Types } from 'mongoose';
 import { InternacionResumen } from './internacion-resumen.schema';
 EventCore.on('mapa-camas:paciente:undo', async movimiento => {
@@ -41,18 +40,42 @@ EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
     }
 });
 
-EventCore.on('internacion:conceptos:ingreso', async (prestacion) => {
+EventCore.on('rup:internacion:valoracion-inicial', async (prestacion) => {
 
     const registroIngreso = prestacion.ejecucion.registros.find(registro => registro.concepto.conceptId === '6451000013102');
-    const registrosDiagnostico = registroIngreso.registros.find(registroSeccion => registroSeccion.concepto.conceptId === '5961000013104');
+    const registrosDiagnostico = registroIngreso.registros.find(registroSeccion => registroSeccion.concepto.conceptId === '2941000246106');
     const query = { _id: prestacion.trackId };
     const resumen = await InternacionResumen.findOne(query);
 
     if (registrosDiagnostico.registros.length) {
-        resumen.diagnostico.registros = registrosDiagnostico.registros;
-        resumen.diagnostico.principal = registrosDiagnostico.registros.find(registro => registro.esDiagnosticoPrincipal);
+        resumen.registros = resumen.registros || [];
+
+        const registros = registrosDiagnostico.registros.map(r => {
+            return {
+                tipo: 'valoracion-inicial',
+                idPrestacion: prestacion._id,
+                concepto: r.concepto,
+                esDiagnosticoPrincipal: r.esDiagnosticoPrincipal,
+                valor: r.valor
+            };
+        });
+
+        resumen.registros.push(...registros);
         await InternacionResumen.findOneAndUpdate({ _id: resumen._id }, resumen);
     }
+
+});
+
+EventCore.on('rup:internacion:valoracion-inicial:cancel', async (prestacion) => {
+    const query = { _id: prestacion.trackId };
+    await InternacionResumen.updateOne(
+        { _id: prestacion.trackId },
+        {
+            $pull: {
+                registros: { idPrestacion: prestacion._id }
+            }
+        }
+    );
 
 });
 
