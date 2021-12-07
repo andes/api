@@ -6,6 +6,7 @@ import { validar } from '../../../core-v2/mpi/validacion';
 import { xmlToJson } from '../../../utils/utils';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
 import { registroMobileLog } from './../registroMobile.log';
+import * as ScanParse from '../../../shared/scanParse';
 const router = express.Router();
 
 /**
@@ -170,19 +171,18 @@ router.post('/registro-familiar/:id', async (req: any, res, next) => {
         const pacienteActual: any = await findById(idPaciente);
         const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
         if (index >= 0) {
-            const documento = req.body.documento;
-            const sexo = req.body.sexo;
+            const scanText = req.body.scanText;
+            if (!ScanParse.isValid(scanText)) {
+                return res.status(400).send('Documento Inválido.');
+            }
+            const documentoScan: any = ScanParse.scan(scanText);
+            req.body.documento = documentoScan.documento;
+            req.body.sexo = documentoScan.sexo;
             req.body.validado = false;
             req.body.estado = 'pendiente';
             // Realiza la búsqueda en Renaper
-            const pacienteValidado = await validar(documento, sexo);
+            const pacienteValidado = await validar(req.body.documento, req.body.sexo.toLocaleLowerCase());
             if (pacienteValidado) {
-                const tramite = Number(req.body.tramite);
-                const usarNroTramite = false;
-                // Verifica el número de trámite
-                if (pacienteValidado.idTramite !== tramite && usarNroTramite) {
-                    return res.status(404).send('Número de trámite inválido');
-                }
                 req.body.nombre = pacienteValidado.nombre;
                 req.body.apellido = pacienteValidado.apellido;
                 req.body.fechaNacimiento = pacienteValidado.fechaNacimiento;
@@ -194,7 +194,7 @@ router.post('/registro-familiar/:id', async (req: any, res, next) => {
             } else {
                 await registroMobileLog.error(
                     'validacion',
-                    { documento, sexo },
+                    { documento: documentoScan.documento, sexo: documentoScan.sexo },
                     'Error validando paciente al registrar familiar',
                     req
                 );
