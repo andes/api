@@ -1,3 +1,11 @@
+# [5.73.0](https://github.com/andes/api/compare/v5.72.0...v5.73.0) (2021-12-08)
+
+
+### Features
+
+* **EP:** remove update SISA ([#1624](https://github.com/andes/api/issues/1624)) ([580b208](https://github.com/andes/api/commit/580b2086cfc3cf8c530da8d0a22f4863e7b0be2d))
+* **mobile:** permitir registro de familiar con scan del dni ([#1608](https://github.com/andes/api/issues/1608)) ([960f0b8](https://github.com/andes/api/commit/960f0b882aa96975bbd3ffd8c66da260fe60bd68))
+
 # [5.72.0](https://github.com/andes/api/compare/v5.71.0...v5.72.0) (2021-12-01)
 
 
