@@ -535,16 +535,16 @@ router.get('/profesionales/documentos/:id', async (req, res, next) => {
     res.json(await AndesDrive.find(req.params.id));
 });
 
-router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
+router.get('/profesionales/:id*?', Auth.authenticate(), async (req, res, next) => {
     const opciones = {};
     let query;
     if (req.params.id) {
-        Profesional.findById(req.params.id, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        try {
+            const profesional = await Profesional.findById(req.params.id);
+            res.json(profesional);
+        } catch (err) {
+            return next(err);
+        }
     } else {
         if (req.query.nombre) {
             opciones['nombre'] = {
