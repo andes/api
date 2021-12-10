@@ -19,7 +19,7 @@ import moment = require('moment');
  */
 export async function liberarRefTurno(turno, req) {
     try {
-        const idTurno = typeof turno.id === 'string' ? Types.ObjectId(turno.id) : turno.id;
+        const idTurno = Types.ObjectId(turno.id);
         const query = Prestacion.findOne({
             $and: [
                 { 'estadoActual.tipo': 'pendiente' },

@@ -686,20 +686,22 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                 }
 
                 if (req.body.op === 'suspendida') {
-                    (data as any).bloques.forEach(bloque => {
+                    const liberar = [];
+                    (data as any).bloques.map(bloque => {
                         // Loggear cada turno
-                        bloque.turnos.forEach(async t => {
+                        bloque.turnos.map(t => {
                             if (t.paciente && t.paciente.id) {
                                 LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
 
                                 if (t.tipoTurno === 'gestion') {
                                     // Se desvincula la solicitud (prestación) de tu turno correspondiente y se registra la acción en el historial
                                     req.body.observaciones = `Motivo: ${t.motivoSuspension}`;
-                                    await liberarRefTurno(t, req);
+                                    liberar.push(liberarRefTurno(t, req));
                                 }
                             }
                         });
                     });
+                    await Promise.all(liberar);
                 }
                 if (req.body.op === 'suspenderTurno') {
                     if (event.data.tipoTurno === 'gestion') {
