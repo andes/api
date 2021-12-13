@@ -25,7 +25,7 @@ export class InformeRUP extends InformePDF {
         const organizacion = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
         const elementosRUPSet = await elementosRUPAsSet();
 
-        fulfillPrestacion(prestacion, elementosRUPSet);
+        await fulfillPrestacion(prestacion, elementosRUPSet);
 
         const cama = await this.getCamaInternacion(prestacion);
 
