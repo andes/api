@@ -1,8 +1,8 @@
 import { ObjectId } from '@andes/core';
-import { model, Schema, SchemaTypes } from 'mongoose';
 import { AndesDoc } from '@andes/mongoose-plugin-audit';
+import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
-
+import { ISnomedConcept, SnomedConcept } from '../../schemas/snomed-concept';
 
 export interface IInternacionResumen {
     ambito: string;
@@ -25,14 +25,21 @@ export interface IInternacionResumen {
     deletedAt?: Date;
 
     ingreso: {
-        elementoRUP: ObjectId;
-        registros: [any];
+        elementoRUP?: ObjectId;
+        registros?: [any];
     };
     prioridad?: {
         id: number;
         label: string;
         type: string;
     };
+    registros: {
+        tipo: string;
+        idPrestacion: Types.ObjectId;
+        concepto: ISnomedConcept;
+        valor: any;
+        esDiagnosticoPrincipal: boolean;
+    }[];
 }
 
 export type IInternacionResumenDoc = AndesDoc<IInternacionResumen>;
@@ -69,8 +76,15 @@ export const InternacionResumenSchema = new Schema({
             elementoRUP: SchemaTypes.ObjectId,
             registros: [SchemaTypes.Mixed]
         },
-        required: false
-    }
+        required: false,
+    },
+    registros: [{
+        tipo: String,
+        idPrestacion: SchemaTypes.ObjectId,
+        concepto: SnomedConcept,
+        valor: SchemaTypes.Mixed,
+        esDiagnosticoPrincipal: Boolean
+    }]
 
 });
 
