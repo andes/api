@@ -46,7 +46,7 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
     const end = hasta ? moment(hasta).toDate() : moment().toDate();
     const match = {
         'estadoActual.tipo': 'validada',
-        'ejecucion.registros.concepto.conceptId': '840534001'
+        'ejecucion.registros.concepto.conceptId': { $in: ['1821000246103', '840534001'] }
     };
 
     // Es necesario mantener este if por si la solicitud viene de monitoreo, en ese caso no usa filtro de fechas
@@ -67,50 +67,21 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
             $match: match
         },
         {
-            $project: {
-                _id: 0,
-                idPaciente: '$paciente.id',
-                fecha: '$solicitud.fecha',
-                idEfector: '$solicitud.organizacion.id',
-                vacuna: '$ejecucion.registros.valor.vacuna'
-            }
-        },
-        {
             $lookup: {
                 from: 'organizacion',
-                localField: 'idEfector',
+                localField: 'solicitud.organizacion.id',
                 foreignField: '_id',
                 as: 'organizacion'
             }
         },
-        { $unwind: '$organizacion' },
-        {
-            $project: {
-                tipo: 'vacuna',
-                idPaciente: '$idPaciente',
-                fecha: {
-                    $dateToString: {
-                        date: '$fecha',
-                        format: '%d-%m-%Y',
-                        timezone: 'America/Argentina/Buenos_Aires'
-                    }
-                },
-                idEfector: '$idEfector',
-                CodigoSisa: '$organizacion.codigo.sisa',
-                vacunas: '$vacuna',
-                fechaCarga: {
-                    $dateToString: {
-                        date: '$fecha',
-                        format: '%d-%m-%Y',
-                        timezone: 'America/Argentina/Buenos_Aires'
-                    }
-                },
-            }
-        }
+        { $unwind: '$organizacion' }
     ];
     const prestaciones = await Prestacion.aggregate(pipelineVacunaCovid19);
     for (const unaPrestacion of prestaciones) {
-        let paciente: any = await Paciente.findById(unaPrestacion.idPaciente);
+        const prestacionAux: any = new Prestacion(unaPrestacion);
+        const registros = prestacionAux.getRegistros(true);
+        const registroVacuna = registros.find(registro => registro.concepto.conceptId === '840534001'); // Me quedo con el registro de la vacuna
+        let paciente: any = await Paciente.findById(unaPrestacion.paciente.id);
         if (!paciente.activo && paciente.idPacientePrincipal) {
             paciente = await Paciente.findById(paciente.idPacientePrincipal);
         }
@@ -131,13 +102,13 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                 },
                 aplicacionVacuna:
                 {
-                    establecimiento: unaPrestacion.CodigoSisa,
-                    fechaAplicacion: unaPrestacion.vacunas[0].fechaAplicacion ? moment(unaPrestacion.vacunas[0].fechaAplicacion).format('DD-MM-YYYY') : null,
-                    lote: unaPrestacion.vacunas[0].lote,
-                    esquema: unaPrestacion.vacunas[0].esquema.codigo,
-                    condicionAplicacion: unaPrestacion.vacunas[0].condicion.codigo,
-                    vacuna: unaPrestacion.vacunas[0].vacuna.codigo,
-                    ordenDosis: unaPrestacion.vacunas[0].dosis.orden,
+                    establecimiento: unaPrestacion.organizacion.codigo.sisa,
+                    fechaAplicacion: registroVacuna.valor.vacuna.fechaAplicacion ? moment(registroVacuna.valor.vacuna.fechaAplicacion).format('DD-MM-YYYY') : null,
+                    lote: registroVacuna.valor.vacuna.lote,
+                    esquema: registroVacuna.valor.vacuna.esquema.codigo,
+                    condicionAplicacion: registroVacuna.valor.vacuna.condicion.codigo,
+                    vacuna: registroVacuna.valor.vacuna.vacuna.codigo,
+                    ordenDosis: registroVacuna.valor.vacuna.dosis.orden,
                     referenciaSistemaProvincial: '32342' // faltaría ver bien que es esto, aunque no es obligatorio
                 }
             };
@@ -145,13 +116,13 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
                 ciudadano: data.ciudadano,
                 aplicacionVacuna: data.aplicacionVacuna
             };
-
             const log = {
                 fecha: new Date(),
                 sistema: 'Nomivac',
-                key: unaPrestacion.tipo,
-                idPaciente: unaPrestacion.idPaciente,
+                key: 'vacuna',
+                idPaciente: unaPrestacion.paciente.id,
                 info_enviada: data,
+                idPrestacion: unaPrestacion._id,
                 resultado: {}
             };
 
@@ -188,8 +159,9 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
             const logEspecial = {
                 fecha: new Date(),
                 sistema: 'Nomivac',
-                key: unaPrestacion.tipo,
+                key: 'vacuna',
                 idPaciente: paciente.id,
+                idPrestacion: unaPrestacion._id,
                 resultado: {
                     resultado: 'ERROR EN LOS DATOS',
                     status: 500,

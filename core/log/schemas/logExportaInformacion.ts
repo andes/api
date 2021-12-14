@@ -6,6 +6,7 @@ export const informacionExportadaSchema = new mongoose.Schema({
     },
     sistema: String,
     key: String,
+    idPrestacion: mongoose.Schema.Types.ObjectId,
     idPaciente: mongoose.Schema.Types.ObjectId,
     info_enviada: { type: mongoose.Schema.Types.Mixed },
     resultado: { type: mongoose.Schema.Types.Mixed }
