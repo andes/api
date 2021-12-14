@@ -32,7 +32,9 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             if (!carnetExistente.controles) {
                 carnetExistente.controles = [];
             }
-
+            if (moment(carnetExistente.fecha).isAfter(moment(prestacion.ejecucion.fecha).startOf('day').toDate())) {
+                carnetExistente.fecha = moment(prestacion.ejecucion.fecha).startOf('day').toDate();
+            }
             const indexControl = carnetExistente.controles.findIndex(item => String(item.idPrestacion) === String(prestacion.id));
             if (indexControl < 0) {
                 carnetExistente.controles.push({
@@ -45,7 +47,9 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             carnetExistente.controles = carnetExistente.controles.sort((a, b) => {
                 return new Date(a.fechaControl).getTime() - new Date(b.fechaControl).getTime();
             });
-            carnetExistente.fechaProximoControl = fechaProximoControl;
+            if (carnetExistente.fechaProximoControl < fechaProximoControl) {
+                carnetExistente.fechaProximoControl = fechaProximoControl;
+            }
             carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
             await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
         } else {
