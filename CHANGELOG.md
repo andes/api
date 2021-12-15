@@ -1,3 +1,17 @@
+# [5.74.0](https://github.com/andes/api/compare/v5.73.0...v5.74.0) (2021-12-15)
+
+
+### Bug Fixes
+
+* **PER-63:** Actualizacion de fecha de inicio al cargar un control antiguo ([#1618](https://github.com/andes/api/issues/1618)) ([95acc7f](https://github.com/andes/api/commit/95acc7ff07c8a82247d5a06be97b06a42c843553))
+
+
+### Features
+
+* **mapa-camas:** mostrar registro de diagnostico al ingreso ([#1617](https://github.com/andes/api/issues/1617)) ([3589f4b](https://github.com/andes/api/commit/3589f4b02c72c01656d95b06ddf90c173dcd7d3a))
+* **misc:** visualizacion de las matriculas de un profesional ([#1625](https://github.com/andes/api/issues/1625)) ([2cff0c5](https://github.com/andes/api/commit/2cff0c5b832c9234360b0dc17cf4fe6ddc0d99c1))
+* **vacunas:** actualiza exportCovid19 ([#1627](https://github.com/andes/api/issues/1627)) ([52fdffd](https://github.com/andes/api/commit/52fdffd03231febcca94cb586d32f5d1473ebd2d))
+
 # [5.73.0](https://github.com/andes/api/compare/v5.72.0...v5.73.0) (2021-12-08)
 
 
