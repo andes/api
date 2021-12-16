@@ -1,6 +1,6 @@
-import { Prestacion } from '../modules/rup/schemas/prestacion';
-import { InformacionExportada } from '../core/log/schemas/logExportaInformacion';
 import * as moment from 'moment';
+import { InformacionExportada } from '../core/log/schemas/logExportaInformacion';
+import { Prestacion } from '../modules/rup/schemas/prestacion';
 
 
 async function run(done) {
@@ -27,9 +27,9 @@ async function run(done) {
         }).cursor({ batchSize: 100 });
     }
     for await (const exportada of exportadas) {
+
         if (!exportada.idPrestacion) {
-            const pipeline =
-            {
+            const pipeline = {
                 'paciente.id': exportada.idPaciente,
                 'estadoActual.tipo': 'validada',
                 'ejecucion.registros.concepto.conceptId': { $in: ['1821000246103', '840534001'] },
@@ -51,8 +51,12 @@ async function run(done) {
 
 // Función que chequea que el documento de "InformacionExportada" haya sido creada con la prestacion matcheada
 const check = (exportada, registroVacuna) => {
-    return exportada.info_enviada.aplicacionVacuna.vacuna === registroVacuna.valor.vacuna.vacuna.codigo &&
-        exportada.info_enviada.aplicacionVacuna.ordenDosis === registroVacuna.valor.vacuna.dosis.orden;
+    const infoVacuna = exportada.info_enviada?.aplicacionVacuna;
+    const vacuna = registroVacuna?.valor?.vacuna;
+    if (infoVacuna && vacuna) {
+        return infoVacuna.vacuna === vacuna.vacuna.codigo && infoVacuna.ordenDosis === vacuna.dosis.orden;
+    }
+    return false;
 };
 
 export = run;
