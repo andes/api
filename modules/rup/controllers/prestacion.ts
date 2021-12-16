@@ -19,10 +19,11 @@ import moment = require('moment');
  */
 export async function liberarRefTurno(turno, req) {
     try {
+        const idTurno = Types.ObjectId(turno.id);
         const query = Prestacion.findOne({
             $and: [
                 { 'estadoActual.tipo': 'pendiente' },
-                { 'solicitud.turno': Types.ObjectId(turno.id) }
+                { 'solicitud.turno': idTurno }
             ]
         });
         const prestacion: any = await query.exec();
@@ -56,6 +57,7 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
         referir: 'Referida',
         asignarTurno: 'Turno asignado',
         liberarTurno: 'Turno liberado',
+        suspenderTurno: 'Turno suspendido',
         asignada: 'Profesional asignado',
         validada: 'Validada',
         ejecucion: 'Ejecutada',

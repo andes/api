@@ -14,7 +14,9 @@ import { getHistorial } from '../controller/historialCitasController/historialCi
 import * as turnosController from '../controller/turnosController';
 import { Agenda } from '../schemas/agenda';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
-
+import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { updateRegistroHistorialSolicitud } from '../../rup/controllers/prestacion';
+import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -334,9 +336,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     fechaHoraDacion: update[etiquetaFechHoraDacion]
                 };
 
-                // Se actualiza el campo financiador del paciente
-                // pacienteController.actualizarFinanciador(req, next);
-
                 // Actualizar padron de prepagas
                 if (req.body.paciente && req.body.paciente.obraSocial && req.body.paciente.obraSocial.prepaga) {
                     const documento = req.body.paciente.documento;
@@ -353,6 +352,19 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 EventCore.emitAsync('citas:agenda:update', doc2);
 
                 res.json(agendaRes);
+            }
+
+            // Se consulta si el turno estaba asociado a una solicitud
+            const prestacion: any = await Prestacion.findOne({ inicio: 'top', 'solicitud.historial.turno': req.body.reasignado.anterior.idTurno });
+            if (prestacion) {
+                const dataHistorial = {
+                    op: 'asignarTurno',
+                    observaciones: 'Reasignación'
+                };
+                updateRegistroHistorialSolicitud(prestacion.solicitud, dataHistorial);
+                prestacion.solicitud.turno = req.body.idTurno;
+                Auth.audit(prestacion, req);
+                await prestacion.save();
             }
         });
     } else {
