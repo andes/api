@@ -91,19 +91,22 @@ export async function elementosRUPAsSet(): Promise<ElementoRUPSet> {
 
 export async function fulfillPrestacion(prestacion, elementosRUPSet: ElementoRUPSet) {
 
-    function traverseRegistros(registros, rootElemento: IElementoRUPDocExt) {
-        registros.forEach((registro) => {
+    async function traverseRegistros(registros, rootElemento: IElementoRUPDocExt) {
+        for (const registro of registros) {
             const requerido = rootElemento.requeridosMap[registro.concepto.conceptId];
-            registro.elementoRUPObject = elementosRUPSet.getByID(registro.elementoRUP);
+            if (registro.elementoRUP) {
+                registro.elementoRUPObject = elementosRUPSet.getByID(registro.elementoRUP);
+            } else {
+                registro.elementoRUPObject = elementosRUPSet.getByConcept(registro.concepto, registro.esSolicitud);
+            }
             registro.params = (requerido && requerido.params) || {};
 
             traverseRegistros(registro.registros, registro.elementoRUPObject);
-
-        });
+        }
     }
 
     const tipoPrestacion = prestacion.solicitud.tipoPrestacion;
     const elementoPrestacion = elementosRUPSet.getByConcept(tipoPrestacion);
-    traverseRegistros(prestacion.ejecucion.registros, elementoPrestacion);
+    await traverseRegistros(prestacion.ejecucion.registros, elementoPrestacion);
 
 }
