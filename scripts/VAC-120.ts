@@ -13,9 +13,18 @@ async function run(done) {
         hasta = process.argv[4];
         const start = moment(desde).toDate();
         const end = moment(hasta).toDate();
-        exportadas = InformacionExportada.find({ 'resultado.resultado': 'OK', fecha: { $gte: start, $lte: end } }).cursor({ batchSize: 100 });
+        exportadas = InformacionExportada.find({
+            'resultado.resultado': 'OK',
+            fecha: { $gte: start, $lte: end },
+            sistema: 'Nomivac',
+            key: 'vacuna'
+        }).cursor({ batchSize: 100 });
     } else {
-        exportadas = InformacionExportada.find({ 'resultado.resultado': 'OK' }).cursor({ batchSize: 100 });
+        exportadas = InformacionExportada.find({
+            'resultado.resultado': 'OK',
+            sistema: 'Nomivac',
+            key: 'vacuna',
+        }).cursor({ batchSize: 100 });
     }
     for await (const exportada of exportadas) {
         if (!exportada.idPrestacion) {
