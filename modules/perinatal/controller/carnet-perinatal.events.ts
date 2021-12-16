@@ -32,8 +32,25 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             if (!carnetExistente.controles) {
                 carnetExistente.controles = [];
             }
+            const fechaUltimaMenstruacion = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007');
+            const pesoPrevio = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003');
+            const talla = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009');
+            const fechaProbableDeParto = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006');
             if (moment(carnetExistente.fecha).isAfter(moment(prestacion.ejecucion.fecha).startOf('day').toDate())) {
                 carnetExistente.fecha = moment(prestacion.ejecucion.fecha).startOf('day').toDate();
+            } else {
+                if (fechaUltimaMenstruacion) {
+                    carnetExistente.fechaUltimaMenstruacion = moment(fechaUltimaMenstruacion.valor).startOf('day').toDate();
+                }
+                if (pesoPrevio) {
+                    carnetExistente.pesoPrevio = pesoPrevio.valor;
+                }
+                if (talla) {
+                    carnetExistente.talla = talla.valor;
+                }
+                if (fechaProbableDeParto) {
+                    carnetExistente.fechaProbableDeParto = moment(fechaProbableDeParto.valor).startOf('day').toDate();
+                }
             }
             const indexControl = carnetExistente.controles.findIndex(item => String(item.idPrestacion) === String(prestacion.id));
             if (indexControl < 0) {
