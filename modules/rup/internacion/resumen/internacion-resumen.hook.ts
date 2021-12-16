@@ -1,6 +1,7 @@
 import { EventCore } from '@andes/event-bus';
 import { Types } from 'mongoose';
 import { InternacionResumen } from './internacion-resumen.schema';
+
 EventCore.on('mapa-camas:paciente:undo', async movimiento => {
     if (movimiento.capa && movimiento.capa === 'estadistica') { return; }
 
@@ -64,6 +65,31 @@ EventCore.on('rup:internacion:valoracion-inicial', async (prestacion) => {
         await InternacionResumen.findOneAndUpdate({ _id: resumen._id }, resumen);
     }
 
+});
+
+EventCore.on('rup:internacion:epicrisis', async (prestacion) => {
+    const registroAlta = prestacion.ejecucion.registros.find(registro => registro.concepto.conceptId === '373942005');
+    const registrosDiagnostico = registroAlta.registros.find(registroSeccion => registroSeccion.concepto.conceptId === '3641000013106');
+    const query = { _id: prestacion.trackId };
+    const resumen = await InternacionResumen.findOne(query);
+    if (registrosDiagnostico.registros.length) {
+
+        resumen.registros = resumen.registros || [];
+
+        const registros = registrosDiagnostico.registros.map(r => {
+            return {
+                tipo: 'epicrisis',
+                idPrestacion: prestacion._id,
+                concepto: r.concepto,
+                esDiagnosticoPrincipal: r.esDiagnosticoPrincipal,
+                valor: r.valor
+            };
+        });
+
+        resumen.registros.push(...registros);
+        await InternacionResumen.findOneAndUpdate({ _id: resumen._id }, resumen);
+
+    }
 });
 
 EventCore.on('rup:internacion:valoracion-inicial:cancel', async (prestacion) => {
