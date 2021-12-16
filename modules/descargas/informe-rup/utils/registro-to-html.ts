@@ -3,10 +3,7 @@ import { HTMLComponent } from '../../model/html-component.class';
 import { ElementoRUP } from '../../../rup/schemas/elementoRUP';
 
 export async function registroToHTML(prestacion, registro, depth: number) {
-    let elementoRUP = registro.elementoRUPObject;
-    if (!elementoRUP) {
-        elementoRUP = await ElementoRUP.findOne({ defaultFor: { $in: [registro.semanticTag] }, esSolicitud: registro.esSolicitud });
-    }
+    const elementoRUP = registro.elementoRUPObject;
     registro.params = {
         ...registro.params,
         ...(elementoRUP.params || {})

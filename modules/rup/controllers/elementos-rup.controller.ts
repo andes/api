@@ -94,9 +94,10 @@ export async function fulfillPrestacion(prestacion, elementosRUPSet: ElementoRUP
     async function traverseRegistros(registros, rootElemento: IElementoRUPDocExt) {
         for (const registro of registros) {
             const requerido = rootElemento.requeridosMap[registro.concepto.conceptId];
-            registro.elementoRUPObject = elementosRUPSet.getByID(registro.elementoRUP);
-            if (!registro.elementoRUPObject) {
-                registro.elementoRUPObject = await ElementoRUP.findOne({ defaultFor: { $in: [registro.semanticTag] }, esSolicitud: registro.esSolicitud });
+            if (registro.elementoRUP) {
+                registro.elementoRUPObject = elementosRUPSet.getByID(registro.elementoRUP);
+            } else {
+                registro.elementoRUPObject = elementosRUPSet.getByConcept(registro.concepto, registro.esSolicitud);
             }
             registro.params = (requerido && requerido.params) || {};
 
