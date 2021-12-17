@@ -78,98 +78,101 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
     ];
     const prestaciones = await Prestacion.aggregate(pipelineVacunaCovid19);
     for (const unaPrestacion of prestaciones) {
-        const prestacionAux: any = new Prestacion(unaPrestacion);
-        const registros = prestacionAux.getRegistros(true);
-        const registroVacuna = registros.find(registro => registro.concepto.conceptId === '840534001'); // Me quedo con el registro de la vacuna
-        let paciente: any = await Paciente.findById(unaPrestacion.paciente.id);
-        if (!paciente.activo && paciente.idPacientePrincipal) {
-            paciente = await Paciente.findById(paciente.idPacientePrincipal);
-        }
-        try {
-            const data = {
-                ciudadano:
-                {
-                    tipoDocumento: 1,
-                    numeroDocumento: paciente.documento,
-                    sexo: paciente.sexo === 'femenino' ? 'F' : (paciente.sexo === 'masculino') ? 'M' : '',
-                    nombre: paciente.nombre,
-                    apellido: paciente.apellido,
-                    fechaNacimiento: moment(paciente.fechaNacimiento).format('DD-MM-YYYY'),
-                    calle: paciente?.direccion[0]?.valor ? paciente.direccion[0].valor : 'No especifica',
-                    pais: 200,
-                    provincia: 15,
-                    departamento: 365 // Confluencia, luego updetear por el que corresponda
-                },
-                aplicacionVacuna:
-                {
-                    establecimiento: unaPrestacion.organizacion.codigo.sisa,
-                    fechaAplicacion: registroVacuna.valor.vacuna.fechaAplicacion ? moment(registroVacuna.valor.vacuna.fechaAplicacion).format('DD-MM-YYYY') : null,
-                    lote: registroVacuna.valor.vacuna.lote,
-                    esquema: registroVacuna.valor.vacuna.esquema.codigo,
-                    condicionAplicacion: registroVacuna.valor.vacuna.condicion.codigo,
-                    vacuna: registroVacuna.valor.vacuna.vacuna.codigo,
-                    ordenDosis: registroVacuna.valor.vacuna.dosis.orden,
-                    referenciaSistemaProvincial: '32342' // faltaría ver bien que es esto, aunque no es obligatorio
-                }
-            };
-            const dto = {
-                ciudadano: data.ciudadano,
-                aplicacionVacuna: data.aplicacionVacuna
-            };
-            const log = {
-                fecha: new Date(),
-                sistema: 'Nomivac',
-                key: 'vacuna',
-                idPaciente: unaPrestacion.paciente.id,
-                info_enviada: data,
-                idPrestacion: unaPrestacion._id,
-                resultado: {}
-            };
-
-            const options = {
-                uri: urlSisa,
-                method: 'POST',
-                body: dto,
-                headers: { APP_ID: sisa.APP_ID_ALTA, APP_KEY: sisa.APP_KEY_ALTA, 'Content-Type': 'application/json' },
-                json: true,
-            };
-            const resJson = await handleHttpRequest(options);
-            if (resJson && resJson.length > 0) {
-                const code = resJson[0];
-                const response = resJson[1];
-                log.resultado = {
-                    status: code ? code : '',
-                    resultado: response.resultado ? response.resultado : '',
-                    idSniAplicacion: response.idSniAplicacion ? response.idSniAplicacion : '',
-                    description: response.description ? response.description : '',
-                    error: response.errors ? response.errors : ''
-                };
-
-            } else {
-                log.resultado = {
-                    resultado: 'ERROR_DE_ENVIO',
-                    status: '',
-                    description: 'No se recibió ningún resultado'
-                };
+        const prestacionRegistrada = await InformacionExportada.findOne({ 'resultado.resultado': 'OK', idPrestacion: unaPrestacion._id });
+        if (!prestacionRegistrada) {
+            const prestacionAux: any = new Prestacion(unaPrestacion);
+            const registros = prestacionAux.getRegistros(true);
+            const registroVacuna = registros.find(registro => registro.concepto.conceptId === '840534001'); // Me quedo con el registro de la vacuna
+            let paciente: any = await Paciente.findById(unaPrestacion.paciente.id);
+            if (!paciente.activo && paciente.idPacientePrincipal) {
+                paciente = await Paciente.findById(paciente.idPacientePrincipal);
             }
-            const info = new InformacionExportada(log);
-            await info.save();
+            try {
+                const data = {
+                    ciudadano:
+                    {
+                        tipoDocumento: 1,
+                        numeroDocumento: paciente.documento,
+                        sexo: paciente.sexo === 'femenino' ? 'F' : (paciente.sexo === 'masculino') ? 'M' : '',
+                        nombre: paciente.nombre,
+                        apellido: paciente.apellido,
+                        fechaNacimiento: moment(paciente.fechaNacimiento).format('DD-MM-YYYY'),
+                        calle: paciente?.direccion[0]?.valor ? paciente.direccion[0].valor : 'No especifica',
+                        pais: 200,
+                        provincia: 15,
+                        departamento: 365 // Confluencia, luego updetear por el que corresponda
+                    },
+                    aplicacionVacuna:
+                    {
+                        establecimiento: unaPrestacion.organizacion.codigo.sisa,
+                        fechaAplicacion: registroVacuna.valor.vacuna.fechaAplicacion ? moment(registroVacuna.valor.vacuna.fechaAplicacion).format('DD-MM-YYYY') : null,
+                        lote: registroVacuna.valor.vacuna.lote,
+                        esquema: registroVacuna.valor.vacuna.esquema.codigo,
+                        condicionAplicacion: registroVacuna.valor.vacuna.condicion.codigo,
+                        vacuna: registroVacuna.valor.vacuna.vacuna.codigo,
+                        ordenDosis: registroVacuna.valor.vacuna.dosis.orden,
+                        referenciaSistemaProvincial: '32342' // faltaría ver bien que es esto, aunque no es obligatorio
+                    }
+                };
+                const dto = {
+                    ciudadano: data.ciudadano,
+                    aplicacionVacuna: data.aplicacionVacuna
+                };
+                const log = {
+                    fecha: new Date(),
+                    sistema: 'Nomivac',
+                    key: 'vacuna',
+                    idPaciente: unaPrestacion.paciente.id,
+                    info_enviada: data,
+                    idPrestacion: unaPrestacion._id,
+                    resultado: {}
+                };
 
-        } catch (error) {
-            const logEspecial = {
-                fecha: new Date(),
-                sistema: 'Nomivac',
-                key: 'vacuna',
-                idPaciente: paciente.id,
-                idPrestacion: unaPrestacion._id,
-                resultado: {
-                    resultado: 'ERROR EN LOS DATOS',
-                    status: 500,
-                    description: error
+                const options = {
+                    uri: urlSisa,
+                    method: 'POST',
+                    body: dto,
+                    headers: { APP_ID: sisa.APP_ID_ALTA, APP_KEY: sisa.APP_KEY_ALTA, 'Content-Type': 'application/json' },
+                    json: true,
+                };
+                const resJson = await handleHttpRequest(options);
+                if (resJson && resJson.length > 0) {
+                    const code = resJson[0];
+                    const response = resJson[1];
+                    log.resultado = {
+                        status: code ? code : '',
+                        resultado: response.resultado ? response.resultado : '',
+                        idSniAplicacion: response.idSniAplicacion ? response.idSniAplicacion : '',
+                        description: response.description ? response.description : '',
+                        error: response.errors ? response.errors : ''
+                    };
+
+                } else {
+                    log.resultado = {
+                        resultado: 'ERROR_DE_ENVIO',
+                        status: '',
+                        description: 'No se recibió ningún resultado'
+                    };
                 }
-            };
-            const info = new InformacionExportada(logEspecial);
-            await info.save();
+                const info = new InformacionExportada(log);
+                await info.save();
+
+            } catch (error) {
+                const logEspecial = {
+                    fecha: new Date(),
+                    sistema: 'Nomivac',
+                    key: 'vacuna',
+                    idPaciente: paciente.id,
+                    idPrestacion: unaPrestacion._id,
+                    resultado: {
+                        resultado: 'ERROR EN LOS DATOS',
+                        status: 500,
+                        description: error
+                    }
+                };
+                const info = new InformacionExportada(logEspecial);
+                await info.save();
+            }
         }
     }
 }
