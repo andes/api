@@ -14,5 +14,6 @@ export const informacionExportadaSchema = new mongoose.Schema({
 
 informacionExportadaSchema.index({ fecha: 1, sistema: 1, key: 1 });
 informacionExportadaSchema.index({ fecha: 1, idPaciente: 1 });
+informacionExportadaSchema.index({ idPrestacion: 1 });
 
 export const InformacionExportada = mongoose.model('nomivacInformacionExportada', informacionExportadaSchema, 'nomivacInformacionExportada');
