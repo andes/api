@@ -1,15 +1,14 @@
 import { HTMLComponent } from './html-component.class';
 
 
-it('no template throw error', () => {
+it('no template throw error', async () => {
     class MyComponent extends HTMLComponent {
-
     }
     const component = new MyComponent();
     try {
-        component.render();
+        await component.render();
         expect(true).toBe(false);
-    } catch {
+    } catch (err) {
         expect(true).toBe(true);
     }
 });
