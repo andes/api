@@ -11,7 +11,6 @@ import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 import { toArray } from '../../../utils/utils';
 import * as prestacionController from '../../rup/controllers/prestacion';
-import { Codificacion } from '../../rup/schemas/codificacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { Agenda } from '../../turnos/schemas/agenda';
 import { agendaLog } from '../citasLog';
@@ -162,6 +161,8 @@ export function suspenderTurno(req, data, turno) {
     if (turno.estado !== 'turnoDoble') {
         turno.estado = 'suspendido';
     }
+    const datosTurno = turno;
+    const efector = data.organizacion;
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
@@ -203,6 +204,9 @@ export function suspenderTurno(req, data, turno) {
             }
         }
     }
+
+    NotificationService.notificarSuspension(datosTurno, efector);
+
 }
 
 // Turno
@@ -453,8 +457,10 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
-
-                    NotificationService.notificarSuspension(turno);
+                    if (turno.paciente) {
+                        const efector = data.organizacion;
+                        NotificationService.notificarSuspension(turno, efector);
+                    }
 
                 });
             });
@@ -1187,8 +1193,7 @@ export function updatePaciente(pacienteModified, turno) {
 
 /* Devuelve el idAgenda y idBloque de un turno dado */
 export async function getDatosTurnos(idTurno) {
-    let pipeline = [];
-    pipeline = [
+    const pipeline = [
         {
             $match: {
                 'bloques.turnos._id': Types.ObjectId(idTurno)
@@ -1206,61 +1211,59 @@ export async function getDatosTurnos(idTurno) {
 export function getCantidadConsultaXPrestacion(params) {
 
     return new Promise(async (resolve, reject) => {
-        let pipeline = [];
-        pipeline = [{
-            $match: {
-                $and: [
-                    { horaInicio: { $gte: new Date(params.horaInicio) } },
-                    { horaFin: { $lte: new Date(params.horaFin) } },
-                    { 'organizacion._id': { $eq: Types.ObjectId(params.organizacion) } },
-                    { 'bloques.turnos.estado': 'asignado' }
-                ]
-            }
-        },
-                    {
-                        $unwind: '$bloques'
-                    },
-                    {
-                        $project: {
-                            idBloque: '$bloques._id',
-                            bloqueTurnos: {
-                                $concatArrays: ['$sobreturnos', '$bloques.turnos']
-                            }
-                        }
-                    },
-
-
-                    {
-                        $unwind: '$bloqueTurnos'
-                    },
-                    {
-                        $project: {
-                            hora: '$bloqueTurnos.horaInicio',
-                            estado: '$bloqueTurnos.estado',
-                            tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
-                        }
-                    },
-                    {
-                        $match: {
-                            estado: 'asignado'
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: '$tipoPrestacion.term',
-                            nombrePrestacion: {
-                                $first: '$tipoPrestacion.term'
-                            },
-                            conceptId: {
-                                $first: '$tipoPrestacion.conceptId'
-                            },
-                            total: {
-                                $sum: 1
-                            },
-                        }
-
-
+        const pipeline = [
+            {
+                $match: {
+                    $and: [
+                        { horaInicio: { $gte: new Date(params.horaInicio) } },
+                        { horaFin: { $lte: new Date(params.horaFin) } },
+                        { 'organizacion._id': { $eq: Types.ObjectId(params.organizacion) } },
+                        { 'bloques.turnos.estado': 'asignado' }
+                    ]
+                }
+            },
+            {
+                $unwind: '$bloques'
+            },
+            {
+                $project: {
+                    idBloque: '$bloques._id',
+                    bloqueTurnos: {
+                        $concatArrays: ['$sobreturnos', '$bloques.turnos']
                     }
+                }
+            },
+
+
+            {
+                $unwind: '$bloqueTurnos'
+            },
+            {
+                $project: {
+                    hora: '$bloqueTurnos.horaInicio',
+                    estado: '$bloqueTurnos.estado',
+                    tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+                }
+            },
+            {
+                $match: {
+                    estado: 'asignado'
+                }
+            },
+            {
+                $group: {
+                    _id: '$tipoPrestacion.term',
+                    nombrePrestacion: {
+                        $first: '$tipoPrestacion.term'
+                    },
+                    conceptId: {
+                        $first: '$tipoPrestacion.conceptId'
+                    },
+                    total: {
+                        $sum: 1
+                    },
+                }
+            }
 
         ];
 
