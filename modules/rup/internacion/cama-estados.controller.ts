@@ -10,7 +10,6 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
     const firstMatch = {};
     const secondMatch = {};
     const thirdMatch = {};
-    const ambitoMatch = {};
     if (filtros.cama) {
         firstMatch['idCama'] = mongoose.Types.ObjectId(filtros.cama);
     }
@@ -19,7 +18,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         secondMatch['paciente.id'] = mongoose.Types.ObjectId(filtros.paciente);
     }
     if (ambito) {
-        ambitoMatch['ambito'] = ambito;
+        firstMatch['ambito'] = ambito;
     }
 
     if (filtros.internacion) {
@@ -48,7 +47,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             }
         },
         {
-            $match: ambitoMatch
+            $match: firstMatch
         },
         {
             $unwind: '$estados',
@@ -106,7 +105,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                         },
                     },
                     {
-                        $match: ambitoMatch
+                        $match: firstMatch
                     },
                     {
                         $unwind: '$estados',
@@ -262,14 +261,13 @@ interface SearchEstadosParams {
 export async function searchEstados({ desde, hasta, organizacion, ambito, capa }, filtros: Partial<SearchEstadosParams> = {}) {
     const firstMatch = {};
     const secondMatch = {};
-    const ambitoMatch={};
 
     if (filtros.cama) {
         firstMatch['idCama'] = wrapObjectId(filtros.cama);
     }
 
     if (ambito) {
-        ambitoMatch['ambito'] = ambito;
+        firstMatch['ambito'] = ambito;
     }
 
     if (filtros.movimiento) {
@@ -311,7 +309,7 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
             }
         },
         {
-            $match: ambitoMatch
+            $match: firstMatch
         },
         {
             $unwind: '$estados',
