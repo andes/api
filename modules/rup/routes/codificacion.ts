@@ -80,6 +80,12 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
         if (!req.query.auditadas) {
             filtros['diagnostico.codificaciones.codificacionAuditoria.codigo'] = { $exists: req.query.auditadas };
         }
+        let matchProfesional = {};
+        if (req.query.idProfesional) {
+            matchProfesional = {
+                'prestacion.solicitud.profesional.id': { $eq: Types.ObjectId(req.query.idProfesional) }
+            };
+        }
 
         const pipeline = [
             {
@@ -98,7 +104,33 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
                     updatedBy: 1,
                     prestacion: '$tipoPrestacion.term'
                 }
-            }];
+            },
+            {
+                $lookup: {
+                    from: 'prestaciones',
+                    localField: 'idPrestacion',
+                    foreignField: '_id',
+                    as: 'prestacion'
+                }
+            },
+            {
+                $match: matchProfesional
+            },
+            {
+                $project: {
+                    id: '$_id',
+                    diagnostico: 1,
+                    idPrestacion: 1,
+                    paciente: 1,
+                    profesional: '$prestacion.solicitud.profesional',
+                    createdAt: 1,
+                    createdBy: 1,
+                    updatedAt: 1,
+                    updatedBy: 1,
+                    prestacion: '$tipoPrestacion.term'
+                }
+            }
+        ];
         try {
             const data = await Codificacion.aggregate(pipeline);
             res.json(data);
