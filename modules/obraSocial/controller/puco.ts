@@ -32,14 +32,17 @@ export async function pacientePuco(documento, sexo) {
             }
             resultOS[i] = {
                 codigoPuco: osPuco[i].codigoOS,
-                nombre: obraSocial?.nombre || '',
-                financiador: obraSocial?.nombre || ''
+                nombre: '',
+                financiador: ''
             };
+            if (obraSocial) {
+                resultOS[i].nombre = obraSocial.nombre;
+                resultOS[i].financiador = obraSocial.nombre;
+            }
         }
     }
     return resultOS;
 }
-
 
 /**
  * obtenemos el paciente de la coleccion de puco

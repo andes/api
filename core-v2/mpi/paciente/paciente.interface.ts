@@ -1,8 +1,8 @@
 import * as moment from 'moment';
-import { Schema, Document, Types } from 'mongoose';
+import { Document, Schema, Types } from 'mongoose';
+import { IContacto, IContactoDoc, IDireccion, IDireccionDoc } from '../../../shared/interface';
 import { IFinanciador } from '../financiador/financiador.interface';
 import { IParentesco } from '../parentesco/parentesco.interface';
-import { IContacto, IContactoDoc, IDireccion, IDireccionDoc } from '../../../shared/interface';
 
 export interface ICarpetaEfector {
     organizacion: any;
@@ -73,8 +73,10 @@ export interface IPacienteDoc extends Document, IPaciente {
     apellido: string;
     tokens?: string[];
     fotoId?: Schema.Types.ObjectId;
+    createdAt: Date;
     createdBy: any;
     updatedBy?: any;
+    updatedAt?: Date;
     scan?: String;
     /**
      * Devuelve los campos originales antes de haber sufrido alguna modificacion.
