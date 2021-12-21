@@ -1,5 +1,5 @@
-import { ObraSocialSchema } from '../../../modules/obraSocial/schemas/obraSocial';
 import { model, Schema } from 'mongoose';
+import { ObraSocialSchema } from '../../../modules/obraSocial/schemas/obraSocial';
 
 export const PacientesEmpadronadosSchema = new Schema(
     {
@@ -9,10 +9,11 @@ export const PacientesEmpadronadosSchema = new Schema(
         nombre: String,
         apellido: String,
         fechaNacimiento: Date,
-        fechaEmpadronamiento: String,
+        fechaEmpadronamiento: Date,
         codigoSisaEmpadronamiento: String,
         financiador: { type: ObraSocialSchema },
-        pais: String
+        pais: String,
+        createdAt: Date
     });
 
 export const PacientesEmpadronados = model('pacientes-empadronados', PacientesEmpadronadosSchema, 'pacientes-empadronados');

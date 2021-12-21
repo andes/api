@@ -1,17 +1,20 @@
-import { Paciente } from './../core-v2/mpi/paciente/paciente.schema';
-import { PacientesEmpadronados } from './../core-v2/mpi/pacientesEmpadronados/pacientesEmpadronados.schema';
+import * as moment from 'moment';
+import { Paciente } from '../core-v2/mpi/paciente/paciente.schema';
+import { PacientesEmpadronados } from '../core-v2/mpi/pacientes-empadronados/pacientes-empadronados.schema';
 import { getOSPuco } from '../modules/obraSocial/controller/puco';
 import { getPacienteSumar } from '../modules/obraSocial/controller/sumar';
 import { ObraSocial } from '../modules/obraSocial/schemas/obraSocial';
 
 async function run(done) {
-    await PacientesEmpadronados.deleteMany({});
-    const fechaDesde = new Date('2021-08-01T01:00:00.300-03:00');
-    const fechaHasta = new Date('2021-08-10T01:00:00.300-03:00');
+    const desde = process.argv[3];
+    const hasta = process.argv[4];
+    const start = moment(desde).toDate();
+    const end = moment(hasta).toDate();
+    // await PacientesEmpadronados.deleteMany({
+    //     createdAt: { $gte: start, $lte: end }
+    // });
     const pacientes = await Paciente.find({
-        $and: [
-            { createdAt: { $gte: fechaDesde } }, { createdAt: { $lte: fechaHasta } }
-        ]
+        createdAt: { $gte: start, $lte: end }
     });
     for (const paciente of pacientes) {
         const datos: any = {};
@@ -20,6 +23,7 @@ async function run(done) {
         datos.documento = paciente.documento;
         datos.fechaNacimiento = paciente.fechaNacimiento;
         datos.pais = 'Argentina';
+        datos.createdAt = paciente.createdAt;
         const datosPuco = await getOSPuco(paciente.documento, paciente.sexo);
         if (datosPuco.length < 1) {
             const datosSumar = await getPacienteSumar(paciente.documento);

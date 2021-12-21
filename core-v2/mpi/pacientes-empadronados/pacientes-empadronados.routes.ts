@@ -1,10 +1,12 @@
 
-import { ResourceBase, MongoQuery } from '@andes/core';
-import { PacientesEmpadronados } from './pacientesEmpadronados.schema';
+import { MongoQuery, ResourceBase } from '@andes/core';
+import { Auth } from '../../../auth/auth.class';
+import { PacientesEmpadronados } from './pacientes-empadronados.schema';
 
 class PacientesEmpadronadosResource extends ResourceBase {
     Model = PacientesEmpadronados;
     resourceName = 'pacientes-empadronados';
+    middlewares = [Auth.authenticate()];
     searchFileds = {
         paciente: {
             field: 'paciente.id',
