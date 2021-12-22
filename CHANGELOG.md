@@ -1,3 +1,21 @@
+# [5.75.0](https://github.com/andes/api/compare/v5.74.0...v5.75.0) (2021-12-22)
+
+
+### Bug Fixes
+
+* **rup:** descarga de Ecografías tira error 500 ([#1628](https://github.com/andes/api/issues/1628)) ([fda9da0](https://github.com/andes/api/commit/fda9da03c05d8278513b1914b2cd8411bae65e09))
+
+
+### Features
+
+* **CIT:** permiso pt inicio sobreturno ([#1623](https://github.com/andes/api/issues/1623)) ([5226d36](https://github.com/andes/api/commit/5226d36baa00e3442a6c1275b1a798d4fdc3de63))
+* **citas:** agrega filtro por profesional en auditoria fuera de agenda ([#1629](https://github.com/andes/api/issues/1629)) ([330b527](https://github.com/andes/api/commit/330b527f47b04bd9c663a336ecb34436d0f3b583))
+* **mapa-camas:** guarda en resumen paciente conceptos al egreso ([#1622](https://github.com/andes/api/issues/1622)) ([6a85345](https://github.com/andes/api/commit/6a853454c78472f5b4a35a14c34e3bbfed2969ec))
+* **mpi:** nueva colección para cargar pacientes empadronados ([#1595](https://github.com/andes/api/issues/1595)) ([f525242](https://github.com/andes/api/commit/f525242ebf8a706e643f20c5fb7f9266c92740f2))
+* **script:** actualizacion log nomivac exportado ([#1631](https://github.com/andes/api/issues/1631)) ([f8c227d](https://github.com/andes/api/commit/f8c227db8a09105762c4cdd8dd3da59959a07ffb))
+* **top:** libera solicitud al suspender turno ([#1593](https://github.com/andes/api/issues/1593)) ([c687a8d](https://github.com/andes/api/commit/c687a8ded1ff1d0be271d421fda151f6d80fabf0))
+* **vacunas:** mejora del proceso de migración de vacunas a nomivac ([#1633](https://github.com/andes/api/issues/1633)) ([9bd2b34](https://github.com/andes/api/commit/9bd2b3437162c60fb488acf73c4d06ab26eab8e2))
+
 # [5.74.0](https://github.com/andes/api/compare/v5.73.0...v5.74.0) (2021-12-15)
 
 
