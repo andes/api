@@ -94,6 +94,7 @@ export default [
                     { key: 'darTurnos', title: 'Dar turnos desde punto inicio', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
                     { key: 'activarMobile', title: 'Activar App Mobile', type: 'boolean' },
+                    { key: 'darSobreturno', title: 'Dar sobreturno', type: 'boolean' },
 
                 ]
             }
