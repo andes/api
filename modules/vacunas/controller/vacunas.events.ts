@@ -1,5 +1,6 @@
 import { ObjectId } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
+import { InformacionExportada } from '../../../core/log/schemas/logExportaInformacion';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { IPacienteDoc } from '../../../core-v2/mpi/paciente/paciente.interface';
@@ -25,6 +26,8 @@ EventCore.on('rup:prestaciones:vacunacion', async (prestacion) => {
     await sincronizarVacunas(prestacion.paciente.id);
 
     if (prestacion.estadoActual.tipo === 'ejecucion') {
+        const informacionExportada: any = await InformacionExportada.findOne({ idPrestacion: prestacion._id, 'resultado.resultado': 'OK' });
+        await InformacionExportada.update({ _id: informacionExportada._id }, { $set: { 'resultado.resultado': 'MODIFICADA' } });
         await deleteVacunasFromNomivac(prestacion);
     }
 });
