@@ -5,14 +5,16 @@ import { Codificacion } from '../modules/rup/schemas/codificacion';
 
 async function run(done) {
 
-    const fechaDesde = new Date(process.argv[3]);
-    const fechaHasta = new Date(process.argv[4]);
-    const codificaciones: any = await Codificacion.find({
-        $and: [
-            {createdAt: {$gte: fechaDesde}},
-            {createdAt: {$lte: fechaHasta}}
-        ]
-    }).cursor({ batchSize: 100 });
+    let codificaciones;
+    if (process.argv.length === 5) {
+        const fechaDesde = new Date(process.argv[3]);
+        const fechaHasta = new Date(process.argv[4]);
+        codificaciones = Codificacion.find({
+            createdAt:{$gte:fechaDesde, $lte:fechaHasta}
+        }).cursor({ batchSize: 100 });
+    } else {
+        codificaciones = Codificacion.find({ }).cursor({ batchSize: 100 });
+    }
     for await (const codificacion of codificaciones) {
         const prestacionId = Types.ObjectId(codificacion.idPrestacion);
         const prestacion: any = await Prestacion.find({_id : prestacionId});
