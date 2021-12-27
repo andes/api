@@ -16,6 +16,7 @@ class ConceptoTurneableResource extends ResourceBase {
         semanticTag: MongoQuery.partialString,
         noNominalizada: MongoQuery.equalMatch,
         auditable: MongoQuery.equalMatch,
+        ambito: MongoQuery.equalMatch,
         permisos: {
             field: '_id',
             fn: (value) => {
