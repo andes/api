@@ -767,12 +767,6 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
                     if (hook.method === 'validar-prestacion') {
                         EventCore.emitAsync(hook.event, { prestacion, registro: reg });
                     }
-                    if (hook.method === 'registro-respirador') {
-                        EventCore.emitAsync(hook.event, { prestacion, registro: reg });
-                    }
-                    if (hook.method === 'destete-respirador') {
-                        EventCore.emitAsync(hook.event, prestacion);
-                    }
                 });
             }
             if (elemento && elemento.tags) {

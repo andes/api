@@ -43,10 +43,10 @@ EventCore.on('internacion:respirador:registro', async ({ prestacion, registro })
                 $push: {
                     registros: {
                         concepto: registro.concepto,
+                        tipo: 'respirador',
                         valor: {
                             fechaDesde: new Date(),
-                            fechaHasta: null,
-                            dispositivo: registroDispositivo.registros[0].valor.label
+                            fechaHasta: null
                         }
                     }
                 }
@@ -55,9 +55,9 @@ EventCore.on('internacion:respirador:registro', async ({ prestacion, registro })
     }
 });
 
-EventCore.on('internacion:respirador:destete', async (prestacion) => {
+EventCore.on('internacion:respirador:destete', async ({ prestacion, registro }) => {
     if (prestacion.trackId && prestacion.solicitud.ambitoOrigen === 'internacion') {
-        await InternacionResumen.updateOne(
+        const r = await InternacionResumen.updateOne(
             { _id: Types.ObjectId(prestacion.trackId) },
             {
                 $set: {
