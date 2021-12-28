@@ -17,6 +17,7 @@ router.post('/codificacion', asyncHandler(async (req, res) => {
     if (codificaciones) {
         const data = new Codificacion({
             idPrestacion,
+            idProfesional: prestacion.solicitud.profesional.id,
             tipoPrestacion: prestacion.solicitud.tipoPrestacion,
             paciente: prestacion.paciente,
             ambitoPrestacion: prestacion.solicitud.ambitoOrigen,
