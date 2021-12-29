@@ -1,3 +1,10 @@
+# [5.76.0](https://github.com/andes/api/compare/v5.75.0...v5.76.0) (2021-12-29)
+
+
+### Features
+
+* **vacunas:** modifica estado log al romper validacion ([#1635](https://github.com/andes/api/issues/1635)) ([8492980](https://github.com/andes/api/commit/84929800c3325a6c1e59ce2bfbba0339bc1185f3))
+
 # [5.75.0](https://github.com/andes/api/compare/v5.74.0...v5.75.0) (2021-12-22)
 
 
