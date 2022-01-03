@@ -47,9 +47,6 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             }
         },
         {
-            $match: firstMatch
-        },
-        {
             $unwind: '$estados',
         },
         {
@@ -307,9 +304,6 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
                 end: { $gte: moment(desde).toDate() },
                 ...firstMatch
             }
-        },
-        {
-            $match: firstMatch
         },
         {
             $unwind: '$estados',
