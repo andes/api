@@ -28,14 +28,17 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
         const carnetExistente: any = await CarnetPerinatal.findOne(query);
 
         const fechaProximoControl = proximoCtrol(prestacion);
+
+        const registros = prestacion.getRegistros(true);
+
+        const fechaUltimaMenstruacion = registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007');
+        const pesoPrevio = registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003');
+        const talla = registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009');
+        const fechaProbableDeParto = registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006');
         if (carnetExistente) {
             if (!carnetExistente.controles) {
                 carnetExistente.controles = [];
             }
-            const fechaUltimaMenstruacion = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007');
-            const pesoPrevio = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003');
-            const talla = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009');
-            const fechaProbableDeParto = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006');
             if (moment(carnetExistente.fecha).isAfter(moment(prestacion.ejecucion.fecha).startOf('day').toDate())) {
                 carnetExistente.fecha = moment(prestacion.ejecucion.fecha).startOf('day').toDate();
             } else {
@@ -70,11 +73,6 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
             await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
         } else {
-            const fechaUltimaMenstruacion = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007');
-            const pesoPrevio = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003');
-            const talla = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009');
-            const fechaProbableDeParto = prestacion.ejecucion.registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006');
-
             const carnet: any = {
                 fecha: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
                 paciente: prestacion.paciente,
@@ -127,22 +125,41 @@ EventCore.on('perinatal:control:cancelar-validacion', async ({ prestacion, regis
         }
         const carnetExistente: any = await CarnetPerinatal.findOne(query);
         if (carnetExistente) {
+            const idUltimaPrestacion = carnetExistente.controles[carnetExistente.controles.length - 1].idPrestacion;
             carnetExistente.controles = carnetExistente.controles.filter(item => String(item.idPrestacion) !== String(prestacion.id));
             if (carnetExistente.controles.length) {
                 // array de controles se generó ordenado por fecha de control
                 const ultControl = carnetExistente.controles[carnetExistente.controles.length - 1];
                 carnetExistente.fechaUltimoControl = ultControl.fechaControl;
-                const proxControl = proximoCtrol(prestacion);
-
-                if (!carnetExistente.fechaProximoControl || carnetExistente.fechaProximoControl <= proxControl) {
-                    const ultPrestacion = await Prestacion.findById(ultControl.idPrestacion);
+                if (idUltimaPrestacion.toString() === prestacion.id) {
+                    const ultPrestacion: any = await Prestacion.findById(ultControl.idPrestacion);
+                    const registros = ultPrestacion.getRegistros(true);
+                    const fechaUltimaMenstruacion = registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007');
+                    const pesoPrevio = registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003');
+                    const talla = registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009');
+                    const fechaProbableDeParto = registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006');
                     carnetExistente.fechaProximoControl = ultPrestacion ? proximoCtrol(ultPrestacion) : null;
+                    const proxControl = proximoCtrol(prestacion);
+                    if (!carnetExistente.fechaProximoControl || carnetExistente.fechaProximoControl <= proxControl) {
+                        carnetExistente.fechaProximoControl = ultPrestacion ? proximoCtrol(ultPrestacion) : null;
+                    }
+                    if (fechaUltimaMenstruacion) {
+                        carnetExistente.fechaUltimaMenstruacion = fechaUltimaMenstruacion.valor;
+                    }
+                    if (pesoPrevio) {
+                        carnetExistente.pesoPrevio = pesoPrevio.valor;
+                    }
+                    if (talla) {
+                        carnetExistente.talla = talla.valor;
+                    }
+                    if (fechaProbableDeParto) {
+                        carnetExistente.fechaProbableDeParto = fechaProbableDeParto.valor;
+                    }
                 }
                 await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
             } else {
                 await CarnetPerinatalCtr.remove(carnetExistente.id);
             }
-
         }
     }
 });
