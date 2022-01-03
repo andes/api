@@ -8,7 +8,7 @@ const listaEsperaSchema = new mongoose.Schema({
         apellido: String,
         documento: String
     },
-    tipoPrestacion: { type: tipoPrestacionSchema },
+    tipoPrestacion: tipoPrestacionSchema,
     profesional: {
         id: mongoose.Schema.Types.ObjectId,
         nombre: String,
