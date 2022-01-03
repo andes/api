@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-const turnoSchena = new mongoose.Schema({
+const turnoSchema = new mongoose.Schema({
     fecha: { type: Date, required: true },
     tipo: {
         type: String,
@@ -14,7 +15,7 @@ const turnoSchena = new mongoose.Schema({
 
 // Virtuals
 
-
-const turno = mongoose.model('turnoMatriculaciones', turnoSchena, 'turno');
+turnoSchema.plugin(AuditPlugin);
+const turno = mongoose.model('turnoMatriculaciones', turnoSchema, 'turno');
 
 export = turno;

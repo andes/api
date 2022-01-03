@@ -1,7 +1,5 @@
 import * as mongoose from 'mongoose';
-// import * as ubicacionSchema from '../../../core/tm/schemas/ubicacion';
 import * as constantes from '../../../core/tm/schemas/constantes';
-// import * as direccionSchema from '../../../core/tm/schemas/direccion';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import { EspecialidadSIISASchema, ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
@@ -71,7 +69,6 @@ export const turnoSolicitadoSchema = new mongoose.Schema({
         imgArchivo: { type: String, required: false },
         fecha: { type: String, required: false },
     }],
-    // ??
     incluidoSuperintendencia: { type: Boolean, default: false },
     // Formacion
     formacionGrado: [{
@@ -99,10 +96,6 @@ export const turnoSolicitadoSchema = new mongoose.Schema({
         },
         matriculacion: [matriculacionSchema]
     }],
-    // origen: {
-    //     type: String,
-    //     enum: ['matriculación', 'rrhh', 'colegio de psicólogos']
-    // },
     sanciones: [{
         numero: { type: Number, required: false },
         sancion: {
@@ -135,20 +128,8 @@ turnoSolicitadoSchema.virtual('nombreCompleto').get(function () {
 
 });
 
-// turnoSolicitadoSchema.virtual('edad').get(function() {
-//     let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
-//     let ageDate = new Date(ageDifMs);
-//     return Math.abs(ageDate.getUTCFullYear() - 1970);
-// });
-
 turnoSolicitadoSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
-
-// profesionalSchema.virtual('ultimaFirma').get(function() {
-//     return this.firmas.sort((a, b) => {
-//         return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
-//     })[0];
-// });
 
 export const turnoSolicitado = mongoose.model('turnoSolicitado', turnoSolicitadoSchema, 'turnoSolicitado');
