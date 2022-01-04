@@ -1,9 +1,9 @@
+import { MongooseAuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { schema as cie10Schema } from '../../../core/term/schemas/cie10';
-import { SnomedConcept } from './snomed-concept';
-import { MongooseAuditPlugin } from '@andes/mongoose-plugin-audit';
-import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
+import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
+import { SnomedConcept } from './snomed-concept';
 
 const pacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
@@ -25,7 +25,7 @@ export const CodificacionSchema = new mongoose.Schema({
     idPrestacion: {
         type: mongoose.Schema.Types.ObjectId
     },
-    idProfesional: {
+    idProfesional:{
         type: mongoose.Schema.Types.ObjectId
     },
     tipoPrestacion: tipoPrestacionSchema,
