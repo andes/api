@@ -517,7 +517,8 @@ router.post('/prestaciones', async (req, res, next) => {
         }
 
         const estado = dto.estados[dto.estados.length - 1].tipo;
-        if (dto.solicitud.turno && estado !== 'modificada') {
+
+        if (dto.solicitud.turno && estado !== 'modificada' && !dto.groupId) {
             const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno, 'estadoActual.tipo': { $ne: 'modificada' } });
             if (prestacionIniciada > 0) {
                 return next('ya_iniciada');

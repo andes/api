@@ -225,12 +225,20 @@ export function codificarTurno(req, data, tid) {
                     err: 'No se encontro prestacion para el turno'
                 });
             }
-            const arrPrestacion = data1 as any;
+            const arrPrestaciones = data1 as any;
             const codificaciones = [];
-            if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
-                const prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                    return f.concepto.semanticTag !== 'elemento de registro';
+            let prestaciones = [];
+            const esEjecucion = arrPrestaciones.every(prestacion => prestacion.ejecucion);
+
+            if (arrPrestaciones.length > 0 && esEjecucion) {
+
+                arrPrestaciones.forEach(arrPrestacion => {
+                    const presta = arrPrestacion.ejecucion.registros.filter(f =>
+                        f.concepto.semanticTag !== 'elemento de registro'
+                    );
+                    prestaciones = [...prestaciones, ...presta];
                 });
+
                 prestaciones.forEach(async registro => {
                     const parametros = {
                         conceptId: registro.concepto.conceptId,
@@ -579,6 +587,7 @@ export function combinarFechas(fecha1, fecha2) {
 }
 
 export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
+
 
     let esHoy = false;
     // Ver si el día de la agenda coincide con el día de hoy
