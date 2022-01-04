@@ -25,6 +25,9 @@ export const CodificacionSchema = new mongoose.Schema({
     idPrestacion: {
         type: mongoose.Schema.Types.ObjectId
     },
+    idProfesional: {
+        type: mongoose.Schema.Types.ObjectId
+    },
     tipoPrestacion: tipoPrestacionSchema,
     paciente: pacienteSchema,
     ambitoPrestacion: {
