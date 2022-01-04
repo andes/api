@@ -15,10 +15,10 @@ import { Auth } from './../../../auth/auth.class';
  */
 export async function vencimientoMatriculaGrado(done) {
     const profesionales: any = Profesional.aggregate([
-        { $match: { 'formacionGrado.matriculado': true, profesionalMatriculado: true, habilitado: true }},
-        { $unwind: '$formacionGrado'},
-        { $addFields: { lastMatriculacion: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] }}},
-        { $match: { 'lastMatriculacion.fin': {$lte: new Date() }}}
+        { $match: { 'formacionGrado.matriculado': true, profesionalMatriculado: true, habilitado: true } },
+        { $unwind: '$formacionGrado' },
+        { $addFields: { lastMatriculacion: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] } } },
+        { $match: { 'lastMatriculacion.fin': { $lte: new Date() } } }
     ]).cursor({ batchSize: 100 });
     for await (const profesional of profesionales) {
         profesional.formacionGrado.matriculado = false;

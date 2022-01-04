@@ -11,7 +11,7 @@ export class SaludDigitalClient {
     private dominio: string;
     private secret: string;
 
-    constructor({dominio, host, secret, federador}) {
+    constructor({ dominio, host, secret, federador }) {
         this.dominio = dominio;
         this.host = host;
         this.hostBus = federador;

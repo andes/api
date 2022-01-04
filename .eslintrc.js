@@ -89,6 +89,7 @@ module.exports = {
             "1tbs",
             { "allowSingleLine": true }
         ],
+        "object-curly-spacing": ["error", "always"], 
         "curly": "error",
         "dot-notation": "off",
         "eol-last": "error",

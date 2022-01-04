@@ -3,7 +3,7 @@ import * as paisSchema from './pais';
 
 const provinciaSchema = new mongoose.Schema({
     nombre: String,
-    pais: { type: paisSchema}
+    pais: { type: paisSchema }
 });
 
 export = provinciaSchema;

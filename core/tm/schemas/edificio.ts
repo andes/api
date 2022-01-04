@@ -4,7 +4,7 @@ import * as contactoSchema from './contacto';
 
 const edificioSchema = new mongoose.Schema({
     descripcion: String,
-    contacto: {type: contactoSchema},
-    direccion: {type: direccionSchema}
+    contacto: { type: contactoSchema },
+    direccion: { type: direccionSchema }
 });
 export = edificioSchema;

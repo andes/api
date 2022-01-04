@@ -30,7 +30,7 @@ export class Arancelamiento extends InformePDF {
             firmaHTML: await this.getFirmaHTML(dataTurno.agenda.profesionales[0], dataTurno.agenda.organizacion),
             resultadoFA: (await getConfigFacturacionAutomatica({ idPrestacionTurneable: dataTurno.turno.tipoPrestacion.conceptId }))[0]
         };
-        this.header = new ArancelamientosHeader({ organizacion: dataTurno.agenda.organizacion});
+        this.header = new ArancelamientosHeader({ organizacion: dataTurno.agenda.organizacion });
         this.body = new ArancelamientoBody(dataBody);
         this.footer = new ArancelamientoFooter();
 

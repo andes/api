@@ -246,7 +246,7 @@ export async function createUser(data) {
     user.authMethod = 'password';
     user.tipo = 'temporal';
 
-    const organizacion = await Organizacion.findOne({matriculacion: true});
+    const organizacion = await Organizacion.findOne({ matriculacion: true });
     const permisos = getPermisosByType(data.tipoPermisos);
     const organizaciones = [{
         _id: organizacion._id,
@@ -262,7 +262,7 @@ export async function createUser(data) {
 }
 
 export async function getTemporyTokenCOVID(username) {
-    const organizacion = await Organizacion.findOne({matriculacion: true});
+    const organizacion = await Organizacion.findOne({ matriculacion: true });
     const permisos = getPermisosByType('inscripcionProfesionalesCovid19');
     return Auth.generateUserTokenTemporaly(username, permisos, organizacion._id);
 }

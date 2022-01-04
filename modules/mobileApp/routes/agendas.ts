@@ -15,7 +15,7 @@ const router = express.Router();
 router.get('/agendasDisponibles', async (req: any, res, next) => {
     const pipelineAgendas = [];
     const matchAgendas = {};
-    const condiciones: any = await CondicionPaciente.find({activo: true});
+    const condiciones: any = await CondicionPaciente.find({ activo: true });
     const reglas = [];
     let fieldRegla;
     if (req.query.idPaciente) {
@@ -45,7 +45,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
         ];
         fieldRegla = {
             cumpleRegla: {
-                $not: [{$eq: [{$size: { $setIntersection: ['$tipoPrestaciones.conceptId', reglas]}}, 0]}]
+                $not: [{ $eq: [{ $size: { $setIntersection: ['$tipoPrestaciones.conceptId', reglas] } }, 0] }]
             }
         };
     } else {

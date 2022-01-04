@@ -188,9 +188,9 @@ router.post('/setValidationTokenAndNotify', async (req, res, next) => {
         if (username) {
             const result = await setValidationTokenAndNotify(username);
             if (result) {
-                return res.json({status: 'ok'});
+                return res.json({ status: 'ok' });
             } else {
-                return res.json({status: 'redirectOneLogin'});
+                return res.json({ status: 'redirectOneLogin' });
             }
         } else {
             return next(403);
@@ -202,11 +202,11 @@ router.post('/setValidationTokenAndNotify', async (req, res, next) => {
 
 router.post('/resetPassword', async (req, res, next) => {
     try {
-        const {token, password} = req.body;
+        const { token, password } = req.body;
         if (token && password) {
             const result = await reset(token, password);
             if (result) {
-                return res.json({status: 'ok'});
+                return res.json({ status: 'ok' });
             } else {
                 return next(404);
             }

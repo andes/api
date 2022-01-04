@@ -1,4 +1,4 @@
-import { Schema, model} from 'mongoose';
+import { Schema, model } from 'mongoose';
 
 export const TurneroSchema = new Schema({
     horaInicio: Date,
