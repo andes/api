@@ -17,6 +17,9 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
     if (filtros.paciente) {
         secondMatch['paciente.id'] = mongoose.Types.ObjectId(filtros.paciente);
     }
+    if (ambito) {
+        firstMatch['ambito'] = ambito;
+    }
 
     if (filtros.internacion) {
         secondMatch['$or'] = [
@@ -37,10 +40,10 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         {
             $match: {
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
-                ambito,
                 capa,
                 start: { $lte: fechaSeleccionada },
-                ...firstMatch
+                ...firstMatch,
+
             }
         },
         {
@@ -74,7 +77,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                     {
                         $match: {
                             idOrganizacion: mongoose.Types.ObjectId(organizacion),
-                            ambito,
+
                             capa,
                             $or: [
                                 {
@@ -96,7 +99,10 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                                     },
                                 }
                             ]
-                        }
+                        },
+                    },
+                    {
+                        $match: firstMatch
                     },
                     {
                         $unwind: '$estados',
@@ -257,6 +263,10 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
         firstMatch['idCama'] = wrapObjectId(filtros.cama);
     }
 
+    if (ambito) {
+        firstMatch['ambito'] = ambito;
+    }
+
     if (filtros.movimiento) {
         firstMatch['estados.extras.idMovimiento'] = filtros.movimiento;
         secondMatch['estados.extras.idMovimiento'] = filtros.movimiento;
@@ -289,7 +299,6 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
         {
             $match: {
                 idOrganizacion: wrapObjectId(organizacion),
-                ambito,
                 capa,
                 start: { $lte: moment(hasta).toDate() },
                 end: { $gte: moment(desde).toDate() },
