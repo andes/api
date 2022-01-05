@@ -1,3 +1,14 @@
+# [5.77.0](https://github.com/andes/api/compare/v5.76.0...v5.77.0) (2022-01-05)
+
+
+### Features
+
+* **codificacion:** Agregar id del profesional a la coleccion codificacion ([#1634](https://github.com/andes/api/issues/1634)) ([49cdde8](https://github.com/andes/api/commit/49cdde8411307a215d12f17c4e7d0c0d8273a65c))
+* **mapa-camas:** Desacoplar ámbito de las queries ([#1597](https://github.com/andes/api/issues/1597)) ([efdf528](https://github.com/andes/api/commit/efdf52854374b5ab51634950ac37ce02f8bf4f1e))
+* **matriculaciones:** verificación de vencimiento de formación de grado ([#1555](https://github.com/andes/api/issues/1555)) ([ee0047f](https://github.com/andes/api/commit/ee0047fd3e41262d1ced291d6a1fb5cd7d94a13b))
+* **rup:** turno multiprestacion ([#1530](https://github.com/andes/api/issues/1530)) ([a0d5ad9](https://github.com/andes/api/commit/a0d5ad9463fc38b00c2988f118baa63952880dc5))
+* **RUP-304:** Guardar idProfesional en la coleccion codificacion ([#1637](https://github.com/andes/api/issues/1637)) ([bf71149](https://github.com/andes/api/commit/bf711490e769530cd76a1d55e7c3b1f4916f9246))
+
 # [5.76.0](https://github.com/andes/api/compare/v5.75.0...v5.76.0) (2021-12-29)
 
 
