@@ -38,7 +38,7 @@
     "cheerio": "^1.0.0-rc.2",
     "concurrently": "^3.1.0",
     "debug": "^3.0.0",
-    "elastic-apm-node": "^3.7.0",
+    "elastic-apm-node": "^3.26.0",
     "events": "^1.1.1",
     "express": "^4.16.3",
     "express-http-proxy": "^1.6.0",
