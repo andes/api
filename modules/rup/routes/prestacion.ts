@@ -2,6 +2,7 @@ import { asyncHandler, Request } from '@andes/api-tool';
 import { MongoQuery } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
 import * as express from 'express';
+import { saveTurnoProfesional } from '../../turnos/controller/agenda';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { AppCache } from '../../../connections';
@@ -677,8 +678,14 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
                 EventCore.emitAsync('rup:prestacion:validate', data);
-                // Se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
+
+                // buscarYCrearSolicitudes y saveTurnoProfesional se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
                 buscarYCrearSolicitudes(prestacion, req);
+
+                const turnoId = prestacion.solicitud.turno;
+                if (turnoId) {
+                    saveTurnoProfesional(turnoId, req.user.profesional);
+                }
             }
 
             if (req.body.estado && req.body.estado.tipo === 'ejecucion') {
