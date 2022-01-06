@@ -40,12 +40,6 @@ router.get('/historial', async (req, res, next) => {
 
 });
 
-async function getPaciente(idPaciente) {
-    return await PacienteCtr.findById(idPaciente);
-}
-function getTipoPrestacion(idTipoPrestacion) {
-    return tipoPrestacion.findById(idTipoPrestacion).exec();
-}
 function getAgenda(idAgenda) {
     return Agenda.findById(idAgenda).exec();
 }
@@ -109,6 +103,11 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
                 _id: req.params.idAgenda
             };
         }
+
+        // Actualiza los audit de update de la agenda
+        update.updatedAt = new Date();
+        update.updatedBy = Auth.getAuditUser(req);
+
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
         Agenda.findOneAndUpdate(query, update, { new: true }, (err4, doc2: any, writeOpResult) => {
             if (err4) {
@@ -265,9 +264,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 update['bloques.' + posBloque + '.restantesGestion'] = countBloques.gestion - 1;
                 break;
         }
-        const usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
-        // Copia la organización desde el token
-        usuario.organizacion = (req as any).user.organizacion;
+        const usuario = Auth.getAuditUser(req);
 
         const etiquetaTipoTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoTurno';
         const etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
@@ -304,6 +301,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaUpdateBy] = usuario;
         update[etiquetaUsuarioDacion] = usuario;
         update[etiquetaFechHoraDacion] = new Date();
+
+        // Actualiza los audit de update de la agenda
+        update.updatedAt = new Date();
+        update.updatedBy = usuario;
 
         const query = {
             _id: req.body.idAgenda,
@@ -395,7 +396,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         etiquetaTurno = 'sobreturnos.' + posTurno;
     }
 
-    const update = {};
+    const update: any = {};
     if (req.body.avisoSuspension) {
         const etiquetaAvisoSuspension: string = etiquetaTurno + '.avisoSuspension';
         update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
@@ -418,6 +419,10 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         _id: req.params.idAgenda,
     };
     dbgTurno('query --->', query);
+
+    // Actualiza los audit de update de la agenda
+    update.updatedAt = new Date();
+    update.updatedBy = Auth.getAuditUser(req);
 
     Agenda.update(query, { $set: update }, (error, data) => {
         if (error) {
@@ -474,6 +479,11 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
         }
 
         update[etiquetaTurno] = req.body.turno;
+
+        // Actualiza los audit de update de la agenda
+        update.updatedAt = new Date();
+        update.updatedBy = Auth.getAuditUser(req);
+
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
         Agenda.findOneAndUpdate(query, update, { new: true }, (err2, doc2: any, writeOpResult) => {
             if (err2) {
