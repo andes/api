@@ -3,20 +3,20 @@ import * as debug from 'debug';
 import * as express from 'express';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
+import { updateRegistroHistorialSolicitud } from '../../rup/controllers/prestacion';
 import { turnosLog } from '../citasLog';
 import { getHistorial } from '../controller/historialCitasController/historialCitasController';
 import * as turnosController from '../controller/turnosController';
 import { Agenda } from '../schemas/agenda';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
-import { Prestacion } from '../../../modules/rup/schemas/prestacion';
-import { updateRegistroHistorialSolicitud } from '../../rup/controllers/prestacion';
-import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -355,16 +355,18 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
             }
 
             // Se consulta si el turno estaba asociado a una solicitud
-            const prestacion: any = await Prestacion.findOne({ inicio: 'top', 'solicitud.historial.turno': req.body.reasignado.anterior.idTurno });
-            if (prestacion) {
-                const dataHistorial = {
-                    op: 'asignarTurno',
-                    observaciones: 'Reasignación'
-                };
-                updateRegistroHistorialSolicitud(prestacion.solicitud, dataHistorial);
-                prestacion.solicitud.turno = req.body.idTurno;
-                Auth.audit(prestacion, req);
-                await prestacion.save();
+            if (req.body.reasignado) {
+                const prestacion: any = await Prestacion.findOne({ inicio: 'top', 'solicitud.historial.turno': req.body.reasignado.anterior.idTurno });
+                if (prestacion) {
+                    const dataHistorial = {
+                        op: 'asignarTurno',
+                        observaciones: 'Reasignación'
+                    };
+                    updateRegistroHistorialSolicitud(prestacion.solicitud, dataHistorial);
+                    prestacion.solicitud.turno = req.body.idTurno;
+                    Auth.audit(prestacion, req);
+                    await prestacion.save();
+                }
             }
         });
     } else {
