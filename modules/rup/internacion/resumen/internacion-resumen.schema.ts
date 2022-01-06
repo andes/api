@@ -23,6 +23,7 @@ export interface IInternacionResumen {
     fechaAtencion?: Date;
     tipo_egreso?: string;
     deletedAt?: Date;
+    idPrestacion: ObjectId;
     ingreso: {
         elementoRUP?: ObjectId;
         registros?: [any];

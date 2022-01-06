@@ -47,6 +47,7 @@ export interface IOrganizacion {
     showMapa?: boolean;
     configuraciones?: any;
     esCOM: Boolean;
+    usaEstadisticaV2: Boolean;
 }
 
 export type OrganizacionRef = Pick<IOrganizacion, 'id' | 'nombre'>;

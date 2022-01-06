@@ -64,7 +64,8 @@ const _schema = new Schema({
     aceptaDerivacion: Boolean,
     esCOM: Boolean,
     trasladosEspeciales: [TipoTrasladoSchema],
-    zonaSanitaria: zonaSanitariasSchema
+    zonaSanitaria: zonaSanitariasSchema,
+    usaEstadisticaV2: Boolean
 });
 
 _schema.plugin(AuditPlugin);

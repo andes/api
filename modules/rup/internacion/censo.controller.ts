@@ -44,7 +44,7 @@ async function unificarMovimientos(snapshots, movimientos) {
     return mapping;
 }
 
-async function realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, camas) {
+async function realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa) {
     const prestaciones = await Prestacion.find({ _id: { $in: [...Object.keys(internaciones)] } });
 
     let existenciaALas0 = 0;
@@ -67,7 +67,6 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         dataInternaciones[idInter] = {};
         const filtros = { internacion: idInter };
         const ambito = 'internacion';
-        const capa = 'estadistica';
         const allMovimientos = internaciones[idInter];
         const organizacion = allMovimientos[0].organizacion._id;
         const ultimoMovimientoUO = allMovimientos.slice().reverse().find(m => m.unidadOrganizativa.conceptId === unidadOrganizativa);
@@ -279,8 +278,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
  * Genera el censo diario para una organizacion, unidad organizativa, y fecha dada
  */
 export async function censoDiario({ organizacion, timestamp, unidadOrganizativa }) {
+    const organizacionFound = await Organizacion.findById(organizacion);
     const ambito = 'internacion';
-    const capa = 'estadistica';
+    const capa = organizacionFound?.usaEstadisticaV2 ? 'medica' : 'estadistica';
     if (!timestamp) {
         timestamp = moment();
     }
@@ -299,7 +299,8 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
     const movimientosPorCama = groupBy(movimientos, 'idCama');
     const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
     const internaciones = await unificarMovimientos(snapshotsAgrupados, movimientosAgrupados);
-    const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, snapshotsPorCama);
+    const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa);
+
     const camas = await unificarMovimientos(snapshotsPorCama, movimientosPorCama);
     Object.keys(camas).forEach(idCama => {
         const ultimoMov = camas[idCama][camas[idCama].length - 1];
