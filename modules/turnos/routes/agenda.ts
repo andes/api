@@ -7,15 +7,15 @@ import * as mongoose from 'mongoose';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import * as prestacionCtrl from '../../rup/controllers/prestacion';
+import { liberarRefTurno } from '../../rup/controllers/prestacion';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import { agendaLog } from '../citasLog';
 import * as agendaCtrl from '../controller/agenda';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import * as AgendasEstadisticas from '../controller/estadisticas';
-import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
+import { getResumenDiarioMensual } from '../controller/reportesDiariosController';
 import { Agenda } from '../schemas/agenda';
 import { Auth } from './../../../auth/auth.class';
-import { Prestacion } from '../../rup/schemas/prestacion';
-import { liberarRefTurno } from '../../rup/controllers/prestacion';
 
 const router = express.Router();
 
@@ -137,13 +137,6 @@ router.get('/agenda/reporteResumenDiarioMensuals', async (req, res, next) => {
 router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
     // Cosas de San Juan
     return res.json([]);
-    const params = req.query;
-    try {
-        const resultado = await getPlanillaC1(params);
-        res.json(resultado);
-    } catch (err) {
-        return next(err);
-    }
 
 });
 
@@ -323,100 +316,63 @@ router.post('/agenda', async (req, res, next) => {
 });
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
-router.post('/agenda/clonar', (req, res, next) => {
+router.post('/agenda/clonar', async (req, res, next) => {
     const idagenda = req.body.idAgenda;
     const clones = req.body.clones;
     const listaSaveAgenda = [];
 
     if (idagenda) {
-        Agenda.findById(idagenda, (err, data) => {
+        Agenda.findById(idagenda, async (err, data) => {
             if (err) {
                 return next(err);
             }
-            clones.forEach(clon => {
-                clon = new Date(clon);
-                if (clon) {
-                    data._id = mongoose.Types.ObjectId();
-                    data.isNew = true;
-                    const nueva: any = new Agenda(data.toObject());
-                    nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
-                    nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
-                    nueva['updatedBy'] = undefined;
-                    nueva['updatedAt'] = undefined;
-                    nueva['createdBy'] = Auth.getAuditUser(req);
-                    nueva['createdAt'] = new Date();
-                    nueva['nota'] = null;
-
-                    if (nueva.dinamica && nueva.cupo >= 0) {
-                        nueva.bloques.forEach(b => {
-                            nueva.cupo += b.turnos.length;
-                        });
-                    }
-
-                    // nueva['bloques'] = data['bloques'];
-                    nueva['bloques'].forEach((bloque) => {
-                        bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
-                        bloque.horaFin = agendaCtrl.combinarFechas(clon, bloque.horaFin);
-                        if (bloque.pacienteSimultaneos) {
-                            bloque.restantesDelDia = bloque.accesoDirectoDelDia * bloque.cantidadSimultaneos;
-                            bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
-                            bloque.restantesGestion = bloque.reservadoGestion * bloque.cantidadSimultaneos;
-                            bloque.restantesProfesional = bloque.reservadoProfesional * bloque.cantidadSimultaneos;
-                            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile * bloque.cantidadSimultaneos : 0;
-
-                        } else {
-                            bloque.restantesDelDia = bloque.accesoDirectoDelDia;
-                            bloque.restantesProgramados = bloque.accesoDirectoProgramado;
-                            bloque.restantesGestion = bloque.reservadoGestion;
-                            bloque.restantesProfesional = bloque.reservadoProfesional;
-                            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile : 0;
-                        }
-                        bloque._id = mongoose.Types.ObjectId();
-                        if (!nueva.dinamica) {
-                            bloque.turnos.forEach((turno, index1) => {
-                                turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
-                                turno.estado = 'disponible';
-                                turno.asistencia = undefined;
-                                turno.paciente = null;
-                                turno.tipoPrestacion = nueva.nominalizada ? null : nueva.bloques[0].tipoPrestaciones[0];
-                                turno.idPrestacionPaciente = null;
-                                turno.nota = null;
-                                turno._id = mongoose.Types.ObjectId();
-                                turno.tipoTurno = undefined;
-                                turno.updatedAt = undefined;
-                                turno.updatedBy = undefined;
-                                turno.diagnostico = { codificaciones: [] };
-                                turno.reasignado = undefined;
-                            });
-                        } else {
-                            bloque.turnos = [];
-                        }
-                    });
-                    nueva['estado'] = 'planificacion';
-                    nueva['sobreturnos'] = [];
-                    Auth.audit(nueva, req);
-                    listaSaveAgenda.push(
-                        agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
-                            // Ver si es necesario especificar que fue una agenda clonada
-                            EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
-                            const objetoLog = {
-                                accion: 'Clonar Agenda',
-                                ruta: req.url,
-                                method: req.method,
-                                data: nuevaAgenda,
-                                err: err || false
-                            };
-                            agendaLog.info('insert', objetoLog, req);
-                        }).catch(error => {
-                            return (error);
-                        })
-                    );
+            let mensaje = null;
+            for (const value of clones) {
+                const nueva = await agendaCtrl.agendaNueva(data, value, req);
+                const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(nueva);
+                if (mensajesSolapamiento) {
+                    mensaje = mensajesSolapamiento;
+                    break;
                 }
-            });
-            Promise.all(listaSaveAgenda).then(resultado => {
-                EventCore.emitAsync('citas:agenda:clone', data);
-                res.json(resultado);
-            }).catch(error => { return next(error); });
+            }
+            if (mensaje) {
+                const objetoLog = {
+                    accion: 'Clonar Agenda',
+                    ruta: req.url,
+                    method: req.method,
+                    data: req.body,
+                    err: mensaje
+                };
+                agendaLog.info('insert', objetoLog, req);
+                return next(mensaje);
+            } else {
+                clones.forEach(async clon => {
+                    clon = new Date(clon);
+                    if (clon) {
+                        const nueva = await agendaCtrl.agendaNueva(data, clon, req);
+                        Auth.audit(nueva, req);
+                        listaSaveAgenda.push(
+                            agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
+                                EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
+                                const objetoLog = {
+                                    accion: 'Clonar Agenda',
+                                    ruta: req.url,
+                                    method: req.method,
+                                    data: nuevaAgenda,
+                                    err: err || false
+                                };
+                                agendaLog.info('insert', objetoLog, req);
+                            }).catch(error => {
+                                return (error);
+                            })
+                        );
+                        Promise.all(listaSaveAgenda).then(resultado => {
+                            EventCore.emitAsync('citas:agenda:clone', data);
+                            res.json(resultado);
+                        }).catch(error => { return next(error); });
+                    }
+                });
+            }
         });
     }
 });

@@ -14,6 +14,7 @@ import * as prestacionController from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { Agenda } from '../../turnos/schemas/agenda';
 import { agendaLog } from '../citasLog';
+import * as agendaCtrl from '../controller/agenda';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
 
@@ -1420,4 +1421,64 @@ export function esVirtual(turnoEmitido) {
     } else {
         return false;
     }
+}
+
+export async function agendaNueva(data, clon, req) {
+    data._id = mongoose.Types.ObjectId();
+    data.isNew = true;
+    const nueva: any = new Agenda(data.toObject());
+    nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
+    nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
+    nueva['updatedBy'] = undefined;
+    nueva['updatedAt'] = undefined;
+    nueva['createdBy'] = Auth.getAuditUser(req);
+    nueva['createdAt'] = new Date();
+    nueva['nota'] = null;
+
+    if (nueva.dinamica && nueva.cupo >= 0) {
+        nueva.bloques.forEach(b => {
+            nueva.cupo += b.turnos.length;
+        });
+    }
+    nueva['bloques'].forEach((bloque) => {
+        bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
+        bloque.horaFin = agendaCtrl.combinarFechas(clon, bloque.horaFin);
+        if (bloque.pacienteSimultaneos) {
+            bloque.restantesDelDia = bloque.accesoDirectoDelDia * bloque.cantidadSimultaneos;
+            bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
+            bloque.restantesGestion = bloque.reservadoGestion * bloque.cantidadSimultaneos;
+            bloque.restantesProfesional = bloque.reservadoProfesional * bloque.cantidadSimultaneos;
+            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile * bloque.cantidadSimultaneos : 0;
+
+        } else {
+            bloque.restantesDelDia = bloque.accesoDirectoDelDia;
+            bloque.restantesProgramados = bloque.accesoDirectoProgramado;
+            bloque.restantesGestion = bloque.reservadoGestion;
+            bloque.restantesProfesional = bloque.reservadoProfesional;
+            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile : 0;
+        }
+        bloque._id = mongoose.Types.ObjectId();
+        if (!nueva.dinamica) {
+            bloque.turnos.forEach((turno, index1) => {
+                turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
+                turno.estado = 'disponible';
+                turno.asistencia = undefined;
+                turno.paciente = null;
+                turno.tipoPrestacion = nueva.nominalizada ? null : nueva.bloques[0].tipoPrestaciones[0];
+                turno.idPrestacionPaciente = null;
+                turno.nota = null;
+                turno._id = mongoose.Types.ObjectId();
+                turno.tipoTurno = undefined;
+                turno.updatedAt = undefined;
+                turno.updatedBy = undefined;
+                turno.diagnostico = { codificaciones: [] };
+                turno.reasignado = undefined;
+            });
+        } else {
+            bloque.turnos = [];
+        }
+    });
+    nueva['estado'] = 'planificacion';
+    nueva['sobreturnos'] = [];
+    return nueva;
 }
