@@ -343,6 +343,8 @@ router.post('/agenda/clonar', (req, res, next) => {
                     nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
                     nueva['updatedBy'] = undefined;
                     nueva['updatedAt'] = undefined;
+                    nueva['createdBy'] = Auth.getAuditUser(req);
+                    nueva['createdAt'] = new Date();
                     nueva['nota'] = null;
 
                     if (nueva.dinamica && nueva.cupo >= 0) {
