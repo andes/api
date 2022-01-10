@@ -207,7 +207,11 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                 fechaIngreso: '$estado_internacion.fechaIngreso',
                 fechaAtencion: '$estado_internacion.fechaAtencion',
                 prioridad: '$estado_internacion.prioridad',
+                registros: '$estado_internacion.registros',
             }
+        });
+        aggregate.push({
+            $unset: 'estado_internacion'
         });
     }
 

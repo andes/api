@@ -1,10 +1,8 @@
 import { EventCore } from '@andes/event-bus';
 import { Types } from 'mongoose';
 import { InternacionResumen } from './internacion-resumen.schema';
-
 EventCore.on('mapa-camas:paciente:undo', async movimiento => {
     if (movimiento.capa && movimiento.capa === 'estadistica') { return; }
-
 
     await InternacionResumen.updateOne(
         { _id: Types.ObjectId(movimiento.idInternacion) },
@@ -18,9 +16,7 @@ EventCore.on('mapa-camas:paciente:undo', async movimiento => {
 
 EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
     if (prestacion.trackId && prestacion.solicitud.ambitoOrigen === 'guardia') {
-
         const resumen = await InternacionResumen.findById(prestacion.trackId);
-
 
         switch (registro.valor.conceptId) {
             case '394848005':
@@ -33,11 +29,47 @@ EventCore.on('mapa-camas:paciente:triage', async ({ prestacion, registro }) => {
                 resumen.prioridad = { id: 100, label: 'ALTA', type: 'danger' };
                 break;
         }
-
         resumen.fechaAtencion = prestacion.ejecucion.fecha;
-
         await resumen.save();
+    }
+});
 
+EventCore.on('internacion:respirador:registro', async ({ prestacion, registro }) => {
+    if (prestacion.trackId && prestacion.solicitud.ambitoOrigen === 'internacion') {
+        const registroDispositivo = prestacion.ejecucion.registros.find(c => c.concepto.conceptId === '266700009');
+        await InternacionResumen.updateOne(
+            { _id: Types.ObjectId(prestacion.trackId) },
+            {
+                $push: {
+                    registros: {
+                        concepto: registro.concepto,
+                        tipo: 'respirador',
+                        valor: {
+                            fechaDesde: new Date(),
+                            fechaHasta: null
+                        }
+                    }
+                }
+            }
+        );
+    }
+});
+
+EventCore.on('internacion:respirador:destete', async ({ prestacion, registro }) => {
+    if (prestacion.trackId && prestacion.solicitud.ambitoOrigen === 'internacion') {
+        const r = await InternacionResumen.updateOne(
+            { _id: Types.ObjectId(prestacion.trackId) },
+            {
+                $set: {
+                    'registros.$[registro].valor.fechaHasta': new Date()
+                }
+            },
+            {
+                arrayFilters: [{
+                    'registro.valor.fechaHasta': { $eq: null }
+                }]
+            }
+        );
     }
 });
 
@@ -49,7 +81,7 @@ EventCore.on('rup:internacion:valoracion-inicial', async (prestacion) => {
     const resumen = await InternacionResumen.findOne(query);
 
     if (registrosDiagnostico.registros.length) {
-        resumen.registros = resumen.registros || [];
+        (resumen.registros as any) = resumen.registros || [];
 
         const registros = registrosDiagnostico.registros.map(r => {
             return {
@@ -74,7 +106,7 @@ EventCore.on('rup:internacion:epicrisis', async (prestacion) => {
     const resumen = await InternacionResumen.findOne(query);
     if (registrosDiagnostico.registros.length) {
 
-        resumen.registros = resumen.registros || [];
+        (resumen.registros as any) = resumen.registros || [];
 
         const registros = registrosDiagnostico.registros.map(r => {
             return {

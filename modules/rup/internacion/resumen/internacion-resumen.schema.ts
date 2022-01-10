@@ -23,7 +23,6 @@ export interface IInternacionResumen {
     fechaAtencion?: Date;
     tipo_egreso?: string;
     deletedAt?: Date;
-
     ingreso: {
         elementoRUP?: ObjectId;
         registros?: [any];
@@ -33,13 +32,13 @@ export interface IInternacionResumen {
         label: string;
         type: string;
     };
-    registros: {
-        tipo: string;
-        idPrestacion: Types.ObjectId;
+    registros: [{
+        tipo?: string;
+        idPrestacion?: Types.ObjectId;
         concepto: ISnomedConcept;
-        valor: any;
-        esDiagnosticoPrincipal: boolean;
-    }[];
+        valor: Object;
+        esDiagnosticoPrincipal?: boolean;
+    }];
 }
 
 export type IInternacionResumenDoc = AndesDoc<IInternacionResumen>;
@@ -64,7 +63,6 @@ export const InternacionResumenSchema = new Schema({
     fechaAtencion: Date,
     tipo_egreso: { type: String, required: false },
     deletedAt: { type: Date, required: false },
-
     prioridad: new Schema({
         id: Number,
         label: String,
@@ -84,7 +82,7 @@ export const InternacionResumenSchema = new Schema({
         concepto: SnomedConcept,
         valor: SchemaTypes.Mixed,
         esDiagnosticoPrincipal: Boolean
-    }],
+    }]
 
 });
 
