@@ -22,9 +22,12 @@ export class FormulaBaseComponent extends HTMLComponent {
     }
 
     async process() {
-        const ps = this.registro.registros.map(registro => {
-            return registroToHTML(this.prestacion, registro, this.depth + 1);
-        });
+        let ps = [];
+        if (!this.registro.valorManual) {
+            ps = this.registro.registros.map(registro => {
+                return registroToHTML(this.prestacion, registro, this.depth + 1);
+            });
+        }
         const registros = await Promise.all(ps);
 
         this.data = {

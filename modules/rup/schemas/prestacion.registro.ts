@@ -56,6 +56,8 @@ schema.add({
     // Almacena el valor del átomo, molécula o fórmula.
     // Para el caso de las moléculas, el valor puede ser nulo.
     valor: mongoose.Schema.Types.Mixed,
+    // Para el caso en que se pueda introducir el valor obviando la formulaBase
+    valorManual: Boolean,
     // Almacena los registros de los átomos asociados a la molécula
     registros: [schema],
     // Indica los id de otros registros dentro array 'registros' de la prestación
