@@ -12,6 +12,7 @@ export interface IEstados {
     estados: { key: IEstadoKey; label: String; color: String; icon: String }[];
     relaciones: { origen: IEstadoKey; destino: IEstadoKey }[];
     historialMedico: boolean;
+    listadoInternacion: boolean;
     configPases: { sala: Types.ObjectId; allowCama: boolean };
 }
 
@@ -54,6 +55,7 @@ const EstadoSchema = new Schema({
     columns: SchemaTypes.Mixed,
     turnero: SchemaTypes.Mixed,
     historialMedico: Boolean,
+    listadoInternacion: Boolean,
     planIndicaciones: {
         required: false,
         type: {
