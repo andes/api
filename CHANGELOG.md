@@ -1,3 +1,17 @@
+# [5.78.0](https://github.com/andes/api/compare/v5.77.0...v5.78.0) (2022-01-12)
+
+
+### Bug Fixes
+
+* **CIT:** actualizar updatedAt agenda ([#1643](https://github.com/andes/api/issues/1643)) ([bd0661e](https://github.com/andes/api/commit/bd0661e990f8d94266be476fdfa845d6efe7debd))
+* **citas:** audit created agenda clonada ([#1644](https://github.com/andes/api/issues/1644)) ([801aa6f](https://github.com/andes/api/commit/801aa6f824bc25769c1e9b8576e15fb7854fc298))
+
+
+### Features
+
+* **EP:** ignorar seguimiento en apertura ficha ([#1645](https://github.com/andes/api/issues/1645)) ([6a45990](https://github.com/andes/api/commit/6a45990f58b38730256a8200573464875478ca39))
+* **in:** registro de respiración asistida para internacion ([#1615](https://github.com/andes/api/issues/1615)) ([2467ffd](https://github.com/andes/api/commit/2467ffdbf68824d5833bbd573f45ed9dc515625c))
+
 # [5.77.0](https://github.com/andes/api/compare/v5.76.0...v5.77.0) (2022-01-05)
 
 
