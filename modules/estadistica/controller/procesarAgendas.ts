@@ -53,11 +53,8 @@ export async function procesar(parametros: any) {
     if (parametros.documento) {
         matchTurno['_bloques.turnos.paciente.documento'] = parametros.documento;
     }
-
     const matchOS = {};
-
     if (parametros.financiador) {
-
         if (parametros.financiador === 'No posee') {
             matchOS['$expr'] = {
                 $and: [
@@ -65,15 +62,21 @@ export async function procesar(parametros: any) {
                     { $ne: [{ $in: [{ $type: '$turno.paciente.obraSocial' }, ['missing', 'null', 'undefined']] }, false] },
                 ]
             };
-        } else {
+
+        } else if (typeof parametros.financiador === 'string') {
             matchOS['$expr'] = {
                 $and: [
                     { $eq: ['$turno.paciente.obraSocial.financiador', parametros.financiador] }
                 ]
             };
+        } else {
+            matchOS['$expr'] = {
+                $and: [
+                    { $in: ['$turno.paciente.obraSocial.financiador', parametros.financiador] }
+                ]
+            };
         }
     }
-
     const pipelineBuscador = [
         { $match: match },
         { $addFields: { profesionales0: { $arrayElemAt: ['$profesionales', 0] } } },
@@ -187,7 +190,6 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
-
     const turnosAsignados = await Agenda.aggregate(pipelineBuscador);
     return turnosAsignados;
 }
