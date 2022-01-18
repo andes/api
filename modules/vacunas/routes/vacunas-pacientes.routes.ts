@@ -5,7 +5,7 @@ import { VacunasPacientes } from '../schemas/vacunas-pacientes.schema';
 class VacunasPacientesResource extends ResourceBase {
     Model = VacunasPacientes;
     middlewares = [Auth.authenticate()];
-    resourceName = 'vacunasPacientes';
+    resourceName = 'vacunas-pacientes';
     searchFileds = {
         paciente: {
             field: 'paciente.id',
