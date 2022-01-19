@@ -14,7 +14,6 @@ import * as prestacionController from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { Agenda } from '../../turnos/schemas/agenda';
 import { agendaLog } from '../citasLog';
-import * as agendaCtrl from '../controller/agenda';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
 
@@ -1423,12 +1422,12 @@ export function esVirtual(turnoEmitido) {
     }
 }
 
-export async function agendaNueva(data, clon, req) {
+export function agendaNueva(data, clon, req) {
     data._id = mongoose.Types.ObjectId();
     data.isNew = true;
     const nueva: any = new Agenda(data.toObject());
-    nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
-    nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
+    nueva['horaInicio'] = combinarFechas(clon, new Date(data['horaInicio']));
+    nueva['horaFin'] = combinarFechas(clon, new Date(data['horaFin']));
     nueva['updatedBy'] = undefined;
     nueva['updatedAt'] = undefined;
     nueva['createdBy'] = Auth.getAuditUser(req);
@@ -1441,8 +1440,8 @@ export async function agendaNueva(data, clon, req) {
         });
     }
     nueva['bloques'].forEach((bloque) => {
-        bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
-        bloque.horaFin = agendaCtrl.combinarFechas(clon, bloque.horaFin);
+        bloque.horaInicio = combinarFechas(clon, bloque.horaInicio);
+        bloque.horaFin = combinarFechas(clon, bloque.horaFin);
         if (bloque.pacienteSimultaneos) {
             bloque.restantesDelDia = bloque.accesoDirectoDelDia * bloque.cantidadSimultaneos;
             bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
@@ -1460,7 +1459,7 @@ export async function agendaNueva(data, clon, req) {
         bloque._id = mongoose.Types.ObjectId();
         if (!nueva.dinamica) {
             bloque.turnos.forEach((turno, index1) => {
-                turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
+                turno.horaInicio = combinarFechas(clon, turno.horaInicio);
                 turno.estado = 'disponible';
                 turno.asistencia = undefined;
                 turno.paciente = null;

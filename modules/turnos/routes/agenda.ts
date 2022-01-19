@@ -13,7 +13,7 @@ import { agendaLog } from '../citasLog';
 import * as agendaCtrl from '../controller/agenda';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import * as AgendasEstadisticas from '../controller/estadisticas';
-import { getResumenDiarioMensual } from '../controller/reportesDiariosController';
+import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
 import { Agenda } from '../schemas/agenda';
 import { Auth } from './../../../auth/auth.class';
 
@@ -135,8 +135,15 @@ router.get('/agenda/reporteResumenDiarioMensuals', async (req, res, next) => {
 });
 
 router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
-    // Cosas de San Juan
+    // Cosas de San Juan - NO CAMBIAR
     return res.json([]);
+    const params = req.query;
+    try {
+        const resultado = await getPlanillaC1(params);
+        res.json(resultado);
+    } catch (err) {
+        return next(err);
+    }
 
 });
 
@@ -316,64 +323,52 @@ router.post('/agenda', async (req, res, next) => {
 });
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
-router.post('/agenda/clonar', async (req, res, next) => {
-    const idagenda = req.body.idAgenda;
-    const clones = req.body.clones;
-    const listaSaveAgenda = [];
+router.post('/agenda/:idAgenda/clonar', async (req, res, next) => {
 
-    if (idagenda) {
-        Agenda.findById(idagenda, async (err, data) => {
-            if (err) {
-                return next(err);
+    try {
+
+        const idagenda = req.params.idAgenda;
+        const clones = req.body.clones;
+
+        const agenda = await Agenda.findById(idagenda);
+
+        if (!agenda) {
+            return next('no existe la agenda');
+        }
+
+        for (const value of clones) {
+            const nueva = agendaCtrl.agendaNueva(agenda, value, req);
+            const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(nueva);
+            if (mensajesSolapamiento) {
+                agendaLog.error('clonar', agenda, mensajesSolapamiento, req);
+                throw mensajesSolapamiento;
             }
-            let mensaje = null;
-            for (const value of clones) {
-                const nueva = await agendaCtrl.agendaNueva(data, value, req);
-                const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(nueva);
-                if (mensajesSolapamiento) {
-                    mensaje = mensajesSolapamiento;
-                    break;
-                }
+        }
+
+        const listaSaveAgenda = clones.map(async clon => {
+            clon = new Date(clon);
+            const nueva = agendaCtrl.agendaNueva(agenda, clon, req);
+            Auth.audit(nueva, req);
+
+            try {
+                const nuevaAgenda = await agendaCtrl.saveAgenda(nueva);
+
+                EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
+                agendaLog.info('clonar', nuevaAgenda, req);
+                return nuevaAgenda;
+            } catch (err) {
+                return err;
             }
-            if (mensaje) {
-                const objetoLog = {
-                    accion: 'Clonar Agenda',
-                    ruta: req.url,
-                    method: req.method,
-                    data: req.body,
-                    err: mensaje
-                };
-                agendaLog.info('insert', objetoLog, req);
-                return next(mensaje);
-            } else {
-                clones.forEach(async clon => {
-                    clon = new Date(clon);
-                    if (clon) {
-                        const nueva = await agendaCtrl.agendaNueva(data, clon, req);
-                        Auth.audit(nueva, req);
-                        listaSaveAgenda.push(
-                            agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
-                                EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
-                                const objetoLog = {
-                                    accion: 'Clonar Agenda',
-                                    ruta: req.url,
-                                    method: req.method,
-                                    data: nuevaAgenda,
-                                    err: err || false
-                                };
-                                agendaLog.info('insert', objetoLog, req);
-                            }).catch(error => {
-                                return (error);
-                            })
-                        );
-                        Promise.all(listaSaveAgenda).then(resultado => {
-                            EventCore.emitAsync('citas:agenda:clone', data);
-                            res.json(resultado);
-                        }).catch(error => { return next(error); });
-                    }
-                });
-            }
+
         });
+
+        const resultado = await Promise.all(listaSaveAgenda);
+        EventCore.emitAsync('citas:agenda:clone', agenda);
+        res.json(resultado);
+
+
+    } catch (err) {
+        return next(err);
     }
 });
 
