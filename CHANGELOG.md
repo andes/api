@@ -1,3 +1,10 @@
+# [5.79.0](https://github.com/andes/api/compare/v5.78.0...v5.79.0) (2022-01-19)
+
+
+### Features
+
+* **rup:** nuevo atributo en esquema prestacion.registro ([#1630](https://github.com/andes/api/issues/1630)) ([aca02db](https://github.com/andes/api/commit/aca02dbb087cd46079f3c1281fb8e59eb53b8802))
+
 # [5.78.0](https://github.com/andes/api/compare/v5.77.0...v5.78.0) (2022-01-12)
 
 
