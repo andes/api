@@ -64,12 +64,12 @@ export async function procesar(parametros: any) {
                 ambito: prestacion.solicitud.ambitoOrigen
             };
 
-            if (prestacion.paciente?.obraSocial?.financiador === os || os === 'todos') {
+            if (prestacion.paciente?.obraSocial?.financiador === os || os.includes(prestacion.paciente?.obraSocial?.financiador) || os === 'todos') {
                 dtoPrestacion['financiador'] = prestacion.paciente.obraSocial;
                 filtroOS = true;
             } else {
 
-                if (prestacion.paciente && prestacion.paciente.obraSocial && prestacion.paciente.obraSocial.financiador === os && os === 'SUMAR') {
+                if (prestacion?.paciente?.obraSocial?.financiador === os && os === 'SUMAR') {
                     dtoPrestacion['financiador'] = prestacion.paciente.obraSocial.financiador;
                     filtroOS = true;
                 } else {
