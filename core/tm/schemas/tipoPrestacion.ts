@@ -14,6 +14,7 @@ export interface ITipoPrestacion extends Document {
         fsn: string;
         semanticTag: String;
     }[];
+    ambito: String[];
 }
 
 
@@ -39,7 +40,8 @@ export const tipoPrestacionSchema = new Schema({
             fsn: String,
             semanticTag: String,
         }]
-    }
+    },
+    ambito: [String]
 });
 
 /* Se definen los campos virtuals */
