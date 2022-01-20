@@ -105,7 +105,8 @@ const turnoSchema = new mongoose.Schema({
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed,
     fechaHoraDacion: Date,
-    usuarioDacion: mongoose.Schema.Types.Mixed
+    usuarioDacion: mongoose.Schema.Types.Mixed,
+    profesional: mongoose.Schema.Types.ObjectId
 });
 
 export = turnoSchema;

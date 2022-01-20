@@ -1137,6 +1137,27 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
     }
 });
 
+export async function saveTurnoProfesional(turnoId, profesionalId) {
+    const agenda: any = await findByTurnoId(turnoId);
+    if (agenda) {
+        const turno = getTurno(null, agenda, turnoId);
+        if (turno) {
+            turno.profesional = profesionalId;
+            await Agenda.findByIdAndUpdate(agenda.id, agenda);
+        }
+    }
+}
+
+export function findByTurnoId(turnoId) {
+    return Agenda.findOne({
+        $or: [{
+            'bloques.turnos._id': turnoId
+        }, {
+            'sobreturnos._id': turnoId
+        }]
+    });
+}
+
 async function getConceptosNoAsistio() {
     const form = 'stated';
     const expression = '<<281399006';
