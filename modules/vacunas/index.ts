@@ -7,6 +7,7 @@ import { nomivacLaboratorioRouter } from './nomivacLaboratorio.route';
 import { nomivacLoteRouter } from './nomivacLote.route';
 import { nomivacVacunaRouter } from './nomivacVacuna.route';
 import { VacunasRouter } from './routes/vacunas';
+import { VacunasPacientesRouter } from './routes/vacunas-pacientes.routes';
 require('./controller/inscripcion-vacunas.events');
 require('./controller/vacunas.events');
 
@@ -19,5 +20,6 @@ export const Routes = [
     nomivacDosisRouter,
     nomivacLoteRouter,
     InscripcionVacunasRouter,
-    VacunasRouter
+    VacunasRouter,
+    VacunasPacientesRouter
 ];
