@@ -1345,7 +1345,14 @@ export async function verificarSolapamiento(data) {
     const horaFin = data.horaFin;
     const profesionalesIds = (data.profesionales) ? data.profesionales.map(p => p._id) : null;
     const espacioFisicoId = (data.espacioFisico ? data.espacioFisico._id : null);
-    let response = null;
+    const response = {
+        tipoError: null,
+        clonarOguardar:'',
+        profesional: '',
+        centroSalud: '',
+        prestacion: '',
+        creadaPor: ''
+    };
 
     if (espacioFisicoId || (profesionalesIds && profesionalesIds.length)) {
 
@@ -1382,11 +1389,7 @@ export async function verificarSolapamiento(data) {
         try {
             const resultados = await Agenda.aggregate([{ $match }]);
             if (resultados.length > 0) {
-                response = 'La agenda no se pudo guardar:';
-                if (resultados.some(a => a.espacioFisico && a.espacioFisico._id === espacioFisicoId)) {
-                    response += ' El espacio físico está asignado a otra agenda en ese horario.';
-                }
-
+                response.tipoError = resultados.some(a => a.espacioFisico && a.espacioFisico._id === espacioFisicoId) ? 'espacio-fisico' : 'profesional';
                 let profesionales = [];
                 let org = []; // nombre de la organizacion
                 let agendaCreadaPor = [];
@@ -1400,9 +1403,11 @@ export async function verificarSolapamiento(data) {
                     }
                 }
                 if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
-                    response += ' Uno o más profesionales están asignados a otra agenda en ese horario. ';
                     profesionales.map((prof) => {
-                        response += `<br><br>Profesional: <strong>${prof.nombre} ${prof.apellido} </strong> <br>Centro de Salud: <strong>${org[0]} </strong> <br> Prestacion: <strong>${prestacionesAgenda[0]}</strong> <br>Creada por: <strong>${agendaCreadaPor[0]} </strong>`;
+                        response.profesional = `${prof.nombre} ${prof.apellido}`;
+                        response.centroSalud = `${org[0]}`;
+                        response.prestacion = `${prestacionesAgenda[0]}`;
+                        response.creadaPor = `${agendaCreadaPor[0]}`;
                     });
                 }
             }

@@ -136,7 +136,6 @@ router.get('/agenda/reporteResumenDiarioMensuals', async (req, res, next) => {
 
 router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
     // Cosas de San Juan - NO CAMBIAR
-    return res.json([]);
     const params = req.query;
     try {
         const resultado = await getPlanillaC1(params);
@@ -144,7 +143,7 @@ router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
     } catch (err) {
         return next(err);
     }
-
+    return res.json([]);
 });
 
 router.get('/agenda/diagnosticos', async (req, res, next) => {
@@ -286,7 +285,7 @@ router.post('/agenda', async (req, res, next) => {
     Auth.audit(data, req);
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
-        if (!mensajesSolapamiento) {
+        if (!mensajesSolapamiento.tipoError) {
             const dataSaved = await data.save();
             const objetoLog = {
                 accion: 'Crear Agenda',
@@ -307,7 +306,7 @@ router.post('/agenda', async (req, res, next) => {
                 err: mensajesSolapamiento
             };
             agendaLog.info('insert', objetoLog, req);
-            return next(mensajesSolapamiento);
+            return res.json(mensajesSolapamiento);
         }
     } catch (error) {
         const objetoLog = {
@@ -339,12 +338,11 @@ router.post('/agenda/:idAgenda/clonar', async (req, res, next) => {
         for (const value of clones) {
             const nueva = agendaCtrl.agendaNueva(agenda, value, req);
             const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(nueva);
-            if (mensajesSolapamiento) {
+            if (mensajesSolapamiento.tipoError) {
                 agendaLog.error('clonar', agenda, mensajesSolapamiento, req);
-                throw mensajesSolapamiento;
+                return res.json(mensajesSolapamiento);
             }
         }
-
         const listaSaveAgenda = clones.map(async clon => {
             clon = new Date(clon);
             const nueva = agendaCtrl.agendaNueva(agenda, clon, req);
