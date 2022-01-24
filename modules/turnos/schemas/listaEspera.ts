@@ -22,6 +22,7 @@ const listaEsperaSchema = new mongoose.Schema({
     // si es demanda rechazada es la fecha en que no se atendió la demanda
     vencimiento: Date,
     estado: String, // Enumerado {solicitud, demandaRechazada}  hay oferta en el mes / no hay
+    origen: String
 });
 
 const listaEspera = mongoose.model('listaEspera', listaEsperaSchema, 'listaEspera');
