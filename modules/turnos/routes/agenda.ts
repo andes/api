@@ -322,7 +322,7 @@ router.post('/agenda', async (req, res, next) => {
 });
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
-router.post('/agenda/:idAgenda/clonar', async (req, res, next) => {
+router.post('/agenda/clonar/:idAgenda', async (req, res, next) => {
 
     try {
 
@@ -330,7 +330,6 @@ router.post('/agenda/:idAgenda/clonar', async (req, res, next) => {
         const clones = req.body.clones;
 
         const agenda = await Agenda.findById(idagenda);
-
         if (!agenda) {
             return next('no existe la agenda');
         }
@@ -373,43 +372,24 @@ router.post('/agenda/:idAgenda/clonar', async (req, res, next) => {
 router.put('/agenda/:id', async (req, res, next) => {
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
-        if (!mensajesSolapamiento) {
-            const data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            const objetoLog = {
-                accion: 'Editar Agenda en estado Planificación',
-                ruta: req.url,
-                method: req.method,
-                data,
-                err: false
-            };
-            agendaLog.info('update', objetoLog, req);
-            res.json(data);
-
-            EventCore.emitAsync('citas:agenda:update', data);
-
-        } else {
-            // puede ser un mensaje de solapamiento o una excepción (Error)
-            const objetoLog = {
-                accion: 'Crear Agenda',
-                ruta: req.url,
-                method: req.method,
-                data: req.body,
-                err: mensajesSolapamiento
-            };
-            agendaLog.info('insert', objetoLog, req);
-            return next(mensajesSolapamiento);
+        if (mensajesSolapamiento.tipoError) {
+            agendaLog.error('update', req.body, mensajesSolapamiento, req);
+            return res.json(mensajesSolapamiento);
         }
-
-    } catch (error) {
+        const data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
         const objetoLog = {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
             method: req.method,
-            data: req.body,
-            err: error
+            data,
+            err: false
         };
-        agendaLog.error('update', objetoLog, req);
-        return next(error);
+        agendaLog.info('update', objetoLog, req);
+        res.json(data);
+        EventCore.emitAsync('citas:agenda:update', data);
+
+    } catch (err) {
+        return next(err);
     }
 });
 
