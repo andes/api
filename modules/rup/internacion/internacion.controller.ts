@@ -90,7 +90,7 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
             return false;
         }
         fechaDesde = internacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso;
-    } else { // capa médica
+    } else { // capa médica, enfermeria o estadistica-v2
         internacion = await InternacionResumen.findById(idInternacion);
         fechaDesde = internacion?.fechaIngreso || moment().subtract(-12, 'months').toDate();
     }
