@@ -46,6 +46,12 @@ class SeguimientoPacienteResource extends ResourceBase {
             fn: (value) => (value ? { $ne: null } : { $eq: null })
         }
     };
+
+    // override de update para ignorar actualizacion de seguimiento cerrado por fallecimiento
+    async update(id, dto, opt) {
+        const query = { _id: id, 'ultimoEstado.clave': { $ne: 'fallecido' } };
+        return SeguimientoPaciente.findOneAndUpdate(query, dto, opt);
+    }
 }
 
 const patchAsignacion = async (req, res, next) => {

@@ -108,25 +108,29 @@ EventCore.on('epidemiologia:prestaciones:validate', async (data) => {
 
 
 EventCore.on('epidemiologia:prestaciones:romperValidacion', async (data) => {
-    if (!data.paciente) {
-        return;
-    }
-    const lastSeguimiento: any = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
-    if (lastSeguimiento) {
-        const indexPrestacion = lastSeguimiento.llamados.findIndex(field => field.idPrestacion.toString() === data._id.toString());
-        if (indexPrestacion !== -1 || lastSeguimiento.ultimoEstado.idPrestacion.toString() === data._id.toString()) {
-            if (indexPrestacion !== -1) {
-                lastSeguimiento.llamados.splice(indexPrestacion, 1);
-            }
-            const longitud = lastSeguimiento.llamados.length;
-            if (!longitud) {
-                lastSeguimiento.ultimoEstado = { clave: 'pendiente', valor: data.createdAt };
-            } else {
-                const ultimaPrestacion = lastSeguimiento.llamados[longitud - 1];
-                lastSeguimiento.ultimoEstado = { clave: 'seguimiento', valor: ultimaPrestacion.fecha };
-            }
-            return await SeguimientoPacienteCtr.update(lastSeguimiento.id, lastSeguimiento, dataLog);
+    try {
+        if (!data.paciente) {
+            return;
         }
+        const lastSeguimiento: any = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
+        if (lastSeguimiento) {
+            const indexPrestacion = lastSeguimiento.llamados.findIndex(field => field.idPrestacion.toString() === data._id.toString());
+            if (indexPrestacion !== -1 || lastSeguimiento.ultimoEstado.idPrestacion.toString() === data._id.toString()) {
+                if (indexPrestacion !== -1) {
+                    lastSeguimiento.llamados.splice(indexPrestacion, 1);
+                }
+                const longitud = lastSeguimiento.llamados.length;
+                if (!longitud) {
+                    lastSeguimiento.ultimoEstado = { clave: 'pendiente', valor: data.createdAt };
+                } else {
+                    const ultimaPrestacion = lastSeguimiento.llamados[longitud - 1];
+                    lastSeguimiento.ultimoEstado = { clave: 'seguimiento', valor: ultimaPrestacion.fecha };
+                }
+                return await SeguimientoPacienteCtr.update(lastSeguimiento.id, lastSeguimiento, dataLog);
+            }
+        }
+    } catch (error) {
+        return error;
     }
 });
 
