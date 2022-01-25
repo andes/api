@@ -3,13 +3,13 @@ import { Agenda } from '../modules/turnos/schemas/agenda';
 import { Prestacion } from '../modules/rup/schemas/prestacion';
 import { Profesional } from '../core/tm/schemas/profesional';
 import moment = require('moment');
-import { getTurno } from 'modules/turnos/controller/agenda';
+import { getTurno } from '../modules/turnos/controller/agenda';
 
 async function run(done) {
     const query: any = {
         $and: [
             { 'solicitud.turno': { $exists: true } },
-            { 'solicitud.turno' : { $ne: null } }
+            { 'solicitud.turno': { $ne: null } }
         ],
         'estadoActual.tipo': 'validada'
     };
@@ -26,7 +26,7 @@ async function run(done) {
         const agenda: any = await Agenda.findOne({
             $or: [
                 { 'bloques.turnos._id': turnoId },
-                { 'sobbreturnos._id': turnoId }
+                { 'sobreturnos._id': turnoId }
             ]
         });
 
