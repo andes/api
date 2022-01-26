@@ -1,3 +1,19 @@
+# [5.80.0](https://github.com/andes/api/compare/v5.79.0...v5.80.0) (2022-01-26)
+
+
+### Bug Fixes
+
+* **perinatal:** Visualizacion de datos en carnet-perinatal ([#1632](https://github.com/andes/api/issues/1632)) ([3215784](https://github.com/andes/api/commit/321578421e2d613fff04da15fbf5a6792d215c5b))
+
+
+### Features
+
+* **BI:** profesional validador turno ([#1641](https://github.com/andes/api/issues/1641)) ([5547459](https://github.com/andes/api/commit/55474594e058e29f17d55f58e890ccf983fdd2f5))
+* **EP:** ignore ultimo estado fallecido ([#1647](https://github.com/andes/api/issues/1647)) ([4e52b9a](https://github.com/andes/api/commit/4e52b9a7fc696588cf727cf48829d082b1911b3c))
+* **mapa-camas:** nueva capa internacion y ambitos con permiso a tipoPrestacionShema ([#1636](https://github.com/andes/api/issues/1636)) ([c71184c](https://github.com/andes/api/commit/c71184cb5e355ef566bdc70951930adcf09a8d78))
+* **MISC-116:** filtro multiple de obras sociales ([#1648](https://github.com/andes/api/issues/1648)) ([62daa23](https://github.com/andes/api/commit/62daa2301d17514c3e5e8864c96138a75781fe88))
+* **pdp:** agrega atributo 'origen' en esquema listaEspera ([#1571](https://github.com/andes/api/issues/1571)) ([7b61487](https://github.com/andes/api/commit/7b614870bbd639bdb8e13de42e1ff1882e652a14))
+
 # [5.79.0](https://github.com/andes/api/compare/v5.78.0...v5.79.0) (2022-01-19)
 
 
