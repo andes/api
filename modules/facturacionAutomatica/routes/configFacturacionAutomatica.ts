@@ -20,7 +20,12 @@ router.post('/facturaArancelamiento', async (req, res, next) => {
     const turno = req.body;
 
     if (turno) {
-        EventCore.emitAsync('facturacion:factura:buscador', turno);
+        if (turno.financiador === 'SUMAR' || turno.financiador?.financiador === 'SUMAR') {
+            EventCore.emitAsync('facturacion:factura:buscador', turno);
+        } else {
+            EventCore.emitAsync('facturacion:factura:recupero_financiero', turno);
+        }
+
 
         res.json({ message: 'Enviado a facturación' });
     } else {
