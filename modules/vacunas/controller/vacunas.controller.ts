@@ -76,8 +76,8 @@ export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
         },
         { $unwind: '$organizacion' }
     ];
-    const prestaciones = await Prestacion.aggregate(pipelineVacunaCovid19);
-    for (const unaPrestacion of prestaciones) {
+    const prestaciones: any = Prestacion.aggregate(pipelineVacunaCovid19).cursor({ batchSize: 100 });
+    for await (const unaPrestacion of prestaciones) {
         const prestacionRegistrada = await InformacionExportada.findOne({ 'resultado.resultado': 'OK', idPrestacion: unaPrestacion._id });
         if (!prestacionRegistrada) {
             const prestacionAux: any = new Prestacion(unaPrestacion);

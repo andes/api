@@ -1,4 +1,7 @@
+import { Types } from 'mongoose';
+
 export interface ISeguimientoPaciente {
+    id?: Types.ObjectId | string;
     fechaInicio: Date;
     origen: {
         id: string;
@@ -51,4 +54,5 @@ export interface ISeguimientoPaciente {
         valor: Date;
     };
     contactosEstrechos: any[];
+    internacion?: boolean;
 }

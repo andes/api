@@ -183,3 +183,25 @@ EventCore.on('mapa-camas:paciente:egreso', async (estado) => {
         }
     }
 });
+
+EventCore.on('rup:paciente:internadoValidacion', async (data) => {
+    try {
+        const lastSeguimiento: ISeguimientoPaciente = await SeguimientoPaciente.findOne({ 'paciente.id': data.prestacion.paciente.id });
+        if (lastSeguimiento) {
+            return await SeguimientoPacienteCtr.update(lastSeguimiento.id, { internacion: true }, dataLog);
+        }
+    } catch (error) {
+        return error;
+    }
+});
+
+EventCore.on('rup:paciente:internadoRomperValidacion', async (data) => {
+    try {
+        const lastSeguimiento: ISeguimientoPaciente = await SeguimientoPaciente.findOne({ 'paciente.id': data.prestacion.paciente.id });
+        if (lastSeguimiento?.internacion) {
+            return await SeguimientoPacienteCtr.update(lastSeguimiento.id, { internacion: false }, dataLog);
+        }
+    } catch (error) {
+        return error;
+    }
+});
