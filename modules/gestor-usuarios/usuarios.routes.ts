@@ -16,7 +16,19 @@ class UsuariosResource extends ResourceBase {
     routesAuthorization = {
         get: Auth.authorize('usuarios:read'),
         search: Auth.authorize('usuarios:read'),
-        post: Auth.authorize('usuarios:write'),
+        post: [
+            Auth.authorize('usuarios:write'),
+            async (req, res, next) => {
+                try {
+                    const user = await AuthUsers.findOne({ usuario: req.body.usuario });
+                    if (user) {
+                        return next('Usuario existente');
+                    }
+                    return next();
+                } catch (err) {
+                    return next(err);
+                }
+            }],
         patch: Auth.authorize('usuarios:write'),
         delete: Auth.authorize('usuarios:write'),
         ldap: Auth.authorize('usuarios:write')

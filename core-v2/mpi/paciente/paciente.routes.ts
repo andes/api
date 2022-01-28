@@ -4,7 +4,6 @@ import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { extractFoto, findById, make, multimatch, set, suggest } from './paciente.controller';
 import { PatientNotFound } from './paciente.error';
 import { IPacienteDoc } from './paciente.interface';
