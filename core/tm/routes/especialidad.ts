@@ -1,7 +1,7 @@
 import * as express from 'express';
+import { Auth } from '../../../auth/auth.class';
 import * as especialidad from '../schemas/especialidad_model';
 import { defaultLimit, maxLimit } from './../../../config';
-import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 

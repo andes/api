@@ -7,6 +7,8 @@ import * as mongoose from 'mongoose';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import * as prestacionCtrl from '../../rup/controllers/prestacion';
+import { liberarRefTurno } from '../../rup/controllers/prestacion';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import { agendaLog } from '../citasLog';
 import * as agendaCtrl from '../controller/agenda';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
@@ -14,8 +16,6 @@ import * as AgendasEstadisticas from '../controller/estadisticas';
 import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
 import { Agenda } from '../schemas/agenda';
 import { Auth } from './../../../auth/auth.class';
-import { Prestacion } from '../../rup/schemas/prestacion';
-import { liberarRefTurno } from '../../rup/controllers/prestacion';
 
 const router = express.Router();
 
@@ -135,8 +135,7 @@ router.get('/agenda/reporteResumenDiarioMensuals', async (req, res, next) => {
 });
 
 router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
-    // Cosas de San Juan
-    return res.json([]);
+    // Cosas de San Juan - NO CAMBIAR
     const params = req.query;
     try {
         const resultado = await getPlanillaC1(params);
@@ -144,7 +143,7 @@ router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
     } catch (err) {
         return next(err);
     }
-
+    return res.json([]);
 });
 
 router.get('/agenda/diagnosticos', async (req, res, next) => {
@@ -286,7 +285,7 @@ router.post('/agenda', async (req, res, next) => {
     Auth.audit(data, req);
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
-        if (!mensajesSolapamiento) {
+        if (!mensajesSolapamiento.tipoError) {
             const dataSaved = await data.save();
             const objetoLog = {
                 accion: 'Crear Agenda',
@@ -307,7 +306,7 @@ router.post('/agenda', async (req, res, next) => {
                 err: mensajesSolapamiento
             };
             agendaLog.info('insert', objetoLog, req);
-            return next(mensajesSolapamiento);
+            return res.json(mensajesSolapamiento);
         }
     } catch (error) {
         const objetoLog = {
@@ -323,144 +322,74 @@ router.post('/agenda', async (req, res, next) => {
 });
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
-router.post('/agenda/clonar', (req, res, next) => {
-    const idagenda = req.body.idAgenda;
-    const clones = req.body.clones;
-    const listaSaveAgenda = [];
+router.post('/agenda/clonar/:idAgenda', async (req, res, next) => {
 
-    if (idagenda) {
-        Agenda.findById(idagenda, (err, data) => {
-            if (err) {
-                return next(err);
+    try {
+
+        const idagenda = req.params.idAgenda;
+        const clones = req.body.clones;
+
+        const agenda = await Agenda.findById(idagenda);
+        if (!agenda) {
+            return next('no existe la agenda');
+        }
+
+        for (const value of clones) {
+            const nueva = agendaCtrl.agendaNueva(agenda, value, req);
+            const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(nueva);
+            if (mensajesSolapamiento.tipoError) {
+                agendaLog.error('clonar', agenda, mensajesSolapamiento, req);
+                return res.json(mensajesSolapamiento);
             }
-            clones.forEach(clon => {
-                clon = new Date(clon);
-                if (clon) {
-                    data._id = mongoose.Types.ObjectId();
-                    data.isNew = true;
-                    const nueva: any = new Agenda(data.toObject());
-                    nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
-                    nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
-                    nueva['updatedBy'] = undefined;
-                    nueva['updatedAt'] = undefined;
-                    nueva['createdBy'] = Auth.getAuditUser(req);
-                    nueva['createdAt'] = new Date();
-                    nueva['nota'] = null;
+        }
+        const listaSaveAgenda = clones.map(async clon => {
+            clon = new Date(clon);
+            const nueva = agendaCtrl.agendaNueva(agenda, clon, req);
+            Auth.audit(nueva, req);
 
-                    if (nueva.dinamica && nueva.cupo >= 0) {
-                        nueva.bloques.forEach(b => {
-                            nueva.cupo += b.turnos.length;
-                        });
-                    }
+            try {
+                const nuevaAgenda = await agendaCtrl.saveAgenda(nueva);
 
-                    // nueva['bloques'] = data['bloques'];
-                    nueva['bloques'].forEach((bloque) => {
-                        bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
-                        bloque.horaFin = agendaCtrl.combinarFechas(clon, bloque.horaFin);
-                        if (bloque.pacienteSimultaneos) {
-                            bloque.restantesDelDia = bloque.accesoDirectoDelDia * bloque.cantidadSimultaneos;
-                            bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
-                            bloque.restantesGestion = bloque.reservadoGestion * bloque.cantidadSimultaneos;
-                            bloque.restantesProfesional = bloque.reservadoProfesional * bloque.cantidadSimultaneos;
-                            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile * bloque.cantidadSimultaneos : 0;
+                EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
+                agendaLog.info('clonar', nuevaAgenda, req);
+                return nuevaAgenda;
+            } catch (err) {
+                return err;
+            }
 
-                        } else {
-                            bloque.restantesDelDia = bloque.accesoDirectoDelDia;
-                            bloque.restantesProgramados = bloque.accesoDirectoProgramado;
-                            bloque.restantesGestion = bloque.reservadoGestion;
-                            bloque.restantesProfesional = bloque.reservadoProfesional;
-                            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile : 0;
-                        }
-                        bloque._id = mongoose.Types.ObjectId();
-                        if (!nueva.dinamica) {
-                            bloque.turnos.forEach((turno, index1) => {
-                                turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
-                                turno.estado = 'disponible';
-                                turno.asistencia = undefined;
-                                turno.paciente = null;
-                                turno.tipoPrestacion = nueva.nominalizada ? null : nueva.bloques[0].tipoPrestaciones[0];
-                                turno.idPrestacionPaciente = null;
-                                turno.nota = null;
-                                turno._id = mongoose.Types.ObjectId();
-                                turno.tipoTurno = undefined;
-                                turno.updatedAt = undefined;
-                                turno.updatedBy = undefined;
-                                turno.diagnostico = { codificaciones: [] };
-                                turno.reasignado = undefined;
-                            });
-                        } else {
-                            bloque.turnos = [];
-                        }
-                    });
-                    nueva['estado'] = 'planificacion';
-                    nueva['sobreturnos'] = [];
-                    Auth.audit(nueva, req);
-                    listaSaveAgenda.push(
-                        agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
-                            // Ver si es necesario especificar que fue una agenda clonada
-                            EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
-                            const objetoLog = {
-                                accion: 'Clonar Agenda',
-                                ruta: req.url,
-                                method: req.method,
-                                data: nuevaAgenda,
-                                err: err || false
-                            };
-                            agendaLog.info('insert', objetoLog, req);
-                        }).catch(error => {
-                            return (error);
-                        })
-                    );
-                }
-            });
-            Promise.all(listaSaveAgenda).then(resultado => {
-                EventCore.emitAsync('citas:agenda:clone', data);
-                res.json(resultado);
-            }).catch(error => { return next(error); });
         });
+
+        const resultado = await Promise.all(listaSaveAgenda);
+        EventCore.emitAsync('citas:agenda:clone', agenda);
+        res.json(resultado);
+
+
+    } catch (err) {
+        return next(err);
     }
 });
 
 router.put('/agenda/:id', async (req, res, next) => {
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
-        if (!mensajesSolapamiento) {
-            const data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            const objetoLog = {
-                accion: 'Editar Agenda en estado Planificación',
-                ruta: req.url,
-                method: req.method,
-                data,
-                err: false
-            };
-            agendaLog.info('update', objetoLog, req);
-            res.json(data);
-
-            EventCore.emitAsync('citas:agenda:update', data);
-
-        } else {
-            // puede ser un mensaje de solapamiento o una excepción (Error)
-            const objetoLog = {
-                accion: 'Crear Agenda',
-                ruta: req.url,
-                method: req.method,
-                data: req.body,
-                err: mensajesSolapamiento
-            };
-            agendaLog.info('insert', objetoLog, req);
-            return next(mensajesSolapamiento);
+        if (mensajesSolapamiento.tipoError) {
+            agendaLog.error('update', req.body, mensajesSolapamiento, req);
+            return res.json(mensajesSolapamiento);
         }
-
-    } catch (error) {
+        const data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
         const objetoLog = {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
             method: req.method,
-            data: req.body,
-            err: error
+            data,
+            err: false
         };
-        agendaLog.error('update', objetoLog, req);
-        return next(error);
+        agendaLog.info('update', objetoLog, req);
+        res.json(data);
+        EventCore.emitAsync('citas:agenda:update', data);
+
+    } catch (err) {
+        return next(err);
     }
 });
 

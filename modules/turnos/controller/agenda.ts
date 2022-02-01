@@ -1345,10 +1345,16 @@ export async function verificarSolapamiento(data) {
     const horaFin = data.horaFin;
     const profesionalesIds = (data.profesionales) ? data.profesionales.map(p => p._id) : null;
     const espacioFisicoId = (data.espacioFisico ? data.espacioFisico._id : null);
-    let response = null;
+    const response = {
+        tipoError: null,
+        clonarOguardar:'',
+        profesional: '',
+        centroSalud: '',
+        prestacion: '',
+        creadaPor: ''
+    };
 
     if (espacioFisicoId || (profesionalesIds && profesionalesIds.length)) {
-
         // Se buscan las agendas que se solapen con la actual en algún punto
         const $match: any = {
             $and: [
@@ -1382,27 +1388,28 @@ export async function verificarSolapamiento(data) {
         try {
             const resultados = await Agenda.aggregate([{ $match }]);
             if (resultados.length > 0) {
-                response = 'La agenda no se pudo guardar:';
-                if (resultados.some(a => a.espacioFisico && a.espacioFisico._id === espacioFisicoId)) {
-                    response += ' El espacio físico está asignado a otra agenda en ese horario.';
-                }
-
+                response.tipoError = resultados.some(a => a.espacioFisico && a.espacioFisico._id === espacioFisicoId) ? 'espacio-fisico' : 'profesional';
                 let profesionales = [];
                 let org = []; // nombre de la organizacion
                 let agendaCreadaPor = [];
                 let prestacionesAgenda = [];
+                let espacio = [];
                 for (const resultado of resultados) {
                     profesionales = profesionales.concat(resultado.profesionales);
                     org = org.concat(resultado.organizacion.nombre);
                     agendaCreadaPor = agendaCreadaPor.concat(resultado.createdBy.nombreCompleto);
+                    espacio = espacio.concat(resultado.espacioFisico);
                     for (const prestacionAg of resultado.tipoPrestaciones) {
                         prestacionesAgenda = prestacionesAgenda.concat(prestacionAg.term);
                     }
                 }
-                if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
-                    response += ' Uno o más profesionales están asignados a otra agenda en ese horario. ';
+
+                if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString())) || espacio.some(e => (e._id === espacioFisicoId))) {
                     profesionales.map((prof) => {
-                        response += `<br><br>Profesional: <strong>${prof.nombre} ${prof.apellido} </strong> <br>Centro de Salud: <strong>${org[0]} </strong> <br> Prestacion: <strong>${prestacionesAgenda[0]}</strong> <br>Creada por: <strong>${agendaCreadaPor[0]} </strong>`;
+                        response.profesional = `${prof.nombre} ${prof.apellido}`;
+                        response.centroSalud = `${org[0]}`;
+                        response.prestacion = `${prestacionesAgenda[0]}`;
+                        response.creadaPor = `${agendaCreadaPor[0]}`;
                     });
                 }
             }
@@ -1420,4 +1427,64 @@ export function esVirtual(turnoEmitido) {
     } else {
         return false;
     }
+}
+
+export function agendaNueva(data, clon, req) {
+    data._id = mongoose.Types.ObjectId();
+    data.isNew = true;
+    const nueva: any = new Agenda(data.toObject());
+    nueva['horaInicio'] = combinarFechas(clon, new Date(data['horaInicio']));
+    nueva['horaFin'] = combinarFechas(clon, new Date(data['horaFin']));
+    nueva['updatedBy'] = undefined;
+    nueva['updatedAt'] = undefined;
+    nueva['createdBy'] = Auth.getAuditUser(req);
+    nueva['createdAt'] = new Date();
+    nueva['nota'] = null;
+
+    if (nueva.dinamica && nueva.cupo >= 0) {
+        nueva.bloques.forEach(b => {
+            nueva.cupo += b.turnos.length;
+        });
+    }
+    nueva['bloques'].forEach((bloque) => {
+        bloque.horaInicio = combinarFechas(clon, bloque.horaInicio);
+        bloque.horaFin = combinarFechas(clon, bloque.horaFin);
+        if (bloque.pacienteSimultaneos) {
+            bloque.restantesDelDia = bloque.accesoDirectoDelDia * bloque.cantidadSimultaneos;
+            bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
+            bloque.restantesGestion = bloque.reservadoGestion * bloque.cantidadSimultaneos;
+            bloque.restantesProfesional = bloque.reservadoProfesional * bloque.cantidadSimultaneos;
+            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile * bloque.cantidadSimultaneos : 0;
+
+        } else {
+            bloque.restantesDelDia = bloque.accesoDirectoDelDia;
+            bloque.restantesProgramados = bloque.accesoDirectoProgramado;
+            bloque.restantesGestion = bloque.reservadoGestion;
+            bloque.restantesProfesional = bloque.reservadoProfesional;
+            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile : 0;
+        }
+        bloque._id = mongoose.Types.ObjectId();
+        if (!nueva.dinamica) {
+            bloque.turnos.forEach((turno, index1) => {
+                turno.horaInicio = combinarFechas(clon, turno.horaInicio);
+                turno.estado = 'disponible';
+                turno.asistencia = undefined;
+                turno.paciente = null;
+                turno.tipoPrestacion = nueva.nominalizada ? null : nueva.bloques[0].tipoPrestaciones[0];
+                turno.idPrestacionPaciente = null;
+                turno.nota = null;
+                turno._id = mongoose.Types.ObjectId();
+                turno.tipoTurno = undefined;
+                turno.updatedAt = undefined;
+                turno.updatedBy = undefined;
+                turno.diagnostico = { codificaciones: [] };
+                turno.reasignado = undefined;
+            });
+        } else {
+            bloque.turnos = [];
+        }
+    });
+    nueva['estado'] = 'planificacion';
+    nueva['sobreturnos'] = [];
+    return nueva;
 }

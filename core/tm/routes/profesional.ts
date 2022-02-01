@@ -4,6 +4,7 @@ import { log } from '@andes/log';
 import * as base64 from 'base64-stream';
 import * as express from 'express';
 import * as fs from 'fs';
+import { Types } from 'mongoose';
 import * as stream from 'stream';
 import { Auth } from '../../../auth/auth.class';
 import { getTemporyTokenCOVID } from '../../../auth/auth.controller';
@@ -15,11 +16,10 @@ import { formacionCero, matriculaCero, migrarTurnos, saveFirma } from '../contro
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { makeFs } from '../schemas/imagenes';
+import { Organizacion } from '../schemas/organizacion';
 import { Profesional } from '../schemas/profesional';
 import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
-import { Organizacion } from '../schemas/organizacion';
-import { Types } from 'mongoose';
 import { userScheduler } from './../../../config.private';
 import moment = require('moment');
 
@@ -586,7 +586,7 @@ router.get('/profesionales/renovacion', Auth.authenticate(), async (req, res, ne
         ];
     }
     if (req.query.numeroMatriculaGrado) {
-        solicitudParams['formacionGrado.matriculacion.matriculaNumero'] =req.query.numeroMatriculaGrado;
+        solicitudParams['formacionGrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaGrado;
     }
 
     const skip: number = parseInt(req.query.skip || 0, 10);
