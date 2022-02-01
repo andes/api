@@ -1355,7 +1355,6 @@ export async function verificarSolapamiento(data) {
     };
 
     if (espacioFisicoId || (profesionalesIds && profesionalesIds.length)) {
-
         // Se buscan las agendas que se solapen con la actual en algún punto
         const $match: any = {
             $and: [
@@ -1394,15 +1393,18 @@ export async function verificarSolapamiento(data) {
                 let org = []; // nombre de la organizacion
                 let agendaCreadaPor = [];
                 let prestacionesAgenda = [];
+                let espacio = [];
                 for (const resultado of resultados) {
                     profesionales = profesionales.concat(resultado.profesionales);
                     org = org.concat(resultado.organizacion.nombre);
                     agendaCreadaPor = agendaCreadaPor.concat(resultado.createdBy.nombreCompleto);
+                    espacio = espacio.concat(resultado.espacioFisico);
                     for (const prestacionAg of resultado.tipoPrestaciones) {
                         prestacionesAgenda = prestacionesAgenda.concat(prestacionAg.term);
                     }
                 }
-                if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString()))) {
+
+                if (profesionales.some(p => profesionalesIds.some(p2 => p2.toString() === p._id.toString())) || espacio.some(e => (e._id === espacioFisicoId))) {
                     profesionales.map((prof) => {
                         response.profesional = `${prof.nombre} ${prof.apellido}`;
                         response.centroSalud = `${org[0]}`;
