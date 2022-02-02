@@ -7,12 +7,12 @@ import { IPacienteDoc } from '../../../core-v2/mpi/paciente/paciente.interface';
 const router = express.Router();
 
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
     const { fechaValidacion, documento, sexo } = req.query;
     const paciente: IPacienteDoc = await Paciente.findOne({ documento, sexo });
     const pacienteId = paciente?.id;
     if (!pacienteId) {
-        return res.send(false);
+        return next('paciente_invalido');
     }
     const fechaCondicion = {
         $gte: moment(fechaValidacion).startOf('day').toDate(),
@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
     const match = {
         'estadoActual.createdAt': fechaCondicion,
         'paciente.id': pacienteId,
-        'paciente.sexo': sexo
+        'estadoActual.tipo': 'validada'
     };
     const prestaciones = await Prestacion.find(match);
     if (prestaciones.length) {
@@ -31,9 +31,9 @@ router.get('/', async (req, res) => {
             const registros = prestacionAux.getRegistros(true);
             registroCertificado = registros.some(registro => registro.concepto.conceptId === '781000246105');
         });
-        return res.send(registroCertificado);
+        return registroCertificado ? res.json(true) : next('registro_invalido');
     } else {
-        return res.send(false);
+        return next('registro_invalido');
     }
 
 });
