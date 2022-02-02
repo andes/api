@@ -1,3 +1,10 @@
+# [5.81.0](https://github.com/andes/api/compare/v5.80.0...v5.81.0) (2022-02-02)
+
+
+### Features
+
+* **facturacion:**  se agrega facturacion prepagas y OS desde buscador de turnos ([#1650](https://github.com/andes/api/issues/1650)) ([8af85d8](https://github.com/andes/api/commit/8af85d80a8f9f2488bc711c5828881043bf1f11a))
+
 # [5.80.0](https://github.com/andes/api/compare/v5.79.0...v5.80.0) (2022-01-26)
 
 
