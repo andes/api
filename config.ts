@@ -169,6 +169,12 @@ export const modules = {
         active: IPS.enabled,
         path: './modules/ips/routes',
         route: '/modules/ips'
+    },
+    validarCertificado: {
+        active: true,
+        path: './modules/validar-certificado/routes',
+        route: '/modules/validar-certificado',
+        middleware: null
     }
 };
 
