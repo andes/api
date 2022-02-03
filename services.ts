@@ -9,6 +9,7 @@ import { AppCache, Connections } from './connections';
 import { PacienteCtr } from './core-v2/mpi/paciente/paciente.routes';
 import { validar } from './core-v2/mpi/validacion';
 import { hudsPaciente } from './modules/rup';
+import { markSeguimientoInternado } from './modules/seguimiento-paciente/seguimiento-pacientes.events';
 import { sincronizarVacunas } from './modules/vacunas/controller/vacunas.events';
 
 export let services: AndesServices;
@@ -27,6 +28,10 @@ export function setupServices(app: express.Express = null) {
 
     services.register('validar-paciente', async (_config, params) => {
         return await validar(params.documento, params.sexo);
+    });
+
+    services.register('epidemio-seguimiento-internado', async (_config, params) => {
+        return await markSeguimientoInternado(params);
     });
 
     services.register('paciente-vacunacion-registrar', async (_config, params) => {

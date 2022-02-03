@@ -1,14 +1,14 @@
 import { EventCore } from '@andes/event-bus';
 import { userScheduler } from '../../config.private';
+import { SECCION_CONTACTOS_ESTRECHOS, SECCION_MPI } from '../../modules/forms/forms-epidemiologia/constantes';
+import { InternacionResumen } from '../rup/internacion/resumen/internacion-resumen.schema';
+import { Prestacion } from '../rup/schemas/prestacion';
+import { getScoreValue } from './../../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
+import { getOrganizacionSeguimiento } from './controller/seguimiento-paciente.controller';
 import { ISeguimientoPaciente } from './interfaces/seguimiento-paciente.interface';
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 import { SeguimientoPacienteCtr } from './seguimiento-paciente.route';
 import moment = require('moment');
-import { Prestacion } from '../rup/schemas/prestacion';
-import { InternacionResumen } from '../rup/internacion/resumen/internacion-resumen.schema';
-import { getOrganizacionSeguimiento } from './controller/seguimiento-paciente.controller';
-import { getScoreValue } from './../../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
-import { SECCION_CONTACTOS_ESTRECHOS, SECCION_MPI } from '../../modules/forms/forms-epidemiologia/constantes';
 
 const dataLog: any = new Object(userScheduler);
 
@@ -205,3 +205,14 @@ EventCore.on('rup:paciente:internadoRomperValidacion', async (data) => {
         return error;
     }
 });
+
+export async function markSeguimientoInternado({ paciente, internacion }) {
+    try {
+        const lastSeguimiento: ISeguimientoPaciente = await SeguimientoPaciente.findOne({ 'paciente.id': paciente.id });
+        if (lastSeguimiento) {
+            return SeguimientoPacienteCtr.update(lastSeguimiento.id, { internacion }, dataLog);
+        }
+    } catch (error) {
+        return error;
+    }
+}
