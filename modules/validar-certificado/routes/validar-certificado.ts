@@ -25,11 +25,18 @@ router.get('/', async (req, res, next) => {
     };
     const prestaciones = await Prestacion.find(match);
     if (prestaciones.length) {
+        const conceptosCertificado = [
+            '791000246108',
+            '801000246109',
+            '772786005',
+            '781000246105',
+            '2171000246104'
+        ];
         let registroCertificado: boolean;
         prestaciones.forEach(prestacion => {
             const prestacionAux: any = new Prestacion(prestacion);
             const registros = prestacionAux.getRegistros(true);
-            registroCertificado = registros.some(registro => registro.concepto.conceptId === '781000246105');
+            registroCertificado = registros.some(registro => conceptosCertificado.includes(registro.concepto.conceptId));
         });
         return registroCertificado ? res.json(true) : next('registro_invalido');
     } else {
