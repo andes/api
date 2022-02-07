@@ -279,28 +279,89 @@ const facets = {
         },
         { $sort: { count: -1 } }
     ],
+};
 
+const facetsEntrada = {
     estados: [
         {
-            $addFields: {
-                estado: { $arrayElemAt: ['$estados', -1] }
+            $addFields:{
+                estado:{
+                    $cond:{
+                        if: { $eq:['$estadoActual.tipo','rechazada'] },
+                        then: 'Contrarreferida',
+                        else: {
+                            $cond:{
+                                if:{ $eq:['$estadoActual.tipo','validada'] },
+                                then: 'Registro en HUDS',
+                                else: {
+                                    $cond:{
+                                        if:{
+                                            $and: [
+                                                { $ne:['$estadoActual.tipo','rechazada'] },
+                                                { $ne:['$solicitud.turno',null] },
+                                            ]
+                                        },
+                                        then: 'Turno Dado',
+                                        else: '$estadoActual.tipo'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         {
             $group: {
-                _id: '$estado.tipo',
+                _id: '$estado',
                 count: { $sum: 1 },
-                nombre: { $first: '$estado.tipo' }
+                nombre: { $first: '$estado' }
             }
         }
     ]
 };
 
+const facetsSalida = {
+    estados: [
+        {
+            $addFields:{
+                estado:{
+                    $cond:{
+                        if: { $eq:['$estadoActual.tipo','rechazada'] },
+                        then: 'Contrarreferida',
+                        else: {
+                            $cond:{
+                                if:{
+                                    $and: [
+                                        { $ne:['$estadoActual.tipo','rechazada'] },
+                                        { $ne:['$solicitud.turno',null] },
+                                    ]
+                                },
+                                then: 'Turno Dado',
+                                else: '$estadoActual.tipo'
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            $group:{
+                _id:'$estado',
+                count:{
+                    $sum:1
+                },
+                nombre:{
+                    $first:'$estado'
+                }
+            }
+        }
+    ]
+};
 
 function makeFacet(condicion) {
     const facet: any = {};
 
-    facet['estados'] = facets['estados'];
     facet['solicitudesOrigen'] = facets['solicitudesOrigen'];
     facet['solicitudesDestino'] = facets['solicitudesDestino'];
     facet['profesionalesOrigen'] = facets['profesionalesOrigen'];
@@ -308,9 +369,11 @@ function makeFacet(condicion) {
 
     if (condicion === 'entrada') {
         facet['organizaciones'] = facets['organizacionesEntrada'];
+        facet['estados'] = facetsEntrada['estados'];
     }
     if (condicion === 'salida') {
         facet['organizaciones'] = facets['organizacionesSalida'];
+        facet['estados'] = facetsSalida['estados'];
     }
     return facet;
 }
