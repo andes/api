@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { Prestacion } from '../schemas/prestacion';
+import { InternacionResumen } from './resumen/internacion-resumen.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import { Camas } from './camas.schema';
 import { Censo } from './censos.schema';
@@ -45,7 +46,18 @@ async function unificarMovimientos(snapshots, movimientos) {
 }
 
 async function realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa) {
-    const prestaciones = await Prestacion.find({ _id: { $in: [...Object.keys(internaciones)] } });
+    let prestaciones;
+    let resumenPrestacionMap: any = [];
+    if (capa === 'medica') {// solo para efectores -> estadistica-v2
+        const condicion1 = { _id: { $in: [...Object.keys(internaciones)] } };// busca resumen de internacion por id.
+        const condicion2 = { idPrestacion: { $exists: true } };// que exista idPrestacion.
+        const resumenes = await InternacionResumen.find({ $and: [condicion1, condicion2] });
+        resumenPrestacionMap = resumenes.map(r => { return { idPrestacion: r.idPrestacion, idResumen: r.id }; });
+        prestaciones = await Prestacion.find({ _id: { $in: resumenPrestacionMap.map(r => r.idPrestacion) } });
+    } else {
+        prestaciones = await Prestacion.find({ _id: { $in: [...Object.keys(internaciones)] } });
+    }
+
 
     let existenciaALas0 = 0;
     let existenciaALas24 = 0;
@@ -70,8 +82,16 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         const allMovimientos = internaciones[idInter];
         const organizacion = allMovimientos[0].organizacion._id;
         const ultimoMovimientoUO = allMovimientos.slice().reverse().find(m => m.unidadOrganizativa.conceptId === unidadOrganizativa);
+        let prestacion;
+        if (capa === 'medica') {
+            const idPrestacion = resumenPrestacionMap.find(r => String(r.idResumen) === String(allMovimientos[0].idInternacion))?.idPrestacion;
+            prestacion = prestaciones.find(p => String(p.id) === String(idPrestacion));
 
-        const prestacion = prestaciones.find(p => String(p.id) === String(allMovimientos[0].idInternacion));
+        } else {
+            prestacion = prestaciones.find(p => String(p.id) === String(allMovimientos[0].idInternacion));
+        }
+
+
         if (prestacion) {
             const informesInternacion: any = getInformesInternacion(prestacion);
             const desde = informesInternacion.ingreso.fechaIngreso;
@@ -290,7 +310,6 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
 
     const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
 
-    // const snapshotsUO = snapshots.filter(item => String(item.unidadOrganizativa.conceptId) === unidadOrganizativa);
 
     const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
 
