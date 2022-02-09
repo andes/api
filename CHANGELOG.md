@@ -1,3 +1,11 @@
+# [5.82.0](https://github.com/andes/api/compare/v5.81.0...v5.82.0) (2022-02-09)
+
+
+### Features
+
+* **seguimiento:** event paciente internado ([#1653](https://github.com/andes/api/issues/1653)) ([2282767](https://github.com/andes/api/commit/228276778613fdd05da10e5444b476ef0a3a2494))
+* **validar-certificado:** nuevos conceptId ([#1656](https://github.com/andes/api/issues/1656)) ([cb167c0](https://github.com/andes/api/commit/cb167c017e53d51d12b15394f1b94d039d258f8b))
+
 # [5.81.0](https://github.com/andes/api/compare/v5.80.0...v5.81.0) (2022-02-02)
 
 
