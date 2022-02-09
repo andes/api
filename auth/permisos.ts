@@ -574,6 +574,11 @@ export default [
                 key: 'crear-dosis-lote',
                 title: 'crear lote y dosis',
                 type: 'boolean'
+            },
+            {
+                key: 'verificar-estado',
+                title: 'Verificar estado de vacunación',
+                type: 'boolean'
             }
         ]
     },
