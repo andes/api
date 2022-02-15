@@ -9,6 +9,7 @@ import { InternacionResumen } from '../rup/internacion/resumen/internacion-resum
 import { getOrganizacionSeguimiento } from './controller/seguimiento-paciente.controller';
 import { getScoreValue } from './../../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 import { SECCION_CONTACTOS_ESTRECHOS, SECCION_MPI } from '../../modules/forms/forms-epidemiologia/constantes';
+import { FormsEpidemiologia } from '../forms/forms-epidemiologia/forms-epidemiologia-schema';
 
 const dataLog: any = new Object(userScheduler);
 
@@ -71,19 +72,9 @@ EventCore.on('epidemiologia:prestaciones:validate', async (data) => {
         return;
     }
     try {
-        const altaCid = '201000246105';
-        const conceptosClasificacionCovid = [
-            '711000246101', // nexoConfirmado;
-            '901000246101', // testRapidoPositivo;
-            '891000246100', // testRapidoNegativo;
-            '840539006', // covidPositivo;
-            '821000246102', // pcrPositivo;
-            '840544004' // sospechaCovid;
-        ];
-
-        const esRegistroConfirmacion = data.ejecucion.registros.some(r => conceptosClasificacionCovid.includes(r.concepto.conceptId));
-
-        if (!esRegistroConfirmacion) {
+        const fichaPaciente = await FormsEpidemiologia.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
+        if (checkFecha(fichaPaciente, data.updatedAt)) {
+            const altaCid = '201000246105';
             const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': data.paciente.id }).sort({ createdAt: -1 });
             if (lastSeguimiento) {
                 const pacienteAlta = data.ejecucion.registros.some(registro => registro.concepto.conceptId === altaCid);
@@ -205,3 +196,14 @@ EventCore.on('rup:paciente:internadoRomperValidacion', async (data) => {
         return error;
     }
 });
+/**
+ * Función para que no se registre como seguimiento la prestacion que se carga desde la ficha,
+ * se asume que si la prestación se registro a 1 hora de haber creado la ficha no es de seguimiento
+ * (Por ahora es la solución que se encontró)
+ */
+
+const checkFecha = (ficha, horaPrestacion: Date) => {
+    const fichaDate = ficha.updatedAt ? ficha.updatedAt : ficha.createdAt;
+    const dif = moment(horaPrestacion).diff(moment(fichaDate), 'hours');
+    return dif >= 1;
+};
