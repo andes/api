@@ -1,14 +1,14 @@
-import { recordatorio } from '../schemas/recordatorio';
-import { Agenda } from '../../turnos/schemas/agenda';
-import * as mongoose from 'mongoose';
-import * as moment from 'moment';
-import { Profesional } from '../../../core/tm/schemas/profesional';
-import { NotificationService } from './NotificationService';
-import { sendSms, ISms } from '../../../utils/roboSender';
-
 import * as debug from 'debug';
+import * as moment from 'moment';
+import * as mongoose from 'mongoose';
+import { Profesional } from '../../../core/tm/schemas/profesional';
+import { ISms, sendSms } from '../../../utils/roboSender';
 import { toArray } from '../../../utils/utils';
+import { Agenda } from '../../turnos/schemas/agenda';
 import { PacienteApp } from '../schemas/pacienteApp';
+import { recordatorio } from '../schemas/recordatorio';
+import { NotificationService } from './NotificationService';
+
 
 const log = debug('RecordatorioController');
 
@@ -52,7 +52,7 @@ export function buscarTurnosARecordar(dayOffset) {
         });
 
         guardarRecordatorioTurno(turnos, (ret) => {
-            resolve();
+            resolve(null);
         });
 
     });

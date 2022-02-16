@@ -1,6 +1,6 @@
-import { RoboModel } from './roboSchema';
-import { INotification } from '../../modules/mobileApp/controller/PushClient';
 import { ExportHudsModel } from '../../modules/huds/export-huds/exportHuds.schema';
+import { INotification } from '../../modules/mobileApp/controller/PushClient';
+import { RoboModel } from './roboSchema';
 
 export interface ISms {
     phone: string;
@@ -62,7 +62,7 @@ export function sendEmail(data: IEmail, options: any = {}) {
 }
 
 export function removeSend(id) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         RoboModel.findById(id, (err, doc: any) => {
             if (doc) {
                 doc.status = 'canceled';
