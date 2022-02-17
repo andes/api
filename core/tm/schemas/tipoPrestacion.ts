@@ -1,4 +1,4 @@
-import { Document, Model, model, Schema } from 'mongoose';
+import { Document, Model, model, Schema, Types } from 'mongoose';
 
 export interface ITipoPrestacion extends Document {
     nombre?: string;
@@ -15,6 +15,7 @@ export interface ITipoPrestacion extends Document {
         semanticTag: String;
     }[];
     ambito: String[];
+    queries: [Types.ObjectId];
 }
 
 
@@ -41,7 +42,8 @@ export const tipoPrestacionSchema = new Schema({
             semanticTag: String,
         }]
     },
-    ambito: [String]
+    ambito: [String],
+    queries: [Types.ObjectId]
 });
 
 /* Se definen los campos virtuals */

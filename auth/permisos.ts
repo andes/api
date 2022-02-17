@@ -60,6 +60,7 @@ export default [
                     { key: 'puedeBorrar', title: 'Borrar agenda', comment: 'Borra agendas en planificación', type: 'boolean' },
                     { key: 'puedeRevision', title: 'Revisar agenda', comment: 'Revisión de agendas', type: 'boolean' },
                     { key: 'puedeNota', title: 'Agregar nota', comment: 'Agregar nota', type: 'boolean' },
+                    { key: 'asignacionMasiva', title: 'Asignación masiva', comment: 'Asignar pacientes de agenda por lote', type: 'boolean' }
                 ]
             },
             {
