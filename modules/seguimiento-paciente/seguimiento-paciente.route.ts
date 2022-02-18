@@ -44,7 +44,8 @@ class SeguimientoPacienteResource extends ResourceBase {
         asignados: {
             field: 'ultimaAsignacion',
             fn: (value) => (value ? { $ne: null } : { $eq: null })
-        }
+        },
+        score: MongoQuery.inArray.withField('score.value')
     };
 
     // override de update para ignorar actualizacion de seguimiento cerrado por fallecimiento
