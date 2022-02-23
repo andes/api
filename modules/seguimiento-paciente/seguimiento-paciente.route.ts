@@ -55,6 +55,29 @@ class SeguimientoPacienteResource extends ResourceBase {
     }
 }
 
+const search = async (req, res, next) => {
+    const options = req.apiOptions();
+    const conditions = { ...req.query };
+    Object.keys(options).map(opt => delete conditions[opt]);
+    let [results, total] = [0, undefined];
+    if (options.skip === 0) {
+        [results, total] = await Promise.all([
+            SeguimientoPacienteCtr.search(conditions, options),
+            SeguimientoPacienteCtr.search(conditions)
+        ]);
+    } else {
+        results = await SeguimientoPacienteCtr.search(conditions, options);
+    }
+    res.json({
+        pagination: {
+            offset: options.skip,
+            limit: options.limit,
+            total: total?.length || undefined
+        },
+        data: results
+    });
+};
+
 const patchAsignacion = async (req, res, next) => {
     try {
         const { seguimientos, profesional } = req.body;
@@ -74,5 +97,7 @@ const patchAsignacion = async (req, res, next) => {
 
 export const SeguimientoPacienteCtr = new SeguimientoPacienteResource({});
 const seguimientoPacienteRouter = SeguimientoPacienteCtr.makeRoutes();
-seguimientoPacienteRouter.post('/seguimientoPaciente/asignaciones', Auth.authenticate(), asyncHandler(patchAsignacion));
 export const SeguimientoPacienteRouter = seguimientoPacienteRouter;
+
+seguimientoPacienteRouter.get('/seguimientoPaciente/search/v2', Auth.authenticate(), asyncHandler(search));
+seguimientoPacienteRouter.post('/seguimientoPaciente/asignaciones', Auth.authenticate(), asyncHandler(patchAsignacion));
