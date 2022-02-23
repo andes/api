@@ -1,3 +1,11 @@
+# [5.83.0](https://github.com/andes/api/compare/v5.82.0...v5.83.0) (2022-02-23)
+
+
+### Features
+
+* **CIT:** queries en prestacion de agenda ([#1626](https://github.com/andes/api/issues/1626)) ([04c23d0](https://github.com/andes/api/commit/04c23d034b65b218dedddc2316ae280db10b2252))
+* **vacunas:** permiso para verificar estado ([#1658](https://github.com/andes/api/issues/1658)) ([fedac56](https://github.com/andes/api/commit/fedac568e3cb9bd57a15d874c6b4e2c1acbf5781))
+
 # [5.82.0](https://github.com/andes/api/compare/v5.81.0...v5.82.0) (2022-02-09)
 
 
