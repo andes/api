@@ -86,13 +86,14 @@ router.post('/censo-diario/csv', Auth.authenticate(), asyncHandler(async (req: a
     csv.write(censoDiario, {
         headers: true, transform: (row) => {
             return {
-                Paciente: `${row.datos.paciente.apellido}, ${row.datos.paciente.nombre} | ${row.datos.paciente.documento}`,
+                Paciente: `${row.datos.paciente.apellido}, ${row.datos.paciente.nombre}`,
+                Documento: `${row.datos.paciente.documento}`,
                 Cama: `${row.datos.cama.nombre}, ${row.datos.cama.sectores[row.datos.cama.sectores.length - 1].nombre}` || `${row.datos.cama.nombre}`,
                 Ingreso: row.ingreso || '',
                 'Pase de': row.paseDe || '',
                 Egreso: row.egreso || '',
                 'Pase a': row.paseA || '',
-                'Fecha de ingreso': row.fechaIngreso ? moment(row.fechaIngreso).format('DD/MM/YYYY hh:mm') : '',
+                'Fecha de ingreso': row.fechaIngreso ? moment(row.fechaIngreso).format('YYYY-MM-DD') : '',
                 'Dias de estada': row.diasEstada || ''
             };
         }
@@ -143,7 +144,7 @@ router.post('/censo-mensual/csv', Auth.authenticate(), asyncHandler(async (req: 
     csv.write(result, {
         headers: true, transform: (row) => {
             return {
-                Fecha: row.fecha ? moment(row.fecha).format('DD/MM/YYYY hh:mm') : 'TOTALES',
+                Fecha: row.fecha ? moment(row.fecha).format('YYYY-MM-DD') : 'TOTALES',
                 'Existencia a las 0': row.censo.existenciaALas0,
                 Ingresos: row.censo.ingresos,
                 'Pases de': row.censo.pasesDe,
