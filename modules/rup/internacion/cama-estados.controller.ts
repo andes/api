@@ -183,7 +183,6 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
                 newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
             }
         },
-
         {
             $match: thirdMatch
         },
@@ -192,29 +191,26 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         }
     ];
 
-    if (ambito === 'guardia') {
-        aggregate.push({
-            $lookup: {
-                from: 'internacionPacienteResumen',
-                localField: 'idInternacion',
-                foreignField: '_id',
-                as: 'estado_internacion'
-            }
-        });
-        aggregate.push({ $unwind: { path: '$estado_internacion', preserveNullAndEmptyArrays: true } });
-        aggregate.push({
-            $addFields: {
-                fechaIngreso: '$estado_internacion.fechaIngreso',
-                fechaAtencion: '$estado_internacion.fechaAtencion',
-                prioridad: '$estado_internacion.prioridad',
-                registros: '$estado_internacion.registros',
-            }
-        });
-        aggregate.push({
-            $unset: 'estado_internacion'
-        });
-    }
-
+    aggregate.push({
+        $lookup: {
+            from: 'internacionPacienteResumen',
+            localField: 'idInternacion',
+            foreignField: '_id',
+            as: 'estado_internacion'
+        }
+    });
+    aggregate.push({ $unwind: { path: '$estado_internacion', preserveNullAndEmptyArrays: true } });
+    aggregate.push({
+        $addFields: {
+            fechaIngreso: '$estado_internacion.fechaIngreso',
+            fechaAtencion: '$estado_internacion.fechaAtencion',
+            prioridad: '$estado_internacion.prioridad',
+            registros: '$estado_internacion.registros',
+        }
+    });
+    aggregate.push({
+        $unset: 'estado_internacion'
+    });
     return await CamaEstados.aggregate(aggregate);
 }
 

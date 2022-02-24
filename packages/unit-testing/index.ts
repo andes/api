@@ -31,8 +31,8 @@ export function getFakeRequest(): Request {
 export function setupUpMongo() {
     let mongoServer: any;
     beforeAll(async () => {
-        mongoServer = new MongoMemoryServer();
-        const mongoUri = await mongoServer.getConnectionString();
+        mongoServer = await MongoMemoryServer.create();
+        const mongoUri = mongoServer.getUri();
         mongoose.connect(mongoUri);
         Connections.logs = mongoose.connection;
     });

@@ -1,18 +1,16 @@
 const mongoose = require('mongoose');
 
-import { store, findById, search, patch } from './camas.controller';
-import * as CamasEstadosController from './cama-estados.controller';
-import { Prestacion } from '../schemas/prestacion';
-import { Camas } from './camas.schema';
-import { CamaEstados } from './cama-estados.schema';
-
 import * as moment from 'moment';
-
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
-
-import * as CensoController from './censo.controller';
 import { Auth } from '../../../auth/auth.class';
+import { Prestacion } from '../schemas/prestacion';
+import * as CamasEstadosController from './cama-estados.controller';
+import { CamaEstados } from './cama-estados.schema';
+import { store } from './camas.controller';
+import { Camas } from './camas.schema';
+import * as CensoController from './censo.controller';
 import { createInternacionPrestacion, estadoOcupada } from './test-utils';
+
 
 const REQMock: any = {
     user: {}
@@ -35,8 +33,8 @@ const otraUnidadOrganizativa = {
 };
 
 beforeAll(async () => {
-    mongoServer = new MongoMemoryServer();
-    const mongoUri = await mongoServer.getConnectionString();
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
     mongoose.connect(mongoUri);
 });
 
