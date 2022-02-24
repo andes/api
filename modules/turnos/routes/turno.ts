@@ -357,7 +357,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
 
             // Se consulta si el turno estaba asociado a una solicitud
             if (req.body.reasignado) {
-                const prestacion: any = await Prestacion.findOne({ inicio: 'top', 'solicitud.historial.turno': req.body.reasignado.anterior.idTurno });
+                const prestacion: any = await Prestacion.findOne({ inicio: 'top', 'solicitud.historial.idTurnoSuspendido': req.body.reasignado.anterior.idTurno });
                 if (prestacion) {
                     const dataHistorial = {
                         op: 'asignarTurno',

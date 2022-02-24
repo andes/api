@@ -13,7 +13,8 @@ export const PrestacionSolicitudHistorialschema = new mongoose.Schema({
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
     },
-    observaciones: String
+    observaciones: String,
+    idTurnoSuspendido: mongoose.Schema.Types.ObjectId
 });
 
 // Habilitar plugin de auditoría

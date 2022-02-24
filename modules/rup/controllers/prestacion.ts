@@ -30,9 +30,8 @@ export async function liberarRefTurno(turno, req) {
         if (!prestacion) {
             return { err: 'No se encontro prestacion para el turno' };
         } else if (prestacion.solicitud) {
-            prestacion.solicitud.turno = null;
-
             updateRegistroHistorialSolicitud(prestacion.solicitud, req.body);
+            prestacion.solicitud.turno = null;
             Auth.audit(prestacion, req);
             return prestacion.save();
         }
@@ -85,6 +84,9 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
     const observaciones = datos.op === 'estadoPush' || datos.op === 'citar' ? datos.estado.observaciones : datos.observaciones;
     if (observaciones) {
         registroHistorial.observaciones = observaciones;
+        if (observaciones.includes('agendaSuspendida')) {
+            registroHistorial.idTurnoSuspendido = solicitud.turno;
+        }
     }
     if (datos.turnos) {
         registroHistorial.turno = datos.turnos[0];
