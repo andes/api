@@ -270,7 +270,7 @@ export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
                 direccion[0].ubicacion.barrio = null;
             }
         }
-        if (direccion[0].georeferencia) {
+        if (direccion[0].geoReferencia) {
             paciente = set(paciente, direccion);
             PacienteCtr.update(paciente.id, paciente, configPrivate.userScheduler as any);
         }
