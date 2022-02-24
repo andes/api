@@ -1,11 +1,11 @@
+import * as archiver from 'archiver';
+import { getCdaAdjunto } from '../../../modules/cda/controller/CDAPatient';
+import { makeFs } from '../../../modules/cda/schemas/CDAFiles';
+import { InformeRUP } from '../../descargas/informe-rup/informe-rup';
 import { Prestacion } from '../../rup/schemas/prestacion';
-import { getHUDSExportarModel } from './hudsFiles';
 import { exportHudsLog } from './exportHuds.log';
 import { ExportHudsModel } from './exportHuds.schema';
-import * as archiver from 'archiver';
-import { InformeRUP } from '../../descargas/informe-rup/informe-rup';
-import { makeFs } from '../../../modules/cda/schemas/CDAFiles';
-import { getCdaAdjunto } from '../../../modules/cda/controller/CDAPatient';
+import { getHUDSExportarModel } from './hudsFiles';
 
 import moment = require('moment');
 
@@ -76,7 +76,7 @@ export async function createFile(idExportHuds) {
                     peticionExport.status = 'completed';
                     peticionExport.updatedAt = new Date();
                     peticionExport.save();
-                    return resolve();
+                    return resolve(null);
                 }
             );
 

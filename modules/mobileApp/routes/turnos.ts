@@ -1,15 +1,15 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { Agenda } from '../../turnos/schemas/agenda';
-import * as agendaCtrl from '../../turnos/controller/agenda';
+import { PatientNotFound } from '../../../core-v2/mpi/paciente/paciente.error';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-import { Auth } from './../../../auth/auth.class';
-import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { PatientNotFound } from '../../../core-v2/mpi/paciente/paciente.error';
-import { turnosLog, agendaLog } from '../../turnos/citasLog';
+import { agendaLog, turnosLog } from '../../turnos/citasLog';
+import * as agendaCtrl from '../../turnos/controller/agenda';
+import { Agenda } from '../../turnos/schemas/agenda';
+import * as recordatorioController from '../controller/RecordatorioController';
+import { Auth } from './../../../auth/auth.class';
 
 const router = express.Router();
 
@@ -135,7 +135,7 @@ router.get('/turnos', async (req: any, res, next) => {
                 const datos = turno.reasignado.anterior;
                 Agenda.findById(datos.idAgenda, (err, ag: any) => {
                     if (err) {
-                        resolve();
+                        resolve(null);
                     }
                     const bloque = ag.bloques.id(datos.idBloque);
                     if (bloque) {
@@ -143,9 +143,9 @@ router.get('/turnos', async (req: any, res, next) => {
                         turno.reasignado_anterior = t;
                         // turno.confirmadoAt = turno.reasignado.confirmadoAt;
                         delete turno['reasignado'];
-                        resolve();
+                        resolve(null);
                     } else {
-                        resolve();
+                        resolve(null);
                     }
                 });
             });

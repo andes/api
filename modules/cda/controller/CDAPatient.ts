@@ -801,7 +801,7 @@ export async function getCdaAdjunto(cda, fileID: string) {
 function deleteCDA(id) {
     const cdaFiles = makeFs();
     return new Promise((resolve, reject) => {
-        cdaFiles.unlink(id, () => { return resolve(); });
+        cdaFiles.unlink(id, () => { return resolve(null); });
     });
 }
 
