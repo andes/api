@@ -1,5 +1,6 @@
 import { ObjectId } from '@andes/core';
 import { AndesDoc } from '@andes/mongoose-plugin-audit';
+import { Prestacion } from 'modules/rup/schemas/prestacion';
 import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
 import { ISnomedConcept, SnomedConcept } from '../../schemas/snomed-concept';
@@ -64,7 +65,7 @@ export const InternacionResumenSchema = new Schema({
     fechaAtencion: Date,
     tipo_egreso: { type: String, required: false },
     deletedAt: { type: Date, required: false },
-    idPrestacion: SchemaTypes.ObjectId,
+    idPrestacion: { type: SchemaTypes.ObjectId, ref: 'prestacion' },
     prioridad: new Schema({
         id: Number,
         label: String,
