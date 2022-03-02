@@ -1,3 +1,16 @@
+# [5.84.0](https://github.com/andes/api/compare/v5.83.0...v5.84.0) (2022-03-02)
+
+
+### Bug Fixes
+
+* **GDU:** se redefine post para evitar crear duplicados ([#1654](https://github.com/andes/api/issues/1654)) ([1e9ddc4](https://github.com/andes/api/commit/1e9ddc47d112ffcd74cf0a514deb175eb1fbd4ea))
+* **TOP-122:** Agenda suspendida ([#1655](https://github.com/andes/api/issues/1655)) ([5f00879](https://github.com/andes/api/commit/5f00879e4500d9e657023805241a99cce7bcd7c5))
+
+
+### Features
+
+* **mapa-camas:** mostrar uso del respirador ([#1662](https://github.com/andes/api/issues/1662)) ([99baac4](https://github.com/andes/api/commit/99baac4928ad01121f7e293089004ad90215abbc))
+
 # [5.83.0](https://github.com/andes/api/compare/v5.82.0...v5.83.0) (2022-02-23)
 
 
