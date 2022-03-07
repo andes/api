@@ -221,35 +221,24 @@ router.get('/profesionales/guia', async (req, res, next) => {
 });
 
 router.get('/profesionales/matching', async (req, res, next) => {
-    const opciones = {};
-
-    if (req.query.documento) {
-        opciones['documento'] = req.query.documento;
+    if (!req.query.documento || !req.query.sexo) {
+        throw 'Error matching requiere documento y sexo';
     }
-
-    if (Object.keys(opciones).length !== 0) {
-        opciones['profesionalMatriculado'] = true;
-        const profEncontrados: any = await Profesional.find(opciones);
-        const arrayProf = [];
-        let resultado;
-        if (profEncontrados) {
-            profEncontrados.forEach(element => {
-                resultado = {
-                    id: element.id,
-                    nombre: element.nombre,
-                    sexo: element.sexo,
-                    apellido: element.apellido,
-                    documento: element.documento,
-                    fechaNacimiento: element.fechaNacimiento
-                };
-                arrayProf.push(resultado);
-            });
-
-        }
-        res.json(arrayProf);
-    } else {
-        res.json();
-    }
+    let profesionales: any = await Profesional.find({
+        documento: req.query.documento,
+        sexo: req.query.sexo
+    });
+    profesionales = profesionales.map(p => {
+        return {
+            id: p.id,
+            nombre: p.nombre,
+            sexo: p.sexo,
+            apellido: p.apellido,
+            documento: p.documento,
+            fechaNacimiento: p.fechaNacimiento
+        };
+    });
+    res.json(profesionales);
 });
 
 router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, res, next) => {
