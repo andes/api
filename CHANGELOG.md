@@ -1,3 +1,10 @@
+# [5.85.0](https://github.com/andes/api/compare/v5.84.0...v5.85.0) (2022-03-09)
+
+
+### Features
+
+* **EP:** filtro score ([#1664](https://github.com/andes/api/issues/1664)) ([027e4bb](https://github.com/andes/api/commit/027e4bb1e8bd0daedbc000614e5958adb61cc8f5))
+
 # [5.84.0](https://github.com/andes/api/compare/v5.83.0...v5.84.0) (2022-03-02)
 
 
