@@ -29,6 +29,10 @@ export interface IRelacion {
     documento: String;
     foto: String;
     fotoId?: Schema.Types.ObjectId;
+    fechaNacimiento?: Date | moment.Moment;
+    numeroIdentificacion?: String;
+    fechaFallecimiento?: Date | moment.Moment;
+    activo?: Boolean;
 }
 
 export interface IPaciente {
