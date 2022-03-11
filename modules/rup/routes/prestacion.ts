@@ -643,8 +643,9 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 break;
             case 'desasociarTurno':
                 data.solicitud.turno = null;
-                data.estados.push({ tipo: 'anulada' });
-                break;
+                const prestation_back = await saveEnHistorial(data, { tipo: 'anulada' }, req);
+                await Prestacion.findOneAndRemove({ _id: data._id });
+                return res.json(prestation_back);
             case 'referir':
                 if (req.body.estado) {
                     data.estados.push();
