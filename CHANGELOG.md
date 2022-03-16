@@ -1,3 +1,11 @@
+## [5.85.1](https://github.com/andes/api/compare/v5.85.0...v5.85.1) (2022-03-16)
+
+
+### Bug Fixes
+
+* **jobSisa:** mathc updatedAt ([#1672](https://github.com/andes/api/issues/1672)) ([2e93e22](https://github.com/andes/api/commit/2e93e22eadefe9e22ce3a4faaf60b2809472112b))
+* **TOP-123:** No mostrar como pendientes las solicitudes con turnos dados en el adshboard ([#1657](https://github.com/andes/api/issues/1657)) ([e20bdfe](https://github.com/andes/api/commit/e20bdfe11880ee3df7861275fc7d11db6782d405))
+
 # [5.85.0](https://github.com/andes/api/compare/v5.84.0...v5.85.0) (2022-03-09)
 
 
