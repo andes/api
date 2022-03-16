@@ -15,20 +15,10 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
     const pipelineConfirmados = [
         {
             $match: {
-                $or: [
-                    {
-                        createdAt: {
-                            $gte: start,
-                            $lte: end
-                        },
-                    },
-                    {
-                        updatedAt: {
-                            $gte: start,
-                            $lte: end
-                        }
-                    }
-                ],
+                createdAt: {
+                    $gte: start,
+                    $lte: end
+                },
                 'type.name': 'covid19'
             }
         },
