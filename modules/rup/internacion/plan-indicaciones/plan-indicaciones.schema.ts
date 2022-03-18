@@ -5,17 +5,7 @@ import { ProfesionalSubSchema } from '../../../../core/tm/schemas/profesional';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
 import { SnomedConcept } from '../../schemas/snomed-concept';
 
-export interface IPlanIndicaciones {
-
-    // estados: {
-    //     tipo: string,
-    //     fecha: Date
-    // }[];
-    // estadoActual: {
-    //     tipo: string,
-    //     fecha: Date
-    // };
-}
+export interface IPlanIndicaciones { }
 
 export type IPlanIndicacionesDoc = AndesDoc<IPlanIndicaciones>;
 
@@ -87,4 +77,4 @@ export const PlanIndicacionesEventosSchema = new Schema({
 
 PlanIndicacionesEventosSchema.plugin(AuditPlugin);
 
-export const PlanIndicacionesEventos = model('internacionPlanIndicacionesEventos', PlanIndicacionesEventosSchema, 'internacionPlaIndicacionesEventos');
+export const PlanIndicacionesEventos = model('internacionPlanIndicacionesEventos', PlanIndicacionesEventosSchema, 'internacionPlanIndicacionesEventos');
