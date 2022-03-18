@@ -22,3 +22,9 @@ export const updateValidadosLog = new Logger({
     application: 'andes'
 });
 
+export const updateRelacionesLog = new Logger({
+    connection: Connections.logs,
+    module: 'mpi',
+    type: 'mpi-update-relaciones',
+    application: 'andes'
+});

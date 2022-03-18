@@ -1,10 +1,12 @@
 import { Paciente } from '../paciente/paciente.schema';
 import { PacienteCtr } from '../paciente/paciente.routes';
 import { userScheduler } from '../../../config.private';
+import { updateRelacionesLog } from '../mpi.log';
 
 const dataLog: any = new Object(userScheduler);
 dataLog.body = { _id: null };
 dataLog.method = null;
+const logUpdateRelaciones = updateRelacionesLog.startTrace();
 
 export const updateRelacionesPacientes = async (done) => {
     const cursor = Paciente.find({
@@ -27,8 +29,8 @@ export const updateRelacionesPacientes = async (done) => {
                     const relacionado: any = await Paciente.findById(rel.referencia); // un paciente relacionado
                     if (relacionado) {
                         await actualizarRelacion(rel, relacionado);
-                        if (relacionado.relaciones && relacionado.relaciones.length > 0) {
-                            const relacion = relacionado.relaciones.find(r => r.referencia.toString() === pac.id.toString());
+                        if (relacionado.relaciones?.length) {
+                            const relacion = relacionado.relaciones.find(r => r.referencia?.toString() === pac.id.toString());
                             await actualizarRelacion(relacion, pac);
 
 
@@ -38,8 +40,8 @@ export const updateRelacionesPacientes = async (done) => {
                 }
                 await PacienteCtr.update(pac._id, { relaciones: pac.relaciones }, dataLog);
             }
-            // }
         } catch (error) {
+            logUpdateRelaciones.error('updateRelacionesPacientes', pac, error, userScheduler);
             return;
         }
     };

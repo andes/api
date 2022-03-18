@@ -39,8 +39,8 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
         },
         body: paciente
     };
-    const direccionOriginal = paciente._original.direccion[0] || null;
-    const direccionActual = paciente.direccion[0] || null;
+    const direccionOriginal = paciente._original.direccion?.[0] || null;
+    const direccionActual = paciente.direccion?.[0] || null;
     // Verifica si hubo algun cambio en direccion, localidad y/o provincia
     if (addressChanged(direccionOriginal, direccionActual)) {
         await updateGeoreferencia(paciente);
