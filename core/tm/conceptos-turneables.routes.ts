@@ -18,12 +18,12 @@ class ConceptoTurneableResource extends ResourceBase {
         auditable: MongoQuery.equalMatch,
         ambito: MongoQuery.equalMatch,
         permisos: {
-            field: '_id',
+            field: 'conceptId',
             fn: (value) => {
                 return { $in: value };
             }
         },
-        ids: MongoQuery.inArray.withField('_id')
+        conceptIds: MongoQuery.inArray.withField('conceptId')
     };
     middlewares = [Auth.authenticate()];
     routesAuthorization = {
@@ -43,16 +43,16 @@ class ConceptoTurneableResource extends ResourceBase {
     };
 
     /**
-     * Devuelve todas los conceptos turneables dado un permiso. Esta funcion sirve para transformar los IDS a conceptId.
+     * Devuelve todas los conceptos turneables dado un permiso.
      * Si devuelve null es que se tiene todos los permisos. Sino devuelve con array.
      *
      * @param req Request de express
      * @param permiso String de permisos. Ej: rup:tipoPrestacion:?
      */
     async getByPermisos(req: Request, permiso: string): Promise<ISnomedConcept[]> {
-        const prestacionesIDs = Auth.getPermissions(req, permiso);
-        if (prestacionesIDs.length && prestacionesIDs[0] !== '*') {
-            const conceptos = await this.search({ permisos: prestacionesIDs }, {}, req);
+        const prestacionesConceptIds = Auth.getPermissions(req, permiso);
+        if (prestacionesConceptIds.length && prestacionesConceptIds[0] !== '*') {
+            const conceptos = await this.search({ permisos: prestacionesConceptIds }, {}, req);
             return conceptos;
         }
         return null;

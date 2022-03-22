@@ -230,9 +230,9 @@ router.get('/agenda/:id?', (req, res, next) => {
             query.where('nominalizada').equals(false);
         }
 
-        // Filtra por el array de tipoPrestacion enviado como parametro
+        // Filtra por el array de tipoPrestacion enviado como parametro segun los permisos de usuario
         if (req.query.tipoPrestaciones) {
-            query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones);
+            query.where('tipoPrestaciones.conceptId').in(req.query.tipoPrestaciones);
         }
 
         if (req.query.profesionales) {
