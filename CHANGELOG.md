@@ -1,3 +1,11 @@
+## [5.85.2](https://github.com/andes/api/compare/v5.85.1...v5.85.2) (2022-03-23)
+
+
+### Bug Fixes
+
+* **job-sisa:** elimina update temporal ([#1676](https://github.com/andes/api/issues/1676)) ([220260c](https://github.com/andes/api/commit/220260ca02e1753ea1b9eb90b965224cebd006ad))
+* **MAT-80:** Falta firma del profesional ([#1659](https://github.com/andes/api/issues/1659)) ([f62f343](https://github.com/andes/api/commit/f62f34335250990e117d85eb8e560dab60a2d08f))
+
 ## [5.85.1](https://github.com/andes/api/compare/v5.85.0...v5.85.1) (2022-03-16)
 
 
