@@ -11,6 +11,7 @@ import { AndesDrive } from '@andes/drive';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { vacunas } from '../../vacunas/schemas/vacunas';
+import { checkFichaAbierta } from '../../forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 
 const ObjectId = Types.ObjectId;
 
@@ -23,103 +24,33 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         return next(403);
     }
     try {
-        const idPrestacion = req.body.id;
-        const fecha = moment(req.body.fecha).toDate();
-
-        let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
-        if (Auth.check(req, 'cda:organizacion') && req.body.organizacion) {
-            orgId = req.body.organizacion;
-        }
-        const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
-        if (yaExiste) {
-            return res.json({ cda: yaExiste._id, paciente: yaExiste.paciente?._id });
-        }
-
-        const dataPaciente = req.body.paciente;
-        const dataProfesional = req.body.profesional;
-
-        // Devuelve un Loinc asociado al código SNOMED
-        const prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
-        if (!prestacion) {
-            // Es obligatorio que posea prestación
-            return next({ error: `prestacion_invalida ${req.body.tipoPrestacion}` });
-        }
-        const cie10Code = req.body.cie10;
-        const file: string = req.body.file;
-        const texto = req.body.texto;
-        // Terminar de decidir esto
-        const organizacion = await Organizacion.findById(orgId, { _id: 1, nombre: 1 });
-        let cie10 = null;
-        if (cie10Code) {
-            cie10 = await Cie10.findOne({
-                $or: [
-                    { codigo: cie10Code },
-                    { codigo: cie10Code + '.9' },
-                    { codigo: cie10Code + '.8' }]
-            });
-            if (!cie10) {
-                return next({ error: `cie10_invalid  ${cie10Code}` });
-            }
-        }
-        let confidencialidad = 'N';
-        if (req.body.confidencialidad === 'R') {
-            confidencialidad = req.body.confidencialidad;
-        }
-
-        const paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
-        if (!paciente) {
-            return next({ error: 'paciente_inexistente' });
-        }
-        const uniqueId = String(new ObjectId());
-
-        let fileData, adjuntos;
-        if (file) {
-            if (file.startsWith('id:')) {
-                const id = file.substring(3);
-                const adjunto = await AndesDrive.find(id);
-                if (adjunto) {
-                    fileData = {
-                        id,
-                        is64: false,
-                        mime: adjunto.mimetype,
-                        data: `${id}.${adjunto.extension}`
-                    };
-                    adjuntos = [{ path: fileData.data, id: ObjectId(fileData.id), adapter: 'drive' }];
-                } else {
-                    return next({ error: 'file_not_exists' });
-                }
-            } else {
-                const fileObj: any = cdaCtr.base64toStream(file);
-                fileObj.metadata = {
-                    cdaId: ObjectId(uniqueId),
-                    paciente: ObjectId(paciente.id)
-                };
-                fileData = await cdaCtr.storeFile(fileObj);
-                adjuntos = [{ path: fileData.data, id: fileData.id }];
-            }
-        }
-        const cda = cdaCtr.generateCDA(uniqueId, confidencialidad, paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
-
-        const metadata = {
-            paciente: paciente._id,
-            prestacion,
-            profesional: dataProfesional,
-            organizacion,
-            adjuntos,
-            fecha,
-            extras: {
-                id: idPrestacion,
-                organizacion: organizacion._id
-            }
-        };
-        const obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-        res.json({ cda: uniqueId, paciente: paciente._id });
-
-        EventCore.emitAsync('huds:cda:create', { cda: uniqueId, paciente: paciente._id });
-
+        return await createCDA(req, res, next);
     } catch (e) {
         return next(e);
     }
+});
+
+router.post('/create/sisa-covid', cdaCtr.validateMiddleware, async (req, res, next) => {
+    if (!Auth.check(req, 'cda:post')) {
+        return next(403);
+    }
+
+    const { documento, sexo } = req.body.paciente;
+    const cda = req.body.cda;
+    const pacientes = await PacienteCtr.search({ documento, sexo, activo: true }); // Identificamos el registro de paciente
+
+    if (pacientes.length !== 1) {
+        return next('No es posible identificar al paciente.');
+    }
+
+    const paciente = pacientes[0];
+    const fichaAbierta = checkFichaAbierta(paciente._id, cda.fecha); // Verificamos que no existan registros previos para el caso
+
+    if (fichaAbierta) {
+        return next('El caso ya fue registrado.');
+    }
+    req.body.paciente = paciente;
+    return await createCDA(req, res, next);
 });
 
 /**
@@ -415,5 +346,100 @@ router.get('/:id/:name', async (req: any, res, next) => {
     }
 });
 
+async function createCDA(req, res, next) {
+    const idPrestacion = req.body.id;
+    const fecha = moment(req.body.fecha).toDate();
+
+    let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
+    if (Auth.check(req, 'cda:organizacion') && req.body.organizacion) {
+        orgId = req.body.organizacion;
+    }
+    const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
+    if (yaExiste) {
+        return res.json({ cda: yaExiste._id, paciente: yaExiste.paciente?._id });
+    }
+
+    const dataPaciente = req.body.paciente;
+    const dataProfesional = req.body.profesional;
+
+    // Devuelve un Loinc asociado al código SNOMED
+    const prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
+    if (!prestacion) {
+        // Es obligatorio que posea prestación
+        return next({ error: `prestacion_invalida ${req.body.tipoPrestacion}` });
+    }
+    const cie10Code = req.body.cie10;
+    const file: string = req.body.file;
+    const texto = req.body.texto;
+    // Terminar de decidir esto
+    const organizacion = await Organizacion.findById(orgId, { _id: 1, nombre: 1 });
+    let cie10 = null;
+    if (cie10Code) {
+        cie10 = await Cie10.findOne({
+            $or: [
+                { codigo: cie10Code },
+                { codigo: cie10Code + '.9' },
+                { codigo: cie10Code + '.8' }]
+        });
+        if (!cie10) {
+            return next({ error: `cie10_invalid  ${cie10Code}` });
+        }
+    }
+    let confidencialidad = 'N';
+    if (req.body.confidencialidad === 'R') {
+        confidencialidad = req.body.confidencialidad;
+    }
+
+    const paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
+    if (!paciente) {
+        return next({ error: 'paciente_inexistente' });
+    }
+    const uniqueId = String(new ObjectId());
+
+    let fileData, adjuntos;
+    if (file) {
+        if (file.startsWith('id:')) {
+            const id = file.substring(3);
+            const adjunto = await AndesDrive.find(id);
+            if (adjunto) {
+                fileData = {
+                    id,
+                    is64: false,
+                    mime: adjunto.mimetype,
+                    data: `${id}.${adjunto.extension}`
+                };
+                adjuntos = [{ path: fileData.data, id: ObjectId(fileData.id), adapter: 'drive' }];
+            } else {
+                return next({ error: 'file_not_exists' });
+            }
+        } else {
+            const fileObj: any = cdaCtr.base64toStream(file);
+            fileObj.metadata = {
+                cdaId: ObjectId(uniqueId),
+                paciente: ObjectId(paciente.id)
+            };
+            fileData = await cdaCtr.storeFile(fileObj);
+            adjuntos = [{ path: fileData.data, id: fileData.id }];
+        }
+    }
+    const cda = cdaCtr.generateCDA(uniqueId, confidencialidad, paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
+
+    const metadata = {
+        paciente: paciente._id,
+        prestacion,
+        profesional: dataProfesional,
+        organizacion,
+        adjuntos,
+        fecha,
+        extras: {
+            id: idPrestacion,
+            organizacion: organizacion._id
+        }
+    };
+    await cdaCtr.storeCDA(uniqueId, cda, metadata);
+    EventCore.emitAsync('huds:cda:create', { cda: uniqueId, paciente: paciente._id });
+    res.json({ cda: uniqueId, paciente: paciente._id });
+
+}
 
 export = router;
