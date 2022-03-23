@@ -4,13 +4,13 @@ import { userScheduler } from '../config.private';
 
 async function run(done) {
     const concepts = await ConceptosTurneablesCtr.search({});
-    const cursor = await AuthUsers.find({ usuario: 34377650 }).cursor({ batchSize: 100 });
+    const cursor = await AuthUsers.find({}).cursor({ batchSize: 100 });
     const updateUsuario = async (usuario: IAuthUsersDoc) => {
         try {
-            usuario.organizaciones.map(org => {
+            usuario.organizaciones.forEach(org => {
                 const permisosNew = [];
                 const ids = []; // ids de conceptos
-                org.permisos.map(permiso => {
+                org.permisos.forEach(permiso => {
                     if (permiso.slice(0, 19) === 'rup:tipoPrestacion:') {
                         ids.push(permiso.slice(19, permiso.length));
                     } else {
@@ -18,7 +18,7 @@ async function run(done) {
                     }
                 });
                 // se mapean los ids para generar los nuevos permisos en funcion de conceptIds
-                ids.map(id => {
+                ids.forEach(id => {
                     /* const conceptId (aclaracion): si el mapeo no existe puede que el permiso ya este configurado como conceptId.
                        En este caso lo insertamos como estaba para evitar sobrescribir como undefined */
                     const conceptId = concepts.find(c => {

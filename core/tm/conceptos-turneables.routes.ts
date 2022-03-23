@@ -50,9 +50,9 @@ class ConceptoTurneableResource extends ResourceBase {
      * @param permiso String de permisos. Ej: rup:tipoPrestacion:?
      */
     async getByPermisos(req: Request, permiso: string): Promise<ISnomedConcept[]> {
-        const prestacionesConceptIds = Auth.getPermissions(req, permiso);
-        if (prestacionesConceptIds.length && prestacionesConceptIds[0] !== '*') {
-            const conceptos = await this.search({ permisos: prestacionesConceptIds }, {}, req);
+        const conceptIds = Auth.getPermissions(req, permiso);
+        if (conceptIds.length && conceptIds[0] !== '*') {
+            const conceptos = await this.search({ permisos: conceptIds }, {}, req);
             return conceptos;
         }
         return null;
