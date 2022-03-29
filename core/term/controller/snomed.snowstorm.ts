@@ -62,12 +62,12 @@ export function filterRelationships(concept, { parent = true }) {
     const result = [];
     const relationships = concept.relationships;
     relationships.forEach((rel) => {
-        if (rel.active === true && ((parent && rel.typeId === IsASct) || (!parent && rel.typeId !== IsASct))) {
+        if (rel.active === true) {
             result.push({
-                conceptId: rel.target.conceptId,
-                term: rel.target.preferredTerm,
-                fsn: rel.target.fullySpecifiedName,
-                type: rel.characteristicType.conceptId === 'INFERRED_RELATIONSHIP' ? 'inferred' : 'stated'
+                conceptId: rel.conceptId,
+                term: rel.fsn.term,
+                fsn: rel.fsn,
+                type: rel.characteristicType?.conceptId === 'INFERRED_RELATIONSHIP' ? 'inferred' : 'stated'
             });
         }
     });
