@@ -13,15 +13,15 @@ import { FormsEpidemiologia } from '../forms/forms-epidemiologia/forms-epidemiol
 
 const dataLog: any = new Object(userScheduler);
 
-function moreThan14Days(seguimientos) {
+function moreThan14Days(seguimientos, data) {
     const ultimoSeguimiento = seguimientos.sort((a, b) => b.fechaInicio - a.fechaInicio)[0];
-    return moment().diff(ultimoSeguimiento.fechaInicio, 'days') >= 14 ? true : false;
+    return moment(data.createdAt).diff(ultimoSeguimiento.fechaInicio, 'days') >= 14 ? true : false;
 }
 
 EventCore.on('epidemiologia:seguimiento:create', async (data) => {
     try {
         const seguimientos = await SeguimientoPaciente.find({ 'paciente.id': data.paciente.id });
-        if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos))) {
+        if (seguimientos.length <= 0 || (seguimientos.length > 0 && moreThan14Days(seguimientos, data))) {
             const mpiSections = data.secciones.find(s => s.name === SECCION_MPI);
             const contactosEstrechos = data.secciones.find(s => s.name === SECCION_CONTACTOS_ESTRECHOS);
             const organizacionSeguimiento = await getOrganizacionSeguimiento(data);
