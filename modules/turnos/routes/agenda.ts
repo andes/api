@@ -283,39 +283,33 @@ router.get('/agenda/:id?', (req, res, next) => {
 router.post('/agenda', async (req, res, next) => {
     const data: any = new Agenda(req.body);
     Auth.audit(data, req);
+    const objetoLog: any = {
+        accion: 'Crear Agenda',
+        ruta: req.url,
+        method: req.method,
+        data: {
+            horaInicio: req.body.horaInicio,
+            horaFin: req.body.horaFin,
+            profesionales: req.body.profesionales,
+            tipoPrestaciones: req.body.tipoPrestaciones
+        }
+    };
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
         if (!mensajesSolapamiento.tipoError) {
             const dataSaved = await data.save();
-            const objetoLog = {
-                accion: 'Crear Agenda',
-                ruta: req.url,
-                method: req.method,
-                data: dataSaved,
-            };
+            objetoLog.data.id = dataSaved._id;
             agendaLog.info('insert', objetoLog, req);
             EventCore.emitAsync('citas:agenda:create', dataSaved);
             res.json(dataSaved);
         } else {
             // puede ser un mensaje de solapamiento o una excepción (Error)
-            const objetoLog = {
-                accion: 'Crear Agenda',
-                ruta: req.url,
-                method: req.method,
-                data: req.body,
-                err: mensajesSolapamiento
-            };
+            objetoLog.err = mensajesSolapamiento;
             agendaLog.info('insert', objetoLog, req);
             return res.json(mensajesSolapamiento);
         }
     } catch (error) {
-        const objetoLog = {
-            accion: 'Crear Agenda',
-            ruta: req.url,
-            method: req.method,
-            data: req.body,
-            err: error
-        };
+        objetoLog.err = error;
         agendaLog.error('insert', objetoLog, req);
         return next(error);
     }
@@ -323,13 +317,18 @@ router.post('/agenda', async (req, res, next) => {
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
 router.post('/agenda/clonar/:idAgenda', async (req, res, next) => {
-
+    const objetoLog: any = {
+        accion: 'Crear Agenda',
+        ruta: req.url,
+        method: req.method,
+        idAgendaOriginal: req.params.idAgenda,
+        clones: req.body.clones
+    };
     try {
-
         const idagenda = req.params.idAgenda;
         const clones = req.body.clones;
-
         const agenda = await Agenda.findById(idagenda);
+
         if (!agenda) {
             return next('no existe la agenda');
         }
@@ -337,8 +336,9 @@ router.post('/agenda/clonar/:idAgenda', async (req, res, next) => {
         for (const value of clones) {
             const nueva = agendaCtrl.agendaNueva(agenda, value, req);
             const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(nueva);
+            objetoLog.err = mensajesSolapamiento;
             if (mensajesSolapamiento.tipoError) {
-                agendaLog.error('clonar', agenda, mensajesSolapamiento, req);
+                agendaLog.info('clonar', objetoLog, req);
                 return res.json(mensajesSolapamiento);
             }
         }
@@ -348,15 +348,18 @@ router.post('/agenda/clonar/:idAgenda', async (req, res, next) => {
             Auth.audit(nueva, req);
 
             try {
-                const nuevaAgenda = await agendaCtrl.saveAgenda(nueva);
-
+                const nuevaAgenda: any = await agendaCtrl.saveAgenda(nueva);
+                objetoLog.data.id = nuevaAgenda._id;
+                objetoLog.data.horaInicio = nuevaAgenda.horaInicio;
+                objetoLog.data.horaFin = nuevaAgenda.horaFin;
+                objetoLog.data.profesionales = nuevaAgenda.profesionales;
+                objetoLog.data.tipoPrestaciones = nuevaAgenda.tipoPrestaciones;
                 EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
-                agendaLog.info('clonar', nuevaAgenda, req);
+                agendaLog.info('clonar', objetoLog, req);
                 return nuevaAgenda;
             } catch (err) {
                 return err;
             }
-
         });
 
         const resultado = await Promise.all(listaSaveAgenda);
@@ -370,33 +373,46 @@ router.post('/agenda/clonar/:idAgenda', async (req, res, next) => {
 });
 
 router.put('/agenda/:id', async (req, res, next) => {
+    const objetoLog: any = {
+        accion: 'Editar Agenda en estado Planificación',
+        ruta: req.url,
+        method: req.method,
+        data: req.body
+    };
+    objetoLog.data.id = req.params.id;
+
     try {
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
         if (mensajesSolapamiento.tipoError) {
-            agendaLog.error('update', req.body, mensajesSolapamiento, req);
+            objetoLog.err = mensajesSolapamiento;
+            agendaLog.info('update', mensajesSolapamiento, req);
             return res.json(mensajesSolapamiento);
         }
         const data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        const objetoLog = {
-            accion: 'Editar Agenda en estado Planificación',
-            ruta: req.url,
-            method: req.method,
-            data,
-            err: false
-        };
+
         agendaLog.info('update', objetoLog, req);
         res.json(data);
         EventCore.emitAsync('citas:agenda:update', data);
 
     } catch (err) {
+        objetoLog.err = err;
+        agendaLog.error('update', objetoLog, req);
         return next(err);
     }
 });
 
 router.patch('/agenda/:id*?', (req, res, next) => {
     let event = { object: '', accion: '', data: null };
-    // Hubo que agregar un control por si no se tiene el idagenda (en los casos en que el patch se haga desde RUP)
+    const objetoLog: any = {
+        accion: req.body.op,
+        ruta: req.url,
+        method: req.method,
+        data: req.body
+    };
+    objetoLog.data.id = req.params?.id || undefined;
+
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        // En caso de que el patch se haga desde RUP no viene el id de la agenda
         const t = req.body.turnos;
         if (t.length > 0) {
             Agenda.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(t[0]) }, (err, data) => {
@@ -408,13 +424,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
                             Auth.audit(data[0], req);
                             data[0].save((error) => {
-                                const objetoLog = {
-                                    accion: req.body.op,
-                                    ruta: req.url,
-                                    method: req.method,
-                                    data,
-                                    err: error || false
-                                };
+                                objetoLog.data.id = data[0]._id;
                                 agendaLog.info('update', objetoLog, req);
                                 if (error) {
                                     debug('andes')(error);
@@ -433,13 +443,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             agendaCtrl.codificarTurno(req, data2, t[0]).then(() => {
                                 Auth.audit(data2[0], req);
                                 data2[0].save((error) => {
-                                    const objetoLog = {
-                                        accion: req.body.op,
-                                        ruta: req.url,
-                                        method: req.method,
-                                        data: data2,
-                                        err: error || false
-                                    };
+                                    objetoLog.err = error || undefined;
                                     agendaLog.info('update', objetoLog, req);
                                     // PAra probar ahora
                                     EventCore.emitAsync('citas:agenda:update', data2[0]);
@@ -605,13 +609,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                 if (event.data) {
                     EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
                 }
-                const objetoLog = {
-                    accion: req.body.op,
-                    ruta: req.url,
-                    method: req.method,
-                    data,
-                    err: error || false
-                };
+                objetoLog.err = error || undefined;
                 agendaLog.info('update', objetoLog, req);
                 if (error) {
                     return next(error);
