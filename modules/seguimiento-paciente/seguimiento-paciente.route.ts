@@ -64,14 +64,14 @@ const getListadoCsv = async (req, res, next) => {
     csv.write(listado, {
         headers: true, transform: (row) => {
             const ultimaAsignacion = row.asignaciones.length ? `${row.ultimaAsignacion.profesional.apellido}, ${row.ultimaAsignacion.profesional.nombre}` : '';
-            const ultimoEstado = row.ultimoEstado ? `${row.ultimoEstado?.clave} | ${moment(row.ultimoEstado.valor).format('DD/MM/YYYY hh:mm')}` : '';
             return {
                 Apellido: row.paciente.apellido,
                 Nombre: row.paciente.nombre,
                 Documento: row.paciente.documento,
                 Telefono: row.paciente.telefonoActual || '',
                 'Asignado a': ultimaAsignacion,
-                Estado: ultimoEstado
+                Estado: row.ultimoEstado ? row.ultimoEstado?.clave : '',
+                'Fecha de estado': row.ultimoEstado ? moment(row.ultimoEstado.valor).format('DD/MM/YYYY hh:mm') : ''
             };
         }
     }).pipe(res);
