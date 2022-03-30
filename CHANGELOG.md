@@ -1,3 +1,17 @@
+# [5.86.0](https://github.com/andes/api/compare/v5.85.2...v5.86.0) (2022-03-30)
+
+
+### Bug Fixes
+
+* **BI-109:** proximos padres ([#1665](https://github.com/andes/api/issues/1665)) ([732b5e8](https://github.com/andes/api/commit/732b5e8ac5030b03682b8998adc224c2186bc4df))
+* **MPI-375:** fix en el campo tipo de identificacion en pacientes extranjeros ([#1679](https://github.com/andes/api/issues/1679)) ([bb40a81](https://github.com/andes/api/commit/bb40a81af4a936552f241d77e0406ed68ec9fba8))
+* **seguimiento:** moreThan14Days ([#1684](https://github.com/andes/api/issues/1684)) ([dc04487](https://github.com/andes/api/commit/dc04487a2680a9e3268270d9821b91c2ae7aa675))
+
+
+### Features
+
+* **script:** actualiza altas en seguimiento ([#1673](https://github.com/andes/api/issues/1673)) ([9b6e27e](https://github.com/andes/api/commit/9b6e27eca8b55093648f9ba75af6002faed979ea))
+
 ## [5.85.2](https://github.com/andes/api/compare/v5.85.1...v5.85.2) (2022-03-23)
 
 
