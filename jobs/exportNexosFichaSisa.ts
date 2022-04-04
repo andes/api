@@ -4,6 +4,7 @@ import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-e
 import { handleHttpRequest } from '../utils/requestHandler';
 import { sisa } from './../config.private';
 import { SECCION_CLASIFICACION } from '../modules/forms/forms-epidemiologia/constantes';
+import { FormsHistory } from 'modules/forms/forms-epidemiologia/forms-history.schema';
 
 const user = sisa.user_snvs;
 const clave = sisa.password_snvs;
@@ -12,16 +13,21 @@ const urlSisa = sisa.url_snvs;
 export async function exportSisaFicha(done, horas, desde, hasta) {
     const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
     const end = hasta ? moment(hasta).toDate() : moment().toDate();
-    const pipelineConfirmados = [
-        {
-            $match: {
-                createdAt: {
-                    $gte: start,
-                    $lte: end
-                },
-                'type.name': 'covid19'
-            }
+    const createdAtMatch = {
+        createdAt: {
+            $gte: start,
+            $lte: end
         },
+        'type.name': 'covid19'
+    };
+    const updatedAtMatch = {
+        updatedAt: {
+            $gte: start,
+            $lte: end
+        },
+        'type.name': 'covid19'
+    };
+    const pipelineConfirmados = [
         {
             $addFields: {
                 orgIdentifier: {
@@ -112,10 +118,26 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
         }
 
     ];
-    const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
+    const fichas = await FormsEpidemiologia.aggregate({ ...createdAtMatch, ...pipelineConfirmados });
+    const fichasActualizadas = await FormsEpidemiologia.aggregate({ ...updatedAtMatch, ...pipelineConfirmados });
+
+    for (const ficha of fichasActualizadas) {
+        const fichaAnterior: any = await FormsHistory.findOne({ id: ficha._id }).sort({ createdAt: -1 });
+        const seccionActual = ficha.secciones.find(s => s.name === SECCION_CLASIFICACION);
+        const clasificacionActual = seccionActual?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
+
+        const seccionAnterior = fichaAnterior.secciones.find(s => s.name === SECCION_CLASIFICACION);
+        const clasificacionAnterior = seccionAnterior?.fields.find(f => f.clasificacionfinal)?.clasificacionfinal;
+
+        if (clasificacionActual !== clasificacionAnterior) {
+            fichas.push(ficha);
+        }
+    }
+
     for (const unaFicha of fichas) {
         const documento = unaFicha.Paciente_documento;
         if (documento) {
+
             const eventoNominal = {
                 idTipodoc: '1',
                 nrodoc: documento,
