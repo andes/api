@@ -1,3 +1,10 @@
+## [5.86.1](https://github.com/andes/api/compare/v5.86.0...v5.86.1) (2022-04-06)
+
+
+### Bug Fixes
+
+* **in:** nombre de coleccion y codigo comentado ([#1677](https://github.com/andes/api/issues/1677)) ([3fd0c5d](https://github.com/andes/api/commit/3fd0c5d840599653fd12eda560675e02604052a0))
+
 # [5.86.0](https://github.com/andes/api/compare/v5.85.2...v5.86.0) (2022-03-30)
 
 
