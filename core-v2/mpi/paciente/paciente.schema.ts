@@ -79,9 +79,11 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
         nombre: String,
         apellido: String,
         documento: String,
+        fechaNacimiento: Date,
         fechaFallecimiento: Date,
         numeroIdentificacion: String,
-        fotoId: mongoose.Schema.Types.ObjectId
+        fotoId: mongoose.Schema.Types.ObjectId,
+        activo: Boolean
     }],
     financiador: [FinanciadorSchema],
     claveBlocking: { type: [String], es_indexed: true },
