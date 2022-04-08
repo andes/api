@@ -2,7 +2,7 @@ import * as base64 from 'base64-stream';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as stream from 'stream';
-import { userScheduler } from '../../../config.private';
+import { userScheduler, sisa as sisaConfig } from '../../../config.private';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
@@ -228,4 +228,3 @@ export async function saveFirma(data, admin = false) {
         input.end(_base64);
     });
 }
-

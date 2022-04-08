@@ -89,6 +89,10 @@ UsuariosRouter.post('/usuarios/create', Auth.authenticate(), async (req, res, ne
         return next(403);
     }
     try {
+        const existsUser = await AuthUsers.findOne({ usuario: req.body.documento });
+        if (existsUser) {
+            return next('Ya posee un usuario en Andes');
+        }
         const user = await createUser(req.body);
         await setValidationTokenAndNotify(req.body.documento);
         return res.json(user);
