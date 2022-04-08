@@ -13,7 +13,7 @@ ExportHudsRouter.get('/export', async (req, res, next) => {
         'user.usuario.id': req.query.id,
         status: { $in: ['pending', 'completed'] }
     };
-    const pending = await ExportHudsModel.find(query);
+    const pending = await ExportHudsModel.find(query).sort({ createdAt: -1 });
     res.json(pending);
 });
 
