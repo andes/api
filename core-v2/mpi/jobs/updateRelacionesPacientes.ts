@@ -12,6 +12,7 @@ export const updateRelacionesPacientes = async (done) => {
     const cursor = Paciente.find({
         activo: true,
         'relaciones.0': { $exists: true },
+        'relaciones.referencia': { $ne: null },
         $or: [
             { 'relaciones.fechaNacimiento': { $exists: false } },
             { 'relaciones.activo': { $exists: false } }
@@ -41,7 +42,7 @@ export const updateRelacionesPacientes = async (done) => {
                 await PacienteCtr.update(pac._id, { relaciones: pac.relaciones }, dataLog);
             }
         } catch (error) {
-            logUpdateRelaciones.error('updateRelacionesPacientes', pac, error, userScheduler);
+            await logUpdateRelaciones.error('updateRelacionesPacientes', pac, error, userScheduler);
             return;
         }
     };
