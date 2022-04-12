@@ -28,6 +28,7 @@ export interface FormTypes {
             extras: any;
             resources: string;
             preload: boolean;
+            dependency?: object;
         }[];
     }[];
 }
@@ -51,7 +52,7 @@ export const FieldSchema = new mongoose.Schema({
     items: { type: Array, required: false },
     resources: { type: String, required: false },
     preload: Boolean,
-
+    dependency: Object
 });
 
 export const SectionSchema = new mongoose.Schema({
