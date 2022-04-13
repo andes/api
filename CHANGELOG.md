@@ -1,3 +1,12 @@
+## [5.86.2](https://github.com/andes/api/compare/v5.86.1...v5.86.2) (2022-04-13)
+
+
+### Bug Fixes
+
+* **mpi:** actualiza job relaciones ([#1691](https://github.com/andes/api/issues/1691)) ([7d81f5d](https://github.com/andes/api/commit/7d81f5ddf506b75e54293ab3cd01fe127f8b86bc))
+* **pacs:**  reverse tags pacs ([#1688](https://github.com/andes/api/issues/1688)) ([265c781](https://github.com/andes/api/commit/265c78174c4ea732ee20b4e072d8ecf4aabdce07))
+* **pacs:** reverse changes ([#1689](https://github.com/andes/api/issues/1689)) ([cb12267](https://github.com/andes/api/commit/cb122671997b7046505f9d77e7c7cf61c4606969))
+
 ## [5.86.1](https://github.com/andes/api/compare/v5.86.0...v5.86.1) (2022-04-06)
 
 
