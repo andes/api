@@ -3,6 +3,8 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { SeguimientoPaciente } from './schemas/seguimiento-paciente.schema';
 import * as mongoose from 'mongoose';
+import * as moment from 'moment';
+const csv = require('fast-csv');
 
 class SeguimientoPacienteResource extends ResourceBase {
     Model = SeguimientoPaciente;
@@ -55,6 +57,26 @@ class SeguimientoPacienteResource extends ResourceBase {
     }
 }
 
+const getListadoCsv = async (req, res, next) => {
+    const listado = await SeguimientoPacienteCtr.search(req.body);
+    res.set('Content-Type', 'text/csv');
+    res.setHeader('Content-disposition', 'attachment; filename=censo-mensual.csv');
+    csv.write(listado, {
+        headers: true, transform: (row) => {
+            const ultimaAsignacion = row.asignaciones.length ? `${row.ultimaAsignacion.profesional.apellido}, ${row.ultimaAsignacion.profesional.nombre}` : '';
+            return {
+                Apellido: row.paciente.apellido,
+                Nombre: row.paciente.nombre,
+                Documento: row.paciente.documento,
+                Telefono: row.paciente.telefonoActual || '',
+                'Asignado a': ultimaAsignacion,
+                Estado: row.ultimoEstado ? row.ultimoEstado?.clave : '',
+                'Fecha de estado': row.ultimoEstado ? moment(row.ultimoEstado.valor).format('DD/MM/YYYY hh:mm') : ''
+            };
+        }
+    }).pipe(res);
+};
+
 const patchAsignacion = async (req, res, next) => {
     try {
         const { seguimientos, profesional } = req.body;
@@ -74,5 +96,7 @@ const patchAsignacion = async (req, res, next) => {
 
 export const SeguimientoPacienteCtr = new SeguimientoPacienteResource({});
 const seguimientoPacienteRouter = SeguimientoPacienteCtr.makeRoutes();
-seguimientoPacienteRouter.post('/seguimientoPaciente/asignaciones', Auth.authenticate(), asyncHandler(patchAsignacion));
 export const SeguimientoPacienteRouter = seguimientoPacienteRouter;
+
+seguimientoPacienteRouter.post('/seguimientoPaciente/listadoCsv', Auth.authenticate(), asyncHandler(getListadoCsv));
+seguimientoPacienteRouter.post('/seguimientoPaciente/asignaciones', Auth.authenticate(), asyncHandler(patchAsignacion));
