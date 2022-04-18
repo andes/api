@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { loadImage, InformePDF, getAssetsURL } from '../model/informe.class';
+import { loadImage } from '../model/informe.class';
 import { HTMLComponent } from '../model/html-component.class';
 
 export class CensoMensualHeader extends HTMLComponent {

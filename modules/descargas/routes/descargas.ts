@@ -41,7 +41,8 @@ router.post('/censo', async (req: any, res, next) => {
 
 router.post('/censoMensual', async (req: any, res, next) => {
     const docCenso = new InformeCenso('mensual', req);
-    const fileName: any = await docCenso.informe();
+    const opciones = { header: { height: '4.5cm' }, orientation: 'landscape' };
+    const fileName: any = await docCenso.informe(opciones);
 
     return res.download(fileName);
 });
