@@ -12,7 +12,7 @@ export class CertificadoEticaBody extends HTMLComponent {
             <div class="row">
                 <div class="col">
                     <p>
-                        La Dirección de Fiscalización Sanitaria de la Subsecretaría de salud de la Provincia de Neuquén, CERTIFICA que {{ profesional.apellido }},
+                        La Dirección de Fiscalización Sanitaria de la Subsecretaría de Salud de la Provincia de Neuquén, CERTIFICA que {{ profesional.apellido }},
                         {{ profesional.nombre }} - DNI {{ profesional.documento }} se encuentra inscripto/a en el Registro Único de Profesionales de la Salud de la Provincia de
                         Neuquén como {{ matricula.grado.titulo }} bajo la matrícula N° {{ matricula.grado.matriculaNumero }} desde {{ matricula.grado.fechaAlta }}.
                     
@@ -48,7 +48,7 @@ export class CertificadoEticaBody extends HTMLComponent {
                         <b>{{ detalleExtension }}</b>
                     </p>
                     <p>
-                        EL PRESENTE CERTIFICADO TIENE VALIDEZ POR EL TERMINO DE 30(TREINTA) DIAS.
+                        EL PRESENTE CERTIFICADO TIENE VALIDEZ POR EL TÉRMINO DE 30(TREINTA) DÍAS.
                     </p>
                 </div>
             </div>
