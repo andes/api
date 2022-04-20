@@ -1,3 +1,11 @@
+# [5.87.0](https://github.com/andes/api/compare/v5.86.2...v5.87.0) (2022-04-20)
+
+
+### Features
+
+* **MISC:** buscador ordenar descargas ([#1690](https://github.com/andes/api/issues/1690)) ([600aab3](https://github.com/andes/api/commit/600aab3faec77446b621727d882a021d5603edc7))
+* **profesional:** posibilidad de enviar mail como param ([#1687](https://github.com/andes/api/issues/1687)) ([d0df3dc](https://github.com/andes/api/commit/d0df3dc867ed96cf1d66b08a9b74711f41bae0f2))
+
 ## [5.86.2](https://github.com/andes/api/compare/v5.86.1...v5.86.2) (2022-04-13)
 
 
