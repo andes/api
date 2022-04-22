@@ -70,7 +70,7 @@ export class InformeRupBody extends HTMLComponent {
             .filter(r => !(r.privacy && (r.privacy.scope === 'private' || r.privacy.scope === 'termOnly'))) // filtramos los registros privados
             .map(registro => {
                 // armamos un nuevo arreglo dejando solamente las secciones que tienen cargada una molécula/átomo
-                const arrayRegistros = registro.registros.filter(r => r.registros.length);
+                const arrayRegistros = registro.registros.filter(r => r.valor || r.registros.length);
                 registro.registros = arrayRegistros;
                 return registroToHTML(this.prestacion, registro, this.registroId ? 1 : 0);
             });
