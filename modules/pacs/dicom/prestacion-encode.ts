@@ -61,7 +61,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
         '00080050': {
             vr: 'SH',
             Value: [
-                toBase64(prestacion.solicitud.tipoPrestacion.conceptId)
+                toBase64(String(prestacion.id))
             ]
         },
         '00400100': {
@@ -130,7 +130,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
         '00401001': {
             vr: 'SH',
             Value: [
-                String(prestacion.id)
+                toBase64(prestacion.solicitud.tipoPrestacion.conceptId)
             ]
         },
         '00321060': {
