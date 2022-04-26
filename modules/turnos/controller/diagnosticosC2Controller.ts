@@ -112,20 +112,23 @@ export function getDiagnosticos(params) {
             organizacionesStrings = result.map(o => o.id);
             organizaciones = result.map(o => mongoose.Types.ObjectId(o.id));
         }
-
-        const matchAgedas = {
-            'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-            'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
+        const matchAgendas = {
+            'bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
+            'bloques.turnos.diagnostico.codificaciones.primeraVez': true,
             horaInicio: { $gte: new Date(params.horaInicio) },
             horaFin: { $lte: new Date(params.horaFin) },
         };
 
         if (organizaciones) {
-            matchAgedas['organizacion._id'] = { $in: organizaciones };
+            matchAgendas['organizacion._id'] = { $in: organizaciones };
+        }
+
+        if (params.cie10) {
+            matchAgendas['bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
         }
 
         pipeline = [{
-            $match: matchAgedas
+            $match: matchAgendas
         },
                     {
                         $unwind: '$bloques'
@@ -134,14 +137,8 @@ export function getDiagnosticos(params) {
                         $unwind: '$bloques.turnos'
                     },
                     {
-                        $match: {
-                            'bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
-                            'bloques.turnos.diagnostico.codificaciones.primeraVez': true,
-                            horaInicio: { $gte: new Date(params.horaInicio) },
-                            horaFin: { $lte: new Date(params.horaFin) },
-                        }
+                        $match: matchAgendas
                     },
-
                     {
                         $project: {
                             paciente: '$bloques.turnos.paciente',
@@ -165,18 +162,27 @@ export function getDiagnosticos(params) {
                             },
                             paciente: { $push: '$paciente' }
                         }
-                    }];
+                    }
+        ];
+
+        if (params.cie10) {
+            pipeline.splice(3,0,{ $unwind:'$bloques.turnos.diagnostico.codificaciones' });
+        }
 
         let pipeline1 = [];
         const matchSobreturnos = {
-            'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-            'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
+            'sobreturnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
+            'sobreturnos.diagnostico.codificaciones.primeraVez': true,
             horaInicio: { $gte: new Date(params.horaInicio) },
             horaFin: { $lte: new Date(params.horaFin) },
         };
 
         if (organizaciones) {
             matchSobreturnos['organizacion._id'] = { $in: organizaciones };
+        }
+
+        if (params.cie10) {
+            matchSobreturnos['sobreturnos.diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
         }
 
         pipeline1 = [{
@@ -186,15 +192,7 @@ export function getDiagnosticos(params) {
                          $unwind: '$sobreturnos'
                      },
                      {
-                         $unwind: '$sobreturnos.diagnostico.codificaciones'
-                     },
-                     {
-                         $match: {
-                             'sobreturnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
-                             'sobreturnos.diagnostico.codificaciones.primeraVez': true,
-                             horaInicio: { $gte: new Date(params.horaInicio) },
-                             horaFin: { $lte: new Date(params.horaFin) },
-                         }
+                         $match: matchSobreturnos
                      },
                      {
                          $project: {
@@ -222,6 +220,10 @@ export function getDiagnosticos(params) {
                          }
                      }];
 
+        if (params.cie10) {
+            pipeline1.splice(2,0,{ $unwind: '$sobreturnos.diagnostico.codificaciones' });
+        }
+
         // Se buscan las prestaciones fuera de agenda codificados con algun diagnostico c2
         let pipeline2 = [];
         const matchCodificacion1 = {
@@ -245,6 +247,10 @@ export function getDiagnosticos(params) {
             matchCodificacion2['prestacion.solicitud.organizacion.id'] = { $in: organizaciones };
         }
 
+        if (params.cie10) {
+            matchCodificacion1['diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
+        }
+
         pipeline2 = [
             {
                 $match: matchCodificacion1
@@ -256,9 +262,6 @@ export function getDiagnosticos(params) {
                     foreignField: '_id',
                     as: 'prestacion'
                 }
-            },
-            {
-                $unwind: '$diagnostico.codificaciones'
             },
             {
                 $unwind: '$prestacion',
@@ -277,6 +280,10 @@ export function getDiagnosticos(params) {
 
             }
         ];
+
+        if (params.cie10) {
+            pipeline2.splice(2,0,{ $unwind: '$diagnostico.codificaciones' });
+        }
 
         const p1 = Agenda.aggregate(pipeline);
         const p2 = Agenda.aggregate(pipeline1);
