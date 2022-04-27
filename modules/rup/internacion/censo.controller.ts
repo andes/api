@@ -185,7 +185,15 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             diasEstadaUO = (diasEstadaUO === 0) ? 1 : diasEstadaUO;
         }
 
-        if (!ultimoMovimiento.esCensable && !(prestacion as any).ejecucion.registros[0].esCensable) {
+        const prestacionInternacion = (prestacion as any).ejecucion.registros[0];
+        /** Ignoramos las internaciones de cama no censable que no estén explicitamente flageadas 'esCensable' en true */
+        if (!ultimoMovimiento.esCensable && !prestacionInternacion.esCensable) {
+            return;
+        }
+
+        /** Ignoramos las internaciones de cama censable que estan explicitamente flageadas 'esCensable' en false */
+        const prestacionNoCensable = 'esCensable' in prestacionInternacion && prestacionInternacion.esCensable === false;
+        if (ultimoMovimiento.esCensable && prestacionNoCensable) {
             return;
         }
         if (fechaEgreso) {
