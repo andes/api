@@ -7,6 +7,7 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { updatePrestacionPatient } from './../../../modules/rup/controllers/prestacion';
 import { findById, linkPacientesDuplicados, updateGeoreferencia } from './paciente.controller';
 import { IPacienteDoc } from './paciente.interface';
+import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 // TODO: Handlear errores
 EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
@@ -78,6 +79,20 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
                 LoggerPaciente.logReporteError(patientRequest, 'error:reportar', paciente, paciente.notaError);
             }
         }
+    }
+    if (changeFields.includes('activo')) {
+        // Obtenemos todos los pacientes relacionados del paciente desactivado/activado en un array de promesas.
+        let relacionados = paciente.relaciones.map(r => Paciente.findById( r.referencia ));
+        relacionados = await Promise.all(relacionados);
+        // Por cada uno de esos pacientes relacionados buscamos en que posición del array de relaciones del paciente desactivado/activado
+        // se encuentra y luego cambiamos el atributo activo a true/false segun corresponde.
+        relacionados.map(async pac => {
+            const index = pac.relaciones.findIndex(rel => rel.referencia.toString() === paciente._id.toString());
+            if (index > -1) {
+                pac.relaciones[index].activo = paciente.activo;
+            }
+            await Paciente.findByIdAndUpdate(pac._id, { relaciones: pac.relaciones });
+        });
     }
 });
 
