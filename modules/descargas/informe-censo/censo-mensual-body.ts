@@ -1,5 +1,4 @@
 import * as moment from 'moment';
-import { loadImage, InformePDF, getAssetsURL } from '../model/informe.class';
 import { HTMLComponent } from '../model/html-component.class';
 
 export class CensoMensualBody extends HTMLComponent {
@@ -87,7 +86,7 @@ export class CensoMensualBody extends HTMLComponent {
                 </tbody>
             </table>
 
-            <br><br>
+            <br>
             <table class="resumen table">
                 <thead>
                     <tr>
