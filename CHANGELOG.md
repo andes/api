@@ -1,3 +1,23 @@
+# [5.88.0](https://github.com/andes/api/compare/v5.87.0...v5.88.0) (2022-04-27)
+
+
+### Bug Fixes
+
+* **pacs:** reverse tags ([#1698](https://github.com/andes/api/issues/1698)) ([40987f9](https://github.com/andes/api/commit/40987f9ccf1ce92b3abdb884095372332a97dab4))
+* **pdf:** registros ([#1697](https://github.com/andes/api/issues/1697)) ([11ed1b5](https://github.com/andes/api/commit/11ed1b565987c37f3005cc90480d4eaa69c6c884))
+
+
+### Features
+
+* **form:** array item ([#1695](https://github.com/andes/api/issues/1695)) ([ee5a86f](https://github.com/andes/api/commit/ee5a86fe35fc284c7b1f00b759fff8262699a3e8))
+* **IN-404:** secciones vacias dentro del pdf de evaluacion inicial ([#1696](https://github.com/andes/api/issues/1696)) ([d6d5099](https://github.com/andes/api/commit/d6d509906e5c356029c522627544f8ace445f88e))
+* **MPI-378:** Relaciones de un paciente ([#1693](https://github.com/andes/api/issues/1693)) ([34f5a1d](https://github.com/andes/api/commit/34f5a1df92d54237f0512c231ecadd63ed032a9a))
+
+
+### Reverts
+
+* Revert "fix(pacs): reverse tags (#1698)" (#1700) ([4127e5c](https://github.com/andes/api/commit/4127e5c1cd165a8137cf81abea50051a93f65704)), closes [#1698](https://github.com/andes/api/issues/1698) [#1700](https://github.com/andes/api/issues/1700)
+
 # [5.87.0](https://github.com/andes/api/compare/v5.86.2...v5.87.0) (2022-04-20)
 
 
