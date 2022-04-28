@@ -32,7 +32,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         }
         const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
-            return next({ error: `prestacion_existente  ${idPrestacion}` });
+            res.json({ cda: yaExiste._id, paciente: yaExiste.paciente?._id });
         }
 
         const dataPaciente = req.body.paciente;
