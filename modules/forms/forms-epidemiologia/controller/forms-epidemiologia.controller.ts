@@ -80,15 +80,14 @@ export function getSeccionClasificacion(ficha) {
 }
 
 
-export async function checkFichaAbierta(pacienteId, fecha ) {
+export async function checkFichaAbierta(pacienteId, fecha) {
     const ficha = await FormsEpidemiologia.findOne({
         'paciente.id': pacienteId,
-        createdAt: { $and:[
-            { $gte: new Date(moment(fecha).subtract(14, 'days').toDate()) },
-            { $lte: new Date(moment(fecha).add(14, 'days').toDate()) }
-        ] }
+        $and: [
+            { createdAt: { $gte: moment(fecha).subtract(14, 'days').toDate() } },
+            { createdAt: { $lte: moment(fecha).add(14, 'days').toDate() } }
+        ]
     });
-
     return ficha;
 }
 

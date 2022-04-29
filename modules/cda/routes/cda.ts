@@ -34,9 +34,8 @@ router.post('/create/sisa-covid', cdaCtr.validateMiddleware, async (req, res, ne
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
-
     const { documento, sexo } = req.body.paciente;
-    const cda = req.body.cda;
+    const cda = req.body;
     const pacientes = await PacienteCtr.search({ documento, sexo, activo: true }); // Identificamos el registro de paciente
 
     if (pacientes.length !== 1) {
@@ -44,7 +43,7 @@ router.post('/create/sisa-covid', cdaCtr.validateMiddleware, async (req, res, ne
     }
 
     const paciente = pacientes[0];
-    const fichaAbierta = checkFichaAbierta(paciente._id, cda.fecha); // Verificamos que no existan registros previos para el caso
+    const fichaAbierta = await checkFichaAbierta(paciente._id, cda.fecha); // Verificamos que no existan registros previos para el caso
 
     if (fichaAbierta) {
         return next('El caso ya fue registrado.');
