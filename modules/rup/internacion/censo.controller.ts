@@ -55,8 +55,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
     let defunciones = 0;
     let pasesA = 0;
     let ingresosYEgresos = 0;
+    let disponibles = 0;
     let diasEstada = 0;
-
+    const arrayCamas = [];
     const tablaPacientes = {};
 
     const idInternaciones = Object.keys(internaciones);
@@ -126,8 +127,12 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         // ultimo movimiento en la unidad organizativa que se está filtrando
         const ultimoMovimientoUO = dataInternaciones[idInter]['ultimoMovimientoUO'];
         const prestacion = dataInternaciones[idInter]['prestacion'];
+        const indiceCama = arrayCamas.findIndex(x => x.toString() === ultimoMovimiento.idCama.toString());
         if (!prestacion) {
             return;
+        } else if (prestacion.ejecucion.registros[0].esCensable && indiceCama === -1) {
+            arrayCamas.push(ultimoMovimiento.idCama);
+            disponibles ++;
         }
         const esPaseA = dataInternaciones[idInter]['esPaseA'];
         const informesInternacion = dataInternaciones[idInter]['informesInternacion'];
@@ -264,7 +269,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             existenciaALas24,
             ingresosYEgresos,
             pacientesDia: existenciaALas24 + ingresosYEgresos,
-            disponibles: 0,
+            disponibles,
             diasEstada
         }
     };
@@ -289,28 +294,21 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
 
     const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
 
-
     const snapshotsAgrupados = groupBy(snapshots, 'idInternacion');
     const snapshotsPorCama = groupBy(snapshots, 'idCama');
     const movimientosPorCama = groupBy(movimientos, 'idCama');
     const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
     const internaciones = await unificarMovimientos(snapshotsAgrupados, movimientosAgrupados);
     const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, snapshotsPorCama);
-
     const camas = await unificarMovimientos(snapshotsPorCama, movimientosPorCama);
-
-    let camasDisponibles = 0;
     Object.keys(camas).forEach(idCama => {
         const ultimoMov = camas[idCama][camas[idCama].length - 1];
         const esDisponible = (ultimoMov.estado !== 'bloqueada' && ultimoMov.estado !== 'inactiva');
         const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
         if (esDisponible && estaUnidadOrganizativa && ultimoMov.esCensable) {
-            camasDisponibles++;
+            resultado.censo.disponibles++;
         }
     });
-
-
-    resultado.censo.disponibles = camasDisponibles;
 
     return resultado;
 }
