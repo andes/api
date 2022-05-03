@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 import { IPrestacion } from '../../rup/prestaciones.interface';
+import * as base64 from 'base64-mongo-id';
 /** *
  *
  * https://www.dicomlibrary.com/dicom/dicom-tags/
@@ -24,7 +25,6 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
     const tecnicoName = `${tecnico.apellido}, ${tecnico.nombre}`;
 
     const fecha = prestacion.ejecucion.fecha;
-
     const json = {
         '00080005': {
             vr: 'CS',
@@ -61,7 +61,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
         '00080050': {
             vr: 'SH',
             Value: [
-                toBase64(prestacion.solicitud.tipoPrestacion.conceptId)
+                base64.toBase64(prestacion.id)
             ]
         },
         '00400100': {
@@ -130,7 +130,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
         '00401001': {
             vr: 'SH',
             Value: [
-                String(prestacion.id)
+                toBase64(prestacion.solicitud.tipoPrestacion.conceptId)
             ]
         },
         '00321060': {
