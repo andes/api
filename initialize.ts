@@ -100,6 +100,7 @@ export function initAPI(app: Express) {
 
     app.use('/api/modules/forms', require('./modules/forms').FormRouter);
     app.use('/api/modules/forms/form-resources', require('./modules/forms').FormResourcesRouter);
+    app.use('/api/modules/forms/form-resources', require('./modules/forms').FormPresetResourcesRouter);
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').UsuariosRouter);
     app.use('/api/modules/gestor-usuarios', require('./modules/gestor-usuarios').PerfilesRouter);
     app.use('/api/modules/registro-novedades', require('./modules/registro-novedades').NovedadesRouter);
