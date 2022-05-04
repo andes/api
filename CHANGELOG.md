@@ -1,3 +1,11 @@
+# [5.89.0](https://github.com/andes/api/compare/v5.88.0...v5.89.0) (2022-05-04)
+
+
+### Features
+
+* **form:** items y dependency ([#1704](https://github.com/andes/api/issues/1704)) ([94914f6](https://github.com/andes/api/commit/94914f674525f2a3eb721ae10a0964b390e07945))
+* **GDU-42:** desactivar usuarios no logueados ([#1678](https://github.com/andes/api/issues/1678)) ([9af113c](https://github.com/andes/api/commit/9af113c31b5b6113a7fe38ee1d49d925fe14ee89))
+
 # [5.88.0](https://github.com/andes/api/compare/v5.87.0...v5.88.0) (2022-04-27)
 
 
