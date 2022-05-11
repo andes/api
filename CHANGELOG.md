@@ -1,3 +1,10 @@
+# [5.90.0](https://github.com/andes/api/compare/v5.89.0...v5.90.0) (2022-05-11)
+
+
+### Features
+
+* **EP:** secciones precargadas ([#1708](https://github.com/andes/api/issues/1708)) ([17466f1](https://github.com/andes/api/commit/17466f168e15baf468879dbb2811bfbf8c865cc1))
+
 # [5.89.0](https://github.com/andes/api/compare/v5.88.0...v5.89.0) (2022-05-04)
 
 
