@@ -54,7 +54,10 @@ export const DerivacionSchema = new mongoose.Schema({
         },
         required: true
     },
-    unidadDestino: SnomedConcept,
+    unidadDestino: {
+        type: SnomedConcept,
+        required: false
+    },
     organizacionTraslado: {
         type: {
             nombre: String,
