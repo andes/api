@@ -1,5 +1,4 @@
 import { EventCore } from '@andes/event-bus';
-import { timeout } from 'async';
 import { AppCache } from '../../../connections';
 import { Types } from 'mongoose';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
@@ -8,6 +7,9 @@ import { updatePrestacionPatient } from './../../../modules/rup/controllers/pres
 import { findById, linkPacientesDuplicados, updateGeoreferencia } from './paciente.controller';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { CamaEstados } from '../../../modules/rup/internacion/cama-estados.schema';
+import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { InternacionResumen } from '../../../modules/rup/internacion/resumen/internacion-resumen.schema';
 
 // TODO: Handlear errores
 EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
@@ -82,7 +84,7 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     }
     if (changeFields.includes('activo')) {
         // Obtenemos todos los pacientes relacionados del paciente desactivado/activado en un array de promesas.
-        let relacionados = paciente.relaciones.map(r => Paciente.findById( r.referencia ));
+        let relacionados = paciente.relaciones.map(r => Paciente.findById(r.referencia));
         relacionados = await Promise.all(relacionados);
         // Por cada uno de esos pacientes relacionados buscamos en que posición del array de relaciones del paciente desactivado/activado
         // se encuentra y luego cambiamos el atributo activo a true/false segun corresponde.
@@ -94,6 +96,10 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
             await Paciente.findByIdAndUpdate(pac._id, { relaciones: pac.relaciones });
         });
     }
+    // Verifica si el paciente esta actualmente internado para replicar los cambios
+    if (['nombre', 'apellido', 'sexo', 'alias', 'genero'].map(field => changeFields.includes(field))) {
+        await checkAndUpdateInternacion(paciente);
+    }
 });
 
 
@@ -103,4 +109,103 @@ function addressChanged(addOld, newAdd) {
     const changeProv = addOld?.ubicacion.provincia?.nombre !== newAdd?.ubicacion.provincia?.nombre;
 
     return changeDir || changeLoc || changeProv;
+}
+
+// Verifica si el paciente se encuentra internado y de ser asi actualiza sus datos basicos
+async function checkAndUpdateInternacion(paciente) {
+    let ultimoEstadoCapaMedica: any = await CamaEstados.findOne({
+        idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
+        capa: 'medica', // habitualmente se registra primero ingreso/egreso en capa medica
+        'estados.paciente.id': paciente._id
+    }).sort({ start: -1 });
+
+    // ultima ocupación de cama del paciente (capa medica)
+    ultimoEstadoCapaMedica = ultimoEstadoCapaMedica.toObject();
+
+    const idInternacionMedica = ultimoEstadoCapaMedica.estados.find(e => {
+        const id = e.paciente?.id ? (e.paciente?.id).toString() : '';
+        return id === paciente.id;
+    }).idInternacion;
+
+    const ultimoEgresoCapaMedica = await CamaEstados.findOne({
+        'estados.extras.idInternacion': idInternacionMedica
+    });
+
+    if (!ultimoEgresoCapaMedica) {
+        // el paciente sigue internado. Obtenemos capa estadistica para actualizar sus datos..
+        let ultimoEstadoEstadistica: any = await CamaEstados.findOne({
+            idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
+            capa: 'estadistica',
+            start: { $gte: ultimoEstadoCapaMedica.start },
+            'estados.paciente.id': paciente._id
+        }).sort({ start: -1 });
+
+        // ultima ocupación de cama del paciente (capa estadistica)
+        ultimoEstadoEstadistica = ultimoEstadoEstadistica?.toObject();
+
+        const idInternacionEstadistica = ultimoEstadoEstadistica?.estados.find(e => {
+            const id = e.paciente?.id ? (e.paciente?.id).toString() : '';
+            return id === paciente.id;
+        }).idInternacion;
+
+        const pac = {
+            id: paciente._id,
+            documento: paciente.documento,
+            nombre: paciente.alias || paciente.nombre,
+            apellido: paciente.apellido,
+            sexo: paciente.sexo,
+            genero: paciente.genero,
+            fechaNacimiento: paciente.fechaNacimiento
+        };
+
+        // actualizamos datos en capa medica
+        await CamaEstados.update(
+            {
+                idOrganizacion: ultimoEstadoCapaMedica.idOrganizacion,
+                ambito: 'internacion',
+                capa: 'medica',
+                'estados.idInternacion': idInternacionMedica
+            },
+            {
+                $set: { 'estados.$[elemento].paciente': pac }
+            },
+            {
+                arrayFilters: [{ 'elemento.paciente.id': paciente.id }],
+                multi: true
+            }
+        );
+        // actualizamos resumen de la internacion
+        const resumenUpdated = await InternacionResumen.findByIdAndUpdate(idInternacionMedica, { paciente: pac });
+        let idPrestacion; // id de la prestacion donde se encuentra el informe
+
+        // si es necesario, actualizamos datos en capa estadistica
+        if (idInternacionEstadistica) {
+            if (idInternacionEstadistica !== idInternacionMedica) {
+                /* si fuera mismo idInternacion significaria que el efector usa capas
+                    fusionadas y solo habria que actualizar capa medica (No es el caso) */
+                await CamaEstados.update(
+                    {
+                        idOrganizacion: ultimoEstadoCapaMedica.idOrganizacion,
+                        ambito: 'internacion',
+                        capa: 'estadistica',
+                        'estados.idInternacion': idInternacionEstadistica
+                    },
+                    {
+                        $set: { 'estados.$[elemento].paciente': pac }
+                    },
+                    {
+                        arrayFilters: [{ 'elemento.paciente.id': paciente.id }],
+                        multi: true
+                    }
+                );
+                idPrestacion = idInternacionEstadistica;
+            } else {
+                idPrestacion = (resumenUpdated as any).idPrestacion;
+            }
+        }
+        if (idPrestacion) {
+            // actualizamos la prestacion donde se encuentra el informe (Necesario para el listado de internación)
+            await Prestacion.findByIdAndUpdate(idInternacionEstadistica, { paciente: pac });
+        }
+    }
 }
