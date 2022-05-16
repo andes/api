@@ -13,6 +13,7 @@ import { Derivacion } from '../com/derivacion';
 import { Arancelamiento } from '../arancelamiento/arancelamiento';
 import { Agenda } from '../agenda/agenda';
 import { getArchivoAdjunto } from '../../../modules/rup/controllers/rup';
+import { CertificadoEtica } from '../matriculaciones/certificado-etica';
 
 const router = express.Router();
 
@@ -53,24 +54,6 @@ router.post('/anexo-dos', async (req: any, res) => {
     const fileName: any = await docRecupero.informe(opciones);
 
     res.download(fileName);
-});
-
-/**
- * Se usa POST para generar la descarga porque se envían datos
- * que van a ser parte del archivo
- */
-router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
-    try {
-        const idPrestacion = req.body.idPrestacion;
-        const idRegistro = req.body.idRegistro;
-
-        const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
-        const fileName = await informe.informe();
-
-        return res.download(fileName);
-    } catch (err) {
-        return next(err);
-    }
 });
 
 /**
@@ -196,10 +179,36 @@ router.post('/arancelamiento/:tipo?', Auth.authenticate(), async (req: any, res)
 
 router.post('/agenda/:id', Auth.authenticate(), async (req: any, res) => {
     const opciones = { header: { height: '3cm' }, orientation: 'landscape' };
-
     const docAgenda = new Agenda(req);
     const fileName = await docAgenda.informe(opciones);
-
     res.download(fileName);
 });
+
+// Certificado de etica para profesional desde matriculaciones
+router.post('/certificadoEtica', Auth.authenticate(), async (req: any, res) => {
+    const certificado = new CertificadoEtica(req);
+    const opciones = { header: { height: '3cm' } };
+    const fileName = await certificado.informe(opciones);
+    return res.download(fileName);
+});
+
+/**
+ * Se usa POST para generar la descarga porque se envían datos
+ * que van a ser parte del archivo
+ */
+router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
+    try {
+        const idPrestacion = req.body.idPrestacion;
+        const idRegistro = req.body.idRegistro;
+
+        const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+        const fileName = await informe.informe();
+
+        return res.download(fileName);
+    } catch (err) {
+        return next(err);
+    }
+});
+
+
 export = router;
