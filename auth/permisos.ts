@@ -79,7 +79,7 @@ export default [
                 key: 'darTurnos',
                 title: 'Dar Turnos',
                 child: [
-                    { key: 'prestacion', title: 'Tipo de prestación', type: 'prestacion' },
+                    { key: 'prestacion', title: 'Tipo de prestación', type: 'prestacion', subtype: 'ambulatorio' },
                     { key: 'delDia', title: 'Turnos del día', type: 'boolean' },
                     { key: 'paraProfesional', title: 'Para profesional', type: 'boolean' },
                     { key: 'programados', title: 'Turnos programados', type: 'boolean' }
