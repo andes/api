@@ -1,3 +1,16 @@
+# [5.91.0](https://github.com/andes/api/compare/v5.90.0...v5.91.0) (2022-05-18)
+
+
+### Bug Fixes
+
+* **COM:** se modifica el esquema de unidadDestino para que no sea requerido ([#1710](https://github.com/andes/api/issues/1710)) ([61e76c2](https://github.com/andes/api/commit/61e76c203e27b1964cef6d171f4821a418b067bb))
+* **MISC:** cda duplicados ([#1711](https://github.com/andes/api/issues/1711)) ([1d8f820](https://github.com/andes/api/commit/1d8f8209568c29bad68d3a0a3d902342ff1d97e5))
+
+
+### Features
+
+* **in:** actualiza internacion al modificar datos de paciente ([#1683](https://github.com/andes/api/issues/1683)) ([f3d1bed](https://github.com/andes/api/commit/f3d1bedec0f04b7c627a98c8856e9ba8425c2a3f))
+
 # [5.90.0](https://github.com/andes/api/compare/v5.89.0...v5.90.0) (2022-05-11)
 
 
