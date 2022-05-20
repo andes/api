@@ -23,6 +23,10 @@ class InternacionResumenController extends ResourceBase<IInternacionResumenDoc> 
         }
     };
 
+    async presearch() {
+        return { deletedAt: { $exists: false } };
+    }
+
     async populate(data: IInternacionResumen) {
         const registros = data.ingreso?.registros || [];
         const concepto = deepSearch(registros);
