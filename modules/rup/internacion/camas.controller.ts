@@ -60,6 +60,7 @@ export interface ICama {
     ambito: String;
     unidadOrganizativaOriginal: ISnomedConcept;
     sectores: Object[];
+    idCamaAnterior: ObjectId;
     nombre: String;
     tipoCama: ISnomedConcept;
     equipamiento: ISnomedConcept[];
@@ -189,6 +190,20 @@ function determinarMovimiento(source, target) {
  */
 
 export async function patch(data: Partial<ICama>, req: Request) {
+    let idCamaAntes, idCamaAhora;
+    // Verificamos si la cama del paciente no se ha modificado antes de efectuar el cambio nuevo
+    if (data.paciente && data.idCamaAnterior) {
+        const cama = await findByPaciente(
+            { organizacion: data.organizacion, capa: data.capa, ambito: data.ambito },
+            data.paciente.id,
+        );
+        idCamaAntes = data.idCamaAnterior;
+        idCamaAhora = cama._id;
+        if (idCamaAntes.toString() !== idCamaAhora.toString()) {
+            return null;
+        }
+    }
+
     let cambioPermitido = true;
     const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
 
@@ -241,7 +256,6 @@ export async function patch(data: Partial<ICama>, req: Request) {
         camaEncontrada.audit(req);
         return await camaEncontrada.save();
     }
-
     return null;
 }
 
