@@ -10,6 +10,7 @@ class PlanIndicacionesEventosController extends ResourceBase {
         fecha: MongoQuery.matchDate,
         internacion: MongoQuery.equalMatch.withField('idInternacion'),
         prestacion: MongoQuery.equalMatch.withField('idPrestacion'),
+        indicacion: MongoQuery.equalMatch.withField('idIndicacion'),
         estado: MongoQuery.equalMatch
     };
 
