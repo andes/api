@@ -2,11 +2,10 @@ import { EventCore } from '@andes/event-bus/';
 import { calcularEdad } from './../../../../core-v2/mpi/paciente/paciente.schema';
 import { SECCION_CLASIFICACION } from '../constantes';
 import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
-import { FormEpidemiologiaCtr } from '../forms-epidemiologia.routes';
-import { userScheduler } from '../../../../config.private';
 import * as mongoose from 'mongoose';
 import { FormCtr } from '../../../../modules/forms/forms.routes';
 import { SECCION_ENFERMEDADES_PREVIAS, SECCION_OPERACIONES } from '../constantes';
+import moment = require('moment');
 
 export async function updateField(id, seccion, fields) {
     const ficha: any = await FormsEpidemiologia.findById(mongoose.Types.ObjectId(id));
@@ -79,3 +78,16 @@ export async function getScoreValue(ficha) {
 export function getSeccionClasificacion(ficha) {
     return ficha.secciones.find(s => s.name === SECCION_CLASIFICACION);
 }
+
+
+export async function checkFichaAbierta(pacienteId, fecha) {
+    const ficha = await FormsEpidemiologia.findOne({
+        'paciente.id': pacienteId,
+        $and: [
+            { createdAt: { $gte: moment(fecha).subtract(14, 'days').toDate() } },
+            { createdAt: { $lte: moment(fecha).add(14, 'days').toDate() } }
+        ]
+    });
+    return ficha;
+}
+
