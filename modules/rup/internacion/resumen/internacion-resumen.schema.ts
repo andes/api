@@ -4,25 +4,29 @@ import { Prestacion } from 'modules/rup/schemas/prestacion';
 import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
 import { ISnomedConcept, SnomedConcept } from '../../schemas/snomed-concept';
+import { PacienteSubSchema } from '../../../../core-v2/mpi/paciente/paciente.schema';
 
 export interface IInternacionResumen {
-    ambito: string;
+    ambito: String;
     paciente: {
         id: ObjectId;
-        documento: string;
-        sexo: string;
-        nombre: string;
-        apellido: string;
-        fechaNacimiento: string;
+        documento: String;
+        numeroIdentificacion?: String;
+        sexo: String;
+        genero: String;
+        nombre: String;
+        alias?: String;
+        apellido: String;
+        fechaNacimiento: String;
     };
     organizacion: {
         id: ObjectId;
-        nombre: string;
+        nombre: String;
     };
     fechaIngreso?: Date;
     fechaEgreso?: Date;
     fechaAtencion?: Date;
-    tipo_egreso?: string;
+    tipo_egreso?: String;
     deletedAt?: Date;
     idPrestacion: ObjectId;
     ingreso: {
@@ -31,11 +35,11 @@ export interface IInternacionResumen {
     };
     prioridad?: {
         id: number;
-        label: string;
-        type: string;
+        label: String;
+        type: String;
     };
     registros: [{
-        tipo?: string;
+        tipo?: String;
         idPrestacion?: Types.ObjectId;
         concepto: ISnomedConcept;
         valor: Object;
@@ -47,15 +51,7 @@ export type IInternacionResumenDoc = AndesDoc<IInternacionResumen>;
 
 export const InternacionResumenSchema = new Schema({
     ambito: String,
-    paciente: {
-        id: SchemaTypes.ObjectId,
-        documento: String,
-        sexo: String,
-        genero: String,
-        nombre: String,
-        apellido: String,
-        fechaNacimiento: Date
-    },
+    paciente: PacienteSubSchema,
     organizacion: {
         type: NombreSchemaV2,
         required: true

@@ -1,22 +1,8 @@
 import { model, Schema, SchemaTypes } from 'mongoose';
-import { ESTADO, NombreSchemaV2 } from '../../../shared/schemas';
+import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 export const VacunasPacientesSchema = new Schema({
-    paciente: {
-        id: SchemaTypes.ObjectId,
-        nombre: String,
-        apellido: String,
-        documento: String,
-        fechaNacimiento: Date,
-        fechaFallecimiento: Date,
-        estado: ESTADO,
-        sexo: String,
-        telefono: String,
-        email: String,
-        localidad: NombreSchemaV2,
-        zona: NombreSchemaV2,
-        areaPrograma: NombreSchemaV2
-    },
+    paciente: PacienteSubSchema,
     aplicaciones: [{
         idPrestacion: SchemaTypes.ObjectId,
         edad: Number,

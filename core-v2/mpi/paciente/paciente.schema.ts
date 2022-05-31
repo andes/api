@@ -2,12 +2,13 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from '../../../shared/constantes';
-import { NombreSchema, DireccionSchema, ContactoSchema } from '../../../shared/schemas';
+import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from './constantes';
+import { NombreSchema, DireccionSchema, ContactoSchema, NombreSchemaV2 } from '../../../shared/schemas';
 import { FinanciadorSchema } from '../financiador/financiador.schema';
 import { ParentescoSchema } from '../parentesco/parentesco.schema';
 import { IPacienteDoc } from './paciente.interface';
-
+import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import * as obraSocialSchema from '../../../modules/obraSocial/schemas/obraSocial';
 
 const ObjectId = mongoose.Types.ObjectId;
 const mongoose_fuzzy_searching = require('mongoose-fuzzy-searching');
@@ -118,6 +119,35 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     }],
     idPacientePrincipal: mongoose.Schema.Types.ObjectId
 }, { versionKey: false });
+
+
+export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
+    id: ObjectId,
+    nombre: String,
+    apellido: String,
+    documento: String,
+    fechaNacimiento: Date,
+    sexo: SEXO,
+    genero: String,
+    fechaFallecimiento: Date,
+    numeroIdentificacion: String,
+    alias: String,
+    //  -------- extras -----------
+    telefono: String,
+    email: String,
+    carpetaEfectores: [{
+        organizacion: nombreSchema,
+        nroCarpeta: String
+    }],
+    obraSocial: { type: obraSocialSchema },
+    localidad: NombreSchemaV2,
+    zona: NombreSchemaV2,
+    areaPrograma: NombreSchemaV2,
+    addAt: Date
+
+
+}, { _id: false });
+
 
 PacienteSchema.pre('save', function (next) {
     const user: any = this;
@@ -230,7 +260,7 @@ export function calcularEdadReal(fecha, fechaFallecimiento) {
 
 /* Se definen los campos virtuals */
 PacienteSchema.virtual('nombreCompleto').get(function () {
-    return this.nombre + ' ' + this.apellido;
+    return this.apellido + ', ' + (this.alias || this.nombre);
 });
 PacienteSchema.virtual('edad').get(function () {
     return calcularEdad(this.fechaNacimiento, this.fechaFallecimiento);
@@ -239,14 +269,27 @@ PacienteSchema.virtual('edadReal').get(function () {
     return calcularEdadReal(this.fechaNacimiento, this.fechaFallecimiento);
 });
 
+PacienteSubSchema.virtual('nombreCompleto').get(function () {
+    return this.apellido + ', ' + (this.alias || this.nombre);
+});
+PacienteSubSchema.virtual('edad').get(function () {
+    return calcularEdad(this.fechaNacimiento, this.fechaFallecimiento);
+});
+PacienteSubSchema.virtual('edadReal').get(function () {
+    return calcularEdadReal(this.fechaNacimiento, this.fechaFallecimiento);
+});
+
 PacienteSchema.methods.basicos = function () {
     return {
         id: this._id,
         nombre: this.nombre,
+        alias: this.alias,
         apellido: this.apellido,
         documento: this.documento,
+        numeroIdentificacion: this.numeroIdentificacion,
         fechaNacimiento: this.fechaNacimiento,
-        sexo: this.sexo
+        sexo: this.sexo,
+        genero: this.genero
     };
 };
 
@@ -262,18 +305,6 @@ PacienteSchema.plugin(mongoose_fuzzy_searching, {
 PacienteSchema.index({ tokens: 1 });
 PacienteSchema.index({ documento: 1, sexo: 1 });
 PacienteSchema.index({ estado: 1, activo: 1, updateAt: 1 });
-
-export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
-    id: mongoose.Schema.Types.ObjectId,
-    nombre: String,
-    apellido: String,
-    documento: String,
-    alias: String,
-    fechaNacimiento: Date,
-    sexo: SEXO,
-    telefono: String
-
-}, { _id: false });
 
 export const Paciente = mongoose.model<IPacienteDoc>('paciente_2', PacienteSchema, 'paciente');
 

@@ -2,6 +2,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { Document, model, Schema, Types } from 'mongoose';
 import { ISeguimientoPaciente } from '../interfaces/seguimiento-paciente.interface';
 import { contactoEstrechoSchema } from './contacto-estrecho.schema';
+import { SEXO } from '../../../core-v2/mpi/paciente/constantes';
 
 export const pointSchema = new Schema({
     type: {
@@ -31,15 +32,18 @@ export const seguimientoPacienteSchema = new Schema(
             fecha: Date
         },
         paciente: {
-            id: Types.ObjectId,
-            nombre: String,
-            apellido: String,
-            documento: String,
-            telefonoActual: String,
-            direccionActual: String,
-            sexo: String,
-            foto: String,
-            fechaNacimiento: Date
+            type: {
+                id: Types.ObjectId,
+                nombre: String,
+                apellido: String,
+                documento: String,
+                fechaNacimiento: Date,
+                sexo: SEXO,
+                genero: String,
+                telefonoActual: String,
+                direccionActual: String,
+                foto: String
+            }
         },
         organizacionSeguimiento: {
             id: Types.ObjectId,

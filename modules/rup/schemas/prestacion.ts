@@ -7,7 +7,7 @@ import { PrestacionEstadoSchema } from './prestacion.estado';
 import * as registro from './prestacion.registro';
 import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
 import { SemanticTag } from './semantic-tag';
-
+import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 export const PrestacionSchema = new Schema({
     /**
@@ -31,16 +31,11 @@ export const PrestacionSchema = new Schema({
 
     // Datos principales del paciente
     paciente: {
-        // requirido, validar en middleware
-        id: Schema.Types.ObjectId,
-        nombre: String,
-        apellido: String,
-        documento: String,
-        telefono: String,
-        sexo: String,
-        fechaNacimiento: Date,
-        obraSocial: ObraSocialSchema,
-        idPacienteValidado: Schema.Types.ObjectId
+        type: {
+            ...PacienteSubSchema,
+            telefono: String,
+            obraSocial: ObraSocialSchema,
+        }
     },
     noNominalizada: {
         type: Boolean,

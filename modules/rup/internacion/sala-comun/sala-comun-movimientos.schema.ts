@@ -4,6 +4,7 @@ import { UnidadOrganizativa } from '../../../../core/tm/interfaces/IOrganizacion
 import { NombreSchemaV2 } from '../../../../shared/schemas';
 import { SnomedConcept } from '../../schemas/snomed-concept';
 import { InternacionExtrasSchema } from '../cama-estados.schema';
+import { PacienteSubSchema } from '../../../../core-v2/mpi/paciente/paciente.schema';
 
 // eslint-disable-next-line no-shadow
 export enum SalaComunAccion {
@@ -19,7 +20,6 @@ export interface ISalaComunMovimiento {
     idInternacion: Types.ObjectId;
     fecha: Date;
     unidadOrganizativas: UnidadOrganizativa[];
-
 }
 
 export type SalaComunMovimientoDocument = AndesDocWithAudit<ISalaComunMovimiento>;
@@ -31,15 +31,7 @@ const SalaComunMovimientosSchema = new Schema({
         required: true
     },
     ambito: String,
-    paciente: {
-        id: SchemaTypes.ObjectId,
-        documento: String,
-        sexo: String,
-        genero: String,
-        nombre: String,
-        apellido: String,
-        fechaNacimiento: Date
-    },
+    paciente: PacienteSubSchema,
     accion: {
         type: String,
         enum: ['IN', 'OUT'],

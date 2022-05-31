@@ -26,11 +26,14 @@ export interface IInscripcionVacunas {
     paciente: {
         id: Types.ObjectId;
         nombre: String;
+        alias?: String;
         apellido: String;
         documento: String;
-        telefono: String;
+        numeroIdentificacion?: String;
         sexo: String;
+        genero: String;
         fechaNacimiento: Date;
+        telefono: String;
         addAt: Date;
     };
     nota?: String;

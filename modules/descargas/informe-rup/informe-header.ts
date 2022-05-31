@@ -39,18 +39,18 @@ export class InformeRupHeader extends HTMLComponent {
                     </div>
                     <div class="contenedor-secundario">
                     <div class="contenedor-bloque-texto" >
-                                 <h6>
-                                 <b>Obra Social: </b>
+                                <h6>
+                                <b>Obra Social: </b>
 
-                                    {{#if paciente.obraSocial}}
-                                   {{paciente.obraSocial}}
-                                    {{else}}
-                                    sin obra social
-                                    {{/if}}
-                                </h6>
+                                {{#if paciente.obraSocial}}
+                                {{paciente.obraSocial}}
+                                {{else}}
+                                sin obra social
+                                {{/if}}
+                            </h6>
                     </div>
                     </div>
-                  <div class="contenedor-secundario">
+                    <div class="contenedor-secundario">
                         <div class="contenedor-bloque-texto">
                             <h6 class="bolder">
                                 Fecha de Nac.
@@ -88,18 +88,18 @@ export class InformeRupHeader extends HTMLComponent {
                 <!-- Datos origen solicitud -->
                 <span class="contenedor-principal-data">
                 {{#if origenTop}}
-                     <div class="contenedor-secundario">
-                         <h6 class="volanta">DATOS DE ORIGEN DE SOLICITUD</h6>
-                             <h4>
-                                 {{{ origen.efectorOrigen }}}
-                             </h4>
-                     </div>
+                    <div class="contenedor-secundario">
+                        <h6 class="volanta">DATOS DE ORIGEN DE SOLICITUD</h6>
+                            <h4>
+                                {{{ origen.efectorOrigen }}}
+                            </h4>
+                    </div>
 
-                     <div class="contenedor-secundario">
+                    <div class="contenedor-secundario">
                         <div class="contenedor-bloque-texto">
                                 <h6 class="bolder">Profesional</h6>
                                 <h6>
-                                     {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
+                                    {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
                                 </h6>
                         </div>
                     </div>
@@ -130,7 +130,7 @@ export class InformeRupHeader extends HTMLComponent {
                             </h6>
                         </div>
                     </div>
-               {{/if}}
+            {{/if}}
                 </span>
             </section>
             {{#unless consultaValidada }}
@@ -161,9 +161,12 @@ export class InformeRupHeader extends HTMLComponent {
             paciente: {
                 nombre: paciente.nombre,
                 apellido: paciente.apellido,
+                alias: paciente.alias || undefined,
                 sexo: paciente.sexo,
+                genero: paciente.genero,
                 fechaNacimiento,
                 documento: paciente.documento,
+                numeroIdentificacion: paciente.numeroIdentificacion || undefined,
                 edad,
                 numeroCarpeta: numeroCarpeta?.nroCarpeta,
                 obraSocial: prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial.financiador : false
@@ -172,7 +175,6 @@ export class InformeRupHeader extends HTMLComponent {
                 nombre: organizacion ? organizacion.nombre.replace('-', '</br>') : '',
                 direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
             },
-
             origen: {
                 efectorOrigen: solicitudOrigen.organizacionOrigen.nombre ? solicitudOrigen.organizacionOrigen.nombre.replace('-', '</br>') : '',
                 profesionalOrigenNombre: solicitudOrigen.profesionalOrigen.nombre,

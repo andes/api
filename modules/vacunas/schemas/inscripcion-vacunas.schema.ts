@@ -4,6 +4,7 @@ import { ITokenSearch, TokenSearch } from '@andes/mongoose-token-search';
 import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { IVacunasInscripcion } from '../inscripcion-vacunas.interface';
+import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 export const InscripcionVacunaSchema = new Schema({
     fechaRegistro: Date,
@@ -28,16 +29,7 @@ export const InscripcionVacunaSchema = new Schema({
     validado: Boolean,
     personal_salud: Boolean,
     validaciones: [String],
-    paciente: {
-        id: Types.ObjectId,
-        nombre: String,
-        apellido: String,
-        documento: String,
-        telefono: String,
-        sexo: String,
-        fechaNacimiento: Date,
-        addAt: Date
-    },
+    paciente: PacienteSubSchema,
     nota: String,
     cud: String,
     alergia: Boolean,

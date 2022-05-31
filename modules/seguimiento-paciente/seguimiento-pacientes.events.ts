@@ -42,11 +42,14 @@ EventCore.on('epidemiologia:seguimiento:create', async (data) => {
                 paciente: {
                     id: data.paciente.id,
                     nombre: data.paciente.nombre,
+                    alias: data.paciente.alias || undefined,
                     apellido: data.paciente.apellido,
                     documento: data.paciente.documento,
+                    numeroIdentificaion: data.paciente.numeroIdentificaion || undefined,
                     telefonoActual: mpiSections.fields.find(f => f.telefonocaso).telefonocaso,
                     direccionActual: mpiSections.fields.find(f => f.direccioncaso).direccioncaso,
                     sexo: data.paciente.sexo,
+                    genero: data.paciente.genero,
                     foto: '',
                     fechaNacimiento: data.paciente.fechaNacimiento
                 },
