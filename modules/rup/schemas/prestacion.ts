@@ -1,7 +1,6 @@
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
-import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { convertToObjectId, iterate } from '../controllers/rup';
 import { PrestacionEstadoSchema } from './prestacion.estado';
 import * as registro from './prestacion.registro';
@@ -30,13 +29,7 @@ export const PrestacionSchema = new Schema({
 
 
     // Datos principales del paciente
-    paciente: {
-        type: {
-            ...PacienteSubSchema,
-            telefono: String,
-            obraSocial: ObraSocialSchema,
-        }
-    },
+    paciente: PacienteSubSchema,
     noNominalizada: {
         type: Boolean,
         required: true,

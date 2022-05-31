@@ -19,7 +19,7 @@ export async function createSala() {
 }
 
 export function createPaciente(documento) {
-    return { id: new Types.ObjectId(), documento, nombre: documento, apellido: documento };
+    return { id: new Types.ObjectId(), documento, nombre: documento, apellido: documento, sexo: 'otro' };
 }
 
 
