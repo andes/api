@@ -1,3 +1,11 @@
+## [5.91.1](https://github.com/andes/api/compare/v5.91.0...v5.91.1) (2022-06-01)
+
+
+### Bug Fixes
+
+* **IN-409:** camas censables y no censables ([#1706](https://github.com/andes/api/issues/1706)) ([be7b655](https://github.com/andes/api/commit/be7b655a021035e7ddd672bcb05c02ac9ac34159))
+* **RUP-305:** guardar en historial-prestacion la prestacion que es cancelada ([#1675](https://github.com/andes/api/issues/1675)) ([ec5be28](https://github.com/andes/api/commit/ec5be28b7dc772320186c7a97b5d172e251f37cc))
+
 # [5.91.0](https://github.com/andes/api/compare/v5.90.0...v5.91.0) (2022-05-18)
 
 
