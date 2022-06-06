@@ -69,11 +69,18 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                         cond: { $eq: ['$$this.name', 'Clasificacion'] }
                     }
                 },
+                informClinica: {
+                    $filter: {
+                        input: '$secciones',
+                        cond: { $eq: ['$$this.name', 'Informacion Clinica'] }
+                    }
+                },
             }
         },
         {
             $addFields: {
                 Type_clasification: '$clasifications.fields.clasificacion',
+                requerimientoCuidado: { $arrayElemAt: ['$informClinica.fields.requerimientocuidado', 0] },
             }
         },
         {
@@ -102,6 +109,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 Organizacion_Nombre: { $arrayElemAt: ['$Organizacion.nombre', 0] },
                 Sisa: { $arrayElemAt: ['$Organizacion.codigo.sisa', 0] },
                 clasificacion: { $arrayElemAt: ['$secciones.fields.segundaclasificacion.nombre', 0] },
+                requerimientoCuidado: { $arrayElemAt: ['$requerimientoCuidado.nombre', 0] },
                 resultado: { $arrayElemAt: ['$secciones.fields.clasificacionfinal', 0] },
             },
         },
@@ -115,6 +123,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
     const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
     for (const unaFicha of fichas) {
         const documento = unaFicha.Paciente_documento;
+        const requerimientoCuidado = unaFicha.requerimientoCuidado;
         if (documento) {
             const eventoNominal = {
                 idTipodoc: '1',
@@ -122,12 +131,11 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 sexo: unaFicha.Paciente_sexo === 'femenino' ? 'F' : (unaFicha.Paciente_sexo === 'masculino') ? 'M' : '',
                 fechaNacimiento: unaFicha.Paciente_fec_nacimiento,
                 idGrupoEvento: '113',
-                idEvento: '307',
+                idEvento: requerimientoCuidado === 'ambulatorio' ? '321' : '322',
                 idEstablecimientoCarga: unaFicha.Sisa.toString(),
                 fechaPapel: unaFicha.Fecha_Ficha,
-                idClasificacionManualCaso: unaFicha.clasificacion === 'Criterio clínico epidemiológico (Nexo)' ? '792' : unaFicha.clasificacion === 'Antígeno' ? '795' : ''
+                idClasificacionManualCaso: unaFicha.clasificacion === 'Antígeno' ? '820' : ''
             };
-
             const dto = {
                 usuario: user,
                 clave,
@@ -137,7 +145,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
             const log = {
                 fecha: new Date(),
                 sistema: 'Sisa',
-                key: unaFicha.clasificacion === 'Criterio clínico epidemiológico (Nexo)' ? '792' : unaFicha.clasificacion === 'Antígeno' ? '795' : '',
+                key: unaFicha.clasificacion === 'Antígeno' ? '820' : '',
                 idPaciente: unaFicha.Paciente_id,
                 info_enviada: eventoNominal,
                 resultado: {}
