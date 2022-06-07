@@ -37,9 +37,9 @@ export async function actualizarRegistro(registroPer: any) {
 
         if (pacienteSP && registroPer.embarazo && pacienteSP['pregnancies']) {
 
-            const numGesta = getNumGesta(registroPer.embarazo).toString() || null;
+            const numGesta = getNumGesta(registroPer.embarazo);
 
-            const embarazoSP = numGesta ? pacienteSP['pregnancies'][numGesta] : null;
+            const embarazoSP = numGesta ? pacienteSP['pregnancies'][numGesta.toString()] : null;
 
             if (embarazoSP) {
                 // se actualiza fechaFinEmbarazo
