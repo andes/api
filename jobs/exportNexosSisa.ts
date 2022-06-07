@@ -237,10 +237,10 @@ export async function exportSisa(done, horas) {
             sexo: unaPrestacion.sexo === 'femenino' ? 'F' : (unaPrestacion.sexo === 'masculino') ? 'M' : '',
             fechaNacimiento: unaPrestacion.fechaNacimiento,
             idGrupoEvento: '113',
-            idEvento: unaPrestacion.ambito === 'ambulatorio' ? '321' : '322',
+            idEvento: unaPrestacion.ambito === 'ambulatorio' ? '329' : '330',
             idEstablecimientoCarga: unaPrestacion.CodigoSisa.toString(),
             fechaPapel: unaPrestacion.fecha,
-            idClasificacionManualCaso: unaPrestacion.tipo === 'nexo' ? '792' : unaPrestacion.tipo === 'antigeno' ? '820' : ''
+            idClasificacionManualCaso: unaPrestacion.tipo === 'antigeno' ? '898' : ''
         };
 
         const dto = {
@@ -256,45 +256,48 @@ export async function exportSisa(done, horas) {
             info_enviada: eventoNominal,
             resultado: {}
         };
-        try {
-            const options = {
-                uri: urlSisa,
-                method: 'POST',
-                body: dto,
-                headers: {
-                    APP_ID: sisa.APP_ID_ALTA,
-                    APP_KEY: sisa.APP_KEY_ALTA,
-                    'Content-Type': 'application/json'
-                },
-                json: true,
-            };
-            const [status, resJson] = await handleHttpRequest(options);
+        if (dto.altaEventoCasoNominal.idClasificacionManualCaso) {
+            try {
 
-            if (status >= 200 && status <= 299) {
-                log.resultado = {
-                    resultado: resJson.resultado ? resJson.resultado : '',
-                    id_caso: resJson.id_caso ? resJson.id_caso : '',
-                    description: resJson.description ? resJson.description : ''
+                const options = {
+                    uri: urlSisa,
+                    method: 'POST',
+                    body: dto,
+                    headers: {
+                        APP_ID: sisa.APP_ID_ALTA,
+                        APP_KEY: sisa.APP_KEY_ALTA,
+                        'Content-Type': 'application/json'
+                    },
+                    json: true,
                 };
+                const [status, resJson] = await handleHttpRequest(options);
 
-            } else {
+                if (status >= 200 && status <= 299) {
+                    log.resultado = {
+                        resultado: resJson.resultado ? resJson.resultado : '',
+                        id_caso: resJson.id_caso ? resJson.id_caso : '',
+                        description: resJson.description ? resJson.description : ''
+                    };
+
+                } else {
+                    log.resultado = {
+                        resultado: 'ERROR_DE_ENVIO',
+                        id_caso: '',
+                        description: 'No se recibió ningún resultado'
+                    };
+                }
+                const info = new InformacionExportada(log);
+                await info.save();
+
+            } catch (error) {
                 log.resultado = {
                     resultado: 'ERROR_DE_ENVIO',
                     id_caso: '',
-                    description: 'No se recibió ningún resultado'
+                    description: error.toString()
                 };
+                const info = new InformacionExportada(log);
+                await info.save();
             }
-            const info = new InformacionExportada(log);
-            await info.save();
-
-        } catch (error) {
-            log.resultado = {
-                resultado: 'ERROR_DE_ENVIO',
-                id_caso: '',
-                description: error.toString()
-            };
-            const info = new InformacionExportada(log);
-            await info.save();
         }
 
     }
