@@ -4,19 +4,6 @@ import { Codificacion } from '../../rup/schemas/codificacion';
 import { find as findOrganizaciones } from '../../../core/tm/controller/organizacion';
 import { Agenda } from '../schemas/agenda';
 
-/*
-function getAge(dateString) {
-    let today = new Date();
-    let birthDate = new Date(dateString);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    let m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-    return age;
-}
-*/
-
 function calculoEdad(dateString) {
     let edad: any;
     const fechaActual: Date = new Date();
@@ -119,12 +106,17 @@ export function getDiagnosticos(params) {
             horaFin: { $lte: new Date(params.horaFin) },
         };
 
+        const matchCodificacionesAuditoria = {
+            'codificacionesAuditoria.c2': true
+        };
+
         if (organizaciones) {
             matchAgendas['organizacion._id'] = { $in: organizaciones };
         }
 
         if (params.cie10) {
             matchAgendas['bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
+            matchCodificacionesAuditoria['codificacionesAuditoria.codigo'] = params.cie10;
         }
 
         pipeline = [{
@@ -150,9 +142,7 @@ export function getDiagnosticos(params) {
                         $unwind: '$codificacionesAuditoria'
                     },
                     {
-                        $match: {
-                            'codificacionesAuditoria.c2': true
-                        }
+                        $match: matchCodificacionesAuditoria
                     },
                     {
                         $group: {
@@ -164,10 +154,6 @@ export function getDiagnosticos(params) {
                         }
                     }
         ];
-
-        if (params.cie10) {
-            pipeline.splice(3,0,{ $unwind:'$bloques.turnos.diagnostico.codificaciones' });
-        }
 
         let pipeline1 = [];
         const matchSobreturnos = {
@@ -205,10 +191,7 @@ export function getDiagnosticos(params) {
                          $unwind: '$codificacionesAuditoria'
                      },
                      {
-                         $match: {
-                             'codificacionesAuditoria.c2': true
-                         }
-
+                         $match: matchCodificacionesAuditoria
                      },
                      {
                          $group: {
@@ -219,10 +202,6 @@ export function getDiagnosticos(params) {
                              paciente: { $push: '$paciente' }
                          }
                      }];
-
-        if (params.cie10) {
-            pipeline1.splice(2,0,{ $unwind: '$sobreturnos.diagnostico.codificaciones' });
-        }
 
         // Se buscan las prestaciones fuera de agenda codificados con algun diagnostico c2
         let pipeline2 = [];
@@ -249,6 +228,7 @@ export function getDiagnosticos(params) {
 
         if (params.cie10) {
             matchCodificacion1['diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
+            matchCodificacion2['diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
         }
 
         pipeline2 = [
@@ -265,6 +245,9 @@ export function getDiagnosticos(params) {
             },
             {
                 $unwind: '$prestacion',
+            },
+            {
+                $unwind: '$diagnostico.codificaciones',
             },
             {
                 $match: matchCodificacion2
@@ -284,7 +267,6 @@ export function getDiagnosticos(params) {
         if (params.cie10) {
             pipeline2.splice(2,0,{ $unwind: '$diagnostico.codificaciones' });
         }
-
         const p1 = Agenda.aggregate(pipeline);
         const p2 = Agenda.aggregate(pipeline1);
         const p3 = Codificacion.aggregate(pipeline2);
@@ -296,19 +278,42 @@ export function getDiagnosticos(params) {
         const arr = [];
         // Se carga el arreglo arr con todos los reporte C2 de data, sin repetir.
         diagnosticos.forEach(e => {
-            if (!arr.some(x => { return e.codigo.reporteC2 === x.codigo.reporteC2; })) {
-                arr.push({ _id: e._id, codigo: e.codigo, paciente: [] });
+            if (typeof e._id === 'string') {
+                if (!arr.some(x => { return e.codigo.nombre === x.codigo.nombre; })) {
+                    arr.push({ _id: e._id, codigo: e.codigo, paciente: [] });
+                }
+            } else {
+                const esta = false;
+                for (let i = 0; i < e._id.length; i++) {
+                    for (let j = 0; j < e.codigo.length && !esta; j++) {
+                        if (!arr.some(x => { return e._id[i] === x.codigo.nombre; }) && (e.codigo[j].nombre === e._id[i])) {
+                            arr.push({ _id: e._id[i], codigo: e.codigo[j], paciente: [] });
+                            this.esta = true;
+                        }
+                    }
+                }
             }
         });
 
-        // A cada reporte C2 le carga los pacientes sin repetir
         diagnosticos.forEach(e => {
-            const match = arr.filter(ee => ee.codigo.reporteC2 === e.codigo.reporteC2)[0];
-            e.paciente.forEach(pac => {
-                if (!match.paciente.some(pac2 => { return pac.documento === pac2.documento && pac.sexo === pac2.sexo; })) {
-                    match.paciente.push(pac);
+            let match;
+            if (typeof e._id === 'string') {
+                match = arr.filter(ee => ee.codigo.nombre === e.codigo.nombre)[0];
+                e.paciente.forEach(pac => {
+                    if (!match.paciente.some(pac2 => { return pac.documento === pac2.documento && pac.sexo === pac2.sexo; })) {
+                        match.paciente.push(pac);
+                    }
+                });
+            } else {
+                for (let i = 0; i < e._id.length; i++) {
+                    match = arr.filter(ee => ee._id === e._id[i])[0];
+                    e.paciente.forEach(pac => {
+                        if (!match.paciente.some(pac2 => { return pac.documento === pac2.documento && pac.sexo === pac2.sexo; })) {
+                            match.paciente.push(pac);
+                        }
+                    });
                 }
-            });
+            }
         });
 
         arr.forEach(elem => {
