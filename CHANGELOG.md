@@ -1,3 +1,15 @@
+# [5.92.0](https://github.com/andes/api/compare/v5.91.1...v5.92.0) (2022-06-08)
+
+
+### Bug Fixes
+
+* **job:** export fichas ([#1717](https://github.com/andes/api/issues/1717)) ([ece0ba5](https://github.com/andes/api/commit/ece0ba5da7b3f70811b746390cbb2a61aabc8c9b))
+
+
+### Features
+
+* **GDU-49:** se agrega subtipo ambulatorio ([#1712](https://github.com/andes/api/issues/1712)) ([dcee94e](https://github.com/andes/api/commit/dcee94e1dae3342d2b0d96b5224971c8d76f50b3))
+
 ## [5.91.1](https://github.com/andes/api/compare/v5.91.0...v5.91.1) (2022-06-01)
 
 
