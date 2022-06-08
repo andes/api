@@ -4,7 +4,7 @@ import * as SalaComunController from './sala-comun/sala-comun.controller';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
-import { Types } from 'mongoose';
+import { Types, Mongoose } from 'mongoose';
 import { CamaEstados } from './cama-estados.schema';
 
 const router = express.Router();
@@ -56,6 +56,20 @@ router.get('/camas/historial', Auth.authenticate(), capaMiddleware, asyncHandler
     const result = await CamasController.historial({ organizacion, ambito, capa }, cama, internacion, desde, hasta, esMovimiento);
     return res.json(result);
 }));
+
+// Devuelve todas las internaciones de un paciente a lo largo del tiempo
+router.get('/camas/historialCompleto/:idPaciente', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
+    const organizacion = {
+        _id: Auth.getOrganization(req),
+        nombre: Auth.getOrganization(req, 'nombre')
+    };
+    const ambito = req.query.ambito;
+    const capa = req.query.capa;
+
+    const result = await CamasController.search({ organizacion, capa, ambito }, { paciente: Types.ObjectId(req.params.idPaciente) });
+    return res.json(result);
+}));
+
 
 router.get('/lista-espera', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = Auth.getOrganization(req);
