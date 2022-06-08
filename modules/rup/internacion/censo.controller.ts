@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { Prestacion } from '../schemas/prestacion';
+import { InternacionResumen } from './resumen/internacion-resumen.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import { Camas } from './camas.schema';
 import { Censo } from './censos.schema';
@@ -44,8 +45,19 @@ async function unificarMovimientos(snapshots, movimientos) {
     return mapping;
 }
 
-async function realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, camas) {
-    const prestaciones = await Prestacion.find({ _id: { $in: [...Object.keys(internaciones)] } });
+async function realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa) {
+    let prestaciones;
+    let resumenPrestacionMap: any = [];
+    if (capa === 'medica') {// solo para efectores -> estadistica-v2
+        const condicion1 = { _id: { $in: [...Object.keys(internaciones)] } };// busca resumen de internacion por id.
+        const condicion2 = { idPrestacion: { $exists: true } };// que exista idPrestacion.
+        const resumenes = await InternacionResumen.find({ $and: [condicion1, condicion2] });
+        resumenPrestacionMap = resumenes.map(r => { return { idPrestacion: r.idPrestacion, idResumen: r.id }; });
+        prestaciones = await Prestacion.find({ _id: { $in: resumenPrestacionMap.map(r => r.idPrestacion) } });
+    } else {
+        prestaciones = await Prestacion.find({ _id: { $in: [...Object.keys(internaciones)] } });
+    }
+
 
     let existenciaALas0 = 0;
     let existenciaALas24 = 0;
@@ -67,12 +79,19 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         dataInternaciones[idInter] = {};
         const filtros = { internacion: idInter };
         const ambito = 'internacion';
-        const capa = 'estadistica';
         const allMovimientos = internaciones[idInter];
         const organizacion = allMovimientos[0].organizacion._id;
         const ultimoMovimientoUO = allMovimientos.slice().reverse().find(m => m.unidadOrganizativa.conceptId === unidadOrganizativa);
+        let prestacion;
+        if (capa === 'medica') {
+            const idPrestacion = resumenPrestacionMap.find(r => String(r.idResumen) === String(allMovimientos[0].idInternacion))?.idPrestacion;
+            prestacion = prestaciones.find(p => String(p.id) === String(idPrestacion));
 
-        const prestacion = prestaciones.find(p => String(p.id) === String(allMovimientos[0].idInternacion));
+        } else {
+            prestacion = prestaciones.find(p => String(p.id) === String(allMovimientos[0].idInternacion));
+        }
+
+
         if (prestacion) {
             const informesInternacion: any = getInformesInternacion(prestacion);
             const desde = informesInternacion.ingreso.fechaIngreso;
@@ -279,8 +298,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
  * Genera el censo diario para una organizacion, unidad organizativa, y fecha dada
  */
 export async function censoDiario({ organizacion, timestamp, unidadOrganizativa }) {
+    const organizacionFound = await Organizacion.findById(organizacion);
     const ambito = 'internacion';
-    const capa = 'estadistica';
+    const capa = organizacionFound?.usaEstadisticaV2 ? 'medica' : 'estadistica';
     if (!timestamp) {
         timestamp = moment();
     }
@@ -290,7 +310,6 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
 
     const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
 
-    // const snapshotsUO = snapshots.filter(item => String(item.unidadOrganizativa.conceptId) === unidadOrganizativa);
 
     const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
 
@@ -299,7 +318,8 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
     const movimientosPorCama = groupBy(movimientos, 'idCama');
     const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
     const internaciones = await unificarMovimientos(snapshotsAgrupados, movimientosAgrupados);
-    const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, snapshotsPorCama);
+    const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa);
+
     const camas = await unificarMovimientos(snapshotsPorCama, movimientosPorCama);
     Object.keys(camas).forEach(idCama => {
         const ultimoMov = camas[idCama][camas[idCama].length - 1];

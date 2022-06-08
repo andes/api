@@ -17,8 +17,15 @@ class InternacionResumenController extends ResourceBase<IInternacionResumenDoc> 
         },
         ingreso: MongoQuery.matchDate.withField('fechaIngreso'),
         egreso: MongoQuery.matchDate.withField('fechaEgreso'),
-
+        idPrestacion: {
+            field: 'idPrestacion',
+            fn: MongoQuery.equalMatch
+        }
     };
+
+    async presearch() {
+        return { deletedAt: { $exists: false } };
+    }
 
     async populate(data: IInternacionResumen) {
         const registros = data.ingreso?.registros || [];

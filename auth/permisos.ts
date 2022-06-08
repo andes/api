@@ -146,7 +146,8 @@ export default [
                     { key: 'medica', title: 'Médico', type: 'boolean' },
                     { key: 'enfermeria', title: 'Enfermero', type: 'boolean' },
                     { key: 'estadistica', title: 'Estadístico', type: 'boolean' },
-                    { key: 'interconsultores', title: 'Interconsultor', type: 'boolean' }
+                    { key: 'interconsultores', title: 'Interconsultor', type: 'boolean' },
+                    { key: 'estadistica-v2', title: 'Estadístico (nuevo)', type: 'boolean' }
                 ]
             },
             {
