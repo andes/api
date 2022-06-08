@@ -131,21 +131,20 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 sexo: unaFicha.Paciente_sexo === 'femenino' ? 'F' : (unaFicha.Paciente_sexo === 'masculino') ? 'M' : '',
                 fechaNacimiento: unaFicha.Paciente_fec_nacimiento,
                 idGrupoEvento: '113',
-                idEvento: requerimientoCuidado === 'ambulatorio' ? '321' : '322',
+                idEvento: requerimientoCuidado === 'Ambulatorio' ? '329' : '330',
                 idEstablecimientoCarga: unaFicha.Sisa.toString(),
                 fechaPapel: unaFicha.Fecha_Ficha,
-                idClasificacionManualCaso: unaFicha.clasificacion === 'Antígeno' ? '820' : ''
+                idClasificacionManualCaso: unaFicha.clasificacion === 'Antígeno' ? '898' : ''
             };
             const dto = {
                 usuario: user,
                 clave,
                 altaEventoCasoNominal: eventoNominal
             };
-
             const log = {
                 fecha: new Date(),
                 sistema: 'Sisa',
-                key: unaFicha.clasificacion === 'Antígeno' ? '820' : '',
+                key: unaFicha.clasificacion === 'Antígeno' ? 'antigeno' : '',
                 idPaciente: unaFicha.Paciente_id,
                 info_enviada: eventoNominal,
                 resultado: {}
@@ -163,6 +162,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                         },
                         json: true,
                     };
+
                     const [status, resJson] = await handleHttpRequest(options);
 
                     if (status >= 200 && status <= 299) {
@@ -181,6 +181,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                             description: 'No se recibió ningún resultado'
                         };
                     }
+
                     const info = new InformacionExportada(log);
                     await info.save();
 
