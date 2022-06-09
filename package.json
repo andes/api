@@ -172,7 +172,7 @@
     "@types/request": "^2.48.5",
     "@typescript-eslint/eslint-plugin": "^4.29.0",
     "@typescript-eslint/eslint-plugin-tslint": "^4.29.0",
-    "@typescript-eslint/parser": "^5.12.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "before": "0.0.1",
     "chai": "^4.1.2",
     "eslint": "^7.32.0",
@@ -183,6 +183,6 @@
     "nodemon": "^1.17.4",
     "semantic-release": "^17.0.8",
     "ts-jest": "^24.1.0",
-    "tslint-eslint-rules": "^5.3.1"
+    "tslint-eslint-rules": "^4.1.1"
   }
 }
