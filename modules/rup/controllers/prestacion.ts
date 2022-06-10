@@ -109,7 +109,7 @@ export async function search(params) {
 }
 
 
-export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPrestacion: string, estado: string, deadline, valor?) {
+export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPrestacion: string, estado: string, deadline, valor?, termSearch?, form?) {
     let useCache = true;
     if (!expresion) {
         return null;
@@ -147,8 +147,7 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
     } else {
         prestaciones = await Prestacion.find(query);
     }
-
-    const conceptos = await SnomedCtr.getConceptByExpression(expresion);
+    const conceptos = await SnomedCtr.getConceptByExpression(expresion, termSearch, form);
     let huds = buscarEnHuds(prestaciones, conceptos);
     if (valor) {
         huds = huds.filter(p => p.registro.valor);
