@@ -156,7 +156,8 @@ export default [
                 child: [
                     { key: 'create', title: 'Crear nueva cama', type: 'boolean' },
                     { key: 'edit', title: 'Editar cama', type: 'boolean' },
-                    { key: 'baja', title: 'Eliminar cama', type: 'boolean' }
+                    { key: 'baja', title: 'Eliminar cama', type: 'boolean' },
+                    { key: 'prestamo', title: 'Prestar cama', type: 'boolean' }
                 ]
             },
             {
