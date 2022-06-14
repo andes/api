@@ -2,6 +2,7 @@ import { EventCore } from '@andes/event-bus/';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { zonaSanitariasSchema } from '../../../core/tm/schemas/zonaSanitarias';
+import { FormConfigSchema } from '../forms.schema';
 import { SECCION_CLASIFICACION, SECCION_USUARIO } from './constantes';
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -26,7 +27,9 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         fechaNacimiento: Date
     }, { _id: false }),
     secciones: [mongoose.Schema.Types.Mixed],
+    config: FormConfigSchema,
     zonaSanitaria: zonaSanitariasSchema,
+    snvs: { type: Boolean, default: false },
     active: {
         type: Boolean,
         required: true,
@@ -92,7 +95,9 @@ FormsEpidemiologiaSchema.post('save', (ficha: any) => {
     const { FormsHistory } = require('./forms-history.schema');
     const history = new FormsHistory(ficha.toJSON());
     history._id = new mongoose.Types.ObjectId();
-
+    if (ficha.config?.idEvento && !ficha.snvs) {
+        EventCore.emitAsync('alta:fichaEpidemiologica:snvs', ficha);
+    }
     history.save();
 });
 

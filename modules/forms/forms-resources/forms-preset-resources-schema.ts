@@ -7,11 +7,12 @@ export const FormPresetResourcesSchema = new mongoose.Schema({
     },
     nombre: String,
     id: String,
+    preset: String,
     type: {
         type: String,
         default: 'normal'
     },
-    fields : [{ type: mongoose.SchemaTypes.Mixed }]
+    fields: [{ type: mongoose.SchemaTypes.Mixed }]
 });
 
 export const FormPresetResource = mongoose.model('formPresetResources', FormPresetResourcesSchema, 'formPresetResources');

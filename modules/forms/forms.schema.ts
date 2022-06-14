@@ -4,12 +4,22 @@ export interface FormTypes {
     name: string;
     type: string;
     snomedCode: string;
+    config?: {
+        idEvento: string;
+        idGrupoEvento: string;
+        configField: {
+            key: string;
+            value: string;
+            event: string;
+        }[];
+    };
     active: boolean;
     sections: {
         id: string;
         active: boolean;
         name: string;
         type: string;
+        preset: string;
         fields: {
             key: string;
             label: string;
@@ -60,12 +70,20 @@ export const SectionSchema = new mongoose.Schema({
     active: Boolean,
     name: String,
     type: String,
+    preset: String,
     fields: [FieldSchema]
+});
+
+export const FormConfigSchema = new mongoose.Schema({
+    idEvento: String,
+    idGrupoEvento: String,
+    configField: Array
 });
 
 export const FormSchema = new mongoose.Schema({
     name: { type: String, index: { unique: true } },
     active: { type: Boolean, default: true },
+    config: FormConfigSchema,
     snomedCode: { type: String },
     type: { type: String, index: { unique: true } },
     sections: [SectionSchema]
