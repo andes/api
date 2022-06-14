@@ -119,6 +119,10 @@ async function checkAndUpdateInternacion(paciente) {
         'estados.paciente.id': paciente._id
     }).sort({ start: -1 });
 
+    if (!ultimoEstadoCapaMedica) {
+        // nunca internado
+        return;
+    }
     // ultima ocupación de cama del paciente (capa medica)
     ultimoEstadoCapaMedica = ultimoEstadoCapaMedica.toObject();
 
@@ -132,7 +136,7 @@ async function checkAndUpdateInternacion(paciente) {
     });
 
     if (!ultimoEgresoCapaMedica) {
-        // el paciente sigue internado. Obtenemos capa estadistica para actualizar sus datos..
+        // como el paciente no esta egresado, obtenemos capa estadistica para tambien actualizar sus datos..
         let ultimoEstadoEstadistica: any = await CamaEstados.findOne({
             idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
             capa: 'estadistica',
