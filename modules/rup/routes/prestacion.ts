@@ -201,6 +201,10 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             match.$and.push({ 'solicitud.prestacionOrigen': { $exists: false } });
         }
 
+        if (req.query.inicio) {
+            match.$and.push({ inicio: req.query.inicio });
+        }
+
         if (req.query.tieneTurno !== undefined) {
             match.$and.push({ 'solicitud.turno': req.query.tieneTurno ? { $ne: null } : { $eq: null } });
         }
