@@ -55,13 +55,13 @@ EventCore.on('alta:fichaEpidemiologica:snvs', async (info) => {
             tipoDocumento: '1',
             numeroDocumento: info.paciente.documento,
             sexo: info.paciente.sexo === 'femenino' ? 'F' : (info.paciente.sexo === 'masculino') ? 'M' : '',
-            fechaNacimiento: moment(info.paciente.fechaNacimiento).format('DD/MM/YYYY')
+            fechaNacimiento: moment(info.paciente.fechaNacimiento).format('DD-MM-YYYY')
         },
         eventoCasoNominal: {
             idGrupoEvento: info.config.idGrupoEvento,
             idEvento: info.config.idEvento,
             idEstablecimientoCarga: organizacion.codigo.sisa,
-            fechaPapel: moment(info.createdAt).format('DD/MM/YYYY'),
+            fechaPapel: moment(info.createdAt).format('DD-MM-YYYY'),
             idClasificacionManualCaso: clasificacionCaso ? clasificacionCaso : '',
         }
     };
