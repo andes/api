@@ -12,7 +12,8 @@ export type IPlanIndicacionesDoc = AndesDoc<IPlanIndicaciones>;
 export const PlanIndicacionesEstadoSchema = new Schema({
     // active | on-hold | cancelled | completed | entered-in-error | stopped | draft | unknown | edited
     tipo: String,
-    fecha: Date
+    fecha: Date,
+    motivo: String,
 }, { _id: false });
 PlanIndicacionesEstadoSchema.plugin(AuditPlugin);
 
