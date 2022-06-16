@@ -173,6 +173,9 @@ router.get('/organizaciones', Auth.optionalAuth(), async (req, res, next) => {
     if (req.query.sisa) {
         filtros['codigo.sisa'] = req.query.sisa;
     }
+    if (req.query.internacionDefault) {
+        filtros['internacionDefault'] = req.query.internacionDefault;
+    }
     filtros['activo'] = req.query.activo !== null && req.query.activo !== undefined ? req.query.activo : true;
 
     if (req.query.tipoEstablecimiento) {
