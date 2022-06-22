@@ -11,113 +11,6 @@ const urlSisa = sisa.url_snvs;
 export async function exportSisa(done, horas) {
     const start = moment().subtract(horas, 'h').toDate();
     const end = moment().toDate();
-    const pipelineNexos = [
-        {
-            $match: {
-                'solicitud.fecha': {
-                    $gte: start,
-                    $lte: end
-                },
-                'estadoActual.tipo': 'validada',
-                $or: [
-                    {
-                        'ejecucion.registros.concepto.conceptId': '711000246101'
-                    },
-                    {
-                        'ejecucion.registros.registros.registros.concepto.conceptId': '711000246101'
-                    }
-                ]
-            }
-        },
-        {
-            $sort: {
-                'solicitud.fecha': 1
-            }
-        },
-        {
-            $project: {
-                paciente: {
-                    idPaciente: '$paciente.id',
-                    dni: '$paciente.documento',
-                    sexo: '$paciente.sexo',
-                    fechaNacimiento: '$paciente.fechaNacimiento'
-                },
-                ambito: '$solicitud.ambitoOrigen',
-                fecha: '$solicitud.fecha',
-                idEfector: '$solicitud.organizacion.id'
-            }
-        },
-        {
-            $group: {
-                _id: '$paciente',
-                primeraPrestacion: {
-                    $first: '$$ROOT'
-                }
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                idPaciente: '$_id.idPaciente',
-                dni: '$_id.dni',
-                sexo: '$_id.sexo',
-                fechaNacimiento: '$_id.fechaNacimiento',
-                fecha: '$primeraPrestacion.fecha',
-                ambito: '$primeraPrestacion.ambito',
-                idEfector: '$primeraPrestacion.idEfector'
-            }
-        },
-        {
-            $lookup: {
-                from: 'organizacion',
-                localField: 'idEfector',
-                foreignField: '_id',
-                as: 'organizacion'
-            }
-        },
-        {
-            $addFields: {
-                organizacion: {
-                    $arrayElemAt: [
-                        '$organizacion',
-                        0
-                    ]
-                }
-            }
-        },
-        {
-            $project: {
-                tipo: 'nexo',
-                idPaciente: '$idPaciente',
-                dni: '$dni',
-                sexo: '$sexo',
-                fechaNacimiento: {
-                    $dateToString: {
-                        date: '$fechaNacimiento',
-                        format: '%d-%m-%Y',
-                        timezone: 'America/Argentina/Buenos_Aires'
-                    }
-                },
-                fecha: {
-                    $dateToString: {
-                        date: '$fecha',
-                        format: '%d-%m-%Y',
-                        timezone: 'America/Argentina/Buenos_Aires'
-                    }
-                },
-                ambito: '$ambito',
-                idEfector: '$idEfector',
-                CodigoSisa: '$organizacion.codigo.sisa',
-                fechaCarga: {
-                    $dateToString: {
-                        date: '$fecha',
-                        format: '%d-%m-%Y',
-                        timezone: 'America/Argentina/Buenos_Aires'
-                    }
-                },
-            }
-        }
-    ];
 
     const pipelineAntigenos = [
         {
@@ -226,9 +119,7 @@ export async function exportSisa(done, horas) {
         }
     ];
 
-    const prestacionesNexo = await Prestacion.aggregate(pipelineNexos);
-    const prestacionesAntigenos = await Prestacion.aggregate(pipelineAntigenos);
-    const prestaciones = [...prestacionesNexo, ...prestacionesAntigenos];
+    const prestaciones = await Prestacion.aggregate(pipelineAntigenos);
 
     for (const unaPrestacion of prestaciones) {
         const eventoNominal = {
@@ -251,7 +142,7 @@ export async function exportSisa(done, horas) {
         const log = {
             fecha: new Date(),
             sistema: 'Sisa',
-            key: unaPrestacion.tipo === 'nexo' ? 'sisa_nexos' : unaPrestacion.tipo === 'antigeno' ? 'sisa_antigenos' : '',
+            key: unaPrestacion.tipo === 'antigeno' ? 'sisa_antigenos' : '',
             idPaciente: unaPrestacion.idPaciente,
             info_enviada: eventoNominal,
             resultado: {}
