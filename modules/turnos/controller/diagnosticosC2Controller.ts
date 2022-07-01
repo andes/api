@@ -4,19 +4,6 @@ import { Codificacion } from '../../rup/schemas/codificacion';
 import { find as findOrganizaciones } from '../../../core/tm/controller/organizacion';
 import { Agenda } from '../schemas/agenda';
 
-/*
-function getAge(dateString) {
-    let today = new Date();
-    let birthDate = new Date(dateString);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    let m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-    return age;
-}
-*/
-
 function calculoEdad(dateString) {
     let edad: any;
     const fechaActual: Date = new Date();
@@ -112,20 +99,28 @@ export function getDiagnosticos(params) {
             organizacionesStrings = result.map(o => o.id);
             organizaciones = result.map(o => mongoose.Types.ObjectId(o.id));
         }
-
-        const matchAgedas = {
-            'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-            'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
+        const matchAgendas = {
+            'bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
+            'bloques.turnos.diagnostico.codificaciones.primeraVez': true,
             horaInicio: { $gte: new Date(params.horaInicio) },
             horaFin: { $lte: new Date(params.horaFin) },
         };
 
+        const matchCodificacionesAuditoria = {
+            'codificacionesAuditoria.c2': true
+        };
+
         if (organizaciones) {
-            matchAgedas['organizacion._id'] = { $in: organizaciones };
+            matchAgendas['organizacion._id'] = { $in: organizaciones };
+        }
+
+        if (params.cie10) {
+            matchAgendas['bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
+            matchCodificacionesAuditoria['codificacionesAuditoria.codigo'] = params.cie10;
         }
 
         pipeline = [{
-            $match: matchAgedas
+            $match: matchAgendas
         },
                     {
                         $unwind: '$bloques'
@@ -134,14 +129,8 @@ export function getDiagnosticos(params) {
                         $unwind: '$bloques.turnos'
                     },
                     {
-                        $match: {
-                            'bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
-                            'bloques.turnos.diagnostico.codificaciones.primeraVez': true,
-                            horaInicio: { $gte: new Date(params.horaInicio) },
-                            horaFin: { $lte: new Date(params.horaFin) },
-                        }
+                        $match: matchAgendas
                     },
-
                     {
                         $project: {
                             paciente: '$bloques.turnos.paciente',
@@ -153,9 +142,7 @@ export function getDiagnosticos(params) {
                         $unwind: '$codificacionesAuditoria'
                     },
                     {
-                        $match: {
-                            'codificacionesAuditoria.c2': true
-                        }
+                        $match: matchCodificacionesAuditoria
                     },
                     {
                         $group: {
@@ -165,18 +152,23 @@ export function getDiagnosticos(params) {
                             },
                             paciente: { $push: '$paciente' }
                         }
-                    }];
+                    }
+        ];
 
         let pipeline1 = [];
         const matchSobreturnos = {
-            'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-            'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
+            'sobreturnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
+            'sobreturnos.diagnostico.codificaciones.primeraVez': true,
             horaInicio: { $gte: new Date(params.horaInicio) },
             horaFin: { $lte: new Date(params.horaFin) },
         };
 
         if (organizaciones) {
             matchSobreturnos['organizacion._id'] = { $in: organizaciones };
+        }
+
+        if (params.cie10) {
+            matchSobreturnos['sobreturnos.diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
         }
 
         pipeline1 = [{
@@ -186,15 +178,7 @@ export function getDiagnosticos(params) {
                          $unwind: '$sobreturnos'
                      },
                      {
-                         $unwind: '$sobreturnos.diagnostico.codificaciones'
-                     },
-                     {
-                         $match: {
-                             'sobreturnos.diagnostico.codificaciones.codificacionAuditoria.c2': true,
-                             'sobreturnos.diagnostico.codificaciones.primeraVez': true,
-                             horaInicio: { $gte: new Date(params.horaInicio) },
-                             horaFin: { $lte: new Date(params.horaFin) },
-                         }
+                         $match: matchSobreturnos
                      },
                      {
                          $project: {
@@ -207,10 +191,7 @@ export function getDiagnosticos(params) {
                          $unwind: '$codificacionesAuditoria'
                      },
                      {
-                         $match: {
-                             'codificacionesAuditoria.c2': true
-                         }
-
+                         $match: matchCodificacionesAuditoria
                      },
                      {
                          $group: {
@@ -245,6 +226,11 @@ export function getDiagnosticos(params) {
             matchCodificacion2['prestacion.solicitud.organizacion.id'] = { $in: organizaciones };
         }
 
+        if (params.cie10) {
+            matchCodificacion1['diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
+            matchCodificacion2['diagnostico.codificaciones.codificacionAuditoria.codigo'] = params.cie10;
+        }
+
         pipeline2 = [
             {
                 $match: matchCodificacion1
@@ -258,10 +244,10 @@ export function getDiagnosticos(params) {
                 }
             },
             {
-                $unwind: '$diagnostico.codificaciones'
+                $unwind: '$prestacion',
             },
             {
-                $unwind: '$prestacion',
+                $unwind: '$diagnostico.codificaciones',
             },
             {
                 $match: matchCodificacion2
@@ -278,6 +264,9 @@ export function getDiagnosticos(params) {
             }
         ];
 
+        if (params.cie10) {
+            pipeline2.splice(2,0,{ $unwind: '$diagnostico.codificaciones' });
+        }
         const p1 = Agenda.aggregate(pipeline);
         const p2 = Agenda.aggregate(pipeline1);
         const p3 = Codificacion.aggregate(pipeline2);
@@ -289,19 +278,42 @@ export function getDiagnosticos(params) {
         const arr = [];
         // Se carga el arreglo arr con todos los reporte C2 de data, sin repetir.
         diagnosticos.forEach(e => {
-            if (!arr.some(x => { return e.codigo.reporteC2 === x.codigo.reporteC2; })) {
-                arr.push({ _id: e._id, codigo: e.codigo, paciente: [] });
+            if (typeof e._id === 'string') {
+                if (!arr.some(x => { return e.codigo.nombre === x.codigo.nombre; })) {
+                    arr.push({ _id: e._id, codigo: e.codigo, paciente: [] });
+                }
+            } else {
+                const esta = false;
+                for (let i = 0; i < e._id.length; i++) {
+                    for (let j = 0; j < e.codigo.length && !esta; j++) {
+                        if (!arr.some(x => { return e._id[i] === x.codigo.nombre; }) && (e.codigo[j].nombre === e._id[i])) {
+                            arr.push({ _id: e._id[i], codigo: e.codigo[j], paciente: [] });
+                            this.esta = true;
+                        }
+                    }
+                }
             }
         });
 
-        // A cada reporte C2 le carga los pacientes sin repetir
         diagnosticos.forEach(e => {
-            const match = arr.filter(ee => ee.codigo.reporteC2 === e.codigo.reporteC2)[0];
-            e.paciente.forEach(pac => {
-                if (!match.paciente.some(pac2 => { return pac.documento === pac2.documento && pac.sexo === pac2.sexo; })) {
-                    match.paciente.push(pac);
+            let match;
+            if (typeof e._id === 'string') {
+                match = arr.filter(ee => ee.codigo.nombre === e.codigo.nombre)[0];
+                e.paciente.forEach(pac => {
+                    if (!match.paciente.some(pac2 => { return pac.documento === pac2.documento && pac.sexo === pac2.sexo; })) {
+                        match.paciente.push(pac);
+                    }
+                });
+            } else {
+                for (let i = 0; i < e._id.length; i++) {
+                    match = arr.filter(ee => ee._id === e._id[i])[0];
+                    e.paciente.forEach(pac => {
+                        if (!match.paciente.some(pac2 => { return pac.documento === pac2.documento && pac.sexo === pac2.sexo; })) {
+                            match.paciente.push(pac);
+                        }
+                    });
                 }
-            });
+            }
         });
 
         arr.forEach(elem => {
