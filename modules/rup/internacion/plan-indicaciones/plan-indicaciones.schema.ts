@@ -10,11 +10,14 @@ export interface IPlanIndicaciones { }
 export type IPlanIndicacionesDoc = AndesDoc<IPlanIndicaciones>;
 
 export const PlanIndicacionesEstadoSchema = new Schema({
-    // active | on-hold | cancelled | completed | entered-in-error | stopped | draft | unknown | edited
-    tipo: String,
+    tipo: {
+        type: String,
+        enum: ['active', 'on-hold', 'cancelled', 'completed', 'entered-in-error', 'stopped', 'draft', 'unknown', 'edited']
+    },
     fecha: Date,
-    motivo: String,
+    motivo: String
 }, { _id: false });
+
 PlanIndicacionesEstadoSchema.plugin(AuditPlugin);
 
 export const PlanIndicacionesSchema = new Schema({
