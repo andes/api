@@ -49,7 +49,7 @@ export const PacienteAppSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true
+        required: false
     },
     usuario: {
         type: String
