@@ -1,4 +1,4 @@
-import { IContactoEnum } from './Constantes.interface';
+import { IContactoEnum } from './constantes.interface';
 import * as moment from 'moment';
 import { Document } from 'mongoose';
 

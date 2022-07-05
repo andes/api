@@ -1,4 +1,4 @@
-import { IUbicacion } from './Ubicacion.interface';
+import { IUbicacion } from './ubicacion.interface';
 import { Moment } from 'moment';
 import { Document } from 'mongoose';
 

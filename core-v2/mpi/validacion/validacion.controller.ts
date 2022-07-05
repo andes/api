@@ -2,7 +2,7 @@ import { sisa, renaperToAndes, sisaToAndes, renaperv3 } from '@andes/fuentes-aut
 import { busInteroperabilidad } from '../../../config.private';
 import { sisa as sisaConfig } from '../../../config.private';
 import { matchUbicacion } from '../../../core/tm/controller/localidad';
-import { IDireccion } from '../../../shared/interface';
+import { IDireccion } from '../../../shared/interfaces';
 import { Types } from 'mongoose';
 
 const sharp = require('sharp');

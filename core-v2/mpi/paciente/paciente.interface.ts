@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import { Document, Schema, Types } from 'mongoose';
-import { IContacto, IContactoDoc, IDireccion, IDireccionDoc } from '../../../shared/interface';
+import { IContacto, IContactoDoc, IDireccion, IDireccionDoc } from '../../../shared/interfaces';
 import { IFinanciador } from '../financiador/financiador.interface';
 import { IParentesco } from '../parentesco/parentesco.interface';
 

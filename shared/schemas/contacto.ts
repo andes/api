@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
-import { CONTACTO } from './constantes';
-import { IContactoDoc } from '../../shared/interface';
+import { CONTACTO } from '../constantes';
+import { IContactoDoc } from '../interfaces';
 
 
 export const ContactoSchema = new mongoose.Schema({

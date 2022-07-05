@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import * as constantes from '../../../core/tm/schemas/constantes';
+import { ESTADOCIVIL } from '../../../shared/constantes';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import { EspecialidadSIISASchema, ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
@@ -61,7 +61,7 @@ export const turnoSolicitadoSchema = new mongoose.Schema({
     fechaFallecimiento: { type: Date, required: false },
     nacionalidad: { type: ObjSIISASchema, required: false },
     sexo: { type: String, required: false },
-    estadoCivil: constantes.ESTADOCIVIL,
+    estadoCivil: ESTADOCIVIL,
     contactos: [contactoSchema],
     domicilios: [direccionSchema],
     fotoArchivo: { type: String, required: false },

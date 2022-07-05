@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { SEXO } from './constantes';
+import { SEXO } from '../../../shared/constantes';
 
 
 const campaniasSaludSchema = new Schema({
