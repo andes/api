@@ -29,6 +29,7 @@ const CodigoSchema = new Schema({
     remediar: String,
     sips: String,
     servSalud: String,
+    internoSisa: String
 });
 
 const _schema = new Schema({

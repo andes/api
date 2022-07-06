@@ -117,6 +117,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 Organizacion_Id: { $toString: { $arrayElemAt: ['$Organizacion._id', 0] } },
                 Organizacion_Nombre: { $arrayElemAt: ['$Organizacion.nombre', 0] },
                 Sisa: { $arrayElemAt: ['$Organizacion.codigo.sisa', 0] },
+                SisaInterno: { $arrayElemAt: ['$Organizacion.codigo.internoSisa', 0] },
                 clasificacion: { $arrayElemAt: ['$secciones.fields.segundaclasificacion.nombre', 0] },
                 requerimientoCuidado: { $arrayElemAt: ['$requerimientoCuidado.nombre', 0] },
                 resultado: { $arrayElemAt: ['$secciones.fields.clasificacionfinal', 0] },
@@ -127,13 +128,14 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 resultado: { $regex: 'Confirmado' }
             }
         }
-
     ];
+
     const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
     for (const unaFicha of fichas) {
         const documento = unaFicha.Paciente_documento;
         const idEvento = getEventoId(unaFicha.requerimientoCuidado);
         const idEstablecimientoCarga = unaFicha.Sisa.toString();
+        const idSisa = unaFicha.SisaInterno ? unaFicha.SisaInterno.toString() : unaFicha.Sisa.toString();
 
         if (documento) {
             const eventoNominal = {
@@ -177,6 +179,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                     const [status, resJson] = await handleHttpRequest(options);
 
                     if (status >= 200 && status <= 299) {
+
                         const id_caso = resJson.id_caso ? resJson.id_caso : '';
 
                         log.resultado = {
@@ -185,9 +188,23 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                             description: resJson.description ? resJson.description : ''
                         };
 
-                        const confirmacionMuestra = await confirmarMuestra(unaFicha, idEstablecimientoCarga, id_caso);
+                        const confirmacionMuestra = await confirmarMuestra(unaFicha, idSisa, id_caso);
                         if (confirmacionMuestra.id) {
-                            return await confirmarDeterminacion(unaFicha, idEvento, idEstablecimientoCarga, confirmacionMuestra.id);
+                            const confirmacionDeterminacion = await confirmarDeterminacion(unaFicha, idEvento, idSisa, confirmacionMuestra.id);
+                            if (!confirmacionDeterminacion.id) {
+                                log.resultado = {
+                                    resultado: 'ERROR_DE_ENVIO',
+                                    id_caso: '',
+                                    description: 'No se dio de alta la determinación'
+                                };
+                            }
+
+                        } else {
+                            log.resultado = {
+                                resultado: 'ERROR_DE_ENVIO',
+                                id_caso: '',
+                                description: 'No se dio de alta la muestra'
+                            };
                         }
                     } else {
                         log.resultado = {
@@ -196,7 +213,6 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                             description: 'No se recibió ningún resultado'
                         };
                     }
-
                     const info = new InformacionExportada(log);
                     await info.save();
 
@@ -222,8 +238,8 @@ async function confirmarMuestra(ficha, idEstablecimientoToma, idEventoCaso) {
         fechaToma: moment(ficha.Fecha_Muestra).format('YYYY-MM-DD'),
         idEstablecimientoToma,
         idEventoCaso,
-        idMuestra: '276', // Hisopado nasofaríngeo (para test de Ag)
-        idtipoMuestra: '4', // Humano - espacios no estériles
+        idMuestra: 276, // Hisopado nasofaríngeo (para test de Ag)
+        idtipoMuestra: 4, // Humano - espacios no estériles
         muestra: true
     };
     return await altaMuestra(dtoMuestra);
@@ -232,14 +248,12 @@ async function confirmarMuestra(ficha, idEstablecimientoToma, idEventoCaso) {
 async function confirmarDeterminacion(ficha, idEvento, idEstablecimiento, idEventoMuestra) {
     const dtoResultado = {
         derivada: false,
-        fechaEmisionResultado: moment(ficha.Fecha_Ficha).format('YYYY-MM-DD'), // fecha de la ficha,
-        fechaRecepcion: moment(ficha.Fecha_Ficha).format('YYYY-MM-DD'), // fecha de la ficha,
         idEstablecimiento,
         idEvento,
         idEventoMuestra,
-        idPrueba: '1087', // Inmunocromatografía
-        idResultado: '109',
-        idTipoPrueba: '739', // Genoma viral SARS-CoV-2
+        idPrueba: 1087, // Inmunocromatografía
+        idResultado: 109,
+        idTipoPrueba: 739, // Genoma viral SARS-CoV-2
         noApta: true,
         valor: 'Confirmado por antígeno'
     };
