@@ -571,6 +571,14 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 break;
             case 'estadoPush':
                 if (req.body.estado) {
+                    // SI LA SALICITUD FUE ANULADA NO SE PUEDE REALIZAR OTRA OPERACION
+                    if (data.estadoActual.tipo === 'anulada') {
+                        return next('Prestación anulada, no se puede modificar su estado.');
+                    }
+                    // SI EL TURNO YA FUE DADO NO SE PUEDE ANULAR
+                    if (data.solicitud.turno && req.body.estado.tipo === 'anulada') {
+                        return next('Ya se asigno un turno para la prestación, no se puede anular la solicitud.');
+                    }
                     if (data.estados[data.estados.length - 1].tipo === 'validada') {
                         return next('Prestación validada, no se puede volver a validar.');
                     }
