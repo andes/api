@@ -20,9 +20,9 @@ router.post('/turnoSolicitados', async (req, res, next) => {
         req.body.profesionalMatriculado = true;
     }
     const newProfesional = new turnoSolicitado(req.body);
-    newProfesional.save((err2) => {
-        if (err2) {
-            next(err2);
+    newProfesional.save((error) => {
+        if (error) {
+            return next(error);
         }
         res.json(newProfesional);
     });
