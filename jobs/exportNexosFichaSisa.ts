@@ -4,6 +4,7 @@ import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-e
 import { handleHttpRequest } from '../utils/requestHandler';
 import { sisa } from './../config.private';
 import { SECCION_CLASIFICACION } from '../modules/forms/forms-epidemiologia/constantes';
+import { altaDeterminacion, altaMuestra, getEventoId } from '../modules/sisa/controller/sisa.controller';
 
 const user = sisa.user_snvs;
 const clave = sisa.password_snvs;
@@ -75,12 +76,19 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                         cond: { $eq: ['$$this.name', 'Informacion Clinica'] }
                     }
                 },
+                clasificacionFinal: {
+                    $filter: {
+                        input: '$secciones',
+                        cond: { $eq: ['$$this.name', SECCION_CLASIFICACION] }
+                    }
+                },
             }
         },
         {
             $addFields: {
                 Type_clasification: '$clasifications.fields.clasificacion',
                 requerimientoCuidado: { $arrayElemAt: ['$informClinica.fields.requerimientocuidado', 0] },
+                fechaMuestra: { $arrayElemAt: ['$clasificacionFinal.fields.fechamuestra', 0] }
             }
         },
         {
@@ -105,9 +113,11 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 Paciente_fec_nacimiento: '$Paciente_fec_nacimiento',
                 Paciente_sexo: '$Paciente_sexo',
                 Fecha_Ficha: '$Fecha_Ficha',
+                Fecha_Muestra: { $arrayElemAt: ['$fechaMuestra', 0] },
                 Organizacion_Id: { $toString: { $arrayElemAt: ['$Organizacion._id', 0] } },
                 Organizacion_Nombre: { $arrayElemAt: ['$Organizacion.nombre', 0] },
                 Sisa: { $arrayElemAt: ['$Organizacion.codigo.sisa', 0] },
+                SisaInterno: { $arrayElemAt: ['$Organizacion.codigo.internoSisa', 0] },
                 clasificacion: { $arrayElemAt: ['$secciones.fields.segundaclasificacion.nombre', 0] },
                 requerimientoCuidado: { $arrayElemAt: ['$requerimientoCuidado.nombre', 0] },
                 resultado: { $arrayElemAt: ['$secciones.fields.clasificacionfinal', 0] },
@@ -118,12 +128,15 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 resultado: { $regex: 'Confirmado' }
             }
         }
-
     ];
+
     const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
     for (const unaFicha of fichas) {
         const documento = unaFicha.Paciente_documento;
-        const requerimientoCuidado = unaFicha.requerimientoCuidado;
+        const idEvento = getEventoId(unaFicha.requerimientoCuidado);
+        const idEstablecimientoCarga = unaFicha.Sisa.toString();
+        const idSisa = unaFicha.SisaInterno ? unaFicha.SisaInterno.toString() : unaFicha.Sisa.toString();
+
         if (documento) {
             const eventoNominal = {
                 idTipodoc: '1',
@@ -131,8 +144,8 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 sexo: unaFicha.Paciente_sexo === 'femenino' ? 'F' : (unaFicha.Paciente_sexo === 'masculino') ? 'M' : '',
                 fechaNacimiento: unaFicha.Paciente_fec_nacimiento,
                 idGrupoEvento: '113',
-                idEvento: requerimientoCuidado === 'Ambulatorio' ? '329' : '330',
-                idEstablecimientoCarga: unaFicha.Sisa.toString(),
+                idEvento,
+                idEstablecimientoCarga,
                 fechaPapel: unaFicha.Fecha_Ficha,
                 idClasificacionManualCaso: unaFicha.clasificacion === 'Antígeno' ? '898' : ''
             };
@@ -166,6 +179,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                     const [status, resJson] = await handleHttpRequest(options);
 
                     if (status >= 200 && status <= 299) {
+
                         const id_caso = resJson.id_caso ? resJson.id_caso : '';
 
                         log.resultado = {
@@ -174,6 +188,24 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                             description: resJson.description ? resJson.description : ''
                         };
 
+                        const confirmacionMuestra = await confirmarMuestra(unaFicha, idSisa, id_caso);
+                        if (confirmacionMuestra.id) {
+                            const confirmacionDeterminacion = await confirmarDeterminacion(unaFicha, idEvento, idSisa, confirmacionMuestra.id);
+                            if (!confirmacionDeterminacion.id) {
+                                log.resultado = {
+                                    resultado: 'ERROR_DE_ENVIO',
+                                    id_caso: '',
+                                    description: 'No se dio de alta la determinación'
+                                };
+                            }
+
+                        } else {
+                            log.resultado = {
+                                resultado: 'ERROR_DE_ENVIO',
+                                id_caso: '',
+                                description: 'No se dio de alta la muestra'
+                            };
+                        }
                     } else {
                         log.resultado = {
                             resultado: 'ERROR_DE_ENVIO',
@@ -181,7 +213,6 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                             description: 'No se recibió ningún resultado'
                         };
                     }
-
                     const info = new InformacionExportada(log);
                     await info.save();
 
@@ -199,3 +230,33 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
     }
     done();
 }
+
+async function confirmarMuestra(ficha, idEstablecimientoToma, idEventoCaso) {
+    const dtoMuestra = {
+        adecuada: true,
+        aislamiento: false,
+        fechaToma: moment(ficha.Fecha_Muestra).format('YYYY-MM-DD'),
+        idEstablecimientoToma,
+        idEventoCaso,
+        idMuestra: 276, // Hisopado nasofaríngeo (para test de Ag)
+        idtipoMuestra: 4, // Humano - espacios no estériles
+        muestra: true
+    };
+    return await altaMuestra(dtoMuestra);
+}
+
+async function confirmarDeterminacion(ficha, idEvento, idEstablecimiento, idEventoMuestra) {
+    const dtoResultado = {
+        derivada: false,
+        idEstablecimiento,
+        idEvento,
+        idEventoMuestra,
+        idPrueba: 1087, // Inmunocromatografía
+        idResultado: 109,
+        idTipoPrueba: 739, // Genoma viral SARS-CoV-2
+        noApta: true,
+        valor: 'Confirmado por antígeno'
+    };
+    return altaDeterminacion(dtoResultado);
+}
+

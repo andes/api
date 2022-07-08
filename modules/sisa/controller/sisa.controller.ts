@@ -17,7 +17,7 @@ export async function altaEventoLAMP(ficha) {
         if (resultado === 'OK' && id_caso) {
             const resAltaMuestra = await altaMuestraCovidPorFicha(ficha, id_caso, orgSisa);
             if (resAltaMuestra.id) {
-                altaDeterminacionCovid(resAltaMuestra.id, orgSisa);
+                altaDeterminacionCovid(getEventoIdFicha(ficha), resAltaMuestra.id, orgSisa);
             }
         }
     }
@@ -38,13 +38,14 @@ export async function altaEventoCovidPorFicha(ficha, idEstablecimientoCarga) {
         idClasificacionManualCaso = 754;
     }
     if (idClasificacionManualCaso) {
+        const idEvento = getEventoIdFicha(ficha);
         const dtoEventoCasoNominal = {
             idTipodoc: '1',
             nrodoc: ficha.paciente.documento,
             sexo: ficha.paciente.sexo === 'femenino' ? 'F' : (ficha.paciente.sexo === 'masculino') ? 'M' : 'X',
             fechaNacimiento: moment(ficha.paciente.fechaNacimiento).format('DD-MM-YYYY'),
             idGrupoEvento: '113',
-            idEvento: '307',
+            idEvento,
             idEstablecimientoCarga,
             fechaPapel: moment(ficha.createdAt).format('DD-MM-YYYY'),
             idClasificacionManualCaso,
@@ -65,7 +66,7 @@ export async function altaMuestraCovidPorFicha(ficha, idEvento, idEstablecimient
         fechaToma: moment(fechaMuestra).format('YYYY-MM-DD'),
         idEstablecimientoToma,
         idEventoCaso: idEvento.toString(),
-        idMuestra: '276', // Hisopado nasofaríngeo (para test de Ag)
+        idMuestra: '294', // Hisopado nasofaríngeo para métodos moleculares
         idtipoMuestra: '4', // Humano - espacios no estériles
         muestra: true
     };
@@ -73,13 +74,13 @@ export async function altaMuestraCovidPorFicha(ficha, idEvento, idEstablecimient
     return altaMuestra(dtoMuestra);
 }
 
-export async function altaDeterminacionCovid(idEventoMuestra, idEstablecimiento) {
+export async function altaDeterminacionCovid(idEvento, idEventoMuestra, idEstablecimiento) {
     const dtoResultado = {
         derivada: false,
         fechaEmisionResultado: moment().format('YYYY-MM-DD'),
         fechaRecepcion: moment().format('YYYY-MM-DD'),
         idEstablecimiento,
-        idEvento: '307',
+        idEvento,
         idEventoMuestra,
         idPrueba: '1082', // Amplificacion isotermica
         idResultado: '109',
@@ -130,4 +131,16 @@ export async function altaDeterminacion(dtoDeterminacion) {
         await logSisa.error('sisa:export:determinacion', { response }, e.message, userScheduler);
         return false;
     }
+}
+
+function getEventoIdFicha(ficha) {
+    const ambito = ficha.secciones
+        .find(s => s.name === 'Informacion Clinica')
+        .fields.find(f => Object.keys(f).includes('requerimientocuidado'))
+        .requerimientocuidado.nombre;
+    return getEventoId(ambito);
+}
+
+export function getEventoId(value) {
+    return (value === 'Ambulatorio' ? '329' : '330');
 }
