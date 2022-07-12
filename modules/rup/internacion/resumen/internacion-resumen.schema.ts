@@ -65,6 +65,7 @@ export const InternacionResumenSchema = new Schema({
     fechaAtencion: Date,
     tipo_egreso: { type: String, required: false },
     deletedAt: { type: Date, required: false },
+    deletedBy: { type: SchemaTypes.Mixed, required: false },
     idPrestacion: { type: SchemaTypes.ObjectId, ref: 'prestacion' },
     prioridad: new Schema({
         id: Number,

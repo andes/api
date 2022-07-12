@@ -142,7 +142,8 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
         if (completo) {
             EventCore.emitAsync('mapa-camas:paciente:undo', {
                 fecha: fechaDesde,
-                idInternacion: internacion.id
+                idInternacion: internacion.id,
+                usuario
             });
         }
 
