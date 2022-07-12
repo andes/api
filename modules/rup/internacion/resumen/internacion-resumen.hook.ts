@@ -8,7 +8,8 @@ EventCore.on('mapa-camas:paciente:undo', async movimiento => {
         { _id: Types.ObjectId(movimiento.idInternacion) },
         {
             $set: {
-                deletedAt: new Date()
+                deletedAt: new Date(),
+                deletedBy: movimiento.usuario
             }
         }
     );
