@@ -5,7 +5,7 @@ export const FormResourcesSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    nombre: String,
+    name: String,
     id: String,
     type: {
         type: String,
