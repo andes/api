@@ -222,7 +222,7 @@ router.get('/profesionales/guia', async (req, res, next) => {
 
 router.get('/profesionales/matching', async (req, res, next) => {
     if (!req.query.documento || !req.query.sexo) {
-        throw 'Error matching requiere documento y sexo';
+        return next('Error en operación de matching. Faltan parámetros.');
     }
     let profesionales: any = await Profesional.find({
         documento: req.query.documento,
@@ -235,7 +235,8 @@ router.get('/profesionales/matching', async (req, res, next) => {
             sexo: p.sexo,
             apellido: p.apellido,
             documento: p.documento,
-            fechaNacimiento: p.fechaNacimiento
+            fechaNacimiento: p.fechaNacimiento,
+            profesionalMatriculado: p.profesionalMatriculado
         };
     });
     res.json(profesionales);
