@@ -22,7 +22,19 @@ export class CensoBody extends HTMLComponent {
                         <tbody>
                             {{#each filas}}
                                 <tr>
-                                    <td> {{ datos.paciente.apellido }}, {{ datos.paciente.nombre }} <br> {{ datos.paciente.documento }} </td>
+                                    <td> {{ datos.paciente.apellido }}, 
+                                        {{#if datos.paciente.alias}}
+                                            {{ datos.paciente.alias }}
+                                        {{else}}
+                                            {{ datos.paciente.nombre }}
+                                        {{/if}}
+                                        <br> 
+                                        {{#if datos.paciente.documento }} 
+                                            {{ datos.paciente.documento }}
+                                        {{else}}
+                                            {{ datos.paciente.numeroIdentificacion }}
+                                        {{/if}}
+                                    </td>
                                     <td> {{ datos.cama.nombre }},
                                         {{#each datos.cama.sectores}}
                                             {{#if @last}}

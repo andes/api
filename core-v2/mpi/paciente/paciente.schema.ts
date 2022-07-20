@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from './constantes';
+import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION } from '../../../shared/constantes';
 import { NombreSchema, DireccionSchema, ContactoSchema, NombreSchemaV2 } from '../../../shared/schemas';
 import { FinanciadorSchema } from '../financiador/financiador.schema';
 import { ParentescoSchema } from '../parentesco/parentesco.schema';
@@ -131,6 +131,7 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     genero: String,
     fechaFallecimiento: Date,
     numeroIdentificacion: String,
+    tipoIdentificacion: IDENTIFICACION,
     alias: String,
     //  -------- extras -----------
     telefono: String,

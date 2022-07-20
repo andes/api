@@ -2,7 +2,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { Document, model, Schema, Types } from 'mongoose';
 import { ISeguimientoPaciente } from '../interfaces/seguimiento-paciente.interface';
 import { contactoEstrechoSchema } from './contacto-estrecho.schema';
-import { SEXO } from '../../../core-v2/mpi/paciente/constantes';
+import { SEXO } from '../../../shared/constantes';
 
 export const pointSchema = new Schema({
     type: {

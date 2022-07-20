@@ -124,9 +124,9 @@ async function checkAndUpdateInternacion(paciente) {
         return;
     }
     // ultima ocupación de cama del paciente (capa medica)
-    ultimoEstadoCapaMedica = ultimoEstadoCapaMedica?.toObject();
+    ultimoEstadoCapaMedica = ultimoEstadoCapaMedica.toObject();
 
-    const idInternacionMedica = ultimoEstadoCapaMedica?.estados.find(e => {
+    const idInternacionMedica = ultimoEstadoCapaMedica.estados.find(e => {
         const id = e.paciente?.id ? (e.paciente?.id).toString() : '';
         return id === paciente.id;
     }).idInternacion;

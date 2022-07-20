@@ -86,8 +86,8 @@ router.post('/censo-diario/csv', Auth.authenticate(), asyncHandler(async (req: a
     csv.write(censoDiario, {
         headers: true, transform: (row) => {
             return {
-                Paciente: `${row.datos.paciente.apellido}, ${row.datos.paciente.nombre}`,
-                Documento: `${row.datos.paciente.documento}`,
+                Paciente: `${row.datos.paciente.apellido}, ${row.datos.paciente.alias || row.datos.paciente.nombre}`,
+                Documento: `${row.datos.paciente.documento || row.datos.paciente.numeroIdentificacion}`,
                 Cama: `${row.datos.cama.nombre}, ${row.datos.cama.sectores[row.datos.cama.sectores.length - 1].nombre}` || `${row.datos.cama.nombre}`,
                 Ingreso: row.ingreso || '',
                 'Pase de': row.paseDe || '',

@@ -30,7 +30,7 @@ export class InformeRupHeader extends HTMLComponent {
                             {{ paciente.apellido }}, {{ paciente.nombre }}
                         </h4>
                         <h4>
-                            {{ paciente.sexo }} |
+                            {{ paciente.genero }} |
                             {{#if paciente.edad }}
                                 {{ paciente.edad }} años |
                             {{/if}}
@@ -162,7 +162,6 @@ export class InformeRupHeader extends HTMLComponent {
                 nombre: paciente.nombre,
                 apellido: paciente.apellido,
                 alias: paciente.alias || undefined,
-                sexo: paciente.sexo,
                 genero: paciente.genero,
                 fechaNacimiento,
                 documento: paciente.documento,
