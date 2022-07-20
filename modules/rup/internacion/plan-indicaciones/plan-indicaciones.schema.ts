@@ -15,7 +15,7 @@ export const PlanIndicacionesEstadoSchema = new Schema({
         enum: ['active', 'on-hold', 'cancelled', 'completed', 'entered-in-error', 'stopped', 'draft', 'unknown', 'edited']
     },
     fecha: Date,
-    motivo: String,
+    observaciones: String,
     verificacion: {
         estado: {
             type: String,
