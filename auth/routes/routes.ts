@@ -23,6 +23,24 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
 });
 
 /**
+ * Listado de organizaciones a las que el usuario tiene permiso desde el modulo de bi-queries solamente
+ * @get /api/auth/bi-queries/organizaciones
+ */
+
+router.get('/bi-queries/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
+    const username = (req as any).user.usuario.username || (req as any).user.usuario;
+    const user: any = await AuthUsers.findOne({ usuario: username });
+    const organizaciones = user.organizaciones.filter(x => x.activo === true).map((item) => {
+        return mongoose.Types.ObjectId(item._id);
+    });
+    const posPermiso = user.organizaciones.filter(org => org._id.toString() === req.user.organizacion._id)
+        .map(item => item.permisos.findIndex(permisos => permisos === 'visualizacionInformacion:totalOrganizaciones' || permisos === 'visualizacionInformacion:*'));
+    const filtro = (posPermiso[0] !== -1) ? { activo: true } : { _id: { $in: organizaciones } };
+    const orgs = await Organizacion.find(filtro, { nombre: 1 }).sort({ nombre: 1 });
+    return res.json(orgs);
+});
+
+/**
  * Listado de organizaciones a las que el usuario tiene permiso
  * @get /api/auth/organizaciones
  */
@@ -35,7 +53,6 @@ router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) =
     });
     const orgs = await Organizacion.find({ _id: { $in: organizaciones } }, { nombre: 1 }).sort({ nombre: 1 });
     return res.json(orgs);
-
 });
 
 /**
