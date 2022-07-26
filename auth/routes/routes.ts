@@ -1,3 +1,4 @@
+import { Modulos } from '../../core/tm/schemas/modulos.schema';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
@@ -23,21 +24,49 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
 });
 
 /**
- * Listado de organizaciones a las que el usuario tiene permiso desde el modulo de bi-queries solamente
+ * Listado de organizaciones a las que el usuario tiene permiso desde un modulo en particular.
+ * Momentaneamente solo se resuelve para Bi-Queries.
  * @get /api/auth/bi-queries/organizaciones
  */
 
-router.get('/bi-queries/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
-    const username = (req as any).user.usuario.username || (req as any).user.usuario;
-    const user: any = await AuthUsers.findOne({ usuario: username });
-    const organizaciones = user.organizaciones.filter(x => x.activo === true).map((item) => {
-        return mongoose.Types.ObjectId(item._id);
-    });
-    const posPermiso = user.organizaciones.filter(org => org._id.toString() === req.user.organizacion._id)
-        .map(item => item.permisos.findIndex(permisos => permisos === 'visualizacionInformacion:totalOrganizaciones' || permisos === 'visualizacionInformacion:*'));
-    const filtro = (posPermiso[0] !== -1) ? { activo: true } : { _id: { $in: organizaciones } };
-    const orgs = await Organizacion.find(filtro, { nombre: 1 }).sort({ nombre: 1 });
-    return res.json(orgs);
+router.get('/submodulo/:idModule/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
+    let pipelineModulo = [];
+    pipelineModulo = [
+        {
+            $match: { 'submodulos._id': mongoose.Types.ObjectId(req.params.idModule) }
+        },
+        {
+            $unwind: '$submodulos'
+        },
+        {
+            $match: { 'submodulos._id': mongoose.Types.ObjectId(req.params.idModule) }
+        },
+        {
+            $project: {
+                _id: 0,
+                nombre: '$submodulos.nombre'
+            }
+        }
+    ];
+    const nombreModulo: any = await Modulos.aggregate(pipelineModulo);
+    if (nombreModulo.length && nombreModulo[0].nombre === 'BI-Queries') {
+        const user: any = await AuthUsers.findOne({ _id: req.user.usuario.id });
+        const organizaciones = user.organizaciones.filter(x => x.activo === true).map(item => mongoose.Types.ObjectId(item._id));
+        const permisosBiQueries = user.organizaciones.filter(org => org._id.toString() === req.user.organizacion._id)
+            .map(item => item.permisos.findIndex(permisos => permisos === 'visualizacionInformacion:biQueries:*' || permisos === 'visualizacionInformacion:*'));
+        if (permisosBiQueries[0] !== -1) {
+            let filtro: any = { _id: { $in: organizaciones } };
+            const permisosOrganizacion = user.organizaciones.filter(org => org._id.toString() === req.user.organizacion._id)
+                .map(item => item.permisos.findIndex(permisos => permisos === 'visualizacionInformacion:totalOrganizaciones' || permisos === 'visualizacionInformacion:*'));
+            if (permisosOrganizacion[0] !== -1) {
+                filtro = { activo: true };
+            }
+            const orgs = await Organizacion.find(filtro, { nombre: 1 }).sort({ nombre: 1 });
+            return res.json(orgs);
+        };
+    } else {
+        return next('Módulo inválido');
+    }
 });
 
 /**
