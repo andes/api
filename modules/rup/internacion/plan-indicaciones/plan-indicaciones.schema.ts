@@ -15,7 +15,14 @@ export const PlanIndicacionesEstadoSchema = new Schema({
         enum: ['active', 'on-hold', 'cancelled', 'completed', 'entered-in-error', 'stopped', 'draft', 'unknown', 'edited']
     },
     fecha: Date,
-    motivo: String
+    motivo: String,
+    verificacion: {
+        estado: {
+            type: String,
+            enum: ['aceptada', 'rechazada']
+        },
+        motivoRechazo: String
+    }
 }, { _id: false });
 
 PlanIndicacionesEstadoSchema.plugin(AuditPlugin);
@@ -31,28 +38,20 @@ export const PlanIndicacionesSchema = new Schema({
         required: true
     },
     profesional: ProfesionalSubSchema,
-
     idPrestacion: SchemaTypes.ObjectId,
     idRegistro: SchemaTypes.ObjectId,
-
     concepto: SnomedConcept,
     nombre: String,
-
     fechaInicio: Date,
     fechaBaja: {
         type: Date,
         default: null
     },
-
     valor: SchemaTypes.Mixed,
-
     estados: [PlanIndicacionesEstadoSchema],
     estadoActual: PlanIndicacionesEstadoSchema,
-
     turneable: Boolean,
-
     seccion: SnomedConcept
-
 });
 
 PlanIndicacionesSchema.plugin(AuditPlugin);
