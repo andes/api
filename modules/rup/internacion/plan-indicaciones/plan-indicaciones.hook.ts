@@ -14,11 +14,13 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
     const idInternacion = prestacion.trackId;
     const fecha = prestacion.ejecucion.fecha;
     const ambito = prestacion.solicitud.ambitoOrigen;
-    registros.filter(r => r.esSolicitud).map(async (registro) => {
+    let indicaciones = registros.filter(r => r.esSolicitud).map(async (registro) => {
         const idRegistro = registro.id;
         const idEvolucion = registro.idEvolucion;
-        const indicacion = await PlanIndicacionesCtr.findOne({ registro: idRegistro });
-
+        return PlanIndicacionesCtr.findOne({ registro: idRegistro });
+    });
+    indicaciones = await Promise.all(indicaciones);
+    const savePromises = indicaciones.map(async indicacion => {
         if (indicacion) {
             indicacion.idPrestacion = prestacion.id;
             indicacion.estados.push({
@@ -27,9 +29,10 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
             });
             const user = Auth.getUserFromResource(prestacion);
             Auth.audit(indicacion, user as any);
-            await indicacion.save();
+            return indicacion.save();
         }
     });
+    await Promise.all(savePromises);
 });
 
 

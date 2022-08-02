@@ -22,7 +22,6 @@ import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
-import { IInternacionResumen } from '../internacion/resumen/internacion-resumen.schema';
 
 const router = express.Router();
 
