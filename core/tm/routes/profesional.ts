@@ -7,8 +7,6 @@ import * as fs from 'fs';
 import { Types } from 'mongoose';
 import * as stream from 'stream';
 import { Auth } from '../../../auth/auth.class';
-import { getTemporyTokenCOVID } from '../../../auth/auth.controller';
-import { services } from '../../../services';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
@@ -21,6 +19,11 @@ import { Profesional } from '../schemas/profesional';
 import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { userScheduler } from './../../../config.private';
+import { getTemporyTokenGenerarUsuario } from '../../../auth/auth.controller';
+import { services } from '../../../services';
+import { Matching } from '@andes/match';
+import { mpi, algoritmo } from './../../../config';
+
 import moment = require('moment');
 
 
@@ -1192,30 +1195,38 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
 });
 
 router.post('/profesionales/validar', async (req, res, next) => {
-    const { documento, sexo, nroTramite } = req.body;
+    try {
+        const { documento, sexo, nombre, apellido, fechaNacimiento } = req.body;
+        if (documento && sexo && nombre && apellido && fechaNacimiento) {
+            const regexSexo = (value) => new RegExp(['^', value, '$'].join(''), 'i');
 
-    const resRenaper = await services.get('renaper').exec({
-        documento, sexo
-    });
+            const params = {
+                documento,
+                sexo: regexSexo(sexo),
+            };
+            const profesional = await Profesional.findOne(params);
+            if (!profesional) {
+                return next('El profesional no se encuentra registrado en Andes.');
+            }
 
-    if (resRenaper && resRenaper.idTramite === Number(nroTramite)) {
-        const regexSexo = new RegExp(['^', sexo, '$'].join(''), 'i');
-        const profesional = await Profesional.findOne({ documento, sexo: regexSexo, profesionalMatriculado: true });
-        const token = await getTemporyTokenCOVID(documento);
-        if (profesional) {
-            return res.json({ profesional, token });
+            const profesionalCompare = { documento, sexo: sexo.toLowerCase(), nombre, apellido, fechaNacimiento };
+            profesional.sexo = profesional.sexo.toLowerCase();
+
+            const valorMatching = new Matching().matchPersonas(profesional, profesionalCompare , mpi.weightsDefault, algoritmo);
+
+            if (valorMatching >= 0.95) {
+                const resRenaper = await services.get('renaper').exec({ documento, sexo });
+                if (resRenaper) {
+                    const token = await getTemporyTokenGenerarUsuario(documento);
+                    return res.json({ profesional, token });
+                }
+            }
         }
-        return next('El profesional no se encuentra registrado en Andes.');
-    } else {
         return next('No se pudo validar el profesional. Por favor revise los datos ingresados.');
+    } catch (err) {
+        return next(500);
     }
 });
-
-// router.post('/profesionales/vencimientoPosGrado', async (req, res, next) => {
-//     let ress = await vencimientoMatriculaPosgrado();
-//     res.json(ress);
-
-// });
 
 export = router;
 

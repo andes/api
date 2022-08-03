@@ -261,9 +261,9 @@ export async function createUser(data) {
     return await user.save();
 }
 
-export async function getTemporyTokenCOVID(username) {
+export async function getTemporyTokenGenerarUsuario(username) {
     const organizacion = await Organizacion.findOne({ matriculacion: true });
-    const permisos = getPermisosByType('inscripcionProfesionalesCovid19');
+    const permisos = getPermisosByType('generarUsuario');
     return Auth.generateUserTokenTemporaly(username, permisos, organizacion._id);
 }
 
@@ -271,8 +271,8 @@ function getPermisosByType(tipoPermisos) {
     let permisos;
     if (tipoPermisos === 'certificadosCovid19') {
         permisos = ['mpi:paciente:getbyId', 'rup:tipoPrestacion:604793e28566033a409007ea'];
-    } else if (tipoPermisos === 'inscripcionProfesionalesCovid19') {
-        permisos = ['usuarios:read', 'usuarios:write', 'matriculaciones:profesionales:putProfesional'];
+    } else if (tipoPermisos === 'generarUsuario') {
+        permisos = ['usuarios:read', 'usuarios:write', 'matriculaciones:profesionales:putProfesional', 'log:post'];
     }
     return permisos;
 }
