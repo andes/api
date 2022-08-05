@@ -3,9 +3,12 @@ FROM node:${NODE_VERSION}
 
 ENV node_env=development
 
-RUN apk update && apk upgrade && apk add --no-cache git
+RUN apk update && apk upgrade && apk add --no-cache git bash
 
 WORKDIR /usr/src/api
+
+COPY wait-for-it.sh /
+RUN chmod +x /wait-for-it.sh
 
 COPY package.json package-lock.json ./
 COPY packages ./packages
