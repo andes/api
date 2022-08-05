@@ -2,13 +2,15 @@ import * as base64 from 'base64-stream';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as stream from 'stream';
-import { userScheduler, sisa as sisaConfig } from '../../../config.private';
+import { userScheduler } from '../../../config.private';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { Profesional } from '../schemas/profesional';
 import { Auth } from './../../../auth/auth.class';
+import { findUsersByUsername } from './../../../auth/auth.controller';
+
 
 /**
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
@@ -227,4 +229,38 @@ export async function saveFirma(data, admin = false) {
         );
         input.end(_base64);
     });
+}
+
+export async function filtrarProfesionalesPorPrestacion(profesionales, prestaciones, organizacionId) {
+    const usuarios = await findUsersByUsername(profesionales.map(p => p.documento));
+
+    profesionales = profesionales.filter(p => {
+        const usuario = usuarios.find(u => String(u.usuario) === p.documento);
+        if (!usuario) {
+            return false;
+        }
+        const orgPermisos = usuario.organizaciones.find(o => o._id.toString() === organizacionId);
+        if (!orgPermisos) {
+            return false;
+        }
+        return prestaciones.some(s => orgPermisos.permisos.includes(`rup:tipoPrestacion:${s}`));
+    });
+
+    return profesionales;
+}
+
+export async function validarProfesionalPrestaciones(profesionales, tipoPrestaciones, organizacionId) {
+    // es posible que el profesional venga en su versión reducida (sin documento, solo nombre completo e _id). En ese caso recuperamos el prof completo
+    profesionales = await Promise.all(profesionales.map(prof => prof.documento ? prof : Profesional.findById(prof.id)));
+
+    const profesionalesFiltrados = await filtrarProfesionalesPorPrestacion(profesionales, tipoPrestaciones, organizacionId);
+    if (profesionales.length > profesionalesFiltrados.length) {
+        const results = profesionales.filter(({ _id: id1 }) => !profesionalesFiltrados.some(({ _id: id2 }) => id2 === id1));
+        const rechazados = results.reduce((p,c, i)=> `${p}${i > 0 ? i < results.length - 1 ? ', ' : ' y ' : ''}${c.nombre} ${c.apellido}`, '');
+        const msgError = `${results.length > 1 ? 'Los profesionales' : 'El profesional' }
+            ${ rechazados } no ${results.length > 1 ? ' poseen' : 'posee' } permisos para las prestaciones seleccionadas`;
+        return msgError;
+    }
+
+    return null;
 }

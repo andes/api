@@ -10,7 +10,7 @@ import { Auth } from '../../../auth/auth.class';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
-import { formacionCero, matriculaCero, migrarTurnos, saveFirma } from '../controller/profesional';
+import { formacionCero, matriculaCero, migrarTurnos, saveFirma, filtrarProfesionalesPorPrestacion } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { makeFs } from '../schemas/imagenes';
@@ -713,10 +713,19 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
         query.select(req.query.fields);
     }
 
-    query.exec((err, data) => {
+    query.exec( async (err, data) => {
         if (err) {
             return next(err);
         }
+
+        if (req.query.prestaciones) {
+            let prestaciones = req.query.prestaciones;
+            if (!Array.isArray(prestaciones)) {
+                prestaciones = [prestaciones];
+            }
+            data = await filtrarProfesionalesPorPrestacion(data, prestaciones, req.user.organizacion.id);
+        }
+
         if (!req.query.exportarPlanillaCalculo) {
             res.json(data);
         } else {
