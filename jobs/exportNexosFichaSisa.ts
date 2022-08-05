@@ -248,6 +248,7 @@ async function confirmarMuestra(ficha, idEstablecimientoToma, idEventoCaso) {
 async function confirmarDeterminacion(ficha, idEvento, idEstablecimiento, idEventoMuestra) {
     const dtoResultado = {
         derivada: false,
+        fechaEmisionResultado: moment(ficha.Fecha_Muestra).format('YYYY-MM-DD'),
         idEstablecimiento,
         idEvento,
         idEventoMuestra,
