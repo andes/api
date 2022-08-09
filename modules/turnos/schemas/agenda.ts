@@ -45,6 +45,7 @@ export const AgendaSchema = new mongoose.Schema({
         required: true,
         default: 'planificacion'
     },
+    motivoDeSuspension: String,
     avisos: [{
         _id: false,
         profesionalId: mongoose.Schema.Types.ObjectId,
