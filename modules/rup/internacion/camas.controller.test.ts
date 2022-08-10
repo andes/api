@@ -167,9 +167,6 @@ describe('Internacion - camas', () => {
         let camaEncontrada = await findById({ organizacion, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
 
-        camaEncontrada = await findById({ organizacion, capa: 'enfermeria', ambito }, idCama);
-        expect(camaEncontrada.estado).toBe('disponible');
-
         const resultNull = await patch({
             organizacion: cama.organizacion,
             ambito,
@@ -183,41 +180,6 @@ describe('Internacion - camas', () => {
 
         camaEncontrada = await findById({ organizacion, capa, ambito }, cama._id, moment().add(3, 'h').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
-
-        await patch({
-            id: cama._id,
-            ambito,
-            capa: 'enfermeria',
-            estado: 'ocupada',
-            esMovimiento: true,
-            fecha: moment().add(2, 'month').toDate(),
-            organizacion: cama.organizacion,
-            paciente: {
-                id: '57f67a7ad86d9f64130a138d',
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'JUANCITO',
-                apellido: 'PEREZ',
-                documento: '38432297',
-                sexo: ''
-            }
-        }, REQMock);
-
-        camaEncontrada = await findById({ organizacion, capa, ambito }, idCama, moment().add(3, 'month').toDate());
-        expect(camaEncontrada.estado).toBe('inactiva');
-
-        camaEncontrada = await findById({ organizacion, capa: 'enfermeria', ambito }, idCama);
-        expect(camaEncontrada.estado).toBe('disponible');
-
-        camaEncontrada = await findById({ organizacion, capa: 'enfermeria', ambito }, idCama, moment().add(3, 'month').toDate());
-        expect(camaEncontrada.estado).toBe('ocupada');
-
-        const _estados = await CamaEstados.find({
-            idOrganizacion: organizacion,
-            idCama,
-            ambito,
-            capa: 'enfermeria'
-        });
-        expect(_estados.length).toBe(2);
     });
 
     test('Cama - Lista Espera con Cama Disponible', async () => {
