@@ -72,7 +72,10 @@ export const PlanIndicaciones = model('internacionPlanIndicaciones', PlanIndicac
 
 export const PlanIndicacionesEventosSchema = new Schema({
     idInternacion: SchemaTypes.ObjectId,
-    idIndicacion: SchemaTypes.ObjectId,
+    idIndicacion: {
+        type: SchemaTypes.ObjectId,
+        es_indexed: true
+    },
     fecha: Date,
     estado: String,
     observaciones: String,
@@ -80,5 +83,6 @@ export const PlanIndicacionesEventosSchema = new Schema({
 });
 
 PlanIndicacionesEventosSchema.plugin(AuditPlugin);
+PlanIndicacionesEventosSchema.index({ idIndicacion: 1 });
 
 export const PlanIndicacionesEventos = model('internacionPlanIndicacionesEventos', PlanIndicacionesEventosSchema, 'internacionPlanIndicacionesEventos');
