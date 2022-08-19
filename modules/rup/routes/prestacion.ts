@@ -52,8 +52,10 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
         const deadline = req.query.deadline;
         const expresion = req.query.expresion;
         const valor = req.query.valor;
+        const termSearch = req.query.termSearch;
+        const form = req.query.form;
 
-        const response = await hudsPaciente(id, expresion, idPrestacion, estado, deadline, valor);
+        const response = await hudsPaciente(id, expresion, idPrestacion, estado, deadline, valor, termSearch, form);
         if (!response) {
             return res.status(404).send('Turno no encontrado');
         }
