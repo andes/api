@@ -37,7 +37,12 @@ export async function actualizarRegistro(registroPer: any) {
 
         if (pacienteSP && registroPer.embarazo && pacienteSP['pregnancies']) {
 
+
+            // eslint-disable-next-line no-console
+            console.log(JSON.stringify(registroPer));
+
             const numGesta = getNumGesta(registroPer.embarazo);
+
 
             const embarazoSP = numGesta ? pacienteSP['pregnancies'][numGesta.toString()] : null;
 
