@@ -1,7 +1,7 @@
 
 import * as moment from 'moment';
 import { Schema, Types } from 'mongoose';
-import { INombre } from '../../../shared/interface';
+import { INombre } from '../../../shared/interfaces';
 
 export interface IInscripcionVacunas {
     id: string | Types.ObjectId;

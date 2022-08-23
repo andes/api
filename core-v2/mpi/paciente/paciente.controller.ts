@@ -12,7 +12,7 @@ import { FileMetadata, AndesDrive } from '@andes/drive';
 import * as Barrio from '../../../core/tm/schemas/barrio';
 import * as configPrivate from '../../../config.private';
 import * as config from '../../../config';
-import { IContacto } from '../../../shared/Contacto.interface';
+import { IContacto } from '../../../shared/interfaces/contacto.interface';
 import { ParentescoCtr } from '../parentesco/parentesco.routes';
 
 

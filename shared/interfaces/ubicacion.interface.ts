@@ -1,4 +1,4 @@
-import { INombre } from './Nombre.interface';
+import { INombre } from './nombre.interface';
 
 export interface IUbicacion {
     barrio?: INombre;
@@ -6,3 +6,4 @@ export interface IUbicacion {
     provincia: INombre;
     pais: INombre;
 }
+

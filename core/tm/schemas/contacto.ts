@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import * as constantes from './constantes';
+import * as constantes from '../../../shared/constantes';
 
 const schema = new mongoose.Schema({
     tipo: constantes.CONTACTO,

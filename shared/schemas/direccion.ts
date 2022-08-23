@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { UbicacionSchema } from './ubicacion';
-import { IDireccionDoc } from '../interface/Direccion.interface';
+import { IDireccionDoc } from '../interfaces/direccion.interface';
 
 export const DireccionSchema = new mongoose.Schema({
     tipo: {

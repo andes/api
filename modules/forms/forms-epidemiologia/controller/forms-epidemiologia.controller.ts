@@ -1,10 +1,9 @@
 import { EventCore } from '@andes/event-bus/';
 import { calcularEdad } from './../../../../core-v2/mpi/paciente/paciente.schema';
-import { SECCION_CLASIFICACION } from '../constantes';
+import { SECCION_CLASIFICACION, SECCION_ENFERMEDADES_PREVIAS } from '../constantes';
 import { FormsEpidemiologia } from '../forms-epidemiologia-schema';
 import * as mongoose from 'mongoose';
 import { FormCtr } from '../../../../modules/forms/forms.routes';
-import { SECCION_ENFERMEDADES_PREVIAS, SECCION_OPERACIONES } from '../constantes';
 import moment = require('moment');
 
 export async function updateField(id, seccion, fields) {

@@ -11,7 +11,7 @@ export const ESTADOCIVIL = {
 
 export const PARENTESCO = {
     type: String,
-    enum: ['progenitor/a', 'hijo', 'hermano', 'tutor']
+    enum: ['progenitor/a', 'hijo', 'hermano', 'tutor', 'tutelado']
 };
 
 export const ESTADO = {
@@ -22,7 +22,8 @@ export const ESTADO = {
 
 export const IDENTIFICACION = {
     type: String,
-    enum: ['documentoExtranjero', 'pasaporte']
+    required: false,
+    enum: ['documentoExtranjero', 'pasaporte', null]
 };
 
 export const CONTACTO = {

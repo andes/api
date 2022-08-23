@@ -10,11 +10,14 @@ export interface IPlanIndicaciones { }
 export type IPlanIndicacionesDoc = AndesDoc<IPlanIndicaciones>;
 
 export const PlanIndicacionesEstadoSchema = new Schema({
-    // active | on-hold | cancelled | completed | entered-in-error | stopped | draft | unknown | edited
-    tipo: String,
+    tipo: {
+        type: String,
+        enum: ['active', 'on-hold', 'cancelled', 'completed', 'entered-in-error', 'stopped', 'draft', 'unknown', 'edited']
+    },
     fecha: Date,
-    motivo: String,
+    motivo: String
 }, { _id: false });
+
 PlanIndicacionesEstadoSchema.plugin(AuditPlugin);
 
 export const PlanIndicacionesSchema = new Schema({
@@ -69,7 +72,10 @@ export const PlanIndicaciones = model('internacionPlanIndicaciones', PlanIndicac
 
 export const PlanIndicacionesEventosSchema = new Schema({
     idInternacion: SchemaTypes.ObjectId,
-    idIndicacion: SchemaTypes.ObjectId,
+    idIndicacion: {
+        type: SchemaTypes.ObjectId,
+        es_indexed: true
+    },
     fecha: Date,
     estado: String,
     observaciones: String,
@@ -77,5 +83,6 @@ export const PlanIndicacionesEventosSchema = new Schema({
 });
 
 PlanIndicacionesEventosSchema.plugin(AuditPlugin);
+PlanIndicacionesEventosSchema.index({ idIndicacion: 1 });
 
 export const PlanIndicacionesEventos = model('internacionPlanIndicacionesEventos', PlanIndicacionesEventosSchema, 'internacionPlanIndicacionesEventos');
