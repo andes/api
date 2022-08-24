@@ -34,7 +34,7 @@ PlanIndicacionesRouter.patch('/plan-indicaciones/:id/estado', asyncHandler(async
         Auth.audit(indicacion, req);
         const indicacionUpdated = await indicacion.save();
         EventCore.emitAsync('internacion:plan-indicaciones:update', indicacionUpdated);
-        return res.json(indicacion);
+        return res.json(indicacionUpdated);
     }
     throw new ResourceNotFound();
 }));
