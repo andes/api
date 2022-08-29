@@ -41,29 +41,20 @@ router.get('/submodulo/:idModule/organizaciones', Auth.authenticate(), async (re
         {
             $match: { 'submodulos._id': mongoose.Types.ObjectId(req.params.idModule) }
         },
-        {
-            $project: {
-                _id: 0,
-                nombre: '$submodulos.nombre'
-            }
-        }
     ];
-    const nombreModulo: any = await Modulos.aggregate(pipelineModulo);
-    if (nombreModulo.length && nombreModulo[0].nombre === 'BI-Queries') {
+    const modulo: any = await Modulos.aggregate(pipelineModulo);
+    if (modulo.length) {
+        const permisosModulo = modulo[0].permisos;
         const user: any = await AuthUsers.findOne({ _id: req.user.usuario.id });
         const organizaciones = user.organizaciones.filter(x => x.activo === true).map(item => mongoose.Types.ObjectId(item._id));
-        const permisosBiQueries = user.organizaciones.filter(org => org._id.toString() === req.user.organizacion._id)
-            .map(item => item.permisos.findIndex(permisos => permisos === 'visualizacionInformacion:biQueries:*' || permisos === 'visualizacionInformacion:*'));
-        if (permisosBiQueries[0] !== -1) {
-            let filtro: any = { _id: { $in: organizaciones } };
-            const permisosOrganizacion = user.organizaciones.filter(org => org._id.toString() === req.user.organizacion._id)
-                .map(item => item.permisos.findIndex(permisos => permisos === 'visualizacionInformacion:totalOrganizaciones' || permisos === 'visualizacionInformacion:*'));
-            if (permisosOrganizacion[0] !== -1) {
-                filtro = { activo: true };
-            }
-            const orgs = await Organizacion.find(filtro, { nombre: 1 }).sort({ nombre: 1 });
-            return res.json(orgs);
+        const itemPermisos = user.organizaciones.filter(org => org._id.toString() === req.user.organizacion._id).map(item => item.permisos);
+        const permiso = permisosModulo.map(item => itemPermisos[0].filter(p => item.slice(0, -1) + 'totalOrganizaciones' === p || item.slice(0, -1) + '*' === p));
+        let filtro: any = { _id: { $in: organizaciones } };
+        if (permiso[0].length) {
+            filtro = { activo: true };
         };
+        const orgs = await Organizacion.find(filtro, { nombre: 1 }).sort({ nombre: 1 });
+        return res.json(orgs);
     } else {
         return next('Módulo inválido');
     }
