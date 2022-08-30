@@ -23,7 +23,7 @@ export const ESTADO = {
 export const IDENTIFICACION = {
     type: String,
     required: false,
-    enum: ['documentoExtranjero', 'pasaporte', null]
+    enum: ['dni extranjero', 'pasaporte', null]
 };
 
 export const CONTACTO = {
