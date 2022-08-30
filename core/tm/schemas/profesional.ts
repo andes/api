@@ -128,7 +128,7 @@ ProfesionalSchema.add({
     idRenovacion: { type: String, required: false },
     documentoViejo: { type: Number, required: false },
     turno: Date,
-    profesionalMatriculado: { type: Boolean, default: true },
+    profesionalMatriculado: { type: Boolean, default: false },
     /* externa significa que no son matriculados con la app de matriculaciones como pueden ser los psicólogos, kinesiólogos, etc
     */
     profesionExterna: { type: ObjSIISASchema, required: false },
