@@ -315,6 +315,7 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
                     $lte: moment(hasta).toDate(),
                     $gte: moment(desde).toDate()
                 },
+                'estados.esMovimiento':true,
                 ...secondMatch
             }
         },
