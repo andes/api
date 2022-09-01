@@ -13,20 +13,28 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 
 export async function obtenerPrestaciones(organizacion, filtros) {
-    const fechaIngresoDesde = (filtros.fechaIngresoDesde) ? moment(filtros.fechaIngresoDesde).toDate() : moment().subtract(1, 'month').toDate();
-    const fechaIngresoHasta = (filtros.fechaIngresoHasta) ? moment(filtros.fechaIngresoHasta).toDate() : moment().toDate();
-
-    const $matchEgreso = [];
-    if (filtros.fechaEgresoDesde) {
-        $matchEgreso.push({
-            'ejecucion.registros.valor.InformeEgreso.fechaEgreso': { $gte: moment(filtros.fechaEgresoDesde).toDate() }
-        });
+    const matchIngreso = {};
+    if (filtros.fechaIngresoDesde || filtros.fechaIngresoHasta) {
+        const fechaIngresoFilter = {};
+        if (filtros.fechaIngresoDesde) {
+            fechaIngresoFilter['$gte'] = moment(filtros.fechaIngresoDesde).startOf('day').toDate();
+        }
+        if (filtros.fechaIngresoHasta) {
+            fechaIngresoFilter['$lte'] = moment(filtros.fechaIngresoHasta).endOf('day').toDate();
+        }
+        matchIngreso['ejecucion.registros.valor.informeIngreso.fechaIngreso'] = fechaIngresoFilter;
     }
 
-    if (filtros.fechaEgresoHasta) {
-        $matchEgreso.push({
-            'ejecucion.registros.valor.InformeEgreso.fechaEgreso': { $lte: moment(filtros.fechaEgresoHasta).toDate() }
-        });
+    const matchEgreso = {};
+    if (filtros.fechaEgresoDesde || filtros.fechaEgresoHasta) {
+        const fechaEgresoFilter = {};
+        if (filtros.fechaEgresoDesde) {
+            fechaEgresoFilter['$gte'] = moment(filtros.fechaEgresoDesde).startOf('day').toDate();
+        }
+        if (filtros.fechaEgresoHasta) {
+            fechaEgresoFilter['$lte'] = moment(filtros.fechaEgresoHasta).endOf('day').toDate();
+        }
+        matchEgreso['ejecucion.registros.valor.InformeEgreso.fechaEgreso'] = fechaEgresoFilter;
     }
 
     const $match = {};
@@ -44,11 +52,8 @@ export async function obtenerPrestaciones(organizacion, filtros) {
         'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
         'solicitud.ambitoOrigen': 'internacion',
         'solicitud.tipoPrestacion.conceptId': '32485007',
-        $and: [
-            { 'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $gte: fechaIngresoDesde } },
-            { 'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $lte: fechaIngresoHasta } },
-            ...$matchEgreso
-        ],
+        ...matchIngreso,
+        ...matchEgreso,
         ...$match,
         'estadoActual.tipo': { $in: ['ejecucion', 'validada'] }
 
@@ -132,9 +137,7 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
                 ambito,
                 capa,
                 cama: mov.idCama
-            },
-            mov.fecha,
-            usuario
+            }, mov.fecha, usuario
             );
         });
 
