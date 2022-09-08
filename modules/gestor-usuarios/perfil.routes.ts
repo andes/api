@@ -1,7 +1,7 @@
 import { Perfiles } from './perfil.schema';
 import { Auth } from '../../auth/auth.class';
 
-import { ResourceBase } from '@andes/core';
+import { MongoQuery, ResourceBase } from '@andes/core';
 import { Request } from '@andes/api-tool';
 
 
@@ -17,6 +17,7 @@ class PerfilesResource extends ResourceBase {
         delete: Auth.authorize('usuarios:perfiles'),
     };
     searchFileds = {
+        nombre: MongoQuery.partialString,
         // equivalente a { organizacion: { $in: [ null, value ] } }
         organizacion: (value) => {
             return { $in: [null, value] };
@@ -24,7 +25,8 @@ class PerfilesResource extends ResourceBase {
         // equivalente a { activo: value }
         activo: (value) => {
             return value;
-        }
+        },
+        search: ['nombre']
     };
 
     public async prefind(data: Object, req: Request) {
