@@ -35,7 +35,7 @@ schema.add({
         type: Boolean,
         default: false
     },
-
+    params: mongoose.Schema.Types.Mixed,
     isEmpty: Boolean,
     /**
      * Por ahora un schema sensillo para marcar un concepto como privado
