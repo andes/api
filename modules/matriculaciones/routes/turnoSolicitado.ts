@@ -22,14 +22,14 @@ router.post('/turnoSolicitados', async (req, res, next) => {
 });
 
 router.get('/turnoSolicitados/traePDni/:dni*?', (req: any, res, next) => {
-    const dni = req.params.dni;
-    turnoSolicitado.find({ _id: dni }, (err, data) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data[0]);
-    });
-
+    if (req.params.dni) {
+        turnoSolicitado.find({ documento: req.params.dni }, (err, data) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data[0]);
+        });
+    }
 });
 
 export = router;
