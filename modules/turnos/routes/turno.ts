@@ -161,7 +161,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
     };
  */
 
-router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
+router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: any, res, next) => {
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
     if (continues.valid) {
@@ -357,7 +357,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
 
             // Se consulta si el turno estaba asociado a una solicitud
             if (req.body.reasignado) {
-                const prestacion: any = await Prestacion.findOne({ inicio: 'top', 'solicitud.historial.idTurnoSuspendido': req.body.reasignado.anterior.idTurno });
+                const fechaDesde = moment(turnoSeleccionado.horaInicio).subtract(6, 'months');
+                const fechaHasta = turnoSeleccionado.horaInicio;
+                const filtros = { 'solicitud.fecha': { $gte: fechaDesde, $lte: fechaHasta }, 'solicitud.organizacion.id': req.user.organizacion.id, 'solicitud.ambitoOrigen': 'ambulatorio', inicio: 'top', 'solicitud.historial.idTurnoSuspendido': req.body.reasignado.anterior.idTurno };
+                const prestacion: any = await Prestacion.findOne(filtros);
                 if (prestacion) {
                     const dataHistorial = {
                         op: 'asignarTurno',
