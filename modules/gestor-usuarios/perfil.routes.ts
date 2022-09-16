@@ -26,7 +26,7 @@ class PerfilesResource extends ResourceBase {
         activo: (value) => {
             return value;
         },
-        search: ['nombre']
+        search: ['nombre', 'activo']
     };
 
     public async prefind(data: Object, req: Request) {
