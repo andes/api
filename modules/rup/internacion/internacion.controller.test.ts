@@ -5,7 +5,7 @@ import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
 import { CamaEstados } from './cama-estados.schema';
-import { findById, patch, store } from './camas.controller';
+import { findById, patchEstados, store } from './camas.controller';
 import { Camas } from './camas.schema';
 import { EstadosCtr } from './estados.routes';
 import * as InternacionController from './internacion.controller';
@@ -210,7 +210,7 @@ describe('Internacion - Controller', () => {
             ]
         }, REQMock);
 
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -280,7 +280,7 @@ test('Deshacer Internacion', async () => {
     expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
     // OCUPA LA CAMA
-    await patch({
+    await patchEstados({
         id: cama._id,
         ambito,
         capa,

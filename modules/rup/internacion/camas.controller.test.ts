@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Prestacion } from '../schemas/prestacion';
-import { store, findById, search, patch, changeTime, listaEspera } from './camas.controller';
+import { store, findById, search, patchEstados, changeTime, listaEspera } from './camas.controller';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import { CamaEstados } from './cama-estados.schema';
 import { Estados } from './estados.schema';
@@ -154,7 +154,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
 
-        const estados = await patch({
+        const estados = await patchEstados({
             organizacion: cama.organizacion,
             id: idCama,
             esMovimiento: true,
@@ -170,7 +170,7 @@ describe('Internacion - camas', () => {
         camaEncontrada = await findById({ organizacion, capa: 'enfermeria', ambito }, idCama);
         expect(camaEncontrada.estado).toBe('disponible');
 
-        const resultNull = await patch({
+        const resultNull = await patchEstados({
             organizacion: cama.organizacion,
             ambito,
             capa,
@@ -184,7 +184,7 @@ describe('Internacion - camas', () => {
         camaEncontrada = await findById({ organizacion, capa, ambito }, cama._id, moment().add(3, 'h').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
 
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa: 'enfermeria',
@@ -265,7 +265,7 @@ describe('Internacion - camas', () => {
         const from = moment().add(1, 'h').toDate();
         const to = moment().add(2, 'h').toDate();
 
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -306,7 +306,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         const fechaIngreso = moment().add(2, 'hour').toDate();
-        await patch({
+        await patchEstados({
             id: idCama,
             ambito,
             capa,
@@ -325,7 +325,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         const fechaPase = moment().add(3, 'hour').toDate();
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -372,7 +372,7 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // OCUPA LA CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -391,7 +391,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         // INACTIVA LA CAMA ANTES DE OCUPARLA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -443,7 +443,7 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // BLOQUEA CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -454,7 +454,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         // INACTIVA CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -506,7 +506,7 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // OCUPA LA CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -525,7 +525,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         // OCUPADA CON OTRO PACIENTE
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -585,7 +585,7 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // OCUPA LA CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -603,7 +603,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         // BLOQUEAR CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -655,7 +655,7 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // INACTIVAR CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -666,7 +666,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         // BLOQUEAR CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -718,7 +718,7 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
         // OCUPA LA CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -764,7 +764,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         // OCUPA LA CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -786,7 +786,7 @@ describe('Internacion - camas', () => {
 
         const idInternacion = Types.ObjectId();
         // LIBERA CAMA
-        await patch({
+        await patchEstados({
             organizacion: cama.organizacion,
             ambito,
             capa,
@@ -832,7 +832,7 @@ describe('Internacion - camas', () => {
         }, REQMock);
 
         // OCUPA LA CAMA
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -860,7 +860,7 @@ describe('Internacion - camas', () => {
             semanticTag: 'medio ambiente',
         };
         // LIBERA CAMA
-        await patch({
+        await patchEstados({
             organizacion: cama.organizacion,
             ambito,
             capa,
