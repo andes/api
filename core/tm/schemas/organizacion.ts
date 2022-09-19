@@ -66,7 +66,8 @@ const _schema = new Schema({
     esCOM: Boolean,
     trasladosEspeciales: [TipoTrasladoSchema],
     zonaSanitaria: zonaSanitariasSchema,
-    usaEstadisticaV2: Boolean
+    usaEstadisticaV2: Boolean,
+    internacionDefault: Boolean // solo castro
 });
 
 _schema.plugin(AuditPlugin);
