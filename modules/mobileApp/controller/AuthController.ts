@@ -262,7 +262,7 @@ export async function verificarCuentaExistente(documento, sexo, email) {
     if (cuentaPaciente.length) {
         return { error: 'existe-cuenta-paciente-activa' };
     }
-    const pacienteApp = await PacienteAppCtr.findOne({ email });
+    const pacienteApp = await PacienteAppCtr.findOne({ email, baja: { $exists: false } });
     if (pacienteApp) {
         if (pacienteApp.activacionApp) { // si existe en una cuenta activa es porque el mail esta vinculado a otro DNI
             return { error: 'existe-email-vinculado' };
