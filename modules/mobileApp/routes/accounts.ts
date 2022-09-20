@@ -80,13 +80,29 @@ router.get('/check/:id', async (req: any, res, next) => {
 
 router.get('/email/:email', async (req: any, res, next) => {
     try {
-        const resp = await PacienteApp.find({ email: req.params.email });
+        const resp = await PacienteApp.find({ email: req.params.email, baja: { $exists: false } });
         return res.send(resp);
     } catch (err) {
         return res.send(err);
     }
 });
 
+/**
+ * Borrado logico de una cuenta
+ *
+ * @param {string} id ID de la cuenta
+ */
+router.patch('/account/baja/:id', async (req: any, res, next) => {
+    const id = req.params.id;
+    try {
+        const account = await PacienteApp.findById(id);
+        account.set(req.body);
+        const updated = await account.save();
+        return res.send(updated);
+    } catch (err) {
+        return next('Ocurrió un error dando de baja la cuenta');
+    }
+});
 
 /**
  * Reenviar código de activación a un paciente
