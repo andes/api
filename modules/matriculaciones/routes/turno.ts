@@ -102,9 +102,8 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
     if (!Auth.check(request, 'matriculaciones:turnos:*')) {
         return errorHandler(403);
     }
-    const offset = parseInt(request.query.offset, 10);
-    const chunkSize = parseInt(request.query.size, 10);
-
+    const offset = parseInt(request.query.offset || 0, 10);
+    const chunkSize = parseInt(request.query.size || 0, 10);
     const responseData = {
         totalPages: null,
         data: null
@@ -181,7 +180,6 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
         });
 
     } else {
-
         turno.find(busquedaTurno).populate('profesional')
             .sort({ fecha: 1, hora: 1 })
             .skip(offset)

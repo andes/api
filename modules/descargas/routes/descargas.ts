@@ -7,6 +7,7 @@ import moment = require('moment');
 import { InformeRUP } from '../informe-rup/informe-rup';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { InformeCenso } from '../informe-censo/informe-censo';
+import { InformeTurnos } from '../informe-turnos/informe-turnos';
 import { RecuperoCosto } from '../recupero-costo/recupero-costo';
 import { ConstanciaPuco } from '../puco/constancia-puco';
 import { Derivacion } from '../com/derivacion';
@@ -202,6 +203,14 @@ router.get('/credencialProfesional/:idProfesional/:idFormacionGrado/:qrcode', Au
     const opciones = { header: { height: '3cm' } };
     const fileName = await certificado.informe(opciones);
     return res.download(fileName);
+});
+
+router.post('/listadoTurnos', Auth.authenticate(), async (req: any, res, next) => {
+    const opciones = { header: { height: '3cm' } };
+    const docTurnos = new InformeTurnos(req);
+    const fileName: any = await docTurnos.informe(opciones);
+    return res.download(fileName);
+
 });
 
 /**
