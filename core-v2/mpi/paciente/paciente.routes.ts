@@ -121,9 +121,13 @@ export const get = async (req: Request, res: Response) => {
         const pacientes = await multimatch(req.query.search, conditions, options);
         return res.json(pacientes);
     } else {
-        const conditions = req.query;
-        const pacientes = await PacienteCtr.search(conditions, options, req);
-        return res.json(pacientes);
+        if (req.query.length) {
+            const conditions = req.query;
+            const pacientes = await PacienteCtr.search(conditions, options, req);
+            return res.json(pacientes);
+        }
+        throw new PatientNotFound();
+
     }
 };
 
@@ -145,51 +149,8 @@ export const getFoto = async (req: Request, res: Response, next) => {
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
-    const pacienteBuscado: any = await Paciente.findById(req.params.id, '+foto');
     try {
-        if (pacienteBuscado) {
-            if (!pacienteBuscado.fotoId) {
-                res.writeHead(200, {
-                    'Content-Type': 'image/svg+xml'
-                });
-                return res.end('<svg version="1.1" id="Layer_4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="480px" height="535px" viewBox="0 0 480 535" enable-background="new 0 0 480 535" xml:space="preserve"><g id="Layer_3"><linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="240" y1="535" x2="240" y2="4.882812e-04"><stop  offset="0" style="stop-color:#C5C5C5"/><stop  offset="1" style="stop-color:#9A9A9A"/></linearGradient><rect fill="url(#SVGID_1_)" width="480" height="535"/></g><g id="Layer_2"><path fill="#FFFFFF" d="M347.5,250c0,59.375-48.125,107.5-107.5,107.5c-59.375,0-107.5-48.125-107.5-107.5c0-59.375,48.125-107.5,107.5-107.5C299.375,142.5,347.5,190.625,347.5,250z"/><path fill="#FFFFFF" d="M421.194,535C413.917,424.125,335.575,336.834,240,336.834c-95.576,0-173.917,87.291-181.194,198.166H421.194z"/></g></svg>');
-            }
-
-            if (pacienteBuscado.foto) {
-                const imagen = pacienteBuscado.foto;
-                const imageMatch = imagen.match(base64RegExp);
-                const mimeType = imageMatch[1];
-                const data = imageMatch[2];
-                const imgStream = Buffer.from(data, 'base64');
-
-                res.writeHead(200, {
-                    'Content-Type': mimeType,
-                    'Content-Length': imgStream.length
-                });
-                return res.end(imgStream);
-            }
-
-
-            if (pacienteBuscado.fotoId) {
-                const fileDrive = await AndesDrive.find(pacienteBuscado.fotoId);
-                if (fileDrive) {
-                    const stream = await AndesDrive.read(fileDrive);
-                    res.writeHead(200, {
-                        'Content-Type': fileDrive.mimetype,
-                        // 'Content-Length': stream.length
-                    });
-                    stream.on('error', (error) => {
-                        // eslint-disable-next-line no-console
-                        console.error(`paciente ${pacienteBuscado.id} tiene foto incorrecta`);
-                    });
-                    return stream.pipe(res);
-                }
-            }
-
-        }
-
-        return next(404);
-
+        return res.end('<svg version="1.1" id="Layer_4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="480px" height="535px" viewBox="0 0 480 535" enable-background="new 0 0 480 535" xml:space="preserve"><g id="Layer_3"><linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="240" y1="535" x2="240" y2="4.882812e-04"><stop  offset="0" style="stop-color:#C5C5C5"/><stop  offset="1" style="stop-color:#9A9A9A"/></linearGradient><rect fill="url(#SVGID_1_)" width="480" height="535"/></g><g id="Layer_2"><path fill="#FFFFFF" d="M347.5,250c0,59.375-48.125,107.5-107.5,107.5c-59.375,0-107.5-48.125-107.5-107.5c0-59.375,48.125-107.5,107.5-107.5C299.375,142.5,347.5,190.625,347.5,250z"/><path fill="#FFFFFF" d="M421.194,535C413.917,424.125,335.575,336.834,240,336.834c-95.576,0-173.917,87.291-181.194,198.166H421.194z"/></g></svg>');
     } catch (err) {
         return next(err);
     }
