@@ -121,7 +121,7 @@ export const get = async (req: Request, res: Response) => {
         const pacientes = await multimatch(req.query.search, conditions, options);
         return res.json(pacientes);
     } else {
-        if (req.query.length) {
+        if (Object.keys(req.query).length) {
             const conditions = req.query;
             const pacientes = await PacienteCtr.search(conditions, options, req);
             return res.json(pacientes);
