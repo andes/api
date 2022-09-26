@@ -14,6 +14,7 @@ import { Arancelamiento } from '../arancelamiento/arancelamiento';
 import { Agenda } from '../agenda/agenda';
 import { getArchivoAdjunto } from '../../../modules/rup/controllers/rup';
 import { CertificadoEtica } from '../matriculaciones/certificado-etica';
+import { CredencialProfesional } from '../matriculaciones/credencial-profesional';
 
 const router = express.Router();
 
@@ -187,6 +188,17 @@ router.post('/agenda/:id', Auth.authenticate(), async (req: any, res) => {
 // Certificado de etica para profesional desde matriculaciones
 router.post('/certificadoEtica', Auth.authenticate(), async (req: any, res) => {
     const certificado = new CertificadoEtica(req);
+    const opciones = { header: { height: '3cm' } };
+    const fileName = await certificado.informe(opciones);
+    return res.download(fileName);
+});
+
+//
+router.get('/credencialProfesional/:idProfesional/:idFormacionGrado/:qrcode', Auth.authenticate(), async (req: any, res) => {
+    const idProfesional = req.params.idProfesional;
+    const idFormacionGrado = req.params.idFormacionGrado;
+    const qrcode = req.params.qrcode;
+    const certificado = new CredencialProfesional(idProfesional, idFormacionGrado, qrcode);
     const opciones = { header: { height: '3cm' } };
     const fileName = await certificado.informe(opciones);
     return res.download(fileName);

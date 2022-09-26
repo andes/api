@@ -1,0 +1,74 @@
+@page {
+    size: portrait;
+}
+
+html {
+    display: inline-block;
+    padding: 0 2rem;
+    margin: 0;
+    font-family: sans-serif;
+}
+
+.logo-credencial {
+    width: 300px;
+    height: 43px;
+}
+
+.logo-colores {
+    width: 100%;
+}
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+
+    span {
+        font-size: smaller;
+    }
+
+    .titulo-profesional {
+        color: #30A0D9;
+        font-weight: bold;
+        font-size: smaller;
+    }
+
+    .texto-dni,
+    .texto-vencimiento {
+        color: #243163;
+        font-weight: bold;
+        margin-left: 0.5rem;
+        font-size: smaller;
+    }
+
+    .titulo-entidad {
+        font-size: smaller;
+        font-weight: bold;
+        margin-bottom: 0.1rem;
+        word-break: break-all;
+    }
+
+    .text-bold {
+        color: #243163;
+        font-weight: bold;
+        font-size: smaller;
+    }
+
+    .datos_profesional {
+        text-align: start;
+    }
+
+    .sexo-profesional {
+        text-transform: capitalize;
+    }
+
+    .img-qr {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+td {
+    text-align: left;
+    padding: 8px;
+}
