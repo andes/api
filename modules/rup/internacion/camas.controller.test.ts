@@ -1,14 +1,13 @@
 import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Prestacion } from '../schemas/prestacion';
-import { store, findById, search, patchEstados, changeTime, listaEspera } from './camas.controller';
+import { storeEstados, findById, search, patchEstados, changeTime, listaEspera } from './camas.controller';
 import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import { CamaEstados } from './cama-estados.schema';
 import { Estados } from './estados.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import { EstadosCtr } from './estados.routes';
 import { Auth } from '../../../auth/auth.class';
-import { patch as patchEstados } from './cama-estados.controller';
 import { integrityCheck as checkIntegridad } from './camas.controller';
 import { createInternacionPrestacion, estadoOcupada } from './test-utils';
 import { getFakeRequest, setupUpMongo } from '@andes/unit-test';
@@ -77,7 +76,7 @@ describe('Internacion - camas', () => {
         await CamaEstados.remove({});
         await Estados.remove({});
         await Prestacion.remove({});
-        cama = await store(seedCama(1, 'h') as any, REQMock);
+        cama = await storeEstados(seedCama(1, 'h') as any, REQMock);
         idCama = String(cama._id);
         organizacion = cama.organizacion._id;
     });
@@ -281,7 +280,7 @@ describe('Internacion - camas', () => {
             }
         }, REQMock);
 
-        await patchEstados({ organizacion, capa, ambito, cama: cama._id }, from, to);
+        await CamasEstadosController.patch({ organizacion, capa, ambito, cama: cama._id }, from, to);
 
         const camaEncontrada = await findById({ organizacion, capa, ambito }, cama._id, moment().add(3, 'h').toDate());
         expect(camaEncontrada.fecha.toISOString()).toBe(to.toISOString());

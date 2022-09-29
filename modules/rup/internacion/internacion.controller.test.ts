@@ -5,7 +5,7 @@ import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
 import { CamaEstados } from './cama-estados.schema';
-import { findById, patchEstados, store } from './camas.controller';
+import { findById, patchEstados, storeEstados } from './camas.controller';
 import { Camas } from './camas.schema';
 import { EstadosCtr } from './estados.routes';
 import * as InternacionController from './internacion.controller';
@@ -39,7 +39,7 @@ beforeEach(async () => {
 
     (REQMock as any).user.organizacion['id'] = '57e9670e52df311059bc8964';
     (REQMock as any).user.organizacion['nombre'] = 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON9670e52df311059bc8964';
-    cama = await store(seedCama(1, 'y') as any, REQMock);
+    cama = await storeEstados(seedCama(1, 'y') as any, REQMock);
     internacion = await storeInternacion();
     organizacion = cama.organizacion._id;
     idCama = String(cama._id);

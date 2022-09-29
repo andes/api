@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 
+import { userScheduler } from 'config.private';
 import * as moment from 'moment';
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import { Auth } from '../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
 import * as CamasEstadosController from './cama-estados.controller';
 import { CamaEstados } from './cama-estados.schema';
-import { store } from './camas.controller';
+import { storeEstados } from './camas.controller';
 import { Camas } from './camas.schema';
 import * as CensoController from './censo.controller';
 import { createInternacionPrestacion, estadoOcupada } from './test-utils';
@@ -42,7 +43,7 @@ beforeEach(async () => {
     await Camas.remove({});
     await CamaEstados.remove({});
     await Prestacion.remove({});
-    cama = await store(seedCama(1, 'y') as any, REQMock);
+    cama = await storeEstados(seedCama(1, 'y') as any, REQMock);
     idCama = String(cama._id);
     organizacion = cama.organizacion._id;
     unidadOrganizativa = cama.unidadOrganizativaOriginal.conceptId;
@@ -223,7 +224,9 @@ test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
 });
 
 test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
-    const cama2 = await store(seedCama(1, 'y', otraUnidadOrganizativa) as any, REQMock);
+    const cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
+    cama2.audit(userScheduler);
+    await storeEstados(cama2, REQMock);
     const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
     nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
@@ -408,7 +411,9 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
 });
 
 test('Censo diario - Paciente ingresa y tiene pase A', async () => {
-    const cama2 = await store(seedCama(1, 'y', otraUnidadOrganizativa) as any, REQMock);
+    const cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
+    cama2.audit(userScheduler);
+    await storeEstados(cama2, REQMock);
     const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
 
@@ -690,7 +695,9 @@ test('Censo diario - Paciente tiene paseDe y tiene defuncion', async () => {
 });
 
 test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
-    const cama2 = await store(seedCama(1, 'y', otraUnidadOrganizativa) as any, REQMock);
+    const cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
+    cama2.audit(userScheduler);
+    await storeEstados(cama2, REQMock);
     const nuevaPrestacion: any = new Prestacion(
         createInternacionPrestacion(cama.organizacion, moment().add(4, 'd').toDate())
     );
