@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-
-import { userScheduler } from 'config.private';
+import { Types } from 'mongoose';
 import * as moment from 'moment';
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import { Auth } from '../../../auth/auth.class';
@@ -11,7 +10,7 @@ import { storeEstados } from './camas.controller';
 import { Camas } from './camas.schema';
 import * as CensoController from './censo.controller';
 import { createInternacionPrestacion, estadoOcupada } from './test-utils';
-
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 const REQMock: any = {
     user: {}
@@ -43,9 +42,32 @@ beforeEach(async () => {
     await Camas.remove({});
     await CamaEstados.remove({});
     await Prestacion.remove({});
-    cama = await storeEstados(seedCama(1, 'y') as any, REQMock);
+    await Organizacion.remove({});
+
+    let newOrganizacion = new Organizacion({
+        _id: Types.ObjectId('57e9670e52df311059bc8964'),
+        nombre: 'HTAL PROV NEUQUEN - DR EDUARDO CASTRO RENDON',
+        codigo: {
+            sisa: '10580352167033',
+            cuie: 'Q06391',
+            remediar: '00001',
+            sips: '205'
+        },
+        activo: true
+    });
+    Auth.audit(newOrganizacion, REQMock);
+    newOrganizacion = await newOrganizacion.save();
+    organizacion = newOrganizacion.id;
+
+    cama = new Camas(seedCama(1, 'y'));
+    cama.audit(REQMock);
+    cama = await cama.save();
+    const dataEstados = {
+        ...seedCama(1, 'y'),
+        _id: cama._id
+    };
+    await storeEstados(dataEstados, REQMock);;
     idCama = String(cama._id);
-    organizacion = cama.organizacion._id;
     unidadOrganizativa = cama.unidadOrganizativaOriginal.conceptId;
 });
 
@@ -59,10 +81,17 @@ function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
         esMovimiento: true,
         fecha: moment().subtract(cantidad, unidad).toDate(),
         organizacion: {
-            _id: mongoose.Types.ObjectId('57e9670e52df311059bc8964'),
+            _id: Types.ObjectId('57e9670e52df311059bc8964'),
             nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
         },
         ambito: 'internacion',
+        unidadOrganizativaOriginal: unidadOrganizativaCama || {
+            refsetIds: [],
+            fsn: 'departamento de rayos X (medio ambiente)',
+            term: 'departamento de rayos X',
+            conceptId: '225747005',
+            semanticTag: 'medio ambiente',
+        },
         unidadOrganizativa: unidadOrganizativaCama || {
             refsetIds: [],
             fsn: 'departamento de rayos X (medio ambiente)',
@@ -224,8 +253,9 @@ test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
 });
 
 test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
-    const cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
-    cama2.audit(userScheduler);
+    let cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
+    cama2.audit(REQMock);
+    cama2 = await cama2.save();
     await storeEstados(cama2, REQMock);
     const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
@@ -270,22 +300,7 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
         diasEstada: 1
     });
 
-    // const censoMan = await CensoController.censoDiario({ organizacion, timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa });
     const censoManUO = await CensoController.censoDiario({ organizacion, timestamp: moment().add(1, 'd').toDate(), unidadOrganizativa: otraUnidadOrganizativa.conceptId });
-
-    // expect(censoMan.censo).toEqual({
-    //     existenciaALas0: 0,
-    //     ingresos: 0,
-    //     pasesDe: 0,
-    //     altas: 0,
-    //     defunciones: 0,
-    //     pasesA: 0,
-    //     existenciaALas24: 0,
-    //     ingresosYEgresos: 0,
-    //     pacientesDia: 0,
-    //     diasEstada: 0,
-    //     disponibles: 1
-    // });
 
     expect(censoManUO.censo).toEqual({
         existenciaALas0: 1,
@@ -310,7 +325,9 @@ test('Censo diario - Paciente ingresa y se queda', async () => {
     const internacion = await nuevaPrestacion.save();
     await CamasEstadosController.store(
         {
-            organizacion, ambito, capa,
+            organizacion,
+            ambito,
+            capa,
             cama: idCama
         }, estadoOcupada(moment().subtract(1, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
         REQMock
@@ -341,7 +358,9 @@ test('Censo diario - Paciente ingresa y tiene alta', async () => {
     const internacion = await nuevaPrestacion.save();
 
     await CamasEstadosController.store({
-        organizacion, ambito, capa,
+        organizacion,
+        ambito,
+        capa,
         cama: idCama
     }, estadoOcupada(
         moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
@@ -349,7 +368,9 @@ test('Censo diario - Paciente ingresa y tiene alta', async () => {
     );
 
     await CamasEstadosController.store({
-        organizacion, ambito, capa,
+        organizacion,
+        ambito,
+        capa,
         cama: idCama
     }, estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
 
@@ -381,7 +402,9 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
 
     await CamasEstadosController.store(
         {
-            organizacion, ambito, capa,
+            organizacion,
+            ambito,
+            capa,
             cama: idCama
         },
         estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
@@ -389,7 +412,9 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
     );
 
     await CamasEstadosController.store({
-        organizacion, ambito, capa,
+        organizacion,
+        ambito,
+        capa,
         cama: idCama
     }, estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
 
@@ -411,8 +436,9 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
 });
 
 test('Censo diario - Paciente ingresa y tiene pase A', async () => {
-    const cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
-    cama2.audit(userScheduler);
+    let cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
+    cama2.audit(REQMock);
+    cama2 = await cama2.save();
     await storeEstados(cama2, REQMock);
     const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
     nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
@@ -695,8 +721,9 @@ test('Censo diario - Paciente tiene paseDe y tiene defuncion', async () => {
 });
 
 test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
-    const cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
-    cama2.audit(userScheduler);
+    let cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
+    cama2.audit(REQMock);
+    cama2 = await cama2.save();
     await storeEstados(cama2, REQMock);
     const nuevaPrestacion: any = new Prestacion(
         createInternacionPrestacion(cama.organizacion, moment().add(4, 'd').toDate())
@@ -772,106 +799,3 @@ function estadoDisponible(unidadOrganizativaEstado, cantidad, unidad) {
         sugierePase: null
     };
 }
-
-// function estadoOcupada(idInternacion, unidadOrganizativaEstado, cantidad, unidad) {
-//     return {
-//         fecha: moment().subtract(cantidad, unidad).toDate(),
-//         estado: 'ocupada',
-//         unidadOrganizativa: unidadOrganizativaEstado,
-//         especialidades: [
-//             {
-//                 fsn: 'medicina general (calificador)',
-//                 term: 'medicina general',
-//                 conceptId: '394802001',
-//                 semanticTag: 'calificador'
-//             }
-//         ],
-//         esCensable: true,
-//         genero: {
-
-//             fsn: 'género femenino (hallazgo)',
-//             term: 'género femenino',
-//             conceptId: '703118005',
-//             semanticTag: 'hallazgo'
-//         },
-//         paciente: {
-//             claveBlocking: [
-//                 'ANSRALN',
-//                 'ANSRN',
-//                 'ALNNTN',
-//                 '6496566365',
-//                 '6496'
-//             ],
-//             entidadesValidadoras: [
-//                 'Sisa',
-//                 'RENAPER'
-//             ],
-//             _id: mongoose.Types.ObjectId('5d3af64e5086740d0f5bc6b5'),
-//             identificadores: [
-//                 {
-//                     entidad: 'SIPS',
-//                     valor: '733776'
-//                 }
-//             ],
-//             contacto: [
-//                 {
-//                     activo: true,
-//                     _id: mongoose.Types.ObjectId('5cf4f5facdb7f026ed635a77'),
-//                     tipo: 'celular',
-//                     valor: '2995166965',
-//                     ranking: 0,
-//                     ultimaActualizacion: '2019-06-03T10:26:09.207Z'
-//                 }
-//             ],
-//             direccion: [],
-//             relaciones: [],
-//             financiador: [],
-//             carpetaEfectores: [],
-//             notas: [],
-//             documento: '40616354',
-//             estado: 'validado',
-//             nombre: 'AILEN ANTONELA',
-//             apellido: 'ANZORENA',
-//             sexo: 'femenino',
-//             genero: 'femenino',
-//             fechaNacimiento: '1997-11-01T03:00:00.000Z',
-//             estadoCivil: null,
-//             activo: true,
-//             createdAt: '2019-04-09T10:15:12.355Z',
-//             createdBy: {
-//                 id: mongoose.Types.ObjectId('5ca4c38333a46481507661da'),
-//                 nombreCompleto: 'Miriam Lorena Sanchez',
-//                 nombre: 'Miriam Lorena',
-//                 apellido: 'Sanchez',
-//                 username: 29882039,
-//                 documento: 29882039,
-//                 organizacion: {
-//                     _id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-//                     nombre: 'HOSPITAL AÑELO',
-//                     id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d')
-//                 }
-//             },
-//             scan: '00249041503@ANZORENA@AILN ANTONELA@F@40616354@A@01/11/1997@25/02/2014',
-//             updatedAt: '2019-07-26T12:47:10.703Z',
-//             updatedBy: {
-//                 id: mongoose.Types.ObjectId('5b5a00ae43563f10834c067c'),
-//                 nombreCompleto: 'MARIA RAQUEL MU�OZ',
-//                 nombre: 'MARIA RAQUEL',
-//                 apellido: 'MU�OZ',
-//                 username: 27932209,
-//                 documento: 27932209,
-//                 organizacion: {
-//                     _id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d'),
-//                     nombre: 'HOSPITAL AÑELO',
-//                     id: mongoose.Types.ObjectId('57f67a7ad86d9f64130a138d')
-//                 }
-//             },
-//             cuil: '27406163542',
-//             reportarError: false
-//         },
-//         idInternacion,
-//         observaciones: null,
-//         esMovimiento: true,
-//         sugierePase: null
-//     };
-// }

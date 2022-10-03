@@ -11,6 +11,7 @@ import { Auth } from '../../../auth/auth.class';
 import { integrityCheck as checkIntegridad } from './camas.controller';
 import { createInternacionPrestacion, estadoOcupada } from './test-utils';
 import { getFakeRequest, setupUpMongo } from '@andes/unit-test';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 const ambito = 'internacion';
 const capa = 'medica';
@@ -31,6 +32,13 @@ function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
             nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
         },
         ambito: 'internacion',
+        unidadOrganizativaOriginal: unidadOrganizativaCama || {
+            refsetIds: [],
+            fsn: 'departamento de rayos X (medio ambiente)',
+            term: 'departamento de rayos X',
+            conceptId: '225747005',
+            semanticTag: 'medio ambiente',
+        },
         unidadOrganizativa: unidadOrganizativaCama || {
             refsetIds: [],
             fsn: 'departamento de rayos X (medio ambiente)',
@@ -76,16 +84,38 @@ describe('Internacion - camas', () => {
         await CamaEstados.remove({});
         await Estados.remove({});
         await Prestacion.remove({});
-        cama = await storeEstados(seedCama(1, 'h') as any, REQMock);
+        await Organizacion.remove({});
+
+        const newOrganizacion = new Organizacion({
+            _id: Types.ObjectId('57e9670e52df311059bc8964'),
+            nombre: 'HTAL PROV NEUQUEN - DR EDUARDO CASTRO RENDON',
+            codigo: {
+                sisa: '10580352167033',
+                cuie: 'Q06391',
+                remediar: '00001',
+                sips: '205'
+            },
+            activo: true
+        });
+        Auth.audit(newOrganizacion, REQMock);
+        organizacion = await newOrganizacion.save();
+
+        cama = new Camas(seedCama(1, 'h'));
+        cama.audit(REQMock);
+        cama = await cama.save();
+        const dataEstados = {
+            ...seedCama(1, 'h'),
+            _id: cama._id
+        };
+        await storeEstados(dataEstados, REQMock);;
         idCama = String(cama._id);
-        organizacion = cama.organizacion._id;
     });
 
     test('create cama', async () => {
         const camaDB: any = await Camas.findById(idCama);
         const test = INTERNACION_CAPAS.map(async (internacionCapa) => {
             const camaEstadoDB: any = await CamaEstados.find({
-                idOrganizacion: organizacion,
+                idOrganizacion: organizacion._id,
                 ambito,
                 capa: internacionCapa,
                 idCama,
@@ -97,7 +127,8 @@ describe('Internacion - camas', () => {
             expect(camaEstadoDB.length).toBe(1);
             expect(camaEstadoDB[0].estados[0].estado).toBe('disponible');
         });
-        return await Promise.all(test);
+        const res = await Promise.all(test);
+        return res;
     });
 
     test('cama - findById', async () => {
@@ -136,23 +167,6 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdAt).toBeDefined();
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
-        await EstadosCtr.create({
-            organizacion,
-            ambito: 'internacion',
-            capa: 'enfermeria',
-            estados: [
-                { key: 'disponible' },
-                { key: 'ocupada' },
-                { key: 'inactiva' }
-            ],
-            relaciones: [
-                { origen: 'disponible', destino: 'inactiva' },
-                { origen: 'disponible', destino: 'ocupada' },
-                { origen: 'ocupada', destino: 'disponible' },
-            ]
-        }, REQMock);
-
-
         const estados = await patchEstados({
             organizacion: cama.organizacion,
             id: idCama,
@@ -163,11 +177,8 @@ describe('Internacion - camas', () => {
             fecha: moment().subtract(3, 'minute').toDate()
         }, REQMock);
 
-        let camaEncontrada = await findById({ organizacion, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
+        let camaEncontrada = await findById({ organizacion: organizacion._id, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
-
-        camaEncontrada = await findById({ organizacion, capa: 'enfermeria', ambito }, idCama);
-        expect(camaEncontrada.estado).toBe('disponible');
 
         const resultNull = await patchEstados({
             organizacion: cama.organizacion,
@@ -180,43 +191,8 @@ describe('Internacion - camas', () => {
         }, REQMock);
         expect(resultNull).toBeNull();
 
-        camaEncontrada = await findById({ organizacion, capa, ambito }, cama._id, moment().add(3, 'h').toDate());
+        camaEncontrada = await findById({ organizacion: organizacion._id, capa, ambito }, cama._id, moment().add(3, 'h').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
-
-        await patchEstados({
-            id: cama._id,
-            ambito,
-            capa: 'enfermeria',
-            estado: 'ocupada',
-            esMovimiento: true,
-            fecha: moment().add(2, 'month').toDate(),
-            organizacion: cama.organizacion,
-            paciente: {
-                id: '57f67a7ad86d9f64130a138d',
-                _id: '57f67a7ad86d9f64130a138d',
-                nombre: 'JUANCITO',
-                apellido: 'PEREZ',
-                documento: '38432297',
-                sexo: ''
-            }
-        }, REQMock);
-
-        camaEncontrada = await findById({ organizacion, capa, ambito }, idCama, moment().add(3, 'month').toDate());
-        expect(camaEncontrada.estado).toBe('inactiva');
-
-        camaEncontrada = await findById({ organizacion, capa: 'enfermeria', ambito }, idCama);
-        expect(camaEncontrada.estado).toBe('disponible');
-
-        camaEncontrada = await findById({ organizacion, capa: 'enfermeria', ambito }, idCama, moment().add(3, 'month').toDate());
-        expect(camaEncontrada.estado).toBe('ocupada');
-
-        const _estados = await CamaEstados.find({
-            idOrganizacion: organizacion,
-            idCama,
-            ambito,
-            capa: 'enfermeria'
-        });
-        expect(_estados.length).toBe(2);
     });
 
     test('Cama - Lista Espera con Cama Disponible', async () => {
@@ -232,7 +208,7 @@ describe('Internacion - camas', () => {
 
     test('Cama - Lista Espera con Cama Ocupada', async () => {
         const nuevoOcupado = estadoOcupada(new Date());
-        await CamasEstadosController.store({ organizacion, ambito, capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
+        await CamasEstadosController.store({ organizacion: organizacion._id, ambito, capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
         const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
         Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
@@ -280,9 +256,9 @@ describe('Internacion - camas', () => {
             }
         }, REQMock);
 
-        await CamasEstadosController.patch({ organizacion, capa, ambito, cama: cama._id }, from, to);
+        await CamasEstadosController.patch({ organizacion: organizacion.id, capa, ambito, cama: cama._id }, from, to);
 
-        const camaEncontrada = await findById({ organizacion, capa, ambito }, cama._id, moment().add(3, 'h').toDate());
+        const camaEncontrada = await findById({ organizacion: organizacion._id, capa, ambito }, cama._id, moment().add(3, 'h').toDate());
         expect(camaEncontrada.fecha.toISOString()).toBe(to.toISOString());
 
     });
