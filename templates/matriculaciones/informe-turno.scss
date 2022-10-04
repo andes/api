@@ -1,7 +1,6 @@
 header {
     .contenedor-data-origen {
         display: inline-block;
-        // border-bottom: $borderBottom;
         width: 100%;
 
         .contenedor-principal-data {
@@ -11,7 +10,6 @@ header {
             width: 50%;
 
             &:nth-of-type(2) {
-                // display: inline-block;
                 float: right;
             }
         }
@@ -41,6 +39,24 @@ header {
     width: 100%;
 }
 
+main {
+    font-size: 0.7rem;
+    margin-top: 2rem;
+}
+
+section {
+    margin-top: 2rem;
+    p {
+        margin-top: 1.5rem;
+    }
+}
+
+html {
+    display: inline-block;
+    padding: 0 2rem;
+    margin: 0;
+    font-family: sans-serif;
+}
 .contenedor-informe {
         .cabezal-conceptos {
             display: inline-block; // height: 8mm; // margin-top: 0.5cm;

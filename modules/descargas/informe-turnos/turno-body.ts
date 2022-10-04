@@ -8,7 +8,7 @@ export class TurnosInformeBody extends HTMLComponent {
                     <span class="contenedor-principal-data">
                         <div class="contenedor-secundario">
                             <h2 align="center">
-                                Turnos para Matriculación - Fecha desde: {{ fecha }}
+                                Turnos para Matriculación - Fecha: {{ fecha }}
                             </h2>
                             
                         </div>

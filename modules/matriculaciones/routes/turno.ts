@@ -4,6 +4,7 @@ import { Profesional } from '../../../core/tm/schemas/profesional';
 import * as turno from '../schemas/turno';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { userScheduler } from '../../../config.private';
+import moment = require('moment');
 const router = express.Router();
 
 router.patch('/turnos/save/:turnoId', Auth.authenticate(), async (request, response, next) => {
@@ -110,22 +111,32 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
     };
 
     let fechaConsulta;
-    if (request.query.fecha) {
-        fechaConsulta = new Date(request.query.fecha);
-        fechaConsulta.setHours(0);
-        fechaConsulta.setMinutes(0);
-        fechaConsulta.setMilliseconds(0);
+    let desde;
+    let hasta;
 
+    if (request.query.fecha) {
+        fechaConsulta = moment(request.query.fecha).startOf('day').toDate();
+        desde = moment(fechaConsulta).toDate();
+        hasta = moment(fechaConsulta).endOf('day').toDate();
     } else {
-        const hoy = new Date();
-        const fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
-        fechaConsulta = fechaActualMargen;
+        fechaConsulta = moment().subtract(30, 'minutes');
     }
 
-    const busquedaTurno = {
-        fecha: { $gte: fechaConsulta }
-
-    };
+    let busquedaTurno;
+    if (request.query.delDia && desde && hasta) {
+        busquedaTurno = {
+            fecha: {
+                $gte: desde,
+                $lte: hasta
+            }
+        };
+    } else {
+        busquedaTurno = {
+            fecha: {
+                $gte: desde || fechaConsulta
+            }
+        };
+    }
     busquedaTurno['anulado'] = { $exists: false };
     if (request.query.nombre || request.query.apellido || request.query.documento) {
 
@@ -249,11 +260,7 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
 
 
     }
-    const matchObj = {
-        // comentado para diferenciar los diferentes tipo de turnos y filtrar por lo mismo
-        // tipo: request.params.tipo
-    };
-    // matchObj['anulado'] = { $exists: false };
+    const matchObj = {};
     if (req.query.anio) {
         matchObj['anio'] = parseInt(req.query.anio, 10);
     }
@@ -281,22 +288,13 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
                         anio: { $year: '$fecha' },
                         mes: { $month: '$fecha' },
                         dia: { $dayOfMonth: '$fecha' }
-                        // hora: { $hour: '$fecha' },
-                        // minutos: { $minute: '$fecha'}
                     }
                 }, {
                     $match: matchObj
                 }, {
                     $group: {
                         _id: {
-                            // tipo: '$tipo',
-                            // fecha: '$fecha',
-                            // anio: { $year: '$fecha' },
-                            // mes: { $month: '$fecha' },
-                            // dia: { $dayOfMonth: '$fecha' },
                             fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
-                            // hora: { $hour: '$fecha' },
-                            // minutos: { $minute: '$fecha'}
                         },
                         count: { $sum: 1 }
                     }
@@ -327,14 +325,11 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
                 }, {
                     $group: {
                         _id: {
-                            // tipo: '$tipo',
-                            // fecha: '$fecha',
                             mes: { $month: '$fecha' },
                             anio: { $year: '$fecha' },
                             dia: { $dayOfMonth: '$fecha' },
                             hora: { $hour: '$horaTimeOffset' },
                             minutos: { $minute: '$fecha' }
-                            // dateDifference: { $hour: '$dateDifference'}
                         },
                         count: { $sum: 1 }
                     }
