@@ -9,6 +9,7 @@ import { ObjectId } from '@andes/core';
 import { ISnomedConcept } from '../schemas/snomed-concept';
 import { EventCore } from '@andes/event-bus';
 import { Auth } from '../../../auth/auth.class';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 interface INombre {
     _id: ObjectId;
@@ -172,23 +173,45 @@ export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha
     return listaDeEspera;
 }
 
-function determinarMovimiento(source, target) {
-    if (source.estado === 'ocupada') {
-        const targetHasUO = target.unidadOrganizativa && target.unidadOrganizativa.conceptId;
-        if (targetHasUO) {
-            return target.unidadOrganizativa.conceptId !== source.unidadOrganizativa.conceptId;
-        }
-    }
-    return false;
+/**
+ *
+ * @param cama objeto cama a partir del cual se crean los estados
+ * @param req
+ * @returns array de nuevos estados
+ */
+export async function storeEstados(cama: Partial<ICama>, req: Request) {
+    const fecha = cama.fecha || moment().toDate();
+    const nuevoEstado = {
+        fecha,
+        estado: 'disponible',
+        unidadOrganizativa: cama.unidadOrganizativa,
+        especialidades: cama.especialidades,
+        genero: cama.genero,
+        esCensable: cama.esCensable,
+        esMovimiento: cama.esMovimiento,
+        equipamiento: cama.equipamiento,
+        nota: cama.nota,
+    };
+    const organizacion = await Organizacion.findById(cama.organizacion._id);
+    let capas = INTERNACION_CAPAS;
+    if (organizacion.usaEstadisticaV2) {
+        capas = capas.filter(capa => capa !== 'estadistica');
+    };
+    const [estadosSaved] = await Promise.all(
+        capas.map(capa => {
+            return CamasEstadosController.store({ organizacion: cama.organizacion._id, ambito: cama.ambito, capa, cama: cama._id }, nuevoEstado, req);
+        })
+    );
+    return estadosSaved.nModified > 0 && estadosSaved.ok === 1;
 }
 
+
 /**
- * Modifica el estado de una cama (movimiento).
- * @param data
+ * Modifica el estado de una cama.
+ * @param data nuevos atributos de cama/estadoCama
  * @param req
  */
-
-export async function patch(data: Partial<ICama>, req: Request) {
+export async function patchEstados(data: Partial<ICama>, req: Request) {
     let cambioPermitido = true;
     const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
 
@@ -196,36 +219,26 @@ export async function patch(data: Partial<ICama>, req: Request) {
         const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
         cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado);
     } else {
-        // por las dudas borro datos que no se deben cambiar
+        // Datos que no deberian cambiar
         delete data['idInternacion'];
         delete data['estado'];
         delete data['paciente'];
     }
-
     if (cambioPermitido) {
-        if ((data as any).idCama || (data as any).createdAt) {
-            // La APP debería mandar solo lo que quiere modificar
-            // por las dudas limpiamos el objeto
-            delete data['idCama'];
-            delete data['createdAt'];
-            delete data['createdBy'];
-            delete data['updatedAt'];
-            delete data['updatedBy'];
-        }
+        // La APP debería mandar solo lo que quiere modificar. Por las dudas limpiamos el objeto
+        delete data['idCama'];
+        delete data['createdAt'];
+        delete data['createdBy'];
+        delete data['updatedAt'];
+        delete data['updatedBy'];
 
         estadoCama.extras = null; // Los extras no se transfieren entre estados
-        // Si la cama esta ocupada, registro el movimiento como un cambio legal.
-        const registraMovimiento = data.esMovimiento || determinarMovimiento(estadoCama, data);
         const nuevoEstado = {
-            ... (registraMovimiento ? estadoCama : {}),
+            ... (data.esMovimiento ? estadoCama : {}),
             ...data,
-            esMovimiento: registraMovimiento
+            esMovimiento: data.esMovimiento
         };
-
-        const [camaEncontrada]: [any, any] = await Promise.all([
-            Camas.findById(data.id),
-            CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado, req),
-        ]);
+        await CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado, req);
 
         if (nuevoEstado.extras?.egreso) {
             EventCore.emitAsync('mapa-camas:paciente:egreso', nuevoEstado);
@@ -236,60 +249,16 @@ export async function patch(data: Partial<ICama>, req: Request) {
         if (nuevoEstado.extras?.unidadOrganizativaOrigen) {
             EventCore.emitAsync('mapa-camas:paciente:pase', { ...nuevoEstado });
         }
-
-        camaEncontrada.set(data);
-        camaEncontrada.audit(req);
-        return await camaEncontrada.save();
+        return nuevoEstado;
     }
 
     return null;
 }
 
-/**
- * Crea una cama de creo. Genera el movimiento inicial en cada capa.
- * @param data
- * @param req
- */
-export async function store(data: Partial<ICama>, req: Request) {
-    const nuevaCama: any = new Camas({
-        organizacion: data.organizacion,
-        ambito: data.ambito,
-        unidadOrganizativaOriginal: data.unidadOrganizativa,
-        sectores: data.sectores,
-        nombre: data.nombre,
-        tipoCama: data.tipoCama,
-    });
-    nuevaCama.audit(req);
-
-    const fecha = data.fecha || moment().toDate();
-
-    const nuevoEstado = {
-        fecha,
-        estado: 'disponible',
-        unidadOrganizativa: data.unidadOrganizativa,
-        especialidades: data.especialidades,
-        genero: data.genero,
-        esCensable: data.esCensable,
-        esMovimiento: data.esMovimiento,
-        equipamiento: data.equipamiento,
-        nota: data.nota,
-    };
-
-    const [camaGuardada] = await Promise.all([
-        nuevaCama.save(),
-        ...INTERNACION_CAPAS.map(capa => {
-            return CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa, cama: nuevaCama._id }, nuevoEstado, req);
-        })
-    ]);
-
-    return camaGuardada;
-}
 
 /**
  * Operacion especial para cambiar la fecha de un estado.
-
  */
-
 export async function changeTime({ organizacion, capa, ambito }: InternacionConfig, cama: ObjectId, from: Date, to: Date, internacionId: ObjectId, req) {
     let start, end;
     if (from.getTime() <= to.getTime()) {

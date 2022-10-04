@@ -6,6 +6,7 @@ import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
 import { Types } from 'mongoose';
 import { CamaEstados } from './cama-estados.schema';
+import { Camas } from './camas.schema';
 
 const router = express.Router();
 
@@ -57,6 +58,7 @@ router.get('/camas/historial', Auth.authenticate(), capaMiddleware, asyncHandler
     return res.json(result);
 }));
 
+
 router.get('/lista-espera', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = Auth.getOrganization(req);
     const ambito = req.query.ambito;
@@ -66,6 +68,7 @@ router.get('/lista-espera', Auth.authenticate(), asyncHandler(async (req: Reques
     const listaEspera = await CamasController.listaEspera({ fecha, organizacion: { _id: organizacion }, ambito, capa });
     return res.json(listaEspera);
 }));
+
 
 router.get('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
@@ -82,33 +85,85 @@ router.get('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async
     }
 }));
 
-router.get('/integrity-check-camas', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+
+/** Crea un nuevo objeto cama y tambien sus estados según las capas que tenga habilitadas el efector */
+router.post('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
+    try {
+        const organizacion = {
+            _id: Auth.getOrganization(req),
+            nombre: Auth.getOrganization(req, 'nombre')
+        };
+        const data = {
+            organizacion,
+            ...req.body
+        };
+        let nuevaCama: any = new Camas({
+            organizacion,
+            ambito: data.ambito,
+            unidadOrganizativaOriginal: data.unidadOrganizativa,
+            sectores: data.sectores,
+            nombre: data.nombre,
+            tipoCama: data.tipoCama,
+        });
+        nuevaCama.audit(req);
+        nuevaCama = await nuevaCama.save();
+        data._id = nuevaCama._id;
+        await CamasController.storeEstados(data, req);
+        return res.json(nuevaCama);
+    } catch (err) {
+        return next('Ocurrió un error guardando la cama');
+    }
+}));
+
+// Edita un objeto cama (No sus estados)
+router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
+    try {
+        const data = req.body;
+        const camaFound: any = await Camas.findById(req.params.id);
+        camaFound.set(data);
+        camaFound.audit(req);
+        const camaUpdated = await camaFound.save();
+        return res.json(camaUpdated);
+    } catch (err) {
+        return next('Ocurrió un error guardando la cama');
+    }
+}));
+
+/** Edita los estados de una cama */
+router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
-    const ambito = req.query.ambito;
-    const capa = req.query.capa;
-    const cama = req.query.cama;
-    const from = req.query.desde;
-    const to = req.query.hasta;
+    const data = { ...req.body, organizacion, id: req.params.idCama };
+    const result = await CamasController.patchEstados(data, req);
 
-    const listaInconsistencias = await CamasController.integrityCheck({ organizacion, ambito, capa }, { cama, from, to });
-    return res.json(listaInconsistencias);
+    if (result) {
+        return res.json(result);
+    } else {
+        return next('No se puede realizar el movimiento');
+    }
 }));
 
-router.post('/camas', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
+
+router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
+    if (req.body.capa !== 'estadistica' && req.body.capa !== 'medica') {
+        return res.json({ status: true });
+    }
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
+    const estado = {
+        fecha: moment().toDate(),
+        estado: 'inactiva',
+    };
+    const data = { ...req.body, organizacion, cama: req.params.id, estado };
+    const result = await CamasController.patchEstados(data, req);
 
-    const data = { ...req.body, organizacion };
-
-    const result = await CamasController.store(data, req);
-
-    res.json(result);
+    return res.json(result);
 }));
+
 
 // Solo estadistico por ahora!
 router.patch('/camas/changeTime/:id', Auth.authenticate(), capaMiddleware, async (req, res, next) => {
@@ -163,44 +218,6 @@ router.patch('/camas/changeTime/:id', Auth.authenticate(), capaMiddleware, async
     }
 });
 
-router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
-    const organizacion = {
-        _id: Auth.getOrganization(req),
-        nombre: Auth.getOrganization(req, 'nombre')
-    };
-
-    const data = { ...req.body, organizacion, id: req.params.id };
-
-    const result = await CamasController.patch(data, req);
-
-    if (result) {
-        return res.json(result);
-    } else {
-        return next('No se puede realizar el movimiento');
-    }
-
-}));
-
-router.delete('/camas/:id', Auth.authenticate(), asyncHandler(async (req: Request, res: Response) => {
-    if (req.body.capa !== 'estadistica' && req.body.capa !== 'medica') {
-        return res.json({ status: true });
-    }
-    const organizacion = {
-        _id: Auth.getOrganization(req),
-        nombre: Auth.getOrganization(req, 'nombre')
-    };
-    const estado = {
-        fecha: moment().toDate(),
-        estado: 'inactiva',
-    };
-    const data = { ...req.body, organizacion, cama: req.params.id, estado };
-
-    const result = await CamasController.patch(data, req);
-
-    return res.json(result);
-}));
-
-export const CamasRouter = router;
 
 /**
  * Agrega un item extra por sala para que se visualize la sala como desocupada.
@@ -233,5 +250,7 @@ function populateSalaComun(salas: any[]) {
         };
     });
     return allSalas;
-
 }
+
+export const CamasRouter = router;
+

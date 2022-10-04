@@ -1,9 +1,9 @@
-import { SchemaTypes, Schema, model } from 'mongoose';
+import { Schema, model } from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-export const INTERNACION_CAPAS = ['medica', 'estadistica', 'enfermeria'];
+export const INTERNACION_CAPAS = ['medica', 'estadistica'];
 
 const CamaSchema = new Schema({
     organizacion: {

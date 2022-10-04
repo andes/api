@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
-
+import { Types } from 'mongoose';
 import { getFakeRequest, setupUpMongo } from '@andes/unit-test';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { Prestacion } from '../schemas/prestacion';
 import { CamaEstados } from './cama-estados.schema';
-import { findById, patch, store } from './camas.controller';
+import { findById, patchEstados, storeEstados } from './camas.controller';
 import { Camas } from './camas.schema';
 import { EstadosCtr } from './estados.routes';
 import * as InternacionController from './internacion.controller';
@@ -14,6 +14,7 @@ import { ingresarPaciente } from './sala-comun/sala-comun.controller';
 import { SalaComunCtr } from './sala-comun/sala-comun.routes';
 import { SalaComun, SalaComunSnapshot } from './sala-comun/sala-comun.schema';
 import { createPaciente, createUnidadOrganizativa } from './test-utils';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 const REQMock = getFakeRequest();
 
@@ -36,13 +37,35 @@ beforeEach(async () => {
     await SalaComun.remove({});
     await SalaComunSnapshot.remove({});
     await SalaComunMovimientos.remove({});
+    await Organizacion.remove({});
 
     (REQMock as any).user.organizacion['id'] = '57e9670e52df311059bc8964';
     (REQMock as any).user.organizacion['nombre'] = 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON9670e52df311059bc8964';
-    cama = await store(seedCama(1, 'y') as any, REQMock);
-    internacion = await storeInternacion();
-    organizacion = cama.organizacion._id;
+
+    const newOrganizacion = new Organizacion({
+        _id: Types.ObjectId('57e9670e52df311059bc8964'),
+        nombre: 'HTAL PROV NEUQUEN - DR EDUARDO CASTRO RENDON',
+        codigo: {
+            sisa: '10580352167033',
+            cuie: 'Q06391',
+            remediar: '00001',
+            sips: '205'
+        },
+        activo: true
+    });
+    Auth.audit(newOrganizacion, REQMock);
+    organizacion = await newOrganizacion.save();
+
+    cama = new Camas(seedCama(1, 'y'));
+    cama.audit(REQMock);
+    cama = await cama.save();
+    const dataEstados = {
+        ...seedCama(1, 'y'),
+        _id: cama._id
+    };
+    await storeEstados(dataEstados, REQMock);;
     idCama = String(cama._id);
+    internacion = await storeInternacion();
 });
 
 async function storeInternacion() {
@@ -71,7 +94,7 @@ async function storeInternacion() {
         },
         ejecucion: {
             organizacion: {
-                id: mongoose.Types.ObjectId('57e9670e52df311059bc8964'),
+                id: Types.ObjectId('57e9670e52df311059bc8964'),
                 nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
             },
             fecha: moment().toDate(),
@@ -140,7 +163,8 @@ async function storeInternacion() {
         inicio: 'internacion'
     });
     Auth.audit(nuevaInternacion, REQMock);
-    return await Prestacion.create(nuevaInternacion);
+    const resp = await Prestacion.create(nuevaInternacion);
+    return resp;
 }
 
 
@@ -149,10 +173,17 @@ function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {
         esMovimiento: true,
         fecha: moment().subtract(cantidad, unidad).toDate(),
         organizacion: {
-            _id: mongoose.Types.ObjectId('57e9670e52df311059bc8964'),
+            _id: Types.ObjectId('57e9670e52df311059bc8964'),
             nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
         },
         ambito: 'internacion',
+        unidadOrganizativaOriginal: unidadOrganizativaCama || {
+            refsetIds: [],
+            fsn: 'departamento de rayos X (medio ambiente)',
+            term: 'departamento de rayos X',
+            conceptId: '225747005',
+            semanticTag: 'medio ambiente',
+        },
         unidadOrganizativa: unidadOrganizativaCama || {
             refsetIds: [],
             fsn: 'departamento de rayos X (medio ambiente)',
@@ -210,7 +241,7 @@ describe('Internacion - Controller', () => {
             ]
         }, REQMock);
 
-        await patch({
+        await patchEstados({
             id: cama._id,
             ambito,
             capa,
@@ -251,7 +282,7 @@ describe('Internacion - Controller', () => {
             },
             REQMock
         );
-        const historialInternacion = await InternacionController.obtenerHistorialInternacion(organizacion, capa, internacion.id, moment().subtract(4, 'month').toDate(), moment().toDate());
+        const historialInternacion = await InternacionController.obtenerHistorialInternacion(organizacion.id, capa, internacion.id, moment().subtract(4, 'month').toDate(), moment().toDate());
         expect(historialInternacion.length).toBe(2);
     });
 });
@@ -280,7 +311,7 @@ test('Deshacer Internacion', async () => {
     expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
     // OCUPA LA CAMA
-    await patch({
+    await patchEstados({
         id: cama._id,
         ambito,
         capa,
