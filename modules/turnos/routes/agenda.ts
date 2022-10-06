@@ -185,7 +185,9 @@ router.get('/agenda/:id?', (req, res, next) => {
             query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion);
         }
 
-        if (req.query.tipoPrestacion) {
+        if (Array.isArray(req.query.tipoPrestacion)) {
+            query.where('tipoPrestaciones.conceptId').in(req.query.tipoPrestacion);
+        } else if (req.query.tipoPrestacion) {
             query.where('tipoPrestaciones.conceptId').equals(req.query.tipoPrestacion);
         }
 
