@@ -32,7 +32,7 @@ export class InformeRupFirma extends HTMLComponent {
     }
 
     async process() {
-        this.profesional = (this.profesional.id) ? await Profesional.findOne({ _id: this.profesional.id }) : await Profesional.findOne({ documento: this.profesional.documento });
+        this.profesional = (this.profesional._id) ? await Profesional.findOne({ _id: this.profesional.id }) : await Profesional.findOne({ documento: this.profesional.documento });
         let firma;
         let matriculas;
         let detalle;
