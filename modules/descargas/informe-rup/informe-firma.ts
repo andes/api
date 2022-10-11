@@ -7,22 +7,24 @@ import { Profesional } from '../../../core/tm/schemas/profesional';
 export class InformeRupFirma extends HTMLComponent {
     template = `
         <footer id="last">
-        <!-- Firmas -->
-        <span class="contenedor-firmas">
-            <div class="contenedor-bloque-texto">
-                {{#if firma}}
-                    <img src="data:image/png;base64,{{{firma}}}">
-                {{/if}}
-                <hr class="lg">
-                <h6 class="bolder">
-                    {{ detalle }} <br>
-                    {{ detalle2 }} <br>
-                    {{{ matriculas }}}
-                </h6>
-                <h6 class="subdata-italic"> </h6>
-            </div>
-        </span>
-    </footer>
+            <!-- Firmas -->
+            <span class="contenedor-firmas">
+                <div class="contenedor-bloque-texto">
+                    {{#if firma}}
+                        <img src="data:image/png;base64,{{{firma}}}">
+                    {{/if}}
+                    {{#if matriculas}}
+                        <hr class="lg">
+                        <h6 class="bolder">
+                            {{ detalle }} <br>
+                            {{ detalle2 }} <br>
+                            {{{ matriculas }}}
+                        </h6>
+                        <h6 class="subdata-italic"> </h6>
+                    {{/if}}
+                </div>
+            </span>
+        </footer>
     `;
 
     constructor(public profesional, public organizacion) {
@@ -30,15 +32,20 @@ export class InformeRupFirma extends HTMLComponent {
     }
 
     async process() {
-        this.profesional = (this.profesional._id) ? await Profesional.findOne({ _id: this.profesional._id }) : await Profesional.findOne({ documento: this.profesional.documento });
-        const imagenFirma = await this.getFirma(this.profesional);
-        const matriculas = await this.getMatriculas();
+        this.profesional = (this.profesional.id) ? await Profesional.findOne({ _id: this.profesional.id }) : await Profesional.findOne({ documento: this.profesional.documento });
+        let firma;
+        let matriculas;
+        let detalle;
 
-        const detalle = this.profesional.apellido + ', ' + this.profesional.nombre;
+        if (this.profesional) {
+            firma = await this.getFirma(this.profesional);
+            matriculas = await this.getMatriculas();
+            detalle = this.profesional.apellido + ', ' + this.profesional.nombre;
+        }
         const detalle2 = this.organizacion.nombre.substring(0, this.organizacion.nombre.indexOf('-'));
 
         this.data = {
-            firma: imagenFirma,
+            firma,
             detalle,
             detalle2,
             matriculas

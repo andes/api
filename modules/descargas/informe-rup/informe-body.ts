@@ -94,7 +94,7 @@ export class InformeRupBody extends HTMLComponent {
             const prof = this.prestacion.estadoActual.createdBy;
             const firmaHTMLComponent = new InformeRupFirma(prof, this.prestacion.solicitud.organizacion);
             await firmaHTMLComponent.process();
-            return firmaHTMLComponent.render();
+            return firmaHTMLComponent.profesional ? firmaHTMLComponent.render() : null;
         } else {
             return null;
         }
