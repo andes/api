@@ -5,7 +5,7 @@ export function DICOMPaciente(patient) {
         '00080005': {
             vr: 'CS',
             Value: [
-                'ISO_IR 192'
+                'ISO_IR 100'
             ]
         },
         '00100020': {
@@ -23,7 +23,7 @@ export function DICOMPaciente(patient) {
         '00100010': {
             vr: 'PN',
             Value: [
-                `${patient.apellido}^${patient.nombre}`
+                toISOIR100(`${patient.apellido}^${patient.nombre}`)
             ]
         },
         '00100040': {
@@ -62,4 +62,12 @@ export function DICOMPaciente(patient) {
 
 export function toBase64(text: string) {
     return Buffer.from(text).toString('base64');
+}
+
+export function toISOIR100(text: string) {
+    //var buf = Buffer.from(text, 'utf8');
+    const buffer = require('buffer');
+    const latin1Buffer = buffer.transcode(Buffer.from(text), "utf8", "latin1");
+    return latin1Buffer.toString("latin1");
+    //return Buffer.from(text).toString('latin1');
 }
