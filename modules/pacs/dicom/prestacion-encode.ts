@@ -29,7 +29,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
         '00080005': {
             vr: 'CS',
             Value: [
-                'ISO_IR 192'
+                'ISO_IR 100'
             ]
         },
         '00100020': {
@@ -48,7 +48,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
             vr: 'PN',
             Value: [
                 {
-                    Alphabetic: profesionalName
+                    Alphabetic: toISOIR100(profesionalName)
                 }
             ]
         },
@@ -101,7 +101,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
                     '00400006': {
                         vr: 'PN',
                         Value: [
-                            tecnicoName
+                            toISOIR100(tecnicoName)
                         ]
                     },
                     '0040000B': {
@@ -136,7 +136,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
         '00321060': {
             vr: 'LO',
             Value: [
-                prestacion.solicitud.tipoPrestacion.term
+                toISOIR100(prestacion.solicitud.tipoPrestacion.term)
             ]
         }
     };
@@ -145,4 +145,10 @@ export function DICOMPrestacion(prestacion: IPrestacion, options: DICOMWorklistC
 
 export function toBase64(text: string) {
     return Buffer.from(text).toString('base64');
+}
+
+export function toISOIR100(text: string) {
+    const buffer = require('buffer');
+    const latin1Buffer = buffer.transcode(Buffer.from(text), 'utf8', 'latin1');
+    return latin1Buffer.toString('latin1');
 }
