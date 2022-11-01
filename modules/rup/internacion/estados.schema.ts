@@ -35,7 +35,11 @@ const EstadoSchema = new Schema({
                 concepto: { type: SnomedConcept, require: false },
                 unidadOrganizativa: { type: [String], require: false }
             }
-        }]
+        }],
+        checkRupTiposPrestacion: {
+            type: Boolean,
+            required: false
+        }
     }],
     relaciones: [{
         nombre: String,
