@@ -81,11 +81,13 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
         if (!req.query.auditadas) {
             filtros['diagnostico.codificaciones.codificacionAuditoria.codigo'] = { $exists: req.query.auditadas };
         }
-        let matchProfesional = {};
+        const matchAdicional = {};
         if (req.query.idProfesional) {
-            matchProfesional = {
-                'prestacion.solicitud.profesional.id': { $eq: Types.ObjectId(req.query.idProfesional) }
-            };
+            matchAdicional['prestacion.solicitud.profesional.id'] = { $eq: Types.ObjectId(req.query.idProfesional) };
+        }
+
+        if (req.query.idPrestacion) {
+            matchAdicional['prestacion.solicitud.tipoPrestacion.id'] = Types.ObjectId(req.query.idPrestacion);
         }
 
         const pipeline = [
@@ -115,7 +117,10 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
                 }
             },
             {
-                $match: matchProfesional
+                $unwind: '$prestacion'
+            },
+            {
+                $match: matchAdicional
             },
             {
                 $project: {
