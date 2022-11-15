@@ -36,6 +36,50 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
     await Promise.all(savePromises);
 });
 
+EventCore.on('internacion:plan-indicaciones-eventos:create', async (evento) => {
+    if (evento.estado === 'realizado' && !evento.updatedAt) {
+        /*  Por cada nuevo evento NO PLANIFICADO en estado REALIZADO debe ajustarse el horario de los proximos.
+            Un evento es no planificado cuando es creado manualmente por el usuario en lugar de generarse automáticamente
+            al momento de guardar una nueva indicación.
+        */
+        const [indicacion, indicacionEventos] = await Promise.all([
+            PlanIndicacionesCtr.findById(evento.idIndicacion),
+            PlanIndicacionesEventosCtr.search({ indicacion: evento.idIndicacion })
+        ]);
+        const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
+        const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
+
+        if (indicacion.valor.unicaVez) {
+            return;
+        }
+        const eventos = indicacionEventos.sort((ev1, ev2) => moment(ev1.fecha).diff(moment(ev2.fecha)));
+        const index = eventos.findIndex(ev => ev.id === evento.id);
+        const eventosPosteriores = eventos.slice(index + 1, eventos.length);
+
+        if (!eventosPosteriores.some(ev => ev.estado !== 'on-hold')) {
+            const proximoEvento = eventosPosteriores.shift();
+            await PlanIndicacionesEventosCtr.deleteByIndicacion(indicacion.id, proximoEvento.fecha);
+
+            if (eventosPosteriores.length) {
+                /* Calculamos la diferencia en horas entre el nuevo evento y el siguiente planificado, luego restamos esta
+                diferencia a los eventos proximos para ajustar la planificacion.
+                */
+                const diferenciaAlProximo = moment(proximoEvento.fecha).diff(moment(evento.fecha), 'hours');
+                const nuevosHorarios = eventosPosteriores.map(ev => moment(ev.fecha).subtract(diferenciaAlProximo, 'hours'));
+
+                // Una indicacion puede tener mas de una frecuencia
+                const ultimaFrecuenciaIndicacion = indicacion.valor.frecuencias[indicacion.valor.frecuencias.length - 1].frecuencia.key; // ultima frecuencia
+                const ultimoHorario = nuevosHorarios[nuevosHorarios.length - 1];
+
+                // Si el adelanto de los horarios genera una franja horaria donde hay lugar para otra toma, se agrega.
+                if (moment(ultimoHorario).add(ultimaFrecuenciaIndicacion, 'hours').isBefore(moment().startOf('day').add(horaInicioEfector + 24, 'hours'))) {
+                    nuevosHorarios.push(moment(ultimoHorario).add(ultimaFrecuenciaIndicacion, 'hours'));
+                }
+                await crearEventos(nuevosHorarios, indicacion);
+            }
+        }
+    }
+});
 
 EventCore.on('internacion:plan-indicaciones:create', async (indicacion) => {
     await crearEventosSegunPrescripcion(indicacion);
