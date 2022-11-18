@@ -3,6 +3,7 @@ import { Auth } from '../../../../auth/auth.class';
 import { Prestacion } from '../../schemas/prestacion';
 import { PlanIndicacionesCtr } from './plan-indicaciones.routes';
 import { PlanIndicacionesEventosCtr } from './plan-indicaciones-eventos.routes';
+import { getConfiguracion } from '../../../../core/tm/controller/organizacion';
 import { Request } from '@andes/api-tool';
 import * as moment from 'moment';
 
@@ -43,8 +44,10 @@ EventCore.on('internacion:plan-indicaciones:create', async (indicacion) => {
 EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
     switch (indicacion.estadoActual.tipo) {
         case 'active':
+            const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
+            const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
             /* Se continua una prescripcion. Deben crearse los eventos correspondientes a la ultima
-                frecuencia pero desde el medio dia actual */
+                frecuencia desde el inicio del dia segun efector */
             let horarios;
             if (indicacion.valor.unicaVez) {
                 const unicoHorario = moment(indicacion.valor.frecuencias[0].horario);
@@ -58,10 +61,8 @@ EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
                 }
                 const ultimaFrecuencia = frecuencias.pop();
                 const fechaDesde = moment(ultimaFrecuencia.horario);
-                const fechaHasta = moment().startOf('day').add(36, 'hours');
-                const mediodia = moment().startOf('day').add(12, 'hours');
-                horarios = calcularHorarios(fechaDesde, fechaHasta, ultimaFrecuencia.frecuencia.key)
-                    .filter(h => moment(h).isBetween(mediodia, fechaHasta, 'hours', '[)'));
+                const fechaHasta = moment().startOf('day').add(horaInicioEfector + 24, 'hours');
+                horarios = calcularHorarios(fechaDesde, fechaHasta, ultimaFrecuencia.frecuencia.key);
             }
             await crearEventos(horarios, indicacion);
             break;
@@ -76,6 +77,8 @@ EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
 
 // Dada una indicación, genera eventos para cada prescripcion con sus respectivas frecuencias
 async function crearEventosSegunPrescripcion(indicacion) {
+    const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
+    const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
     if (indicacion.valor.unicaVez) {
         if (indicacion.valor.frecuencias[0].horario) {
             const unicoHorario = moment(indicacion.valor.frecuencias[0].horario);
@@ -94,11 +97,11 @@ async function crearEventosSegunPrescripcion(indicacion) {
             horariosFrecuencia = calcularHorarios(frecuencias[f].horario, frecuencias[f + 1].horario, frecuencias[f].frecuencia.key);
             horarios = horarios.concat(horariosFrecuencia);
         }
-        // se calculan los horarios para la ultima frecuencia (puede ser la unica), hasta el proximo medio dia
+        // se calculan los horarios para la ultima frecuencia (puede ser la unica), hasta el fin del turno (horario segun efector)
         const ultimaFrecuencia = frecuencias[frecuencias.length - 1];
         if (ultimaFrecuencia) {
-            const proxMediodia = moment(frecuencias[frecuencias.length - 1].horario).startOf('day').add(36, 'hours'); // a partir de la ultima indicacion de frecuencia
-            horariosFrecuencia = calcularHorarios(ultimaFrecuencia.horario, proxMediodia, ultimaFrecuencia.frecuencia.key);
+            const horaFinEfector = moment(frecuencias[frecuencias.length - 1].horario).startOf('day').add(horaInicioEfector + 24, 'hours'); // a partir de la ultima indicacion de frecuencia
+            horariosFrecuencia = calcularHorarios(ultimaFrecuencia.horario, horaFinEfector, ultimaFrecuencia.frecuencia.key);
             horarios = horarios.concat(horariosFrecuencia);
 
             await crearEventos(horarios, indicacion);

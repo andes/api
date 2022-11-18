@@ -3,6 +3,7 @@ import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
 import { Auth } from '../../../../auth/auth.class';
 import { IPlanIndicacionesDoc, PlanIndicaciones } from './plan-indicaciones.schema';
 import { EventCore } from '@andes/event-bus/';
+import * as moment from 'moment';
 class PlanIndicacionesController extends ResourceBase<IPlanIndicacionesDoc> {
     Model = PlanIndicaciones;
     resourceName = 'plan-indicaciones';
@@ -17,7 +18,13 @@ class PlanIndicacionesController extends ResourceBase<IPlanIndicacionesDoc> {
         fechaBaja: MongoQuery.matchDate,
         internacion: MongoQuery.equalMatch.withField('idInternacion'),
         prestacion: MongoQuery.equalMatch.withField('idPrestacion'),
-        registro: MongoQuery.equalMatch.withField('idRegistro')
+        registro: MongoQuery.equalMatch.withField('idRegistro'),
+        rangoFechas:(fecha: Date)=>{
+            return { $or:[
+                { fechaInicio: { $gte: moment(fecha).startOf('day').toDate() } },
+                { fechaInicio: { $lte: moment(fecha).endOf('day').add(1, 'd').toDate() } }
+            ] };
+        }
     };
     eventBus = EventCore;
 }
