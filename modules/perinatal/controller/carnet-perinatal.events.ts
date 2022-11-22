@@ -16,7 +16,6 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
         const primeriza = carnetYdatos.primeriza;
         const fechaProximoControl = proximoCtrol(prestacion);
         const datos = cargarDatos(prestacion);
-
         if (carnetExistente) {
             if (!carnetExistente.controles) {
                 carnetExistente.controles = [];
@@ -54,6 +53,7 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             }
             carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
             await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
+
         } else {
             const carnet: any = {
                 fecha: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
@@ -67,8 +67,12 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
                     }],
                 fechaUltimoControl: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
                 fechaProximoControl,
-                embarazo
+                embarazo,
             };
+            const registros = prestacion.ejecucion.registros.find(reg => reg.concepto.conceptId === '364323006');
+            if (registros) {
+                carnet['cantidadEmbarazos'] = registros.valor;
+            }
             carnet.primeriza = primeriza;
             if (datos.fechaUltimaMenstruacion) {
                 carnet.fechaUltimaMenstruacion = moment(datos.fechaUltimaMenstruacion.valor).startOf('day').toDate();
@@ -163,6 +167,10 @@ export const obtenerCarnetYdatos = async (registro, prestacion) => {
     if (primeriza) {
         query['primeriza'] = primeriza;
     } else {
+        if (embarazo.conceptId === '127374005') {
+            const registros = prestacion.ejecucion.registros.find(reg => reg.concepto.conceptId === '364323006');
+            query['cantidadEmbarazos'] = { $eq: registros.valor };
+        }
         query['embarazo.conceptId'] = embarazo.conceptId;
     }
     const carnet: any = await CarnetPerinatal.findOne(query);
