@@ -60,6 +60,7 @@ export interface ICama {
     organizacion: { _id: ObjectId; nombre: String };
     ambito: String;
     unidadOrganizativaOriginal: ISnomedConcept;
+    idCamaAnterior: ObjectId;
     sectores: Object[];
     nombre: String;
     tipoCama: ISnomedConcept;
@@ -214,7 +215,21 @@ export async function storeEstados(cama: Partial<ICama>, req: Request) {
 export async function patchEstados(data: Partial<ICama>, req: Request) {
     let cambioPermitido = true;
     const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
-
+    let idCamaAntes, idCamaAhora;
+    // Verificamos si la cama del paciente no se ha modificado antes de efectuar el cambio nuevo
+    if (data.paciente && data.idCamaAnterior) {
+        const cama = await findByPaciente(
+            { organizacion: data.organizacion, capa: data.capa, ambito: data.ambito },
+            data.paciente.id,
+        );
+        if (cama) {
+            idCamaAntes = data.idCamaAnterior;
+            idCamaAhora = cama._id;
+            if (idCamaAntes.toString() !== idCamaAhora.toString()) {
+                return null;
+            }
+        }
+    }
     if (data.esMovimiento) {
         const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
         cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado);
