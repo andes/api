@@ -1,5 +1,6 @@
 import { EventCore } from '@andes/event-bus';
 import { log } from '@andes/log';
+import { of } from 'core-js/core/array';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
@@ -170,6 +171,12 @@ export async function liberarTurno(req, data, turno) {
         if (turno.tipoTurno) {
             turno.tipoTurno = undefined;
         }
+        const fechaActualizar = moment().startOf('day').add(2, 'days');
+        // actualizamos turnos de la agenda si la horade inicio esta dentro de las proxmas 48hs
+        if (moment(data.horaInicio).isBefore(fechaActualizar)) {
+            data = this.actualizarTurnos(data);
+        }
+
     } else {
         if (data.cupo > -1) {
             data.cupo++;
@@ -177,6 +184,7 @@ export async function liberarTurno(req, data, turno) {
         const newTurnos = data.bloques[position.indexBloque].turnos;
         newTurnos.splice(position.indexTurno, 1);
         data.bloques[position.indexBloque].turnos = newTurnos;
+
     }
     return true;
 }
@@ -701,8 +709,8 @@ function esFeriado(fecha) {
 }
 
 /**
- * Actualiza las cantidades de turnos restantes de la agenda antes de su fecha de inicio,
- * se ejecuta una vez al día por el scheduler.
+ * Recupera las agendas a 48hs de la fecha actual y actualiza la cantidad de turnos restantes antes
+ * de su fecha de inicio. Se ejecuta una vez al día por el scheduler.
  *
  * @export actualizarTiposDeTurno()
  * @returns resultado
@@ -737,21 +745,7 @@ export async function actualizarTiposDeTurno() {
 
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(doc => {
-        const agenda: any = doc;
-        for (let j = 0; j < agenda.bloques.length; j++) {
-            const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
-
-            if (cantAccesoDirecto > 0) {
-                agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
-                agenda.bloques[j].restantesGestion = 0;
-                agenda.bloques[j].restantesProfesional = 0;
-            } else {
-                if (agenda.bloques[j].reservadoProfesional > 0) {
-                    agenda.bloques[j].restantesGestion = agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
-                    agenda.bloques[j].restantesProfesional = 0;
-                }
-            }
-        }
+        const agenda: any = this.actualizarTurnos(doc);
 
         Auth.audit(agenda, (userScheduler as any));
         return saveAgenda(agenda).then(() => {
@@ -768,8 +762,27 @@ export async function actualizarTiposDeTurno() {
             return Promise.resolve();
         });
     });
-
 }
+
+// Dada una agenda, actualiza los turnos restantes (Para agendas dentro de las 48hs a partir de hoy).
+export function actualizarTurnos(agenda) {
+    for (let j = 0; j < agenda.bloques.length; j++) {
+        const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
+
+        if (cantAccesoDirecto > 0) {
+            agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+            agenda.bloques[j].restantesGestion = 0;
+            agenda.bloques[j].restantesProfesional = 0;
+        } else {
+            if (agenda.bloques[j].reservadoProfesional > 0) {
+                agenda.bloques[j].restantesGestion = agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+                agenda.bloques[j].restantesProfesional = 0;
+            }
+        }
+    }
+    return agenda;
+}
+
 
 /**
  * Actualiza los estados de las agendas que se ejecutaron el día anterior a Pendiente Asistencia o

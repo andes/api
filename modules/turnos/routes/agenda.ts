@@ -474,10 +474,8 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     });
                 }
                 // Fin de insert cache
-                // return res.json(data[0]);
             });
         }
-        // return next('ObjectID Inválido');
     } else {
         Agenda.findById(req.params.id, async (err, data: any) => {
             if (err) {
