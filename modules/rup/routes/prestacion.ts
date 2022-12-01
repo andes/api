@@ -193,6 +193,14 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             match.$and.push({ createdAt: { $lte: (moment(req.query.solicitudHasta).endOf('day').toDate() as any) } });
         }
 
+        if (req.query.solicitudDesdeActualizacion) {
+            match.$and.push({ updatedAt: { $gte: (moment(req.query.solicitudDesdeActualizacion).startOf('day').toDate() as any) } });
+        }
+
+        if (req.query.solicitudHastaActualizacion) {
+            match.$and.push({ updatedAt: { $lte: (moment(req.query.solicitudHastaActualizacion).endOf('day').toDate() as any) } });
+        }
+
         if (req.query.pacienteDocumento) {
             match.$and.push({ 'paciente.documento': { $eq: req.query.pacienteDocumento } });
         }
@@ -328,10 +336,12 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.ordenFecha || req.query.ordenFechaAsc) {
             sort['solicitud.fecha'] = -1;
-        } else if (req.query.ordenFechaDesc) {
+        } else if (req.query.solicitudDesde && req.query.solicitudHasta) {
             sort['solicitud.fecha'] = 1;
         } else if (req.query.ordenFechaEjecucion) {
             sort['ejecucion.fecha'] = -1;
+        } else if (req.query.solicitudDesdeActualizacion && req.query.solicitudHastaActualizacion) {
+            sort['updatedAt'] = 1;
         }
 
         pipeline.push({ $sort: sort });
@@ -343,7 +353,6 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         if (req.query.limit) {
             pipeline.push({ $limit: parseInt(req.query.limit, 10) });
         }
-
         res.json(await Prestacion.aggregate(pipeline).option({ hint: indice }).allowDiskUse(true));
     } catch (err) {
         return next(err);
