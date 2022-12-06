@@ -454,10 +454,10 @@ export function actualizarEstado(req, data) {
         data.estado = data.prePausada;
     } else {
         data.estado = req.body.estado;
-
         // Si se suspende una agenda, hay que enviar SMS a todos los pacientes
         if (req.body.estado === 'suspendida') {
 
+            data.motivoDeSuspension = req.body.motivo;
             data.bloques.forEach(bloque => {
                 bloque.turnos.forEach(turno => {
                     if (turno.estado !== 'turnoDoble') {
