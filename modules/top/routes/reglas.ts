@@ -97,6 +97,15 @@ router.get('/reglas', async (req: Request, res, next) => {
     if (req.query.prestacionDestino) {
         query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
     }
+
+    if (req.query.skip) {
+        query.skip(parseInt(req.query.skip || 0, 10));
+    }
+
+    if (req.query.limit) {
+        query.limit(parseInt(req.query.limit || 0, 10));
+    }
+
     const reglas = await query.exec();
     if (prestacionesPermisos && !raw) {
         reglas.forEach(regla => {
@@ -111,6 +120,7 @@ router.get('/reglas', async (req: Request, res, next) => {
             }
         });
     }
+
 
     res.json(reglas);
 });
