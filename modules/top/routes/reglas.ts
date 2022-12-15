@@ -106,7 +106,7 @@ router.get('/reglas', async (req: Request, res, next) => {
         query.limit(parseInt(req.query.limit || 0, 10));
     }
 
-    const reglas = await query.exec();
+    const reglas = await query.sort({ 'destino.prestacion.term': 1 }).exec();
     if (prestacionesPermisos && !raw) {
         reglas.forEach(regla => {
             regla.origen.prestaciones = regla.origen.prestaciones.filter(p => prestacionesPermisos.find(pp => pp.conceptId === p.prestacion.conceptId));
@@ -120,7 +120,6 @@ router.get('/reglas', async (req: Request, res, next) => {
             }
         });
     }
-
 
     res.json(reglas);
 });
