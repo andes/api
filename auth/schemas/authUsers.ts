@@ -21,6 +21,7 @@ export interface IAuthUsers {
             _id: ObjectId;
             nombre: string;
         }[];
+        lastLogin: Date;
     }[];
     lastLogin: Date;
     tipo?: String;
@@ -62,7 +63,8 @@ export const AuthUsersSchema = new mongoose.Schema({
         perfiles: [{
             _id: mongoose.Schema.Types.ObjectId,
             nombre: String
-        }]
+        }],
+        lastLogin: Date
     }],
     lastLogin: Date,
     tipo: {
