@@ -20,6 +20,7 @@ export const InternacionExtrasSchema = new Schema(
         devolucion: { type: Boolean, required: false },
         edicionCama: { type: Boolean, required: false },
         cambioDeCama: { type: Boolean, required: false },
+        desbloqueo: { type: Boolean, required: false },
         idInternacion: { type: SchemaTypes.ObjectId, required: false }, // idInternacion al egresar,
         unidadOrganizativaOrigen: { type: SnomedConcept, required: false },
         idMovimiento: { type: SchemaTypes.ObjectId, required: false },
