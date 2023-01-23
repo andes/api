@@ -12,7 +12,7 @@ export async function armarListado(datos) {
         profesional: datos.idProfesional,
         financiador: datos.financiador,
         estadoFacturacion: datos.estadoFacturacion,
-        documento: datos.documento,
+        paciente: datos.paciente,
         ambito: datos.ambito
     };
     // Procesa los turnos aplicando los filtros

@@ -17,9 +17,10 @@ export async function procesar(parametros: any) {
         'solicitud.turno': null,
         'solicitud.organizacion.id': mongoose.Types.ObjectId(parametros.organizacion)
     };
+    const matchPaciente = {};
 
-    if (parametros.documento) {
-        match['paciente.documento'] = parametros.documento;
+    if (parametros.paciente) {
+        matchPaciente['$and'] = [{ datosPaciente: { $regex: parametros.paciente.toUpperCase() } }];
     }
 
     if (parametros.estadoFacturacion) {
@@ -43,7 +44,22 @@ export async function procesar(parametros: any) {
 
 
     try {
-        const prestaciones = Prestacion.aggregate([{ $match: match }]).cursor({ batchSize: 100 }).exec();
+        const prestaciones = Prestacion.aggregate([
+            { $match: match },
+            {
+                $addFields: {
+                    datosPaciente: {
+                        $concat: [
+                            '$paciente.nombre',
+                            ' ',
+                            '$paciente.apellido',
+                            ' ',
+                            '$paciente.documento'
+                        ]
+                    }
+                }
+            },
+            { $match: matchPaciente }]).cursor({ batchSize: 100 }).exec();
         const resultado = [];
         const os = parametros.financiador ? parametros.financiador : 'todos';
         const filtroEstado = parametros.estado ? parametros.estado : 'todos';
