@@ -18,16 +18,16 @@ export class CredencialProfesionalBody extends HTMLComponent {
                         <span class="titulo-profesional">{{formacion}} N°{{matricula}}</span><br>
                         <span>{{ apellido }} {{ nombre }}</span><br>
                         <span class="sexo-profesional">{{sexo}} <span class="texto-dni">DNI:</span> {{documento}}</span><br>
-                        <span class="titulo-profesion">{{nacionalidad}} <span class="texto-vencimiento">F.VENCIMIENTO:</span> {{fecha_nacimiento}}</span><br>
+                        <span class="titulo-profesion">{{nacionalidad}} <span class="texto-vencimiento">F.NACIMIENTO:</span> {{fechaNacimiento}}</span><br>
                     </td>
                 </tr>
-                <tr>
+                <tr #each >
                     <td colspan="2">
-                        <span class="titulo-entidad">{{entidad_formadora }}</span><br>
+                        <span class="titulo-entidad">{{entidadFormadora }}</span><br>
                         <span><span class="text-bold">EGRESO:</span> {{egreso}}  </span><br>
-                        <span><span class="text-bold">PRIMER MATRÍCULA:</span> {{primer_matricula}}</span><br>
-                        <span><span class="text-bold">RENOVACIÓN:</span> {{renovacion}}</span><br>
-                        <span><span class="text-bold">FECHA IMPRESIÓN:</span> {{fecha_impresion}}</span><br>
+                        <span><span class="text-bold">PRIMER MATRÍCULA:</span> {{primerMatricula}}</span><br>
+                        <span><span class="text-bold">VENCIMIENTO:</span> {{vencimiento}}</span><br>
+                        <span><span class="text-bold">FECHA IMPRESIÓN:</span> {{fechaImpresion}}</span><br>
                     </td>
                 </tr>
                 <tr>
@@ -50,12 +50,12 @@ export class CredencialProfesionalBody extends HTMLComponent {
         const matricula = formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].matriculaNumero;
         const documento = profesional.documento;
         const nacionalidad = profesional.nacionalidad.nombre;
-        const fecha_nacimiento = moment(profesional.fecha_nacimiento).format('DD/MM/YYYY');
-        const entidad_formadora = formacionGrado.entidadFormadora.nombre;
+        const fechaNacimiento = moment(profesional.fechaNacimiento).format('DD/MM/YYYY');
+        const entidadFormadora = formacionGrado.entidadFormadora.nombre;
         const egreso = moment(formacionGrado.fechaEgreso).format('DD/MM/YYYY');
-        const primer_matricula = moment(formacionGrado.matriculacion[0].inicio).format('DD/MM/YYYY');
-        const renovacion = moment(formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].fin).format('DD/MM/YYYY');
-        const fecha_impresion = moment().format('DD/MM/YYYY');
+        const primerMatricula = moment(formacionGrado.matriculacion[0].inicio).format('DD/MM/YYYY');
+        const vencimiento = moment(formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].fin).format('DD/MM/YYYY');
+        const fechaImpresion = moment().format('DD/MM/YYYY');
 
         this.data = {
             logo,
@@ -67,12 +67,12 @@ export class CredencialProfesionalBody extends HTMLComponent {
             sexo,
             documento,
             nacionalidad,
-            fecha_nacimiento,
-            entidad_formadora,
+            fechaNacimiento,
+            entidadFormadora,
             egreso,
-            primer_matricula,
-            renovacion,
-            fecha_impresion,
+            primerMatricula,
+            vencimiento,
+            fechaImpresion,
             qrdecod
         };
     }
