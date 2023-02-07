@@ -82,7 +82,9 @@ EventCore.on('internacion:plan-indicaciones-eventos:create', async (evento) => {
 });
 
 EventCore.on('internacion:plan-indicaciones:create', async (indicacion) => {
-    await crearEventosSegunPrescripcion(indicacion);
+    if (indicacion.elementoRUP === '60ed8c8770569dd3ad533e96') {
+        await crearEventosSegunPrescripcion(indicacion);
+    }
 });
 
 EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
@@ -113,7 +115,9 @@ EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
         case 'draft':
             // Se editó una prescripción existente
             await PlanIndicacionesEventosCtr.deleteByIndicacion(indicacion._id);
-            await crearEventosSegunPrescripcion(indicacion);
+            if (indicacion.elementoRUP === '60ed8c8770569dd3ad533e96') {
+                await crearEventosSegunPrescripcion(indicacion);
+            }
             break;
     }
 });
@@ -131,7 +135,6 @@ async function crearEventosSegunPrescripcion(indicacion) {
     } else {
         let horariosFrecuencia = [];
         let horarios = [];
-
         const frecuencias = indicacion.valor.frecuencias
             .filter(frec => frec.frecuencia?.type === 'number')
             .sort((frec1, frec2) => moment(frec1.horario).diff(moment(frec2.horario)) > 0);
