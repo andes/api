@@ -1,3 +1,4 @@
+import { Modulos } from '../../core/tm/schemas/modulos.schema';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
@@ -23,6 +24,43 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
 });
 
 /**
+ * Listado de organizaciones a las que el usuario tiene permiso desde un modulo en particular.
+ * Momentaneamente solo se resuelve para Bi-Queries.
+ * @get /api/auth/bi-queries/organizaciones
+ */
+
+router.get('/submodulo/:idModule/organizaciones', Auth.authenticate(), async (req: any, res, next) => {
+    let pipelineModulo = [];
+    pipelineModulo = [
+        {
+            $match: { 'submodulos._id': mongoose.Types.ObjectId(req.params.idModule) }
+        },
+        {
+            $unwind: '$submodulos'
+        },
+        {
+            $match: { 'submodulos._id': mongoose.Types.ObjectId(req.params.idModule) }
+        },
+    ];
+    const modulo: any = await Modulos.aggregate(pipelineModulo);
+    if (modulo.length) {
+        const permisosModulo = modulo[0].permisos;
+        const user: any = await AuthUsers.findOne({ _id: req.user.usuario.id });
+        const organizaciones = user.organizaciones.filter(x => x.activo === true).map(item => mongoose.Types.ObjectId(item._id));
+        const itemPermisos = user.organizaciones.filter(org => org._id.toString() === req.user.organizacion._id).map(item => item.permisos);
+        const permiso = permisosModulo.map(item => itemPermisos[0].filter(p => item.slice(0, -1) + 'totalOrganizaciones' === p || item.slice(0, -1) + '*' === p));
+        let filtro: any = { _id: { $in: organizaciones } };
+        if (permiso[0].length) {
+            filtro = { activo: true };
+        };
+        const orgs = await Organizacion.find(filtro, { nombre: 1 }).sort({ nombre: 1 });
+        return res.json(orgs);
+    } else {
+        return next('Módulo inválido');
+    }
+});
+
+/**
  * Listado de organizaciones a las que el usuario tiene permiso
  * @get /api/auth/organizaciones
  */
@@ -35,7 +73,6 @@ router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) =
     });
     const orgs = await Organizacion.find({ _id: { $in: organizaciones } }, { nombre: 1 }).sort({ nombre: 1 });
     return res.json(orgs);
-
 });
 
 /**
