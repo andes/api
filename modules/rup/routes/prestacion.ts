@@ -673,20 +673,24 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 data.estados.push({ tipo: 'auditoria', fecha: new Date() });
                 data.solicitud.profesional = null;
                 break;
+            case 'notificar':
+                try {
+                    await Auth.audit(data, req);
+                    return res.json(await data.save());
+                } catch (error) {
+                    next(error);
+                }
+                break;
             default:
                 return next(500);
         }
 
-        Auth.audit(data, req);
-        data.save(async (error, prestacion: any) => {
-            if (error) {
-                return next(error);
-            }
-
+        try {
+            await Auth.audit(data, req);
+            const prestacion = await data.save();
             if (data.paciente) {
                 AppCache.clear(`huds-${data.paciente.id}`);
             }
-
             if (req.body.estado && req.body.estado.tipo === 'validada') {
                 EventCore.emitAsync('rup:prestacion:validate', data);
 
@@ -723,9 +727,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 const _prestacion = data;
                 EventCore.emitAsync('rup:prestacion:romperValidacion', _prestacion);
             }
-
             res.json(prestacion);
-        });
+        } catch (error) {
+            return next(error);
+        }
     });
 });
 

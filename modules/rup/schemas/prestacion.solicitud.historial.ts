@@ -6,6 +6,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 export const PrestacionSolicitudHistorialschema = new mongoose.Schema({
     accion: String,
     descripcion: String,
+    fechaDeNotificacion: Date,
     profesional: ProfesionalBaseSchema,
     tipoPrestacion: tipoPrestacionSchema,
     turno: mongoose.Schema.Types.ObjectId,
