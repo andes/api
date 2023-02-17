@@ -24,20 +24,24 @@ export async function pacientePuco(documento, sexo) {
     const resultOS = [];
     const osPuco = await getOSPuco(documento, sexo);
     if (osPuco.length > 0) {
-        // genera un array con todas las obras sociales para una version de padron dada
-        for (let i = 0; i < osPuco.length; i++) {
-            const obraSocial = await ObraSocial.findOne({ codigoPuco: osPuco[i].codigoOS });
-            if (!obraSocial) {
-                obraSocialLog.error('find', { codigoPuco: osPuco[i].codigoOS }, null);
-            }
-            resultOS[i] = {
-                codigoPuco: osPuco[i].codigoOS,
-                nombre: '',
-                financiador: ''
-            };
-            if (obraSocial) {
-                resultOS[i].nombre = obraSocial.nombre;
-                resultOS[i].financiador = obraSocial.nombre;
+        const ultimoTrimestre = moment().utc().subtract(3, 'M').startOf('month');
+
+        if (!ultimoTrimestre.isAfter(osPuco[0].version)) {
+            // genera un array con todas las obras sociales para una version de padron dada
+            for (let i = 0; i < osPuco.length; i++) {
+                const obraSocial = await ObraSocial.findOne({ codigoPuco: osPuco[i].codigoOS });
+                if (!obraSocial) {
+                    obraSocialLog.error('find', { codigoPuco: osPuco[i].codigoOS }, null);
+                }
+                resultOS[i] = {
+                    codigoPuco: osPuco[i].codigoOS,
+                    nombre: '',
+                    financiador: ''
+                };
+                if (obraSocial) {
+                    resultOS[i].nombre = obraSocial.nombre;
+                    resultOS[i].financiador = obraSocial.nombre;
+                }
             }
         }
     }
