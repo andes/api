@@ -169,6 +169,16 @@ export default [
                     { key: 'delete', title: 'Eliminar sala', type: 'boolean' }
                 ]
             },
+            {
+                key: 'indicaciones',
+                title: 'Plan de Indicaciones',
+                visibility: 'restricted', // se mantiene oculto en tanto el p.i. no esté productivo
+                child: [
+                    { key: 'create', title: 'Crear indicación', type: 'boolean' },
+                    { key: 'validar', title: 'Validar indicación', type: 'boolean' },
+                    { key: 'ejecutar', title: 'Ejecutar indicación', type: 'boolean' }
+                ]
+            },
             { key: 'ingreso', title: 'Realizar ingreso de pacientes', type: 'boolean' },
             { key: 'movimientos', title: 'Realizar movimientos de internacion', type: 'boolean' },
             { key: 'egreso', title: 'Realizar egreso de pacientes', type: 'boolean' },
