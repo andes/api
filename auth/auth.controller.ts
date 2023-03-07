@@ -115,12 +115,17 @@ export async function findUser(username) {
     return null;
 }
 
-
 export async function updateUser(documento, nombre, apellido, password) {
     return await AuthUsers.findOneAndUpdate(
         { usuario: documento },
         { password, nombre, apellido, lastLogin: new Date() },
     );
+}
+
+export async function updateOrganizacion(usuario, idOrg) {
+    const org = usuario.user.organizaciones.find(organizacion => idOrg.toString() === organizacion._id.toString());
+    org.lastLogin = new Date();
+    return await AuthUsers.update({ _id: usuario.user._id }, { $set: { organizaciones: usuario.user.organizaciones } });
 }
 
 // Función interna que chequea si la cuenta mobile existe
@@ -253,7 +258,8 @@ export async function createUser(data) {
         nombre: organizacion.nombre,
         activo: true,
         permisos,
-        perfiles: []
+        perfiles: [],
+        lastLogin: new Date()
     }];
     user.organizaciones = organizaciones;
 

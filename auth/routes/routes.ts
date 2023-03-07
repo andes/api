@@ -1,8 +1,9 @@
 import { Modulos } from '../../core/tm/schemas/modulos.schema';
+import { findIndex } from 'core-js/core/array';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
-import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser } from '../auth.controller';
+import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser, updateOrganizacion } from '../auth.controller';
 import { checkPassword } from '../ldap.controller';
 import { AuthUsers } from '../schemas/authUsers';
 import { Organizacion } from './../../core/tm/schemas/organizacion';
@@ -84,9 +85,11 @@ router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) =
 router.post('/v2/organizaciones', Auth.authenticate(), async (req, res, next) => {
     const username = req.user.usuario.username || req.user.usuario;
     const orgId = mongoose.Types.ObjectId(req.body.organizacion);
+    const usuario = await findUser(username);
     const account_id = (req as any).user.account_id;
 
     const dto = await generateTokenPayload(username, orgId, account_id);
+    updateOrganizacion(usuario, orgId);
     if (dto) {
         return res.send({
             token: dto.token
