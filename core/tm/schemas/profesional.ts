@@ -60,6 +60,15 @@ ProfesionalSchema.add({
         fechaTitulo: { type: Date, required: false },
         fechaEgreso: { type: Date, required: false },
         renovacion: { type: Boolean, default: false },
+        renovacionOnline: {
+            estado: {
+                type: String,
+                enum: ['pendiente', 'aprobada', 'rechazada']
+            },
+            descripcion: { type: String, required: false },
+            fecha: Date,
+            required: false
+        },
         papelesVerificados: { type: Boolean, default: false },
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
