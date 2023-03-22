@@ -27,17 +27,15 @@ async function run(done) {
 
         upProf = false;
 
-        for (const fpg of formacionPosgrado) {
+        for (const formacionposgrado of formacionPosgrado) {
 
-            const profEspecialidad = fpg.especialidad;
+            const profEspecialidad = formacionposgrado.especialidad;
 
             if (profEspecialidad.codigo > 0) {
                 const esp: SIISAEspecialidad = await Especialidad.findOne({ 'codigo.sisa': profEspecialidad.codigo });
-                if (esp != null) {
-                    fpg.especialidad = esp;
+                if (esp) {
+                    formacionposgrado.especialidad = esp;
                     upProf = true;
-                } else {
-                    upProf = false;
                 }
             } else {
                 if (profEspecialidad.nombre != null) {
@@ -46,18 +44,16 @@ async function run(done) {
                         nombre: regexNombre(replSpecialChr(profEspecialidad.nombre))
                     };
                     const esp: SIISAEspecialidad = await Especialidad.findOne(params);
-                    if (esp != null) {
-                        fpg.especialidad = esp;
+                    if (esp) {
+                        formacionposgrado.especialidad = esp;
                         upProf = true;
-                    } else {
-                        upProf = false;
                     }
                 }
             }
             cantFpg++;
         }
         if (upProf) {
-            const profUp = await Profesional.findByIdAndUpdate( profesionalId, { $set: { formacionPosgrado } });
+            await Profesional.findByIdAndUpdate( profesionalId, { $set: { formacionPosgrado } });
             cantProfUp++;
         }
         cantProf++;
@@ -66,9 +62,9 @@ async function run(done) {
 }
 
 function replSpecialChr(texto: string) {
-    let r = texto.replace(/\(/g, '.');
-    r = r .replace(/\)/g, '.');
-    return r;
+    let textoReplace = texto.replace(/\(/g, '.');
+    textoReplace = textoReplace.replace(/\)/g, '.');
+    return textoReplace;
 }
 
 export = run;
