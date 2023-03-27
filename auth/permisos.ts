@@ -91,6 +91,7 @@ export default [
                 child: [
                     { key: 'read', title: 'Ver Turnos', type: 'boolean' },
                     { key: 'solicitud', title: 'Registrar solicitud', type: 'boolean' },
+                    { key: 'visualizarSolicitud', title: 'Visualizar solicitudes', type: 'boolean' },
                     { key: 'autocitado', title: 'Registrar Autocitación', type: 'boolean' },
                     { key: 'darTurnos', title: 'Dar turnos desde punto inicio', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
