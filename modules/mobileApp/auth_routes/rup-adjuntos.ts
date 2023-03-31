@@ -49,16 +49,17 @@ router.post('/prestaciones-adjuntar', Auth.authenticate(), (req: any, res, next)
 /**
  * Borra la solicitud de adjuntar imagen cuando ya esta todo listo
  */
-router.delete('/prestaciones-adjuntar/:id', Auth.authenticate(), (req: any, res, next) => {
+router.delete('/prestaciones-adjuntar/:id', Auth.authenticate(), async (req: any, res, next) => {
     const id = req.params.id;
-
-    PrestacionAdjunto.findById(id).then((doc: any) => {
-        doc.remove().then(() => {
+    try {
+        const adjunto: any = await PrestacionAdjunto.findById(id);
+        adjunto.remove().then(() => {
+            NotificationService.solicitudAdjuntos((adjunto.profesional), id, true);
             return res.json({ status: 'ok' });
-        }).catch(next);
-    }).catch((err) => {
+        });
+    } catch (err) {
         return next(err);
-    });
+    }
 });
 
 
