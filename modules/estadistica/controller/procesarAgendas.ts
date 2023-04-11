@@ -22,6 +22,7 @@ export async function procesar(parametros: any) {
     };
     const matchTurno = {};
     const matchEstado = {};
+    const matchPaciente = {};
     if (parametros.estadoFacturacion) {
         match['bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
         matchTurno['_bloques.turnos.estadoFacturacion.estado'] = parametros.estadoFacturacion;
@@ -50,9 +51,10 @@ export async function procesar(parametros: any) {
         matchEstado['$expr'] = { $and: [{ $eq: ['$estado', parametros.estado] }] };
     }
 
-    if (parametros.documento) {
-        matchTurno['_bloques.turnos.paciente.documento'] = parametros.documento;
+    if (parametros.paciente) {
+        matchPaciente['$and'] = [{ datosPaciente: { $regex: parametros.paciente.toUpperCase() } }];
     }
+
     const matchOS = {};
     if (parametros.financiador) {
         if (parametros.financiador === 'No posee') {
@@ -180,8 +182,20 @@ export async function procesar(parametros: any) {
                 turno: '$turno',
                 idPrestacion: '$prestacion0._id',
                 estadoFacturacion: '$turno.estadoFacturacion',
-                ambito: { $ifNull: ['$prestacion0.solicitud.ambitoOrigen', 'ambulatorio'] }
+                ambito: { $ifNull: ['$prestacion0.solicitud.ambitoOrigen', 'ambulatorio'] },
+                datosPaciente: {
+                    $concat: [
+                        '$turno.paciente.nombre',
+                        ' ',
+                        '$turno.paciente.apellido',
+                        ' ',
+                        '$turno.paciente.documento'
+                    ]
+                }
             }
+        },
+        {
+            $match: matchPaciente
         },
         {
             $match: matchEstado
