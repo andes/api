@@ -73,6 +73,10 @@ export const AgendaSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    multiprofesional: {
+        type: Boolean,
+        default: false
+    },
     cupo: Number
 }, { versionKey: false });
 
