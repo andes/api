@@ -177,7 +177,8 @@ export default [
                 child: [
                     { key: 'create', title: 'Crear indicación', type: 'boolean' },
                     { key: 'validar', title: 'Validar indicación', type: 'boolean' },
-                    { key: 'ejecutar', title: 'Ejecutar indicación', type: 'boolean' }
+                    { key: 'ejecutar', title: 'Ejecutar indicación', type: 'boolean' },
+                    { key: 'aceptarRechazar', title: 'Aceptar y rechazar indicacion', type: 'boolean' }
                 ]
             },
             { key: 'ingreso', title: 'Realizar ingreso de pacientes', type: 'boolean' },
