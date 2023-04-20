@@ -417,25 +417,28 @@ export async function store({ organizacion, ambito, capa, cama }, estado, req: R
 }
 
 /**
- * Operación especial para modificar la fecha de un estado
-*/
-
-export async function patch({ organizacion, ambito, capa, cama }, from: Date, to: Date) {
+ * Función para cambiar la unidad organizativa de estados segun su fecha
+ * @param newUO nueva unidad organizativa
+ * @param datesArray array de fechas que identifican los estados a modificar
+ */
+export async function patch({ organizacion, ambito, capa, cama }, from: Date, to: Date, newUO, datesArray) {
     const result = await CamaEstados.update(
         {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),
             ambito,
             capa,
             idCama: mongoose.Types.ObjectId(cama),
-            start: { $lte: from },
+            start: { $lte: to },
             end: { $gte: from }
-
         },
         {
-            $set: { 'estados.$[elemento].fecha': to }
+            $set: { 'estados.$[elemento].unidadOrganizativa': newUO }
         },
         {
-            arrayFilters: [{ 'elemento.fecha': from }]
+            arrayFilters: [
+                { 'elemento.fecha': { $in: datesArray } }
+            ],
+            multi: true
         }
     );
     return result.nModified > 0 && result.ok === 1;
@@ -450,7 +453,6 @@ export async function remove({ organizacion, ambito, capa, cama }, date: Date) {
             idCama: mongoose.Types.ObjectId(cama),
             start: { $lte: date },
             end: { $gte: date }
-
         },
         {
             $pull: { estados: { fecha: date } }
