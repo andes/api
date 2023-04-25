@@ -14,6 +14,8 @@ import { Agenda } from '../../turnos/schemas/agenda';
 import { agendaLog } from '../citasLog';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -392,11 +394,22 @@ export function editarAgenda(req, data) {
     data.enviarSms = req.body.enviarSms || false;
 }
 
+export async function actualizarPaciente(pacienteTurno: any, req: any) {
+    const pacienteMPI = await PacienteCtr.findById(pacienteTurno.id) as any;
+    const obraSocialUpdated = await updateObraSocial(pacienteMPI);
+    const financiador = updateFinanciador(obraSocialUpdated, pacienteTurno.obraSocial);
+
+    return await PacienteCtr.update(pacienteTurno.id, { ...pacienteTurno, financiador }, req);
+}
+
 // Agenda
-export function agregarSobreturno(req, data) {
+export async function agregarSobreturno(req, data) {
     const sobreturno = req.body.sobreturno;
     if (sobreturno) {
         const usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+
+        await this.actualizarPaciente(sobreturno.paciente, req);
+
         // Copia la organización desde el token
         usuario.organizacion = (req as any).user.organizacion;
         sobreturno.updatedAt = new Date();

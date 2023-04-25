@@ -1,19 +1,20 @@
-import { Types } from 'mongoose';
-import { Paciente, replaceChars } from './paciente.schema';
-import * as moment from 'moment';
-import * as intoStream from 'into-stream';
-import { Matching } from '@andes/match';
-import { IPacienteDoc, IPaciente } from './paciente.interface';
 import { isSelected } from '@andes/core';
-import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
-import { PacienteCtr } from './paciente.routes';
+import { AndesDrive, FileMetadata } from '@andes/drive';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
-import { FileMetadata, AndesDrive } from '@andes/drive';
-import * as Barrio from '../../../core/tm/schemas/barrio';
-import * as configPrivate from '../../../config.private';
+import { Matching } from '@andes/match';
+import * as intoStream from 'into-stream';
+import * as moment from 'moment';
+import { Types } from 'mongoose';
 import * as config from '../../../config';
+import * as configPrivate from '../../../config.private';
+import * as Barrio from '../../../core/tm/schemas/barrio';
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { IContacto } from '../../../shared/interfaces/contacto.interface';
+import { IFinanciador } from '../financiador';
 import { ParentescoCtr } from '../parentesco/parentesco.routes';
+import { IPaciente, IPacienteDoc } from './paciente.interface';
+import { PacienteCtr } from './paciente.routes';
+import { Paciente, replaceChars } from './paciente.schema';
 
 
 /**
@@ -44,6 +45,62 @@ export function set(paciente: IPacienteDoc, body: any) {
     return paciente;
 }
 
+export function getFinanciador(paciente: IPacienteDoc) {
+    return paciente.financiador?.filter((financiador) => financiador?.origen === 'ANDES') || [];
+}
+
+export function updateFinanciador(currentFinanciador: IFinanciador[], nuevoFinanciador?: IFinanciador) {
+    const financiador = currentFinanciador.length ? [...currentFinanciador] : [];
+
+    if (nuevoFinanciador) {
+        const fechaDeActualizacion = moment().toDate();
+        const financiadorActualizado = { ...nuevoFinanciador, fechaDeActualizacion };
+
+        if (currentFinanciador.length) {
+            if (nuevoFinanciador.origen === 'ANDES') {
+                const index = currentFinanciador?.findIndex(f => f?.origen === 'ANDES');
+
+                if (index > -1) {
+                    financiador[index] = financiadorActualizado;
+                } else {
+                    financiador.push(financiadorActualizado);
+                }
+            }
+        } else {
+            financiador.push(financiadorActualizado);
+        }
+    }
+
+    return financiador;
+}
+
+export async function updateObraSocial(paciente: IPacienteDoc) {
+    const obraSocial = await getObraSocial(paciente);
+    const financiador = obraSocial.length ? [...obraSocial] : [];
+
+    if (financiador.length) {
+        const fechaDeActualizacion = moment().toDate();
+
+        financiador.forEach(item => {
+            if (item.financiador === 'SUMAR' && !item.origen) {
+                item.origen = 'SUMAR';
+            }
+            if (item.codigoPuco && !item.origen) {
+                item.origen = 'PUCO';
+            }
+
+            item.fechaDeActualizacion = fechaDeActualizacion;
+            item.prepaga = false;
+        });
+
+        const currentFinanciador = getFinanciador(paciente);
+        financiador.push(...currentFinanciador);
+    }
+
+    return financiador;
+};
+
+
 /**
  * Busca un paciente por ID. Tanto en ANDES y MPI.
  * @param {string} id ID del paciente a buscar.
@@ -63,7 +120,9 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     const paciente = await queryFind;
     if (paciente) {
         if (isSelected(fields, 'financiador')) {
-            paciente.financiador = await getObraSocial(paciente);
+            const financiador = await updateObraSocial(paciente);
+
+            paciente.financiador = financiador;
         }
         return paciente;
     }
@@ -195,6 +254,20 @@ export async function findOrCreate(query: any, req) {
     return pacienteCreado;
 }
 
+
+export async function linkPacientesDuplicados(req, paciente) {
+    // linkea los pacientes validados con los temporales con un alto porcentaje de match
+    const resultado = await suggest(paciente);
+    if (resultado.length > 0) {
+        // Verifica los resultados y linkea los pacientes
+        resultado.forEach(async pacienteLink => {
+            if (pacienteLink._score > config.mpi.cotaMatchMax && paciente.id !== pacienteLink.id) {
+                await linkPaciente(req, 'link', paciente, pacienteLink);
+            }
+        });
+    }
+}
+
 /**
  * Vincula pacientes
  *
@@ -228,21 +301,6 @@ export async function linkPaciente(req, op, pacienteBase, pacienteLinkeado) {
     await PacienteCtr.update(pacienteBase.id, pacienteBase, req);
     await PacienteCtr.update(pacienteLinkeado.id, pacienteLinkeado, req);
 }
-
-
-export async function linkPacientesDuplicados(req, paciente) {
-    // linkea los pacientes validados con los temporales con un alto porcentaje de match
-    const resultado = await suggest(paciente);
-    if (resultado.length > 0) {
-        // Verifica los resultados y linkea los pacientes
-        resultado.forEach(async pacienteLink => {
-            if (pacienteLink._score > config.mpi.cotaMatchMax && paciente.id !== pacienteLink.id) {
-                await linkPaciente(req, 'link', paciente, pacienteLink);
-            }
-        });
-    }
-}
-
 
 /**
  * * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
