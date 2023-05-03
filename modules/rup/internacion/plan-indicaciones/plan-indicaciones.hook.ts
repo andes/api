@@ -82,7 +82,7 @@ EventCore.on('internacion:plan-indicaciones-eventos:create', async (evento) => {
 });
 
 EventCore.on('internacion:plan-indicaciones:create', async (indicacion) => {
-    if (indicacion.elementoRUP === '60ed8c8770569dd3ad533e96') {
+    if (indicacion.requiereFrecuencia) {
         await crearEventosSegunPrescripcion(indicacion);
     }
 });
@@ -115,7 +115,7 @@ EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
         case 'draft':
             // Se editó una prescripción existente
             await PlanIndicacionesEventosCtr.deleteByIndicacion(indicacion._id);
-            if (indicacion.elementoRUP === '60ed8c8770569dd3ad533e96') {
+            if (indicacion.requiereFrecuencia) {
                 await crearEventosSegunPrescripcion(indicacion);
             }
             break;

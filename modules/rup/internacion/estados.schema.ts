@@ -64,6 +64,7 @@ const EstadoSchema = new Schema({
                 concepto: SnomedConcept,
                 color: String,
                 icono: String,
+                requiereFrecuencia: Boolean,
                 registro: SnomedConcept
             }]
         }
