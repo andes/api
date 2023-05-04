@@ -51,7 +51,8 @@ export const PlanIndicacionesSchema = new Schema({
     estados: [PlanIndicacionesEstadoSchema],
     estadoActual: PlanIndicacionesEstadoSchema,
     turneable: Boolean,
-    seccion: SnomedConcept
+    seccion: SnomedConcept,
+    requiereFrecuencia: Boolean
 });
 
 PlanIndicacionesSchema.plugin(AuditPlugin);
