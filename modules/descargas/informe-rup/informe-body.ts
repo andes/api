@@ -16,7 +16,7 @@ export class InformeRupBody extends HTMLComponent {
 
                     <div class="contenedor-bloque-texto">
                         <h6 class="bolder">
-                            Fecha Ejecución
+                            Fecha Consulta
                         </h6>
                         <h6>
                             {{ fechaEjecucion }}hs
@@ -56,7 +56,7 @@ export class InformeRupBody extends HTMLComponent {
 
     public async process() {
 
-        const fechaEjecucion = this.getFechaEstado('ejecucion');
+        const fechaEjecucion = this.prestacion.ejecucion.fecha;
         const fechaValidacion = this.getFechaEstado('validada');
         const esValidada = (fechaValidacion !== null);
 
