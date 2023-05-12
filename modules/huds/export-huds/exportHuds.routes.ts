@@ -9,10 +9,20 @@ export const ExportHudsRouter = express.Router();
 ExportHudsRouter.use(Auth.authenticate());
 
 ExportHudsRouter.get('/export', async (req, res, next) => {
-    const query = {
+    const query: any = {
         'user.usuario.id': req.query.id,
         status: { $in: ['pending', 'completed'] }
     };
+    if (req.query.fechaDesde && req.query.fechaHasta) {
+        query.createdAt = { $gte: new Date(req.query.fechaDesde), $lte: new Date(req.query.fechaHasta) };
+    } else {
+        if (req.query.fechaDesde) {
+            query.createdAt = { $gte: new Date(req.query.fechaDesde) };
+        }
+        if (req.query.fechaHasta) {
+            query.createdAt = { $lte: new Date(req.query.fechaHasta) };
+        }
+    }
     const pending = await ExportHudsModel.find(query).sort({ createdAt: -1 });
     res.json(pending);
 });
