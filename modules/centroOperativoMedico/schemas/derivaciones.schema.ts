@@ -80,9 +80,11 @@ export const DerivacionSchema = new mongoose.Schema({
         type: {
             id: { type: mongoose.Schema.Types.ObjectId, ref: 'paciente' },
             documento: String,
+            numeroIdentificacion: String,
             sexo: String,
             genero: String,
             nombre: String,
+            alias: String,
             apellido: String,
             fechaNacimiento: Date,
             ObraSocial: { type: obraSocialSchema }

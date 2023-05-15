@@ -1,6 +1,6 @@
 import { AndesDoc, AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { model, Schema, SchemaTypes } from 'mongoose';
-import { PacienteSubSchema } from '../../../../core-v2/mpi';
+import { PacienteSubSchema } from '../../../../core-v2/mpi/paciente/paciente.schema';
 import { ProfesionalSubSchema } from '../../../../core/tm/schemas/profesional';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
 import { SnomedConcept } from '../../schemas/snomed-concept';

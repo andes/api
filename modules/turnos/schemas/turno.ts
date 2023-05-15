@@ -1,26 +1,8 @@
 import * as mongoose from 'mongoose';
 import * as cie10 from '../../../core/term/schemas/cie10';
-import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
-import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
-
-const pacienteSchema = new mongoose.Schema({
-    id: mongoose.Schema.Types.ObjectId,
-    nombre: String,
-    apellido: String,
-    alias: String,
-    documento: String,
-    fechaNacimiento: Date,
-    telefono: String,
-    sexo: String,
-    carpetaEfectores: [{
-        organizacion: nombreSchema,
-        nroCarpeta: String
-    }],
-    obraSocial: { type: obraSocialSchema }
-});
-
+import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 const turnoSchema = new mongoose.Schema({
     horaInicio: Date,
@@ -69,7 +51,7 @@ const turnoSchema = new mongoose.Schema({
         enum: ['no enviado', 'enviado', 'fallido']
     },
     emitidoPor: String, // Agregamos para identificar desde donde se emitio el turno. Ej: appmobile.
-    paciente: pacienteSchema,
+    paciente: PacienteSubSchema,
     motivoConsulta: String,
     tipoPrestacion: {
         type: tipoPrestacionSchema

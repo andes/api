@@ -1,56 +1,59 @@
 import { Types } from 'mongoose';
 
 export interface ISeguimientoPaciente {
-    id?: Types.ObjectId | string;
+    id?: Types.ObjectId | String;
     fechaInicio: Date;
     origen: {
-        id: string;
-        nombre: string;
-        tipo: string;
+        id: String;
+        nombre: String;
+        tipo: String;
     };
     score: {
         value: number;
         fecha: Date;
     };
     paciente: {
-        id: string;
-        nombre: string;
-        apellido: string;
-        documento: string;
-        telefonoActual: string;
-        direccionActual: string;
-        sexo: string;
-        foto: string;
+        id: String;
+        nombre: String;
+        alias?: String;
+        apellido: String;
+        documento: String;
+        numeroIdentificaion?: String;
+        telefonoActual: String;
+        direccionActual: String;
+        sexo: String;
+        genero: String;
+        foto: String;
         fechaNacimiento: Date;
     };
     llamados: any[];
     organizacionSeguimiento: {
-        id: string;
-        nombre: string;
-        codigoSisa: string;
+        id: String;
+        nombre: String;
+        codigoSisa: String;
     };
     asignaciones?: [
         {
             profesional: {
-                id: string;
-                nombre: string;
-                apellido: string;
-                documento: string;
+                id: String;
+                nombre: String;
+                apellido: String;
+                documento: String;
             };
             fecha: Date;
         }
     ];
     ultimaAsignacion?: {
         profesional: {
-            id: string;
-            nombre: string;
-            apellido: string;
-            documento: string;
+            id: String;
+            nombre: String;
+            apellido: String;
+            documento: String;
         };
         fecha: Date;
     };
     ultimoEstado: {
-        clave: string;
+        clave: String;
         valor: Date;
     };
     contactosEstrechos: any[];

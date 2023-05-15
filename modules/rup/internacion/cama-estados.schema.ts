@@ -1,6 +1,7 @@
 import { ObjectId } from '@andes/core';
 import { SchemaTypes, Schema, model } from 'mongoose';
 import { ISnomedConcept, SnomedConcept } from '../schemas/snomed-concept';
+import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 export interface InternacionExtras {
     egreso?: boolean;
@@ -51,15 +52,7 @@ const CamaEstadosSchema = new Schema({
         },
         genero: { type: SnomedConcept, required: false },
         /* Datos del paciente e internacion si la cama está ocupada */
-        paciente: {
-            id: SchemaTypes.ObjectId,
-            documento: String,
-            sexo: String,
-            genero: String,
-            nombre: String,
-            apellido: String,
-            fechaNacimiento: Date
-        },
+        paciente: PacienteSubSchema,
         idInternacion: SchemaTypes.ObjectId,
         fechaIngreso: Date,
         observaciones: {

@@ -5,6 +5,7 @@ import * as constantes from './constantes';
 import { Document, Schema, Types, SchemaTypes, model, Model } from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 export interface IPrestamo extends Document {
     paciente: any;
@@ -39,22 +40,7 @@ export interface IPrestamo extends Document {
 }
 
 export const PrestamoSchema = new Schema({
-    paciente: {
-        type: {
-            id: SchemaTypes.ObjectId,
-            nombre: String,
-            apellido: String,
-            alias: String,
-            documento: String,
-            fechaNacimiento: Date,
-            telefono: String,
-            sexo: String,
-            carpetaEfectores: [{
-                organizacion: nombreSchema,
-                nroCarpeta: String
-            }]
-        }
-    },
+    paciente: PacienteSubSchema,
     numero: String,
     organizacion: {
         type: nombreSchema,

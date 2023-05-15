@@ -1,18 +1,10 @@
 import { Schema, Types, model } from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 export const CarnetPerinatalSchema = new Schema({
     fecha: Date,
-    paciente: {
-        id: Types.ObjectId,
-        nombre: String,
-        apellido: String,
-        documento: String,
-        telefono: String,
-        sexo: String,
-        fechaNacimiento: Date,
-        addAt: Date
-    },
+    paciente: PacienteSubSchema,
     controles: [
         {
             fechaControl: Date,

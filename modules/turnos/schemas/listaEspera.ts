@@ -1,13 +1,9 @@
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
+import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 const listaEsperaSchema = new mongoose.Schema({
-    paciente: {
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String,
-        apellido: String,
-        documento: String
-    },
+    paciente: PacienteSubSchema,
     tipoPrestacion: { type: tipoPrestacionSchema },
     profesional: {
         id: mongoose.Schema.Types.ObjectId,

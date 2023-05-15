@@ -7,6 +7,7 @@ import { ISectores } from '../../../../core/tm/interfaces/ISectores';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
 import { SnomedConcept } from '../../schemas/snomed-concept';
 import { InternacionExtrasSchema } from '../cama-estados.schema';
+import { PacienteSubSchema } from '../../../../core-v2/mpi/paciente/paciente.schema';
 
 export type SalaComunID = ObjectId;
 
@@ -98,15 +99,7 @@ SalaComunSnapshotSchema.add({
     idSalaComun: SchemaTypes.ObjectId,
     fecha: Date,
     ocupacion: [{
-        paciente: {
-            id: SchemaTypes.ObjectId,
-            documento: String,
-            sexo: String,
-            genero: String,
-            nombre: String,
-            apellido: String,
-            fechaNacimiento: Date
-        },
+        paciente: PacienteSubSchema,
         ambito: String,
         idInternacion: SchemaTypes.ObjectId,
         desde: Date,

@@ -327,7 +327,7 @@ test('Deshacer Internacion', async () => {
             nombre: 'JUANCITO',
             apellido: 'PEREZ',
             documento: '38432297',
-            sexo: ''
+            sexo: 'otro'
         }
     }, REQMock);
 
