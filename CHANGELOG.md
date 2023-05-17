@@ -1,3 +1,44 @@
+# [5.93.0](https://github.com/andes/api/compare/v5.92.0...v5.93.0) (2023-05-17)
+
+
+### Bug Fixes
+
+* **CDA:** se corrige error al generar CDA de paciente con sexo otro ([#1791](https://github.com/andes/api/issues/1791)) ([df0541f](https://github.com/andes/api/commit/df0541f5634c5918abab01a2c2502d42167dfe27))
+* **chore:** parser ([6774213](https://github.com/andes/api/commit/6774213ba6eb923167e6cc3361eb6d553555608a))
+* **chore:** parser ([#1720](https://github.com/andes/api/issues/1720)) ([9f4844f](https://github.com/andes/api/commit/9f4844f9ec69917ebf655dcf0a61ceb2abb80db4))
+* **CIT:** Cannot set headers.. ([#1727](https://github.com/andes/api/issues/1727)) ([61db2ad](https://github.com/andes/api/commit/61db2ad1ef78e599391ee0fe6cd81346a9a309a2))
+* **huds:** evita buscar firma si no valido un profesional ([#1765](https://github.com/andes/api/issues/1765)) ([3d3e3aa](https://github.com/andes/api/commit/3d3e3aa66a4415fa4e4dfbde97d12c3a074c158f))
+* **INT:** Se cambia filtros en el GET de prestaciones de internacion ([#1747](https://github.com/andes/api/issues/1747)) ([7b6db99](https://github.com/andes/api/commit/7b6db991b768e9d69414e097ff42c12d4759dbf9))
+* **JOB:** Se Agrega fecha de  emision de resultado al cargar la determinación ([#1740](https://github.com/andes/api/issues/1740)) ([7072191](https://github.com/andes/api/commit/7072191048d8994722f910cbe6563daf84a4341f))
+* **mail:** corrige error envío mail ([#1805](https://github.com/andes/api/issues/1805)) ([4706a53](https://github.com/andes/api/commit/4706a53d5bc064d8639f0c749529094c281eb3dd))
+* **mpi:** event paciente ([#1724](https://github.com/andes/api/issues/1724)) ([d045453](https://github.com/andes/api/commit/d045453dc46be8b9d71f6e0296b5fdbbc16b1f44))
+* **mpi:** fix registro extranjeros ([#1750](https://github.com/andes/api/issues/1750)) ([3e2cc2f](https://github.com/andes/api/commit/3e2cc2fe25564b3839baa3d1fcd05b0c61c91c05))
+* **MPI:** Cambia el control de parametros para busqueda de pacientes ([#1762](https://github.com/andes/api/issues/1762)) ([4a394aa](https://github.com/andes/api/commit/4a394aad7a7f8f68cb3ff08d40feeba4a457d23d))
+* **MPI:** Se quita acceso a foto del paciente. Agrega control de parametros vacios ([#1761](https://github.com/andes/api/issues/1761)) ([d616c68](https://github.com/andes/api/commit/d616c68734f1451fedfd76a7e490b8558c7263e5))
+
+
+### Features
+
+* **CIT-185:** Guardar motivo de suspension de agenda ([#1743](https://github.com/andes/api/issues/1743)) ([d3ad509](https://github.com/andes/api/commit/d3ad5099769cee13fafe8b23a0f3a58fae5f3abd))
+* **CIT-199:** Agregar filtro de prestacion en el sidebar ([#1771](https://github.com/andes/api/issues/1771)) ([f93f3a1](https://github.com/andes/api/commit/f93f3a1af8eb88bcf7dea68d9c1fc2584a0cb47a))
+* **GDU:** se agrega el atributo lastLogin ([#1778](https://github.com/andes/api/issues/1778)) ([2788407](https://github.com/andes/api/commit/2788407ab4fb5dce0eebc1985c70ea5d9d8d0e09))
+* **GDU-50:** eliminar permiso del punto de inicio en internacion ([#1745](https://github.com/andes/api/issues/1745)) ([7836fad](https://github.com/andes/api/commit/7836fad9a84861473e358f340d257f869228b124))
+* **HUDS:** Agregar filtro de descargas pendientes ([#1719](https://github.com/andes/api/issues/1719)) ([d7b1acb](https://github.com/andes/api/commit/d7b1acb542ac46a736a2d9c2419c9788c69a6e8f))
+* **in:** nuevo event para eventos nuevos en ejecucion ([#1772](https://github.com/andes/api/issues/1772)) ([6e08158](https://github.com/andes/api/commit/6e08158e822cc6d8acd50cad4fd5be3a44e5fb60))
+* **in:** se agrega extra 'desbloqueo' a esquema de cama-estados ([#1779](https://github.com/andes/api/issues/1779)) ([081898b](https://github.com/andes/api/commit/081898b3e6a3b72b49dd3a771e90153ad68f2e6c))
+* **IN:** estado observacion ([#1734](https://github.com/andes/api/issues/1734)) ([5b2496b](https://github.com/andes/api/commit/5b2496b1833b0eec9ea25893829fe4a3e841b1c3))
+* **IN:** motivo suspension indicacion ([#1716](https://github.com/andes/api/issues/1716)) ([d5dc8b4](https://github.com/andes/api/commit/d5dc8b47752d2242d7f1e2d7ec391cf4b6294117))
+* **IN-499:** registro de estados dentro de una cama ([#1768](https://github.com/andes/api/issues/1768)) ([3c8eae5](https://github.com/andes/api/commit/3c8eae5a811ab893185f2a161998b409576d8573))
+* **INT:** pasar a internacion no censable ([#1702](https://github.com/andes/api/issues/1702)) ([1b68c60](https://github.com/andes/api/commit/1b68c600091832efbf6e1dee6d1eff03ffc60d20))
+* **MAT:** quitar validacion de nro de tramite ([#1692](https://github.com/andes/api/issues/1692)) ([f66f34e](https://github.com/andes/api/commit/f66f34e332c9d78d26a3607048e69a5cc0e71180))
+* **MISC-266:** refactor de los filtros ([#1780](https://github.com/andes/api/issues/1780)) ([41e1637](https://github.com/andes/api/commit/41e163759e2f6b7026cbf4f5f82e5135c86c92e5))
+* **MOBILE:** agrega descarga de credencial en formato pdf ([#1763](https://github.com/andes/api/issues/1763)) ([b420b2d](https://github.com/andes/api/commit/b420b2d00a95d04d77b13a6c9626fbd776c4fac6))
+* **PER-77:** cantidad de embarazos ([#1746](https://github.com/andes/api/issues/1746)) ([1b5aa28](https://github.com/andes/api/commit/1b5aa28690b38cd05106a2a992cce6fbfe995a16))
+* **RUP:** se agrega permiso a link de plantillas ([#1792](https://github.com/andes/api/issues/1792)) ([31fca01](https://github.com/andes/api/commit/31fca012dd1d948ecdad836b18e126028829d62b))
+* **TOP:** agrega skip y limit listado reglas ([#1756](https://github.com/andes/api/issues/1756)) ([85e0e11](https://github.com/andes/api/commit/85e0e1192c8cad892203e97d3f62ef1d694c555c))
+* **TOP:** nueva solicitud con misma fecha que prestacion ([#1775](https://github.com/andes/api/issues/1775)) ([9aaef87](https://github.com/andes/api/commit/9aaef87b83514b5272393d9fdbcd4f67e3995131))
+* **TOP-147:** filtros fecha de actualizacion ([#1776](https://github.com/andes/api/issues/1776)) ([b9f6e28](https://github.com/andes/api/commit/b9f6e284dee014bdec7f8ef7a9230ef24e769f99))
+
 # [5.92.0](https://github.com/andes/api/compare/v5.91.1...v5.92.0) (2022-06-08)
 
 
