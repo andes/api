@@ -7,6 +7,10 @@ export const FormResourcesSchema = new mongoose.Schema({
     },
     nombre: String,
     id: String,
+    preset: {
+        type: String,
+        required: false
+    },
     type: {
         type: String,
         default: 'normal'
