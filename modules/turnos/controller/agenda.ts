@@ -210,112 +210,100 @@ export function suspenderTurno(req, data, turno) {
 }
 
 // Turno
-export function codificarTurno(req, data, tid) {
-    return new Promise((resolve, reject) => {
-        const turno = getTurno(req, data[0], tid);
+export async function codificarTurno(req, data, tid, pid = null) {
+    const turno = getTurno(req, data[0], tid);
+    let conditions = {};
 
-        const query = Prestacion.find({
+    if (pid) {
+        conditions = { _id: pid };
+    } else {
+        conditions = {
             'estadoActual.tipo': 'validada',
             'solicitud.turno': tid
-        });
+        };
+    }
+    const arrPrestaciones = await Prestacion.find(conditions);
 
-        query.exec((err, data1) => {
-            if (err) {
-                return ({
-                    err: 'No se encontro prestacion para el turno'
-                });
-            }
-            const arrPrestaciones = data1 as any;
-            const codificaciones = [];
-            let prestaciones = [];
-            const esEjecucion = arrPrestaciones.every(prestacion => prestacion.ejecucion);
+    if (!arrPrestaciones.length) {
+        return turno;
+    }
 
-            if (arrPrestaciones.length > 0 && esEjecucion) {
+    const codificaciones = [];
+    let registros = [];
 
-                arrPrestaciones.forEach(arrPrestacion => {
-                    const presta = arrPrestacion.ejecucion.registros.filter(f =>
-                        f.concepto.semanticTag !== 'elemento de registro'
-                    );
-                    prestaciones = [...prestaciones, ...presta];
-                });
-
-                prestaciones.forEach(async registro => {
-                    const parametros = {
-                        conceptId: registro.concepto.conceptId,
-                        paciente: turno.paciente,
-                        secondaryConcepts: prestaciones.map(r => r.concepto.conceptId)
-                    };
-                    const map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
-                    try {
-                        let codigoCie10: any = {
-                            codigo: 'Mapeo no disponible'
-                        };
-                        const target = await map.transform(parametros.conceptId);
-                        if (target) {
-                            const cie = await cie10.model.findOne({
-                                codigo: (target as String).substring(0, 5)
-                            });
-                            if (cie != null) {
-                                codigoCie10 = {
-                                    causa: (cie as any).causa,
-                                    subcausa: (cie as any).subcausa,
-                                    codigo: (cie as any).codigo,
-                                    nombre: (cie as any).nombre,
-                                    sinonimo: (cie as any).sinonimo,
-                                    c2: (cie as any).c2,
-                                    reporteC2: (cie as any).reporteC2,
-                                    ficha: (cie as any).ficha
-                                };
-                            }
-                        }
-                        if (registro.esDiagnosticoPrincipal) {
-                            codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
-                                codificacionProfesional: {
-                                    snomed: {
-                                        conceptId: registro.concepto.conceptId,
-                                        term: registro.concepto.term,
-                                        fsn: registro.concepto.fsn,
-                                        semanticTag: registro.concepto.semanticTag
-                                    },
-                                    cie10: codigoCie10
-                                },
-                                primeraVez: registro.esPrimeraVez,
-                            });
-
-                        } else {
-                            codificaciones.push({
-                                codificacionProfesional: {
-                                    snomed: {
-                                        conceptId: registro.concepto.conceptId,
-                                        term: registro.concepto.term,
-                                        fsn: registro.concepto.fsn,
-                                        semanticTag: registro.concepto.semanticTag
-                                    },
-                                    cie10: codigoCie10
-                                },
-                                primeraVez: registro.esPrimeraVez
-                            });
-                        }
-
-                        if (prestaciones.length === codificaciones.length) {
-                            turno.diagnostico = {
-                                ilegible: false,
-                                codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
-                            };
-                            turno.asistencia = 'asistio';
-                            resolve(data);
-                        }
-
-                    } catch (error) {
-                        reject(error);
-                    }
-
-                });
-            } else {
-                return resolve(null);
-            }
-        });
+    arrPrestaciones.forEach((unaPrestacion: any) => {
+        const presta = unaPrestacion.ejecucion.registros.filter(f =>
+            f.concepto.semanticTag !== 'elemento de registro'
+        );
+        registros = [...registros, ...presta];
     });
+
+    if (arrPrestaciones.length && registros.length) {
+        for (const registro of registros) {
+            const parametros = {
+                conceptId: registro.concepto.conceptId,
+                paciente: turno.paciente,
+                secondaryConcepts: registros.map(r => r.concepto.conceptId)
+            };
+
+            const map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
+            let codigoCie10: any = {
+                codigo: 'Mapeo no disponible'
+            };
+            const target = await map.transform(parametros.conceptId);
+            if (target) {
+                const cie = await cie10.model.findOne({
+                    codigo: (target as String).substring(0, 5)
+                });
+                if (cie != null) {
+                    codigoCie10 = {
+                        causa: (cie as any).causa,
+                        subcausa: (cie as any).subcausa,
+                        codigo: (cie as any).codigo,
+                        nombre: (cie as any).nombre,
+                        sinonimo: (cie as any).sinonimo,
+                        c2: (cie as any).c2,
+                        reporteC2: (cie as any).reporteC2,
+                        ficha: (cie as any).ficha
+                    };
+                }
+            }
+            if (registro.esDiagnosticoPrincipal) {
+                codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+                    codificacionProfesional: {
+                        snomed: {
+                            conceptId: registro.concepto.conceptId,
+                            term: registro.concepto.term,
+                            fsn: registro.concepto.fsn,
+                            semanticTag: registro.concepto.semanticTag
+                        },
+                        cie10: codigoCie10
+                    },
+                    primeraVez: registro.esPrimeraVez,
+                });
+
+            } else {
+                codificaciones.push({
+                    codificacionProfesional: {
+                        snomed: {
+                            conceptId: registro.concepto.conceptId,
+                            term: registro.concepto.term,
+                            fsn: registro.concepto.fsn,
+                            semanticTag: registro.concepto.semanticTag
+                        },
+                        cie10: codigoCie10
+                    },
+                    primeraVez: registro.esPrimeraVez
+                });
+            }
+        }
+    }
+    turno.diagnostico = {
+        ilegible: false,
+        codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+    };
+    turno.asistencia = 'asistio';
+    return turno;
 }
 
 // Turno
@@ -1113,6 +1101,8 @@ EventCore.on('rup:prestacion:validate', async (prestacion) => {
                 event = { object: 'turno', accion: 'asistencia', data: turno };
             } else {
                 turno = darAsistencia(user, agenda, idTurno);
+                const turCodi = await codificarTurno(user, [agenda], prestacion.solicitud.turno, prestacion._id);
+                turno.diagnostico = turCodi.diagnostico;
                 event = { object: 'turno', accion: 'asistencia', data: turno };
             }
 
@@ -1347,7 +1337,7 @@ export async function verificarSolapamiento(data) {
     const espacioFisicoId = (data.espacioFisico ? data.espacioFisico._id : null);
     const response = {
         tipoError: null,
-        clonarOguardar:'',
+        clonarOguardar: '',
         profesional: '',
         centroSalud: '',
         prestacion: '',
