@@ -28,7 +28,7 @@ async function EmailClient(options) {
     };
     const transporter = nodemailer.createTransport(data);
     const mailOptions = {
-        from: options.from,
+        from: 'andes@hospitalneuquen.org.ar',
         to: options.to,
         subject: options.subject,
         text: options.text,
