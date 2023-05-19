@@ -8,11 +8,10 @@ async function run(done) {
 
     const dias = 1;
     const fechaDesde: Date = moment().subtract(dias, 'days').toDate();
-    const match = { 'solicitud.ambitoOrigen': 'ambulatorio', 'solicitud.turno': { $ne: null }, createdAt: { $gte: fechaDesde } };
-    const prestacionAmbulatoria = Prestacion.find(match).cursor({ batchSize: 100 });
+    const match = { 'estadoActual.tipo': 'validada', 'ejecucion.fecha': { $gte: fechaDesde }, 'solicitud.ambitoOrigen': 'ambulatorio', 'solicitud.turno': { $ne: null } };
+    const prestacionAmbulatoria: any[] = await Prestacion.find(match);
 
     let agendas: any;
-
     for await (const prestacion of prestacionAmbulatoria) {
 
         const turnoId = prestacion.solicitud.turno;
@@ -23,25 +22,28 @@ async function run(done) {
                 { 'sobreturnos._id': Types.ObjectId(turnoId) }
             ]
         });
-
         for (const agenda of agendas) {
             for (const bloque of agenda.bloques) {
-                for (const turno of bloque.turnos) {
+                for (let turno of bloque.turnos) {
+
                     if (String(turno._id) === String(turnoId)) {
-                        if (turno.diagnostico.codificaciones.length === 0) {
+                        if (!turno.diagnostico.codificaciones.length) {
+
                             if (!turno.horaAsistencia) {
                                 turno.horaAsistencia = turno.horaInicio;
                             }
                             const data = await codificarTurno('', [agenda], turnoId);
-                            await Agenda.findByIdAndUpdate(agenda.id, data[0]);
+                            turno = data;
+                            await Agenda.findByIdAndUpdate(agenda.id, agenda);
                         }
                     }
                 }
-                for (const sobreturno of agenda.sobreturnos) {
+                for (let sobreturno of agenda.sobreturnos) {
                     if (String(sobreturno._id) === String(turnoId)) {
-                        if (sobreturno.diagnostico.codificaciones.length === 0) {
+                        if (!sobreturno.diagnostico.codificaciones.length) {
                             const data = await codificarTurno('', [agenda], turnoId);
-                            await Agenda.findByIdAndUpdate(agenda.id, data[0]);
+                            sobreturno = data;
+                            await Agenda.findByIdAndUpdate(agenda.id, agenda);
                         }
                     }
                 }
