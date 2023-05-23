@@ -63,7 +63,8 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
         romperValidacion: 'Ejecutada',
         anulada: 'Anulada',
         devolver: 'Devuelta',
-        indefinida: 'Modificada'
+        indefinida: 'Modificada',
+        notificar: 'Paciente notificado'
     };
 
     if (!solicitud.historial) {
@@ -74,6 +75,10 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
         organizacion: solicitud.organizacion,
         tipoPrestacion: solicitud.tipoPrestacion
     };
+
+    if (datos.fechaNotificacion) {
+        registroHistorial.fechaDeNotificacion = datos.fechaNotificacion;
+    }
 
     /** La accion de historial es el tipo de PATCH que se realiza.
      * Si el PATCH es es un push de estado, la acción es el tipo de estado que se pushea */
