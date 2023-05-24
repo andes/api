@@ -1,3 +1,17 @@
+# [5.94.0](https://github.com/andes/api/compare/v5.93.0...v5.94.0) (2023-05-24)
+
+
+### Bug Fixes
+
+* **CITAS:** agrega codificacion en evento de  validar prestacion ([#1803](https://github.com/andes/api/issues/1803)) ([8c1f101](https://github.com/andes/api/commit/8c1f101e0ce7fecfbeb2eff6bb074179e9196be2))
+* **IN-525:** se agrega nuevo permiso al plan de indicaciones ([#1797](https://github.com/andes/api/issues/1797)) ([077c37d](https://github.com/andes/api/commit/077c37d423072602afdc71631824451ac64f0338))
+* **MISC:** Agrega 'from' al EmailClient ([#1808](https://github.com/andes/api/issues/1808)) ([ef6b10e](https://github.com/andes/api/commit/ef6b10e5526710ee5b09badf5594aa2f6c28f49b))
+
+
+### Features
+
+* **TOP-131:** Seguimiento de llamados telefonicos a pacientes ([#1785](https://github.com/andes/api/issues/1785)) ([96e7871](https://github.com/andes/api/commit/96e7871bc6fd55ae3d717df186ffcc03a4b8db8e))
+
 # [5.93.0](https://github.com/andes/api/compare/v5.92.0...v5.93.0) (2023-05-17)
 
 

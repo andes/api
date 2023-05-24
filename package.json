@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "5.93.0",
+  "version": "5.94.0",
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
