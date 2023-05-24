@@ -24,9 +24,8 @@ function identidadSinAcentos(ciudadano) {
  */
 
 export async function validar(documento: string, sexo: string) {
-
-    const ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
     try {
+        const ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
         if (ciudadanoRenaper) {
             // Valida el tamaño de la foto
             ciudadanoRenaper.foto = ciudadanoRenaper.foto?.includes('image/jpg') ? await validarTamañoFoto(ciudadanoRenaper.foto) : null;
