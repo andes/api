@@ -1,3 +1,10 @@
+## [5.94.1](https://github.com/andes/api/compare/v5.94.0...v5.94.1) (2023-05-31)
+
+
+### Bug Fixes
+
+* **MPI:** controles en la validación con Renaper ([#1809](https://github.com/andes/api/issues/1809)) ([eda2f16](https://github.com/andes/api/commit/eda2f1685a860c30d9fac2f64d7cb3e398582d37))
+
 # [5.94.0](https://github.com/andes/api/compare/v5.93.0...v5.94.0) (2023-05-24)
 
 
