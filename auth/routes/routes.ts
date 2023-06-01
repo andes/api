@@ -72,9 +72,15 @@ router.get('/organizaciones', Auth.authenticate(), async (req: any, res, next) =
     const organizaciones = user.organizaciones.filter(x => x.activo === true).map((item) => {
         return mongoose.Types.ObjectId(item._id);
     });
-    const orgs = await Organizacion.find({ _id: { $in: organizaciones } }, { nombre: 1 }).sort({ nombre: 1 });
+    const match = {};
+    match['_id'] = { $in: organizaciones };
+    if (req.query.soloOrgActivas) {
+        match['activo'] = true;
+    }
+    const orgs = await Organizacion.find(match, { nombre: 1 }).sort({ nombre: 1 });
     return res.json(orgs);
 });
+
 
 /**
  * Refresca el token y los permisos dado una organizacion}
