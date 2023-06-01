@@ -6,6 +6,7 @@ import { RoboModel } from './roboSchema';
 import * as mailTools from './sendEmail';
 import * as smsTools from './sendSms';
 import { sendPushNotification } from '../../modules/mobileApp/controller/PushClientFCM';
+import moment = require('moment');
 
 const log = debug('roboSender');
 
@@ -25,6 +26,10 @@ export function roboSender() {
             if (enviosPendientes.length > 0) {
                 for (const env of enviosPendientes) {
                     try {
+
+                        let error = false;
+                        const today = moment().toDate();
+
                         if (env.email) {
                             let html = '';
 
@@ -45,7 +50,10 @@ export function roboSender() {
                                 attachments: ''
                             };
                             log('Enviando email a', env.email);
-                            await mailTools.sendMail(mailOptions);
+
+                            if (today <= env.expiredAt) {
+                                await mailTools.sendMail(mailOptions);
+                            } else { error = true; }
                         }
 
                         if (env.phone) {
@@ -69,14 +77,16 @@ export function roboSender() {
 
                         // Exportar HUDS
                         if (env.idExportHuds) {
-                            await createFile(env.idExportHuds);
+                            if (today <= env.expiredAt) {
+                                await createFile(env.idExportHuds);
+                            } else { error = true; }
                         }
 
                         if (env.service) {
                             await services.get(env.service).exec(env.params);
                         }
 
-                        await changeState(env, 'success');
+                        if (error) { await changeState(env, 'error'); } else { await changeState(env, 'success'); }
 
 
                     } catch (errorSending) {
