@@ -42,21 +42,27 @@ export async function syncWorkList(prestacion: IPrestacion) {
             );
 
             await createPaciente(config, pacienteDICOM, token);
-            await createWorkList(config, prestacionDICOM, token);
+            const response = await createWorkList(config, prestacionDICOM, token);
+            const dataResponse = response?.['00400100']?.['Value']?.[0]['00400009']?.['Value']?.[0];
+            const spsID = dataResponse || null;
+
             const query = prestacion.groupId ?
                 { groupId: prestacion.groupId } :
-                { _id: (prestacion as any)._id } ;
+                { _id: (prestacion as any)._id };
 
+            const arrayMetadata = [
+                { key: 'pacs-uid', valor: uniqueID },
+                { key: 'pacs-config', valor: config.id }
+            ];
+            if (dataResponse) {
+                arrayMetadata.push({ key: 'pacs-spsID', valor: spsID });
+            }
             await Prestacion.update(
                 query,
                 {
                     $push: {
                         metadata: {
-                            $each: [
-                                { key: 'pacs-uid', valor: uniqueID },
-                                { key: 'pacs-config', valor: config.id },
-
-                            ]
+                            $each: arrayMetadata
                         }
                     }
                 }
