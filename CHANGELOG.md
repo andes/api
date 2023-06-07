@@ -1,3 +1,15 @@
+# [5.95.0](https://github.com/andes/api/compare/v5.94.1...v5.95.0) (2023-06-07)
+
+
+### Bug Fixes
+
+* **MISC-267:** Visualización de solo efectores activos en el LogIn Andes ([#1782](https://github.com/andes/api/issues/1782)) ([476cb14](https://github.com/andes/api/commit/476cb14e8413ed717ca7d224d29a8642889fb3ff))
+
+
+### Features
+
+* **CIT:** agrega permiso visualizar solicitudes ([#1793](https://github.com/andes/api/issues/1793)) ([7b4334e](https://github.com/andes/api/commit/7b4334eef9de1e9ac85973bae1f34a80e00503e7))
+
 ## [5.94.1](https://github.com/andes/api/compare/v5.94.0...v5.94.1) (2023-05-31)
 
 
