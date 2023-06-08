@@ -36,6 +36,7 @@ export async function createFile(idExportHuds) {
 
             const queryCda = {
                 'metadata.paciente': peticionExport.pacienteId,
+                'metadata.prestacion.snomed.conceptId': { $ne: '2881000013106' },
                 'metadata.adjuntos': { $exists: true }
             };
             if (fechaCondicion) {

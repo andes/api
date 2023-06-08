@@ -53,10 +53,10 @@ export function sendEmail(data: IEmail, options: any = {}) {
 
         from: options.from ? options.from : 'undefined',
 
-        createdAt: moment(),
-        updatedAt: moment(),
-        expiredAt: moment().add(1, 'd'),
-        scheduledAt: options.scheduledAt ? options.scheduledAt : moment(),
+        createdAt: moment().toDate(),
+        updatedAt: moment().toDate(),
+        expiredAt: moment().add(1, 'd').toDate(),
+        scheduledAt: options.scheduledAt ? options.scheduledAt : moment().toDate(),
         tries: 0,
     });
 
@@ -99,15 +99,15 @@ export function exportHuds(data, user) {
         fechaHasta: data.fechaHasta,
         pacienteId: data.pacienteId,
         pacienteNombre: data.pacienteNombre,
-        createdAt: moment(),
-        updatedAt: moment(),
+        createdAt: moment().toDate(),
+        updatedAt: moment().toDate(),
         tipoPrestacion: data.tipoPrestacion,
         prestaciones: data.prestaciones,
         user
     });
     new RoboModel({
         idExportHuds: obj._id,
-        expiredAt: moment().add(2, 'd'),
+        expiredAt: moment().add(2, 'd').toDate(),
         scheduledAt: new Date(),
         tries: 0
     }).save();
