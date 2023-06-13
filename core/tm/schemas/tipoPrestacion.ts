@@ -16,6 +16,7 @@ export interface ITipoPrestacion extends Document {
     }[];
     ambito: String[];
     queries: [Types.ObjectId];
+    agendaDinamica?: Boolean;
 }
 
 
@@ -43,6 +44,10 @@ export const tipoPrestacionSchema = new Schema({
         }]
     },
     ambito: [String],
+    agendaDinamica: {
+        type: Boolean,
+        required: false
+    },
     queries: [Types.ObjectId]
 });
 

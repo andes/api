@@ -17,6 +17,7 @@ class ConceptoTurneableResource extends ResourceBase {
         noNominalizada: MongoQuery.equalMatch,
         auditable: MongoQuery.equalMatch,
         ambito: MongoQuery.equalMatch,
+        agendaDinamica: MongoQuery.equalMatch,
         permisos: {
             field: '_id',
             fn: (value) => {
@@ -27,7 +28,7 @@ class ConceptoTurneableResource extends ResourceBase {
     };
     middlewares = [Auth.authenticate()];
     routesAuthorization = {
-        // Agrega un middlegare antes de la ruta de SEARCH: /conceptos-turneables
+        // Agrega un middleware antes de la ruta de SEARCH: /conceptos-turneables
         search: (req: Request, res: Response, next) => {
             if (req.query.permisos) {
                 const permisosString = req.query.permisos as string;
