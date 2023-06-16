@@ -8,10 +8,8 @@ import { Request } from '@andes/api-tool';
 import * as moment from 'moment';
 
 EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
-
     prestacion = new Prestacion(prestacion);
     const registros = prestacion.getRegistros();
-
     const idInternacion = prestacion.trackId;
     const fecha = prestacion.ejecucion.fecha;
     const ambito = prestacion.solicitud.ambitoOrigen;
@@ -26,7 +24,12 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
             indicacion.idPrestacion = prestacion.id;
             indicacion.estados.push({
                 tipo: 'active',
-                fecha
+                fecha,
+                ...(!indicacion.requiereAceptacion && {
+                    verificacion: {
+                        estado: 'aceptada'
+                    }
+                })
             });
             const user = Auth.getUserFromResource(prestacion);
             Auth.audit(indicacion, user as any);
