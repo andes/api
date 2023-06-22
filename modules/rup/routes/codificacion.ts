@@ -7,7 +7,6 @@ import { Auth } from './../../../auth/auth.class';
 import { IPrestacionDoc } from '../prestaciones.interface';
 import { asyncHandler } from '@andes/api-tool';
 
-
 const router = express.Router();
 
 router.post('/codificacion', asyncHandler(async (req, res) => {
@@ -78,16 +77,17 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
             ambitoPrestacion: 'ambulatorio'
         };
 
-        if (!req.query.auditadas) {
-            filtros['diagnostico.codificaciones.codificacionAuditoria.codigo'] = { $exists: req.query.auditadas };
+        if (req.query.estado) {
+            const est = (req.query.estado === 'auditada') ? true : false;
+            filtros['diagnostico.codificaciones.codificacionAuditoria.codigo'] = { $exists: est };
         }
+
         const matchAdicional = {};
         if (req.query.idProfesional) {
             matchAdicional['prestacion.solicitud.profesional.id'] = { $eq: Types.ObjectId(req.query.idProfesional) };
         }
-
-        if (req.query.idPrestacion) {
-            matchAdicional['prestacion.solicitud.tipoPrestacion.id'] = Types.ObjectId(req.query.idPrestacion);
+        if (req.query.tipoPrestacion) {
+            matchAdicional['prestacion.solicitud.tipoPrestacion.conceptId'] = (typeof req.query.tipoPrestacion === 'string') ? req.query.tipoPrestacion : { $in: req.query.tipoPrestacion };
         }
 
         const pipeline = [
@@ -133,7 +133,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
                     createdBy: 1,
                     updatedAt: 1,
                     updatedBy: 1,
-                    prestacion: '$tipoPrestacion.term'
+                    prestacion: '$prestacion.solicitud.tipoPrestacion.term'
                 }
             }
         ];
