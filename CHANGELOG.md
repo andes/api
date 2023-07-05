@@ -1,3 +1,10 @@
+# [5.96.0](https://github.com/andes/api/compare/v5.95.0...v5.96.0) (2023-07-05)
+
+
+### Features
+
+* **IN-538:** Plan indicaciones: dar opción para validar o no una indicación ([#1812](https://github.com/andes/api/issues/1812)) ([7fcd2d2](https://github.com/andes/api/commit/7fcd2d200eb1d991a17d0521f8b22b47c4fc37f0))
+
 # [5.95.0](https://github.com/andes/api/compare/v5.94.1...v5.95.0) (2023-06-07)
 
 
