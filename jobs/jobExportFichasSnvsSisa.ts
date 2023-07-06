@@ -1,7 +1,6 @@
 import { exportSisaFicha } from './exportNexosFichaSisa';
 
 function run(done) {
-
     if (process.argv.length === 5) {
         const desde = process.argv[3];
         const hasta = process.argv[4];
