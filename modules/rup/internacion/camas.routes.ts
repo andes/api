@@ -147,18 +147,18 @@ router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncH
         const capa = req.body.capa;
         const ambito = 'internacion';
 
-        let r1 = true, r2, r3;
+        let response = true, response2, response3;
         if (req.body.movimientosIntermedios) {
             // si existen movimientos entre fechaDesde y fechaHasta, se verán afectados por el cambio (Se actualizará su unidadOrganizativa)
             const estadosAfectados = await CamasEstadosController.searchEstados({ desde, hasta, organizacion: organizacion._id, ambito, capa }, { cama: data.id });
             const fechaEstados = estadosAfectados.map(e => e.fecha);
-            r1 = await CamasEstadosController.patch({ organizacion: organizacion._id, ambito, capa, cama: data.id }, desde, hasta, prestamo.unidadOrganizativa, fechaEstados);
+            response = await CamasEstadosController.patch({ organizacion: organizacion._id, ambito, capa, cama: data.id }, desde, hasta, prestamo.unidadOrganizativa, fechaEstados);
         }
-        if (r1) {
-            r2 = await CamasController.patchEstados({ ...prestamo, ambito, capa, fecha: desde, organizacion, id: data.id }, req);
-            r3 = await CamasController.patchEstados({ ...devolucion, ambito, capa, fecha: hasta, organizacion, id: data.id }, req);
+        if (response) {
+            response2 = await CamasController.patchEstados({ ...prestamo, ambito, capa, fecha: desde, organizacion, id: data.id }, req);
+            response3 = await CamasController.patchEstados({ ...devolucion, ambito, capa, fecha: hasta, organizacion, id: data.id }, req);
         }
-        result = r1 && r2 && r3 ? true : false;
+        result = response && response2 && response3 ? true : false;
     } else {
         result = await CamasController.patchEstados(data, req);
     }
