@@ -27,7 +27,12 @@ export class InformeRupHeader extends HTMLComponent {
                     <div class="contenedor-secundario">
                         <h6 class="volanta">Datos del paciente</h6>
                         <h4>
-                            {{ paciente.apellido }}, {{ paciente.nombre }}
+                            {{ paciente.apellido }},  
+                                {{#if paciente.alias}} 
+                                    {{paciente.alias}}
+                                {{else}}
+                                     {{paciente.nombre}}
+                                {{/if}}
                         </h4>
                         <h4>
                             {{ paciente.genero }} |

@@ -36,7 +36,9 @@ class DerivacionesResource extends ResourceBase {
                     { 'paciente.documento': MongoQuery.partialString(value) },
                     { 'paciente.nombre': MongoQuery.partialString(value) },
                     { 'paciente.apellido': MongoQuery.partialString(value) },
-                    { 'paciente.id': MongoQuery.equalMatch(value) }
+                    { 'paciente.id': MongoQuery.equalMatch(value) },
+                    { 'paciente.numeroIdentificacion': MongoQuery.partialString(value) },
+                    { 'paciente.alias': MongoQuery.partialString(value) }
                 ]
             };
         },

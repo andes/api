@@ -189,7 +189,11 @@ export async function procesar(parametros: any) {
                         ' ',
                         '$turno.paciente.apellido',
                         ' ',
-                        '$turno.paciente.documento'
+                        '$turno.paciente.documento',
+                        ' ',
+                        '$turno.paciente.alias',
+                        ' ',
+                        '$turno.paciente.numeroIdentificacion'
                     ]
                 }
             }
