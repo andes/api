@@ -44,6 +44,17 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     alias: String,
     estado: ESTADO,
     contacto: [ContactoSchema],
+    createdBy: {
+        documento: Number,
+        username: Number,
+        apellido: String,
+        nombre: String,
+        nombreCompleto: String,
+        organizacion: {
+            id: String,
+            nombre: String,
+        },
+    },
     direccion: [DireccionSchema],
     lugarNacimiento: {
         localidad: { type: NombreSchema },
