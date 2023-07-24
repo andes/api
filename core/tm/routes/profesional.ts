@@ -209,6 +209,7 @@ router.get('/profesionales/guia', async (req, res, next) => {
                     sexo: element.sexo ? element.sexo : '',
                     apellido: element.apellido ? element.apellido : '',
                     documento: element.documento ? element.documento : '',
+                    cuit: element.cuit ? element.cuit : '',
                     nacionalidad: element.nacionalidad ? element.nacionalidad.nombre : '',
                     profesiones: element.formacionGrado
                 });
@@ -498,19 +499,15 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
     if (req.query.fechaDesde && req.query.fechaHasta) {
         if (req.query.matriculasPorVencer) {
             if (req.query.tipoMatricula === 'grado') {
-                match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } },
-                                  { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
             } else {
-                match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } },
-                                  { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
+                match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
             }
         } else if (req.query.matriculasPorVencer === false) {
             if (req.query.tipoMatricula === 'grado') {
-                match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                                  { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+                match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
             } else {
-                match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } },
-                                  { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
+                match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
             }
         }
     }
@@ -934,9 +931,7 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
                 metadata: {
                     idProfesional: req.body.imagen.idProfesional,
                 }
-            },
-            input.pipe(decoder),
-            (error, createdFile) => {
+            }, input.pipe(decoder), (error, createdFile) => {
                 res.json(createdFile);
             });
             input.end(_base64);
@@ -1202,7 +1197,7 @@ router.post('/profesionales/validar', async (req, res, next) => {
             const profesionalCompare = { documento, sexo: sexo.toLowerCase(), nombre, apellido, fechaNacimiento };
             profesional.sexo = profesional.sexo.toLowerCase();
 
-            const valorMatching = new Matching().matchPersonas(profesional, profesionalCompare , mpi.weightsDefault, algoritmo);
+            const valorMatching = new Matching().matchPersonas(profesional, profesionalCompare, mpi.weightsDefault, algoritmo);
 
             if (valorMatching >= 0.95) {
                 const resRenaper = await services.get('renaper').exec({ documento, sexo });
