@@ -1,3 +1,11 @@
+# [5.97.0](https://github.com/andes/api/compare/v5.96.0...v5.97.0) (2023-07-26)
+
+
+### Features
+
+* **MAT:**  Agrega cuit a salida de guia profesional ([#1820](https://github.com/andes/api/issues/1820)) ([1590d01](https://github.com/andes/api/commit/1590d010b4eb82c362fa9de982ec0a4fb1bde5e6))
+* **MPI-406:** Auditoria de pacientes- Creado por ([#1816](https://github.com/andes/api/issues/1816)) ([b57e4e4](https://github.com/andes/api/commit/b57e4e4e00605ec085985c49823ba4b288b367f7))
+
 # [5.96.0](https://github.com/andes/api/compare/v5.95.0...v5.96.0) (2023-07-05)
 
 
