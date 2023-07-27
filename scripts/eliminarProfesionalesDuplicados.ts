@@ -7,7 +7,6 @@ import { makeFs } from '../core/tm/schemas/imagenes';
 import * as base64 from 'base64-stream';
 import * as stream from 'stream';
 import moment = require('moment');
-
 interface IDuplicado {
     _id: {
         documento: string;
@@ -21,34 +20,48 @@ interface IDuplicado {
             nombre: string;
             createdAt?: Date;
             updatedAt?: Date;
+            profesionalMatriculado?: boolean;
+            formacionGrado?: any[];
         }
     ];
 };
-
-const decoder = base64.decode();
-const input = new stream.PassThrough();
 
 /**
  *
  * @param idOld id del profesional a desasociar la firma
  * @param idNew id del profesional al que se asociara la firma
  */
-async function asociarFirma(idOld: string, idNew: string) {
+async function asociarFirma(idNew: string, idOld: string) {
     const firma = makeFsFirma();
-    const fileFirma = await firma.findOne({ 'metadata.idProfesional': idOld });
-    if (fileFirma) {
-        fileFirma['metadata.idProfesional'] = idNew;
-        await firma.unlink(fileFirma._id, (error) => { });
-        return new Promise((resolve, reject) => {
-            firma.writeFile(fileFirma, input.pipe(decoder),
-                (error, createdFile) => {
-                    if (error) {
-                        reject(error);
-                    }
-                    resolve(createdFile);
+    const fileFirmaNuevo = await firma.findOne({ 'metadata.idProfesional': idNew });
+    if (!fileFirmaNuevo) {
+        const fileFirmaViejo = await firma.findOne({ 'metadata.idProfesional': idOld });
+        if (fileFirmaViejo) {
+            const decoder1 = base64.decode();
+            const input1 = new stream.PassThrough();
+            const readStream = await firma.readFile({ _id: fileFirmaViejo._id });
+            const firmaProfesional = await streamToBase64(readStream);
+            if (firmaProfesional) {
+                await firma.unlink(fileFirmaViejo._id, (error) => { });
+                return new Promise((resolve, reject) => {
+                    firma.writeFile(
+                        {
+                            filename: 'foto.png',
+                            contentType: 'image/png',
+                            metadata: {
+                                idProfesional: idNew,
+                            }
+                        }, input1.pipe(decoder1),
+                        (error, createdFile) => {
+                            if (error) {
+                                reject(error);
+                            }
+                            resolve(createdFile);
+                        });
+                    input1.end(firmaProfesional);
                 });
-            input.end();
-        });
+            }
+        }
     }
 }
 
@@ -57,23 +70,78 @@ async function asociarFirma(idOld: string, idNew: string) {
  * @param idOld id del profesional a desasociar la foto
  * @param idNew id del profesional al que se asociara la foto
  */
-async function asociarFoto(idOld: string, idNew: string) {
+async function asociarFoto(idNew: string, idOld: string) {
     const foto = makeFs();
-    const fileFoto = await foto.findOne({ 'metadata.idProfesional': idOld });
-    if (fileFoto) {
-        fileFoto['metadata.idProfesional'] = idNew;
-        await foto.unlink(fileFoto._id, (error) => { });
-        return new Promise((resolve, reject) => {
-            foto.writeFile(fileFoto, input.pipe(decoder),
-                (error, createdFile) => {
-                    if (error) {
-                        reject(error);
-                    }
-                    resolve(createdFile);
+    const fileFotoNuevo = await foto.findOne({ 'metadata.idProfesional': idNew });
+    if (!fileFotoNuevo) {
+        const fileFotoViejo = await foto.findOne({ 'metadata.idProfesional': idOld });
+        if (fileFotoViejo) {
+            const input2 = new stream.PassThrough();
+            const decoder2 = base64.decode();
+            const readStream = await foto.readFile({ _id: fileFotoViejo._id });
+            const fotoProfesional = await streamToBase64(readStream);
+            if (fotoProfesional) {
+                await foto.unlink(fileFotoViejo._id, (error) => { });
+                return new Promise((resolve, reject) => {
+                    foto.writeFile(
+                        {
+                            filename: 'foto.png',
+                            contentType: 'image/png',
+                            metadata: {
+                                idProfesional: idNew,
+                            }
+                        }, input2.pipe(decoder2),
+                        (error, createdFile) => {
+                            if (error) {
+                                reject(error);
+                            }
+                            resolve(createdFile);
+                        });
+                    input2.end(fotoProfesional);
                 });
-            input.end();
-        });
+            }
+        }
     }
+}
+
+// Función para obtener las imagenes de fotos y firmas del profesional.
+function streamToBase64(streamData) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        streamData.on('data', (chunk) => {
+            chunks.push(chunk);
+        });
+        streamData.on('end', () => {
+            const result = Buffer.concat(chunks);
+            return resolve(result.toString('base64'));
+        });
+        streamData.on('error', (err) => {
+            return reject(err);
+        });
+    });
+}
+
+// Función para unificar los arrays de formacionGrado sin profesiones repetidas
+function unificarFormacionGrado(fgViejo, fgNuevo) {
+    const formacionUnificada = [];
+
+    fgViejo.forEach((elemento) => {
+        if (!formacionUnificada.some((elem) => elem.profesion.codigo === elemento.profesion.codigo)) {
+            formacionUnificada.push(elemento);
+        }
+    });
+
+    fgNuevo.forEach(elemento => {
+        const index = formacionUnificada.findIndex((elem) => elem.profesion.codigo === elemento.profesion.codigo);
+        if (index === -1) {
+            formacionUnificada.push(elemento);
+        } else {
+            if (elemento.matriculado && !formacionUnificada[index].matriculado) {
+                formacionUnificada.splice(index, 1, elemento);
+            }
+        }
+    });
+    return formacionUnificada;
 }
 
 async function run(done) {
@@ -91,7 +159,9 @@ async function run(done) {
                         apellido: '$apellido',
                         documento: '$documento',
                         createdAt: '$createdAt',
-                        updatedAt: '$updatedAt'
+                        updatedAt: '$updatedAt',
+                        formacionGrado: '$formacionGrado',
+                        profesionalMatriculado: '$profesionalMatriculado'
                     }
                 },
                 count: {
@@ -107,7 +177,7 @@ async function run(done) {
     ]);
 
     for (const data of duplicados) {
-        // Se ordenan duplicados por fecha de creación. El primer registro creado será el profesional activo
+        // Se crea un nuevo array con los profesionales duplicados ordenados por fecha de creción o de actualización.
         const dupsSorted = data.dups.sort((a, b) => {
             const f1 = a.createdAt || a.updatedAt;
             const f2 = b.createdAt || b.updatedAt;
@@ -118,49 +188,54 @@ async function run(done) {
             } else { return -1; }
         });
 
+        let profesionalViejo = dupsSorted.shift();
+        let profesionalNuevo = dupsSorted[0];
+        // Verificamos si existe un profesionalMatriculado en false.
+        const index = dupsSorted.findIndex(d => !d.profesionalMatriculado);
+        if (index === 0) {
+            profesionalNuevo = dupsSorted.shift();
+            profesionalViejo = dupsSorted[0];
+        }
         try {
-            let profesionalActivo = await Profesional.findById(dupsSorted.shift().id);
-            let profesionalDuplicado: any = dupsSorted[0];
-            profesionalDuplicado = await Profesional.findById(dupsSorted[0].id);
+
+            // Unificamos los arrays de formacionGrado sin repetir la profesiónes que tengan matriculas
+            const formacionUnificada = unificarFormacionGrado(profesionalViejo.formacionGrado, profesionalNuevo.formacionGrado);
+            profesionalNuevo.formacionGrado = formacionUnificada;
 
             // Si el duplicado posee firma, se le asocia al profesional activo. Lo mismo con la foto.
-            await asociarFirma(profesionalDuplicado.id.toString(), profesionalActivo.id.toString());
-            await asociarFoto(profesionalDuplicado.id.toString(), profesionalActivo.id.toString());
+            const firmaPromise = asociarFirma(profesionalNuevo.id.toString(), profesionalViejo.id.toString());
+            const fotoPromise = asociarFoto(profesionalNuevo.id.toString(), profesionalViejo.id.toString());
 
             // Se asocian turnos y prestaciones del profesional duplicado al activo.
-            await Agenda.updateMany(
-                { 'profesionales._id': profesionalDuplicado.id },
-                { $set: { 'profesionales.$[elemento]._id': profesionalActivo.id } },
-                { arrayFilters: [{ 'elemento._id': profesionalDuplicado.id }] }
-            );
-            await Prestacion.updateMany(
-                { 'solicitud.profesional.id': profesionalDuplicado.id },
-                { $set: { 'solicitud.profesional.id': profesionalActivo.id } }
+            const agendaPromise = Agenda.updateMany(
+                { 'profesionales._id': profesionalViejo.id },
+                { $set: { 'profesionales.$[elemento]._id': profesionalNuevo.id } },
+                { arrayFilters: [{ 'elemento._id': profesionalViejo.id }] }
             );
 
-            const idProfesional = profesionalDuplicado.id;
-            if (profesionalDuplicado.profesionalMatriculado) {
-                delete profesionalDuplicado.id;
-                delete profesionalDuplicado._id;
-                profesionalActivo = profesionalDuplicado;
-                await Profesional.update(
-                    { _id: profesionalActivo },
-                    { $set: { activo: false } }
-                );
-            }
+            const prestacionPromise = Prestacion.updateMany(
+                { 'solicitud.profesional.id': profesionalViejo.id },
+                { $set: { 'solicitud.profesional.id': profesionalNuevo.id } }
+            );
+
             // Se inactivan los duplicados
-            await Profesional.update(
-                { _id: idProfesional },
+            const profesionalNuevoPromise = Profesional.update(
+                { _id: profesionalViejo.id },
                 { $set: { activo: false } }
             );
 
+            const profesionalViejoPromise = Profesional.update(
+                { _id: profesionalNuevo.id },
+                { $set: { formacionGrado: profesionalNuevo.formacionGrado } }
+            );
+
+            await Promise.all([firmaPromise, agendaPromise, prestacionPromise, profesionalNuevoPromise, profesionalViejoPromise, fotoPromise]);
 
         } catch (err) {
             // eslint-disable-next-line no-console
             console.error('DNI: ', data._id.documento, '\n', err.message);
         }
     }
-
     done();
 }
 
