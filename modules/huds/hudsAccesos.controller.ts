@@ -11,7 +11,6 @@ import { HudsAcceso } from './hudsAccesos.schema';
 
 export async function search(filtros) {
     const match = {};
-    const matchOrg = {};
     const fechas = [];
 
     if (filtros.fechaDesde) {
@@ -37,7 +36,7 @@ export async function search(filtros) {
     }
 
     if (filtros.organizacion) {
-        matchOrg['accesos.organizacion.id'] = filtros.organizacion;
+        match['accesos.organizacion.id'] = mongoose.Types.ObjectId(filtros.organizacion);
     }
 
     if (filtros.usuario) {
@@ -79,10 +78,6 @@ export async function search(filtros) {
             }
         }
     ];
-
-    if (filtros.organizacion) {
-        aggregate.splice(2, 0, { $match: matchOrg });
-    }
 
     return await HudsAcceso.aggregate(aggregate);
 

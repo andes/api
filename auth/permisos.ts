@@ -250,7 +250,7 @@ export default [
         avoidAll: true,
         child: [
             { key: 'visualizacionHuds', title: 'Visualización HUDS por paciente', type: 'boolean' },
-            { key: 'efectorHuds', title: 'Visualizar HUDS del paciente por efector', type: 'boolean' },
+            { key: 'soloEfectorActual', title: 'Visualizar HUDS solo de prestaciones realizadas en el efector actual', type: 'boolean' },
             { key: 'impresion', title: 'Imprimir cualquier prestación', type: 'boolean', visibility: 'restricted' },
             { key: 'exportarHuds', title: 'Exportar HUDS de un paciente', type: 'boolean', visibility: 'restricted' }
         ]

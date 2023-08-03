@@ -435,7 +435,7 @@ export async function CDAExists(id, fecha, orgId) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promise<any[]> {
+export function searchByPatient(pacienteId, prestacion, { limit, skip }, org = null): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         const ids = Array.isArray(pacienteId) ? pacienteId : [Types.ObjectId(pacienteId)];
         const CDAFiles = makeFs();
@@ -468,7 +468,10 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
                     });
 
                 }
-                list.push(item.metadata);
+                // Filtramos todos los CDAs del paciente menos los de vacunación.
+                if (org?.toString() === item.metadata.organizacion._id.toString() || item.metadata.prestacion.snomed.conceptId === '33879002') {
+                    list.push(item.metadata);
+                }
             }
 
             return resolve(list);

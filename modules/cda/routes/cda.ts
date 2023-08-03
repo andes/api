@@ -218,10 +218,6 @@ router.get('/paciente/', async (req: any, res, next) => {
  * Devuelve el XML de un CDA según un ID
  */
 router.get('/:id', async (req: any, res, next) => {
-    // if (!Auth.check(req, 'cda:get')) {
-    //     return next(403);
-    // }
-
     const _base64 = Types.ObjectId(req.params.id);
     const CDAFiles = makeFs();
     const contexto = await CDAFiles.findOne({ _id: _base64 });
@@ -293,10 +289,11 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     if (ObjectId.isValid(req.params.id)) {
         const pacienteID = req.params.id;
         const prestacion = req.query.prestacion;
+        const organizacion = req.query.org;
         const paciente: any = await PacienteCtr.findById(pacienteID, {});
 
         if (paciente) {
-            const list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
+            const list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 }, organizacion);
             return res.json(list);
         }
     }
