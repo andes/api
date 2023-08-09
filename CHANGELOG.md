@@ -1,3 +1,10 @@
+# [5.98.0](https://github.com/andes/api/compare/v5.97.0...v5.98.0) (2023-08-09)
+
+
+### Features
+
+* **TOP:** chequear estado previa modificacion ([#1733](https://github.com/andes/api/issues/1733)) ([a76efc8](https://github.com/andes/api/commit/a76efc8a830d96ec747553e4739e42976e6fa064))
+
 # [5.97.0](https://github.com/andes/api/compare/v5.96.0...v5.97.0) (2023-07-26)
 
 
