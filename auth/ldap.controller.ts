@@ -38,6 +38,7 @@ export async function checkPassword(user, password): Promise<any> {
                 ldap.bind(dn, password, (err) => {
 
                     if (err) {
+                        ldap.unbind((err1) => { if (err1) { return resolve('invalid'); } });
                         if (err.name === 'InvalidCredentialsError' || err.name === 'NoSuchObjectError') {
                             return resolve('invalid');
                         } else {
@@ -51,14 +52,17 @@ export async function checkPassword(user, password): Promise<any> {
                         sizeLimit: 1
                     }, (err2, searchResult) => {
                         if (err2) {
+                            ldap.unbind((err1) => { if (err1) { return resolve('invalid'); } });
                             return resolve('invalid');
                         }
 
                         searchResult.on('searchEntry', (entry) => {
+                            ldap.unbind((err1) => { if (err1) { return resolve('invalid'); } });
                             return resolve({ nombre: entry.object.givenName, apellido: entry.object.sn });
                         });
 
                         searchResult.on('error', (err3) => {
+                            ldap.unbind((err1) => { if (err1) { return resolve('invalid'); } });
                             return resolve('invalid');
                         });
                     });
@@ -113,6 +117,7 @@ export async function getUserInfo(documento): Promise<any> {
 
                 ldap.bind('', '', (err) => {
                     if (err) {
+                        ldap.unbind((err1) => { if (err1) { return resolve('invalid'); } });
                         if (err.name === 'InvalidCredentialsError') {
                             return reject();
                         } else {
@@ -126,10 +131,12 @@ export async function getUserInfo(documento): Promise<any> {
                         sizeLimit: 1
                     }, (err2, searchResult) => {
                         if (err2) {
+                            ldap.unbind((err1) => { if (err1) { return resolve('invalid'); } });
                             return reject(false);
                         }
 
                         searchResult.on('searchEntry', (entry) => {
+                            ldap.unbind((err1) => { if (err1) { return resolve('invalid'); } });
                             return resolve({
                                 nombre: entry.object.givenName,
                                 apellido: entry.object.sn,
@@ -140,6 +147,7 @@ export async function getUserInfo(documento): Promise<any> {
                         });
 
                         searchResult.on('error', (err3) => {
+                            ldap.unbind((err1) => { if (err1) { return resolve('invalid'); } });
                             return reject(err3);
                         });
                     });
