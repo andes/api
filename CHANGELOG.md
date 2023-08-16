@@ -1,3 +1,10 @@
+## [5.98.1](https://github.com/andes/api/compare/v5.98.0...v5.98.1) (2023-08-16)
+
+
+### Bug Fixes
+
+* **AUTH:** Cierra la conexion al server ldap ([#1826](https://github.com/andes/api/issues/1826)) ([2da406a](https://github.com/andes/api/commit/2da406a638b3f0bd3ed245d487b724b12f02cb51))
+
 # [5.98.0](https://github.com/andes/api/compare/v5.97.0...v5.98.0) (2023-08-09)
 
 
