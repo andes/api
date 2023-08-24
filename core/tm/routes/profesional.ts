@@ -1212,11 +1212,8 @@ router.post('/profesionales/validar', async (req, res, next) => {
             const valorMatching = new Matching().matchPersonas(profesional, profesionalCompare, mpi.weightsDefault, algoritmo);
 
             if (valorMatching >= 0.95) {
-                const resRenaper = await services.get('renaper').exec({ documento, sexo });
-                if (resRenaper) {
-                    const token = await getTemporyTokenGenerarUsuario(documento);
-                    return res.json({ profesional, token });
-                }
+                const token = await getTemporyTokenGenerarUsuario(documento);
+                return res.json({ profesional, token });
             }
         }
         return next('No se pudo validar el profesional. Por favor revise los datos ingresados.');
