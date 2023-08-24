@@ -5,7 +5,7 @@ import { perinatalFechaFinEmbarazoLog } from '../modules/perinatal/perinatal.log
 import { getPaciente as getPacienteSP } from '../utils/servicioSipPlus';
 import { userScheduler } from '../config.private';
 import moment = require('moment');
-import { ISnomedConcept } from '../modules/rup/schemas/snomed-concept';
+
 
 const fechaFinEmbLog = perinatalFechaFinEmbarazoLog.startTrace();
 
@@ -32,13 +32,9 @@ export async function actualizarRegistro(registroPer: any) {
     const documento = registroPer.paciente.documento;
     if (documento) {
         const resultSP = await getPacienteSP({ documento });
-
         const pacienteSP = resultSP ? resultSP.paciente : null;
-
         if (pacienteSP && registroPer.embarazo && pacienteSP['pregnancies']) {
-
-            const numGesta = getNumGesta(registroPer.embarazo);
-
+            const numGesta = getNumGesta(registroPer.embarazo.conceptId, registroPer.cantidadEmbarazos);
             const embarazoSP = numGesta ? pacienteSP['pregnancies'][numGesta.toString()] : null;
 
             if (embarazoSP) {
@@ -102,14 +98,19 @@ export async function actualizarRegistro(registroPer: any) {
  * @param concepto concepto snomed con el numero de embarazo
  * @returns numero de embarazo
  */
-function getNumGesta(concepto: ISnomedConcept) {
-    const conceptId = concepto.conceptId;
-    const gestas = {
-        29399001: 1, 199719009: 1, 127364007: 1, 53881005: 1,
-        127365008: 2, 127366009: 3, 127367000: 4, 127368005: 5,
-        127369002: 6, 127370001: 7, 127371002: 8, 127372009: 9,
-        127373004: 10
-    };
-    const numGesta = gestas[conceptId] || null;
+function getNumGesta(conceptId: string, cantidadEmbarazos: number) {
+    let numGesta = null;
+    if (conceptId === '127374005') {
+        numGesta = cantidadEmbarazos ? cantidadEmbarazos : null;
+    } else {
+        const gestas = {
+            29399001: 1, 199719009: 1, 127364007: 1, 53881005: 1,
+            127365008: 2, 127366009: 3, 127367000: 4, 127368005: 5,
+            127369002: 6, 127370001: 7, 127371002: 8, 127372009: 9,
+            127373004: 10
+        };
+        numGesta = gestas[conceptId] || null;
+    }
     return numGesta;
 }
+
