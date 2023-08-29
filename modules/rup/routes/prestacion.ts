@@ -582,10 +582,13 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if (data.estados[data.estados.length - 1].tipo === 'validada') {
                         return next('Prestación validada, no se puede volver a validar.');
                     }
-                    if (req.body.estado.tipo === 'anulada' && data.inicio !== 'top') {
-                        const prestacion = await saveEnHistorial(data, req.body.estado, req);
-                        await Prestacion.findOneAndRemove({ _id: data._id });
-                        return res.json(prestacion);
+                    if (req.body.estado.tipo === 'anulada') {
+                        EventCore.emitAsync('rup:prestacion:anular', data);
+                        if (data.inicio !== 'top') {
+                            const prestacion = await saveEnHistorial(data, req.body.estado, req);
+                            await Prestacion.findOneAndRemove({ _id: data._id });
+                            return res.json(prestacion);
+                        }
                     }
                     data.estados.push(req.body.estado);
                     if (req.body.estado.tipo === 'asignada') {
@@ -662,13 +665,14 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
             case 'desasociarTurno':
                 data.solicitud.turno = null;
                 const prestation_back = await saveEnHistorial(data, { tipo: 'anulada' }, req);
+                EventCore.emitAsync('rup:prestacion:anular', data);
                 await Prestacion.findOneAndRemove({ _id: data._id });
                 return res.json(prestation_back);
+
             case 'referir':
                 if (req.body.estado) {
                     data.estados.push();
                 }
-
                 data.solicitud.profesional = req.body.profesional;
                 data.solicitud.organizacion = req.body.organizacion;
                 data.solicitud.tipoPrestacion = req.body.tipoPrestacion;
@@ -699,7 +703,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
             if (data.paciente) {
                 AppCache.clear(`huds-${data.paciente.id}`);
             }
-            if (req.body.estado && req.body.estado.tipo === 'validada') {
+            if (req.body.estado?.tipo === 'validada') {
                 EventCore.emitAsync('rup:prestacion:validate', data);
 
                 // buscarYCrearSolicitudes y saveTurnoProfesional se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
@@ -711,7 +715,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
             }
 
-            if (req.body.estado && req.body.estado.tipo === 'ejecucion') {
+            if (req.body.estado?.tipo === 'ejecucion') {
                 EventCore.emitAsync('rup:prestacion:ejecucion', data);
             }
 
@@ -813,22 +817,22 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacionDoc) => {
 EventCore.on('rup:prestacion:romperValidacion', async (prestacion: IPrestacionDoc) => {
     const elementosRUPSet = await elementosRUPAsSet();
     const elementoRUPPrestacion = elementosRUPSet.getByConcept(prestacion.solicitud.tipoPrestacion);
-    if (elementoRUPPrestacion) {
-        if (elementoRUPPrestacion?.dispatch) {
-            elementoRUPPrestacion.dispatch.forEach(hook => {
-                if (hook.method === 'romper-validacion') {
-                    EventCore.emitAsync(hook.event, prestacion);
-                }
-            });
-        }
+
+    if (elementoRUPPrestacion?.dispatch) {
+        elementoRUPPrestacion.dispatch.forEach(hook => {
+            if (hook.method === 'romper-validacion') {
+                EventCore.emitAsync(hook.event, prestacion);
+            }
+        });
     }
+
     const registros = prestacion.getRegistros(true);
 
     for (const reg of registros) {
         if (reg.elementoRUP) {
 
             const elemento = elementosRUPSet.getByID(reg.elementoRUP);
-            if (elemento && elemento.dispatch) {
+            if (elemento?.dispatch) {
                 elemento.dispatch.forEach(hook => {
                     if (hook.method === 'romper-validacion') {
                         EventCore.emitAsync(hook.event, { prestacion, registro: reg });

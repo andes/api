@@ -6,7 +6,7 @@ import { DICOMInformePDF } from './dicom/informe-encode';
 import { DICOMPaciente } from './dicom/paciente-encode';
 import { DICOMPrestacion } from './dicom/prestacion-encode';
 import { PacsConfigController } from './pacs-config.controller';
-import { createPaciente, createWorkList, enviarInforme, loginPacs } from './pacs-network';
+import { createPaciente, createWorkList, enviarInforme, loginPacs, anularPacs } from './pacs-network';
 
 export async function syncWorkList(prestacion: IPrestacion) {
     try {
@@ -55,7 +55,7 @@ export async function syncWorkList(prestacion: IPrestacion) {
                 { key: 'pacs-config', valor: config.id }
             ];
             if (dataResponse) {
-                arrayMetadata.push({ key: 'pacs-spsID', valor: spsID });
+                arrayMetadata.push({ key: 'pacs-spsID', valor: spsID }); // id de la orden
             }
             await Prestacion.update(
                 query,
@@ -91,6 +91,25 @@ export async function getVisualizadorURL(prestacion: IPrestacion) {
     }
 }
 
+export async function updateWork(metadata: any, estado: string) {
+    try {
+        const { valor: uid } = metadata.find(item => item.key === 'pacs-uid');
+        const { valor: spsId } = metadata.find(item => item.key === 'pacs-spsID');
+        const { valor: configId } = metadata.find(item => item.key === 'pacs-config');
+        const config = await PacsConfigController.findById(configId);
+        if (config) {
+            const token = await loginPacs(config);
+
+            if (estado === 'anular') {
+                await anularPacs(config, uid, spsId, token);
+            }
+        }
+        return null;
+    } catch (err) {
+        return null;
+    }
+}
+
 export async function sendInformePDF(prestacion: IPrestacion) {
     try {
         const { valor: uid } = prestacion.metadata.find(item => item.key === 'pacs-uid');
@@ -119,4 +138,13 @@ export async function sendInformePDF(prestacion: IPrestacion) {
 EventCore.on('rup:prestacion:ejecucion', (prestacion) => {
     syncWorkList(prestacion);
 });
+
+
+EventCore.on('rup:prestacion:anular', (prestacion) => {
+    if (prestacion?.metadata?.length) {
+        const estado = 'anular';
+        updateWork(prestacion.metadata, estado);
+    };
+});
+
 
