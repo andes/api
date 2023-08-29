@@ -170,6 +170,7 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
 router.get('/profesionales/guia', async (req, res, next) => {
     const opciones = {};
 
+    opciones['profesionalMatriculado'] = true;
     if (req.query.documento) {
         opciones['documento'] = req.query.documento;
     }
