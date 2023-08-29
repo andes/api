@@ -170,6 +170,7 @@ router.get('/profesionales/exportSisa', Auth.authenticate(), async (req, res, ne
 router.get('/profesionales/guia', async (req, res, next) => {
     const opciones = {};
 
+    opciones['profesionalMatriculado'] = true;
     if (req.query.documento) {
         opciones['documento'] = req.query.documento;
     }
@@ -195,14 +196,12 @@ router.get('/profesionales/guia', async (req, res, next) => {
     }
 
     if (Object.keys(opciones).length) {
-        opciones['formacionGrado.matriculacion'] = { $ne: null };
-        opciones['profesionalMatriculado'] = true;
-
         const datosGuia: any = await Profesional.find(opciones);
         const resultado = [];
-
         if (datosGuia.length > 0) {
             datosGuia.forEach(element => {
+                const formGradFilter = element.formacionGrado.filter(formGrado => formGrado.matriculacion !== null);
+
                 resultado.push({
                     id: element.id,
                     nombre: element.nombre ? element.nombre : '',
@@ -211,7 +210,7 @@ router.get('/profesionales/guia', async (req, res, next) => {
                     documento: element.documento ? element.documento : '',
                     cuit: element.cuit ? element.cuit : '',
                     nacionalidad: element.nacionalidad ? element.nacionalidad.nombre : '',
-                    profesiones: element.formacionGrado
+                    profesiones: formGradFilter
                 });
             });
         }
