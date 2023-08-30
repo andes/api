@@ -73,7 +73,8 @@ export async function enviarInforme(pacsConfig: IPacsConfig, uid: string, data: 
 
 export async function anularPacs(pacsConfig: IPacsConfig, uid: string, spsId: string, token: string) {
     const fs = require('fs');
-    const url = `${pacsConfig.host}/dcm4chee-arc/aets/DCM4CHEE/rs/mwlitems/${uid}/${spsId}/status/CANCELED`;
+    const aet = pacsConfig.aet;
+    const url = `${pacsConfig.host}/dcm4chee-arc/aets/${aet}/rs/mwlitems/${uid}/${spsId}/status/CANCELED`;
     const [status, body] = await handleHttpRequest({
         method: 'POST',
         url,
@@ -87,7 +88,6 @@ export async function anularPacs(pacsConfig: IPacsConfig, uid: string, spsId: st
     if (status >= 200 && status < 300) {
         return status;
     }
-
     throw new Error(body);
 }
 
