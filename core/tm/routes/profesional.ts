@@ -605,6 +605,10 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
         opciones['profesionalMatriculado'] = true;
     }
 
+    if (req.query.profesionalMatriculado) {
+        opciones['profesionalMatriculado'] = false;
+    }
+
     if (req.query.apellido) {
         opciones['apellido'] = {
             $regex: makePattern(req.query.apellido)
