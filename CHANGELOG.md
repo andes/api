@@ -1,3 +1,10 @@
+## [5.98.2](https://github.com/andes/api/compare/v5.98.1...v5.98.2) (2023-09-06)
+
+
+### Bug Fixes
+
+* **pacs:** se corrige error en url al cambiar estado ([#1829](https://github.com/andes/api/issues/1829)) ([e207a16](https://github.com/andes/api/commit/e207a169a47bc1ccb0c79e02bb2992f8c7bf3cc4))
+
 ## [5.98.1](https://github.com/andes/api/compare/v5.98.0...v5.98.1) (2023-08-16)
 
 
