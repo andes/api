@@ -325,6 +325,18 @@ PrestacionSchema.index({
 }, { name: 'TOP-SALIDA', partialFilterExpression: { inicio: 'top' } });
 
 PrestacionSchema.index({
+    updatedAt: 1,
+    'solicitud.organizacion.id' : 1,
+    'solicitud.organizacionOrigen.id' : 1
+}, { name: 'TOP-ENTRADA-UPDATED', partialFilterExpression: { inicio: 'top' } });
+
+PrestacionSchema.index({
+    updatedAt : 1,
+    'solicitud.organizacionOrigen.id' : 1,
+    'solicitud.organizacion.id' : 1
+}, { name: 'TOP-SALIDA-UPDATED', partialFilterExpression: { inicio: 'top' } });
+
+PrestacionSchema.index({
     'solicitud.organizacion.id': 1,
     'solicitud.ambitoOrigen': 1,
     'solicitud.tipoPrestacion.conceptId': 1,
