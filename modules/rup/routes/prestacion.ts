@@ -583,7 +583,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 break;
             case 'estadoPush':
                 if (req.body.estado) {
-                    // SI LA SALICITUD FUE ANULADA NO SE PUEDE REALIZAR OTRA OPERACION
+                    // SI LA SOLICITUD FUE ANULADA NO SE PUEDE REALIZAR OTRA OPERACION
                     if (data.estadoActual.tipo === 'anulada') {
                         return next('Prestación anulada, no se puede modificar su estado.');
                     }
@@ -602,6 +602,9 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                             return res.json(prestacion);
                         }
                     }
+                    if (req.body.estado.tipo === 'rechazada') {
+                        data.solicitud.organizacion = req.body.organizacion;
+                    }
                     data.estados.push(req.body.estado);
                     if (req.body.estado.tipo === 'asignada') {
                         if (req.body.profesional) {
@@ -614,20 +617,18 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
                 }
-                if (req.body.ejecucion && req.body.ejecucion.fecha) {
+                if (req.body.ejecucion?.fecha) {
                     data.ejecucion.fecha = req.body.ejecucion.fecha;
                 }
-                if (req.body.ejecucion && req.body.ejecucion.organizacion) {
+                if (req.body.ejecucion?.organizacion) {
                     data.ejecucion.organizacion = req.body.ejecucion.organizacion;
                 }
                 if (req.body.prioridad) {
                     data.solicitud.registros[0].valor.solicitudPrestacion.prioridad = req.body.prioridad;
                     data.solicitud.registros[0].markModified('valor');
                 }
-                if (req.body.solicitud) {
-                    if (req.body.solicitud.tipoPrestacion) {
-                        data.solicitud.tipoPrestacion = req.body.solicitud.tipoPrestacion;
-                    }
+                if (req.body.solicitud?.tipoPrestacion) {
+                    data.solicitud.tipoPrestacion = req.body.solicitud.tipoPrestacion;
                 }
 
                 break;
@@ -683,7 +684,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
 
             case 'referir':
                 if (req.body.estado) {
-                    data.estados.push();
+                    data.estados.push({ tipo: 'auditoria', fecha: new Date() });
                 }
                 data.solicitud.profesional = req.body.profesional;
                 data.solicitud.organizacion = req.body.organizacion;
