@@ -103,6 +103,7 @@ export function exportHuds(data, user) {
         updatedAt: moment().toDate(),
         tipoPrestacion: data.tipoPrestacion,
         prestaciones: data.prestaciones,
+        excluye: data.excluye,
         user
     });
     new RoboModel({
