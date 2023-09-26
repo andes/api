@@ -985,14 +985,12 @@ router.post('/profesionales/sms', (req, res, next) => {
 });
 
 router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, next) => {
-    if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
+    if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional') && !req.user.profesional) {
         return next(403);
     }
     try {
         if (req.body.id) {
             const resultado: any = await Profesional.findById(req.body.id);
-
-
             const profesionalOriginal = resultado.toObject();
             for (const key in req.body) {
                 resultado[key] = req.body[key];
