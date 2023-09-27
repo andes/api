@@ -10,6 +10,7 @@ import { ISnomedConcept } from '../schemas/snomed-concept';
 import { EventCore } from '@andes/event-bus';
 import { Auth } from '../../../auth/auth.class';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
+import { internacionCamaEstadosLog as logger } from './internacion.log';
 
 interface INombre {
     _id: ObjectId;
@@ -217,7 +218,8 @@ export async function patchEstados(data: Partial<ICama>, req: Request) {
 
     if (data.esMovimiento) {
         const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
-        cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado);
+        cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado, estadoCama?.idInternacion, data?.idInternacion);
+
     } else {
         // Datos que no deberian cambiar
         delete data['idInternacion'];
@@ -251,6 +253,7 @@ export async function patchEstados(data: Partial<ICama>, req: Request) {
         }
         return nuevoEstado;
     }
+    await logger.info('patchEstados', { info: 'cambio no permitido', fecha: moment().toDate(), estadoAnterior: estadoCama, nuevoEstado: data }, req);
 
     return null;
 }

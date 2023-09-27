@@ -2,8 +2,6 @@ import { Request } from '@andes/api-tool';
 import { MongoMemoryServer } from 'mongodb-memory-server-global';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
-import { Connections } from '../../connections';
-
 
 const sha1 = require('sha1');
 
@@ -20,6 +18,10 @@ export function getFakeRequest(): Request {
         user: {
             usuario: { nombre: 'JUAN' },
             organizacion: { nombre: 'CASTRO' }
+        },
+        ip: '0.0.0.0',
+        connection: {
+            localAddress: '0.0.0.0'
         }
     } as any;
 }
@@ -34,7 +36,6 @@ export function setupUpMongo() {
         mongoServer = await MongoMemoryServer.create();
         const mongoUri = mongoServer.getUri();
         mongoose.connect(mongoUri);
-        Connections.logs = mongoose.connection;
     });
 
     afterAll(async () => {

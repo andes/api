@@ -167,16 +167,6 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdAt).toBeDefined();
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
-        const estados = await patchEstados({
-            organizacion: cama.organizacion,
-            id: idCama,
-            esMovimiento: true,
-            ambito,
-            capa,
-            estado: 'inactiva',
-            fecha: moment().subtract(3, 'minute').toDate()
-        }, REQMock);
-
         let camaEncontrada = await findById({ organizacion: organizacion._id, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
 
@@ -320,7 +310,6 @@ describe('Internacion - camas', () => {
         const fechaNuevaIngreso = moment().add(4, 'hour').toDate();
         const mustBeNull = await changeTime({ organizacion, capa, ambito }, idCama, fechaIngreso, fechaNuevaIngreso, '57f67a7ad86d9f64130a138d', REQMock);
         expect(mustBeNull).toBe(false);
-
     });
 
     test('Fallo de integridad en cama - Inactiva > Ocupada', async () => {

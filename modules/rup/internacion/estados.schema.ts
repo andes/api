@@ -76,9 +76,10 @@ const EstadoSchema = new Schema({
     }
 });
 
-EstadoSchema.methods.check = function (origen, destino) {
+EstadoSchema.methods.check = function (origen, destino, idInternacionOrigen, idInternacionDestino) {
     if (origen === destino) {
-        return true;
+        // true en caso de cambio de UO o cama (no)censable. De lo contrario debería tratarse de estados (y camas) distintos.
+        return (!idInternacionOrigen && !idInternacionDestino) || idInternacionOrigen && idInternacionDestino && idInternacionOrigen === idInternacionDestino;
     }
 
     for (const relacion of this.relaciones) {
