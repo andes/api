@@ -919,7 +919,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
 
 
 router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
-    if (!Auth.check(req, 'matriculaciones:profesionales:postProfesional')) {
+    if (!Auth.check(req, 'matriculaciones:profesionales:postProfesional') && !req.user.profesional) {
         return next(403);
     }
     try {
