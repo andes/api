@@ -167,7 +167,17 @@ describe('Internacion - camas', () => {
         expect(maquinaEstados.createdAt).toBeDefined();
         expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
 
-        let camaEncontrada = await findById({ organizacion: organizacion._id, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
+        const estados = await patchEstados({
+            organizacion: cama.organizacion,
+            id: idCama,
+            esMovimiento: true,
+            ambito,
+            capa,
+            estado: 'inactiva',
+            fecha: moment().subtract(3, 'minute').toDate()
+        }, REQMock);
+
+        let camaEncontrada: any = await findById({ organizacion: organizacion._id, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
         expect(camaEncontrada.estado).toBe('inactiva');
 
         const resultNull = await patchEstados({
@@ -303,7 +313,8 @@ describe('Internacion - camas', () => {
                 term: 'servicio de adicciones',
                 conceptId: '4561000013103',
                 semanticTag: 'medio ambiente'
-            }
+            },
+            idInternacion: '57f67a7ad86d9f64130a138d'
         }, REQMock);
 
 

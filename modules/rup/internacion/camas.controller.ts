@@ -253,7 +253,7 @@ export async function patchEstados(data: Partial<ICama>, req: Request) {
         }
         return nuevoEstado;
     }
-    await logger.info('patchEstados', { info: 'cambio no permitido', fecha: moment().toDate(), estadoAnterior: estadoCama, nuevoEstado: data }, req);
+    logger.info('patchEstados', { info: 'cambio no permitido', fecha: moment().toDate(), estadoAnterior: estadoCama, nuevoEstado: data }, req);
 
     return null;
 }

@@ -29,11 +29,12 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
     const { capa, fecha } = req.query;
 
     let salas = [];
-    if (capa !== 'estadistica' && !req.query.cama && !req.query.idInternacion) {
+    if (capa !== 'estadistica' && !req.query.idInternacion) {
         salas = await SalaComunController.listarSalaComun({
             organizacion: organizacion._id,
             fecha: moment(fecha).toDate(),
-            ambito: req.query.ambito
+            ambito: req.query.ambito,
+            id: req.query.cama
         });
         salas = populateSalaComun(salas);
     }
