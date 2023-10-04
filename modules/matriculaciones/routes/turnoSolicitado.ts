@@ -1,35 +1,36 @@
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import * as express from 'express';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
-
+import { Auth } from '../../../auth/auth.class';
+import { userScheduler } from '../../../config.private';
 const router = express.Router();
 
 router.post('/turnoSolicitados', async (req, res, next) => {
     const doc = req.body.documento;
     const sexo = req.body.sexo;
-    const profesional = await Profesional.findOne({ documento: doc, sexo, profesionalMatriculado: false });
-    if (profesional && profesional._id) {
-        req.body._id = profesional._id;
-        req.body.profesionalMatriculado = true;
-    }
-    const newProfesional = new turnoSolicitado(req.body);
-    newProfesional.save(error => {
-        if (error) {
-            return next('error-turno');
+    try {
+        const profesional = await Profesional.findOne({ documento: doc, sexo, profesionalMatriculado: false });
+        if (profesional?._id) {
+            req.body._id = profesional._id;
+            req.body.profesionalMatriculado = true;
         }
-        res.json(newProfesional);
-    });
+        const newProfesional = new turnoSolicitado(req.body);
+        Auth.audit(newProfesional, userScheduler as any);
+        const saved = await newProfesional.save();
+        res.json(saved);
+    } catch (err) {
+        return next('error-turno');
+    }
 });
 
-router.get('/turnoSolicitados/traePDni/:dni*?', (req: any, res, next) => {
+router.get('/turnoSolicitados/traePDni/:dni*?', async (req: any, res, next) => {
     const dni = req.params.dni;
-    turnoSolicitado.find({ _id: dni }, (err, data) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data[0]);
-    });
-
+    try {
+        const turno = await turnoSolicitado.find({ _id: dni });
+        res.json(turno[0]);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 export = router;

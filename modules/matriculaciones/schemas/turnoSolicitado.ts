@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import { ESTADOCIVIL } from '../../../shared/constantes';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import { EspecialidadSIISASchema, ObjSIISASchema } from '../../../core/tm/schemas/siisa';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -132,4 +133,5 @@ turnoSolicitadoSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
 
+turnoSolicitadoSchema.plugin(AuditPlugin);
 export const turnoSolicitado = mongoose.model('turnoSolicitado', turnoSolicitadoSchema, 'turnoSolicitado');
