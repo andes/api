@@ -48,9 +48,7 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
             carnetExistente.controles = carnetExistente.controles.sort((a, b) => {
                 return new Date(a.fechaControl).getTime() - new Date(b.fechaControl).getTime();
             });
-            if (carnetExistente.fechaProximoControl < fechaProximoControl) {
-                carnetExistente.fechaProximoControl = fechaProximoControl;
-            }
+            carnetExistente.fechaProximoControl = fechaProximoControl;
             carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
             await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
 
@@ -144,10 +142,10 @@ export const proximoCtrol = (prestacion) => {
 export const cargarDatos = (prestacion) => {
     const registros = prestacion.getRegistros(true);
     const datos = {
-        fechaUltimaMenstruacion : registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007'),
-        pesoPrevio : registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003'),
-        talla : registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009'),
-        fechaProbableDeParto : registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006'),
+        fechaUltimaMenstruacion: registros.find(itemRegistro => itemRegistro.concepto.conceptId === '21840007'),
+        pesoPrevio: registros.find(itemRegistro => itemRegistro.concepto.conceptId === '248351003'),
+        talla: registros.find(itemRegistro => itemRegistro.concepto.conceptId === '14456009'),
+        fechaProbableDeParto: registros.find(itemRegistro => itemRegistro.concepto.conceptId === '161714006'),
     };
     return datos;
 };
@@ -156,9 +154,9 @@ export const obtenerCarnetYdatos = async (registro, prestacion) => {
     const embarazo = registro.valor;
     let primeriza;
     if (embarazo.conceptId === '199719009'
-            || embarazo.conceptId === '127364007'
-            || embarazo.conceptId === '29399001'
-            || embarazo.conceptId === '53881005') {
+        || embarazo.conceptId === '127364007'
+        || embarazo.conceptId === '29399001'
+        || embarazo.conceptId === '53881005') {
         primeriza = true;
     }
     const query = {
