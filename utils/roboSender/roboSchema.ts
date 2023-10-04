@@ -27,6 +27,7 @@ export const RoboSchema = new mongoose.Schema({
     // timestamps
     createdAt: Date,
     updatedAt: Date,
+    expiredAt: Date,
 
     // options to send message at certain time
     scheduledAt: Date,

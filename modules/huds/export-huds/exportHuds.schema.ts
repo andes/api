@@ -13,6 +13,7 @@ export const ExportHudsSchema = new mongoose.Schema({
     prestaciones: [mongoose.Schema.Types.ObjectId], // Para el pedido desde el buscador de turnos y prestaciones
     createdAt: Date,
     updatedAt: Date,
+    expiredAt: Date,
     status: {
         type: String,
         enum: ['pending', 'success', 'error', 'canceled', 'completed'],
