@@ -104,7 +104,7 @@ export async function getTokenPayload(token, userData) {
 
 export async function findUser(username) {
     const pAuth = AuthUsers.findOne({ usuario: username });
-    const pProfesional = Profesional.findOne({ documento: username }, { matriculas: true, especialidad: true });
+    const pProfesional = Profesional.findOne({ documento: username, habilitado: true }, { matriculas: true, especialidad: true });
     const [auth, prof] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
         return {
