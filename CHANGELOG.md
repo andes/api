@@ -1,3 +1,10 @@
+## [5.98.3](https://github.com/andes/api/compare/v5.98.2...v5.98.3) (2023-10-04)
+
+
+### Bug Fixes
+
+* **mat:** habilita permisos para firma desde mobile ([#1838](https://github.com/andes/api/issues/1838)) ([d26ac4b](https://github.com/andes/api/commit/d26ac4b2c4e6ff52dc3602dd25629f7e4407e446))
+
 ## [5.98.2](https://github.com/andes/api/compare/v5.98.1...v5.98.2) (2023-09-06)
 
 
