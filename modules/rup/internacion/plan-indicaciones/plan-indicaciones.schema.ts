@@ -12,7 +12,7 @@ export type IPlanIndicacionesDoc = AndesDoc<IPlanIndicaciones>;
 export const PlanIndicacionesEstadoSchema = new Schema({
     tipo: {
         type: String,
-        enum: ['active', 'on-hold', 'cancelled', 'completed', 'entered-in-error', 'stopped', 'draft', 'unknown', 'edited']
+        enum: ['active', 'on-hold', 'cancelled', 'completed', 'entered-in-error', 'stopped', 'draft', 'unknown', 'edited', 'pending']
     },
     fecha: Date,
     observaciones: String,
