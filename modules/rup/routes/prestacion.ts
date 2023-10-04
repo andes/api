@@ -305,7 +305,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         };
 
         if (req.query.paciente && !Types.ObjectId.isValid(req.query.paciente)) {
-            (project.$project as any).datosPaciente = { $concat: ['$paciente.nombre', ' ', '$paciente.apellido', ' ', '$paciente.documento'] };
+            project.$project['datosPaciente'] = { $concat: ['$paciente.nombre', ' ', '$paciente.apellido', ' ', '$paciente.documento',' ', '$paciente.numeroIdentificacion',' ', '$paciente.alias'] };
         }
 
         pipeline.push(project);

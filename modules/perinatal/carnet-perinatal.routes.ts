@@ -18,7 +18,9 @@ class CarnetPerinatalResource extends ResourceBase {
                 $or: [
                     { 'paciente.documento': MongoQuery.partialString(value) },
                     { 'paciente.nombre': MongoQuery.partialString(value) },
-                    { 'paciente.apellido': MongoQuery.partialString(value) }
+                    { 'paciente.apellido': MongoQuery.partialString(value) },
+                    { 'paciente.alias': MongoQuery.partialString(value) },
+                    { 'paciente.numeroIdentificacion': MongoQuery.partialString(value) }
                 ]
             };
         },

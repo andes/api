@@ -93,7 +93,11 @@ export class AgendaBody extends HTMLComponent {
                         <small>
                         {{#if paciente}}
                             {{#if paciente.id}}
-                                {{paciente.apellido}}, {{paciente.nombre}}
+                                {{#if paciente.alias}}
+                                    {{paciente.apellido}}, {{paciente.alias}}
+                                {{else}}
+                                    {{paciente.apellido}}, {{paciente.nombre}}
+                                {{/if}}                                   
                             {{/if}}
                         {{/if}}
                         </small>
