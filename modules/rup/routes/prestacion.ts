@@ -270,8 +270,9 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             let tipoPrestaciones = req.query.tipoPrestaciones;
             tipoPrestaciones = Array.isArray(tipoPrestaciones) ? tipoPrestaciones : [tipoPrestaciones];
             match.$and.push({
-                $or: [{ 'solicitud.tipoPrestacion.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } },
-                      { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
+                $or: [
+                    { 'solicitud.tipoPrestacion.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } },
+                    { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
             });
         }
 
@@ -305,7 +306,14 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         };
 
         if (req.query.paciente && !Types.ObjectId.isValid(req.query.paciente)) {
-            project.$project['datosPaciente'] = { $concat: ['$paciente.nombre', ' ', '$paciente.apellido', ' ', '$paciente.documento',' ', '$paciente.numeroIdentificacion',' ', '$paciente.alias'] };
+            project.$project['datosPaciente'] = {
+                $concat: [
+                    '$paciente.nombre', ' ',
+                    '$paciente.apellido', ' ',
+                    '$paciente.documento', ' ',
+                    { $ifNull: ['$paciente.numeroIdentificacion', ''] }, ' ',
+                    { $ifNull: ['$paciente.alias', ''] }]
+            };
         }
 
         pipeline.push(project);
