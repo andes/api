@@ -282,3 +282,7 @@ function getPermisosByType(tipoPermisos) {
     }
     return permisos;
 }
+
+export async function findUsersByUsername(usernames) {
+    return await AuthUsers.find({ usuario: { $in: usernames } });
+}

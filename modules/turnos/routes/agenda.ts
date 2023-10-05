@@ -1,5 +1,6 @@
 
 import { EventCore } from '@andes/event-bus';
+import { validarProfesionalPrestaciones } from '../../../core/tm/controller/profesional';
 import * as debug from 'debug';
 import * as express from 'express';
 import * as moment from 'moment';
@@ -282,7 +283,9 @@ router.get('/agenda/:id?', (req, res, next) => {
     }
 });
 
-router.post('/agenda', async (req, res, next) => {
+router.post('/agenda', async (req: any, res, next) => {
+    const organizacionId = req.user.organizacion.id;
+    const { profesionales, tipoPrestaciones } = req.body;
     const data: any = new Agenda(req.body);
     Auth.audit(data, req);
     const objetoLog: any = {
@@ -292,11 +295,16 @@ router.post('/agenda', async (req, res, next) => {
         data: {
             horaInicio: req.body.horaInicio,
             horaFin: req.body.horaFin,
-            profesionales: req.body.profesionales,
-            tipoPrestaciones: req.body.tipoPrestaciones
+            profesionales,
+            tipoPrestaciones
         }
     };
     try {
+        const errorPrestaciones = await validarProfesionalPrestaciones(profesionales, tipoPrestaciones.map(p => p._id), organizacionId);
+        if (errorPrestaciones) {
+            return next(errorPrestaciones);
+        }
+
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
         if (!mensajesSolapamiento.tipoError) {
             const dataSaved = await data.save();
@@ -374,7 +382,7 @@ router.post('/agenda/clonar/:idAgenda', async (req, res, next) => {
     }
 });
 
-router.put('/agenda/:id', async (req, res, next) => {
+router.put('/agenda/:id', async (req: any, res, next) => {
     const objetoLog: any = {
         accion: 'Editar Agenda en estado Planificación',
         ruta: req.url,
@@ -384,6 +392,13 @@ router.put('/agenda/:id', async (req, res, next) => {
     objetoLog.data.id = req.params.id;
 
     try {
+        const organizacionId = req.user.organizacion.id;
+        const { profesionales, tipoPrestaciones } = req.body;
+        const errorPrestaciones = await validarProfesionalPrestaciones(profesionales, tipoPrestaciones.map(p => p.id), organizacionId);
+        if (errorPrestaciones) {
+            return next(errorPrestaciones);
+        }
+
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
         if (mensajesSolapamiento.tipoError) {
             objetoLog.err = mensajesSolapamiento;
