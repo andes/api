@@ -43,7 +43,7 @@ async function asociarFirma(idNew: string, idOld: string) {
             const firmaProfesional = await streamToBase64(readStream);
             if (firmaProfesional) {
                 await firma.unlink(fileFirmaViejo._id, (error) => { });
-                return new Promise((resolve, reject) => {
+                await new Promise((resolve, reject) => {
                     firma.writeFile(
                         {
                             filename: 'foto.png',
@@ -82,7 +82,7 @@ async function asociarFoto(idNew: string, idOld: string) {
             const fotoProfesional = await streamToBase64(readStream);
             if (fotoProfesional) {
                 await foto.unlink(fileFotoViejo._id, (error) => { });
-                return new Promise((resolve, reject) => {
+                await new Promise((resolve, reject) => {
                     foto.writeFile(
                         {
                             filename: 'foto.png',
@@ -123,25 +123,28 @@ function streamToBase64(streamData) {
 
 // Función para unificar los arrays de formacionGrado sin profesiones repetidas
 function unificarFormacionGrado(fgViejo, fgNuevo) {
-    const formacionUnificada = [];
-
-    fgViejo.forEach((elemento) => {
-        if (!formacionUnificada.some((elem) => elem.profesion.codigo === elemento.profesion.codigo)) {
-            formacionUnificada.push(elemento);
-        }
-    });
-
-    fgNuevo.forEach(elemento => {
-        const index = formacionUnificada.findIndex((elem) => elem.profesion.codigo === elemento.profesion.codigo);
-        if (index === -1) {
-            formacionUnificada.push(elemento);
-        } else {
-            if (elemento.matriculado && !formacionUnificada[index].matriculado) {
-                formacionUnificada.splice(index, 1, elemento);
+    const formUnica = !fgNuevo ? [] : fgNuevo.map((unaFG) => unaFG);
+    if (fgViejo) {
+        fgViejo.forEach(unaFG => {
+            const index = formUnica.findIndex((elem) => elem.profesion.codigo === unaFG.profesion.codigo);
+            if (index === -1) {
+                formUnica.push(unaFG);
+            } else {
+                // si coincide profesión en ambos profesionales
+                // entonces verifica matricula
+                const noExisteMat = !formUnica[index].matriculado && unaFG.matriculado;
+                // si ambos tienen y es el mismo numero => nos quedamos con la que vence más tarde
+                const matUnif = formUnica[index].matriculacion;
+                const matFG = unaFG.matriculacion;
+                const coincideNum = (matUnif?.length && matFG?.length) && (matUnif[0]?.matriculaNumero === matFG[0]?.matriculaNumero);
+                const faltaMasVencer = coincideNum ? matUnif[matUnif.length - 1]?.fin < matFG[matFG.length - 1]?.fin : null;
+                if (noExisteMat || faltaMasVencer) {
+                    formUnica.splice(index, 1, unaFG);
+                }
             }
-        }
-    });
-    return formacionUnificada;
+        });
+    }
+    return formUnica;
 }
 
 async function run(done) {
@@ -176,61 +179,86 @@ async function run(done) {
         }
     ]);
 
+    const fechaDesde = moment().startOf('year').toDate();
     for (const data of duplicados) {
         // Se crea un nuevo array con los profesionales duplicados ordenados por fecha de creción o de actualización.
-        const dupsSorted = data.dups.sort((a, b) => {
-            const f1 = a.createdAt || a.updatedAt;
-            const f2 = b.createdAt || b.updatedAt;
-            if (f1) {
-                if (f2) {
-                    return moment(f1).diff(moment(f2));
-                } else { return 1; }
-            } else { return -1; }
+        const dupsSorted: any[] = data.dups.sort((a, b) => {
+            // ver de agregar control por daltos de matricula, si tiene los datos de matriculacion
+            const f1 = a.updatedAt || a.createdAt;
+            const f2 = b.updatedAt || b.createdAt;
+            const sort = (f1 && f2) ? moment(f1).diff(moment(f2)) :
+                f1 ? 1 : -1;
+            return sort;
         });
-
-        let profesionalViejo = dupsSorted.shift();
-        let profesionalNuevo = dupsSorted[0];
         // Verificamos si existe un profesionalMatriculado en false.
-        const index = dupsSorted.findIndex(d => !d.profesionalMatriculado);
-        if (index === 0) {
-            profesionalNuevo = dupsSorted.shift();
-            profesionalViejo = dupsSorted[0];
+        const indexNoMat = dupsSorted.findIndex(d => !d.profesionalMatriculado);
+        const indexMat = dupsSorted.findIndex(d => d.profesionalMatriculado);
+        let profesionalNuevo, profesionalViejo;
+        if (indexNoMat !== -1 && indexMat !== -1) {
+            profesionalViejo = dupsSorted[indexNoMat];
+            profesionalNuevo = dupsSorted[indexMat];
+        } else {
+            profesionalViejo = dupsSorted.shift();
+            profesionalNuevo = dupsSorted[0];
         }
         try {
+            // Profesional duplicado con 2 matriculas distintas en una misma profesión
+            let dobleMat = null;
+            if (profesionalNuevo.formacionGrado) {
+                for (const unaFG of profesionalNuevo.formacionGrado) {
+                    const mat1 = unaFG.matriculacion;
+                    dobleMat = profesionalViejo.formacionGrado?.find((elem) => {
+                        const igualProf = elem.profesion?.codigo === unaFG.profesion?.codigo;
+                        const existeMat = igualProf && elem.matriculacion?.length && mat1?.length;
+                        return existeMat ? elem.matriculacion[0].matriculaNumero !== mat1[0].matriculaNumero : false;
+                    });
+                }
+            }
+            if (!dobleMat) {
+                // coincide profesión, entonces verifica matricula:
+                // (no llegaría con dos profesionales con distinta matricula, para igual profesión)
+                const formacionUnificada = unificarFormacionGrado(profesionalViejo.formacionGrado, profesionalNuevo.formacionGrado);
+                profesionalNuevo.formacionGrado = formacionUnificada;
 
-            // Unificamos los arrays de formacionGrado sin repetir la profesiónes que tengan matriculas
-            const formacionUnificada = unificarFormacionGrado(profesionalViejo.formacionGrado, profesionalNuevo.formacionGrado);
-            profesionalNuevo.formacionGrado = formacionUnificada;
+                // Si el duplicado posee firma, se le asocia al profesional activo. Lo mismo con la foto.
+                const firmaPromise = await asociarFirma(profesionalNuevo.id.toString(), profesionalViejo.id.toString());
+                const fotoPromise = await asociarFoto(profesionalNuevo.id.toString(), profesionalViejo.id.toString());
 
-            // Si el duplicado posee firma, se le asocia al profesional activo. Lo mismo con la foto.
-            const firmaPromise = asociarFirma(profesionalNuevo.id.toString(), profesionalViejo.id.toString());
-            const fotoPromise = asociarFoto(profesionalNuevo.id.toString(), profesionalViejo.id.toString());
+                // Se asocian turnos y prestaciones del profesional duplicado al activo
+                // registrados en el último año
+                const agendaPromise = Agenda.updateMany(
+                    {
+                        'profesionales._id': profesionalViejo.id,
+                        horaInicio: { $gte: fechaDesde }
+                    },
+                    { $set: { 'profesionales.$[elemento]._id': profesionalNuevo.id } },
+                    { arrayFilters: [{ 'elemento._id': profesionalViejo.id }] }
+                );
 
-            // Se asocian turnos y prestaciones del profesional duplicado al activo.
-            const agendaPromise = Agenda.updateMany(
-                { 'profesionales._id': profesionalViejo.id },
-                { $set: { 'profesionales.$[elemento]._id': profesionalNuevo.id } },
-                { arrayFilters: [{ 'elemento._id': profesionalViejo.id }] }
-            );
+                const prestacionPromise = Prestacion.updateMany(
+                    {
+                        'solicitud.profesional.id': profesionalViejo.id,
+                        'solicitud.fecha': { $gte: fechaDesde }
+                    },
+                    { $set: { 'solicitud.profesional.id': profesionalNuevo.id } }
+                );
 
-            const prestacionPromise = Prestacion.updateMany(
-                { 'solicitud.profesional.id': profesionalViejo.id },
-                { $set: { 'solicitud.profesional.id': profesionalNuevo.id } }
-            );
+                // Se inactiva el profesional duplicado
+                const profesionalViejoPromise = Profesional.update(
+                    { _id: profesionalViejo.id },
+                    { $set: { activo: false } }
+                );
 
-            // Se inactivan los duplicados
-            const profesionalNuevoPromise = Profesional.update(
-                { _id: profesionalViejo.id },
-                { $set: { activo: false } }
-            );
+                const profesionalNuevoPromise = Profesional.update(
+                    { _id: profesionalNuevo.id },
+                    { $set: { formacionGrado: profesionalNuevo.formacionGrado } }
+                );
 
-            const profesionalViejoPromise = Profesional.update(
-                { _id: profesionalNuevo.id },
-                { $set: { formacionGrado: profesionalNuevo.formacionGrado } }
-            );
-
-            await Promise.all([firmaPromise, agendaPromise, prestacionPromise, profesionalNuevoPromise, profesionalViejoPromise, fotoPromise]);
-
+                await Promise.all([firmaPromise, agendaPromise, prestacionPromise, profesionalNuevoPromise, profesionalViejoPromise, fotoPromise]);
+            } else {
+                // eslint-disable-next-line no-console
+                console.error('Matricula duplicada DNI: ', data._id.documento);
+            }
         } catch (err) {
             // eslint-disable-next-line no-console
             console.error('DNI: ', data._id.documento, '\n', err.message);
