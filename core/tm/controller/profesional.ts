@@ -251,14 +251,15 @@ export async function filtrarProfesionalesPorPrestacion(profesionales, prestacio
 
 export async function validarProfesionalPrestaciones(profesionales, tipoPrestaciones, organizacionId) {
     // es posible que el profesional venga en su versión reducida (sin documento, solo nombre completo e _id). En ese caso recuperamos el prof completo
+    profesionales = profesionales || [];
     profesionales = await Promise.all(profesionales.map(prof => prof.documento ? prof : Profesional.findById(prof.id)));
 
     const profesionalesFiltrados = await filtrarProfesionalesPorPrestacion(profesionales, tipoPrestaciones, organizacionId);
     if (profesionales.length > profesionalesFiltrados.length) {
         const results = profesionales.filter(({ _id: id1 }) => !profesionalesFiltrados.some(({ _id: id2 }) => id2 === id1));
-        const rechazados = results.reduce((p,c, i)=> `${p}${i > 0 ? i < results.length - 1 ? ', ' : ' y ' : ''}${c.nombre} ${c.apellido}`, '');
-        const msgError = `${results.length > 1 ? 'Los profesionales' : 'El profesional' }
-            ${ rechazados } no ${results.length > 1 ? ' poseen' : 'posee' } permisos para las prestaciones seleccionadas`;
+        const rechazados = results.reduce((p, c, i) => `${p}${i > 0 ? i < results.length - 1 ? ', ' : ' y ' : ''}${c.nombre} ${c.apellido}`, '');
+        const msgError = `${results.length > 1 ? 'Los profesionales' : 'El profesional'}
+            ${rechazados} no ${results.length > 1 ? ' poseen' : 'posee'} permisos para las prestaciones seleccionadas`;
         return msgError;
     }
 
