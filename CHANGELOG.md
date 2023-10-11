@@ -1,3 +1,16 @@
+# [5.99.0](https://github.com/andes/api/compare/v5.98.3...v5.99.0) (2023-10-11)
+
+
+### Bug Fixes
+
+* **IN-550:** error al aceptar indicacion ([#1817](https://github.com/andes/api/issues/1817)) ([4c409c3](https://github.com/andes/api/commit/4c409c3bbe4f75a7de5346c7afbefe03d10ef3d6))
+* **TOP:** control en busqueda de paciente ([#1840](https://github.com/andes/api/issues/1840)) ([2ad9380](https://github.com/andes/api/commit/2ad9380518c914bca4a4d3c606df1ed40858ca6f))
+
+
+### Features
+
+* **CIT:** buscar profesionales por prestacion habilitada ([#1741](https://github.com/andes/api/issues/1741)) ([737b54d](https://github.com/andes/api/commit/737b54df7db19cb441e4f7e8f9557dcbcc092c54))
+
 ## [5.98.3](https://github.com/andes/api/compare/v5.98.2...v5.98.3) (2023-10-04)
 
 
