@@ -946,6 +946,29 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
         return next(403);
     }
     try {
+        if (req.body.profesional) {
+            const newProfesional = new Profesional(req.body.profesional);
+            Auth.audit(newProfesional, req);
+            newProfesional.save(async (err2) => {
+                if (err2) {
+                    return next(err2);
+                }
+                EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
+                log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
+                res.json(newProfesional);
+            });
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'matriculaciones:profesionales:postProfesional') && !req.user.profesional) {
+        return next(403);
+    }
+    try {
+
         if (req.body.imagen) {
             const _base64 = req.body.imagen.img;
             const decoder = base64.decode();
@@ -955,7 +978,7 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
             const file = await fotoProf.findOne({
                 'metadata.idProfesional': req.body.imagen.idProfesional
             });
-            if (file && file._id) {
+            if (file?._id) {
                 await fotoProf.unlink(file._id, (error) => { });
             }
             // inserta en la bd en files y chucks
@@ -978,20 +1001,45 @@ router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
             const response = await saveFirma(req.body.firmaAdmin, true);
             res.json(response);
         }
-        if (req.body.profesional) {
-            const newProfesional = new Profesional(req.body.profesional);
-            Auth.audit(newProfesional, req);
-            newProfesional.save(async (err2) => {
-                if (err2) {
-                    return next(err2);
-                }
-                EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
-                log(req, 'profesional:post', null, 'profesional:post', newProfesional, null);
-                res.json(newProfesional);
-            });
+        if (req.body.documentos) {
+            const profesional: any = await Profesional.findById(req.body.documentos.idProfesional);
+            const documento = {
+                fecha: req.body.documentos.data.fecha,
+                tipo: req.body.documentos.data.tipo.label,
+                archivo: req.body.documentos.data.archivo
+            };
+            // console.log('ingresa a patchear documentos: ', documento, ' profesional: ', profesional);
+            profesional?.documentos.push(documento);
+            Auth.audit(profesional, (userScheduler as any));
+            await profesional.save();
+            // resultado.documentos.push(documento);
+            res.json(profesional);
         }
-    } catch (err) {
-        return next(err);
+        if (req.body.domicilios) {
+            const profesional: any = await Profesional.findById(req.body.domicilios.idProfesional);
+
+            if (req.body.domicilios.tipo === 'real') {
+                profesional.domicilios[0].valor = req.body.domicilios?.valor ?? profesional.domicilios[0].valor;
+                profesional.domicilios[0].codigoPostal = req.body.domicilios?.codigoPostal ?? profesional.domicilios[0].codigoPostal;
+                profesional.domicilios[0].ubicacion.pais.nombre = req.body.domicilios?.ubicacion?.pais?.nombre ?? profesional.domicilios[0].ubicacion.pais.nombre;
+                profesional.domicilios[0].ubicacion.provincia.nombre = req.body.domicilios?.ubicacion?.provincia?.nombre ?? profesional.domicilios[0].ubicacion.provincia.nombre;
+                profesional.domicilios[0].ubicacion.localidad.nombre = req.body.domicilios?.ubicacion?.localidad?.nombre ?? profesional.domicilios[0].ubicacion.localidad.nombre;
+            }
+            if (req.body.domicilios.tipo === 'profesional') {
+                profesional.domicilios[2].valor = req.body.domicilios?.valor ?? profesional.domicilios[2].valor;
+                profesional.domicilios[2].codigoPostal = req.body.domicilios?.codigoPostal ?? profesional.domicilios[2].codigoPostal;
+                profesional.domicilios[2].ubicacion.pais.nombre = req.body.domicilios?.ubicacion?.pais?.nombre ?? profesional.domicilios[2].ubicacion.pais.nombre;
+                profesional.domicilios[2].ubicacion.provincia.nombre = req.body.domicilios?.ubicacion?.provincia?.nombre ?? profesional.domicilios[2].ubicacion.provincia.nombre;
+                profesional.domicilios[2].ubicacion.localidad.nombre = req.body.domicilios?.ubicacion?.localidad?.nombre ?? profesional.domicilios[2].ubicacion.localidad.nombre;
+
+            }
+            Auth.audit(profesional, (userScheduler as any));
+            await profesional.save();
+            res.json(profesional);
+        }
+
+    } catch (error) {
+        next(error);
     }
 });
 
