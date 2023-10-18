@@ -1,3 +1,10 @@
+## [5.99.1](https://github.com/andes/api/compare/v5.99.0...v5.99.1) (2023-10-18)
+
+
+### Bug Fixes
+
+* **CITAS:** control al buscar un profesional con permiso por prestacion ([#1843](https://github.com/andes/api/issues/1843)) ([1704a9b](https://github.com/andes/api/commit/1704a9b2759d6b55468c4ef22c0820f4f1e07cc7))
+
 # [5.99.0](https://github.com/andes/api/compare/v5.98.3...v5.99.0) (2023-10-11)
 
 
