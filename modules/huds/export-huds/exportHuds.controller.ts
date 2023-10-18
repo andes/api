@@ -101,16 +101,18 @@ export async function createFile(idExportHuds) {
                 }
             }));
         };
-        const getCdas = () => {
+        const getCdas = (excluye: string[]) => {
             return Promise.all(cdas.map(async (cda: any) => {
-                if (cda.metadata.adjuntos?.length > 0) {
-                    const realName = cda.metadata.adjuntos[0].id;
-                    try {
-                        const fileCda = await getCdaAdjunto(cda, realName);
-                        archive.append(fileCda.stream, { name: `${moment(cda.metadata.fecha).format('YYYY-MM-DD')} - ${cda.metadata.prestacion.snomed.term}.pdf` });
+                if (!excluye.includes(cda.metadata.prestacion.snomed.conceptId)) {
+                    if (cda.metadata.adjuntos?.length > 0) {
+                        const realName = cda.metadata.adjuntos[0].id;
+                        try {
+                            const fileCda = await getCdaAdjunto(cda, realName);
+                            archive.append(fileCda.stream, { name: `${moment(cda.metadata.fecha).format('YYYY-MM-DD')} - ${cda.metadata.prestacion.snomed.term}.pdf` });
 
-                    } catch (error) {
-                        exportHudsLog.error('Crear cda', objectLog, error);
+                        } catch (error) {
+                            exportHudsLog.error('Crear cda', objectLog, error);
+                        }
                     }
                 }
             }));
@@ -120,7 +122,7 @@ export async function createFile(idExportHuds) {
             await getData();
         }
         if (cdas) {
-            await getCdas();
+            await getCdas(peticionExport.excluye);
         }
         archive.finalize();
     });
