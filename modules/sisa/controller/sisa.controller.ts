@@ -106,6 +106,24 @@ export async function altaEvento(altaEventoCasoNominal) {
     }
 }
 
+export async function altaEventoV2(altaEventoCasoNominal) {
+    let response = null;
+
+    try {
+        response = await services.get('SISA-WS400-v2').exec({ altaEventoCasoNominal });
+
+        if (response.status !== 'OK') {
+            throw new Error(response.description || 'error export SISA ws400');
+        }
+
+        return response;
+    } catch (e) {
+        await logSisa.error('sisa:export:evento', { params: altaEventoCasoNominal, response }, e.message, userScheduler);
+
+        return false;
+    }
+}
+
 export async function altaMuestra(dtoMuestra) {
     let response = null;
     try {

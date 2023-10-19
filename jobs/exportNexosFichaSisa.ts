@@ -1,14 +1,8 @@
 import * as moment from 'moment';
 import { InformacionExportada } from '../core/log/schemas/logExportaInformacion';
-import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-epidemiologia-schema';
-import { handleHttpRequest } from '../utils/requestHandler';
-import { sisa } from './../config.private';
 import { SECCION_CLASIFICACION } from '../modules/forms/forms-epidemiologia/constantes';
-import { altaDeterminacion, altaMuestra, getEventoId } from '../modules/sisa/controller/sisa.controller';
-
-const user = sisa.user_snvs;
-const clave = sisa.password_snvs;
-const urlSisa = sisa.url_snvs;
+import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-epidemiologia-schema';
+import { altaDeterminacion, altaEventoV2, altaMuestra, getEventoId } from '../modules/sisa/controller/sisa.controller';
 
 export async function exportSisaFicha(done, horas, desde, hasta) {
     const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
@@ -131,6 +125,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
     ];
 
     const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
+
     for (const unaFicha of fichas) {
         const documento = unaFicha.Paciente_documento;
         const idEvento = getEventoId(unaFicha.requerimientoCuidado);
@@ -139,20 +134,30 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
 
         if (documento) {
             const eventoNominal = {
-                idTipodoc: '1',
-                nrodoc: documento,
-                sexo: unaFicha.Paciente_sexo === 'femenino' ? 'F' : (unaFicha.Paciente_sexo === 'masculino') ? 'M' : '',
-                fechaNacimiento: unaFicha.Paciente_fec_nacimiento,
-                idGrupoEvento: '113',
-                idEvento,
-                idEstablecimientoCarga,
-                fechaPapel: unaFicha.Fecha_Ficha,
-                idClasificacionManualCaso: unaFicha.clasificacion === 'Antígeno' ? '898' : ''
-            };
-            const dto = {
-                usuario: user,
-                clave,
-                altaEventoCasoNominal: eventoNominal
+                ciudadano: {
+                    apellido: unaFicha.Paciente_apellido,
+                    nombre: unaFicha.Paciente_nombre,
+                    tipoDocumento: '1',
+                    numeroDocumento: unaFicha.Paciente_documento,
+                    sexo: unaFicha.Paciente_sexo === 'femenino' ? 'F' : (unaFicha.Paciente_sexo === 'masculino') ? 'M' : '',
+                    fechaNacimiento: unaFicha.Paciente_fec_nacimiento,
+                    seDeclaraPuebloIndigena: 'No',
+                    paisEmisionTipoDocumento: null,
+                    telefono: null,
+                    mail: null,
+                    personaACargo: {
+                        tipoDocumento: null,
+                        numeroDocumento: null,
+                        vinculo: null
+                    }
+                },
+                eventoCasoNominal: {
+                    idGrupoEvento: '113',
+                    idEvento,
+                    idEstablecimientoCarga,
+                    fechaPapel: unaFicha.Fecha_Ficha,
+                    idClasificacionManualCaso: unaFicha.clasificacion === 'Antígeno' ? '898' : ''
+                }
             };
             const log = {
                 fecha: new Date(),
@@ -162,30 +167,18 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                 info_enviada: eventoNominal,
                 resultado: {}
             };
-            if (dto.altaEventoCasoNominal.idClasificacionManualCaso) {
+
+            if (eventoNominal.eventoCasoNominal.idClasificacionManualCaso) {
                 try {
-                    const options = {
-                        uri: urlSisa,
-                        method: 'POST',
-                        body: dto,
-                        headers: {
-                            APP_ID: sisa.APP_ID_ALTA,
-                            APP_KEY: sisa.APP_KEY_ALTA,
-                            'Content-Type': 'application/json'
-                        },
-                        json: true,
-                    };
+                    const response = await altaEventoV2(eventoNominal);
 
-                    const [status, resJson] = await handleHttpRequest(options);
-
-                    if (status >= 200 && status <= 299) {
-
-                        const id_caso = resJson.id_caso ? resJson.id_caso : '';
+                    if (response) {
+                        const id_caso = response.id_caso ? response.id_caso : '';
 
                         log.resultado = {
-                            resultado: resJson.resultado ? resJson.resultado : '',
+                            resultado: response.resultado ? response.resultado : '',
                             id_caso,
-                            description: resJson.description ? resJson.description : ''
+                            description: response.description ? response.description : ''
                         };
 
                         const confirmacionMuestra = await confirmarMuestra(unaFicha, idSisa, id_caso);
@@ -214,6 +207,7 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                         };
                     }
                     const info = new InformacionExportada(log);
+
                     await info.save();
 
                 } catch (error) {
