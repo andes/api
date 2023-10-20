@@ -1,14 +1,25 @@
 import { userScheduler } from '../config.private';
+import * as mongoose from 'mongoose';
 import { Profesional } from '../core/tm/schemas/profesional';
-import * as provincia from '../core/tm/schemas/provincia_model';
 import * as localidad from '../core/tm/schemas/localidad';
 import { Auth } from '../auth/auth.class';
+import { removeDiacritics } from '../utils/utils';
+/*
+El esquema original no contempla el codigo de provincia, por eso creamos un esquema nuevo de solo consulta
+*/
+const provinciaSchema = new mongoose.Schema({
+    _id: String,
+    nombre: String,
+    codigo: Number
+});
+const provinciaAUX = mongoose.model('provinciaAUX', provinciaSchema, 'provincia');
 
 /*  Corrige domicilios de profesional con valor null y ubicaciones sin ids o ids erroneos
     Aclaración: Se asume que el domicilio legal existe y está completo (Ya que no debería faltar en ningun caso. Chequeado en DB al 09/23)
 */
 async function run(done) {
-    const provincias = await provincia.find();
+    const provincias = await provinciaAUX.find();
+    const localidades = await localidad.find();
     const cursor = Profesional.find({ profesionalMatriculado: true }).cursor({ batchSize: 100 });
     const update = async (profesional) => {
         try {
@@ -27,10 +38,12 @@ async function run(done) {
                     domicilio.codigoPostal = '';
                     hadChanges = true;
                 }
+                let provAux: any = null;
                 // existe nombre de provincia (puede no existir _id o ser incorrecto)
                 if (domicilio.ubicacion.provincia?.nombre?.length) {
                     // parchamos con id correspondiente segun coleccion 'provincia' ya que existen errores
-                    domicilio.ubicacion.provincia = provincias.find((prov: any) => prov.nombre.toLowerCase() === domicilio.ubicacion.provincia.nombre.toLowerCase()) || null;
+                    provAux = provincias.find((prov: any) => prov.nombre.toLowerCase() === domicilio.ubicacion.provincia.nombre.toLowerCase());
+                    domicilio.ubicacion.provincia = provAux || null;
                     hadChanges = true;
                 } else {
                     domicilio.ubicacion.provincia = null;
@@ -42,10 +55,12 @@ async function run(done) {
                     hadChanges = true;
                 }
                 // existe nombre de localidad (puede no existir _id o ser incorrecto)
-                if (domicilio.ubicacion.provincia && domicilio.ubicacion.localidad?.nombre?.length) {
-                    const locRegex = new RegExp(domicilio.ubicacion.localidad.nombre, 'i');
-                    const locFound = await localidad.find({ nombre: locRegex, 'provincia._id': domicilio.ubicacion.provincia.id });
-                    domicilio.ubicacion.localidad = locFound[0] || null;
+                if (provAux && domicilio.ubicacion.provincia && domicilio.ubicacion.localidad?.nombre?.length) {
+                    const locFound = localidades.find((e: any) =>
+                        removeDiacritics(e.nombre.trim().toLocaleLowerCase()) === removeDiacritics(domicilio.ubicacion.localidad.nombre.trim().toLocaleLowerCase())
+                        && ((e.provincia && e.provincia.id === domicilio.ubicacion.provincia._id) || (e.codigoProvincia === provAux.codigo))
+                    );
+                    domicilio.ubicacion.localidad = locFound || null;
                     hadChanges = true;
                 } else {
                     domicilio.ubicacion.localidad = null;
