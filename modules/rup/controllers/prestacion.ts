@@ -199,11 +199,13 @@ export async function saveEnHistorial(prestacion, estado, req) {
 }
 
 export async function vencimientoPrestacion(done) {
-
     try {
         const fechaLimite = moment().subtract(1, 'years').toDate();
+        let fechaInicio = moment().subtract(3, 'years').toDate();
+        fechaInicio = moment(fechaInicio).subtract(2, 'months').toDate();
         const query = {
-            'solicitud.fecha': { $lte: fechaLimite },
+            createdAt: { $gte: fechaInicio, $lte: fechaLimite }
+            ,
             $or: [
                 { 'estadoActual.tipo': 'pendiente', 'solicitud.turno': { $eq: null } },
                 { 'estadoActual.tipo': 'auditoria' }
@@ -219,6 +221,4 @@ export async function vencimientoPrestacion(done) {
     } catch (error) {
         return error;
     }
-
-
 }
