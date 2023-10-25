@@ -1,3 +1,12 @@
+# [5.100.0](https://github.com/andes/api/compare/v5.99.1...v5.100.0) (2023-10-25)
+
+
+### Features
+
+* **EP:** reemplaza versiones de alta evento SISA ([#1824](https://github.com/andes/api/issues/1824)) ([0e1e29c](https://github.com/andes/api/commit/0e1e29cc4123077d9184a25f29e427a2a58711a1))
+* **HUDS:** agrega filtro de CDAs al exportar HUDS ([#1834](https://github.com/andes/api/issues/1834)) ([08f5c18](https://github.com/andes/api/commit/08f5c18a3551a69b590b05dc11a957e9452cbb62))
+* se agrega nueva condición de filtro ([#1831](https://github.com/andes/api/issues/1831)) ([b0669cb](https://github.com/andes/api/commit/b0669cbdcfcf32faca076a5f3fb9e53e521a5546))
+
 ## [5.99.1](https://github.com/andes/api/compare/v5.99.0...v5.99.1) (2023-10-18)
 
 
