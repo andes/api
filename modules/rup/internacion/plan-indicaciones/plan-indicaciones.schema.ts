@@ -21,6 +21,7 @@ export const PlanIndicacionesEstadoSchema = new Schema({
             type: String,
             enum: ['aceptada', 'rechazada']
         },
+        key: String,
         motivoRechazo: String
     }
 }, { _id: false });
