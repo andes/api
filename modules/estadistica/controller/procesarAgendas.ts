@@ -191,9 +191,9 @@ export async function procesar(parametros: any) {
                         ' ',
                         '$turno.paciente.documento',
                         ' ',
-                        '$turno.paciente.alias',
+                        { $ifNull: ['$turno.paciente.alias', ''] }, ' ',
                         ' ',
-                        '$turno.paciente.numeroIdentificacion'
+                        { $ifNull: ['$turno.paciente.numeroIdentificacion', ''] }, ' ',
                     ]
                 }
             }
