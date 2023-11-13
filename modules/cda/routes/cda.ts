@@ -362,7 +362,7 @@ async function createCDA(req, res, next) {
     const prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
     if (!prestacion) {
         // Es obligatorio que posea prestación
-        return next({ error: `prestacion_invalida ${req.body.tipoPrestacion}` });
+        return next(`prestacion_invalida ${req.body.tipoPrestacion}`);
     }
     const cie10Code = req.body.cie10;
     const file: string = req.body.file;
@@ -378,7 +378,7 @@ async function createCDA(req, res, next) {
                 { codigo: cie10Code + '.8' }]
         });
         if (!cie10) {
-            return next({ error: `cie10_invalid  ${cie10Code}` });
+            return next(`cie10_invalid  ${cie10Code}`);
         }
     }
     let confidencialidad = 'N';
@@ -388,7 +388,7 @@ async function createCDA(req, res, next) {
 
     const paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
     if (!paciente) {
-        return next({ error: 'paciente_inexistente' });
+        return next('paciente_inexistente');
     }
     const uniqueId = String(new ObjectId());
 
@@ -406,7 +406,7 @@ async function createCDA(req, res, next) {
                 };
                 adjuntos = [{ path: fileData.data, id: ObjectId(fileData.id), adapter: 'drive' }];
             } else {
-                return next({ error: 'file_not_exists' });
+                return next('file_not_exists');
             }
         } else {
             const fileObj: any = cdaCtr.base64toStream(file);
