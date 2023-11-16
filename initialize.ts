@@ -112,6 +112,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').TipoTrasladoRouter);
     app.use('/api/modules/com', require('./modules/centroOperativoMedico').ReglasDerivacionRouter);
     app.use('/api/modules/perinatal', require('./modules/perinatal').CarnetPerinatalRouter);
+    app.use('/api/modules/huds/motivosHuds', require('./modules/huds/motivosHuds').MotivosHudsRouter);
     app.use('/api/core-v2/mpi', MPI.RoutingMPI);
     app.use('/api/modules/forms/forms-epidemiologia', require('./modules/forms/').FormEpidemiologiaRouter);
     app.use('/api/modules/forms/forms-epidemiologia', require('./modules/forms/').FormHistoryRouter);
