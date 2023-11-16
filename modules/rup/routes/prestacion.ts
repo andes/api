@@ -474,6 +474,10 @@ router.get('/prestaciones', async (req: any, res, next) => {
         query.where('solicitud.ambitoOrigen').equals(req.query.ambitoOrigen);
     }
 
+    if (req.query.efectorRestringido) {
+        query.where('ejecucion.organizacion.id').equals(req.query.efectorRestringido);
+    }
+
     // Ordenar por fecha de solicitud
     if (req.query.ordenFecha) {
         query.sort({ 'solicitud.fecha': -1 });
