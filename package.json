@@ -1,189 +1,189 @@
 {
-  "name": "api",
-  "version": "5.102.1",
-  "description": "API para ANDES",
-  "main": "index.js",
-  "dependencies": {
-    "@agm/core": "^1.0.0-beta.5",
-    "@andes/api-tool": "^2.5.0",
-    "@andes/core": "^1.13.0",
-    "@andes/drive": "file:packages/drive",
-    "@andes/etl": "^0.1.1",
-    "@andes/event-bus": "file:packages/event-bus",
-    "@andes/fhir": "^1.8.3",
-    "@andes/fuentes-autenticas": "^1.0.9",
-    "@andes/georeference": "^1.0.2",
-    "@andes/log": "^2.2.5",
-    "@andes/match": "^1.1.12",
-    "@andes/mongoose-plugin-audit": "^1.2.0",
-    "@andes/mongoose-token-search": "^1.0.0",
-    "@andes/services": "^0.3.3",
-    "@types/async": "^2.0.49",
-    "@types/bcrypt-nodejs": "0.0.30",
-    "@types/core-js": "^0.9.36",
-    "@types/debug": "0.0.30",
-    "@types/express": "^4.0.35",
-    "@types/google-maps": "^3.2.0",
-    "@types/node-sass": "^3.10.32",
-    "@types/ws": "^3.0.2",
-    "aggregate-error": "^1.0.0",
-    "apg": "^3.1.1",
-    "apg-lib": "^3.2.0",
-    "archiver": "^5.0.2",
-    "async": "^2.4.0",
-    "base64-mongo-id": "^2.0.1",
-    "base64-stream": "^0.1.3",
-    "bcrypt-nodejs": "0.0.3",
-    "body-parser": "^1.18.3",
-    "bson": "^3.0.0",
-    "cheerio": "^1.0.0-rc.2",
-    "concurrently": "^3.1.0",
-    "debug": "^3.0.0",
-    "elastic-apm-node": "^3.26.0",
-    "events": "^1.1.1",
-    "express": "^4.16.3",
-    "express-http-proxy": "^1.6.0",
-    "express-query-boolean": "^2.0.0",
-    "fast-csv": "^2.5.0",
-    "geojson": "^0.4.1",
-    "gridfs-stream": "^1.1.1",
-    "handlebars": "^4.1.0",
-    "html-pdf": "^2.2.0",
-    "http": "0.0.0",
-    "http-status-codes": "^1.1.6",
-    "into-stream": "^5.0.0",
-    "ipaddr.js": "^1.7.0",
-    "is-reachable": "^2.3.2",
-    "json-rules-engine": "^6.0.0",
-    "jsonwebtoken": "^8.2.1",
-    "ldapjs": "^1.0.1",
-    "libxmljs2": "^0.29.0",
-    "mime-db": "^1.29.0",
-    "mime-types": "^2.1.24",
-    "moment": "^2.19.3",
-    "mongoose": "^5.10.9",
-    "mongoose-fuzzy-searching": "^1.3.1",
-    "mongoose-gridfs": "^1.2.48",
-    "mssql": "^4.1.0",
-    "node-pushnotifications": "^1.0.18",
-    "node-sass": "^7.0.0",
-    "node-schedule": "^1.2.4",
-    "nodemailer": "^6.9.1",
-    "passport": "^0.3.2",
-    "passport-jwt": "^4.0.0",
-    "pdfkit": "^0.9.0",
-    "phantomjs-prebuilt-that-works": "^3.0.1",
-    "request": "^2.83.0",
-    "require-dir": "^0.3.0",
-    "sha1": "^1.1.1",
-    "sharp": "^0.29.3",
-    "shiro-trie": "^0.3.12",
-    "soap": "^0.24.0",
-    "socket.io": "^2.0.4",
-    "socket.io-redis": "^5.2.0",
-    "stream": "0.0.2",
-    "supports-color": "^4.2.1",
-    "swagger-jsdoc": "^4.0.0",
-    "twitter": "^1.7.1",
-    "typescript": "^4.5.5",
-    "ws": "^3.2.0",
-    "xmlbuilder": "^9.0.4",
-    "xmldom": "^0.1.27",
-    "xmljson": "^0.2.0"
-  },
-  "scripts": {
-    "startNode": "tsc && gulp && concurrently \"npm run node\" ",
-    "start": "DEBUG=andes concurrently -r \"npm run tsc:w\" \"npm run node\" ",
-    "node": "nodemon -q ./index.js",
-    "tsc": "tsc",
-    "tsc:w": "tsc -w",
-    "tsc:next": "tsc --target es2018 --lib es2018",
-    "jobs": "tsc && node jobs/scheduler.js",
-    "lint": "eslint -c .eslintrc.js --ext .ts .",
-    "lint:fix": "eslint -c .eslintrc.js --ext .ts . --fix",
-    "test": "jest",
-    "testing": "NODE_ENV=test npm start",
-    "docker:up": "docker-compose -p andes_dev up -d ",
-    "docker:down": "docker-compose -p andes_dev down",
-    "docker:seed": "./seed.sh"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/andes/api.git"
-  },
-  "author": "Team Andes",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/andes/api/issues"
-  },
-  "release": {
-    "branches": [
-      {
-        "name": "master"
-      }
-    ],
-    "plugins": [
-      [
-        "@semantic-release/commit-analyzer",
-        {
-          "preset": "angular",
-          "releaseRules": [
+    "name": "api",
+    "version": "5.102.1",
+    "description": "API para ANDES",
+    "main": "index.js",
+    "dependencies": {
+        "@agm/core": "^1.0.0-beta.5",
+        "@andes/api-tool": "^2.5.0",
+        "@andes/core": "^1.13.0",
+        "@andes/drive": "file:packages/drive",
+        "@andes/etl": "^0.1.1",
+        "@andes/event-bus": "file:packages/event-bus",
+        "@andes/fhir": "^1.8.3",
+        "@andes/fuentes-autenticas": "^1.0.9",
+        "@andes/georeference": "^1.0.2",
+        "@andes/log": "^2.2.5",
+        "@andes/match": "^1.1.12",
+        "@andes/mongoose-plugin-audit": "^1.2.0",
+        "@andes/mongoose-token-search": "^1.0.0",
+        "@andes/services": "^0.3.3",
+        "@types/async": "^2.0.49",
+        "@types/bcrypt-nodejs": "0.0.30",
+        "@types/core-js": "^0.9.36",
+        "@types/debug": "0.0.30",
+        "@types/express": "^4.0.35",
+        "@types/google-maps": "^3.2.0",
+        "@types/node-sass": "^3.10.32",
+        "@types/ws": "^3.0.2",
+        "aggregate-error": "^1.0.0",
+        "apg": "^3.1.1",
+        "apg-lib": "^3.2.0",
+        "archiver": "^5.0.2",
+        "async": "^2.4.0",
+        "base64-mongo-id": "^2.0.1",
+        "base64-stream": "^0.1.3",
+        "bcrypt-nodejs": "0.0.3",
+        "body-parser": "^1.18.3",
+        "bson": "^3.0.0",
+        "cheerio": "^1.0.0-rc.2",
+        "concurrently": "^3.1.0",
+        "debug": "^3.0.0",
+        "elastic-apm-node": "^3.26.0",
+        "events": "^1.1.1",
+        "express": "^4.16.3",
+        "express-http-proxy": "^1.6.0",
+        "express-query-boolean": "^2.0.0",
+        "fast-csv": "^2.5.0",
+        "geojson": "^0.4.1",
+        "gridfs-stream": "^1.1.1",
+        "handlebars": "^4.1.0",
+        "html-pdf": "^2.2.0",
+        "http": "0.0.0",
+        "http-status-codes": "^1.1.6",
+        "into-stream": "^5.0.0",
+        "ipaddr.js": "^1.7.0",
+        "is-reachable": "^2.3.2",
+        "json-rules-engine": "^6.0.0",
+        "jsonwebtoken": "^8.2.1",
+        "ldapjs": "^1.0.1",
+        "libxmljs2": "^0.29.0",
+        "mime-db": "^1.29.0",
+        "mime-types": "^2.1.24",
+        "moment": "^2.19.3",
+        "mongoose": "^5.10.9",
+        "mongoose-fuzzy-searching": "^1.3.1",
+        "mongoose-gridfs": "^1.2.48",
+        "mssql": "^4.1.0",
+        "node-pushnotifications": "^1.0.18",
+        "node-sass": "^7.0.0",
+        "node-schedule": "^1.2.4",
+        "nodemailer": "^6.9.1",
+        "passport": "^0.3.2",
+        "passport-jwt": "^4.0.0",
+        "pdfkit": "^0.9.0",
+        "phantomjs-prebuilt-that-works": "^3.0.1",
+        "request": "^2.83.0",
+        "require-dir": "^0.3.0",
+        "sha1": "^1.1.1",
+        "sharp": "^0.29.3",
+        "shiro-trie": "^0.3.12",
+        "soap": "^0.24.0",
+        "socket.io": "^2.0.4",
+        "socket.io-redis": "^5.2.0",
+        "stream": "0.0.2",
+        "supports-color": "^4.2.1",
+        "swagger-jsdoc": "^4.0.0",
+        "twitter": "^1.7.1",
+        "typescript": "^4.5.5",
+        "ws": "^3.2.0",
+        "xmlbuilder": "^9.0.4",
+        "xmldom": "^0.1.27",
+        "xmljson": "^0.2.0"
+    },
+    "scripts": {
+        "startNode": "tsc && gulp && concurrently \"npm run node\" ",
+        "start": "DEBUG=andes concurrently -r \"npm run tsc:w\" \"npm run node\" ",
+        "node": "nodemon -q ./index.js",
+        "tsc": "tsc",
+        "tsc:w": "tsc -w",
+        "tsc:next": "tsc --target es2018 --lib es2018",
+        "jobs": "tsc && node jobs/scheduler.js",
+        "lint": "eslint -c .eslintrc.js --ext .ts .",
+        "lint:fix": "eslint -c .eslintrc.js --ext .ts . --fix",
+        "test": "jest",
+        "testing": "NODE_ENV=test npm start",
+        "docker:up": "docker-compose -p andes_dev up -d ",
+        "docker:down": "docker-compose -p andes_dev down",
+        "docker:seed": "./seed.sh"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/andes/api.git"
+    },
+    "author": "Team Andes",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/andes/api/issues"
+    },
+    "release": {
+        "branches": [
             {
-              "type": "refactor",
-              "release": "patch"
-            },
-            {
-              "type": "chore",
-              "release": "patch"
+                "name": "master"
             }
-          ],
-          "parserOpts": {
-            "noteKeywords": [
-              "BREAKING CHANGE",
-              "BREAKING CHANGES"
-            ]
-          }
-        }
-      ],
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/changelog",
-      [
-        "@semantic-release/github",
-        {
-          "successComment": false,
-          "failComment": false
-        }
-      ],
-      [
-        "@semantic-release/npm",
-        {
-          "npmPublish": false
-        }
-      ],
-      "@semantic-release/git"
-    ]
-  },
-  "homepage": "https://github.com/andes/api#readme",
-  "devDependencies": {
-    "@semantic-release/changelog": "^5.0.1",
-    "@semantic-release/git": "^9.0.0",
-    "@types/jest": "^24.0.22",
-    "@types/mongoose": "^5.7.36",
-    "@types/node": "^14.11.9",
-    "@types/request": "^2.48.5",
-    "@typescript-eslint/eslint-plugin": "^4.29.0",
-    "@typescript-eslint/eslint-plugin-tslint": "^4.29.0",
-    "@typescript-eslint/parser": "^4.33.0",
-    "before": "0.0.1",
-    "chai": "^4.1.2",
-    "eslint": "^7.32.0",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-prefer-arrow": "^1.2.3",
-    "jest": "^24.9.0",
-    "mongodb-memory-server-global": "^8.4.0",
-    "nodemon": "^1.17.4",
-    "semantic-release": "^17.0.8",
-    "ts-jest": "^24.1.0",
-    "tslint-eslint-rules": "^4.1.1"
-  }
+        ],
+        "plugins": [
+            [
+                "@semantic-release/commit-analyzer",
+                {
+                    "preset": "angular",
+                    "releaseRules": [
+                        {
+                            "type": "refactor",
+                            "release": "patch"
+                        },
+                        {
+                            "type": "chore",
+                            "release": "patch"
+                        }
+                    ],
+                    "parserOpts": {
+                        "noteKeywords": [
+                            "BREAKING CHANGE",
+                            "BREAKING CHANGES"
+                        ]
+                    }
+                }
+            ],
+            "@semantic-release/release-notes-generator",
+            "@semantic-release/changelog",
+            [
+                "@semantic-release/github",
+                {
+                    "successComment": false,
+                    "failComment": false
+                }
+            ],
+            [
+                "@semantic-release/npm",
+                {
+                    "npmPublish": false
+                }
+            ],
+            "@semantic-release/git"
+        ]
+    },
+    "homepage": "https://github.com/andes/api#readme",
+    "devDependencies": {
+        "@semantic-release/changelog": "^5.0.1",
+        "@semantic-release/git": "^9.0.0",
+        "@types/jest": "^24.0.22",
+        "@types/mongoose": "^5.7.36",
+        "@types/node": "^14.11.9",
+        "@types/request": "^2.48.5",
+        "@typescript-eslint/eslint-plugin": "^4.29.0",
+        "@typescript-eslint/eslint-plugin-tslint": "^4.29.0",
+        "@typescript-eslint/parser": "^4.33.0",
+        "before": "0.0.1",
+        "chai": "^4.1.2",
+        "eslint": "^7.32.0",
+        "eslint-plugin-import": "^2.23.4",
+        "eslint-plugin-prefer-arrow": "^1.2.3",
+        "jest": "^24.9.0",
+        "mongodb-memory-server-global": "^8.4.0",
+        "nodemon": "^1.17.4",
+        "semantic-release": "^17.0.8",
+        "ts-jest": "^24.1.0",
+        "tslint-eslint-rules": "^4.1.1"
+    }
 }

@@ -595,6 +595,13 @@ router.get('/profesionales/:id', Auth.authenticate(), async (req, res, next) => 
 router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
     const opciones = {};
     let query;
+    if (req.query.fechaDesde || req.query.fechaHasta) {
+        opciones['$and'] = [
+            { updatedAt: { $gte: req.query.fechaDesde || moment().startOf('day').toDate() } },
+            { updatedAt: { $lte: req.query.fechaHasta || moment().endOf('day').toDate() } }
+        ];
+    }
+
     if (req.query.nombre) {
         opciones['nombre'] = {
             $regex: makePattern(req.query.nombre)
