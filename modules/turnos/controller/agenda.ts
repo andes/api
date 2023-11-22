@@ -120,6 +120,9 @@ export async function liberarTurno(req, data, turno) {
             turnoDoble.updatedBy = req.user.usuario || req.user;
         }
 
+        const hoy = new Date();
+        const tomorrow = moment(new Date()).add(1, 'days');
+
         switch (turno.tipoTurno) {
             case ('delDia'):
                 data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
@@ -128,17 +131,40 @@ export async function liberarTurno(req, data, turno) {
                 data.bloques[position.indexBloque].restantesGestion = 0;
                 break;
             case ('programado'):
-                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                if (moment(data.horaInicio).isSame(hoy, 'day')) {
+                    data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                } else {
+                    data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                }
                 if (this.esVirtual(turno.emitidoPor)) {
                     data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
                 }
                 turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
                 break;
             case ('profesional'):
-                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
+                    if (moment(data.horaInicio).isSame(hoy, 'day')) {
+                        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                    } else {
+                        data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                    }
+
+                } else {
+                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                }
                 break;
             case ('gestion'):
-                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+                if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
+                    if (moment(data.horaInicio).isSame(hoy, 'day')) {
+                        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                    } else {
+                        data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                    }
+
+                } else {
+                    data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+                }
+
                 break;
         }
         if (turno.tipoTurno) {
