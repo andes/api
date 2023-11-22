@@ -1,3 +1,17 @@
+# [5.101.0](https://github.com/andes/api/compare/v5.100.0...v5.101.0) (2023-11-22)
+
+
+### Bug Fixes
+
+* **huds:** filtro por efector ([#1851](https://github.com/andes/api/issues/1851)) ([01acb7f](https://github.com/andes/api/commit/01acb7f0107356f4d6e6f7929787a41c575ea4cf))
+* **MAT-160:** Remover firma en certificado de etica ([#1852](https://github.com/andes/api/issues/1852)) ([24fc945](https://github.com/andes/api/commit/24fc9450bee651e3845da017ee09b4f7c8decd73))
+
+
+### Features
+
+* **huds:** se crea nueva coleccion motivosHuds ([#1815](https://github.com/andes/api/issues/1815)) ([35d660d](https://github.com/andes/api/commit/35d660d4be6d278c14946f2c82675e694f3845de))
+* **IN:** agrega audit para updatedAt y createdBy en internaciones ([#1841](https://github.com/andes/api/issues/1841)) ([9d52e57](https://github.com/andes/api/commit/9d52e5744f574f17d8cfe59696fe0499a9010150))
+
 # [5.100.0](https://github.com/andes/api/compare/v5.99.1...v5.100.0) (2023-10-25)
 
 
