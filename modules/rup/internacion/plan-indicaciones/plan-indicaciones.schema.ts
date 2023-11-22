@@ -53,7 +53,9 @@ export const PlanIndicacionesSchema = new Schema({
     turneable: Boolean,
     seccion: SnomedConcept,
     requiereFrecuencia: Boolean,
-    requiereAceptacion: Boolean
+    requiereAceptacion: Boolean,
+    deletedAt: { type: Date, required: false },
+    deletedBy: { type: SchemaTypes.Mixed, required: false },
 });
 
 PlanIndicacionesSchema.plugin(AuditPlugin);
