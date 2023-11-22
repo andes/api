@@ -469,7 +469,9 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }, org = n
 
                 }
                 // Filtramos todos los CDAs del paciente menos los de vacunación.
-                if (org?.toString() === item.metadata.organizacion._id.toString() || item.metadata.prestacion.snomed.conceptId === '33879002') {
+                if (!org || item.metadata.prestacion.snomed.conceptId === '33879002') {
+                    list.push(item.metadata);
+                } else if (org?.toString() === item.metadata.organizacion._id.toString()) {
                     list.push(item.metadata);
                 }
             }
