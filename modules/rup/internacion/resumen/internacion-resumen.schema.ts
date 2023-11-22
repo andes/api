@@ -1,10 +1,9 @@
 import { ObjectId } from '@andes/core';
-import { AndesDoc } from '@andes/mongoose-plugin-audit';
-import { Prestacion } from 'modules/rup/schemas/prestacion';
+import { AndesDoc, AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { model, Schema, SchemaTypes, Types } from 'mongoose';
+import { PacienteSubSchema } from '../../../../core-v2/mpi/paciente/paciente.schema';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
 import { ISnomedConcept, SnomedConcept } from '../../schemas/snomed-concept';
-import { PacienteSubSchema } from '../../../../core-v2/mpi/paciente/paciente.schema';
 
 export interface IInternacionResumen {
     ambito: String;
@@ -89,5 +88,7 @@ export const InternacionResumenSchema = new Schema({
 InternacionResumenSchema.index({
     fechaIngreso: 1
 });
+
+InternacionResumenSchema.plugin(AuditPlugin);
 
 export const InternacionResumen = model<IInternacionResumenDoc>('internacionPacienteResumen', InternacionResumenSchema, 'internacionPacienteResumen');
