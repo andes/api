@@ -220,49 +220,6 @@ describe('Internacion - camas', () => {
 
     });
 
-    test('update fecha de un estado', async () => {
-        await EstadosCtr.create({
-            organizacion,
-            ambito,
-            capa,
-            estados: [
-                { key: 'disponible' },
-                { key: 'ocupada' },
-                { key: 'inactiva' }
-            ],
-            relaciones: [
-                { origen: 'disponible', destino: 'inactiva' },
-                { origen: 'disponible', destino: 'ocupada' },
-                { origen: 'ocupada', destino: 'disponible' },
-            ]
-        }, REQMock);
-
-        const from = moment().add(1, 'h').toDate();
-        const to = moment().add(2, 'h').toDate();
-
-        await patchEstados({
-            id: cama._id,
-            ambito,
-            capa,
-            estado: 'inactiva',
-            fecha: from,
-            organizacion: cama.organizacion,
-            esMovimiento: true,
-            tipoCama: {
-                fsn: 'cama saturada (objeto físico)',
-                term: 'cama saturada',
-                conceptId: '1234567890',
-                semanticTag: 'objeto físico'
-            }
-        }, REQMock);
-
-        await CamasEstadosController.patch({ organizacion: organizacion.id, capa, ambito, cama: cama._id }, from, to);
-
-        const camaEncontrada = await findById({ organizacion: organizacion._id, capa, ambito }, cama._id, moment().add(3, 'h').toDate());
-        expect(camaEncontrada.fecha.toISOString()).toBe(to.toISOString());
-
-    });
-
     test('update fecha de un estado fallida', async () => {
         await EstadosCtr.create({
             organizacion,

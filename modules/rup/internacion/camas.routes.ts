@@ -6,6 +6,7 @@ import { Auth } from '../../../auth/auth.class';
 import moment = require('moment');
 import { Types } from 'mongoose';
 import { CamaEstados } from './cama-estados.schema';
+import * as CamasEstadosController from './cama-estados.controller';
 import { Camas } from './camas.schema';
 
 const router = express.Router();
@@ -136,12 +137,35 @@ router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncH
         nombre: Auth.getOrganization(req, 'nombre')
     };
     const data = { ...req.body, organizacion, id: req.params.idCama };
-    const result = await CamasController.patchEstados(data, req);
+    let result;
 
+    if (req.body.op === 'prestamo-devolucion') {
+        const desde = req.body.desde;
+        const hasta = req.body.hasta;
+        const prestamo = req.body.prestamo;
+        const devolucion = req.body.devolucion;
+        const capa = req.body.capa;
+        const ambito = 'internacion';
+
+        let response = true, response2, response3;
+        if (req.body.movimientosIntermedios) {
+            // si existen movimientos entre fechaDesde y fechaHasta, se verán afectados por el cambio (Se actualizará su unidadOrganizativa)
+            const estadosAfectados = await CamasEstadosController.searchEstados({ desde, hasta, organizacion: organizacion._id, ambito, capa }, { cama: data.id });
+            const fechaEstados = estadosAfectados.map(e => e.fecha);
+            response = await CamasEstadosController.patch({ organizacion: organizacion._id, ambito, capa, cama: data.id }, desde, hasta, prestamo.unidadOrganizativa, fechaEstados);
+        }
+        if (response) {
+            response2 = await CamasController.patchEstados({ ...prestamo, ambito, capa, fecha: desde, organizacion, id: data.id }, req);
+            response3 = await CamasController.patchEstados({ ...devolucion, ambito, capa, fecha: hasta, organizacion, id: data.id }, req);
+        }
+        result = response && response2 && response3 ? true : false;
+    } else {
+        result = await CamasController.patchEstados(data, req);
+    }
     if (result) {
         return res.json(result);
     } else {
-        return next('No se puede realizar el movimiento');
+        return next('Ocurrió un problema realizando el movimiento');
     }
 }));
 
