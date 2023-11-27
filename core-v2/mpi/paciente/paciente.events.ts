@@ -82,7 +82,7 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
             }
         }
     }
-    if (changeFields.includes('activo')) {
+    if (changeFields.includes('activo') && paciente.relaciones) {
         // Obtenemos todos los pacientes relacionados del paciente desactivado/activado en un array de promesas.
         let relacionados = paciente.relaciones.map(r => Paciente.findById(r.referencia));
         relacionados = await Promise.all(relacionados);
