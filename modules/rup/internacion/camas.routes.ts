@@ -7,6 +7,7 @@ import moment = require('moment');
 import { Types } from 'mongoose';
 import { CamaEstados } from './cama-estados.schema';
 import { Camas } from './camas.schema';
+import { internacionCamaEstadosLog as logger } from './internacion.log';
 
 const router = express.Router();
 
@@ -28,11 +29,12 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
     const { capa, fecha } = req.query;
 
     let salas = [];
-    if (capa !== 'estadistica' && !req.query.cama && !req.query.idInternacion) {
+    if (capa !== 'estadistica' && !req.query.idInternacion) {
         salas = await SalaComunController.listarSalaComun({
             organizacion: organizacion._id,
             fecha: moment(fecha).toDate(),
-            ambito: req.query.ambito
+            ambito: req.query.ambito,
+            id: req.query.cama
         });
         salas = populateSalaComun(salas);
     }
@@ -136,7 +138,18 @@ router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncH
         nombre: Auth.getOrganization(req, 'nombre')
     };
     const data = { ...req.body, organizacion, id: req.params.idCama };
-    const result = await CamasController.patchEstados(data, req);
+    let result;
+    try {
+        result = await CamasController.patchEstados(data, req);
+    } catch (err) {
+        const dataErr = {
+            ruta: '/camaEstados/:idCama',
+            idCama: req.params.idCama,
+            fecha: moment().toDate(),
+            nuevoEstado: req.body
+        };
+        await logger.error('patchCamaEstados', dataErr, err, req);
+    }
 
     if (result) {
         return res.json(result);
@@ -211,9 +224,17 @@ router.patch('/camas/changeTime/:id', Auth.authenticate(), capaMiddleware, async
                 }
             );
         } else {
+            await logger.info('/camas/changeTime/:id', { info: 'cambio no realizado', fecha: moment().toDate(), nuevoEstado: req.body }, req);
             return next('No se puede realizar el cambio de estado');
         }
     } catch (err) {
+        const dataErr = {
+            ruta: '/camas/changeTime/:id',
+            idCama: req.params.id,
+            fecha: moment().toDate(),
+            nuevoEstado: req.body
+        };
+        await logger.error('patchCamaEstados', dataErr, err, req);
         return next(err);
     }
 });
