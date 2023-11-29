@@ -1,3 +1,11 @@
+## [5.101.1](https://github.com/andes/api/compare/v5.101.0...v5.101.1) (2023-11-29)
+
+
+### Bug Fixes
+
+* **MPI:** corrige error relaciones null ([#1854](https://github.com/andes/api/issues/1854)) ([397a686](https://github.com/andes/api/commit/397a68629b450a3019c2479a71078c06317c5f9d))
+* **TYP:** error en buscador con filtros de pacientes ([#1848](https://github.com/andes/api/issues/1848)) ([fed44c9](https://github.com/andes/api/commit/fed44c9bd1fcc7bac61adcff1aeb50ad82c58b54))
+
 # [5.101.0](https://github.com/andes/api/compare/v5.100.0...v5.101.0) (2023-11-22)
 
 
