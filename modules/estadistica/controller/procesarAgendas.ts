@@ -18,7 +18,7 @@ export async function procesar(parametros: any) {
         'bloques.turnos': {
             $ne: null
         },
-        $or: [{ 'bloques.turnos.estado': 'asignado' }, { 'sobreturnos.estado': 'asignado' }]
+        $or: !parametros.noNominalizada ? [{ 'bloques.turnos.estado': 'asignado' }, { 'sobreturnos.estado': 'asignado' }] : [{}]
     };
     const matchTurno = {};
     const matchEstado = {};
@@ -55,6 +55,10 @@ export async function procesar(parametros: any) {
         matchPaciente['$and'] = [{ datosPaciente: { $regex: parametros.paciente.toUpperCase() } }];
     }
 
+    if (parametros.noNominalizada) {
+        match['tipoPrestaciones.noNominalizada'] = true;
+    }
+
     const matchOS = {};
     if (parametros.financiador) {
         if (parametros.financiador === 'No posee') {
@@ -79,6 +83,7 @@ export async function procesar(parametros: any) {
             };
         }
     }
+
     const pipelineBuscador = [
         { $match: match },
         { $addFields: { profesionales0: { $arrayElemAt: ['$profesionales', 0] } } },
@@ -103,7 +108,8 @@ export async function procesar(parametros: any) {
                 idBloque: '$bloques._id',
                 turno: '$_bloques.turnos',
                 profesionales0: '$profesionales0.apellido',
-                profesionales: '$profesionales'
+                profesionales: '$profesionales',
+                organizacion: '$organizacion'
             }
         },
         {
@@ -195,7 +201,8 @@ export async function procesar(parametros: any) {
                         ' ',
                         { $ifNull: ['$turno.paciente.numeroIdentificacion', ''] }, ' ',
                     ]
-                }
+                },
+                organizacion: '$organizacion'
             }
         },
         {
@@ -208,6 +215,7 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
+
     const turnosAsignados = await Agenda.aggregate(pipelineBuscador);
     return turnosAsignados;
 }
