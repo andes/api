@@ -32,6 +32,13 @@ export interface IAuthUsers {
         _id: ObjectId;
         createdAt: Date;
     }[];
+    pacienteRestringido: {
+        idPaciente: string;
+        archivos: [any];
+        observaciones: string;
+        createdBy: any;
+        createdAt: Date;
+    }[];
 }
 
 export type IAuthUsersDoc = AndesDocWithAudit<IAuthUsers>;
@@ -84,6 +91,13 @@ export const AuthUsersSchema = new mongoose.Schema({
         default: {}
     },
     disclaimers: [{ createdAt: Date, _id: { type: mongoose.Schema.Types.ObjectId, ref: 'dislaimer' } }],
+    pacienteRestringido: [{
+        idPaciente: String,
+        observaciones: String,
+        archivos: [mongoose.SchemaTypes.Mixed],
+        createdBy: mongoose.SchemaTypes.Mixed,
+        createdAt: Date
+    }]
 });
 
 AuthUsersSchema.pre('save', function (next) {
