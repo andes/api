@@ -140,6 +140,7 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     fechaNacimiento: Date,
     sexo: SEXO,
     genero: String,
+    estado: ESTADO,
     fechaFallecimiento: Date,
     numeroIdentificacion: String,
     tipoIdentificacion: IDENTIFICACION,
