@@ -40,9 +40,12 @@ PlanIndicacionesRouter.patch('/plan-indicaciones/:id/estado', asyncHandler(async
     if (indicacion) {
         const estado = req.body;
         if (estado.verificacion) {
-            indicacion.estados[indicacion.estados.length - 1] = req.body;
+            indicacion.estados[indicacion.estados.length - 1] = estado;
         } else {
             indicacion.estados.push(estado);
+            if (req.body.continuarIndicacion) {
+                indicacion.estadoActual.verificacion = undefined;
+            }
         }
         Auth.audit(indicacion, req);
         const indicacionUpdated = await indicacion.save();
