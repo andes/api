@@ -4,20 +4,10 @@ import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { PacienteSubSchema } from '../../../../core-v2/mpi/paciente/paciente.schema';
 import { NombreSchemaV2 } from '../../../../shared/schemas';
 import { ISnomedConcept, SnomedConcept } from '../../schemas/snomed-concept';
-
+import { IPacienteSub } from 'core-v2/mpi/paciente/paciente.interface';
 export interface IInternacionResumen {
     ambito: String;
-    paciente: {
-        id: ObjectId;
-        documento: String;
-        numeroIdentificacion?: String;
-        sexo: String;
-        genero: String;
-        nombre: String;
-        alias?: String;
-        apellido: String;
-        fechaNacimiento: String;
-    };
+    paciente: IPacienteSub;
     organizacion: {
         id: ObjectId;
         nombre: String;

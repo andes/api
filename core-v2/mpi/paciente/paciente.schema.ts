@@ -140,13 +140,18 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     fechaNacimiento: Date,
     sexo: SEXO,
     genero: String,
-    estado: ESTADO,
+    estado: {
+        type: String,
+        required: false,
+        enum: ESTADO.enum
+    },
     fechaFallecimiento: Date,
     numeroIdentificacion: String,
     tipoIdentificacion: IDENTIFICACION,
     alias: String,
     //  -------- extras -----------
     telefono: String,
+    direccion: String,
     email: String,
     carpetaEfectores: [{
         organizacion: nombreSchema,
@@ -157,10 +162,7 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     zona: NombreSchemaV2,
     areaPrograma: NombreSchemaV2,
     addAt: Date
-
-
 }, { _id: false });
-
 
 PacienteSchema.pre('save', function (next) {
     const user: any = this;
@@ -207,7 +209,6 @@ PacienteSchema.pre('save', function (next) {
     }
     user.tokens = words.map(replaceChars);
     next();
-
 });
 
 PacienteSchema.virtual('vinculos').get(function () {
@@ -300,6 +301,7 @@ PacienteSchema.methods.basicos = function () {
         apellido: this.apellido,
         documento: this.documento,
         numeroIdentificacion: this.numeroIdentificacion,
+        tipoIdentificacion: this.tipoIdentificacion,
         fechaNacimiento: this.fechaNacimiento,
         sexo: this.sexo,
         genero: this.genero
