@@ -10,9 +10,6 @@ import * as turnos_prestacionesConstroller from './../controller/turnos_prestaci
 const router = express.Router();
 
 router.get('/turnos_prestaciones', async (req, res, next) => {
-    if (!Auth.check(req, 'turnosPrestaciones:buscar')) {
-        return next(403);
-    }
 
     try {
         const resultado = await turnos_prestacionesConstroller.armarListado(req.query);
