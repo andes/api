@@ -1,3 +1,10 @@
+## [5.101.2](https://github.com/andes/api/compare/v5.101.1...v5.101.2) (2023-12-27)
+
+
+### Bug Fixes
+
+* **TYP-10:** Corregir Acceso al buscador ([#1859](https://github.com/andes/api/issues/1859)) ([830b5b0](https://github.com/andes/api/commit/830b5b0a9736b05ad435acdd8b2af4bdbb42073b))
+
 ## [5.101.1](https://github.com/andes/api/compare/v5.101.0...v5.101.1) (2023-11-29)
 
 
