@@ -1,6 +1,5 @@
 import { EventCore } from '@andes/event-bus';
 import { log } from '@andes/log';
-import { of } from 'core-js/core/array';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
@@ -121,9 +120,6 @@ export async function liberarTurno(req, data, turno) {
             turnoDoble.updatedBy = req.user.usuario || req.user;
         }
 
-        const hoy = new Date();
-        const tomorrow = moment(new Date()).add(1, 'days');
-
         switch (turno.tipoTurno) {
             case ('delDia'):
                 data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
@@ -132,47 +128,24 @@ export async function liberarTurno(req, data, turno) {
                 data.bloques[position.indexBloque].restantesGestion = 0;
                 break;
             case ('programado'):
-                if (moment(data.horaInicio).isSame(hoy, 'day')) {
-                    data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-                } else {
-                    data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-                }
+                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
                 if (this.esVirtual(turno.emitidoPor)) {
                     data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
                 }
                 turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
                 break;
             case ('profesional'):
-                if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
-                    if (moment(data.horaInicio).isSame(hoy, 'day')) {
-                        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-                    } else {
-                        data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-                    }
-
-                } else {
-                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
-                }
+                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
                 break;
             case ('gestion'):
-                if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
-                    if (moment(data.horaInicio).isSame(hoy, 'day')) {
-                        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-                    } else {
-                        data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-                    }
-
-                } else {
-                    data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
-                }
-
+                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
                 break;
         }
         if (turno.tipoTurno) {
             turno.tipoTurno = undefined;
         }
         const fechaActualizar = moment().startOf('day').add(2, 'days');
-        // actualizamos turnos de la agenda si la horade inicio esta dentro de las proxmas 48hs
+        // actualizamos turnos de la agenda si la hora de inicio esta dentro de las proxmas 48hs
         if (moment(data.horaInicio).isBefore(fechaActualizar)) {
             data = this.actualizarTurnos(data);
         }
