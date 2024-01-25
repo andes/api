@@ -53,10 +53,12 @@ router.delete('/prestaciones-adjuntar/:id', Auth.authenticate(), async (req: any
     const id = req.params.id;
     try {
         const adjunto: any = await PrestacionAdjunto.findById(id);
-        adjunto.remove().then(() => {
-            NotificationService.solicitudAdjuntos((adjunto.profesional), id, true);
-            return res.json({ status: 'ok' });
-        });
+        if (adjunto?.id) {
+            adjunto.remove().then(() => {
+                NotificationService.solicitudAdjuntos((adjunto.profesional), id, true);
+                return res.json({ status: 'ok' });
+            });
+        }
     } catch (err) {
         return next(err);
     }
