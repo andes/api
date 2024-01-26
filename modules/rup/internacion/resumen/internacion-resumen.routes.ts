@@ -1,7 +1,7 @@
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../../../auth/auth.class';
 import { IInternacionResumen, IInternacionResumenDoc, InternacionResumen } from './internacion-resumen.schema';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import moment = require('moment');
 
 class InternacionResumenController extends ResourceBase<IInternacionResumenDoc> {
@@ -70,7 +70,7 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
         };
     }
 
-    match['organizacion.id'] = mongoose.Types.ObjectId(req.query.idOrganizacion);
+    match['organizacion.id'] = Types.ObjectId(req.query.idOrganizacion);
     pipeline = [
         {
             $match: match
