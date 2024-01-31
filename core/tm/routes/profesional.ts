@@ -648,8 +648,9 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
         }
         opciones['formacionPosgrado.matriculado'] = req.query.estadoE;
     }
-    if (req.query.habilitado) {
-        opciones['habilitado'] = false;
+
+    if (req.query.habilitado !== undefined) {
+        opciones['habilitado'] = req.query.habilitado;
     }
 
     if (req.query.documento) {
@@ -698,7 +699,6 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
     const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
     if (req.query.nombreCompleto) {
-
         const tokensQuery = Profesional.search(req.query.nombreCompleto);
         query = Profesional
             .find(tokensQuery).
@@ -706,7 +706,9 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
                 apellido: 1,
                 nombre: 1
             });
-
+        if (req.query.habilitado !== undefined) {
+            query = query.find({ habilitado: req.query.habilitado });
+        }
     } else if (!req.query.exportarPlanillaCalculo) {
         query = Profesional.find(opciones).skip(skip).limit(limit);
     } else {
@@ -717,7 +719,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
         query.select(req.query.fields);
     }
 
-    query.exec( async (err, data) => {
+    query.exec(async (err, data) => {
         if (err) {
             return next(err);
         }
