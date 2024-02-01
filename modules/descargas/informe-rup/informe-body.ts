@@ -36,6 +36,14 @@ export class InformeRupBody extends HTMLComponent {
                             </h6>
                         {{/if}}
                     </div>
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
+                            Inicio de Prestación
+                        </h6>
+                        <h6>
+                            {{ fechaPrestacion }}hs
+                        </h6>
+                    </div>
                 </article>
                 <hr>
                 <div class="registros">
@@ -58,6 +66,7 @@ export class InformeRupBody extends HTMLComponent {
 
         const fechaEjecucion = this.prestacion.ejecucion.fecha;
         const fechaValidacion = this.getFechaEstado('validada');
+        const fechaPrestacion = this.prestacion.estados.find(estado => { return estado.tipo === 'ejecucion'; }).createdAt;
         const esValidada = (fechaValidacion !== null);
 
         if (this.registroId) {
@@ -82,6 +91,7 @@ export class InformeRupBody extends HTMLComponent {
 
             fechaEjecucion: fechaEjecucion && moment(fechaEjecucion).format('DD/MM/YYYY HH:mm'),
             fechaValidacion: fechaValidacion && moment(fechaValidacion).format('DD/MM/YYYY HH:mm'),
+            fechaPrestacion: fechaPrestacion && moment(fechaPrestacion).format('DD/MM/YYYY HH:mm'),
             titulo: this.prestacion.solicitud.tipoPrestacion.term,
             registros,
             esValidada,
