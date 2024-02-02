@@ -312,6 +312,7 @@ PrestacionSchema.index({
     'ejecucion.fecha': 1,
     'solicitud.tipoPrestacion.conceptId': 1
 });
+
 PrestacionSchema.index({
     createdAt: 1,
     'solicitud.organizacion.id': 1,
@@ -342,6 +343,13 @@ PrestacionSchema.index({
     'solicitud.tipoPrestacion.conceptId': 1,
     'ejecucion.registros.valor.informeIngreso.fechaIngreso': 1,
 }, { sparse: true, name: 'LISTADO-INTERNACIONES' });
+
+PrestacionSchema.index({
+    'solicitud.organizacion.id': 1,
+    'solicitud.ambitoOrigen': 1,
+    'solicitud.tipoPrestacion.conceptId': 1,
+    'ejecucion.registros.valor.InformeEgreso.fechaEgreso': 1,
+}, { sparse: true, name: 'Listado-internacion-egreso' });
 
 PrestacionSchema.index({
     'solicitud.prestacionOrigen': 1,

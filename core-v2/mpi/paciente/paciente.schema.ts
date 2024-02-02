@@ -314,7 +314,7 @@ PacienteSchema.plugin(mongoose_fuzzy_searching, {
         }]
 });
 
-PacienteSchema.index({ tokens: 1 });
+PacienteSchema.index({ tokens: 1, activo: 1 });
 PacienteSchema.index({ documento: 1, sexo: 1 });
 PacienteSchema.index({ estado: 1, activo: 1, updateAt: 1 });
 
