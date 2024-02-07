@@ -649,8 +649,12 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
         opciones['formacionPosgrado.matriculado'] = req.query.estadoE;
     }
 
-    if (req.query.habilitado !== undefined) {
-        opciones['habilitado'] = req.query.habilitado;
+    if (req.query.habilitado !== undefined && req.query.habilitado !== null) {
+        if (req.query.habilitado === false) {
+            opciones['habilitado'] = false;
+        } else {
+            opciones['habilitado'] = { $ne: false };
+        }
     }
 
     if (req.query.documento) {
@@ -701,14 +705,11 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
     if (req.query.nombreCompleto) {
         const tokensQuery = Profesional.search(req.query.nombreCompleto);
         query = Profesional
-            .find(tokensQuery).
+            .find({ $and: tokensQuery['$and'], ...opciones }).
             sort({
                 apellido: 1,
                 nombre: 1
             });
-        if (req.query.habilitado !== undefined) {
-            query = query.find({ habilitado: req.query.habilitado });
-        }
     } else if (!req.query.exportarPlanillaCalculo) {
         query = Profesional.find(opciones).skip(skip).limit(limit);
     } else {
