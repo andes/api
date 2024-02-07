@@ -1008,11 +1008,9 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
                 tipo: req.body.documentos.data.tipo.label,
                 archivo: req.body.documentos.data.archivo
             };
-            // console.log('ingresa a patchear documentos: ', documento, ' profesional: ', profesional);
             profesional?.documentos.push(documento);
             Auth.audit(profesional, (userScheduler as any));
             await profesional.save();
-            // resultado.documentos.push(documento);
             res.json(profesional);
         }
         if (req.body.domicilios) {
@@ -1032,6 +1030,28 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
                 profesional.domicilios[2].ubicacion.provincia.nombre = req.body.domicilios?.ubicacion?.provincia?.nombre ?? profesional.domicilios[2].ubicacion.provincia.nombre;
                 profesional.domicilios[2].ubicacion.localidad.nombre = req.body.domicilios?.ubicacion?.localidad?.nombre ?? profesional.domicilios[2].ubicacion.localidad.nombre;
 
+            }
+            Auth.audit(profesional, (userScheduler as any));
+            await profesional.save();
+            res.json(profesional);
+        }
+        if (req.body.domiciliosMobile?.domicilios) {
+
+            const profesional: any = await Profesional.findById(req.body.domiciliosMobile.idProfesional);
+
+            if (req.body.domiciliosMobile.domicilios[0]) {
+                profesional.domicilios[0].valor = req.body.domiciliosMobile.domicilios[0].valor ?? profesional.domicilios[0].valor;
+                profesional.domicilios[0].codigoPostal = req.body.domiciliosMobile.domicilios[0].codigoPostal ?? profesional.domicilios[0].codigoPostal;
+                profesional.domicilios[0].ubicacion.pais.nombre = req.body.domiciliosMobile.domicilios[0].ubicacion?.pais?.nombre ?? profesional.domicilios[0].ubicacion.pais.nombre;
+                profesional.domicilios[0].ubicacion.provincia.nombre = req.body.domiciliosMobile.domicilios[0].ubicacion?.provincia?.nombre ?? profesional.domicilios[0].ubicacion.provincia.nombre;
+                profesional.domicilios[0].ubicacion.localidad.nombre = req.body.domiciliosMobile.domicilios[0].ubicacion?.localidad?.nombre ?? profesional.domicilios[0].ubicacion.localidad.nombre;
+            }
+            if (req.body.domiciliosMobile.domicilios[2]) {
+                profesional.domicilios[2].valor = req.body.domiciliosMobile.domicilios[2].valor ?? profesional.domicilios[2].valor;
+                profesional.domicilios[2].codigoPostal = req.body.domiciliosMobile.domicilios[2].codigoPostal ?? profesional.domicilios[2].codigoPostal;
+                profesional.domicilios[2].ubicacion.pais.nombre = req.body.domiciliosMobile.domicilios[2].ubicacion?.pais?.nombre ?? profesional.domicilios[2].ubicacion.pais.nombre;
+                profesional.domicilios[2].ubicacion.provincia.nombre = req.body.domiciliosMobile.domicilios[2].ubicacion?.provincia?.nombre ?? profesional.domicilios[2].ubicacion.provincia.nombre;
+                profesional.domicilios[2].ubicacion.localidad.nombre = req.body.domiciliosMobile.domicilios[2].ubicacion?.localidad?.nombre ?? profesional.domicilios[2].ubicacion.localidad.nombre;
             }
             Auth.audit(profesional, (userScheduler as any));
             await profesional.save();
