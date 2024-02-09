@@ -71,6 +71,7 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
     }
 
     match['organizacion.id'] = Types.ObjectId(req.query.idOrganizacion);
+    match['deletedAt'] = { $exists: false };
     pipeline = [
         {
             $match: match
@@ -84,54 +85,24 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
             }
         },
         {
-            $lookup: {
-                from: 'internacionSalaComunMovimientos',
-                localField: '_id',
-                foreignField: 'idInternacion',
-                as: 'estadosSala'
-            }
-        },
-        {
             $addFields: {
-                estadosSala: {
-                    $cond: {
-                        if: { $gt: [{ $size: '$estadosSala' }, 0] },
-                        then: { $arrayElemAt: ['$estadosSala', -1] },
-                        else: '$$REMOVE'
+                diagnosticos: {
+                    $filter: {
+                        input: '$registros',
+                        as: 'item',
+                        cond: { $gte: ['$$item.tipo', 'valoracion-inicial'] }
                     }
                 }
             }
         },
         {
-            $unwind: {
-                path: '$estadosCama',
-                preserveNullAndEmptyArrays: true
-            }
-        },
-        {
             $addFields: {
-                estadosCama: { $arrayElemAt: ['$estadosCama.estados', -1] }
-            }
-        },
-        {
-            $addFields: {
-                estadosCama: {
-                    $cond: {
-                        if: { $eq: ['$estadosCama', null] },
-                        then: '$$REMOVE',
-                        else: '$estadosCama'
-                    }
+                diagnostico: {
+                    $arrayElemAt: [
+                        '$diagnosticos',
+                        0
+                    ]
                 }
-            }
-        },
-        {
-            $match: {
-                $or: [
-                    { 'estadosCama.extras.ingreso': true },
-                    { 'estadosCama.extras.egreso': true },
-                    { 'estadosSala.extras.ingreso': true },
-                    { 'estadosSala.extras.egreso': true }
-                ]
             }
         },
         {
@@ -154,6 +125,12 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
                     $mergeObjects: [
                         '$idPrestacion',
                         { id: '$idPrestacion._id' }
+                    ]
+                },
+                diagnostico: {
+                    $ifNull: [
+                        '$diagnostico.concepto',
+                        null
                     ]
                 }
             }
