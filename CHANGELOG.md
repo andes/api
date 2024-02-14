@@ -1,3 +1,11 @@
+## [5.101.3](https://github.com/andes/api/compare/v5.101.2...v5.101.3) (2024-02-14)
+
+
+### Bug Fixes
+
+* **CIT:** agendas con profesional habilitado ([#1865](https://github.com/andes/api/issues/1865)) ([5f02e07](https://github.com/andes/api/commit/5f02e07a7867ec2d5eae5fac3125a243f50a4f33))
+* **INT:** Corrige la consulta para listado de historial medico ([#1867](https://github.com/andes/api/issues/1867)) ([9fb4aba](https://github.com/andes/api/commit/9fb4aba15ffa9372dd0fb0ee350b66566b90a8f7))
+
 ## [5.101.2](https://github.com/andes/api/compare/v5.101.1...v5.101.2) (2023-12-27)
 
 
