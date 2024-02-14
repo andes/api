@@ -13,8 +13,10 @@ export async function armarListado(datos) {
         financiador: datos.financiador,
         estadoFacturacion: datos.estadoFacturacion,
         paciente: datos.paciente,
-        ambito: datos.ambito
+        ambito: datos.ambito,
+        noNominalizada: datos.noNominalizada,
     };
+
     // Procesa los turnos aplicando los filtros
     const _turnos = parametros?.ambito === 'internacion' ? [] : agendaController.procesar(parametros);
     // Procesa las prestaciones fuera de agenda
@@ -30,6 +32,6 @@ export function obtenerProfesionales(profesionales) {
     profesionales.forEach(element => {
         salida += element.apellido + ', ' + element.nombre + ' - ';
     });
-    return salida.slice(0,-3);
+    return salida.slice(0, -3);
 }
 

@@ -19,6 +19,9 @@ export async function procesar(parametros: any) {
     };
     const matchPaciente = {};
 
+    if (parametros.noNominalizada) {
+        match['solicitud.tipoPrestacion.noNominalizada'] = { $eq: true };
+    }
     if (parametros.paciente) {
         matchPaciente['$and'] = [{ datosPaciente: { $regex: parametros.paciente.toUpperCase() } }];
     }
@@ -42,7 +45,6 @@ export async function procesar(parametros: any) {
         match['solicitud.ambitoOrigen'] = parametros.ambito;
     }
 
-
     try {
         const prestaciones = Prestacion.aggregate([
             { $match: match },
@@ -65,6 +67,8 @@ export async function procesar(parametros: any) {
         const filtroEstado = parametros.estado ? parametros.estado : 'todos';
         await prestaciones.eachAsync(async (prestacion) => {
             let filtroOS = false;
+            const registro = prestacion.ejecucion?.registros?.find(x => x.valor?.informe !== null);
+            const registroConAdjunto = prestacion.ejecucion?.registros?.find(x => x.nombre === 'documento adjunto');
             const dtoPrestacion = {
                 fecha: prestacion.ejecucion.fecha,
                 paciente: prestacion.paciente,
@@ -77,28 +81,39 @@ export async function procesar(parametros: any) {
                 turno: null,
                 idPrestacion: prestacion._id,
                 estadoFacturacion: prestacion.estadoFacturacion,
-                ambito: prestacion.solicitud.ambitoOrigen
+                ambito: prestacion.solicitud?.ambitoOrigen,
+                organizacion: prestacion.solicitud?.organizacion,
+                actividad: registro.valor?.informe?.tipoActividad?.term,
+                tematica: registro.valor?.informe?.tematica,
+                pacientes: registro.valor?.informe?.pacientes,
+                documentos: registroConAdjunto?.valor?.documentos,
+                estadoActual: prestacion.estadoActual
             };
 
-            if (prestacion.paciente?.obraSocial?.financiador === os || os.includes(prestacion.paciente?.obraSocial?.financiador) || os === 'todos') {
-                dtoPrestacion['financiador'] = prestacion.paciente.obraSocial;
-                filtroOS = true;
+            if (parametros.noNominalizada) {
+                resultado.push(dtoPrestacion);
             } else {
+                const financiador = prestacion.paciente?.obraSocial?.financiador;
 
-                if (prestacion?.paciente?.obraSocial?.financiador === os && os === 'SUMAR') {
-                    dtoPrestacion['financiador'] = prestacion.paciente.obraSocial.financiador;
+                if (financiador === os || os.includes(financiador) || os === 'todos') {
+                    dtoPrestacion['financiador'] = prestacion.paciente.obraSocial;
                     filtroOS = true;
                 } else {
-                    if (prestacion.paciente && !prestacion.paciente.obraSocial && os === 'No posee') {
+                    if (prestacion?.paciente?.obraSocial === 'SUMAR' && os === 'SUMAR') {
+                        dtoPrestacion['financiador'] = prestacion.paciente.obraSocial;
                         filtroOS = true;
                     } else {
-                        filtroOS = false;
+                        if (prestacion.paciente && !prestacion.paciente.obraSocial && os === 'No posee') {
+                            filtroOS = true;
+                        } else {
+                            filtroOS = false;
+                        }
                     }
                 }
-            }
 
-            if (filtroOS === true && (filtroEstado === dtoPrestacion.estado || filtroEstado === 'todos')) {
-                resultado.push(dtoPrestacion);
+                if (filtroOS === true && (filtroEstado === dtoPrestacion.estado || filtroEstado === 'todos')) {
+                    resultado.push(dtoPrestacion);
+                }
             }
         });
         return resultado;
