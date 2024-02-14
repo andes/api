@@ -2,11 +2,11 @@ import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutom
 
 export async function getConfigFacturacionAutomatica(query) {
     const params = {};
-    if ((query.idPrestacionEjecutada) && (query.idPrestacionEjecutada !== 'undefined') && (query.idPrestacionEjecutada !== 'null')) {
+    if (query.idPrestacionEjecutada) {
         params['prestacionSnomed.conceptId'] = query.idPrestacionEjecutada;
     }
 
-    if ((query.idPrestacionTurneable) && (query.idPrestacionTurneable !== 'undefined') && (query.idPrestacionTurneable !== 'null')) {
+    if (query.idPrestacionTurneable) {
         params['conceptosTurneables.conceptId'] = query.idPrestacionTurneable;
     }
 
