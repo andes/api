@@ -26,7 +26,9 @@ if (RedisWebSockets.active) {
 export function createPayload(user, authOrg, prof) {
     const nombre = (prof && prof.nombre) || user.nombre;
     const apellido = (prof && prof.apellido) || user.apellido;
+    const pacienteRestringido = (prof && prof.pacienteRestringido) || user.pacienteRestringido;
     return {
+        pacienteRestringido,
         usuario: {
             id: String(user._id),
             nombreCompleto: nombre + ' ' + apellido,
