@@ -3,7 +3,7 @@ import { loadDinamicContext } from './../../rup/dinamic-context.controller';
 import * as mongoose from 'mongoose';
 
 export async function verificarCondicionPaciente(condicion, pacienteId, organizacionId?) {
-    if (condicion && condicion.rules) {
+    if (condicion?.rules) {
         const condicionPaciente = condicion.toObject();
         const idPaciente = mongoose.Types.ObjectId(pacienteId);
         const params = {
