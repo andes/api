@@ -5,6 +5,7 @@ import * as moment from 'moment';
 import { getDistanceBetweenPoints } from '../../../utils/utilCoordenadas';
 import { verificarCondicionPaciente } from '../../../modules/turnos/condicionPaciente/condicionPaciente.controller';
 import { CondicionPaciente } from '../../../modules/turnos/condicionPaciente/condicionPaciente.schema';
+import { Constantes, Constante } from '../../../modules/constantes/constantes.schema';
 
 const router = express.Router();
 
@@ -40,7 +41,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
                 'bloques.restantesMobile': { $gt: 0 },
             },
             {
-                'tipoPrestaciones.conceptId': { $in:  reglas }
+                'tipoPrestaciones.conceptId': { $in: reglas }
             }
         ];
         fieldRegla = {
@@ -74,8 +75,8 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
             const userLocation = JSON.parse(req.query.userLocation);
             for (let i = 0; i <= agendasResultado.length - 1; i++) {
                 const org: any = await Organizacion.findById(agendasResultado[i].id);
-
-                if (org.codigo && org.codigo.sisa && org.turnosMobile && org.direccion && org.direccion.geoReferencia) {
+                agendasResultado[i].circunferencia = org.circunferenciaKmTurno;
+                if (org.codigo?.sisa && org.turnosMobile && org.direccion?.geoReferencia) {
                     agendasResultado[i].coordenadasDeMapa = {
                         lat: org.direccion.geoReferencia[0],
                         lng: org.direccion.geoReferencia[1]
@@ -94,8 +95,11 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
             agendasResultado.sort((locationA, locationB) => {
                 return locationA.distance - locationB.distance;
             });
-            // Limitamos a 10 km los turnos a mostrar (FILTRA LOS MAYORES A 10 KM)
-            agendasResultado = agendasResultado.filter(obj => obj.distance <= 10);
+
+            // Limitamos los turnos a mostrar hasta un máximo
+            agendasResultado = agendasResultado.filter(obj => {
+                return (obj.distance <= obj.circunferencia);
+            });
         }
         res.json(agendasResultado);
     } catch (err) {
