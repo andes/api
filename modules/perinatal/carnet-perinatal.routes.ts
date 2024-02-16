@@ -24,7 +24,21 @@ class CarnetPerinatalResource extends ResourceBase {
                 ]
             };
         },
-        fechaControl: MongoQuery.matchDate.withField('controles.fechaControl'),
+        fechaControl: {
+            field: 'controles',
+            fn: (value) => {
+                const fechas = value.split('|');
+                return {
+                    $elemMatch: {
+                        fechaControl: {
+                            $gte: fechas[0],
+                            $lte: fechas[1]
+                        }
+                    }
+                };
+            }
+        }
+        ,
         organizacion: {
             field: 'controles.organizacion.id',
             fn: (value) => mongoose.Types.ObjectId(value)
