@@ -3,6 +3,7 @@ import * as mongoose from 'mongoose';
 export interface FormTypes {
     name: string;
     type: string;
+    description: string;
     snomedCode: string;
     config?: {
         idEvento: string;
@@ -88,6 +89,7 @@ export const FormSchema = new mongoose.Schema({
     config: FormConfigSchema,
     snomedCode: { type: String },
     type: { type: String, index: { unique: true } },
+    description: String,
     sections: [SectionSchema]
 });
 
