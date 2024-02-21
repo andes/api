@@ -1,3 +1,11 @@
+# [5.102.0](https://github.com/andes/api/compare/v5.101.3...v5.102.0) (2024-02-21)
+
+
+### Features
+
+* **MPI:** condicion trimestral para devolucion de os ([#1787](https://github.com/andes/api/issues/1787)) ([2c0d1d1](https://github.com/andes/api/commit/2c0d1d1ba40cd0dd9993a8e12cf2e53f9d29e754))
+* **TYP:** listado de prestaciones no nominalizadas ([#1857](https://github.com/andes/api/issues/1857)) ([a23e23f](https://github.com/andes/api/commit/a23e23fc8ad096436ffa1b45194fe7adfdeb8aa9))
+
 ## [5.101.3](https://github.com/andes/api/compare/v5.101.2...v5.101.3) (2024-02-14)
 
 
