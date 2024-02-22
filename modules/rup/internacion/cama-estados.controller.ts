@@ -383,13 +383,30 @@ function rellenarMovimientos(value, index, movs) {
 }
 
 export async function store({ organizacion, ambito, capa, cama }, estado, req: Request) {
-    delete estado['createdAt'];
-    delete estado['createdBy'];
-    delete estado['updatedAt'];
-    delete estado['updatedBy'];
-    delete estado['deletedAt'];
-    delete estado['deletedBy'];
+    const editado = estado.editado;
+    const keysToDelete = ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'deletedAt', 'deletedBy', 'editado'];
+    for (const key of keysToDelete) {
+        delete estado[key];
+    }
     AuditDocument(estado, req.user);
+    let updateOperation;
+    if (editado) {
+        updateOperation = {
+            $set: { 'estados.$[elemento].fecha': estado.fecha }
+        };
+    } else {
+        updateOperation = {
+            $push: { estados: estado },
+            $setOnInsert: {
+                idOrganizacion: mongoose.Types.ObjectId(organizacion),
+                ambito,
+                capa,
+                idCama: mongoose.Types.ObjectId(cama),
+                start: moment(estado.fecha).startOf('month').toDate(),
+                end: moment(estado.fecha).endOf('month').toDate()
+            },
+        };
+    }
     return await CamaEstados.update(
         {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),
@@ -399,18 +416,9 @@ export async function store({ organizacion, ambito, capa, cama }, estado, req: R
             start: { $lte: estado.fecha },
             end: { $gte: estado.fecha }
         },
+        updateOperation,
         {
-            $push: { estados: estado },
-            $setOnInsert: {
-                idOrganizacion: mongoose.Types.ObjectId(organizacion),
-                ambito,
-                capa,
-                idCama: mongoose.Types.ObjectId(cama),
-                start: moment(estado.fecha).startOf('month').toDate(),
-                end: moment(estado.fecha).endOf('month').toDate(),
-            }
-        },
-        {
+            arrayFilters: [{ 'elemento._id': estado._id }],
             upsert: true
         }
     );
