@@ -60,6 +60,7 @@ router.post('/paciente', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
+
     // elimina vacunas y cdas previos antes de generar nuevos
     await vacunas.deleteMany({ documento: req.body.paciente.documento });
     await cdaCtr.deleteCda(null, req.body.paciente.id);
@@ -281,8 +282,7 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
 
-    if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token'
-        && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
+    if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
         return next(403);
     }
 
@@ -318,7 +318,7 @@ router.get('/:id/:name', async (req: any, res, next) => {
 
         if (req.user.type === 'paciente-token') {
             const paciente: any = await findById(idPaciente);
-            const index = req.user.pacientes.findIndex(item => String(item.id) === String(idPaciente));
+            const index = req.user.pacientes.findIndex(item => String(item.id) === String(idPaciente._id));
             let esFamiliar;
             if (index < 0) {
                 const resultado = await findById((req as any).user.pacientes[0].id);
