@@ -1,3 +1,10 @@
+## [5.102.1](https://github.com/andes/api/compare/v5.102.0...v5.102.1) (2024-02-28)
+
+
+### Bug Fixes
+
+* **EPI:** Agrega  campo descripción ([#1872](https://github.com/andes/api/issues/1872)) ([43a562c](https://github.com/andes/api/commit/43a562ce6830cc080e8223199338e1081c7b4288))
+
 # [5.102.0](https://github.com/andes/api/compare/v5.101.3...v5.102.0) (2024-02-21)
 
 
