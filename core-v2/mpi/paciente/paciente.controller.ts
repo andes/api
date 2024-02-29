@@ -215,12 +215,14 @@ export async function linkPaciente(req, op, pacienteBase, pacienteLinkeado) {
             pacienteBase.identificadores = [dataLink]; // Primer elemento del array
         }
         pacienteLinkeado.activo = false;
+        pacienteLinkeado.idPacientePrincipal = pacienteBase.id;
     }
     if (op === 'unlink') {
         if (pacienteBase.identificadores) {
             pacienteBase.identificadores = pacienteBase.identificadores.filter(x => x.valor !== dataLink.valor);
         }
         pacienteLinkeado.activo = true;
+        pacienteLinkeado.idPacientePrincipal = null;
     }
 
     await PacienteCtr.update(pacienteBase.id, pacienteBase, req);
