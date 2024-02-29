@@ -9,6 +9,7 @@ class NovedadesResource extends ResourceBase {
     resourceName = 'novedades';
     searchFileds = {
         titulo: MongoQuery.partialString,
+        palabra: MongoQuery.partialString,
         descripcion: MongoQuery.partialString,
         fecha: MongoQuery.equalMatch,
         activa: MongoQuery.equalMatch,

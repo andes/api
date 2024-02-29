@@ -5,6 +5,7 @@ export const NovedadSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     fecha: { type: Date, default: Date.now },
     titulo: String,
+    palabra: String,
     descripcion: String,
     modulo: {
         type: ModuloSchema
