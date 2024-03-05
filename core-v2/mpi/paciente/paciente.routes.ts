@@ -167,7 +167,9 @@ export const getFoto = async (req: Request, res: Response, next) => {
 
 export const post = async (req: Request, res: Response) => {
     const body = req.body;
-    const sugeridos = await suggest(body);
+    let sugeridos = await suggest(body);
+    // filtrar sugeridos: validado => sólo pacientes validados
+    sugeridos = (body.estado === 'validado') ? sugeridos.filter(s => s.paciente.estado === 'validado') : sugeridos;
     if (sugeridos.length && !body.ignoreSuggestions) {
         return res.json({ sugeridos });
     }
