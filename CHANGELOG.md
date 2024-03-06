@@ -1,3 +1,11 @@
+# [5.103.0](https://github.com/andes/api/compare/v5.102.1...v5.103.0) (2024-03-06)
+
+
+### Features
+
+* **GDU:** se desactiva usuario por organizacion ([#1789](https://github.com/andes/api/issues/1789)) ([c29b70f](https://github.com/andes/api/commit/c29b70f171b116e66faf08dfbc689adb13734de8))
+* **MONIT:** actualizacion de ABM en novedades ([#1784](https://github.com/andes/api/issues/1784)) ([d51cf0b](https://github.com/andes/api/commit/d51cf0ba019146ab97de6abfe3b063d61928f5fe))
+
 ## [5.102.1](https://github.com/andes/api/compare/v5.102.0...v5.102.1) (2024-02-28)
 
 
