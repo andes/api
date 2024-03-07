@@ -19,11 +19,13 @@ class PlanIndicacionesController extends ResourceBase<IPlanIndicacionesDoc> {
         internacion: MongoQuery.equalMatch.withField('idInternacion'),
         prestacion: MongoQuery.equalMatch.withField('idPrestacion'),
         registro: MongoQuery.equalMatch.withField('idRegistro'),
-        rangoFechas:(fecha: Date)=>{
-            return { $or:[
-                { fechaInicio: { $gte: moment(fecha).startOf('day').toDate() } },
-                { fechaInicio: { $lte: moment(fecha).endOf('day').add(1, 'd').toDate() } }
-            ] };
+        rangoFechas: (fecha: Date) => {
+            return {
+                $or: [
+                    { fechaInicio: { $gte: moment(fecha).startOf('day').toDate() } },
+                    { fechaInicio: { $lte: moment(fecha).endOf('day').add(1, 'd').toDate() } }
+                ]
+            };
         }
     };
     eventBus = EventCore;

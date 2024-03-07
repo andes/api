@@ -19,7 +19,7 @@ export interface IPrestacion {
         obraSocial: IFinanciador;
         idPacienteValidado?: ObjectId;
     };
-    inicio: 'top' | 'agenda' | 'fuera-agenda' | 'internacion';
+    inicio: 'top' | 'agenda' | 'fuera-agenda' | 'internacion' | 'plan-indicaciones';
     noNominalizada: boolean;
     estadoFacturacion?: {
         tipo: String;

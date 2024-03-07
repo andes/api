@@ -21,7 +21,7 @@ export const PrestacionSchema = new Schema({
 
     inicio: {
         type: String,
-        enum: ['top', 'agenda', 'fuera-agenda', 'internacion', 'servicio-intermedio'],
+        enum: ['top', 'agenda', 'fuera-agenda', 'internacion', 'servicio-intermedio', 'plan-indicaciones'],
     },
 
 
@@ -346,7 +346,8 @@ PrestacionSchema.index(
     {
         servicioIntermedioId: 1,
         'solicitud.fecha': 1,
-    }, {
+    },
+    {
         name: 'SERVICIOS-INTERMEDIO',
         partialFilterExpression: { inicio: 'servicio-intermedio' }
     }
