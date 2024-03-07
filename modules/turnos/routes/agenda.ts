@@ -638,11 +638,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             if (t.paciente && t.paciente.id) {
                                 LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
 
-                                if (t.tipoTurno === 'gestion') {
-                                    // Se desvincula la solicitud (prestación) de tu turno correspondiente y se registra la acción en el historial
-                                    req.body.observaciones = `Motivo: ${t.motivoSuspension}`;
-                                    liberar.push(liberarRefTurno(t, req));
-                                }
+                                // Se desvincula la solicitud (prestación) de tu turno correspondiente y se registra la acción en el historial
+                                req.body.observaciones = `Motivo: ${t.motivoSuspension}`;
+                                liberar.push(liberarRefTurno(t, req));
                             }
                         });
                     });
