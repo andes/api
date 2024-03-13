@@ -1,3 +1,10 @@
+## [5.103.1](https://github.com/andes/api/compare/v5.103.0...v5.103.1) (2024-03-13)
+
+
+### Bug Fixes
+
+* **MPI:** agrega id en vinculacion paciente ([#1876](https://github.com/andes/api/issues/1876)) ([88c764c](https://github.com/andes/api/commit/88c764c297c6451ee4a8183b06f1f95732cd4c2e))
+
 # [5.103.0](https://github.com/andes/api/compare/v5.102.1...v5.103.0) (2024-03-06)
 
 
