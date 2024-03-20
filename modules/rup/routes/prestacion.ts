@@ -178,6 +178,10 @@ router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
 router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
         let indice = 'TOP-ENTRADA';
+        if ( req.query.solicitudDesdeActualizacion) {
+            indice = 'TOP-ENTRADA-UPDATED';
+        };
+
         const pipeline = [];
         const match: any = { $and: [] };
 
@@ -240,6 +244,9 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.organizacionOrigen) {
             indice = 'TOP-SALIDA';
+            if ( req.query.solicitudDesdeActualizacion) {
+                indice = 'TOP-SALIDA-UPDATED';
+            };
             const organizacionesOrigen = Array.isArray(req.query.organizacionOrigen) ? req.query.organizacionOrigen : [req.query.organizacionOrigen];
             match.$and.push({ 'solicitud.organizacionOrigen.id': { $in: organizacionesOrigen.map(id => Types.ObjectId(id)) } });
         }
