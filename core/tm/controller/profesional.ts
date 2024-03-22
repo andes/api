@@ -209,7 +209,7 @@ export async function saveFirma(data, admin = false) {
 
     // Remueve la firma anterior antes de insertar la nueva
     const fileFirma = await firma.findOne(metadataFind);
-    if (fileFirma && fileFirma._id) {
+    if (fileFirma?._id) {
         await firma.unlink(fileFirma._id, (error) => { });
     }
     // Inserta en la bd en files y chunks
