@@ -39,12 +39,8 @@ PlanIndicacionesRouter.patch('/plan-indicaciones/:id/estado', asyncHandler(async
     const indicacion = await PlanIndicacionesCtr.findById(req.params.id);
     if (indicacion) {
         const estado = req.body;
-        if (estado.verificacion) {
-            indicacion.estados[indicacion.estados.length - 1] = req.body;
-        } else {
-            indicacion.estados.push(estado);
-        }
         Auth.audit(indicacion, req);
+        indicacion.estados.push(estado);
         const indicacionUpdated = await indicacion.save();
         EventCore.emitAsync('internacion:plan-indicaciones:update', indicacionUpdated);
         return res.json(indicacionUpdated);
