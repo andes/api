@@ -1013,46 +1013,11 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
             await profesional.save();
             res.json(profesional);
         }
-        if (req.body.domicilios) {
-            const profesional: any = await Profesional.findById(req.body.domicilios.idProfesional);
 
-            if (req.body.domicilios.tipo === 'real') {
-                profesional.domicilios[0].valor = req.body.domicilios?.valor ?? profesional.domicilios[0].valor;
-                profesional.domicilios[0].codigoPostal = req.body.domicilios?.codigoPostal ?? profesional.domicilios[0].codigoPostal;
-                profesional.domicilios[0].ubicacion.pais.nombre = req.body.domicilios?.ubicacion?.pais?.nombre ?? profesional.domicilios[0].ubicacion.pais.nombre;
-                profesional.domicilios[0].ubicacion.provincia.nombre = req.body.domicilios?.ubicacion?.provincia?.nombre ?? profesional.domicilios[0].ubicacion.provincia.nombre;
-                profesional.domicilios[0].ubicacion.localidad.nombre = req.body.domicilios?.ubicacion?.localidad?.nombre ?? profesional.domicilios[0].ubicacion.localidad.nombre;
-            }
-            if (req.body.domicilios.tipo === 'profesional') {
-                profesional.domicilios[2].valor = req.body.domicilios?.valor ?? profesional.domicilios[2].valor;
-                profesional.domicilios[2].codigoPostal = req.body.domicilios?.codigoPostal ?? profesional.domicilios[2].codigoPostal;
-                profesional.domicilios[2].ubicacion.pais.nombre = req.body.domicilios?.ubicacion?.pais?.nombre ?? profesional.domicilios[2].ubicacion.pais.nombre;
-                profesional.domicilios[2].ubicacion.provincia.nombre = req.body.domicilios?.ubicacion?.provincia?.nombre ?? profesional.domicilios[2].ubicacion.provincia.nombre;
-                profesional.domicilios[2].ubicacion.localidad.nombre = req.body.domicilios?.ubicacion?.localidad?.nombre ?? profesional.domicilios[2].ubicacion.localidad.nombre;
-
-            }
-            Auth.audit(profesional, (userScheduler as any));
-            await profesional.save();
-            res.json(profesional);
-        }
-        if (req.body.domiciliosMobile?.domicilios) {
-
-            const profesional: any = await Profesional.findById(req.body.domiciliosMobile.idProfesional);
-
-            if (req.body.domiciliosMobile.domicilios[0]) {
-                profesional.domicilios[0].valor = req.body.domiciliosMobile.domicilios[0].valor ?? profesional.domicilios[0].valor;
-                profesional.domicilios[0].codigoPostal = req.body.domiciliosMobile.domicilios[0].codigoPostal ?? profesional.domicilios[0].codigoPostal;
-                profesional.domicilios[0].ubicacion.pais.nombre = req.body.domiciliosMobile.domicilios[0].ubicacion?.pais?.nombre ?? profesional.domicilios[0].ubicacion.pais.nombre;
-                profesional.domicilios[0].ubicacion.provincia.nombre = req.body.domiciliosMobile.domicilios[0].ubicacion?.provincia?.nombre ?? profesional.domicilios[0].ubicacion.provincia.nombre;
-                profesional.domicilios[0].ubicacion.localidad.nombre = req.body.domiciliosMobile.domicilios[0].ubicacion?.localidad?.nombre ?? profesional.domicilios[0].ubicacion.localidad.nombre;
-            }
-            if (req.body.domiciliosMobile.domicilios[2]) {
-                profesional.domicilios[2].valor = req.body.domiciliosMobile.domicilios[2].valor ?? profesional.domicilios[2].valor;
-                profesional.domicilios[2].codigoPostal = req.body.domiciliosMobile.domicilios[2].codigoPostal ?? profesional.domicilios[2].codigoPostal;
-                profesional.domicilios[2].ubicacion.pais.nombre = req.body.domiciliosMobile.domicilios[2].ubicacion?.pais?.nombre ?? profesional.domicilios[2].ubicacion.pais.nombre;
-                profesional.domicilios[2].ubicacion.provincia.nombre = req.body.domiciliosMobile.domicilios[2].ubicacion?.provincia?.nombre ?? profesional.domicilios[2].ubicacion.provincia.nombre;
-                profesional.domicilios[2].ubicacion.localidad.nombre = req.body.domiciliosMobile.domicilios[2].ubicacion?.localidad?.nombre ?? profesional.domicilios[2].ubicacion.localidad.nombre;
-            }
+        if (req.body.domicilios || req.body.domiciliosMobile) {
+            const idProfesional = req.body.domicilios?.idProfesional ? req.body.domicilios.idProfesional : req.body.domiciliosMobile.idProfesional;
+            const profesional: any = await Profesional.findById(idProfesional);
+            profesional.domicilios = req.body.domicilios ? req.body.domicilios : req.body.domiciliosMobile.domicilios;
             Auth.audit(profesional, (userScheduler as any));
             await profesional.save();
             res.json(profesional);
