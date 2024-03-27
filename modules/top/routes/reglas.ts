@@ -93,6 +93,16 @@ router.get('/reglas', async (req: Request, res, next) => {
 
     if (req.query.organizacionDestino) {
         query.where('destino.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionDestino));
+
+    }
+    if (req.query.search) {
+        const searchRegex = new RegExp(req.query.search, 'i');
+        query.where({
+            $or: [
+                { 'destino.organizacion.nombre': searchRegex },
+                { 'destino.prestacion.term': searchRegex },
+            ]
+        });
     }
     if (req.query.prestacionDestino) {
         query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
@@ -116,7 +126,7 @@ router.get('/reglas', async (req: Request, res, next) => {
     if (req.query.prestacionDestino && !raw) {
         reglas.forEach(regla => {
             if (Array.isArray(regla.destino.prestacion)) {
-                regla.destino.prestacion = regla.destino.prestacion.find(p => p.conceptId === req.query.prestacionDestino);
+                regla.destino.prestacion = regla.destino.prestacion.find(p => (p.conceptId === req.query.prestacionDestino));
             }
         });
     }
