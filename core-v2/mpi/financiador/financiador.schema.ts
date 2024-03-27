@@ -7,5 +7,7 @@ export const FinanciadorSchema = new Schema({
     id: Schema.Types.ObjectId,
     numeroAfiliado: String,
     prepaga: Boolean,
-    idObraSocial: Number
+    idObraSocial: Number,
+    origen: String,
+    fechaDeActualizacion: Date,
 }, { _id: false });
