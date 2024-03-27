@@ -290,7 +290,8 @@ export default [
         child: [
             { key: 'read', title: 'Ver usuarios y permisos', type: 'boolean' },
             { key: 'write', title: 'Agregar/modificar permisos', type: 'boolean' },
-            { key: 'perfiles', title: 'Crear/modificar perfiles de usuarios', visibility: 'restricted', type: 'boolean' }
+            { key: 'perfiles', title: 'Crear/modificar perfiles de usuarios', visibility: 'restricted', type: 'boolean' },
+            { key: 'cuenta', title: 'Editar cuenta de usuario', visibility: 'restricted', type: 'boolean' }
         ]
     },
     {
