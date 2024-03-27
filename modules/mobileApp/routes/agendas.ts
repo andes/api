@@ -40,7 +40,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
                 'bloques.restantesMobile': { $gt: 0 },
             },
             {
-                'tipoPrestaciones.conceptId': { $in:  reglas }
+                'tipoPrestaciones.conceptId': { $in: reglas }
             }
         ];
         fieldRegla = {
@@ -95,7 +95,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
                 return locationA.distance - locationB.distance;
             });
             // Limitamos a 10 km los turnos a mostrar (FILTRA LOS MAYORES A 10 KM)
-            agendasResultado = agendasResultado.filter(obj => obj.distance <= 10);
+            agendasResultado = agendasResultado.filter(obj => obj.distance <= 4);
         }
         res.json(agendasResultado);
     } catch (err) {
