@@ -26,7 +26,7 @@ router.get('/prestaciones', async (req, res, next) => {
 });
 
 router.get('/:capa/:idInternacion/historial', capaMiddleware, async (req: Request, res: Response, next) => {
-    const organizacionId = Auth.getOrganization(req);
+    const organizacionId = (req.query.organizacionID) ? req.query.organizacionID : Auth.getOrganization(req);
     const capa = req.params.capa;
     const idInternacion = req.params.idInternacion;
     const desde = req.query.desde;
