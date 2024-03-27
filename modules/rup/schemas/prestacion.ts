@@ -313,6 +313,12 @@ PrestacionSchema.index({
     'solicitud.tipoPrestacion.conceptId': 1
 });
 PrestacionSchema.index({
+    'solicitud.ambitoOrigen': 1,
+    'solicitud.tipoPrestacion.conceptId': 1,
+    'ejecucion.registros.valor.InformeEgreso.fechaEgreso': 1,
+    'solicitud.organizacion.id': 1,
+});
+PrestacionSchema.index({
     createdAt: 1,
     'solicitud.organizacion.id': 1,
     'solicitud.organizacionOrigen.id': 1
