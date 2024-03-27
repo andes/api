@@ -1,3 +1,16 @@
+# [5.104.0](https://github.com/andes/api/compare/v5.103.1...v5.104.0) (2024-03-27)
+
+
+### Bug Fixes
+
+* **MAT:** Actualizacion de domicilios ([#1879](https://github.com/andes/api/issues/1879)) ([e5cc4a6](https://github.com/andes/api/commit/e5cc4a60d5b60c3f69903f9779df55a4de097a74))
+
+
+### Features
+
+* **IN-573:** nuevo rol de internacion: farmacia ([#1856](https://github.com/andes/api/issues/1856)) ([50ea636](https://github.com/andes/api/commit/50ea63644f8bfd6e706e062fd2409e2d785cb4cc))
+* **IN-583:** eliminar indicacion en estado borrador ([#1853](https://github.com/andes/api/issues/1853)) ([db5748f](https://github.com/andes/api/commit/db5748fd87733752906f04211c98ce97fed25466))
+
 ## [5.103.1](https://github.com/andes/api/compare/v5.103.0...v5.103.1) (2024-03-13)
 
 
