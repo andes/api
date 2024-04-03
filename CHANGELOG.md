@@ -1,3 +1,10 @@
+## [5.104.1](https://github.com/andes/api/compare/v5.104.0...v5.104.1) (2024-04-03)
+
+
+### Bug Fixes
+
+* **AM:** se modifica la distancia para sacar turnos por mobile ([#1881](https://github.com/andes/api/issues/1881)) ([350fff9](https://github.com/andes/api/commit/350fff90ec3a5abcdfb6168b1d70139919ea794b))
+
 # [5.104.0](https://github.com/andes/api/compare/v5.103.1...v5.104.0) (2024-03-27)
 
 
