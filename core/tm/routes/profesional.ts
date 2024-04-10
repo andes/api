@@ -201,7 +201,6 @@ router.get('/profesionales/guia', async (req, res, next) => {
         if (datosGuia.length > 0) {
             datosGuia.forEach(element => {
                 const formGradFilter = element.formacionGrado.filter(formGrado => formGrado.matriculacion !== null);
-
                 resultado.push({
                     id: element.id,
                     nombre: element.nombre ? element.nombre : '',
@@ -210,6 +209,7 @@ router.get('/profesionales/guia', async (req, res, next) => {
                     documento: element.documento ? element.documento : '',
                     cuit: element.cuit ? element.cuit : '',
                     nacionalidad: element.nacionalidad ? element.nacionalidad.nombre : '',
+                    habilitado: element.habilitado,
                     profesiones: formGradFilter
                 });
             });
