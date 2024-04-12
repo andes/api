@@ -22,6 +22,7 @@ export const DireccionSchema = new mongoose.Schema({
         default: true
     },
     ultimaActualizacion: Date,
+    situacionCalle: Boolean
 });
 
 DireccionSchema.methods.isCompleted = function () {
