@@ -1508,6 +1508,12 @@ export function agendaNueva(data, clon, req) {
                 turno.updatedBy = undefined;
                 turno.diagnostico = { codificaciones: [] };
                 turno.reasignado = undefined;
+                turno.diagnostico = undefined;
+                turno.emitidoPor = undefined;
+                turno.fechaHoraDacion = undefined;
+                turno.link = undefined;
+                turno.motivoConsulta = undefined;
+                turno.usuarioDacion = undefined;
             });
         } else {
             bloque.turnos = [];
