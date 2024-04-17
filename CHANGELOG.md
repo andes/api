@@ -1,3 +1,10 @@
+## [5.104.2](https://github.com/andes/api/compare/v5.104.1...v5.104.2) (2024-04-17)
+
+
+### Bug Fixes
+
+* **am:** error en esquema de imagenes ([#1884](https://github.com/andes/api/issues/1884)) ([2a9f077](https://github.com/andes/api/commit/2a9f0778056e8e26df72198986dfa68b48c9ba3f))
+
 ## [5.104.1](https://github.com/andes/api/compare/v5.104.0...v5.104.1) (2024-04-03)
 
 
