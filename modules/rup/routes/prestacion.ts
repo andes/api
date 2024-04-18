@@ -713,6 +713,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     next(error);
                 }
                 break;
+            case 'periodosCensables':
+                data.periodosCensables = req.body.periodosCensables;
+                data.ejecucion.registros = req.body.registros;
+                break;
             default:
                 return next(500);
         }
