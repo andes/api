@@ -11,6 +11,7 @@ export interface IElementoRUP {
     tipo: string;
     formulaImplementation?: string;
     esSolicitud: boolean;
+    esIndicacion?: boolean;
     requiereDiagnosticoPrincipal?: boolean;
     params: any;
     conceptos: ISnomedConcept[];
@@ -66,7 +67,12 @@ export const ElementoRUPSchema = new mongoose.Schema({
         required: true,
         default: false
     },
-
+    // Indica si este elementoRUP aplica a una indicacion para internacion
+    esIndicacion: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     // Indica si este elementoRUP requiere indicar diagnostico principal
     requiereDiagnosticoPrincipal: {
         type: Boolean,
