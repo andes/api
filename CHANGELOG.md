@@ -1,3 +1,10 @@
+## [5.104.3](https://github.com/andes/api/compare/v5.104.2...v5.104.3) (2024-04-24)
+
+
+### Bug Fixes
+
+* **INT:** Agrega la opcion  de  indicaciones para elementos RUP ([#1888](https://github.com/andes/api/issues/1888)) ([e6e1f91](https://github.com/andes/api/commit/e6e1f91dc9e005c6051ae112bd53e5f4f36a27dc))
+
 ## [5.104.2](https://github.com/andes/api/compare/v5.104.1...v5.104.2) (2024-04-17)
 
 
