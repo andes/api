@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import { InformacionExportada } from '../core/log/schemas/logExportaInformacion';
 import { SECCION_CLASIFICACION } from '../modules/forms/forms-epidemiologia/constantes';
 import { FormsEpidemiologia } from '../modules/forms/forms-epidemiologia/forms-epidemiologia-schema';
+import { Forms } from '../modules/forms/forms.schema';
 import { altaDeterminacion, altaEventoV2, altaMuestra, getEventoId } from '../modules/sisa/controller/sisa.controller';
 
 export async function exportSisaFicha(done, horas, desde, hasta) {
@@ -156,22 +157,20 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
                     idEvento,
                     idEstablecimientoCarga,
                     fechaPapel: unaFicha.Fecha_Ficha,
-                    idClasificacionManualCaso: unaFicha.clasificacion === 'Antígeno' ? '898' : ''
+                    idClasificacionManualCaso: unaFicha.clasificacion === 'Antígeno COVID-19' ? '898' : ''
                 }
             };
             const log = {
                 fecha: new Date(),
                 sistema: 'Sisa',
-                key: unaFicha.clasificacion === 'Antígeno' ? 'antigeno' : '',
+                key: unaFicha.clasificacion === 'Antígeno COVID-19' ? 'antigeno' : '',
                 idPaciente: unaFicha.Paciente_id,
                 info_enviada: eventoNominal,
                 resultado: {}
             };
-
             if (eventoNominal.eventoCasoNominal.idClasificacionManualCaso) {
                 try {
                     const response = await altaEventoV2(eventoNominal);
-
                     if (response) {
                         const id_caso = response.id_caso ? response.id_caso : '';
 
@@ -224,6 +223,208 @@ export async function exportSisaFicha(done, horas, desde, hasta) {
     }
     done();
 }
+
+export async function exportFichaSNVS(done, horas, desde, hasta) {
+    const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
+    const end = hasta ? moment(hasta).toDate() : moment().toDate();
+
+    const formulario = await Forms.find({ active: true, 'config.idEvento': { $exists: true } });
+    for (const unForm of formulario) {
+        const configSNVS = unForm.config;
+        const pipelineConfirmados = [
+            {
+                $match: {
+                    createdAt: {
+                        $gte: start,
+                        $lte: end
+                    },
+                    'type.name': unForm.name
+                }
+            },
+            {
+                $lookup: {
+                    from: 'paciente',
+                    localField: 'paciente.id',
+                    foreignField: '_id',
+                    as: 'pacienteCompleto'
+                }
+            },
+            {
+                $unwind: '$pacienteCompleto'
+            },
+            {
+                $addFields: {
+                    orgIdentifier: {
+                        $toObjectId: '$createdBy.organizacion.id'
+                    },
+                    fechaNacimientoString: {
+                        $dateToString: {
+                            date: '$paciente.fechaNacimiento',
+                            format: '%d-%m-%Y',
+                            timezone: 'America/Argentina/Buenos_Aires'
+                        }
+                    },
+                    telefono: {
+                        $arrayElemAt: [
+                            {
+                                $filter: {
+                                    input: '$pacienteCompleto.contacto',
+                                    as: 'unContacto',
+                                    cond: {
+                                        $eq: [
+                                            '$$unContacto.tipo',
+                                            'celular'
+                                        ]
+                                    }
+                                }
+                            },
+                            0
+                        ]
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'organizacion',
+                    localField: 'orgIdentifier',
+                    foreignField: '_id',
+                    as: 'Organization'
+                }
+            },
+            {
+                $unwind: '$Organization'
+            },
+            {
+                $project: {
+                    _id: '$_id',
+                    Tipo: '$type.name',
+                    Paciente_id: '$paciente.id',
+                    Paciente_nombre: '$paciente.nombre',
+                    Paciente_apellido: '$paciente.apellido',
+                    Paciente_documento: '$paciente.documento',
+                    Paciente_fec_nacimiento: '$fechaNacimientoString',
+                    Paciente_sexo: '$paciente.sexo',
+                    Paciente_telefono: {
+                        $ifNull: [
+                            '$telefono.valor',
+                            ''
+                        ]
+                    },
+                    Fecha_Ficha: {
+                        $dateToString: {
+                            date: '$createdAt',
+                            format: '%d-%m-%Y',
+                            timezone: 'America/Argentina/Buenos_Aires'
+                        }
+                    },
+                    Organizacion_Id: { $toString: '$Organization._id' },
+                    Organizacion_Nombre: '$Organization.nombre',
+                    Sisa: '$Organization.codigo.sisa',
+                    SisaInterno: '$Organization.codigo.internoSisa',
+                    secciones: '$secciones'
+                }
+            }
+        ];
+        const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
+
+        for (const unaFicha of fichas) {
+            const documento = unaFicha.Paciente_documento;
+            const idEvento = configSNVS.idEvento;
+            const idGrupoEvento = configSNVS.idGrupoEvento;
+            const idEstablecimientoCarga = unaFicha.Sisa.toString();
+            const idSisa = unaFicha.SisaInterno ? unaFicha.SisaInterno.toString() : unaFicha.Sisa.toString();
+
+            if (documento) {
+                const clasificacion = buscarClasificacion(configSNVS, unaFicha.secciones);
+                if (clasificacion) {
+                    const eventoNominal = {
+                        ciudadano: {
+                            apellido: unaFicha.Paciente_apellido,
+                            nombre: unaFicha.Paciente_nombre,
+                            tipoDocumento: '1',
+                            numeroDocumento: unaFicha.Paciente_documento,
+                            sexo: unaFicha.Paciente_sexo === 'femenino' ? 'F' : (unaFicha.Paciente_sexo === 'masculino') ? 'M' : 'X',
+                            fechaNacimiento: unaFicha.Paciente_fec_nacimiento,
+                            seDeclaraPuebloIndigena: 'No',
+                            paisEmisionTipoDocumento: null,
+                            telefono: unaFicha.Paciente_telefono !== '' ? unaFicha.Paciente_telefono : null,
+                            mail: null,
+                            personaACargo: {
+                                tipoDocumento: null,
+                                numeroDocumento: null,
+                                vinculo: null
+                            }
+                        },
+                        eventoCasoNominal: {
+                            idGrupoEvento,
+                            idEvento,
+                            idEstablecimientoCarga,
+                            fechaPapel: unaFicha.Fecha_Ficha,
+                            idClasificacionManualCaso: clasificacion
+                        }
+                    };
+                    const log = {
+                        fecha: new Date(),
+                        sistema: 'Sisa',
+                        key: unaFicha.tipo,
+                        idPaciente: unaFicha.Paciente_id,
+                        info_enviada: eventoNominal,
+                        resultado: {}
+                    };
+                    if (eventoNominal.eventoCasoNominal.idClasificacionManualCaso) {
+                        try {
+                            const response = await altaEventoV2(eventoNominal);
+
+                            if (response) {
+                                const id_caso = response.id_caso ? response.id_caso : '';
+                                log.resultado = {
+                                    resultado: response.resultado ? response.resultado : '',
+                                    id_caso,
+                                    description: response.description ? response.description : ''
+                                };
+
+                            } else {
+                                log.resultado = {
+                                    resultado: 'ERROR_DE_ENVIO',
+                                    id_caso: '',
+                                    description: 'No se recibió ningún resultado'
+                                };
+                            }
+                            const info = new InformacionExportada(log);
+
+                            await info.save();
+
+                        } catch (error) {
+                            log.resultado = {
+                                resultado: 'ERROR_DE_ENVIO',
+                                id_caso: '',
+                                description: error.toString()
+                            };
+                            const info = new InformacionExportada(log);
+                            await info.save();
+                        }
+                    }
+                }
+
+
+            }
+        }
+    }
+    done();
+}
+
+function buscarClasificacion(configuracion, secciones) {
+    for (const GC of configuracion.configField) {
+        for (const unaSeccion of secciones) {
+            const salida = unaSeccion.fields.find(f => f[GC.key] === GC.value || f[GC.key]?.id === GC.value);
+            if (salida) {
+                return parseInt(GC.event, 10);
+            }
+        }
+    };
+    return 0;
+}
+
 
 async function confirmarMuestra(ficha, idEstablecimientoToma, idEventoCaso) {
     const dtoMuestra = {
