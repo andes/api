@@ -1,3 +1,10 @@
+# [5.105.0](https://github.com/andes/api/compare/v5.104.3...v5.105.0) (2024-05-01)
+
+
+### Features
+
+* **EPI:** Agrega job interoperabilidad generico ([#1891](https://github.com/andes/api/issues/1891)) ([bc6b190](https://github.com/andes/api/commit/bc6b190e6ffdad2df2b089e760855e06b6b385d5))
+
 ## [5.104.3](https://github.com/andes/api/compare/v5.104.2...v5.104.3) (2024-04-24)
 
 
