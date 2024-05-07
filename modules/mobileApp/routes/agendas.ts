@@ -75,7 +75,8 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
             const userLocation = JSON.parse(req.query.userLocation);
             for (let i = 0; i <= agendasResultado.length - 1; i++) {
                 const org: any = await Organizacion.findById(agendasResultado[i].id);
-                agendasResultado[i].circunferencia = org.circunferenciaKmTurno;
+                const kmDefault: Constante = await Constantes.findOne({ nombre: 'default-km' });
+                agendasResultado[i].circunferencia = org.configuraciones.circunferenciaKmTurno || kmDefault.key;
                 if (org.codigo?.sisa && org.turnosMobile && org.direccion?.geoReferencia) {
                     agendasResultado[i].coordenadasDeMapa = {
                         lat: org.direccion.geoReferencia[0],
