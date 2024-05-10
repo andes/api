@@ -70,20 +70,18 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
 
     try {
         let agendasResultado = await Agenda.aggregate(pipelineAgendas);
-
         if (req.query.userLocation) {
             const userLocation = JSON.parse(req.query.userLocation);
+            const kmDefault: Constante = await Constantes.findOne({ nombre: 'default-km' });
             for (let i = 0; i <= agendasResultado.length - 1; i++) {
                 const org: any = await Organizacion.findById(agendasResultado[i].id);
-                const kmDefault: Constante = await Constantes.findOne({ nombre: 'default-km' });
-                agendasResultado[i].circunferencia = org.configuraciones.circunferenciaKmTurno || kmDefault.key;
+                agendasResultado[i].circunferencia = org.configuraciones?.circunferenciaKmTurno || kmDefault.key;
                 if (org.codigo?.sisa && org.turnosMobile && org.direccion?.geoReferencia) {
                     agendasResultado[i].coordenadasDeMapa = {
                         lat: org.direccion.geoReferencia[0],
                         lng: org.direccion.geoReferencia[1]
                     };
                     agendasResultado[i].domicilio = org.direccion.valor;
-
                     // Calculamos la distancia entre la posicion actual del usuario y el efector (Aplica applyHaversine)
                     agendasResultado[i].distance = getDistanceBetweenPoints(
                         userLocation,
@@ -93,13 +91,12 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
                 }
             }
 
-            agendasResultado.sort((locationA, locationB) => {
-                return locationA.distance - locationB.distance;
-            });
-
             // Limitamos los turnos a mostrar hasta un máximo
             agendasResultado = agendasResultado.filter(obj => {
-                return (obj.distance <= obj.circunferencia);
+                return (obj.distance <= parseInt(obj.circunferencia, 10));
+            });
+            agendasResultado.sort((locationA, locationB) => {
+                return locationA.distance - locationB.distance;
             });
         }
         res.json(agendasResultado);

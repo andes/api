@@ -216,25 +216,25 @@ export function storeFile({
         const CDAFiles = makeFs();
         const uniqueId = new Types.ObjectId();
 
-        CDAFiles.writeFile({
-            _id: uniqueId,
-            filename: filename ? filename : String(uniqueId) + '.' + extension,
-            contentType: mimeType,
-            metadata
-        },
-        stream,
-        (error, createdFile) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve({
-                id: createdFile._id,
-                data: createdFile.filename,
-                mime: mimeType,
-                is64: false
+        CDAFiles.writeFile(
+            {
+                _id: uniqueId,
+                filename: filename ? filename : String(uniqueId) + '.' + extension,
+                contentType: mimeType,
+                metadata
+            },
+            stream,
+            (error, createdFile) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve({
+                    id: createdFile._id,
+                    data: createdFile.filename,
+                    mime: mimeType,
+                    is64: false
+                });
             });
-        }
-        );
     });
 }
 
@@ -248,19 +248,20 @@ export function storePdfFile(pdf) {
         const input = new Stream.PassThrough();
         const mime = 'application/pdf';
         const CDAFiles = makeFs();
-        CDAFiles.writeFile({
-            _id: uniqueId,
-            filename: String(uniqueId) + '.pdf',
-            contentType: mime
-        },
-        input.pipe(pdf),
-        (error, createdFile) => {
-            resolve({
-                id: createdFile._id,
-                data: 'files/' + createdFile.filename,
-                mime
-            });
-        }
+        CDAFiles.writeFile(
+            {
+                _id: uniqueId,
+                filename: String(uniqueId) + '.pdf',
+                contentType: mime
+            },
+            input.pipe(pdf),
+            (error, createdFile) => {
+                resolve({
+                    id: createdFile._id,
+                    data: 'files/' + createdFile.filename,
+                    mime
+                });
+            }
         );
     });
 }
@@ -438,21 +439,22 @@ export async function CDAExists(id, fecha, orgId) {
 export function searchByPatient(pacienteId, prestacion, { limit, skip }, org = null): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         const ids = Array.isArray(pacienteId) ? pacienteId : [Types.ObjectId(pacienteId)];
-        const CDAFiles = makeFs();
-        const conditions: any = {
-            'metadata.paciente': { $in: ids },
-            'metadata.cdaId': null
-        };
-        if (prestacion) {
-            conditions['metadata.prestacion.snomed.conceptId'] = prestacion;
-        }
-        if (limit === null) {
-            limit = 100;
-        }
-        if (skip === null) {
-            skip = 0;
-        }
         try {
+            const CDAFiles = makeFs();
+            const conditions: any = {
+                'metadata.paciente': { $in: ids },
+                'metadata.cdaId': null
+            };
+            if (prestacion) {
+                conditions['metadata.prestacion.snomed.conceptId'] = prestacion;
+            }
+            if (limit === null) {
+                limit = 100;
+            }
+            if (skip === null) {
+                skip = 0;
+            }
+
             const list = [];
             for await (const item of CDAFiles.find(conditions).sort({
                 'metadata.fecha': -1
