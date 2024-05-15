@@ -12,12 +12,26 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { vacunas } from '../../vacunas/schemas/vacunas';
 import { checkFichaAbierta } from '../../forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
+import { InformeCDA } from '../../../modules/descargas/informe-cda/informe-cda';
 
 const ObjectId = Types.ObjectId;
 
 const path = require('path');
 const router = express.Router();
 const to_json = require('xmljson').to_json;
+
+router.post('/createInformeCDA', Auth.authenticate(), async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:post')) {
+        return next(403);
+    }
+    try {
+        const informe = new InformeCDA(req.body, req.user.usuario);
+        const fileName = await informe.informe();
+        return res.download(fileName);
+    } catch (err) {
+        return next(err);
+    }
+});
 
 router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
@@ -237,43 +251,13 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:get')) {
         return next(403);
     }
-    const _base64 = req.params.id;
-    let contexto = await cdaCtr.loadCDA(_base64);
-    let setText = false;
-    // Limpiamos xml previo al parsing
-    contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
-    contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
-    contexto = contexto.toString().replace(new RegExp('&#xD', 'g'), '');
-
-    /**
-     * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros.
-     * Obtenemos el texto dentro de los tags <text> del xml, la extraemos tal cual está y la agregamos luego de la ejecución del parser
-     * para conservala tal cual la escribieron.
-     * PD: Deberemos mejorar esto a futuro!
-     */
-
-    let resultado = contexto.toString().match('(<text>)[^~]*(<\/text>)')[0];
-    if (!resultado.includes('Sin datos')) {
-        resultado = resultado.replace('<text>', '');
-        resultado = resultado.replace('</text>', '');
-        setText = true;
-    }
-    contexto = contexto.toString().replace(new RegExp('(<text>)[^~]*(<\/text>)'), '');
-    to_json(contexto, (error, data) => {
-        if (error) {
-            return next(error);
-        } else {
-            if (setText) {
-                // Volvemos a agregar el texto de la evolución
-                if (typeof data.ClinicalDocument.component.structuredBody.component.section === 'object') {
-                    data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
-                } else {
-                    data.ClinicalDocument.component.structuredBody.component.section = { text: resultado };
-                }
-            }
-            res.json(data);
-        }
+    cdaCtr.cdaToJSON(req.params.id).then((cda) => {
+        return res.json(cda ? cda : {});
+    }).catch(err => {
+        return next(err);
     });
+
+    return null;
 });
 
 /**

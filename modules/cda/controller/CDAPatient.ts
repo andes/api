@@ -17,6 +17,8 @@ import { Body, Component, ImageComponent } from './class/Body';
 import { CDA } from './class/CDA';
 import { Organization } from './class/Organization';
 import { Patient } from './class/Patient';
+import * as cdaCtr from '../controller/CDAPatient';
+const to_json = require('xmljson').to_json;
 
 /**
  * Matcheamos los datos del paciente.
@@ -234,7 +236,8 @@ export function storeFile({
                     mime: mimeType,
                     is64: false
                 });
-            });
+            }
+        );
     });
 }
 
@@ -278,16 +281,17 @@ export function storeCDA(objectID, cdaXml, metadata) {
         const input = new Stream.PassThrough();
         const CDAFiles = makeFs();
 
-        CDAFiles.writeFile({
-            _id: Types.ObjectId(objectID),
-            filename: String(objectID) + '.xml',
-            contentType: 'application/xml',
-            metadata
-        },
-        input,
-        (error, createdFile) => {
-            resolve(createdFile);
-        }
+        CDAFiles.writeFile(
+            {
+                _id: Types.ObjectId(objectID),
+                filename: String(objectID) + '.xml',
+                contentType: 'application/xml',
+                metadata
+            },
+            input,
+            (error, createdFile) => {
+                resolve(createdFile);
+            }
         );
 
         input.end(cdaXml);
@@ -824,5 +828,46 @@ export async function deleteCda(idCda, idPaciente) {
         }
     }
     return { success: true };
+}
+
+export function cdaToJSON(idCDA) {
+    return new Promise(async (resolve, reject) => {
+        const _base64 = idCDA;
+        let contexto = await cdaCtr.loadCDA(_base64);
+        let setText = false;
+        // Limpiamos xml previo al parsing
+        contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
+        contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
+        contexto = contexto.toString().replace(new RegExp('&#xD', 'g'), '');
+
+        /**
+         * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros.
+         * Obtenemos el texto dentro de los tags <text> del xml, la extraemos tal cual está y la agregamos luego de la ejecución del parser
+         * para conservala tal cual la escribieron.
+         * PD: Deberemos mejorar esto a futuro!
+         */
+        let resultado = contexto.toString().match('(<text>)[^~]*(<\/text>)')[0];
+        if (!resultado.includes('Sin datos')) {
+            resultado = resultado.replace('<text>', '');
+            resultado = resultado.replace('</text>', '');
+            setText = true;
+        }
+        contexto = contexto.toString().replace(new RegExp('(<text>)[^~]*(<\/text>)'), '');
+        to_json(contexto, (error, data) => {
+            if (error) {
+                return reject(error);
+            } else {
+                if (setText) {
+                    // Volvemos a agregar el texto de la evolución
+                    if (typeof data.ClinicalDocument.component.structuredBody.component.section === 'object') {
+                        data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
+                    } else {
+                        data.ClinicalDocument.component.structuredBody.component.section = { text: resultado };
+                    }
+                }
+                return resolve(data);
+            }
+        });
+    });
 }
 
