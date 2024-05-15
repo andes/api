@@ -1,3 +1,10 @@
+## [5.105.1](https://github.com/andes/api/compare/v5.105.0...v5.105.1) (2024-05-15)
+
+
+### Bug Fixes
+
+* **CITAS:** Corrige error al calcular radio para turnos mobile ([#1897](https://github.com/andes/api/issues/1897)) ([a969cb3](https://github.com/andes/api/commit/a969cb3c27da7db363711a3e0e578032d20e8c15))
+
 # [5.105.0](https://github.com/andes/api/compare/v5.104.3...v5.105.0) (2024-05-01)
 
 
