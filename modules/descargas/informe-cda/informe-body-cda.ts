@@ -1,6 +1,5 @@
 import moment = require('moment');
 import { HTMLComponent } from '../model/html-component.class';
-
 export class InformeCDABody extends HTMLComponent {
     template = `
     <main>
@@ -23,21 +22,36 @@ export class InformeCDABody extends HTMLComponent {
                 </article>
                 <hr>
                 <div>
+                </br>
                 <h6>
-                    {{{codificacion}}}
+                    <b>Codificación:</b> {{{codificacion.codigo}}} - {{{codificacion.nombre}}}
+                    </br></br>
+                    <b>Registros de la consulta:</b>  
+                    {{#if codificacion.registros}}
+                        {{#each codificacion.registros}}
+                            </br>
+                            {{{this}}}
+                        {{/each}}
+                    {{else}}
+                        Sin registros
+                    {{/if}}
                 </h6>    
                 </div>
             </section>
         </main>
     `;
 
-    constructor(public datos, public organizacion, public paciente) {
+    constructor(public datos, public organizacion, public paciente, public codificacion) {
         super();
         const fechaEjecucion = this.datos.fecha;
         this.data = {
             titulo: this.datos.prestacion.snomed.term,
             fechaEjecucion: fechaEjecucion && moment(fechaEjecucion).format('DD/MM/YYYY HH:mm'),
-            codificacion: this.datos.codificacion?.code?.$?.displayName
+            codificacion: {
+                codigo: codificacion.code.$.code,
+                nombre: codificacion.code.$.displayName,
+                registros: codificacion.text?.split(';')
+            }
         };
     }
 }

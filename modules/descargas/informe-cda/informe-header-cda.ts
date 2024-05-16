@@ -112,7 +112,7 @@ export class InformeCDAHeader extends HTMLComponent {
                 organizacion: organizacion ? this.getLogoOrganizacion(organizacion) : ''
             },
             organizacion: {
-                nombre: organizacion ? organizacion.nombre.replace('-', '</br>') : '',
+                nombre: organizacion.nombre,
                 direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
             },
             paciente: {
