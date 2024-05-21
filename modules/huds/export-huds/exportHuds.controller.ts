@@ -1,7 +1,8 @@
 import * as archiver from 'archiver';
-import { getCdaAdjunto } from '../../../modules/cda/controller/CDAPatient';
+import { cdaToJSON, getCdaAdjunto } from '../../../modules/cda/controller/CDAPatient';
 import { makeFs } from '../../../modules/cda/schemas/CDAFiles';
 import { InformeRUP } from '../../descargas/informe-rup/informe-rup';
+import { InformeCDA } from '../../descargas/informe-cda/informe-cda';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { exportHudsLog } from './exportHuds.log';
 import { ExportHudsModel } from './exportHuds.schema';
@@ -37,7 +38,6 @@ export async function createFile(idExportHuds) {
             const queryCda = {
                 'metadata.paciente': peticionExport.pacienteId,
                 'metadata.prestacion.snomed.conceptId': { $ne: '2881000013106' },
-                'metadata.adjuntos': { $exists: true }
             };
             if (fechaCondicion) {
                 queryCda['metadata.fecha'] = fechaCondicion;
@@ -103,7 +103,7 @@ export async function createFile(idExportHuds) {
         };
         const getCdas = (excluye: string[]) => {
             return Promise.all(cdas.map(async (cda: any) => {
-                if (!excluye.includes(cda.metadata.prestacion.snomed.conceptId)) {
+                if (!excluye.includes(cda.metadata.prestacion?.snomed?.conceptId)) {
                     if (cda.metadata.adjuntos?.length > 0) {
                         const realName = cda.metadata.adjuntos[0].id;
                         try {
@@ -112,6 +112,23 @@ export async function createFile(idExportHuds) {
 
                         } catch (error) {
                             exportHudsLog.error('Crear cda', objectLog, error);
+                        }
+                    } else {
+                        if (cda.metadata.prestacion && cda.metadata.prestacion.snomed.conceptId !== '33879002') {
+                            try {
+                                let codificacionCDA;
+                                await cdaToJSON(cda._id).then(async (cdaData: any) => {
+                                    codificacionCDA = cdaData.ClinicalDocument.component.structuredBody.component.section;
+                                });
+                                cda.metadata['codificacion'] = codificacionCDA;
+                                const informe = new InformeCDA(cda.metadata, peticionExport.usuario);
+                                const archivo: any = await informe.informe();
+                                const fechaArchivo = moment(cda.metadata.fecha).format('YYYY-MM-DD');
+                                const nombreArchivo = cda.metadata.prestacion.snomed.term;
+                                archive.file(`${archivo}`, { name: `${fechaArchivo} - ${nombreArchivo}.pdf` });
+                            } catch (error) {
+                                exportHudsLog.error('Crear informe cda', objectLog, error);
+                            }
                         }
                     }
                 }
