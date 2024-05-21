@@ -62,6 +62,8 @@ export const mongooseDebugMode = false;
 // Swagger config
 export const enableSwagger = false;
 
+export const diasNoLaborables = 'https://nolaborables.com.ar/api/v2/feriados/';
+
 // Configuración de Google Geocoding
 export const geoKey = getEnv('GOOGLE_MAP_KEY', 'GOOGLE_MAP_KEY');
 export const geocodingPaths = {
