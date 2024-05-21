@@ -6,7 +6,7 @@ import { Types } from 'mongoose';
 import * as request from 'request';
 import { Auth } from '../../../auth/auth.class';
 import { logKeys } from '../../../config';
-import { userScheduler } from '../../../config.private';
+import { userScheduler, diasNoLaborables } from '../../../config.private';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 import { toArray } from '../../../utils/utils';
@@ -661,7 +661,7 @@ function esFeriado(fecha) {
         const anio = moment(fecha).year();
         const mes = moment(fecha).month(); // de 0 a 11
         const dia = moment(fecha).date(); // de 1 a 31
-        const url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
+        const url = diasNoLaborables + anio;
 
         request({ url, json: true }, (err, response, body) => {
             if (err) {
