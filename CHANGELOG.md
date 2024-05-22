@@ -1,3 +1,15 @@
+# [5.106.0](https://github.com/andes/api/compare/v5.105.1...v5.106.0) (2024-05-22)
+
+
+### Bug Fixes
+
+* **CITAS:** cambia url feriados en actualizarAgendasJobs ([#1902](https://github.com/andes/api/issues/1902)) ([e449e2a](https://github.com/andes/api/commit/e449e2a9b2f51721e9d5757d9afce57c20eb0fea))
+
+
+### Features
+
+* **GDU:** modificar email en paciente temporal ([#1866](https://github.com/andes/api/issues/1866)) ([ad2eeec](https://github.com/andes/api/commit/ad2eeecff39e3c69c2afb7cf322d776a46caa743))
+
 ## [5.105.1](https://github.com/andes/api/compare/v5.105.0...v5.105.1) (2024-05-15)
 
 
