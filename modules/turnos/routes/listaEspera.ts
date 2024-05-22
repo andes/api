@@ -41,16 +41,16 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
         if (req.query.documento) {
             opciones['paciente.documento'] = utils.makePattern(req.query.documento);
         }
-    }
-    const radix = 10;
-    const skip: number = parseInt(req.query.skip || 0, radix);
-    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-    const query = listaEspera.find(opciones).skip(skip).limit(limit);
-    query.exec((err, data) => {
-        if (err) { return next(err); }
-        res.json(data);
-    });
 
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        const query = listaEspera.find(opciones).skip(skip).limit(limit);
+        query.exec((err, data) => {
+            if (err) { return next(err); }
+            res.json(data);
+        });
+    }
 });
 
 router.post('/listaEspera', async (req, res, next) => {
@@ -89,6 +89,9 @@ router.patch('/listaEspera/:id/:datoMod', async (req, res, next) => {
         }
         if (datoMod === 'estado') {
             data.estado = req.body;
+        }
+        if (datoMod === 'llamados') {
+            data.llamados = req.body;
         }
         Auth.audit(data, req);
         data.save((errUpdate) => {

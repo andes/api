@@ -39,7 +39,8 @@ const listaEsperaSchema = new mongoose.Schema({
         fecha: Date,
         motivo: String,
         observacion: String
-    }
+    },
+    llamados: {}
 });
 
 listaEsperaSchema.plugin(AuditPlugin);
