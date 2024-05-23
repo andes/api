@@ -86,18 +86,23 @@ export class NotificationService {
 
     /**
      * Envia una notificacion de adjunto
+     * Si cancel es true notifica la cancelacion de una solicitud previa
      */
-    public static solicitudAdjuntos(profesionalId, adjuntoId) {
-        const notificacion = {
+    public static solicitudAdjuntos(profesionalId, adjuntoId, cancel = false) {
+        const notificacion: any = {
             title: 'Adjunto Andes RUP',
-            body: 'Tocar para ir a adjuntar un documento',
             extraData: {
-                action: 'rup-adjuntar',
                 id: adjuntoId
             }
         };
-        // let id = new mongoose.Schema.Types.ObjectId(profesionalId);
-        // console.log(id);
+        if (cancel) {
+            notificacion.body = 'Solicitud para adjuntar documento cancelada';
+            notificacion.extraData.action = 'calcel-rup-adjuntar';
+        } else {
+            notificacion.body = 'Tocar para ir a adjuntar un documento';
+            notificacion.extraData.action = 'rup-adjuntar';
+
+        }
         this.sendByProfesional(profesionalId, notificacion);
     }
 
