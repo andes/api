@@ -25,7 +25,7 @@ router.post('/accesos/token', asyncHandler(async (req: any, res) => {
         const datosProfesional: any = await search({ id: idProfesional }, { matricula: 1 });
         matricula = (datosProfesional.length && datosProfesional[0].matricula && datosProfesional[0].matricula.length) ? datosProfesional[0].matricula[0] : null;
     }
-    logAcceso(req, req.body.paciente.id, matricula, req.body.motivo, req.body.idTurno, req.body.idPrestacion);
+    logAcceso(req, req.body.paciente.id, matricula, req.body.motivo, req.body.idTurno, req.body.idPrestacion, req.body.detalleMotivo);
     return res.json({ token: Auth.generateHudsToken(req.body.usuario, organizacionId, req.body.paciente) });
 }));
 
