@@ -495,11 +495,16 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }, org = n
  */
 export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
-        const CDAFiles = makeFs();
-        CDAFiles.readFile({ filename: String(cdaID) + '.xml' }, (err, buffer) => {
-            const xml = buffer.toString('utf8');
-            return resolve(xml);
-        });
+        try {
+            const CDAFiles = makeFs();
+            CDAFiles.readFile({ filename: String(cdaID) + '.xml' }, (err, buffer) => {
+                const xml = buffer.toString('utf8');
+                return resolve(xml);
+            });
+        } catch (e) {
+            return reject(null);
+        }
+
     });
 }
 
@@ -835,39 +840,43 @@ export function cdaToJSON(idCDA) {
         const _base64 = idCDA;
         let contexto = await cdaCtr.loadCDA(_base64);
         let setText = false;
-        // Limpiamos xml previo al parsing
-        contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
-        contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
-        contexto = contexto.toString().replace(new RegExp('&#xD', 'g'), '');
+        if (contexto) {
+            // Limpiamos xml previo al parsing
+            contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
+            contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
+            contexto = contexto.toString().replace(new RegExp('&#xD', 'g'), '');
 
-        /**
-         * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros.
-         * Obtenemos el texto dentro de los tags <text> del xml, la extraemos tal cual está y la agregamos luego de la ejecución del parser
-         * para conservala tal cual la escribieron.
-         * PD: Deberemos mejorar esto a futuro!
-         */
-        let resultado = contexto.toString().match('(<text>)[^~]*(<\/text>)')[0];
-        if (!resultado.includes('Sin datos')) {
-            resultado = resultado.replace('<text>', '');
-            resultado = resultado.replace('</text>', '');
-            setText = true;
-        }
-        contexto = contexto.toString().replace(new RegExp('(<text>)[^~]*(<\/text>)'), '');
-        to_json(contexto, (error, data) => {
-            if (error) {
-                return reject(error);
-            } else {
-                if (setText) {
-                    // Volvemos a agregar el texto de la evolución
-                    if (typeof data.ClinicalDocument.component.structuredBody.component.section === 'object') {
-                        data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
-                    } else {
-                        data.ClinicalDocument.component.structuredBody.component.section = { text: resultado };
-                    }
-                }
-                return resolve(data);
+            /**
+             * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros.
+             * Obtenemos el texto dentro de los tags <text> del xml, la extraemos tal cual está y la agregamos luego de la ejecución del parser
+             * para conservala tal cual la escribieron.
+             * PD: Deberemos mejorar esto a futuro!
+             */
+            let resultado = contexto.toString().match('(<text>)[^~]*(<\/text>)')[0];
+            if (!resultado.includes('Sin datos')) {
+                resultado = resultado.replace('<text>', '');
+                resultado = resultado.replace('</text>', '');
+                setText = true;
             }
-        });
+            contexto = contexto.toString().replace(new RegExp('(<text>)[^~]*(<\/text>)'), '');
+            to_json(contexto, (error, data) => {
+                if (error) {
+                    return reject(error);
+                } else {
+                    if (setText) {
+                        // Volvemos a agregar el texto de la evolución
+                        if (typeof data.ClinicalDocument.component.structuredBody.component.section === 'object') {
+                            data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
+                        } else {
+                            data.ClinicalDocument.component.structuredBody.component.section = { text: resultado };
+                        }
+                    }
+                    return resolve(data);
+                }
+            });
+        } else {
+            return reject(null);
+        }
     });
 }
 
