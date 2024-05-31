@@ -153,10 +153,12 @@ router.get('/laboratorios/(:id)', async (req: any, res, next) => {
         const cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip });
         for (const cda of cdas) {
             const _xml = await cdaCtr.loadCDA(cda.cda_id);
-            const dom: any = xmlToJson(_xml);
-            cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
-            cda.title = dom.ClinicalDocument.title['#text'];
-            cda.organizacion = dom.ClinicalDocument.author.assignedAuthor.representedOrganization.name['#text'];
+            if (_xml) {
+                const dom: any = xmlToJson(_xml);
+                cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
+                cda.title = dom.ClinicalDocument.title['#text'];
+                cda.organizacion = dom.ClinicalDocument.author.assignedAuthor.representedOrganization.name['#text'];
+            }
         }
         res.json(cdas);
     } else {
