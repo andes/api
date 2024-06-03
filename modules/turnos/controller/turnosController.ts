@@ -40,39 +40,40 @@ export function getTurno(req) {
             const turnos = [];
             let turno;
 
-            pipelineTurno = [{
-                $match: {
-                    estado: 'publicada'
-                }
-            },
+            pipelineTurno = [
+                {
+                    $match: {
+                        estado: 'publicada'
+                    }
+                },
                 // Unwind cada array
-                             { $unwind: '$bloques' },
-                             { $unwind: '$bloques.turnos' },
+                { $unwind: '$bloques' },
+                { $unwind: '$bloques.turnos' },
                 // Filtra los elementos que matchean
-                             {
-                                 $match: {
-                                     estado: 'publicada'
-                                 }
-                             },
-                             {
-                                 $group: {
-                                     _id: { id: '$_id', bloqueId: '$bloques._id' },
-                                     agenda_id: { $first: '$_id' },
-                                     organizacion: { $first: '$organizacion' },
-                                     profesionales: { $first: '$profesionales' },
-                                     turnos: { $push: '$bloques.turnos' }
-                                 }
-                             },
-                             {
-                                 $group: {
-                                     _id: '$_id.id',
-                                     agenda_id: { $first: '$agenda_id' },
-                                     bloque_id: { $first: '$_id.bloqueId' },
-                                     organizacion: { $first: '$organizacion' },
-                                     profesionales: { $first: '$profesionales' },
-                                     bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } }
-                                 }
-                             }];
+                {
+                    $match: {
+                        estado: 'publicada'
+                    }
+                },
+                {
+                    $group: {
+                        _id: { id: '$_id', bloqueId: '$bloques._id' },
+                        agenda_id: { $first: '$_id' },
+                        organizacion: { $first: '$organizacion' },
+                        profesionales: { $first: '$profesionales' },
+                        turnos: { $push: '$bloques.turnos' }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$_id.id',
+                        agenda_id: { $first: '$agenda_id' },
+                        bloque_id: { $first: '$_id.bloqueId' },
+                        organizacion: { $first: '$organizacion' },
+                        profesionales: { $first: '$profesionales' },
+                        bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } }
+                    }
+                }];
             // ver llamado, req.query
             if (req.query && mongoose.Types.ObjectId.isValid(req.query.id)) {
 
@@ -171,7 +172,7 @@ export function getTurno(req) {
  */
 export async function getHistorialPaciente(req) {
     // console.warn('Deprecation warning: getHistorialPaciente is deprecated. Use getHistorialPaciente in core/mpi/controller/paciente');
-    if (req.query && req.query.pacienteId) {
+    if (req.query?.pacienteId) {
         const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
         const paciente: any = await PacienteCtr.findById(idPaciente);
         try {
@@ -339,17 +340,21 @@ export async function getHistorialPaciente(req) {
 }
 
 export async function getLiberadosPaciente(req) {
-    if (req.query && req.query.pacienteId) {
+    if (req.query?.pacienteId) {
         try {
             const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
             const paciente: any = await PacienteCtr.findById(idPaciente);
-            const resultado: any = await logPaciente.find(
-                {
-                    paciente: { $in: paciente.vinculos },
-                    operacion: 'turnos:liberar',
-                    'dataTurno.turno.updatedBy.organizacion._id': req.user.organizacion._id
-                })
-                .exec();
+            const query = {
+                paciente: { $in: paciente.vinculos },
+                operacion: 'turnos:liberar'
+            };
+
+            if (req.user.organizacion?.id) {
+                query['dataTurno.turno.updatedBy.organizacion._id'] = req.user.organizacion.id;
+            }
+
+            const resultado: any = await logPaciente.find(query).exec();
+
             let turno;
             const turnos = [];
             resultado.forEach(elem => {

@@ -4,16 +4,13 @@ import moment = require('moment');
 import { PacienteCtr } from '../../../../core-v2/mpi/paciente/paciente.routes';
 
 export async function getHistorial(req) {
-    let historial;
-    if (req.query.sinLiberados) {
-        historial = await getHistorialPaciente(req);
-    } else {
-        const turnos = getHistorialPaciente(req);
-        const liberados = getLiberadosPaciente(req);
-        const fueraAgendas = getHistorialFueraAgendas(req.query.pacienteId);
-        const result = await Promise.all([turnos, liberados, fueraAgendas]);
-        historial = [...result[0], ...result[1], ...result[2]];
-    }
+
+    const turnos = getHistorialPaciente(req);
+    const liberados = getLiberadosPaciente(req);
+    const fueraAgendas = getHistorialFueraAgendas(req.query.pacienteId);
+    const result = await Promise.all([turnos, liberados, fueraAgendas]);
+    const historial = [...result[0], ...result[1], ...result[2]];
+
     return historial;
 }
 
