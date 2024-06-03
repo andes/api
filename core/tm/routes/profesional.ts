@@ -1246,27 +1246,20 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
 
 router.post('/profesionales/validar', async (req, res, next) => {
     try {
-        const { documento, sexo, nombre, apellido, fechaNacimiento } = req.body;
-        if (documento && sexo && nombre && apellido && fechaNacimiento) {
+        const { documento, sexo, fechaNacimiento } = req.body;
+        if (documento && sexo && fechaNacimiento) {
             const regexSexo = (value) => new RegExp(['^', value, '$'].join(''), 'i');
-
             const params = {
                 documento,
                 sexo: regexSexo(sexo),
             };
             const profesional = await Profesional.findOne(params);
-            if (!profesional) {
-                return next('El profesional no se encuentra registrado en Andes.');
-            }
-
-            const profesionalCompare = { documento, sexo: sexo.toLowerCase(), nombre, apellido, fechaNacimiento };
-            profesional.sexo = profesional.sexo.toLowerCase();
-
-            const valorMatching = new Matching().matchPersonas(profesional, profesionalCompare, mpi.weightsDefault, algoritmo);
-
-            if (valorMatching >= 0.95) {
+            const fechaNacBD = moment(profesional?.fechaNacimiento).format('DD/MM/YYYY');
+            if (profesional && fechaNacBD === fechaNacimiento) {
                 const token = await getTemporyTokenGenerarUsuario(documento);
                 return res.json({ profesional, token });
+            } else {
+                return next('El profesional no se encuentra registrado en Andes.');
             }
         }
         return next('No se pudo validar el profesional. Por favor revise los datos ingresados.');
