@@ -2,12 +2,12 @@ import { HudsAcceso } from './hudsAccesos.schema';
 import * as moment from 'moment';
 
 
-export async function logAcceso(req, paciente, matricula, motivo, idTurno, idPrestacion) {
+export async function logAcceso(req, paciente, matricula, motivo, idTurno, idPrestacion, detalleMotivo) {
     let bucketNumber = 0;
     let retry = true;
     while (retry) {
         try {
-            await execLog(req, paciente, matricula, motivo, idTurno, idPrestacion, bucketNumber);
+            await execLog(req, paciente, matricula, motivo, idTurno, idPrestacion, bucketNumber, detalleMotivo);
             retry = false;
         } catch (err) {
             if (err.code === 17419) {
@@ -20,7 +20,7 @@ export async function logAcceso(req, paciente, matricula, motivo, idTurno, idPre
     }
 }
 
-async function execLog(req, paciente, matricula, motivoAcceso, turno, prestacion, bucketNumber) {
+async function execLog(req, paciente, matricula, motivoAcceso, turno, prestacion, bucketNumber, detalleMotivo) {
     const now = new Date();
     const start = moment(now).startOf('year') as unknown as number;
     return HudsAcceso.update(
@@ -42,6 +42,7 @@ async function execLog(req, paciente, matricula, motivoAcceso, turno, prestacion
                     usuario: user(req),
                     matricula,
                     motivoAcceso,
+                    detalleMotivo,
                     turno,
                     prestacion,
                     organizacion: organizacion(req),
