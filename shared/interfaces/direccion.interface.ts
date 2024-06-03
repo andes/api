@@ -11,6 +11,7 @@ export interface IDireccion {
     ranking: Number;
     activo: Boolean;
     ultimaActualizacion: Date | Moment;
+    situacionCalle: Boolean;
 }
 
 export interface IDireccionDoc extends Document, IDireccion {

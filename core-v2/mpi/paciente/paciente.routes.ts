@@ -220,6 +220,9 @@ export const patch = async (req: Request, res: Response) => {
         await extractFoto(body, req);
 
         paciente = set(paciente, body);
+        if (paciente.direccion[0].situacionCalle) {
+            paciente.direccion[0].geoReferencia = null;
+        }
         const updated = await PacienteCtr.update(id, paciente, req);
         return res.json(updated);
     }

@@ -22,7 +22,7 @@ EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
             },
             body: paciente
         };
-        if (paciente.direccion?.length) {
+        if (!paciente.direccion[0].situacionCalle && paciente.direccion?.length) {
             await updateGeoreferencia(paciente);
         }
         await linkPacientesDuplicados(patientRequest, paciente);
@@ -45,7 +45,7 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     const direccionOriginal = paciente._original.direccion?.[0] || null;
     const direccionActual = paciente.direccion?.[0] || null;
     // Verifica si hubo algun cambio en direccion, localidad y/o provincia
-    if (addressChanged(direccionOriginal, direccionActual)) {
+    if (!paciente.direccion[0].situacionCalle && addressChanged(direccionOriginal, direccionActual)) {
         await updateGeoreferencia(paciente);
     }
     // Verifica si se realizó alguna operación de vinculación de pacientes
