@@ -128,6 +128,7 @@ export function initAPI(app: Express) {
         );
     }
     app.use('/api/modules/turnos', require('./modules/turnos').InstitucionRouter);
+    app.use('/api/modules/turnos', require('./modules/turnos').ProfesionalPermisosEspecialesRouter);
 
     const { PacienteAppRouter, SendMessageCacheRouter } = require('./modules/mobileApp');
     app.use('/api/modules/mobileApp', SendMessageCacheRouter);
