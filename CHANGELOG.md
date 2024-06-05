@@ -1,3 +1,18 @@
+# [5.107.0](https://github.com/andes/api/compare/v5.106.0...v5.107.0) (2024-06-05)
+
+
+### Bug Fixes
+
+* **AM:** matching profesional ([#1909](https://github.com/andes/api/issues/1909)) ([d04fcdc](https://github.com/andes/api/commit/d04fcdca666863fe0ca32ad44515a394ae8e30c9))
+* **AM-262:** Corregir matching profesional ([#1887](https://github.com/andes/api/issues/1887)) ([98125f9](https://github.com/andes/api/commit/98125f9ecd0f06a9eed0c095d64783e3fbe65ce4))
+* **CDAs:** Agrega control al crear bucket ([#1907](https://github.com/andes/api/issues/1907)) ([58a9bba](https://github.com/andes/api/commit/58a9bba13d73ebe15d068118cd973b8bed107609))
+
+
+### Features
+
+* **MPI-424:** Pacientes sin domicilio real ([#1886](https://github.com/andes/api/issues/1886)) ([039bfa9](https://github.com/andes/api/commit/039bfa9e17f438bbad45a0c23ec9071c280a2949))
+* **PRIV-70:** Agregar campo observación en motivos ([#1901](https://github.com/andes/api/issues/1901)) ([fe63c17](https://github.com/andes/api/commit/fe63c1707b16d460b13211947f0aeec4231b609e))
+
 # [5.106.0](https://github.com/andes/api/compare/v5.105.1...v5.106.0) (2024-05-22)
 
 
