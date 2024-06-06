@@ -30,51 +30,49 @@ export function roboSender() {
                         let error = false;
                         const today = moment().toDate();
 
-                        if (env.email) {
-                            let html = '';
+                        // if (env.email) {
+                        //     let html = '';
 
-                            /**
-                             * Renderizamo con handlebars el template elegido
-                             */
-                            if (env.template && env.template.length) {
-                                html = await mailTools.renderHTML(env.template, env.extras);
-                            } else {
-                                html = env.message;
-                            }
+                        //     /**
+                        //      * Renderizamo con handlebars el template elegido
+                        //      */
+                        //     if (env.template && env.template.length) {
+                        //         html = await mailTools.renderHTML(env.template, env.extras);
+                        //     } else {
+                        //         html = env.message;
+                        //     }
 
-                            const mailOptions: mailTools.MailOptions = {
-                                to: env.email,
-                                subject: env.subject,
-                                text: env.message,
-                                html,
-                                attachments: ''
-                            };
-                            log('Enviando email a', env.email);
+                        //     const mailOptions: mailTools.MailOptions = {
+                        //         to: env.email,
+                        //         subject: env.subject,
+                        //         text: env.message,
+                        //         html,
+                        //         attachments: ''
+                        //     };
+                        //     log('Enviando email a', env.email);
 
-                            if (today <= env.expiredAt) {
-                                await mailTools.sendMail(mailOptions);
-                            } else { error = true; }
-                        }
+                        //     if (today <= env.expiredAt) {
+                        //         await mailTools.sendMail(mailOptions);
+                        //     } else { error = true; }
+                        // }
 
-                        if (env.phone) {
-                            const smsOptions: smsTools.SmsOptions = {
-                                telefono: env.phone,
-                                mensaje: env.message
-                            };
-                            log('Enviando SMS a', env.phone);
-                            await smsTools.sendSms(smsOptions);
-                        }
-                        if (env.device_id) {
-                            new PushClient().send(env.device_id, env.notificationData);
-                        }
-
-                        if (env.device_fcm_token) {
-                            const device = [
-                                { device_fcm_token: env.device_fcm_token }
-                            ];
-                            await sendPushNotification(device, env.notificationData);
-                        }
-
+                        // if (env.phone) {
+                        //     const smsOptions: smsTools.SmsOptions = {
+                        //         telefono: env.phone,
+                        //         mensaje: env.message
+                        //     };
+                        //     log('Enviando SMS a', env.phone);
+                        //     await smsTools.sendSms(smsOptions);
+                        // }
+                        // if (env.device_id) {
+                        //     new PushClient().send(env.device_id, env.notificationData);
+                        // }
+                        // if (env.device_fcm_token) {
+                        //     const device = [
+                        //         { device_fcm_token: env.device_fcm_token }
+                        //     ];
+                        //     await sendPushNotification(device, env.notificationData);
+                        // }
                         // Exportar HUDS
                         if (env.idExportHuds) {
                             if (today <= env.expiredAt) {

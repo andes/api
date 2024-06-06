@@ -14,6 +14,8 @@ export async function registroToHTML(prestacion, registro, depth: number) {
     }
 
     const HTMLClass = ElementosRUPHTML[elementoRUP.componente];
+    // console.log('elemrup comp', elementoRUP.componente);
+    // console.log('htm', HTMLClass);
 
     if (HTMLClass) {
         const componenteHTML: HTMLComponent = new (HTMLClass)(prestacion, registro, registro.params, depth);

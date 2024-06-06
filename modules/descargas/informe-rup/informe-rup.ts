@@ -28,7 +28,7 @@ export class InformeRUP extends InformePDF {
         await fulfillPrestacion(prestacion, elementosRUPSet);
 
         const cama = await this.getCamaInternacion(prestacion);
-
+        // console.log('informe ruo', prestacion);
         this.header = new InformeRupHeader(prestacion, paciente, organizacion, cama);
         this.body = new InformeRupBody(prestacion, paciente, organizacion, this.registroId);
         this.footer = new InformeRupFooter(prestacion, paciente, organizacion, this.usuario);

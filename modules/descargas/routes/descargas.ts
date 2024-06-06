@@ -217,7 +217,7 @@ router.post('/listadoTurnos', Auth.authenticate(), async (req: any, res, next) =
  * Se usa POST para generar la descarga porque se envían datos
  * que van a ser parte del archivo
  */
-router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
+router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {// modules/descarga/pdf
     try {
         const idPrestacion = req.body.idPrestacion;
         const idRegistro = req.body.idRegistro;
