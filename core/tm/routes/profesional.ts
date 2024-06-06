@@ -1254,7 +1254,7 @@ router.post('/profesionales/validar', async (req, res, next) => {
                 sexo: regexSexo(sexo),
             };
             const profesional = await Profesional.findOne(params);
-            if (profesional?.id && moment(profesional.fechaNacimiento, 'DD-MM-YYYY').isSame(moment(fechaNacimiento, 'DD-MM-YYYY'), 'day')) {
+            if (profesional?.id) {
                 const token = await getTemporyTokenGenerarUsuario(documento);
                 return res.json({ profesional, token });
             } else {
