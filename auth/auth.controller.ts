@@ -250,8 +250,8 @@ export async function createUser(data) {
     user.nombre = data.nombre;
     user.apellido = data.apellido;
     user.email = data.email;
-    user.authMethod = 'password';
-    user.tipo = 'temporal';
+    user.authMethod = data.authMethod;
+    user.tipo = data.tipo;
 
     const organizacion = await Organizacion.findOne({ matriculacion: true });
     const permisos = getPermisosByType(data.tipoPermisos);
