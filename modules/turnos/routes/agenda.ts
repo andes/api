@@ -502,9 +502,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                 }
             });
             if (turnoSinPaciente) {
-                return next('Error: Uno o varios turnos no presentan pacientes.');
+                return next('Error: El turno que está intentando modificar ha sufrido cambios recientes. Por favor, actualice la pantalla e inténtelo de nuevo.');
             } else if (!tieneSobreTurno && indexSobreturno > -1) {
-                return next('Error: El sobreturno se encuentra suspendido o no presenta paciente.');
+                return next('Error: El sobreturno que está intentando modificar ha sufrido cambios recientes. Por favor, actualice la pantalla e inténtelo de nuevo.');
             }
             for (let y = 0; y < turnos.length; y++) {
                 let turno;
