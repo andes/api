@@ -27,7 +27,7 @@ demandaSchema.plugin(AuditPlugin);
 const listaEsperaSchema = new mongoose.Schema({
     paciente: PacienteSubSchema,
     tipoPrestacion: { type: tipoPrestacionSchema },
-    fecha: Date, // si es una solicitud es la fecha en que se solicitó, si es demanda rechazada es la fecha en que no se atendió la demanda
+    fecha: Date,
     vencimiento: Date,
     estado: {
         type: String, enum: ['pendiente', 'resuelto', 'vencido'],
@@ -45,6 +45,5 @@ const listaEsperaSchema = new mongoose.Schema({
 listaEsperaSchema.plugin(AuditPlugin);
 listaEsperaSchema.index({ 'paciente.id': 1, 'tipoPrestacion.conceptId': 1, fecha: 1 });
 
-const listaEspera = mongoose.model('listaEspera', listaEsperaSchema, 'listaEspera');
-
-export = listaEspera;
+export const listaEspera = mongoose.model('listaEspera', listaEsperaSchema, 'listaEspera');
+export const demanda = mongoose.model('demanda', demandaSchema);
