@@ -1,3 +1,12 @@
+## [5.107.1](https://github.com/andes/api/compare/v5.107.0...v5.107.1) (2024-06-12)
+
+
+### Bug Fixes
+
+* **LIB:** cambia label para marcar conflictos ([#1910](https://github.com/andes/api/issues/1910)) ([3f6ac77](https://github.com/andes/api/commit/3f6ac7714cad195b92369530015f14560d8e0a9b))
+* **MAT:** Cambia el formato de fecha para validar profesional ([#1911](https://github.com/andes/api/issues/1911)) ([1b4b5d7](https://github.com/andes/api/commit/1b4b5d78b3358122615b1f6b95e91c29ee130a0c))
+* **MAT:** Saca el control de fecha de nacimiento para validar ([#1913](https://github.com/andes/api/issues/1913)) ([539a8da](https://github.com/andes/api/commit/539a8dafa2de4d99690b20fb20f8286cbe1d3615))
+
 # [5.107.0](https://github.com/andes/api/compare/v5.106.0...v5.107.0) (2024-06-05)
 
 
