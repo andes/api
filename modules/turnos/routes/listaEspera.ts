@@ -53,7 +53,6 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 });
 
 router.post('/listaEspera', async (req, res, next) => {
-
     const params = {
         'paciente.id': req.body.paciente.id,
         'tipoPrestacion.conceptId': req.body.tipoPrestacion.conceptId,
@@ -69,29 +68,21 @@ router.post('/listaEspera', async (req, res, next) => {
     };
 
     try {
-        const query: any = await listaEspera.find(params, (data: any) => { return data; });
-        if (query[0]?.demandas) {
+        const listaDocument: any = await listaEspera.findOne(params, (data: any) => { return data; });
+        let listaSaved;
+        if (listaDocument?.demandas) {
             const newDemanda = new demanda(unaDemanda);
             Auth.audit(newDemanda, req);
-            query[0].demandas.push(newDemanda);
-            const editItem = new listaEspera(query[0]);
-            Auth.audit(editItem, req);
-            await editItem.save((err) => {
-                if (err) {
-                    return next(err);
-                }
-                res.json(editItem);
-            });
+            listaDocument.demandas.push(newDemanda);
+
+            Auth.audit(listaDocument, req);
+            listaSaved = await listaDocument.save();
         } else {
-            const newItem = new listaEspera(req.body);
-            Auth.audit(newItem, req);
-            await newItem.save((err) => {
-                if (err) {
-                    return next(err);
-                }
-                res.json(newItem);
-            });
+            const newListaDocument = new listaEspera(req.body);
+            Auth.audit(newListaDocument, req);
+            listaSaved = await newListaDocument.save();
         }
+        res.json(listaSaved);
     } catch (error) {
         return next(error);
     }
