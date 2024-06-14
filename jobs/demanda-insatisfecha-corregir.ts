@@ -3,6 +3,7 @@ import { Agenda } from '../modules/turnos/schemas/agenda';
 import { Auth } from '../auth/auth.class';
 import { userScheduler } from '../config.private';
 import * as moment from 'moment';
+import { demandaLog } from '../modules/turnos/citasLog';
 
 /**
  * job para cerrar demandas, de acuerdo a los turnos asignados
@@ -33,7 +34,7 @@ async function run(done) {
 
             }
         } catch (error) {
-
+            demandaLog.error('job cerrar demanda', listaEsperaPend, error, userScheduler);
         }
     }
     done();

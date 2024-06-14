@@ -17,3 +17,11 @@ export const turnosLog = new Logger({
     bucketBy: 'h',
     bucketSize: 100
 });
+export const demandaLog = new Logger({
+    connection: Connections.logs,
+    module: 'citas',
+    type: 'demanda-turno',
+    application: 'andes',
+    bucketBy: 'h',
+    bucketSize: 100
+});
