@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+
 const profesionalSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     nombre: String,
