@@ -240,7 +240,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                 return next('No quedan turnos del tipo ' + tipoTurno);
             }
         }
-
+        if (req.body.emitidoPor && (req.body.emitidoPor === 'appMobile') && countBloques['mobile'] === 0) {
+            return next('Lo sentimos, ya no quedan más turnos para consumir desde la aplicación');
+        }
         // Verifica si el turno se encuentra todavia disponible
         // Si quedan turnos
         const update: any = {};
