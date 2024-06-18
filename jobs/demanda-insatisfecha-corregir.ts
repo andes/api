@@ -11,30 +11,30 @@ import { demandaLog } from '../modules/turnos/citasLog';
 
 async function run(done) {
     const params = { estado: 'pendiente' };
-    const listaEsperaPend = listaEspera.find(params).cursor({ batchSize: 100 });
+    const listaEsperaPendientes = listaEspera.find(params).cursor({ batchSize: 100 });
 
-    for await (const lista of listaEsperaPend) {
+    for await (const lista of listaEsperaPendientes) {
         try {
             const conceptId = lista.tipoPrestacion.conceptId;
             const pacienteId = lista.paciente.id;
-            const listDemandas: any[] = lista.demandas.sort((a, b) => (a.fecha - b.fecha));
             if (lista.demandas.length) {
-                const fechaDemIni = listDemandas[0].fecha;
-                const fechaDemFin = listDemandas[listDemandas.length - 1].fecha;
-                const fechaHoy = moment(new Date()).toDate();
-                let turnos = await getTurnosAsignados('turno', pacienteId, conceptId, fechaDemIni, fechaHoy) || [];
+                const demandas: any[] = lista.demandas.sort((a, b) => (a.fecha - b.fecha));
+                const fechaInicioDemanda = demandas[0].fecha;
+                const fechaFinDemanda = demandas[demandas.length - 1].fecha;
+                const fechaHoy = moment().toDate();
+                let turnos = await getTurnosAsignados('turno', pacienteId, conceptId, fechaInicioDemanda, fechaHoy) || [];
                 if (turnos.length) {
-                    await resolverDemanda(lista, listDemandas, turnos, fechaDemFin, null);
+                    await resolverDemanda(lista, demandas, turnos, fechaFinDemanda, null);
                 } else {
-                    turnos = await getTurnosAsignados('sobreturno', pacienteId, conceptId, fechaDemIni, fechaHoy) || [];
+                    turnos = await getTurnosAsignados('sobreturno', pacienteId, conceptId, fechaInicioDemanda, fechaHoy) || [];
                     if (turnos.length) {
-                        await resolverDemanda(lista, listDemandas, turnos, fechaDemFin, null);
+                        await resolverDemanda(lista, demandas, turnos, fechaFinDemanda, null);
                     }
                 }
 
             }
         } catch (error) {
-            demandaLog.error('job cerrar demanda', listaEsperaPend, error, userScheduler);
+            await demandaLog.error('job cerrar demanda', listaEsperaPendientes, error, userScheduler);
         }
     }
     done();
