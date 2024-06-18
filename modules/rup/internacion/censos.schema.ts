@@ -25,5 +25,11 @@ export const CensoSchema = new mongoose.Schema({
     }]
 });
 
+CensoSchema.index({
+    idOrganizacion: 1,
+    unidadOrganizativa: 1,
+    start: 1,
+    end: 1
+});
 
 export const Censo = mongoose.model('internacionCensos', CensoSchema, 'internacionCensos');
