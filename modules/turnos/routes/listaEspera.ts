@@ -1,9 +1,8 @@
 import * as express from 'express';
 import * as moment from 'moment';
-import { Logger } from '../../../utils/logService';
 import * as utils from '../../../utils/utils';
 import { Agenda } from '../schemas/agenda';
-import * as listaEspera from '../schemas/listaEspera';
+import { listaEspera, demanda } from '../schemas/listaEspera';
 import { defaultLimit, maxLimit } from './../../../config';
 import { Auth } from '../../../auth/auth.class';
 
@@ -54,19 +53,39 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 });
 
 router.post('/listaEspera', async (req, res, next) => {
-    const newItem = new listaEspera(req.body);
-    Auth.audit(newItem, req);
-    newItem.save((err) => {
-        if (err) {
-            return next(err);
+    const params = {
+        'paciente.id': req.body.paciente.id,
+        'tipoPrestacion.conceptId': req.body.tipoPrestacion.conceptId,
+        estado: 'pendiente'
+    };
+
+    const unaDemanda = {
+        profesional: req.body.demandas[0].Profesional,
+        organizacion: req.body.demandas[0].organizacion,
+        motivo: req.body.demandas[0].motivo,
+        fecha: moment().toDate(),
+        origen: req.body.demandas[0].origen
+    };
+
+    try {
+        const listaDocument: any = await listaEspera.findOne(params, (data: any) => { return data; });
+        let listaSaved;
+        if (listaDocument?.demandas) {
+            const newDemanda = new demanda(unaDemanda);
+            Auth.audit(newDemanda, req);
+            listaDocument.demandas.push(newDemanda);
+
+            Auth.audit(listaDocument, req);
+            listaSaved = await listaDocument.save();
+        } else {
+            const newListaDocument = new listaEspera(req.body);
+            Auth.audit(newListaDocument, req);
+            listaSaved = await newListaDocument.save();
         }
-        Logger.log(req, req.body.demandas[0].origen, 'lista espera', (errLog) => {
-            if (errLog) {
-                return next(err);
-            }
-        });
-        res.json(newItem);
-    });
+        res.json(listaSaved);
+    } catch (error) {
+        return next(error);
+    }
 });
 
 router.put('/listaEspera/:id', (req, res, next) => {
