@@ -1,3 +1,15 @@
+# [5.108.0](https://github.com/andes/api/compare/v5.107.1...v5.108.0) (2024-06-19)
+
+
+### Bug Fixes
+
+* **AM-276:** Evitar errores por asignación simultáneas de turnos virtuales ([#1895](https://github.com/andes/api/issues/1895)) ([d4b1277](https://github.com/andes/api/commit/d4b1277961891a8b097c8be4c6924f8b52e5cee7))
+
+
+### Features
+
+* **MISC-259:** API agregar índices a mongo ([#1864](https://github.com/andes/api/issues/1864)) ([a3c2880](https://github.com/andes/api/commit/a3c2880207edadba474e27208b65f94f50c77c07))
+
 ## [5.107.1](https://github.com/andes/api/compare/v5.107.0...v5.107.1) (2024-06-12)
 
 
