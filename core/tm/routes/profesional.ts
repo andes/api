@@ -665,7 +665,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
     }
 
     if (req.query.documento) {
-        opciones['documento'] = makePattern(req.query.documento);
+        opciones['documento'] = req.query.busquedaExacta ? req.query.documento : makePattern(req.query.documento);
     }
     if (req.query.numeroMatriculaGrado) {
         opciones['formacionGrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaGrado;
