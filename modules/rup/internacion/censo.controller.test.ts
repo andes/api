@@ -771,6 +771,71 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
     });
 });
 
+
+test('Censo diario - Prestación con periodos censables incluyentes', async () => {
+    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(10, 'd').toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
+    nuevaPrestacion.periodosCensables = [{ desde: moment().subtract(1, 'd'), hasta: moment().add(1, 'd') }];
+
+    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
+    const internacion = await nuevaPrestacion.save();
+
+    await CamasEstadosController.store(
+        { organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(moment().subtract(10, 'd').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
+        REQMock
+    );
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+
+    expect(resultado.censo).toEqual({
+        existenciaALas0: 1,
+        ingresos: 0,
+        pasesDe: 0,
+        altas: 0,
+        defunciones: 0,
+        pasesA: 0,
+        existenciaALas24: 1,
+        ingresosYEgresos: 0,
+        pacientesDia: 1,
+        diasEstada: 0,
+        disponibles: 1
+    });
+});
+
+test('Censo diario - Prestación con periodos censables excluyentes', async () => {
+    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
+    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(10, 'd').toDate();
+    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
+    nuevaPrestacion.periodosCensables = [{ desde: moment().add(1, 'd'), hasta: moment().add(3, 'd') }];
+
+    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
+    const internacion = await nuevaPrestacion.save();
+
+    await CamasEstadosController.store(
+        { organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(moment().subtract(10, 'd').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
+        REQMock
+    );
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+
+    expect(resultado.censo).toEqual({
+        existenciaALas0: 0,
+        ingresos: 0,
+        pasesDe: 0,
+        altas: 0,
+        defunciones: 0,
+        pasesA: 0,
+        existenciaALas24: 0,
+        ingresosYEgresos: 0,
+        pacientesDia: 0,
+        diasEstada: 0,
+        disponibles: 1
+    });
+});
+
 function estadoDisponible(unidadOrganizativaEstado, cantidad, unidad) {
     return {
         fecha: moment().subtract(cantidad, unidad).toDate(),

@@ -171,7 +171,8 @@ export const PrestacionSchema = new Schema({
     // Historia de estado de la prestación
     estados: [PrestacionEstadoSchema],
     estadoActual: PrestacionEstadoSchema,
-    unidadOrganizativa: SnomedConcept
+    unidadOrganizativa: SnomedConcept,
+    periodosCensables: []
 }, { usePushEach: true } as any);
 
 // Esquema para prestaciones anuladas/modificadas

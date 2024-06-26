@@ -2,10 +2,10 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { Prestacion } from '../schemas/prestacion';
-import { InternacionResumen } from './resumen/internacion-resumen.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import { Camas } from './camas.schema';
 import { Censo } from './censos.schema';
+import { InternacionResumen } from './resumen/internacion-resumen.schema';
 
 /**
  * Agrupa por cierta key. Por cada valor genera un array de esos elementos
@@ -43,6 +43,27 @@ async function unificarMovimientos(snapshots, movimientos) {
     });
 
     return mapping;
+}
+
+function incluyePeriodo(prestacion, date) {
+    return prestacion.periodosCensables.length ? prestacion.periodosCensables?.some(periodo => periodo.hasta
+        ? date.isBetween(periodo.desde, periodo.hasta, undefined, '[]')
+        : date.isSameOrAfter(periodo.desde)) : true;
+}
+
+function eliminarPeriodoEnEgreso(fechaEgreso, periodosCensables) {
+    if (!fechaEgreso) {
+        return periodosCensables;
+    }
+
+    const egreso = moment(fechaEgreso);
+
+    return periodosCensables.filter(periodo => {
+        if (periodo.hasta) {
+            return !(egreso.isBetween(periodo.desde, periodo.hasta) || egreso.isBefore(periodo.desde));
+        }
+        return false;
+    });
 }
 
 async function realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa) {
@@ -89,8 +110,20 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
 
         } else {
             prestacion = prestaciones.find(p => String(p.id) === String(allMovimientos[0].idInternacion));
-        }
 
+            // filtra los periodos que se superponen con la fecha de egreso
+            const informes: any = getInformesInternacion(prestacion);
+            const fechaEgreso = informes?.egreso?.fechaEgreso;
+
+            if (fechaEgreso) {
+                prestacion.periodosCensables = eliminarPeriodoEnEgreso(fechaEgreso, prestacion.periodosCensables);
+            }
+
+            // verifica si la prestación tiene periodos que incluyan la fecha del censo
+            if (!incluyePeriodo(prestacion, timestampStart)) {
+                prestacion = null;
+            }
+        }
 
         if (prestacion) {
             const informesInternacion: any = getInformesInternacion(prestacion);
@@ -151,7 +184,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             return;
         } else if (prestacion.ejecucion.registros[0].esCensable && indiceCama === -1) {
             arrayCamas.push(ultimoMovimiento.idCama);
-            disponibles ++;
+            disponibles++;
         }
         const esPaseA = dataInternaciones[idInter]['esPaseA'];
         const informesInternacion = dataInternaciones[idInter]['informesInternacion'];
@@ -333,6 +366,7 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
         const ultimoMov = camas[idCama][camas[idCama].length - 1];
         const esDisponible = (ultimoMov.estado !== 'bloqueada' && ultimoMov.estado !== 'inactiva');
         const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
+
         if (esDisponible && estaUnidadOrganizativa && ultimoMov.esCensable) {
             resultado.censo.disponibles++;
         }
