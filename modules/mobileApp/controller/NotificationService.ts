@@ -97,7 +97,7 @@ export class NotificationService {
         };
         if (cancel) {
             notificacion.body = 'Solicitud para adjuntar documento cancelada';
-            notificacion.extraData.action = 'calcel-rup-adjuntar';
+            notificacion.extraData.action = 'cancel-rup-adjuntar';
         } else {
             notificacion.body = 'Tocar para ir a adjuntar un documento';
             notificacion.extraData.action = 'rup-adjuntar';
