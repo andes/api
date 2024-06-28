@@ -54,7 +54,8 @@ const listaEsperaSchema = new mongoose.Schema({
             },
             required: false
         }
-    }
+    },
+    llamados: {}
 });
 
 listaEsperaSchema.plugin(AuditPlugin);
