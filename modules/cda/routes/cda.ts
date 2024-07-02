@@ -266,7 +266,7 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
 
-    if (!Auth.check(req, 'cda:list') || (req.user.type !== 'paciente-token' && req.user.type !== 'user-token' && req.user.type !== 'user-token-2')) {
+    if (req.user.type !== 'paciente-token' && !Auth.check(req, 'cda:list')) {
         return next(403);
     }
 
