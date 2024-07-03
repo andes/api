@@ -49,7 +49,11 @@ PlanIndicacionesRouter.patch('/plan-indicaciones/:id/estado', asyncHandler(async
         }
         Auth.audit(indicacion, req);
         const indicacionUpdated = await indicacion.save();
-        EventCore.emitAsync('internacion:plan-indicaciones:update', indicacionUpdated);
+        if (!req.body.verificacion) {
+            /*  si contiene verificacion significa que es revisión de interconsultores.
+                Por tanto, ante cualquier accion excepto aceptacion/rechazo de la indicacion...  */
+            EventCore.emitAsync('internacion:plan-indicaciones:update', indicacionUpdated);
+        }
         return res.json(indicacionUpdated);
     }
     throw new ResourceNotFound();

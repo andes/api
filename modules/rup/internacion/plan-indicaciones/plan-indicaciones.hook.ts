@@ -109,7 +109,9 @@ EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
                     return;
                 }
                 const ultimaFrecuencia = frecuencias.pop();
-                const fechaDesde = moment(ultimaFrecuencia.horario);
+                // Se actualizan solo eventos de la fecha actual
+                const horaInicio = moment(ultimaFrecuencia.horario).hours();
+                const fechaDesde = moment().startOf('day').hours(horaInicio);
                 const fechaHasta = moment().startOf('day').add(horaInicioEfector + 24, 'hours');
                 horarios = calcularHorarios(fechaDesde, fechaHasta, ultimaFrecuencia.frecuencia.key);
             }
@@ -150,7 +152,7 @@ async function crearEventosSegunPrescripcion(indicacion) {
         // se calculan los horarios para la ultima frecuencia (puede ser la unica), hasta el fin del turno (horario segun efector)
         const ultimaFrecuencia = frecuencias[frecuencias.length - 1];
         if (ultimaFrecuencia) {
-            const horaFinEfector = moment(frecuencias[frecuencias.length - 1].horario).startOf('day').add(horaInicioEfector + 24, 'hours'); // a partir de la ultima indicacion de frecuencia
+            const horaFinEfector = moment(ultimaFrecuencia.horario).startOf('day').add(horaInicioEfector + 24, 'hours'); // a partir de la ultima indicacion de frecuencia
             horariosFrecuencia = calcularHorarios(ultimaFrecuencia.horario, horaFinEfector, ultimaFrecuencia.frecuencia.key);
             horarios = horarios.concat(horariosFrecuencia);
 
