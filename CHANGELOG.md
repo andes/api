@@ -1,3 +1,15 @@
+# [5.109.0](https://github.com/andes/api/compare/v5.108.0...v5.109.0) (2024-07-03)
+
+
+### Bug Fixes
+
+* **CDA:** actualiza permisos ruta CDA de un paciente ([#1917](https://github.com/andes/api/issues/1917)) ([3779dba](https://github.com/andes/api/commit/3779dbabb777e94e239162f998ba526f28532e81))
+
+
+### Features
+
+* **IN:** implementa periodos censables en internacion ([#1894](https://github.com/andes/api/issues/1894)) ([b33c37c](https://github.com/andes/api/commit/b33c37cf91601c3f1e2df127e65929f01a162b7f))
+
 # [5.108.0](https://github.com/andes/api/compare/v5.107.1...v5.108.0) (2024-06-19)
 
 
