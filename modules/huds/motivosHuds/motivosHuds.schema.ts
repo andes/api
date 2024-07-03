@@ -2,18 +2,22 @@ import { Schema, model } from 'mongoose';
 
 export const MotivosHudsSchema = new Schema({
     id: Schema.Types.ObjectId,
-    motivo: {
+    label: {
         type: String,
-        required: true
+        required: false
     },
-    descripcion: {
+    key: {
         type: String,
         required: true
     },
     moduloDefault: {
-        type: String,
+        type: [String],
         required: false
     },
+    descripcion: {
+        type: String,
+        required: false
+    }
 
 });
 
