@@ -49,8 +49,6 @@ router.get('/turnos', async (req: any, res, next) => {
 
     matchTurno['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
 
-    // matchTurno['estado'] = 'publicada';
-
     if (req.query.estado) {
         matchTurno['bloques.turnos.estado'] = req.query.estado;
     }
@@ -80,6 +78,22 @@ router.get('/turnos', async (req: any, res, next) => {
     pipelineTurno.push({ $unwind: '$bloques' });
     pipelineTurno.push({ $unwind: '$bloques.turnos' });
     pipelineTurno.push({ $match: matchTurno });
+    pipelineTurno.push({
+        $match: {
+            $expr: {
+                $or: [
+                    { $ne: ['$bloques.cantidadTurnos', '$bloques.accesoDirectoDelDia'] },
+                    {
+                        $and: [
+                            { $eq: ['$bloques.cantidadTurnos', '$bloques.accesoDirectoDelDia'] },
+                            { $eq: [{ $dateToString: { format: '%Y-%m-%d', date: '$horaInicio' } }, new Date().toISOString().substring(0, 10)] }
+                        ]
+                    }
+                ]
+            },
+        }
+    });
+
     pipelineTurno.push({
         $group: {
             _id: { id: '$_id', bloqueId: '$bloques._id' },
