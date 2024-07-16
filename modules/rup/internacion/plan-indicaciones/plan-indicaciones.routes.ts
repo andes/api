@@ -1,9 +1,9 @@
 import { asyncHandler } from '@andes/api-tool';
 import { MongoQuery, ResourceBase, ResourceNotFound } from '@andes/core';
-import { Auth } from '../../../../auth/auth.class';
-import { IPlanIndicacionesDoc, PlanIndicaciones } from './plan-indicaciones.schema';
 import { EventCore } from '@andes/event-bus/';
 import * as moment from 'moment';
+import { Auth } from '../../../../auth/auth.class';
+import { IPlanIndicacionesDoc, PlanIndicaciones } from './plan-indicaciones.schema';
 class PlanIndicacionesController extends ResourceBase<IPlanIndicacionesDoc> {
     Model = PlanIndicaciones;
     resourceName = 'plan-indicaciones';
@@ -26,7 +26,13 @@ class PlanIndicacionesController extends ResourceBase<IPlanIndicacionesDoc> {
                     { fechaInicio: { $lte: moment(fecha).endOf('day').add(1, 'd').toDate() } }
                 ]
             };
-        }
+        },
+        excluyeEstado: {
+            field: 'estadoActual.tipo',
+            fn: (value) => {
+                return { $ne: value };
+            }
+        },
     };
     eventBus = EventCore;
 }
