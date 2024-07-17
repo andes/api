@@ -39,7 +39,7 @@ ExportHudsRouter.post('/export/:id', async (req, res, next) => {
     const hudsFiles = getHUDSExportarModel();
     try {
         const archivo = await readFile(req.params.id);
-        res.contentType(archivo.file.contentType);
+        res.contentType(archivo?.file?.contentType);
         archivo.stream.pipe(res);
     } catch (error) {
         return next(error);
