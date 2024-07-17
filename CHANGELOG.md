@@ -1,3 +1,10 @@
+# [5.110.0](https://github.com/andes/api/compare/v5.109.0...v5.110.0) (2024-07-17)
+
+
+### Features
+
+* **HUDS:** implementa filtro para plan de indicaciones ([#1906](https://github.com/andes/api/issues/1906)) ([c353ad9](https://github.com/andes/api/commit/c353ad9bfbe54b60c13713f79305dce4967324ce))
+
 # [5.109.0](https://github.com/andes/api/compare/v5.108.0...v5.109.0) (2024-07-03)
 
 
