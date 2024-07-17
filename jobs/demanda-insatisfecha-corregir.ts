@@ -24,11 +24,11 @@ async function run(done) {
                 const fechaHoy = moment().toDate();
                 let turnos = await getTurnosAsignados('turno', pacienteId, conceptId, fechaInicioDemanda, fechaHoy) || [];
                 if (turnos.length) {
-                    await resolverDemanda(lista, demandas, turnos, fechaFinDemanda, null);
+                    await resolverDemanda(lista, demandas, turnos[0], fechaFinDemanda, null);
                 } else {
                     turnos = await getTurnosAsignados('sobreturno', pacienteId, conceptId, fechaInicioDemanda, fechaHoy) || [];
                     if (turnos.length) {
-                        await resolverDemanda(lista, demandas, turnos, fechaFinDemanda, null);
+                        await resolverDemanda(lista, demandas, turnos[0], fechaFinDemanda, null);
                     }
                 }
 
@@ -41,7 +41,7 @@ async function run(done) {
 }
 
 async function getTurnosAsignados(tipo = 'turno', pacienteId, conceptId: String, fechaDemIni: Date, fechaHasta: Date) {
-    const tipoDacion = tipo === 'turno' ? 'sobreturnos' : 'bloques.turnos';
+    const tipoDacion = tipo === 'turno' ? 'bloques.turnos' : 'sobreturnos';
     const match1 = {};
     match1[`${tipoDacion}.paciente.id`] = pacienteId;
     match1[`${tipoDacion}.tipoPrestacion.conceptId`] = conceptId;
@@ -51,6 +51,9 @@ async function getTurnosAsignados(tipo = 'turno', pacienteId, conceptId: String,
     match2['updatedAt'] = {
         $gte: fechaDemIni,
         $lte: fechaHasta
+    };
+    match2['horaInicio'] = {
+        $gte: fechaDemIni
     };
     match2['estado'] = {
         $in: ['disponible', 'publicada', 'pendienteAsistencia', 'pendienteAuditoria', 'auditada']
@@ -78,30 +81,40 @@ async function getTurnosAsignados(tipo = 'turno', pacienteId, conceptId: String,
 }
 
 
-async function resolverDemanda(lista, listDemandas, turnos, fechaDemFin, fechaResolucion = null) {
+async function resolverDemanda(lista, listDemandas, turno, fechaDemFin, fechaResolucion = null) {
     fechaResolucion = fechaResolucion || moment(new Date()).toDate();
     let demandasNew = [];
     let demandasOld = [];
-    if (turnos[0].fechaAgenda <= fechaDemFin) {
+    listDemandas.map(d => {
+        if (d.profesional?.id) {
+            d.profesional._id = d.profesional.id;
+        }
+        if (d.organizacion?.id) {
+            d.organizacion._id = d.organizacion.id;
+        }
+        return d;
+    });
+    if (turno.fechaAgenda <= fechaDemFin) {
         // existe turno en medio del periodo de una demanda
         // se divide la demanda y se cierra la original
-        demandasOld = listDemandas.filter(d => d.fecha < turnos[0].fechaAgenda).map(d => d);
-        demandasNew = listDemandas.filter(d => d.fecha > turnos[0].fechaAgenda).map(d => d);
+        demandasOld = listDemandas.filter(d => d.fecha <= turno.fechaAgenda).map(d => d);
+        demandasNew = listDemandas.filter(d => d.fecha > turno.fechaAgenda).map(d => d);
         lista.demandas = demandasOld;
     }
     lista.estado = 'resuelto';
+    const dataTurno = turno.turno;
     lista.resolucion = {
         fecha: fechaResolucion,
         motivo: 'turno asignado',
         turno: {
-            idAgenda: turnos[0].idAgenda,
-            organizacion: turnos[0].organizacion,
-            id: turnos[0].turno._id,
-            horaInicio: turnos[0].turno.fecha,
-            tipo: turnos[0].turno.tipoTurno,
-            emitidoPor: turnos[0].turno.emitidoPor,
-            fechaHoraDacion: turnos[0].turno.fechaHoraDacion,
-            profesionales: turnos[0].profesionales || null
+            idAgenda: turno.idAgenda,
+            organizacion: turno.organizacion,
+            id: dataTurno._id,
+            horaInicio: dataTurno.horaInicio,
+            tipo: dataTurno.tipoTurno || 'sobreturno',
+            emitidoPor: dataTurno.emitidoPor || '',
+            fechaHoraDacion: dataTurno.fechaHoraDacion || dataTurno.createdAt || dataTurno.updatedAt,
+            profesionales: turno.profesionales || null
         }
     };
     Auth.audit(lista, (userScheduler as any));
