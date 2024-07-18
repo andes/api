@@ -14,11 +14,23 @@ class PlanIndicacionesController extends ResourceBase<IPlanIndicacionesDoc> {
             field: 'organizacion.id',
             fn: MongoQuery.matchString
         },
+        paciente: (value) => {
+            return {
+                $or: [
+                    { 'paciente.documento': MongoQuery.partialString(value) },
+                    { 'paciente.nombre': MongoQuery.partialString(value) },
+                    { 'paciente.apellido': MongoQuery.partialString(value) },
+                    { 'paciente.alias': MongoQuery.partialString(value) },
+                    { 'paciente.numeroIdentificacion': MongoQuery.partialString(value) }
+                ]
+            };
+        },
         fechaInicio: MongoQuery.matchDate,
         fechaBaja: MongoQuery.matchDate,
         internacion: MongoQuery.equalMatch.withField('idInternacion'),
         prestacion: MongoQuery.equalMatch.withField('idPrestacion'),
         registro: MongoQuery.equalMatch.withField('idRegistro'),
+        fechaRango: MongoQuery.matchDate.withField('fechaInicio'),
         rangoFechas: (fecha: Date) => {
             return {
                 $or: [
@@ -33,6 +45,27 @@ class PlanIndicacionesController extends ResourceBase<IPlanIndicacionesDoc> {
                 return { $ne: value };
             }
         },
+        delDia: () => {
+            return {
+                $and: [
+                    { 'estadoActual.createdAt': { $gte: moment().startOf('day').toDate() } },
+                    { 'estadoActual.fecha': { $gte: moment().startOf('day').toDate() } }
+                ]
+            };
+        },
+        aceptadas: () => {
+            return {
+                $or: [
+                    { 'estadoActual.tipo': 'bypass' },
+                    {
+                        $and: [
+                            { 'estadoActual.tipo': 'active' },
+                            { 'estadoActual.verificacion.estado': 'aceptada' }
+                        ]
+                    }
+                ]
+            };
+        }
     };
     eventBus = EventCore;
 }
