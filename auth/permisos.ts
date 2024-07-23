@@ -33,6 +33,11 @@ export default [
                 type: 'boolean'
             },
             {
+                key: 'demandaInsatisfecha',
+                title: 'Demanda Insatisfecha',
+                type: 'boolean'
+            },
+            {
                 key: 'planificarAgenda',
                 title: 'Planificacion de agenda',
                 comment: 'Agregar prestaciones para poder crear las agendas',
