@@ -1,3 +1,16 @@
+# [5.111.0](https://github.com/andes/api/compare/v5.110.0...v5.111.0) (2024-07-24)
+
+
+### Bug Fixes
+
+* **AM:** se modifica la distancia para sacar turnos por mobile ([#1881](https://github.com/andes/api/issues/1881)) ([#1883](https://github.com/andes/api/issues/1883)) ([e13a6fc](https://github.com/andes/api/commit/e13a6fc7c59f6709f49b70bf772fee27d51fabeb))
+* **CITAS:** corrige errores en job cerrar demanda insatisfecha ([#1920](https://github.com/andes/api/issues/1920)) ([01d6c5f](https://github.com/andes/api/commit/01d6c5fbe50b9a0a2a2229a48fe4cad5be7c7321))
+
+
+### Features
+
+* **HUDS:** controla permisos para ver la HUDS ([#1871](https://github.com/andes/api/issues/1871)) ([756c2b1](https://github.com/andes/api/commit/756c2b1b61bcb8595646472f1e0daae31674bd51))
+
 # [5.110.0](https://github.com/andes/api/compare/v5.109.0...v5.110.0) (2024-07-17)
 
 
