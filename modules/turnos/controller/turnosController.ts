@@ -3,9 +3,13 @@ import * as mongoose from 'mongoose';
 import { checkCarpeta } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
+import { notificacionesLog } from '../../../modules/turnos/citasLog';
+import { userScheduler } from './../../../config.private';
 import { Agenda } from '../../../modules/turnos/schemas/agenda';
+import { Prestacion } from '../../rup/schemas/prestacion';
 import { toArray } from '../../../utils/utils';
 import { Auth } from './../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 
 type IAgenda = any;
 
@@ -411,3 +415,87 @@ export async function actualizarCarpeta(req: any, res: any, next: any, paciente:
         }
     }
 }
+
+async function dataAgenda(idTurno) {
+    let profesionales = '';
+    let organizacion = '';
+    try {
+        const dataTurno = await getTurnoById(idTurno);
+        if (dataTurno?.agenda) {
+            const agenda = dataTurno?.agenda;
+            if (agenda.profesionales.length) {
+                profesionales = 'con el/los profesionales ';
+                for (const prof of agenda.profesionales) {
+                    profesionales += `${prof.nombre} ${prof.apellido}, `;
+                }
+            }
+            organizacion = agenda.organizacion?.nombre;
+            if (agenda.espacioFisico?.nombre) {
+                organizacion += `, ${agenda.espacioFisico.nombre}`;
+            }
+            return {
+                profesionales,
+                organizacion
+            };
+        } else {
+            notificacionesLog.error('verificarAgenda:agenda', { turno: idTurno }, { error: 'agenda no encontrada' }, userScheduler);
+            return null;
+        }
+    } catch (error) {
+        notificacionesLog.error('verificarAgenda', { turno: idTurno }, { error: error.message }, userScheduler);
+        return null;
+    }
+}
+
+async function buscarPrestacion(idTurno, idPaciente) {
+    const idT = mongoose.Types.ObjectId(idTurno);
+    const unaPrestacion = await Prestacion.findOne({
+        'paciente.id': idPaciente,
+        'solicitud.turno': idT,
+        inicio: 'top'
+    });
+    if (!unaPrestacion) {
+        notificacionesLog.error('verificarPrestacion', { turno: idTurno }, { error: 'prestación no encontrada' }, userScheduler);
+        return null;
+    }
+    return unaPrestacion;
+}
+
+EventCore.on('citas:turno:asignar', async (turno) => {
+    const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
+    const tipoTurno = turno.tipoTurno === 'gestion';
+    const dataTurno = await dataAgenda(turno._id);
+    const dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id);
+    if ((tipoTurno || dataPrestacion) && fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
+        const dtoMensaje: any = {
+            idTurno: turno._id,
+            mensaje: 'turno-dacion',
+            telefono: turno.paciente.telefono,
+            nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
+            tipoPrestacion: turno.tipoPrestacion.term,
+            fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
+            profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
+            organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
+        };
+        EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
+    }
+});
+
+EventCore.on('notificaciones:turno:suspender', async (turno) => {
+    const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
+    const dataTurno = await dataAgenda(turno._id);
+    if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
+        const dtoMensaje: any = {
+            idTurno: turno._id,
+            mensaje: 'turno-suspencion',
+            telefono: turno.paciente.telefono,
+            nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
+            tipoPrestacion: turno.tipoPrestacion.term,
+            fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
+            profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
+            organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
+        };
+        EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
+    }
+
+});

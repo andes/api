@@ -25,3 +25,11 @@ export const demandaLog = new Logger({
     bucketBy: 'h',
     bucketSize: 100
 });
+
+export const notificacionesLog = new Logger({
+    connection: Connections.logs,
+    module: 'msNotificaciones',
+    application: 'andes',
+    bucketBy: 'h',
+    bucketSize: 100
+});
