@@ -107,7 +107,7 @@ UsuariosRouter.post('/usuarios/create', Auth.authenticate(), async (req, res, ne
             req.body.tipo = '';
         }
         const user = await createUser(req.body);
-        if (req.body.authMethod === 'oneLogin') {
+        if (!userOneLogin) {
             await setValidationTokenAndNotify(documento);
         }
 
