@@ -93,8 +93,24 @@ UsuariosRouter.post('/usuarios/create', Auth.authenticate(), async (req, res, ne
         if (existsUser) {
             return next('Ya posee un usuario en Andes');
         }
+        req.body.authMethod = 'password';
+        req.body.tipo = 'temporal';
+        let userOneLogin;
+        const documento = req.body.documento;
+        try {
+            userOneLogin = await getUserInfo(documento);
+        } catch {
+            userOneLogin = null;
+        }
+        if (userOneLogin) {
+            req.body.authMethod = '';
+            req.body.tipo = '';
+        }
         const user = await createUser(req.body);
-        await setValidationTokenAndNotify(req.body.documento);
+        if (!userOneLogin) {
+            await setValidationTokenAndNotify(documento);
+        }
+
         return res.json(user);
 
     } catch (err) {
