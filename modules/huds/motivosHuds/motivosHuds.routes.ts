@@ -5,10 +5,10 @@ class MotivosHudsResource extends ResourceBase {
     Model = MotivosHuds;
     resourceName = 'motivosHuds';
     searchFileds = {
-        motivo: MongoQuery.partialString,
+        label: MongoQuery.partialString,
+        key: MongoQuery.partialString,
         descripcion: MongoQuery.partialString,
-        moduloDefault: MongoQuery.partialString,
-        search: ['motivo', 'moduloDefault']
+        moduloDefault: MongoQuery.partialString
     };
 }
 export const MotivosHudsCtr = new MotivosHudsResource({});
