@@ -484,32 +484,14 @@ router.patch('/agenda/:id*?', (req, res, next) => {
             // Loopear los turnos, si viene vacío, es porque viene un id solo
             const turnos = req.body.turnos || [''];
             const estadoAgenda = data.estado;
-            let indexTurno, indexSobreturno, turnoSinPaciente = false, tieneSobreTurno = false;
 
-            data.bloques.forEach(bloque => {
-                turnos.forEach(t => {
-                    indexTurno = bloque.turnos.findIndex(bt => bt._id.toString() === t);
-                    if (indexTurno > -1 && req.body.op === 'darAsistencia' && !data.bloques.some(b => b.turnos[indexTurno].paciente && b.turnos[indexTurno].estado !== 'turnoDoble')) {
-                        turnoSinPaciente = true;
-                    }
-                });
-            });
-
-            turnos.forEach(t => {
-                indexSobreturno = data.sobreturnos.findIndex(st => t === st._id.toString());
-                if (indexSobreturno > -1 && data.sobreturnos[indexSobreturno].estado !== 'suspendido' && data.sobreturnos[indexSobreturno].paciente) {
-                    tieneSobreTurno = true;
-                }
-            });
-            if (turnoSinPaciente) {
-                return next('Error: El turno que está intentando modificar ha sufrido cambios recientes. Por favor, actualice la pantalla e inténtelo de nuevo.');
-            } else if (!tieneSobreTurno && indexSobreturno > -1) {
-                return next('Error: El sobreturno que está intentando modificar ha sufrido cambios recientes. Por favor, actualice la pantalla e inténtelo de nuevo.');
-            }
             for (let y = 0; y < turnos.length; y++) {
                 let turno;
                 switch (req.body.op) {
                     case 'darAsistencia':
+                        if (agendaCtrl.turnoSinAsignar(data, turnos[y])) {
+                            return next('Error: El turno que está intentando modificar ha sufrido cambios recientes. Por favor, actualice la pantalla e inténtelo de nuevo.');
+                        }
                         turno = agendaCtrl.darAsistencia(req, data, turnos[y]);
                         event = { object: 'turno', accion: 'asistencia', data: turno };
                         break;
