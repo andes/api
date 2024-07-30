@@ -22,6 +22,16 @@ export async function getAgendaById(agendaId) {
 }
 
 // Turno
+export function turnoSinAsignar(data, turnoBuscar) {
+    const turnosTotal = data.bloques.flatMap(unBloque => unBloque.turnos).concat(data.sobreturnos);
+    const encontrado = turnosTotal.find(unTurno => unTurno._id.toString() === turnoBuscar);
+    if (encontrado && encontrado.estado !== 'turnoDoble' && !encontrado.paciente) {
+        return true;
+    }
+    return false;
+}
+
+// Turno
 export function darAsistencia(req, data, tid = null) {
     const turno = getTurno(req, data, tid);
     turno.asistencia = 'asistio';
