@@ -1,3 +1,18 @@
+# [5.112.0](https://github.com/andes/api/compare/v5.111.0...v5.112.0) (2024-07-31)
+
+
+### Bug Fixes
+
+* **AUTH:** agrega control para usuarios one login ([#1914](https://github.com/andes/api/issues/1914)) ([2022535](https://github.com/andes/api/commit/20225358717ce20819a4eb3d3db8a223254c9114))
+* **CITAS:**  Corrige control por turno liberado  al dar asistencia ([#1932](https://github.com/andes/api/issues/1932)) ([eae291a](https://github.com/andes/api/commit/eae291a01ff8bb4240873ec781008f30637906c2))
+* **GDU-64:** Controlar datos del profesional asociado al usuario ([#1915](https://github.com/andes/api/issues/1915)) ([d0bde96](https://github.com/andes/api/commit/d0bde962e6654e80766f6a34ef9bc1c0e40bb2e3))
+* **SMS:** Se agregan eventos para envio de notificaciones nuevo turno y cancelar turno. ([#1931](https://github.com/andes/api/issues/1931)) ([d1fadf4](https://github.com/andes/api/commit/d1fadf44989691a0d0d13089308bf055d19b3703))
+
+
+### Features
+
+* **PRIV-65:** Visualizar motivos de acceso a la HUDS ([#1918](https://github.com/andes/api/issues/1918)) ([d09a369](https://github.com/andes/api/commit/d09a369072072a431440e19ae22d88304abc450c))
+
 # [5.111.0](https://github.com/andes/api/compare/v5.110.0...v5.111.0) (2024-07-24)
 
 
