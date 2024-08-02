@@ -1,16 +1,16 @@
 import * as express from 'express';
 import * as moment from 'moment';
+import { Auth } from '../../../auth/auth.class';
 import * as utils from '../../../utils/utils';
 import { Agenda } from '../schemas/agenda';
-import { listaEspera, demanda } from '../schemas/listaEspera';
+import { demanda, listaEspera } from '../schemas/listaEspera';
 import { defaultLimit, maxLimit } from './../../../config';
-import { Auth } from '../../../auth/auth.class';
 
 const async = require('async');
 const router = express.Router();
 
 router.get('/listaEspera/:id*?', (req, res, next) => {
-    const opciones = {};
+    let opciones = {};
 
     if (req.params.id) {
         listaEspera.findById(req.params.id, (err, data) => {
@@ -40,16 +40,47 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
         if (req.query.documento) {
             opciones['paciente.documento'] = utils.makePattern(req.query.documento);
         }
-    }
-    const radix = 10;
-    const skip: number = parseInt(req.query.skip || 0, radix);
-    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-    const query = listaEspera.find(opciones).skip(skip).limit(limit);
-    query.exec((err, data) => {
-        if (err) { return next(err); }
-        res.json(data);
-    });
+        if (req.query.paciente) {
+            opciones = {
+                ...opciones,
+                $or: [
+                    { 'paciente.nombre': { $regex: req.query.paciente, $options: 'i' } },
+                    { 'paciente.apellido': { $regex: req.query.paciente, $options: 'i' } },
+                    { 'paciente.documento': { $regex: req.query.paciente, $options: 'i' } }
+                ]
+            };
+        }
+        if (req.query.fechaDesde) {
+            const fechaDesde = new Date(req.query.fechaDesde);
+            const fechaHasta = req.query.fechaHasta ? new Date(req.query.fechaHasta) : new Date();
 
+            opciones['fecha'] = {
+                $gte: fechaDesde,
+                $lte: fechaHasta.setDate(fechaHasta.getDate() + 1)
+            };
+        }
+        if (req.query.prestacion) {
+            opciones['tipoPrestacion.term'] =
+                RegExp('^.*' + req.query.prestacion + '.*$', 'i');
+        }
+        if (req.query.motivo) {
+            opciones = {
+                ...opciones,
+                demandas: {
+                    $elemMatch: { motivo: RegExp('^.*' + req.query.motivo + '.*$', 'i') }
+                }
+            };
+        }
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        const query = listaEspera.find(opciones).skip(skip).limit(limit);
+
+        query.exec((err, data) => {
+            if (err) { return next(err); }
+            res.json(data);
+        });
+    }
 });
 
 router.post('/listaEspera', async (req, res, next) => {
@@ -108,6 +139,9 @@ router.patch('/listaEspera/:id/:datoMod', async (req, res, next) => {
         }
         if (datoMod === 'estado') {
             data.estado = req.body;
+        }
+        if (datoMod === 'llamados') {
+            data.llamados = req.body;
         }
         Auth.audit(data, req);
         data.save((errUpdate) => {
