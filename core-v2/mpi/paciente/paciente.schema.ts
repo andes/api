@@ -63,7 +63,7 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
         lugar: { type: String }
     },
     sexo: SEXO,
-    genero: SEXO,
+    genero: String,
     fechaFallecimiento: Date,
     estadoCivil: ESTADOCIVIL,
     fotoId: mongoose.Schema.Types.ObjectId,
