@@ -462,40 +462,51 @@ async function buscarPrestacion(idTurno, idPaciente) {
 }
 
 EventCore.on('citas:turno:asignar', async (turno) => {
-    const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
-    const tipoTurno = turno.tipoTurno === 'gestion';
-    const dataTurno = await dataAgenda(turno._id);
-    const dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id);
-    if ((tipoTurno || dataPrestacion) && fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
-        const dtoMensaje: any = {
-            idTurno: turno._id,
-            mensaje: 'turno-dacion',
-            telefono: turno.paciente.telefono,
-            nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
-            tipoPrestacion: turno.tipoPrestacion.term,
-            fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
-            profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
-            organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
-        };
-        EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
+    try {
+        const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
+        const tipoTurno = turno.tipoTurno === 'gestion';
+        const idTurno = turno._id || turno.id;
+        const dataTurno = await dataAgenda(idTurno);
+        const dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id);
+        if ((tipoTurno || dataPrestacion) && fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
+            const dtoMensaje: any = {
+                idTurno: turno._id,
+                mensaje: 'turno-dacion',
+                telefono: turno.paciente.telefono,
+                nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
+                tipoPrestacion: turno.tipoPrestacion.term,
+                fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
+                profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
+                organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
+            };
+            EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
+        }
+    } catch (unError) {
+        notificacionesLog.error('obtenerAgenda', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
     }
+
 });
 
 EventCore.on('notificaciones:turno:suspender', async (turno) => {
-    const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
-    const dataTurno = await dataAgenda(turno._id);
-    if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
-        const dtoMensaje: any = {
-            idTurno: turno._id,
-            mensaje: 'turno-suspencion',
-            telefono: turno.paciente.telefono,
-            nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
-            tipoPrestacion: turno.tipoPrestacion.term,
-            fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
-            profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
-            organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
-        };
-        EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
+    try {
+        const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
+        const idTurno = turno._id || turno.id;
+        const dataTurno = await dataAgenda(idTurno);
+        if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
+            const dtoMensaje: any = {
+                idTurno: turno._id,
+                mensaje: 'turno-suspencion',
+                telefono: turno.paciente.telefono,
+                nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
+                tipoPrestacion: turno.tipoPrestacion.term,
+                fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
+                profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
+                organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
+            };
+            EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
+        }
+    } catch (unError) {
+        notificacionesLog.error('obtenerAgendaCancelar', { turno }, { error: 'error al generar la notificacion de cancelar' }, userScheduler);
     }
-
 });
+
