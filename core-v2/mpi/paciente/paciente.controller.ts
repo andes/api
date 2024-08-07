@@ -259,7 +259,9 @@ export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
             // georeferencia exitosa?
             if (geoRef && Object.keys(geoRef).length) {
                 direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                const nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, configPrivate.geoNode.auth.user, configPrivate.geoNode.auth.password);
+                const user = configPrivate.geoNode.auth.user || null;
+                const password = configPrivate.geoNode.auth.password || null;
+                const nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, user, password, configPrivate.geoNode.config);
                 // consulta exitosa?
                 if (nombreBarrio) {
                     const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));
@@ -273,6 +275,7 @@ export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
             }
         }
         if (direccion[0].geoReferencia) {
+            direccion[0].ultimaActualizacion = new Date();
             paciente = set(paciente, direccion);
             PacienteCtr.update(paciente.id, paciente, configPrivate.userScheduler as any);
         }
