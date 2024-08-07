@@ -60,17 +60,33 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             };
         }
         if (req.query.prestacion) {
-            opciones['tipoPrestacion.term'] =
-                RegExp('^.*' + req.query.prestacion + '.*$', 'i');
+            const terminos = req.query.prestacion?.split(',').map(term => term.trim());
+
+            opciones['$or'] = terminos.map(term => ({
+                'tipoPrestacion.term': RegExp('^.*' + term + '.*$', 'i')
+            }));
         }
-        if (req.query.motivo) {
+
+        const motivoFiltro = req.query.motivo
+            ? { motivo: RegExp('^.*' + req.query.motivo + '.*$', 'i') }
+            : {};
+
+        const organizacionFiltro = req.query.organizacion
+            ? { 'organizacion._id': { $in: req.query.organizacion.split(',') } }
+            : {};
+
+        if (req.query.motivo || req.query.organizacion) {
             opciones = {
                 ...opciones,
                 demandas: {
-                    $elemMatch: { motivo: RegExp('^.*' + req.query.motivo + '.*$', 'i') }
+                    $elemMatch: {
+                        ...motivoFiltro,
+                        ...organizacionFiltro
+                    }
                 }
             };
         }
+
         const radix = 10;
         const skip: number = parseInt(req.query.skip || 0, radix);
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
