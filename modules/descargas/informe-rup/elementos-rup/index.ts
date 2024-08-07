@@ -26,6 +26,7 @@ import { SeccionadoComponent } from './seccion/seccionado.component';
 import { SeccionComponent } from './seccion/seccion.component';
 import { InformeEpicrisisComponent } from './informe-epicrisis.component';
 import { ChecklistComponent } from './checklist.component';
+import { OdontogramaRefsetComponent } from './odontograma.component';
 /**
  * [TODO] ProcedimientoDeEnfermeriaComponent
  * [TODO] OdontogramaRefsetComponent
@@ -103,7 +104,7 @@ export const ElementosRUPHTML = {
     CalculoDeBostonComponent,
     AutocitadoComponent,
     AdjuntarDocumentoComponent,
-
+    OdontogramaRefsetComponent,
     ElementoDeRegistroComponent: SeccionComponent,
     InformeEpicrisisComponent,
     RecetaMedicaComponent
