@@ -50,7 +50,10 @@ router.post('/censo-diario/csv', Auth.authenticate(), asyncHandler(async (req: a
         const censoPaciente = result.pacientes[p];
         censoPaciente.actividad.forEach((actividad: any) => {
             const movimiento = {
-                datos: censoPaciente.datos,
+                datos: {
+                    cama: actividad.cama,
+                    paciente: actividad.paciente
+                },
                 ingreso: actividad.ingreso,
                 fechaIngreso: actividad.fechaIngreso,
                 paseDe: actividad.paseDe,

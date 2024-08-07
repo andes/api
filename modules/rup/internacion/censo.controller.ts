@@ -239,7 +239,13 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         ingreso: 'SI',
                         fechaIngreso,
                         egreso: informesInternacion.egreso.tipoEgreso.id,
-                        diasEstada: diasEstadaUO
+                        diasEstada: diasEstadaUO,
+                        cama: {
+                            nombre: ultimoMovimiento.nombre,
+                            tipoCama: ultimoMovimiento.tipoCama,
+                            sectores: ultimoMovimiento.sectores
+                        },
+                        paciente: ultimoMovimiento.paciente
                     });
                 }
             }
@@ -255,7 +261,14 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                             fechaIngreso,
                             egreso: informesInternacion.egreso.tipoEgreso.id,
-                            diasEstada: diasEstadaUO
+                            diasEstada: diasEstadaUO,
+                            cama: {
+                                nombre: ultimoMovimiento.nombre,
+                                tipoCama: ultimoMovimiento.tipoCama,
+                                sectores: ultimoMovimiento.sectores
+                            },
+                            paciente: ultimoMovimiento.paciente
+
                         });
                     }
                 }
@@ -272,7 +285,14 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     paseDe: null,
                     egreso: null,
                     paseA: null,
-                    diasEstada: diasEstadaUO || null
+                    diasEstada: diasEstadaUO || null,
+                    cama: {
+                        nombre: ultimoMovimiento.nombre,
+                        tipoCama: ultimoMovimiento.tipoCama,
+                        sectores: ultimoMovimiento.sectores
+                    },
+                    paciente: ultimoMovimiento.paciente
+
                 });
             } else if (moment(fechaIngreso).isSameOrAfter(timestampStart.toDate())) {
                 ingresos++;
@@ -281,7 +301,14 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     tablaPacientes[ultimoMovimientoUO.paciente.id].actividad.push({
                         ingreso: 'SI',
                         fechaIngreso,
-                        diasEstada: diasEstadaUO || null
+                        diasEstada: diasEstadaUO || null,
+                        cama: {
+                            nombre: ultimoMovimiento.nombre,
+                            tipoCama: ultimoMovimiento.tipoCama,
+                            sectores: ultimoMovimiento.sectores
+                        },
+                        paciente: ultimoMovimiento.paciente
+
                     });
                 }
             }
@@ -296,7 +323,14 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     tablaPacientes[movimiento.paciente.id].actividad.push({
                         paseDe: movimientoAnterior.unidadOrganizativa.term,
                         fechaIngreso,
-                        diasEstada: null
+                        diasEstada: null,
+                        cama: {
+                            nombre: movimiento.nombre,
+                            tipoCama: movimiento.tipoCama,
+                            sectores: movimiento.sectores
+                        },
+                        paciente: movimiento.paciente
+
                     });
                 } else {
                     if (movimientoAnterior.unidadOrganizativa.conceptId === unidadOrganizativa && movimiento.unidadOrganizativa.conceptId !== unidadOrganizativa) {
@@ -305,7 +339,14 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         tablaPacientes[movimiento.paciente.id].actividad.push({
                             paseA: movimiento.unidadOrganizativa.term,
                             fechaIngreso,
-                            diasEstada: diasEstadaUO
+                            diasEstada: diasEstadaUO,
+                            cama: {
+                                nombre: movimiento.nombre,
+                                tipoCama: movimiento.tipoCama,
+                                sectores: movimiento.sectores
+                            },
+                            paciente: movimiento.paciente
+
                         });
                     }
                 }
