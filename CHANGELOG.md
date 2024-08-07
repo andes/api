@@ -1,3 +1,18 @@
+# [5.113.0](https://github.com/andes/api/compare/v5.112.0...v5.113.0) (2024-08-07)
+
+
+### Bug Fixes
+
+* **CITAS:** Agrega control por id en el evento citas:asignar ([#1935](https://github.com/andes/api/issues/1935)) ([450cef2](https://github.com/andes/api/commit/450cef2473f99e6f373c332f47f2f8012fcb154a))
+* **CITAS:** Cambio de logs en  notificaciones ([#1938](https://github.com/andes/api/issues/1938)) ([08ad596](https://github.com/andes/api/commit/08ad59652cc2f1b539df749ddcdcdff5f102149f))
+* **CITAS:** Control de turno null ([#1936](https://github.com/andes/api/issues/1936)) ([9d99967](https://github.com/andes/api/commit/9d99967ad3227730ffde175da6c4a21b936c8bf9))
+* **IN-608:** Censo diario- error datos de cama y paciente de internacion duplicada ([#1919](https://github.com/andes/api/issues/1919)) ([18c10b8](https://github.com/andes/api/commit/18c10b841325568c327a6cbcc19c1cb008e6311f))
+
+
+### Features
+
+* **CIT:** Implementa mockups de demanda insatisfecha ([#1898](https://github.com/andes/api/issues/1898)) ([f898c6a](https://github.com/andes/api/commit/f898c6a16788e844518c955d03d3c6197eb91bb9))
+
 # [5.112.0](https://github.com/andes/api/compare/v5.111.0...v5.112.0) (2024-07-31)
 
 
