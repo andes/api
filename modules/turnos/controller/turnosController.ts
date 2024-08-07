@@ -455,7 +455,7 @@ async function buscarPrestacion(idTurno, idPaciente) {
         inicio: 'top'
     });
     if (!unaPrestacion) {
-        notificacionesLog.error('verificarPrestacion', { turno: idTurno }, { error: 'prestación no encontrada' }, userScheduler);
+        notificacionesLog.error('verificarPrestacion', { turno: idTurno, idPaciente }, { error: 'prestación no encontrada' }, userScheduler);
         return null;
     }
     return unaPrestacion;
@@ -463,31 +463,33 @@ async function buscarPrestacion(idTurno, idPaciente) {
 
 EventCore.on('citas:turno:asignar', async (turno) => {
     try {
-        if (turno?._id) {
+        if (turno?._id || turno.id) {
             const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
             const tipoTurno = turno.tipoTurno === 'gestion';
-            const idTurno = turno._id || turno.id;
-            const dataTurno = await dataAgenda(idTurno);
-            const dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id);
-            if ((tipoTurno || dataPrestacion) && fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
-                const dtoMensaje: any = {
-                    idTurno: turno._id,
-                    mensaje: 'turno-dacion',
-                    telefono: turno.paciente.telefono,
-                    nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
-                    tipoPrestacion: turno.tipoPrestacion.term,
-                    fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
-                    profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
-                    organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
-                };
-                EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
-
-            } else {
-                notificacionesLog.error('obteneIdTurno', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
+            let dataPrestacion = null;
+            if (!tipoTurno) { dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id); }
+            if ((tipoTurno || dataPrestacion)) {
+                const idTurno = turno._id || turno.id;
+                const dataTurno = await dataAgenda(idTurno);
+                if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
+                    const dtoMensaje: any = {
+                        idTurno: turno._id,
+                        mensaje: 'turno-dacion',
+                        telefono: turno.paciente.telefono,
+                        nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
+                        tipoPrestacion: turno.tipoPrestacion.term,
+                        fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
+                        profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
+                        organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
+                    };
+                    EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
+                }
             }
+        } else {
+            notificacionesLog.error('obteneIdTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
         }
     } catch (unError) {
-        notificacionesLog.error('obtenerAgenda', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
+        notificacionesLog.error('obtenerAgenda', { turno }, unError, userScheduler);
     }
 
 });
@@ -510,9 +512,9 @@ EventCore.on('notificaciones:turno:suspender', async (turno) => {
                     organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
                 };
                 EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
-            } else {
-                notificacionesLog.error('obteneIdTurno-Suspender', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
             }
+        } else {
+            notificacionesLog.error('obteneIdTurno-Suspender', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
         }
     } catch (unError) {
         notificacionesLog.error('obtenerAgendaCancelar', { turno }, { error: 'error al generar la notificacion de cancelar' }, userScheduler);
