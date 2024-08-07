@@ -63,14 +63,27 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             opciones['tipoPrestacion.term'] =
                 RegExp('^.*' + req.query.prestacion + '.*$', 'i');
         }
-        if (req.query.motivo) {
+
+        const motivoFiltro = req.query.motivo
+            ? { motivo: RegExp('^.*' + req.query.motivo + '.*$', 'i') }
+            : {};
+
+        const organizacionFiltro = req.query.organizacion
+            ? { 'organizacion._id': req.query.organizacion }
+            : {};
+
+        if (req.query.motivo || req.query.organizacion) {
             opciones = {
                 ...opciones,
                 demandas: {
-                    $elemMatch: { motivo: RegExp('^.*' + req.query.motivo + '.*$', 'i') }
+                    $elemMatch: {
+                        ...motivoFiltro,
+                        ...organizacionFiltro
+                    }
                 }
             };
         }
+
         const radix = 10;
         const skip: number = parseInt(req.query.skip || 0, radix);
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
