@@ -731,17 +731,18 @@ export async function actualizarTiposDeTurno() {
         const agenda: any = this.actualizarTurnos(doc);
 
         Auth.audit(agenda, (userScheduler as any));
+        const objetoLog = {
+            idAgenda: agenda._id,
+            organizacion: agenda.organizacion,
+            horaInicio: agenda.horaInicio,
+            updatedAt: agenda.updatedAt,
+            updatedBy: agenda.updatedBy
+        };
         return saveAgenda(agenda).then(() => {
-            const objetoLog = {
-                idAgenda: agenda._id,
-                organizacion: agenda.organizacion,
-                horaInicio: agenda.horaInicio,
-                updatedAt: agenda.updatedAt,
-                updatedBy: agenda.updatedBy
-            };
             agendaLog.info('actualizarTiposTurnos', objetoLog);
             return Promise.resolve();
-        }).catch(() => {
+        }).catch((err) => {
+            agendaLog.error('actualizarTiposTurnos', objetoLog, err, userScheduler);
             return Promise.resolve();
         });
     });
@@ -777,7 +778,7 @@ export function actualizarTurnos(agenda) {
  * @param {any} end
  * @returns resultado
  */
-export function actualizarEstadoAgendas(start, end) {
+export async function actualizarEstadoAgendas(start, end) {
     // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado entre las fechas start y end
     const condicion = {
         $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }, { estado: 'pendienteAsistencia' }, { estado: 'pendienteAuditoria' }],
@@ -789,35 +790,46 @@ export function actualizarEstadoAgendas(start, end) {
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(doc => {
         const agenda: any = doc;
-        let turnos = [];
-        let todosAsistencia = false;
-        let todosAuditados = false;
-        for (let j = 0; j < agenda.bloques.length; j++) {
-            turnos = turnos.concat(agenda.bloques[j].turnos);
-        }
-        if (agenda.sobreturnos) {
-            turnos = turnos.concat(agenda.sobreturnos);
-        }
-        todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
-        todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
+        try {
+            let turnos = [];
+            let todosAsistencia = false;
+            let todosAuditados = false;
+            for (let j = 0; j < agenda.bloques.length; j++) {
+                turnos = turnos.concat(agenda.bloques[j].turnos);
+            }
+            if (agenda.sobreturnos) {
+                turnos = turnos.concat(agenda.sobreturnos);
+            }
+            todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
+            todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
 
-        if (agenda.nominalizada) {
-            if (todosAsistencia) {
-                if (todosAuditados) {
-                    agenda.estado = 'auditada';
-                    actualizarAux(agenda);
+            if (agenda.nominalizada) {
+                if (todosAsistencia) {
+                    if (todosAuditados) {
+                        agenda.estado = 'auditada';
+                        actualizarAux(agenda);
+                    } else {
+                        if (agenda.estado !== 'pendienteAuditoria') {
+                            agenda.estado = 'pendienteAuditoria';
+                            actualizarAux(agenda);
+                        }
+                    }
                 } else {
-                    if (agenda.estado !== 'pendienteAuditoria') {
-                        agenda.estado = 'pendienteAuditoria';
+                    if (agenda.estado !== 'pendienteAsistencia') {
+                        agenda.estado = 'pendienteAsistencia';
                         actualizarAux(agenda);
                     }
                 }
-            } else {
-                if (agenda.estado !== 'pendienteAsistencia') {
-                    agenda.estado = 'pendienteAsistencia';
-                    actualizarAux(agenda);
-                }
             }
+        } catch (err) {
+            const datosLog = {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
+            };
+            agendaLog.error('actualizarEstadosAgenda', datosLog, err, userScheduler);
         }
     });
 }
