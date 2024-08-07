@@ -10,12 +10,9 @@ import * as moment from 'moment';
 EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
     prestacion = new Prestacion(prestacion);
     const registros = prestacion.getRegistros();
-    const idInternacion = prestacion.trackId;
     const fecha = prestacion.ejecucion.fecha;
-    const ambito = prestacion.solicitud.ambitoOrigen;
     let indicaciones = registros.filter(r => r.esSolicitud).map(async (registro) => {
         const idRegistro = registro.id;
-        const idEvolucion = registro.idEvolucion;
         return PlanIndicacionesCtr.findOne({ registro: idRegistro });
     });
     indicaciones = await Promise.all(indicaciones);
@@ -59,7 +56,8 @@ EventCore.on('internacion:plan-indicaciones-eventos:create', async (evento) => {
         const index = eventos.findIndex(ev => ev.id === evento.id);
         const eventosPosteriores = eventos.slice(index + 1, eventos.length);
 
-        if (!eventosPosteriores.some(ev => ev.estado !== 'on-hold')) {
+        // si existen eventos posteriores al nuevo y TODOS estan en estado 'on-hold'
+        if (eventosPosteriores && !eventosPosteriores.some(ev => ev.estado !== 'on-hold')) {
             const proximoEvento = eventosPosteriores.shift();
             await PlanIndicacionesEventosCtr.deleteByIndicacion(indicacion.id, proximoEvento.fecha);
 
@@ -93,6 +91,11 @@ EventCore.on('internacion:plan-indicaciones:create', async (indicacion) => {
 EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
     switch (indicacion.estadoActual.tipo) {
         case 'active':
+            if (indicacion.estadoActual.verificacion) {
+                /* los nuevos eventos se crean solo cuando se valida o continúa (validacion del dia)
+                    una indicación, pero no cuando se verifica */
+                break;
+            }
             const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
             const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
             /* Se continua una prescripcion. Deben crearse los eventos correspondientes a la ultima
@@ -109,7 +112,8 @@ EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
                     return;
                 }
                 const ultimaFrecuencia = frecuencias.pop();
-                const fechaDesde = moment(ultimaFrecuencia.horario);
+                const horaInicio = moment(ultimaFrecuencia.horario).hours();
+                const fechaDesde = moment().hours(horaInicio).minutes(0);
                 const fechaHasta = moment().startOf('day').add(horaInicioEfector + 24, 'hours');
                 horarios = calcularHorarios(fechaDesde, fechaHasta, ultimaFrecuencia.frecuencia.key);
             }
@@ -166,7 +170,7 @@ function calcularHorarios(fechaDesde, fechaHasta, frecuencia) {
     const cantTomas = diferenciaEnHoras / frecuencia;
     const result = [];
 
-    for (let t = 0; t < cantTomas; t++) {
+    for (let t = 0; t <= cantTomas; t++) {
         result.push(moment(fechaDesde).add(t * frecuencia, 'hours'));
     }
     return result;
