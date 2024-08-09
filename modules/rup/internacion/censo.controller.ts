@@ -6,6 +6,8 @@ import * as CamasEstadosController from './cama-estados.controller';
 import { Camas } from './camas.schema';
 import { Censo } from './censos.schema';
 import { InternacionResumen } from './resumen/internacion-resumen.schema';
+import { internacionCensosLog as logger } from './internacion.log';
+import { userScheduler } from '../../../config.private';
 
 /**
  * Agrupa por cierta key. Por cada valor genera un array de esos elementos
@@ -380,40 +382,48 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
  * Genera el censo diario para una organizacion, unidad organizativa, y fecha dada
  */
 export async function censoDiario({ organizacion, timestamp, unidadOrganizativa }) {
-    const organizacionFound = await Organizacion.findById(organizacion);
-    const ambito = 'internacion';
-    const capa = organizacionFound?.usaEstadisticaV2 ? 'medica' : 'estadistica';
-    if (!timestamp) {
-        timestamp = moment();
-    }
-
-    const timestampStart = moment(timestamp).startOf('day');
-    const timestampEnd = moment(timestamp).endOf('day');
-
-    const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
-
-
-    const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
-
-    const snapshotsAgrupados = groupBy(snapshots, 'idInternacion');
-    const snapshotsPorCama = groupBy(snapshots, 'idCama');
-    const movimientosPorCama = groupBy(movimientos, 'idCama');
-    const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
-    const internaciones = await unificarMovimientos(snapshotsAgrupados, movimientosAgrupados);
-    const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa);
-
-    const camas = await unificarMovimientos(snapshotsPorCama, movimientosPorCama);
-    Object.keys(camas).forEach(idCama => {
-        const ultimoMov = camas[idCama][camas[idCama].length - 1];
-        const esDisponible = (ultimoMov.estado !== 'bloqueada' && ultimoMov.estado !== 'inactiva');
-        const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
-
-        if (esDisponible && estaUnidadOrganizativa && ultimoMov.esCensable) {
-            resultado.censo.disponibles++;
+    try {
+        const organizacionFound = await Organizacion.findById(organizacion);
+        const ambito = 'internacion';
+        const capa = organizacionFound?.usaEstadisticaV2 ? 'medica' : 'estadistica';
+        if (!timestamp) {
+            timestamp = moment();
         }
-    });
 
-    return resultado;
+        const timestampStart = moment(timestamp).startOf('day');
+        const timestampEnd = moment(timestamp).endOf('day');
+
+        const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
+        const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
+
+        const snapshotsAgrupados = groupBy(snapshots, 'idInternacion');
+        const snapshotsPorCama = groupBy(snapshots, 'idCama');
+        const movimientosPorCama = groupBy(movimientos, 'idCama');
+        const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
+        const internaciones = await unificarMovimientos(snapshotsAgrupados, movimientosAgrupados);
+        const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa);
+
+        const camas = await unificarMovimientos(snapshotsPorCama, movimientosPorCama);
+        Object.keys(camas).forEach(idCama => {
+            const ultimoMov = camas[idCama][camas[idCama].length - 1];
+            const esDisponible = (ultimoMov.estado !== 'bloqueada' && ultimoMov.estado !== 'inactiva');
+            const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
+
+            if (esDisponible && estaUnidadOrganizativa && ultimoMov.esCensable) {
+                resultado.censo.disponibles++;
+            }
+        });
+
+        return resultado;
+    } catch (err) {
+        const dataErr = {
+            fecha: timestamp,
+            organizacion,
+            unidadOrganizativa
+        };
+        await logger.error('censoDiario', dataErr, err, userScheduler);
+        return null;
+    }
 }
 
 function getInformesInternacion(prestacion) {
@@ -431,100 +441,132 @@ function getInformesInternacion(prestacion) {
 }
 
 export async function censoMensual({ organizacion, unidadOrganizativa, fechaDesde, fechaHasta }) {
-    const resultado = [];
-    const bucketsCensos: any = await Censo.find({
-        idOrganizacion: mongoose.Types.ObjectId(organizacion),
-        unidadOrganizativa,
-        start: { $gte: moment(fechaDesde).startOf('month') },
-        end: { $lte: moment(fechaHasta).endOf('month') }
-    });
+    try {
+        const resultado = [];
+        const bucketsCensos: any = await Censo.find({
+            idOrganizacion: mongoose.Types.ObjectId(organizacion),
+            unidadOrganizativa,
+            start: { $gte: moment(fechaDesde).startOf('month') },
+            end: { $lte: moment(fechaHasta).endOf('month') }
+        });
 
-    for (const bucket of bucketsCensos) {
-        const censos = bucket.censos.filter(censo =>
-            (moment(censo.fecha).isSameOrAfter(fechaDesde, 'day')
-            && moment(censo.fecha).isSameOrBefore(fechaHasta, 'day')));
-        resultado.push(...censos);
+        for (const bucket of bucketsCensos) {
+            const censos = bucket.censos.filter(censo =>
+                (moment(censo.fecha).isSameOrAfter(fechaDesde, 'day')
+                && moment(censo.fecha).isSameOrBefore(fechaHasta, 'day')));
+            resultado.push(...censos);
+        }
+        resultado.sort((a, b) => (a.fecha - b.fecha));
+        return resultado;
+    } catch (err) {
+        const dataErr = {
+            fechaDesde,
+            fechaHasta,
+            organizacion,
+            unidadOrganizativa
+        };
+        await logger.error('censoMensual', dataErr, err, userScheduler);
+        return null;
     }
-    resultado.sort((a, b) => (a.fecha - b.fecha));
-    return resultado;
 }
 
 export async function censoMensualJob(done) {
-    const cantidadMeses = 1;
+    try {
+        const cantidadMeses = 1;
 
-    const camasXOrg = await Camas.aggregate([
-        { $group: { _id: '$organizacion._id' } }
-    ]);
+        const camasXOrg = await Camas.aggregate([
+            { $group: { _id: '$organizacion._id' } }
+        ]);
 
-    const idsOrg = camasXOrg.map(a => a._id);
+        const idsOrg = camasXOrg.map(a => a._id);
 
-    const organizaciones: any = await Organizacion.find({
-        _id: { $in: idsOrg }
-    });
+        const organizaciones: any = await Organizacion.find({
+            _id: { $in: idsOrg }
+        });
 
-    const fechaDesde = moment().subtract(cantidadMeses, 'months').startOf('month');
-    const fechahasta = moment();
-    const dias = fechahasta.diff(fechaDesde, 'days');
+        const fechaDesde = moment().subtract(cantidadMeses, 'months').startOf('month');
+        const fechahasta = moment();
+        const dias = fechahasta.diff(fechaDesde, 'days');
 
-    for (let i = dias; i > 0; i--) {
-        const timestamp = moment().subtract(i, 'days');
-        for (const organizacion of organizaciones) {
-            for (const unidadOrganizativa of organizacion.unidadesOrganizativas) {
-                const resultado: any = await censoDiario({
-                    organizacion: organizacion._id,
-                    timestamp,
-                    unidadOrganizativa: unidadOrganizativa.conceptId
-                });
-
-                await storeCenso(
-                    organizacion._id,
-                    unidadOrganizativa.conceptId,
-                    resultado.censo,
-                    timestamp.startOf('day').toDate()
-                );
+        for (let i = dias; i > 0; i--) {
+            const timestamp = moment().subtract(i, 'days');
+            for (const organizacion of organizaciones) {
+                for (const unidadOrganizativa of organizacion.unidadesOrganizativas) {
+                    try {
+                        const resultado: any = await censoDiario({
+                            organizacion: organizacion._id,
+                            timestamp,
+                            unidadOrganizativa: unidadOrganizativa.conceptId
+                        });
+                        await storeCenso(
+                            organizacion._id,
+                            unidadOrganizativa.conceptId,
+                            resultado.censo,
+                            timestamp.startOf('day').toDate()
+                        );
+                    } catch (err) {
+                        const dataErr = {
+                            fecha: timestamp,
+                            organizacion,
+                            unidadOrganizativa
+                        };
+                        await logger.error('censoMensualLog', dataErr, err, userScheduler);
+                    }
+                }
             }
         }
+    } catch (err) {
+        await logger.error('censoMensualLog', err, userScheduler);
     }
 
     done();
 }
 
 export async function storeCenso(organizacion, unidadOrganizativa, censo, fecha) {
-    fecha = moment(fecha).startOf('d').toDate();
-    await Censo.update(
-        {
-            idOrganizacion: mongoose.Types.ObjectId(organizacion),
-            unidadOrganizativa,
-            start: { $lte: fecha },
-            end: { $gte: fecha }
-        },
-        {
-            $pull: { censos: { fecha } },
-        },
-        {
-            multi: true
-        }
-    );
-    const dateStart = moment(fecha).startOf('month').toDate();
-    const dateEnd = moment(fecha).endOf('month').toDate();
-    return await Censo.update(
-        {
-            idOrganizacion: mongoose.Types.ObjectId(organizacion),
-            unidadOrganizativa,
-            start: { $lte: fecha },
-            end: { $gte: fecha }
-        },
-        {
-            $push: { censos: { fecha, censo } },
-            $setOnInsert: {
+    try {
+        fecha = moment(fecha).startOf('d').toDate();
+        await Censo.update(
+            {
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
                 unidadOrganizativa,
-                start: dateStart,
-                end: dateEnd,
+                start: { $lte: fecha },
+                end: { $gte: fecha }
+            },
+            {
+                $pull: { censos: { fecha } },
+            },
+            {
+                multi: true
             }
-        },
-        {
-            upsert: true
-        }
-    );
+        );
+        const dateStart = moment(fecha).startOf('month').toDate();
+        const dateEnd = moment(fecha).endOf('month').toDate();
+        return await Censo.update(
+            {
+                idOrganizacion: mongoose.Types.ObjectId(organizacion),
+                unidadOrganizativa,
+                start: { $lte: fecha },
+                end: { $gte: fecha }
+            },
+            {
+                $push: { censos: { fecha, censo } },
+                $setOnInsert: {
+                    idOrganizacion: mongoose.Types.ObjectId(organizacion),
+                    unidadOrganizativa,
+                    start: dateStart,
+                    end: dateEnd,
+                }
+            },
+            {
+                upsert: true
+            }
+        );
+    } catch (err) {
+        const dataErr = {
+            organizacion,
+            unidadOrganizativa,
+            fecha
+        };
+        await logger.error('storeCenso', dataErr, err, userScheduler);
+    }
 }
