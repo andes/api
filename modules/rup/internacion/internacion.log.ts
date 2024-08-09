@@ -7,5 +7,16 @@ export const internacionCamaEstadosLog = new Logger({
     type: 'cama-estados',
     application: 'andes',
     bucketBy: 'd',
-    bucketSize: 100
+    bucketSize: 100,
+    expiredAt: '2 M'
+});
+
+export const internacionCensosLog = new Logger({
+    connection: Connections.logs,
+    module: 'internacion',
+    type: 'censos',
+    application: 'andes',
+    bucketBy: 'd',
+    bucketSize: 100,
+    expiredAt: '2 M'
 });
