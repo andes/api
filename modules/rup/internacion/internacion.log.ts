@@ -9,3 +9,12 @@ export const internacionCamaEstadosLog = new Logger({
     bucketBy: 'd',
     bucketSize: 100
 });
+
+export const internacionCensosLog = new Logger({
+    connection: Connections.logs,
+    module: 'internacion',
+    type: 'censos',
+    application: 'andes',
+    bucketBy: 'd',
+    bucketSize: 100
+});
