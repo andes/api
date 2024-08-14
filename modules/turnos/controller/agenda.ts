@@ -1,11 +1,9 @@
 import { EventCore } from '@andes/event-bus';
-import { log } from '@andes/log';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
 import * as request from 'request';
 import { Auth } from '../../../auth/auth.class';
-import { logKeys } from '../../../config';
 import { userScheduler, diasNoLaborables } from '../../../config.private';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
@@ -703,48 +701,55 @@ export async function actualizarTiposDeTurno() {
     const cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
     const esDomingo = false;
-
-    while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
-        switch (moment(fechaActualizar).day().toString()) {
-            case '0':
-                this.esDomingo = true;
-                break;
-            case '6':
-                fechaActualizar = moment(fechaActualizar).add(2, 'days');
-                break;
-            default:
-                fechaActualizar = moment(fechaActualizar).add(1, 'days');
-                break;
+    let agenda = null;
+    let condicion = {};
+    try {
+        while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
+            switch (moment(fechaActualizar).day().toString()) {
+                case '0':
+                    this.esDomingo = true;
+                    break;
+                case '6':
+                    fechaActualizar = moment(fechaActualizar).add(2, 'days');
+                    break;
+                default:
+                    fechaActualizar = moment(fechaActualizar).add(1, 'days');
+                    break;
+            }
         }
-    }
-    // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
-    const condicion = {
-        estado: 'publicada',
-        horaInicio: {
-            $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
-            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
-        }
-    };
+        // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
+        condicion = {
+            estado: 'publicada',
+            horaInicio: {
+                $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+                $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+            }
+        };
 
-    const cursor = Agenda.find(condicion).cursor();
-    return cursor.eachAsync(doc => {
-        const agenda: any = this.actualizarTurnos(doc);
+        const cursor = Agenda.find(condicion).cursor();
+        return cursor.eachAsync(doc => {
+            agenda = this.actualizarTurnos(doc);
 
-        Auth.audit(agenda, (userScheduler as any));
-        return saveAgenda(agenda).then(() => {
-            const objetoLog = {
-                idAgenda: agenda._id,
-                organizacion: agenda.organizacion,
-                horaInicio: agenda.horaInicio,
-                updatedAt: agenda.updatedAt,
-                updatedBy: agenda.updatedBy
-            };
-            agendaLog.info('actualizarTiposTurnos', objetoLog);
-            return Promise.resolve();
-        }).catch(() => {
-            return Promise.resolve();
+            Auth.audit(agenda, (userScheduler as any));
+            return saveAgenda(agenda).then(() => {
+                const objetoLog = {
+                    idAgenda: agenda._id,
+                    organizacion: agenda.organizacion,
+                    horaInicio: agenda.horaInicio,
+                    updatedAt: agenda.updatedAt,
+                    updatedBy: agenda.updatedBy
+                };
+                agendaLog.info('actualizarTiposTurnos', objetoLog);
+                return Promise.resolve();
+            }).catch(() => {
+                agendaLog.error('actualizarTiposTurnos', { agenda }, 'error saveAgenda');
+                return Promise.resolve();
+            });
         });
-    });
+    } catch (error) {
+        agendaLog.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
+        return null;
+    }
 }
 
 // Dada una agenda, actualiza los turnos restantes (Para agendas dentro de las 48hs a partir de hoy).
@@ -792,32 +797,36 @@ export function actualizarEstadoAgendas(start, end) {
         let turnos = [];
         let todosAsistencia = false;
         let todosAuditados = false;
-        for (let j = 0; j < agenda.bloques.length; j++) {
-            turnos = turnos.concat(agenda.bloques[j].turnos);
-        }
-        if (agenda.sobreturnos) {
-            turnos = turnos.concat(agenda.sobreturnos);
-        }
-        todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
-        todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
+        try {
+            for (let j = 0; j < agenda.bloques.length; j++) {
+                turnos = turnos.concat(agenda.bloques[j].turnos);
+            }
+            if (agenda.sobreturnos) {
+                turnos = turnos.concat(agenda.sobreturnos);
+            }
+            todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
+            todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
 
-        if (agenda.nominalizada) {
-            if (todosAsistencia) {
-                if (todosAuditados) {
-                    agenda.estado = 'auditada';
-                    actualizarAux(agenda);
+            if (agenda.nominalizada) {
+                if (todosAsistencia) {
+                    if (todosAuditados) {
+                        agenda.estado = 'auditada';
+                        actualizarAux(agenda);
+                    } else {
+                        if (agenda.estado !== 'pendienteAuditoria') {
+                            agenda.estado = 'pendienteAuditoria';
+                            actualizarAux(agenda);
+                        }
+                    }
                 } else {
-                    if (agenda.estado !== 'pendienteAuditoria') {
-                        agenda.estado = 'pendienteAuditoria';
+                    if (agenda.estado !== 'pendienteAsistencia') {
+                        agenda.estado = 'pendienteAsistencia';
                         actualizarAux(agenda);
                     }
                 }
-            } else {
-                if (agenda.estado !== 'pendienteAsistencia') {
-                    agenda.estado = 'pendienteAsistencia';
-                    actualizarAux(agenda);
-                }
             }
+        } catch (error) {
+            agendaLog.error('actualizarEstadoAgendas', { agenda }, error);
         }
     });
 }
@@ -1041,17 +1050,6 @@ export function actualizarTurnosMobile() {
         'bloques.restantesMobile': { $gt: 0 }
     };
     const cursor = Agenda.find(condicion).cursor();
-    const logRequest = {
-        user: {
-            usuario: { nombre: 'actualizarTurnosMobileJob', apellido: 'actualizarTurnosMobileJob' },
-            app: 'citas',
-            organizacion: userScheduler.user.organizacion.nombre
-        },
-        ip: 'localhost',
-        connection: {
-            localAddress: ''
-        }
-    };
 
     return cursor.eachAsync(async doc => {
         const agenda: any = doc;
@@ -1064,7 +1062,7 @@ export function actualizarTurnosMobile() {
             Auth.audit(agenda, (userScheduler as any));
             await saveAgenda(agenda);
         } catch (err) {
-            await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, err, { idAgenda: agenda._id });
+            agendaLog.error('actualizarTurnosMobile', { operacion: 'setea a 0 turnos disponibles para app mobile', agenda }, err);
         }
     });
 }
