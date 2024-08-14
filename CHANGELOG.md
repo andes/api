@@ -1,3 +1,11 @@
+## [5.113.1](https://github.com/andes/api/compare/v5.113.0...v5.113.1) (2024-08-14)
+
+
+### Bug Fixes
+
+* **AM:** Corrige error de tipeo en notificación al cancelar adjunto ([#1905](https://github.com/andes/api/issues/1905)) ([3e57b7b](https://github.com/andes/api/commit/3e57b7b79b8ac34070a9363ab5a7ed351a0befd9))
+* **IN:** agrega logs y continúa ejecucion ante un fallo ([#1940](https://github.com/andes/api/issues/1940)) ([97744b3](https://github.com/andes/api/commit/97744b318f70dc0f787b132210fc82210ef312ec))
+
 # [5.113.0](https://github.com/andes/api/compare/v5.112.0...v5.113.0) (2024-08-07)
 
 
