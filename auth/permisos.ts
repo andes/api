@@ -103,6 +103,13 @@ export default [
         ]
     },
     {
+        key: 'demandaInsatisfecha',
+        title: 'Demanda Insatisfecha',
+        comment: 'Ver listado de demandas insatisfechas',
+        visibility: 'restricted',
+        child: []
+    },
+    {
         key: 'mpi',
         title: 'Módulo MPI',
         comment: 'Ingresar y editar datos de pacientes',
@@ -746,5 +753,5 @@ export default [
                 ]
             }
         ]
-    }
+    },
 ];
