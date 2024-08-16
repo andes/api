@@ -328,14 +328,14 @@ PrestacionSchema.index({
 
 PrestacionSchema.index({
     updatedAt: 1,
-    'solicitud.organizacion.id' : 1,
-    'solicitud.organizacionOrigen.id' : 1
+    'solicitud.organizacion.id': 1,
+    'solicitud.organizacionOrigen.id': 1
 }, { name: 'TOP-ENTRADA-UPDATED', partialFilterExpression: { inicio: 'top' } });
 
 PrestacionSchema.index({
-    updatedAt : 1,
-    'solicitud.organizacionOrigen.id' : 1,
-    'solicitud.organizacion.id' : 1
+    updatedAt: 1,
+    'solicitud.organizacionOrigen.id': 1,
+    'solicitud.organizacion.id': 1
 }, { name: 'TOP-SALIDA-UPDATED', partialFilterExpression: { inicio: 'top' } });
 
 PrestacionSchema.index({
@@ -372,6 +372,16 @@ PrestacionSchema.index(
         name: 'SERVICIOS-INTERMEDIO',
         partialFilterExpression: { inicio: 'servicio-intermedio' }
     }
+);
+// índice utilizado desde el buscador de turnos y prestaciones
+PrestacionSchema.index(
+    {
+        'ejecucion.fecha': 1,
+        'estadoActual.tipo': 1,
+        'solicitud.organizacion.id': 1,
+        'solicitud.tipoPrestacion.conceptId': 1
+    },
+    { name: 'FUERA-AGENDA' }
 );
 
 export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');
