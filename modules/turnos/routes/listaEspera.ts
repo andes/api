@@ -145,61 +145,63 @@ router.put('/listaEspera/:id', (req, res, next) => {
 });
 
 router.patch('/listaEspera/:id/:datoMod', async (req, res, next) => {
-    listaEspera.findById(req.params.id, async (err, data: any) => {
-        if (err) {
-            return next(err);
+    try {
+        const data: any = await listaEspera.findById(req.params.id).exec();
+        if (!data) {
+            return next(new Error('No se ha encontrado el registro.'));
         }
-        try {
-            const datoMod = req.params.datoMod;
-            if (datoMod === 'demandas') {
-                data.demandas = req.body;
+
+        const datoMod = req.params.datoMod;
+        if (datoMod === 'demandas') {
+            data.demandas = req.body;
+        } else if (datoMod === 'estado') {
+            data.estado = req.body.estado;
+            data.resolucion = {
+                fecha: req.body.fecha,
+                motivo: req.body.motivo,
+            };
+            if (req.body.observacion) {
+                data.resolucion.observacion = req.body.observacion;
             }
-            if (datoMod === 'estado') {
-                data.estado = req.body.estado;
-                data.resolucion = {
-                    fecha: req.body.fecha,
-                    motivo: req.body.motivo,
+            if (req.body.turno) {
+                const agenda: any = await Agenda.findById(req.body.turno.idAgenda).exec();
+                if (!agenda) {
+                    return next(new Error('No se ha encontrado la agenda.'));
+                }
+
+                const turnoAgenda = agenda.bloques.flatMap(bloque =>
+                    bloque.turnos.filter(t => t._id.toString() === req.body.turno.id)
+                )[0];
+
+                if (!turnoAgenda) {
+                    return next(new Error('No se ha encontrado el turno'));
+                }
+
+                const turno = {
+                    id: turnoAgenda._id,
+                    horaInicio: turnoAgenda.horaInicio,
+                    tipo: turnoAgenda.tipoTurno,
+                    emitidoPor: turnoAgenda.emitidoPor,
+                    fechaHoraDacion: turnoAgenda.fechaHoraDacion,
+                    profesionales: agenda.profesionales,
+                    idAgenda: req.body.turno.idAgenda,
+                    organizacion: {
+                        id: agenda.organizacion.id,
+                        nombre: agenda.organizacion.nombre
+                    },
                 };
-                if (req.body.observacion) {
-                    data.resolucion.observacion = req.body.observacion;
-                }
-                if (req.body.turno) {
-                    await Agenda.findById(req.body.turno.idAgenda, (error, agenda: any) => {
-                        if (error) {
-                            return next(error);
-                        }
-                        const turnoAgenda = agenda.bloques.map(bloque => bloque.turnos.find(t => t._id.toString() === req.body.turno.id));
-                        const turno = {
-                            id: turnoAgenda[0]._id,
-                            horaInicio: turnoAgenda[0].horaInicio,
-                            tipo: turnoAgenda[0].tipoTurno,
-                            emitidoPor: turnoAgenda[0].emitidoPor,
-                            fechaHoraDacion: turnoAgenda[0].fechaHoraDacion,
-                            profesionales: agenda.profesionales,
-                            idAgenda: req.body.turno.idAgenda,
-                            organizacion: {
-                                id: agenda.organizacion.id,
-                                nombre: agenda.organizacion.nombre
-                            },
-                        };
-                        data.resolucion.turno = turno;
-                    });
-                }
+                data.resolucion.turno = turno;
             }
-            if (datoMod === 'llamados') {
-                data.llamados = req.body;
-            }
-            Auth.audit(data, req);
-            data.save((errUpdate) => {
-                if (errUpdate) {
-                    return next(errUpdate);
-                }
-                res.json(data);
-            });
-        } catch (error) {
-            return next(error);
+        } else if (datoMod === 'llamados') {
+            data.llamados = req.body;
         }
-    });
+
+        Auth.audit(data, req);
+        await data.save();
+        res.json(data);
+    } catch (error) {
+        next(error);
+    }
 });
 
 router.delete('/listaEspera/:id', (req, res, next) => {
