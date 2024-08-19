@@ -7,16 +7,22 @@ import * as mongoose from 'mongoose';
  * @returns {object} {fecha, paciente, financiador, prestacion, profesionales, estado, idAgenda:null, idBloque:null, turno:null, idPrestacion}
  */
 export async function procesar(parametros: any) {
+    const indice = 'FUERA-AGENDA';
     const match: any = {
         'ejecucion.fecha': {
             $gte: new Date(parametros.fechaDesde),
             $lte: new Date(parametros.fechaHasta)
         },
         'estadoActual.tipo': 'validada',
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(parametros.organizacion),
         'solicitud.tipoPrestacion.noNominalizada': { $ne: true },
         'solicitud.turno': null,
-        'solicitud.organizacion.id': mongoose.Types.ObjectId(parametros.organizacion)
     };
+
+    if (parametros.prestacion) {
+        match['solicitud.tipoPrestacion.conceptId'] = parametros.prestacion;
+    }
+
     const matchPaciente = {};
 
     if (parametros.noNominalizada) {
@@ -34,9 +40,6 @@ export async function procesar(parametros: any) {
         }
     }
 
-    if (parametros.prestacion) {
-        match['solicitud.tipoPrestacion.conceptId'] = parametros.prestacion;
-    }
 
     if (parametros.profesional) {
         match['solicitud.profesional.id'] = new mongoose.Types.ObjectId(parametros.profesional);
@@ -61,7 +64,7 @@ export async function procesar(parametros: any) {
                     }
                 }
             },
-            { $match: matchPaciente }]).cursor({ batchSize: 100 }).exec();
+            { $match: matchPaciente }]).option({ hint: indice }).allowDiskUse(true).cursor({ batchSize: 100 }).exec();
         const resultado = [];
         const os = parametros.financiador ? parametros.financiador : 'todos';
         const filtroEstado = parametros.estado ? parametros.estado : 'todos';
