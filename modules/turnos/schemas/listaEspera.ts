@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
-import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { PacienteListaEsperaSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 const profesionalSchema = new mongoose.Schema({
@@ -27,7 +27,7 @@ const demandaSchema = new mongoose.Schema({
 demandaSchema.plugin(AuditPlugin);
 
 const listaEsperaSchema = new mongoose.Schema({
-    paciente: PacienteSubSchema,
+    paciente: PacienteListaEsperaSchema,
     tipoPrestacion: { type: tipoPrestacionSchema },
     fecha: Date,
     vencimiento: Date,
