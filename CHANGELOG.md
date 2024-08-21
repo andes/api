@@ -1,3 +1,18 @@
+# [5.114.0](https://github.com/andes/api/compare/v5.113.1...v5.114.0) (2024-08-21)
+
+
+### Bug Fixes
+
+* **HUDS-103:** Error al exportar la HUDS ([#1924](https://github.com/andes/api/issues/1924)) ([d657c99](https://github.com/andes/api/commit/d657c99da46e06a888e437cef985eb3de5c2c980))
+* **int:** comportamiento de eventos al guardar/actualizar indicacion ([#1922](https://github.com/andes/api/issues/1922)) ([04a245e](https://github.com/andes/api/commit/04a245ebfdb0db245d8db0f74e0cedba9eab50c9))
+* **TyP:** Agrega índices para búsqueda fuera de agenda ([#1942](https://github.com/andes/api/issues/1942)) ([d290212](https://github.com/andes/api/commit/d290212bbc27d71deb77dc6325e08805a0499eb6))
+
+
+### Features
+
+* **CIT:** agrega permisos para demanda insatisfecha ([#1929](https://github.com/andes/api/issues/1929)) ([4c0bcc1](https://github.com/andes/api/commit/4c0bcc1cfa4855083632959a0cd8aa052bfc4b70))
+* **CIT:** implementa filtro de organizacion ([#1939](https://github.com/andes/api/issues/1939)) ([21baea4](https://github.com/andes/api/commit/21baea40fc2efdb77ea4cbe2d4a669e3191faddb))
+
 ## [5.113.1](https://github.com/andes/api/compare/v5.113.0...v5.113.1) (2024-08-14)
 
 
