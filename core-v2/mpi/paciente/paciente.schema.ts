@@ -1,14 +1,14 @@
-import * as mongoose from 'mongoose';
-import * as moment from 'moment';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import { ESTADO, ESTADOCIVIL, SEXO, IDENTIFICACION, GENERO } from '../../../shared/constantes';
-import { NombreSchema, DireccionSchema, ContactoSchema, NombreSchemaV2 } from '../../../shared/schemas';
+import * as moment from 'moment';
+import * as mongoose from 'mongoose';
+import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import * as obraSocialSchema from '../../../modules/obraSocial/schemas/obraSocial';
+import { ESTADO, ESTADOCIVIL, GENERO, IDENTIFICACION, SEXO } from '../../../shared/constantes';
+import { ContactoSchema, DireccionSchema, NombreSchema, NombreSchemaV2 } from '../../../shared/schemas';
 import { FinanciadorSchema } from '../financiador/financiador.schema';
 import { ParentescoSchema } from '../parentesco/parentesco.schema';
 import { IPacienteDoc } from './paciente.interface';
-import * as nombreSchema from '../../../core/tm/schemas/nombre';
-import * as obraSocialSchema from '../../../modules/obraSocial/schemas/obraSocial';
 
 const ObjectId = mongoose.Types.ObjectId;
 const mongoose_fuzzy_searching = require('mongoose-fuzzy-searching');
