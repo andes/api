@@ -496,3 +496,10 @@ export async function verificaInternacionActual(idPaciente) {
     }
     return null;
 }
+
+export async function agregarFinanciador(paciente) {
+    const financiador = await getObraSocial(paciente);
+    paciente.financiador = financiador;
+
+    return paciente;
+}
