@@ -3,11 +3,10 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import { extractFoto, findById, make, multimatch, set, suggest, verificaInternacionActual } from './paciente.controller';
+import { agregarFinanciador, extractFoto, findById, make, multimatch, set, suggest, verificaInternacionActual } from './paciente.controller';
 import { PatientNotFound } from './paciente.error';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from './paciente.schema';
-import moment = require('moment');
 
 class PacienteResource extends ResourceBase<IPacienteDoc> {
     Model = Paciente;
@@ -176,28 +175,34 @@ export const getFoto = async (req: Request, res: Response, next) => {
  * @apiSuccess {IPaciente} Paciente creado.
  */
 
-export const post = async (req: Request, res: Response) => {
-    const body = req.body;
-    let sugeridos = await suggest(body);
-    // filtrar sugeridos: validado => sólo pacientes validados
-    sugeridos = (body.estado === 'validado') ? sugeridos.filter(s => s.paciente.estado === 'validado') : sugeridos;
-    if (sugeridos.length && !body.ignoreSuggestions) {
-        return res.json({ sugeridos });
-    }
-    body.activo = true; // Todo paciente esta activo por defecto
-    body.estado = body.estado || 'temporal';
-    const paciente = make(body);
+export const post = async (req: Request, res: Response, next) => {
+    try {
+        const body = req.body;
+        let sugeridos = await suggest(body);
 
-    await extractFoto(paciente, req);
+        sugeridos = (body.estado === 'validado') ? sugeridos.filter(s => s.paciente.estado === 'validado') : sugeridos;
+        if (sugeridos.length && !body.ignoreSuggestions) {
+            return res.json({ sugeridos });
+        }
+        body.activo = true;
+        body.estado = body.estado || 'temporal';
+        const paciente = make(body);
 
-    if (paciente.scan) {
-        // obtengo el numero de tramite del documento que contiene el scan del paciente
-        const numTramite = Number(paciente.scan.split('@')[0]);
-        const valor = numTramite ? numTramite.toString() : '';
-        paciente.identificadores = valor ? [{ entidad: 'RENAPER', valor }] : null;
+        await extractFoto(paciente, req);
+
+        if (paciente.scan) {
+            const numTramite = Number(paciente.scan.split('@')[0]);
+            const valor = numTramite ? numTramite.toString() : '';
+            paciente.identificadores = valor ? [{ entidad: 'RENAPER', valor }] : null;
+        }
+
+        const pacienteConFinanciador = await agregarFinanciador(paciente);
+        const pacienteCreado = await PacienteCtr.create(pacienteConFinanciador, req);
+
+        return res.json(pacienteCreado);
+    } catch (err) {
+        return next('Ocurrió un error al guardar el paciente');
     }
-    const pacienteCreado = await PacienteCtr.create(paciente, req);
-    return res.json(pacienteCreado);
 };
 
 /**
@@ -239,7 +244,6 @@ export const patch = async (req: Request, res: Response) => {
     }
     throw new PatientNotFound();
 };
-
 
 PacienteRouter.use(Auth.authenticate());
 PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(get));
