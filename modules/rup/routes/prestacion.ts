@@ -178,7 +178,7 @@ router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
 router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
         let indice = 'TOP-ENTRADA';
-        if ( req.query.solicitudDesdeActualizacion) {
+        if (req.query.solicitudDesdeActualizacion) {
             indice = 'TOP-ENTRADA-UPDATED';
         };
 
@@ -244,7 +244,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.organizacionOrigen) {
             indice = 'TOP-SALIDA';
-            if ( req.query.solicitudDesdeActualizacion) {
+            if (req.query.solicitudDesdeActualizacion) {
                 indice = 'TOP-SALIDA-UPDATED';
             };
             const organizacionesOrigen = Array.isArray(req.query.organizacionOrigen) ? req.query.organizacionOrigen : [req.query.organizacionOrigen];
@@ -411,7 +411,10 @@ router.get('/prestaciones', async (req: any, res, next) => {
         query.where('solicitud.profesional.id').equals(req.query.idProfesional);
     }
     if (req.query.idPaciente) {
-        const paciente: any = await PacienteCtr.findById(req.query.idPaciente);
+        let paciente: any = await PacienteCtr.findById(req.query.idPaciente);
+        if (paciente.idPacientePrincipal) {
+            paciente = await PacienteCtr.findById(paciente.idPacientePrincipal);
+        }
         if (paciente) {
             query.where('paciente.id').in(paciente.vinculos);
         }
