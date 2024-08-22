@@ -2,12 +2,10 @@ import moment = require('moment');
 import { Agenda, AgendaSchema } from '../modules/turnos/schemas/agenda';
 import { notificacionesLog } from '../modules/turnos/citasLog';
 import { userScheduler } from '../config.private';
-import { EventCore } from '@andes/event-bus';
 import * as mongoose from 'mongoose';
 import { WebHook } from '../modules/webhook/webhook.schema';
 import { WebHookLog } from '../modules/webhook/webhooklog/webhooklog.schema';
-
-const request = require('request');
+import { handleHttpRequest } from '../utils/requestHandler';
 
 async function run(done) {
     try {
@@ -33,23 +31,16 @@ async function recorrerAgendas() {
         'bloques.turnos.estado': 'asignado'
     };
 
-    const agendasMañana: any[] = await Agenda.find(match);;
-
-    // for (const agenda of agendasMañana) {
-    //     for (const bloque of agenda.bloques) {
-    //         for (const turno of bloque.turnos) {
-    //             await recordarTurno(agenda, turno);
-    //         }
-    //     }
-    // }
-
+    const agendasMañana: any[] = await Agenda.find(match);
     for (let i = 0; i < agendasMañana.length; i++) {
         const agenda = agendasMañana[i];
         for (let j = 0; j < agenda.bloques.length; j++) {
             const bloque = agenda.bloques[j];
             for (let k = 0; k < bloque.turnos.length; k++) {
                 const turno = bloque.turnos[k];
-                await recordarTurno(agenda, turno);
+                if (turno.estado === 'asignado' && turno.paciente) {
+                    await recordarTurno(agenda, turno);
+                }
             }
         }
     }
@@ -72,8 +63,7 @@ async function recordarTurno(agenda, turno) {
                     profesional: datoAgenda.profesionales ? datoAgenda.profesionales : '',
                     organizacion: datoAgenda.organizacion ? datoAgenda.organizacion : ''
                 };
-                // EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
-                await webHook('notificaciones:enviar', dtoMensaje);
+                await send('notificaciones:enviar', dtoMensaje);
             }
         } else {
             notificacionesLog.error('obteneIdTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
@@ -112,46 +102,42 @@ function dataAgenda(agenda, idTurno) {
     }
 }
 
-async function webHook(event, datos) {
+async function send(event, datos) {
 
-    const subscriptions = await WebHook.find({
+    const subscriptions: any = await WebHook.findOne({
         active: true,
         event
     });
 
-    subscriptions.forEach((sub: any) => {
+    if (subscriptions) {
 
         const data = {
             id: new mongoose.Types.ObjectId(),
-            subscription: sub._id,
+            subscription: subscriptions._id,
             data: datos,
             event
         };
-
-        // console.log({ method: sub.method, uri: sub.url, headers: sub.headers, body: data, json: true, timeout: 10000, });
-
-        request({
-            method: sub.method,
-            uri: sub.url,
-            headers: sub.headers,
-            body: data,
-            json: true,
-            timeout: 10000,
-        }, (error, response, _body) => {
-            const log = new WebHookLog({
-                event,
-                url: sub.url,
-                method: sub.method,
-                headers: sub.headers,
+        try {
+            const resultado = await handleHttpRequest({
+                method: subscriptions.method,
+                uri: subscriptions.url,
+                headers: subscriptions.headers,
                 body: data,
-                subscriptionId: sub._id,
-                status: error ? 0 : response.statusCode,
-                response: _body
+                json: true,
+                timeout: 10000,
             });
-            log.save();
-        });
 
-    });
+            return resultado;
+        } catch (err) {
+            notificacionesLog.error('envioNotificacion', { error: err }, userScheduler);
+            return null;
+        }
+
+    } else {
+        notificacionesLog.error('envioNotificacion', { turno: datos }, { error: 'evento no encontrado' }, userScheduler);
+        return null;
+    }
+
 }
 export = run;
 
