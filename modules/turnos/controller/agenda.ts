@@ -702,10 +702,12 @@ export async function actualizarTiposDeTurno() {
     const cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
     const esDomingo = false;
+    let feriado;
     let agenda = null;
     let condicion = {};
     try {
-        while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
+        feriado = await esFeriado(fechaActualizar);
+        while ((feriado && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
             switch (moment(fechaActualizar).day().toString()) {
                 case '0':
                     this.esDomingo = true;
@@ -717,40 +719,42 @@ export async function actualizarTiposDeTurno() {
                     fechaActualizar = moment(fechaActualizar).add(1, 'days');
                     break;
             }
+            feriado = await esFeriado(fechaActualizar);
         }
-        // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
-        condicion = {
-            estado: 'publicada',
-            horaInicio: {
-                $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
-                $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
-            }
-        };
+    } catch (error) {
+        agendaLog.error('actualizarTiposTurnos', { feriado, fechaActualizar }, error);
+        return null;
+    }
 
-        const cursor = Agenda.find(condicion).cursor();
-        return cursor.eachAsync(doc => {
+    // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
+    condicion = {
+        estado: 'publicada',
+        horaInicio: {
+            $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+        }
+    };
+    const cursor = Agenda.find(condicion).cursor();
+    return cursor.eachAsync(async doc => {
+        try {
             agenda = this.actualizarTurnos(doc);
 
             Auth.audit(agenda, (userScheduler as any));
-            return saveAgenda(agenda).then(() => {
-                const objetoLog = {
-                    idAgenda: agenda._id,
-                    organizacion: agenda.organizacion,
-                    horaInicio: agenda.horaInicio,
-                    updatedAt: agenda.updatedAt,
-                    updatedBy: agenda.updatedBy
-                };
-                agendaLog.info('actualizarTiposTurnos', objetoLog);
-                return Promise.resolve();
-            }).catch(() => {
-                agendaLog.error('actualizarTiposTurnos', { agenda }, 'error saveAgenda');
-                return Promise.resolve();
-            });
-        });
-    } catch (error) {
-        agendaLog.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
-        return null;
-    }
+            await saveAgenda(agenda);
+            const objetoLog = {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
+            };
+            agendaLog.info('actualizarTiposTurnos', objetoLog);
+        } catch (error) {
+            agendaLog.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
+        }
+    });
+
+
 }
 
 // Dada una agenda, actualiza los turnos restantes (Para agendas dentro de las 48hs a partir de hoy).
