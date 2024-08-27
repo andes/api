@@ -184,7 +184,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                     pacienteTurno.carpetaEfectores = req.body.carpetaEfectores;
                 }
             }
-
         } catch (err) {
             return next(err);
         }
@@ -267,22 +266,23 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                 break;
         }
         const usuario = Auth.getAuditUser(req);
+        const bloqueTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
 
-        const etiquetaTipoTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoTurno';
-        const etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
-        const etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
-        const etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
-        const etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
-        const etiquetaLink: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.link';
-        const etiquetaEmitidoPor: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.emitidoPor';
-        const etiquetaMotivoConsulta: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.motivoConsulta';
-        const estadoFacturacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estadoFacturacion';
-
-        const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
-        const etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
-        const etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
-        const etiquetaUsuarioDacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.usuarioDacion';
-        const etiquetaFechHoraDacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.fechaHoraDacion';
+        const etiquetaTipoTurno: string = bloqueTurno + '.tipoTurno';
+        const etiquetaEstado: string = bloqueTurno + '.estado';
+        const etiquetaPaciente: string = bloqueTurno + '.paciente';
+        const etiquetaPrestacion: string = bloqueTurno + '.tipoPrestacion';
+        const etiquetaNota: string = bloqueTurno + '.nota';
+        const etiquetaLink: string = bloqueTurno + '.link';
+        const etiquetaEmitidoPor: string = bloqueTurno + '.emitidoPor';
+        const etiquetaMotivoConsulta: string = bloqueTurno + '.motivoConsulta';
+        const estadoFacturacion: string = bloqueTurno + '.estadoFacturacion';
+        const etiquetaReasignado: string = bloqueTurno + '.reasignado';
+        const etiquetaNotificar = bloqueTurno + '.notificar';
+        const etiquetaUpdateAt: string = bloqueTurno + '.updatedAt';
+        const etiquetaUpdateBy: string = bloqueTurno + '.updatedBy';
+        const etiquetaUsuarioDacion: string = bloqueTurno + '.usuarioDacion';
+        const etiquetaFechHoraDacion: string = bloqueTurno + '.fechaHoraDacion';
 
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
@@ -298,6 +298,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
 
         if (req.body.reasignado) {
             update[etiquetaReasignado] = req.body.reasignado;
+        }
+        if (req.body.notificar) {
+            update[etiquetaNotificar] = req.body.notificar;
         }
         update[etiquetaUpdateAt] = new Date();
         update[etiquetaUpdateBy] = usuario;
@@ -509,8 +512,10 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
             if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
                 const turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
                 const idBloque = req.params.idBloque !== '-1' ? null : Types.ObjectId(req.params.idBloque);
+                EventCore.emitAsync('citas:turno:asignar', turno);
                 LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, idBloque, req.params.idAgenda);
-                NotificationService.notificarReasignar(req.params, usuario.organizacion);
+                // TODO:: Resolver envio de notificaciones push
+                // NotificationService.notificarReasignar(req.params, usuario.organizacion);
             }
 
         });
