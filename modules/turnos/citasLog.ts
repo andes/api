@@ -7,23 +7,28 @@ export const agendaLog = new Logger({
     type: 'agenda',
     application: 'andes',
     bucketBy: 'h',
-    bucketSize: 100
+    bucketSize: 100,
+    expiredAt: '3 M'
 });
+
 export const turnosLog = new Logger({
     connection: Connections.logs,
     module: 'citas',
     type: 'turno',
     application: 'andes',
     bucketBy: 'h',
-    bucketSize: 100
+    bucketSize: 100,
+    expiredAt: '3 M'
 });
+
 export const demandaLog = new Logger({
     connection: Connections.logs,
     module: 'citas',
     type: 'demanda-turno',
     application: 'andes',
     bucketBy: 'h',
-    bucketSize: 100
+    bucketSize: 100,
+    expiredAt: '3 M'
 });
 
 export const notificacionesLog = new Logger({
@@ -31,5 +36,6 @@ export const notificacionesLog = new Logger({
     module: 'msNotificaciones',
     application: 'andes',
     bucketBy: 'h',
-    bucketSize: 100
+    bucketSize: 100,
+    expiredAt: '3 M'
 });

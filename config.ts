@@ -263,10 +263,6 @@ export const logKeys = {
         key: 'mpi:validacion',
         operacion: 'Validar paciente'
     },
-    turnosMobileUpdate: {
-        key: 'citas:bloques:modificar',
-        operacion: 'setea a 0 turnos disponibles para app mobile'
-    },
     regexChecker: {
         key: 'mpi:regexChecker',
         operacion: 'JOB: intenta corregir errores en nombre y apellido de pacientes'
