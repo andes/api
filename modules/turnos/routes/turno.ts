@@ -514,7 +514,8 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
                 const idBloque = req.params.idBloque !== '-1' ? null : Types.ObjectId(req.params.idBloque);
                 EventCore.emitAsync('citas:turno:asignar', turno);
                 LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, idBloque, req.params.idAgenda);
-                NotificationService.notificarReasignar(req.params, usuario.organizacion);
+                // TODO:: Resolver envio de notificaciones push
+                // NotificationService.notificarReasignar(req.params, usuario.organizacion);
             }
 
         });

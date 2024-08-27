@@ -221,9 +221,7 @@ export function suspenderTurno(req, data, turno) {
             }
         }
     }
-
-    NotificationService.notificarSuspension(datosTurno, efector);
-
+    // NotificationService.notificarSuspension(datosTurno, efector);
 }
 
 // Turno
@@ -470,10 +468,13 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
+                    // TODO::: revisar envio de notificacion push
+                    /*
                     if (turno.paciente) {
                         const efector = data.organizacion;
                         NotificationService.notificarSuspension(turno, efector);
                     }
+                    */
 
                 });
             });
