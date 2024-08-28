@@ -1,3 +1,15 @@
+# [5.115.0](https://github.com/andes/api/compare/v5.114.0...v5.115.0) (2024-08-28)
+
+
+### Bug Fixes
+
+* **IN:** incluye pacientes vinculados en la huds ([#1947](https://github.com/andes/api/issues/1947)) ([b76ad99](https://github.com/andes/api/commit/b76ad993b54142c4c9292449c9b128d7a033d178))
+
+
+### Features
+
+* **TM-36:** API para ABM de Farmacias ([#1926](https://github.com/andes/api/issues/1926)) ([a6e2167](https://github.com/andes/api/commit/a6e2167249dd9c8e463513e465c703df95e70f35))
+
 # [5.114.0](https://github.com/andes/api/compare/v5.113.1...v5.114.0) (2024-08-21)
 
 
