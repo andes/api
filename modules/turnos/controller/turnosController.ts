@@ -466,9 +466,9 @@ EventCore.on('citas:turno:asignar', async (turno) => {
     try {
         if (turno?._id || turno.id) {
             const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
-            const tipoTurno = turno.tipoTurno === 'gestion' || turno.reasignado.anterior && turno.notificar;
+            const tipoTurno = turno.tipoTurno === 'gestion' || (turno.reasignado?.anterior && turno.notificar);
             const mensaje = turno.tipoTurno === 'gestion' ? 'turno-dacion' : 'turno-reasignar';
-            const telefono = await telefonoUnico() || turno.paciente.telefono;
+            const telefono = turno.paciente.telefono;
             let dataPrestacion = null;
             if (!tipoTurno) { dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id); }
             if ((tipoTurno || dataPrestacion)) {
