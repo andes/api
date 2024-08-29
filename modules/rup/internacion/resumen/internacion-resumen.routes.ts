@@ -15,12 +15,7 @@ class InternacionResumenController extends ResourceBase<IInternacionResumenDoc> 
         },
         paciente: {
             field: 'paciente.id',
-            fn: (value) => {
-                if (typeof value === 'string') {
-                    return MongoQuery.equalMatch(value);
-                }
-                return MongoQuery.inArray(value);
-            }
+            fn: MongoQuery.matchString
         },
         ingreso: MongoQuery.matchDate.withField('fechaIngreso'),
         egreso: MongoQuery.matchDate.withField('fechaEgreso'),

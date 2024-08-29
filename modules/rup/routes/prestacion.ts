@@ -411,10 +411,7 @@ router.get('/prestaciones', async (req: any, res, next) => {
         query.where('solicitud.profesional.id').equals(req.query.idProfesional);
     }
     if (req.query.idPaciente) {
-        let paciente: any = await PacienteCtr.findById(req.query.idPaciente);
-        if (paciente.idPacientePrincipal) {
-            paciente = await PacienteCtr.findById(paciente.idPacientePrincipal);
-        }
+        const paciente: any = await PacienteCtr.findById(req.query.idPaciente);
         if (paciente) {
             query.where('paciente.id').in(paciente.vinculos);
         }
