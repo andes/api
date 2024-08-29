@@ -78,7 +78,7 @@ function dataAgenda(agenda, idTurno) {
     try {
         if (agenda) {
             if (agenda.profesionales.length) {
-                profesionales = 'con el/los profesionales ';
+                profesionales = agenda.profesionales.length === 1 ? 'con el/la profesional ' : 'con los profesionales ';
                 for (const prof of agenda.profesionales) {
                     profesionales += `${prof.nombre} ${prof.apellido}, `;
                 }
