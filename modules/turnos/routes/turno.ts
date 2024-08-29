@@ -364,7 +364,13 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
             if (req.body.reasignado) {
                 const fechaDesde = moment(turnoSeleccionado.horaInicio).subtract(6, 'months');
                 const fechaHasta = turnoSeleccionado.horaInicio;
-                const filtros = { 'solicitud.fecha': { $gte: fechaDesde, $lte: fechaHasta }, 'solicitud.organizacion.id': req.user.organizacion.id, 'solicitud.ambitoOrigen': 'ambulatorio', inicio: 'top', 'solicitud.historial.idTurnoSuspendido': req.body.reasignado.anterior.idTurno };
+                const filtros = {
+                    'solicitud.organizacion.id': req.user.organizacion.id,
+                    'solicitud.fecha': { $gte: fechaDesde, $lte: fechaHasta },
+                    'solicitud.ambitoOrigen': 'ambulatorio',
+                    inicio: 'top',
+                    'solicitud.historial.idTurnoSuspendido': req.body.reasignado.anterior.idTurno
+                };
                 const prestacion: any = await Prestacion.findOne(filtros);
                 if (prestacion) {
                     const dataHistorial = {
