@@ -6,6 +6,7 @@ import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import { agendaLog, turnosLog } from '../../turnos/citasLog';
+import * as prestacionCtrl from '../../rup/controllers/prestacion';
 import * as agendaCtrl from '../../turnos/controller/agenda';
 import { Agenda } from '../../turnos/schemas/agenda';
 import * as recordatorioController from '../controller/RecordatorioController';
@@ -220,6 +221,7 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
                 if (!liberado) {
                     return next('Turno en ejecución');
                 }
+                await prestacionCtrl.liberarRefTurno(turno, req);
                 Auth.audit(agendaObj, req);
                 return agendaObj.save((error) => {
                     const objetoLog = {
