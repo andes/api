@@ -1,10 +1,9 @@
 import moment = require('moment');
-import { Agenda, AgendaSchema } from '../modules/turnos/schemas/agenda';
+import { Agenda } from '../modules/turnos/schemas/agenda';
 import { notificacionesLog } from '../modules/turnos/citasLog';
 import { userScheduler } from '../config.private';
 import * as mongoose from 'mongoose';
 import { WebHook } from '../modules/webhook/webhook.schema';
-import { WebHookLog } from '../modules/webhook/webhooklog/webhooklog.schema';
 import { handleHttpRequest } from '../utils/requestHandler';
 
 async function run(done) {
