@@ -1,3 +1,11 @@
+## [5.115.1](https://github.com/andes/api/compare/v5.115.0...v5.115.1) (2024-09-04)
+
+
+### Bug Fixes
+
+* **CITAS:** Agrega control en notificacion ([#1951](https://github.com/andes/api/issues/1951)) ([4df5b54](https://github.com/andes/api/commit/4df5b5420cf2a4410950f5aeb9b70f21154131d1))
+* **in:** busqueda por id de paciente ([#1952](https://github.com/andes/api/issues/1952)) ([857f79a](https://github.com/andes/api/commit/857f79af9f6f393dcb39dcfbed6b0d088f7abff7))
+
 # [5.115.0](https://github.com/andes/api/compare/v5.114.0...v5.115.0) (2024-08-28)
 
 
