@@ -221,6 +221,9 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
                 if (!liberado) {
                     return next('Turno en ejecución');
                 }
+                req.body['op'] = 'liberarTurno';
+                req.body['observaciones'] = 'paciente canceló desde app mobile';
+                req.body['turnos'] = [turno._id];
                 await prestacionCtrl.liberarRefTurno(turno, req);
                 Auth.audit(agendaObj, req);
                 return agendaObj.save((error) => {
