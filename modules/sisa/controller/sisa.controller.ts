@@ -113,14 +113,13 @@ export async function altaEventoV2(altaEventoCasoNominal) {
         response = await services.get('SISA-WS400-v2').exec({ altaEventoCasoNominal });
 
         if (response.status !== 'OK') {
-            throw new Error(response.description || 'error export SISA ws400');
+            await logSisa.error('sisa:export:SNVS:evento', { params: altaEventoCasoNominal, response }, 'error al dar de alta evento', userScheduler);
+            return null;
         }
-
         return response;
     } catch (e) {
-        await logSisa.error('sisa:export:evento', { params: altaEventoCasoNominal, response }, e.message, userScheduler);
-
-        return false;
+        await logSisa.error('sisa:export:SNVS:evento', { params: altaEventoCasoNominal }, e.message, userScheduler);
+        return null;
     }
 }
 
@@ -133,7 +132,7 @@ export async function altaMuestra(dtoMuestra) {
         }
         return response;
     } catch (e) {
-        await logSisa.error('sisa:export:muestra', { params: dtoMuestra, response }, e.message, userScheduler);
+        await logSisa.error('sisa:export:SNVS:muestra', { params: dtoMuestra, response }, e.message, userScheduler);
         return false;
     }
 }
@@ -143,10 +142,10 @@ export async function altaDeterminacion(dtoDeterminacion) {
     try {
         response = await services.get('SISA-WS76').exec(dtoDeterminacion);
         // Log info solo para fines de monitoreo inicial. Borrar una vez puesto a punto
-        await logSisa.info('sisa:export:determinacion', { params: dtoDeterminacion, response }, userScheduler);
+        await logSisa.info('sisa:export:SNVS:determinacion', { params: dtoDeterminacion, response }, userScheduler);
         return response;
     } catch (e) {
-        await logSisa.error('sisa:export:determinacion', { response }, e.message, userScheduler);
+        await logSisa.error('sisa:export:SNVS:determinacion', { response }, e.message, userScheduler);
         return false;
     }
 }
