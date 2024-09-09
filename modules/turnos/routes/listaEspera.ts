@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as moment from 'moment';
+import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import * as utils from '../../../utils/utils';
 import { Agenda } from '../schemas/agenda';
 import { demanda, listaEspera } from '../schemas/listaEspera';
 import { defaultLimit, maxLimit } from './../../../config';
@@ -20,45 +20,25 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             res.json(data);
         });
     } else {
-        if (req.query.pacienteId) {
-            opciones['paciente.id'] = req.query.pacienteId;
-        }
         if (req.query.conceptId) {
             opciones['tipoPrestacion.conceptId'] = req.query.conceptId;
         }
+
         if (req.query.estado) {
             opciones['estado'] = req.query.estado;
         }
-        if (req.query.nombre) {
-            opciones['paciente.nombre'] =
-                RegExp('^.*' + req.query.nombre + '.*$', 'i');
-        }
-        if (req.query.apellido) {
-            opciones['paciente.apellido'] =
-                RegExp('^.*' + req.query.apellido + '.*$', 'i');
-        }
-        if (req.query.documento) {
-            opciones['paciente.documento'] = utils.makePattern(req.query.documento);
-        }
-        if (req.query.paciente) {
-            opciones = {
-                ...opciones,
-                $or: [
-                    { 'paciente.nombre': { $regex: req.query.paciente, $options: 'i' } },
-                    { 'paciente.apellido': { $regex: req.query.paciente, $options: 'i' } },
-                    { 'paciente.documento': { $regex: req.query.paciente, $options: 'i' } }
-                ]
-            };
-        }
-        if (req.query.fechaDesde) {
-            const fechaDesde = new Date(req.query.fechaDesde);
-            const fechaHasta = req.query.fechaHasta ? new Date(req.query.fechaHasta) : new Date();
 
-            opciones['fecha'] = {
-                $gte: fechaDesde,
-                $lte: fechaHasta.setDate(fechaHasta.getDate() + 1)
-            };
+        if (req.query.fechaDesde) {
+            const fechaDesde = moment(req.query.fechaDesde).startOf('day').toDate();
+
+            if (req.query.fechaHasta) {
+                const fechaHasta = moment(req.query.fechaHasta).endOf('day').toDate();
+                opciones['fecha'] = { $gte: fechaDesde, $lte: fechaHasta };
+            } else {
+                opciones['fecha'] = { $gte: fechaDesde };
+            }
         }
+
         if (req.query.prestacion) {
             const terminos = req.query.prestacion?.split(',').map(term => term.trim());
 
@@ -72,7 +52,7 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             : {};
 
         const organizacionFiltro = req.query.organizacion
-            ? { 'organizacion._id': { $in: req.query.organizacion.split(',') } }
+            ? { 'organizacion.id': { $in: req.query.organizacion.split(',').map((id) => mongoose.Types.ObjectId(id)) } }
             : {};
 
         if (req.query.motivo || req.query.organizacion) {
@@ -87,13 +67,59 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             };
         }
 
-        const radix = 10;
-        const skip: number = parseInt(req.query.skip || 0, radix);
-        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-        const query = listaEspera.find(opciones).skip(skip).limit(limit);
+        const skip: number = parseInt(req.query.skip || 0, 10);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
+
+        const pacienteAggregate = [
+            {
+                $match: opciones,
+            },
+            {
+                $lookup: {
+                    from: 'paciente',
+                    let: { pacienteId: '$paciente' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ['$_id', '$$pacienteId.id'] }
+                            }
+                        },
+                        ...(req.query.paciente ? [
+                            {
+                                $match: {
+                                    $or: [
+                                        { nombre: { $regex: req.query.paciente, $options: 'i' } },
+                                        { apellido: { $regex: req.query.paciente, $options: 'i' } },
+                                        { documento: { $regex: req.query.paciente, $options: 'i' } }
+                                    ]
+                                }
+                            }
+                        ] : [])
+                    ],
+                    as: 'paciente'
+                }
+            },
+            {
+                $unwind: { path: '$paciente', preserveNullAndEmptyArrays: true }
+            },
+            {
+                $match: {
+                    paciente: { $ne: null }
+                }
+            },
+            {
+                $skip: skip,
+            },
+            {
+                $limit: limit,
+            }
+        ];
+
+        const query = listaEspera.aggregate(pacienteAggregate);
 
         query.exec((err, data) => {
             if (err) { return next(err); }
+
             res.json(data);
         });
     }
@@ -101,7 +127,7 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 
 router.post('/listaEspera', async (req, res, next) => {
     const params = {
-        'paciente.id': req.body.paciente.id,
+        paciente: req.body.paciente,
         'tipoPrestacion.conceptId': req.body.tipoPrestacion.conceptId,
         estado: 'pendiente'
     };
@@ -116,6 +142,7 @@ router.post('/listaEspera', async (req, res, next) => {
 
     try {
         const listaDocument: any = await listaEspera.findOne(params, (data: any) => { return data; });
+
         let listaSaved;
         if (listaDocument?.demandas) {
             const newDemanda = new demanda(unaDemanda);
