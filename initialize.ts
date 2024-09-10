@@ -72,6 +72,7 @@ export function initAPI(app: Express) {
     }
 
     require('./modules/pacs');
+    require('./modules/hl7v2');
 
     const modulos = [
         './modules/rup',
