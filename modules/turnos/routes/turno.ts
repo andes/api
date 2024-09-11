@@ -4,8 +4,8 @@ import * as express from 'express';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
+import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
@@ -164,8 +164,11 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: any, res, next) => {
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
+
     if (continues.valid) {
         const agendaRes: any = await getAgenda(req.body.idAgenda);
+        const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id) as any;
+
         if (agendaRes.estado === 'pausada' || agendaRes.estado === 'suspendida') {
             return next('La agenda ya no está disponible');
         }
@@ -178,7 +181,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                 }
                 // Si el paciente no tiene carpeta en ese efector, se busca en la colección carpetaPaciente y se actualiza
                 if (!arrPrueba || arrPrueba.length === 0) {
-                    const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id) as any;
                     const carpetas = await getCarpeta(req.body.paciente.documento, user.organizacion._id);
                     await turnosController.actualizarCarpeta(req, res, next, pacienteMPI, carpetas);
                     pacienteTurno.carpetaEfectores = req.body.carpetaEfectores;
@@ -187,6 +189,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
         } catch (err) {
             return next(err);
         }
+
+        const obraSocialUpdated = await updateObraSocial(pacienteMPI);
+        const financiador = updateFinanciador(obraSocialUpdated, pacienteTurno.obraSocial);
+
+        await PacienteCtr.update(pacienteTurno.id, { ...pacienteTurno, financiador }, req);
+
         let posTurno: number;
 
         let esHoy = false;
@@ -286,7 +294,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
 
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
-        // update[etiquetaPaciente] = req.body.paciente;
         update[etiquetaPaciente] = req.body.paciente;
 
         update[etiquetaTipoTurno] = tipoTurno;
