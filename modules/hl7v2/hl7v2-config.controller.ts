@@ -1,24 +1,18 @@
-import { MongoQuery, ObjectId, ResourceBase } from '@andes/core';
-import { IHL7v2Config, HL7v2Config } from './hl7v2-config.schema';
+import { HL7v2Config } from './hl7v2-config.schema';
+import { ObjectId } from '@andes/core';
+import * as mongoose from 'mongoose';
 
-export class Hl7ConfigCtr extends ResourceBase {
-    Model = HL7v2Config;
-    resourceName = 'hl7v2-config';
-    middlewares = [];
-    searchFields = {
-        organizacion: MongoQuery.equalMatch.withField('organizacion.id'),
-        tipoPrestacion: MongoQuery.equalMatch.withField('tipoPrestacion.conceptId')
-    };
+export async function getConfigHl7(organizacionId: ObjectId, conceptId: string, tipoMensaje: string): Promise<any> {
+    const orgId = new mongoose.Types.ObjectId(organizacionId);
+    const config = await HL7v2Config.findOne({
+        'organizacion.id': orgId,
+        'tipoPrestacion.conceptId': conceptId,
+        tipoMensaje
+    });
 
-    async getConfig(organizacion: ObjectId, tipoPrestacion: string, tipoMensaje: string): Promise<IHL7v2Config> {
-        const config = await this.findOne({
-            organizacion,
-            tipoPrestacion,
-            tipoMensaje
-        });
-        return config;
+    if (!config) {
+        return null;
     }
-}
 
-export const Hl7ConfigController = new Hl7ConfigCtr();
-export const Hl7ConfigRoutes = Hl7ConfigController.makeRoutes();
+    return config;
+}
