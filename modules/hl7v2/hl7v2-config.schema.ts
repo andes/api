@@ -21,10 +21,11 @@ export interface IHL7v2Config {
 };
 
 export const HL7v2ConfigSchema = new Schema({
-    organizacion: NombreSchema,
-    tipoPrestacion: [
-        SnomedConcept
-    ],
+    organizacion: {
+        type: NombreSchema,
+        required: true,
+    },
+    tipoPrestacion: [SnomedConcept],
     hl7Destinations: [
         {
             ipAddress: String,
@@ -33,7 +34,7 @@ export const HL7v2ConfigSchema = new Schema({
     ],
     tipoMensaje: String,
     queueName: String,
-    queueConnectionString: String
+    queueConnectionString: String,
 });
 
 export const HL7v2Config = model('hl7v2-config', HL7v2ConfigSchema, 'hl7v2-config');
