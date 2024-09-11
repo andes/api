@@ -4,14 +4,14 @@ export class Hl7v2NetworkController {
     private connection: any;
     private channel: any;
 
-    constructor() {}
+    constructor() {};
 
     async connectHl7v2(queueConnectionString: string) {
         if (!this.connection) {
             this.connection = await connect(queueConnectionString);
             this.channel = await this.connection.createChannel();
-        }
-    }
+        };
+    };
 
     async closeConnectionHl7v2() {
         if (this.channel) {
