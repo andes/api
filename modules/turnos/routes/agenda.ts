@@ -561,7 +561,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         break;
                     case 'agregarSobreturno':
                         event = { object: 'turno', accion: 'asignar', data: null };
-                        event.data = agendaCtrl.agregarSobreturno(req, data);
+                        event.data = await agendaCtrl.agregarSobreturno(req, data);
                         break;
                     case 'disponible':
                         if (estadoAgenda !== 'planificacion') {
