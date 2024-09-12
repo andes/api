@@ -802,10 +802,10 @@ export function actualizarTurnos(agenda) {
         const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
 
         if (cantAccesoDirecto > 0) {
-            agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
-            agenda.bloques[j].restantesGestion = 0;
-            agenda.bloques[j].restantesProfesional = 0;
-        } else {
+            //     agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+            //     agenda.bloques[j].restantesGestion = 0;
+            //     agenda.bloques[j].restantesProfesional = 0;
+            // } else {
             if (agenda.bloques[j].reservadoProfesional > 0) {
                 agenda.bloques[j].restantesGestion = agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
                 agenda.bloques[j].restantesProfesional = 0;
