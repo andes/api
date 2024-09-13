@@ -431,12 +431,14 @@ async function dataAgenda(idTurno) {
                 }
             }
             organizacion = agenda.organizacion?.nombre;
+            const enviarSms = agenda.enviarSms;
             if (agenda.espacioFisico?.nombre) {
                 organizacion += `, ${agenda.espacioFisico.nombre}`;
             }
             return {
                 profesionales,
-                organizacion
+                organizacion,
+                enviarSms
             };
         } else {
             notificacionesLog.error('verificarAgenda:agenda', { turno: idTurno }, { error: 'agenda no encontrada' }, userScheduler);
@@ -474,7 +476,7 @@ EventCore.on('citas:turno:asignar', async (turno) => {
             if ((tipoTurno || dataPrestacion)) {
                 const idTurno = turno._id || turno.id;
                 const dataTurno = await dataAgenda(idTurno);
-                if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
+                if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion && dataTurno.enviarSms) {
                     const dtoMensaje: any = {
                         idTurno: turno._id,
                         mensaje,
@@ -502,7 +504,7 @@ EventCore.on('notificaciones:turno:suspender', async (turno) => {
             const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
             const idTurno = turno._id || turno.id;
             const dataTurno = await dataAgenda(idTurno);
-            if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion) {
+            if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion && dataTurno.enviarSms) {
                 const dtoMensaje: any = {
                     idTurno: turno._id,
                     mensaje: 'turno-suspencion',
