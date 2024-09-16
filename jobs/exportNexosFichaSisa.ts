@@ -5,9 +5,9 @@ import { sisaLog } from '../modules/sisa/logger/sisaLog';
 import { userScheduler } from '../config.private';
 import { altaDeterminacion, altaEventoV2, altaMuestra } from '../modules/sisa/controller/sisa.controller';
 
-export async function exportFichaSNVS(done, horas, desde, hasta) {
-    const start = desde ? moment(desde).toDate() : moment().subtract(horas, 'h').toDate();
-    const end = hasta ? moment(hasta).toDate() : moment().toDate();
+export async function exportFichaSNVS(done) {
+    const start = moment(new Date()).subtract(2, 'days').toDate();
+    const end = new Date();
 
     const formulario = await Forms.find({ active: true, 'config.idEvento': { $exists: true } });
     for (const unForm of formulario) {
