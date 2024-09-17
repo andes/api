@@ -18,6 +18,8 @@ export interface IHL7v2Config {
     tipoMensaje: string;
     queueName: string;
     queueConnectionString: string;
+    deadLetterQueue: any[];
+    mapping: any;
 };
 
 export const HL7v2ConfigSchema = new Schema({
@@ -35,6 +37,8 @@ export const HL7v2ConfigSchema = new Schema({
     tipoMensaje: String,
     queueName: String,
     queueConnectionString: String,
+    deadLetterQueue: [Schema.Types.Mixed],
+    mapping: Schema.Types.Mixed
 });
 
 export const HL7v2Config = model('hl7v2-config', HL7v2ConfigSchema, 'hl7v2-config');
