@@ -6,8 +6,8 @@ import { userScheduler } from '../config.private';
 import { altaDeterminacion, altaEventoV2, altaMuestra } from '../modules/sisa/controller/sisa.controller';
 
 export async function exportFichaSNVS(done) {
-    const start = moment(new Date()).subtract(2, 'days').toDate();
-    const end = new Date();
+    const start = (moment(new Date()).startOf('day').subtract(2, 'days').toDate() as any);
+    const end = (moment(new Date()).endOf('day').toDate() as any);
 
     const formulario = await Forms.find({ active: true, 'config.idEvento': { $exists: true } });
     for (const unForm of formulario) {
