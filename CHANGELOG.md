@@ -1,3 +1,16 @@
+# [5.116.0](https://github.com/andes/api/compare/v5.115.1...v5.116.0) (2024-09-18)
+
+
+### Bug Fixes
+
+* **CIT:** await guardando datos de sobreturno ([#1959](https://github.com/andes/api/issues/1959)) ([8055404](https://github.com/andes/api/commit/8055404683e22f7054204648614d6e58ea056abb))
+* **huds:** incluye busqueda por array de ids ([#1957](https://github.com/andes/api/issues/1957)) ([455c63a](https://github.com/andes/api/commit/455c63a6643f7e0dcbf3f9f3a3b6864b45de112b))
+
+
+### Features
+
+* **MPI:** Agrega detalles al esquema de pacientes ([#1807](https://github.com/andes/api/issues/1807)) ([59d5f2d](https://github.com/andes/api/commit/59d5f2daf0afe893b7dec9ac223dcadb44eb0f1c))
+
 ## [5.115.1](https://github.com/andes/api/compare/v5.115.0...v5.115.1) (2024-09-04)
 
 
