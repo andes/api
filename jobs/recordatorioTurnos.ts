@@ -31,6 +31,7 @@ async function recorrerAgendas() {
     };
 
     const agendasMañana: any[] = await Agenda.find(match);
+    let n = 0;
     for (let i = 0; i < agendasMañana.length; i++) {
         const agenda = agendasMañana[i];
         for (let j = 0; j < agenda.bloques.length; j++) {
@@ -38,6 +39,11 @@ async function recorrerAgendas() {
             for (let k = 0; k < bloque.turnos.length; k++) {
                 const turno = bloque.turnos[k];
                 if (turno.estado === 'asignado' && turno.paciente) {
+                    n++;
+                    if (n > 50) {
+                        await new Promise(resolve => setTimeout(resolve, 10000));
+                        n = 0;
+                    }
                     await recordarTurno(agenda, turno);
                 }
             }
@@ -47,7 +53,7 @@ async function recorrerAgendas() {
 
 async function recordarTurno(agenda, turno) {
     try {
-        if (turno?._id || turno.id) {
+        if (turno?._id || turno?.id) {
             const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
             const idTurno = turno._id || turno.id;
             const datoAgenda = dataAgenda(agenda, idTurno);
@@ -65,10 +71,10 @@ async function recordarTurno(agenda, turno) {
                 await send('notificaciones:enviar', dtoMensaje);
             }
         } else {
-            notificacionesLog.error('obteneIdTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
+            notificacionesLog.error('recordarTurno:noExisteTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
         }
     } catch (unError) {
-        notificacionesLog.error('obtenerAgenda', { turno }, unError, userScheduler);
+        notificacionesLog.error('recordarTurno', { turno }, unError, userScheduler);
     }
 };
 
