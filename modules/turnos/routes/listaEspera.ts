@@ -72,7 +72,7 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             : {};
 
         const organizacionFiltro = req.query.organizacion
-            ? { 'organizacion._id': { $in: req.query.organizacion.split(',') } }
+            ? { 'organizacion.id': { $in: req.query.organizacion.split(',') } }
             : {};
 
         if (req.query.motivo || req.query.organizacion) {
