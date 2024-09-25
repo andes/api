@@ -4,6 +4,12 @@ export const SEXO = {
     enum: ['femenino', 'masculino', 'otro']
 };
 
+export const GENERO = {
+    type: String,
+    required: true,
+    enum: ['mujer', 'mujer trans', 'varon', 'varon trans', 'no binario', 'travesti', 'masculinidad trans', 'femenino', 'masculino', 'otro']
+};
+
 export const ESTADOCIVIL = {
     type: String,
     enum: ['casado', 'separado', 'divorciado', 'viudo', 'soltero', 'concubino', 'otro', null]
