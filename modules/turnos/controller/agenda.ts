@@ -1468,7 +1468,8 @@ export function agendaNueva(data, clon, req) {
     nueva['updatedAt'] = undefined;
     nueva['createdBy'] = Auth.getAuditUser(req);
     nueva['createdAt'] = new Date();
-    nueva['nota'] = null;
+    nueva['nota'] = undefined;
+    nueva['enviarSms'] = true;
 
     if (nueva.dinamica && nueva.cupo >= 0) {
         nueva.bloques.forEach(b => {
@@ -1498,22 +1499,23 @@ export function agendaNueva(data, clon, req) {
                 turno.horaInicio = combinarFechas(clon, turno.horaInicio);
                 turno.estado = 'disponible';
                 turno.asistencia = undefined;
-                turno.paciente = null;
-                turno.tipoPrestacion = nueva.nominalizada ? null : nueva.bloques[0].tipoPrestaciones[0];
-                turno.idPrestacionPaciente = null;
-                turno.nota = null;
+                turno.paciente = undefined;
+                turno.tipoPrestacion = nueva.nominalizada ? undefined : nueva.bloques[0].tipoPrestaciones[0];
+                turno.idPrestacionPaciente = undefined;
+                turno.nota = undefined;
                 turno._id = mongoose.Types.ObjectId();
                 turno.tipoTurno = undefined;
                 turno.updatedAt = undefined;
                 turno.updatedBy = undefined;
                 turno.diagnostico = { codificaciones: [] };
                 turno.reasignado = undefined;
-                turno.diagnostico = undefined;
                 turno.emitidoPor = undefined;
                 turno.fechaHoraDacion = undefined;
                 turno.link = undefined;
                 turno.motivoConsulta = undefined;
                 turno.usuarioDacion = undefined;
+                turno.profesional = undefined;
+                turno.horaAsistencia = undefined;
             });
         } else {
             bloque.turnos = [];
