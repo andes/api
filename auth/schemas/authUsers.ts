@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import { AndesDocWithAudit, AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { ObjectId } from '@andes/core';
+import { PermisosOrganizacionesSchema } from './permisos-organizaciones';
 
 export interface IAuthUsers {
     usuario: number;
@@ -50,24 +51,7 @@ export const AuthUsersSchema = new mongoose.Schema({
         required: false
     },
     permisosGlobales: [String],
-    organizaciones: [{
-        _id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'organizacion'
-        },
-        nombre: String,
-        permisos: [String],
-        activo: {
-            type: Boolean,
-            default: true
-        },
-        perfiles: [{
-            _id: mongoose.Schema.Types.ObjectId,
-            nombre: String
-        }],
-        lastLogin: Date
-    }],
-    lastLogin: Date,
+    organizaciones: [PermisosOrganizacionesSchema],
     tipo: {
         type: String,
         required: false
