@@ -1,3 +1,10 @@
+## [5.116.1](https://github.com/andes/api/compare/v5.116.0...v5.116.1) (2024-10-02)
+
+
+### Bug Fixes
+
+* **auth:** filtro profesional habilitado en login ([#1958](https://github.com/andes/api/issues/1958)) ([fb0eec6](https://github.com/andes/api/commit/fb0eec687041fb1d5265059ba6a08aaf94ade3e8))
+
 # [5.116.0](https://github.com/andes/api/compare/v5.115.1...v5.116.0) (2024-09-18)
 
 
