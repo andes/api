@@ -183,6 +183,7 @@ export function suspenderTurno(req, data, turno) {
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
+    turno.avisoSuspension = req.body.avisoSuspension;
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
 
