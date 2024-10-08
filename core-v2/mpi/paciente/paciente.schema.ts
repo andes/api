@@ -102,7 +102,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     entidadesValidadoras: [String],
     scan: String,
     reportarError: Boolean,
-    notaError: String,
+    nombreCorrecto: String,
+    apellidoCorrecto: String,
     carpetaEfectores: [{
         organizacion: NombreSchema,
         nroCarpeta: String
