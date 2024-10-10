@@ -5,7 +5,7 @@ import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { updatePrestacionPatient } from './../../../modules/rup/controllers/prestacion';
 import { findById, linkPacientesDuplicados, updateGeoreferencia } from './paciente.controller';
-import { IPacienteDoc } from './paciente.interface';
+import { IPacienteDoc, IPacienteSub } from './paciente.interface';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { CamaEstados } from '../../../modules/rup/internacion/cama-estados.schema';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
@@ -152,11 +152,12 @@ async function checkAndUpdateInternacion(paciente) {
             return id === paciente.id;
         }).idInternacion;
 
-        const pac = {
+        const pac: IPacienteSub = {
             id: paciente._id,
             documento: paciente.documento,
             numeroIdentificacion: paciente.numeroIdentificacion,
             nombre: paciente.nombre,
+            estado: paciente.estado,
             alias: paciente.alias,
             apellido: paciente.apellido,
             sexo: paciente.sexo,
