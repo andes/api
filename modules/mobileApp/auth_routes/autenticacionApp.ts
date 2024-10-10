@@ -303,4 +303,13 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
     }
 });
 
+router.get('/documento/:documento', async (req: any, res, next) => {
+    try {
+        const resp = await PacienteApp.find({ documento: req.params.documento });
+        return res.send(resp);
+    } catch (err) {
+        return res.send(err);
+    }
+});
+
 export = router;
