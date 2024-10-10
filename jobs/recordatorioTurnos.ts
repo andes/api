@@ -31,20 +31,15 @@ async function recorrerAgendas() {
     };
 
     const agendasMañana: any[] = await Agenda.find(match);
-    let n = 0;
     for (let i = 0; i < agendasMañana.length; i++) {
         const agenda = agendasMañana[i];
         for (let j = 0; j < agenda.bloques.length; j++) {
             const bloque = agenda.bloques[j];
             for (let k = 0; k < bloque.turnos.length; k++) {
                 const turno = bloque.turnos[k];
-                if (turno.estado === 'asignado' && turno.paciente) {
-                    n++;
-                    if (n > 50) {
-                        await new Promise(resolve => setTimeout(resolve, 10000));
-                        n = 0;
-                    }
+                if (turno.estado === 'asignado' && turno.paciente?.telefono) {
                     await recordarTurno(agenda, turno);
+                    await new Promise(resolve => setTimeout(resolve, 7500));
                 }
             }
         }
