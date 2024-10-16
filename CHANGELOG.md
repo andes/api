@@ -1,3 +1,11 @@
+# [5.117.0](https://github.com/andes/api/compare/v5.116.1...v5.117.0) (2024-10-16)
+
+
+### Features
+
+* **CIT:** modifica recuperacion de pacientes ([#1960](https://github.com/andes/api/issues/1960)) ([0152094](https://github.com/andes/api/commit/0152094079575ff89e5bc14e641a4a83c00e0a58))
+* **GDU-69:** Agregar auditoría en permisos por organización ([#1966](https://github.com/andes/api/issues/1966)) ([0b32637](https://github.com/andes/api/commit/0b32637e20f9cdd3493ae76fe328d221baa40dde))
+
 ## [5.116.1](https://github.com/andes/api/compare/v5.116.0...v5.116.1) (2024-10-02)
 
 
