@@ -127,7 +127,7 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 
 router.post('/listaEspera', async (req, res, next) => {
     const params = {
-        paciente: req.body.paciente,
+        'paciente.id': req.body.paciente.id,
         'tipoPrestacion.conceptId': req.body.tipoPrestacion.conceptId,
         estado: 'pendiente'
     };
