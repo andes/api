@@ -35,13 +35,13 @@ recetaSchema.add({
     fechaPrestación: Date,
     idPrestacion: String,
     idRegistro: String,
-    medicamentos: [{
+    medicamento: {
         conceptId: String,
         term: String, // (Descripción)
         presentacion: String,
-        unidades: Number,
+        unidades: String, // (mg, cc, etc.)
         cantidad: Number,
-    }],
+    },
     estados: estadosSchema,
     paciente: PacienteSchema.methods.basicos(),
     renovacion: String, // (referencia al registro original)
