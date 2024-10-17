@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { services } from '../../../services';
-import { Logger } from '../../../utils/logService';
+import { laboratorioLog } from '../laboratorio.log';
 
 const router = express.Router();
 
@@ -22,9 +22,18 @@ router.get('/protocolosLab/:id?', async (req, res, next) => {
             throw new Error(response || service);
         }
         res.json(response);
-    } catch (e) {
-        await Logger.log(req, req.params.module, req.params.op, req.body.data);
-        res.json('error:' + e.message);
+    } catch (err) {
+        const data = {
+            id: req.params.id,
+            estado: req.query.estado,
+            documento: req.query.dni,
+            fechaNacimiento: req.query.fecNac,
+            apellido: req.query.apellido,
+            fechaDesde: req.query.fechaDde,
+            fechaHasta: req.query.fechaHta
+        };
+        await laboratorioLog.error('resultado-protocolo', data, err, req);
+        res.json('error:' + err.message);
     }
 });
 
