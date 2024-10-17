@@ -371,6 +371,15 @@ export default [
                     { key: 'sectores', title: 'Editar sectores físicos', type: 'organizacion' }
                 ]
             },
+            {
+                key: 'farmacia',
+                title: 'Farmacias',
+                child: [
+                    { key: 'create', title: 'Crear nueva farmacia', type: 'boolean' },
+                    { key: 'edit', title: 'Editar farmacias', type: 'boolean' },
+                    { key: 'delete', title: 'Borrar farmacias', type: 'boolean' },
+                ]
+            }
         ]
     },
     {
