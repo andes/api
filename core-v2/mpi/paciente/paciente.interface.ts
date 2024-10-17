@@ -3,6 +3,7 @@ import { Document, Schema, Types } from 'mongoose';
 import { IContacto, IContactoDoc, IDireccion, IDireccionDoc } from '../../../shared/interfaces';
 import { IFinanciador } from '../financiador/financiador.interface';
 import { IParentesco } from '../parentesco/parentesco.interface';
+import { IObraSocial } from 'modules/obraSocial/schemas/obraSocial';
 
 export interface ICarpetaEfector {
     organizacion: any;
@@ -68,6 +69,29 @@ export interface IPaciente {
     direccion?: IDireccion[];
     scan?: String;
     idPacientePrincipal?: Schema.Types.ObjectId;
+}
+
+export interface IPacienteSub {
+    id: String;
+    nombre: String;
+    apellido: String;
+    documento?: String;
+    fechaNacimiento: Date;
+    sexo: String;
+    genero: String;
+    estado: String;
+    alias: String;
+    fechaFallecimiento?: Date;
+    numeroIdentificacion?: String;
+    tipoIdentificacion?: String;
+    telefono?: String;
+    direccion?: String;
+    email?: String;
+    carpetaEfectores?: String;
+    obraSocial?: IObraSocial;
+    localidad?: String;
+    zona?: String;
+    areaPrograma?: String;
 }
 
 export interface IPacienteDoc extends Document, IPaciente {
