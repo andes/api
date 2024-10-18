@@ -154,6 +154,11 @@ export function removeDiacritics(str: string): string {
     return str;
 }
 
+export function getDateStr(date: Date): String {
+    const dt = new Date(date);
+    return dt.getDate() + '/' + (dt.getMonth() + 1) + '/' + dt.getFullYear();
+}
+
 /**
 * Converts mongo cursor to array
 * @deprecated
