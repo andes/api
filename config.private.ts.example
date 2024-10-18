@@ -267,6 +267,17 @@ export const fueraAgendaPecas = {
     }
 };
 
+export const EncuestasSql = {
+    auth: {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: ''
+    }
+};
+
 export const RedisWebSockets = {
     active: getEnv('REDIS', false),
     host: getEnv('REDIS_HOST', 'localhost', 'b'),
