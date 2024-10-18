@@ -1,6 +1,6 @@
 import moment = require('moment');
 import { Agenda } from '../modules/turnos/schemas/agenda';
-import { notificacionesLog } from '../modules/turnos/citasLog';
+import { notificacionesRecordatorioLog } from '../modules/turnos/citasLog';
 import { userScheduler } from '../config.private';
 import * as mongoose from 'mongoose';
 import { WebHook } from '../modules/webhook/webhook.schema';
@@ -66,10 +66,10 @@ async function recordarTurno(agenda, turno) {
                 await send('notificaciones:enviar', dtoMensaje);
             }
         } else {
-            notificacionesLog.error('recordarTurno:noExisteTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
+            notificacionesRecordatorioLog.error('obteneIdTurno', { turno, agenda }, { error: 'No se encontró el turno' }, userScheduler);
         }
     } catch (unError) {
-        notificacionesLog.error('recordarTurno', { turno }, unError, userScheduler);
+        notificacionesRecordatorioLog.error('obtenerAgenda', { turno, agenda }, unError, userScheduler);
     }
 };
 
@@ -93,11 +93,11 @@ function dataAgenda(agenda, idTurno) {
                 organizacion
             };
         } else {
-            notificacionesLog.error('verificarAgenda:agenda', { turno: idTurno }, { error: 'agenda no encontrada' }, userScheduler);
+            notificacionesRecordatorioLog.error('verificarAgenda:agenda', { turno: idTurno }, { error: 'agenda no encontrada' }, userScheduler);
             return null;
         }
     } catch (error) {
-        notificacionesLog.error('verificarAgenda', { turno: idTurno }, { error: error.message }, userScheduler);
+        notificacionesRecordatorioLog.error('verificarAgenda', { turno: idTurno, agenda }, { error: error.message }, userScheduler);
         return null;
     }
 }
@@ -129,12 +129,12 @@ async function send(event, datos) {
 
             return resultado;
         } catch (err) {
-            notificacionesLog.error('envioNotificacion', { error: err }, userScheduler);
+            notificacionesRecordatorioLog.error('envioNotificacion', { error: err, turno: datos }, userScheduler);
             return null;
         }
 
     } else {
-        notificacionesLog.error('envioNotificacion', { turno: datos }, { error: 'evento no encontrado' }, userScheduler);
+        notificacionesRecordatorioLog.error('envioNotificacion', { turno: datos }, { error: 'evento no encontrado' }, userScheduler);
         return null;
     }
 
