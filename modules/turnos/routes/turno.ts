@@ -435,6 +435,10 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         const etiquetaEstadoFacturacion: string = etiquetaTurno + '.estadoFacturacion';
         update[etiquetaEstadoFacturacion] = req.body.estadoFacturacion;
     }
+    if (req.body.carpetaEfectores) {
+        const etiquetaCarpetaEfectores: string = etiquetaTurno + '.paciente.carpetaEfectores';
+        update[etiquetaCarpetaEfectores] = req.body.carpetaEfectores;
+    }
 
     const query = {
         _id: req.params.idAgenda,
