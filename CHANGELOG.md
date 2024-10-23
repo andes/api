@@ -1,3 +1,16 @@
+# [5.118.0](https://github.com/andes/api/compare/v5.117.0...v5.118.0) (2024-10-23)
+
+
+### Bug Fixes
+
+* **citas:** al guardar una demanda corrige busqueda de una existente ([#1977](https://github.com/andes/api/issues/1977)) ([e379a45](https://github.com/andes/api/commit/e379a451248cb88a82b9fec1d33cc3934d125676))
+* **CITAS:** actualiza carpetaEfectores en el turno ([#1976](https://github.com/andes/api/issues/1976)) ([a0eee3e](https://github.com/andes/api/commit/a0eee3e9974e2ccab472a584e74c2d8625ea1879))
+
+
+### Features
+
+* **TM-34:** Nuevo modulo de farmacias ([#1949](https://github.com/andes/api/issues/1949)) ([3a2c76e](https://github.com/andes/api/commit/3a2c76e13a183320d51bf6ed4c7d7010749904e5))
+
 # [5.117.0](https://github.com/andes/api/compare/v5.116.1...v5.117.0) (2024-10-16)
 
 
