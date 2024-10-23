@@ -450,30 +450,14 @@ async function dataAgenda(idTurno) {
     }
 }
 
-async function buscarPrestacion(idTurno, idPaciente) {
-    const idT = mongoose.Types.ObjectId(idTurno);
-    const unaPrestacion = await Prestacion.findOne({
-        'paciente.id': idPaciente,
-        'solicitud.turno': idT,
-        inicio: 'top'
-    });
-    if (!unaPrestacion) {
-        notificacionesLog.error('verificarPrestacion', { turno: idTurno, idPaciente }, { error: 'prestación no encontrada' }, userScheduler);
-        return null;
-    }
-    return unaPrestacion;
-}
-
 EventCore.on('citas:turno:asignar', async (turno) => {
     try {
-        if (turno?._id || turno.id) {
+        if (turno._id || turno.id) {
             const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
             const tipoTurno = turno.tipoTurno === 'gestion' || (turno.reasignado?.anterior && turno.notificar);
             const mensaje = turno.tipoTurno === 'gestion' ? 'turno-dacion' : 'turno-reasignar';
             const telefono = turno.paciente.telefono;
-            let dataPrestacion = null;
-            if (!tipoTurno) { dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id); }
-            if ((tipoTurno || dataPrestacion)) {
+            if (tipoTurno) {
                 const idTurno = turno._id || turno.id;
                 const dataTurno = await dataAgenda(idTurno);
                 if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion && dataTurno.enviarSms) {
@@ -491,7 +475,9 @@ EventCore.on('citas:turno:asignar', async (turno) => {
                 }
             }
         } else {
-            notificacionesLog.error('obteneIdTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
+            if (turno.tipoTurno !== 'delDia') {
+                notificacionesLog.error('obtenerIdTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
+            }
         }
     } catch (unError) {
         notificacionesLog.error('obtenerAgenda', { turno }, unError, userScheduler);
@@ -518,21 +504,9 @@ EventCore.on('notificaciones:turno:suspender', async (turno) => {
                 EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
             }
         } else {
-            notificacionesLog.error('obteneIdTurno-Suspender', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
+            notificacionesLog.error('obtenerIdTurno:suspender', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
         }
     } catch (unError) {
-        notificacionesLog.error('obtenerAgendaCancelar', { turno }, { error: 'error al generar la notificacion de cancelar' }, userScheduler);
+        notificacionesLog.error('obtenerAgenda:cancelar', { turno }, { error: 'error al generar la notificacion de cancelar' }, userScheduler);
     }
 });
-
-async function telefonoUnico() {
-    let constante;
-    const key = 'telefonoUnico';
-    try {
-        constante = await Constantes.findOne({ key });
-        return constante?.nombre;
-    } catch (error) {
-        log.error('cuerpoMensaje', { constante, key }, { error: error.message }, userScheduler);
-        return '';
-    }
-}
