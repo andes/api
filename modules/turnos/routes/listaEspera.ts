@@ -5,6 +5,8 @@ import { Auth } from '../../../auth/auth.class';
 import { Agenda } from '../schemas/agenda';
 import { demanda, listaEspera } from '../schemas/listaEspera';
 import { defaultLimit, maxLimit } from './../../../config';
+import { getHistorial } from '../controller/historialCitasController/historialCitasController';
+import { getSolicitudes } from '../controller/listaEsperaController/listaEsperaController';
 
 const async = require('async');
 const router = express.Router();
@@ -126,6 +128,23 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 });
 
 router.post('/listaEspera', async (req, res, next) => {
+    let status = 'demandaRealizada';
+
+    const historial = await getHistorial({
+        ...req, query: {
+            pacienteId: req.body.paciente.id, turnosProximos: true, estado: 'asignado', conceptId: req.body.tipoPrestacion.conceptId
+        }
+    });
+
+    const turno = historial.length ? historial.filter(item => { return moment(item.horaInicio).isAfter(moment().startOf('day')); }).filter(item => item.estado === 'asignado') : undefined;
+
+    if (turno.length) {
+        status = 'existeTurno';
+        return res.json({ status, data: turno[0] });
+    }
+
+    const solicitudes = await getSolicitudes(req.body.paciente.id, req.body.tipoPrestacion.conceptId);
+
     const params = {
         'paciente.id': req.body.paciente.id,
         'tipoPrestacion.conceptId': req.body.tipoPrestacion.conceptId,
@@ -156,7 +175,7 @@ router.post('/listaEspera', async (req, res, next) => {
             Auth.audit(newListaDocument, req);
             listaSaved = await newListaDocument.save();
         }
-        res.json(listaSaved);
+        res.json({ status, data: { listado: listaSaved, solicitudes } });
     } catch (error) {
         return next(error);
     }
