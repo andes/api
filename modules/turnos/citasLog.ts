@@ -39,3 +39,13 @@ export const notificacionesLog = new Logger({
     bucketSize: 100,
     expiredAt: '3 M'
 });
+
+export const notificacionesEncuestaLog = new Logger({
+    connection: Connections.logs,
+    module: 'msNotificaciones',
+    type: 'encuesta',
+    application: 'andes',
+    bucketBy: 'h',
+    bucketSize: 100,
+    expiredAt: '3 M'
+});
