@@ -1,23 +1,12 @@
 import { EncuestasSql } from '../config.private';
 import * as sql from 'mssql';
-import { notificacionesLog } from '../modules/turnos/citasLog';
+import { notificacionesEncuestaLog as notificacionesLog } from '../modules/turnos/citasLog';
 import { WebHook } from '../modules/webhook/webhook.schema';
 import * as mongoose from 'mongoose';
 import { handleHttpRequest } from '../utils/requestHandler';
 import { userScheduler } from '../config.private';
 import moment = require('moment');
 
-const logRequest = {
-    user: {
-        usuario: { nombre: 'EncuestasSql', apellido: 'EncuestasSql' },
-        app: 'jobs/encuesta-satisfaccion',
-        organizacion: 'Subsecretaría de salud'
-    },
-    ip: 'localhost',
-    connection: {
-        localAddress: ''
-    }
-};
 
 const constanteKey = 'encuesta-envio';
 const query = 'SELECT * FROM Mensajes WHERE MsgEnviado = 0 OR MsgEnviado IS NULL';
@@ -52,7 +41,7 @@ async function run(done) {
         await pool.close();
         done();
     } catch (err) {
-        notificacionesLog.error('sql.request', logRequest, err);
+        notificacionesLog.error('sql.request', query, err, userScheduler);
         return done(err);
     }
 }
@@ -82,11 +71,11 @@ async function send(event, datos) {
             });
             return resultado;
         } catch (error) {
-            notificacionesLog.error(constanteKey, data, error, userScheduler);
+            notificacionesLog.error('send:error', data, error, userScheduler);
             return null;
         }
     } else {
-        notificacionesLog.error(constanteKey, event, { error: 'evento no encontrado' }, userScheduler);
+        notificacionesLog.error('send:not-event', event, { error: 'evento no encontrado' }, userScheduler);
         return null;
     }
 }
