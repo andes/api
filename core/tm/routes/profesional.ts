@@ -1022,6 +1022,7 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
             if (req.body.domiciliosMobile.contactos) {
                 let emailUpdate;
                 let telefonoUpdate;
+                let fijoUpdate;
                 const indexEmail = req.body.domiciliosMobile.contactos.findIndex(item => item.tipo === 'email');
                 if (indexEmail >= 0) {
                     emailUpdate = req.body.domiciliosMobile.contactos[indexEmail].valor;
@@ -1031,18 +1032,29 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
                 if (indexTelefono >= 0) {
                     telefonoUpdate = req.body.domiciliosMobile.contactos[indexTelefono].valor;
                 }
+                const indexFijo = req.body.domiciliosMobile.contactos.findIndex(item => item.tipo === 'fijo');
+                if (indexFijo >= 0) {
+                    fijoUpdate = req.body.domiciliosMobile.contactos[indexTelefono].valor;
+                }
                 const pacienteApp = await PacienteAppCtr.findOne({ documento: profesional.documento });
                 await PacienteAppCtr.update(
                     pacienteApp._id,
                     {
                         email: emailUpdate ? emailUpdate : pacienteApp.email,
-                        telefono: telefonoUpdate ? telefonoUpdate : pacienteApp.telefono
+                        telefono: telefonoUpdate ? telefonoUpdate : pacienteApp.telefono,
+                        fijo: fijoUpdate ? fijoUpdate : pacienteApp.fijo
                     },
                     req
                 );
             }
-            profesional.contactos = req.body.domiciliosMobile.contactos ? req.body.domiciliosMobile.contactos : profesional.contactos;
-            profesional.domicilios = req.body.domicilios ? req.body.domicilios : req.body.domiciliosMobile.domicilios;
+            profesional.contactos = req.body.domiciliosMobile?.contactos ? req.body.domiciliosMobile.contactos : profesional.contactos;
+            if (req.body.domiciliosMobile?.domicilios) {
+                profesional.domicilios = req.body.domiciliosMobile.domicilios;
+            }
+            if (req.body.domicilios) {
+                profesional.domicilios = req.body.domicilios;
+            }
+
             Auth.audit(profesional, (userScheduler as any));
             await profesional.save();
             res.json(profesional);
