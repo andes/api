@@ -30,6 +30,7 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
     config: FormConfigSchema,
     zonaSanitaria: zonaSanitariasSchema,
     snvs: { type: Boolean, default: false },
+    idCasoSnvs: { type: String, default: '' },
     active: {
         type: Boolean,
         required: true,
