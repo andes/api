@@ -1,38 +1,33 @@
 import * as express from 'express';
-import { services } from '../../../services';
 import { laboratorioLog } from '../laboratorio.log';
+import * as laboratorioController from '../laboratorios.controller';
 
 const router = express.Router();
 
 router.get('/protocolosLab/:id?', async (req, res, next) => {
-    let params;
+    let dataSearch = {};
     const service = 'get-LABAPI';
     if (req.params.id) {
-        params = {
-            parametros: `nombre=LABAPI_GetResultadoProtocolo&parametros=${req.params.id}`
-        };
+        dataSearch = { idProtocolo: req.params.id };
     } else {
-        params = {
-            parametros: `nombre=LABAPI_GetProtocolos&parametros=${req.query.estado}|${req.query.dni}|${req.query.fecNac}|${req.query.apellido}|${req.query.fechaDde}|${req.query.fechaHta}`
+        dataSearch = {
+            estado: req.query.estado,
+            dni: req.query.dni,
+            fechaNac: req.query.fecNac,
+            apellido: req.query.apellido,
+            fechaDesde: req.query.fechaDde,
+            fechaHasta: req.query.fechaHta
         };
     }
     try {
-        const response = await services.get(service).exec(params);
+        const response = await laboratorioController.search(dataSearch);
         if (!response.length) {
             throw new Error(response || service);
         }
         res.json(response);
     } catch (err) {
-        const data = {
-            id: req.params.id,
-            estado: req.query.estado,
-            documento: req.query.dni,
-            fechaNacimiento: req.query.fecNac,
-            apellido: req.query.apellido,
-            fechaDesde: req.query.fechaDde,
-            fechaHasta: req.query.fechaHta
-        };
-        await laboratorioLog.error('resultado-protocolo', data, err, req);
+        dataSearch['id'] = req.params.id;
+        await laboratorioLog.error('resultado-protocolo', dataSearch, err, req);
         res.json('error:' + err.message);
     }
 });

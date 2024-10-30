@@ -1,0 +1,51 @@
+.contenedor-secundario {
+    display: block;
+    text-align: center;
+    font-size: .25cm;
+}
+
+.tabla-header {
+    border-color: black;
+    border-collapse: collapse;
+    font-size: .25cm;
+}
+
+td {
+    text-align: left;
+}
+
+.tabla-header {
+    border-color: black;
+    border-collapse: collapse;
+    font-size: .20cm;
+}
+
+.tituloGeneral {
+    text-align: left;
+    margin-top: 20px;
+    font-size: .25cm;
+}
+
+.tituloSecundario {
+    text-align: left;
+    margin-top: 8px;
+    font-size: .25cm;
+}
+
+.tituloTabla {
+    text-align: left;
+    margin-top: 8px;
+    margin-left: 20px;
+    font-size: .25cm;
+}
+
+body {
+    padding-left: 0.5cm;
+    padding-right: 0.5cm;
+    font-family: Arial, sans-serif;
+}
+
+.foot {
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+}

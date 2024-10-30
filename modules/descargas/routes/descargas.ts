@@ -16,6 +16,10 @@ import { Agenda } from '../agenda/agenda';
 import { getArchivoAdjunto } from '../../../modules/rup/controllers/rup';
 import { CertificadoEtica } from '../matriculaciones/certificado-etica';
 import { CredencialProfesional } from '../matriculaciones/credencial-profesional';
+import { Laboratorio } from '../laboratorio/laboratorio';
+import * as laboratorioController from './../../rup/laboratorios.controller';
+import { laboratorioLog } from './../../rup/laboratorio.log';
+import { Paciente } from './../../../core-v2/mpi';
 
 const router = express.Router();
 
@@ -163,6 +167,40 @@ router.post('/constanciaPuco/:tipo?', Auth.authenticate(), async (req: any, res)
     const fileName: any = await docPuco.informe(opciones);
 
     res.download(fileName);
+});
+
+router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
+    let dataSearch;
+    if (req.body.protocolo.data.idProtocolo) {
+        try {
+            const paciente = await Paciente.find({ documento: req.body.protocolo.data.documento });
+            dataSearch = { idProtocolo: req.body.protocolo.data.idProtocolo };
+            const response = await laboratorioController.search(dataSearch);
+            if (!response.length || !paciente) {
+                throw new Error('Error al generar laboratorio.');
+            }
+            const docLaboratorio = new Laboratorio(req.body.protocolo, response[0].Data, paciente, req.body.usuario);
+            const opciones = { header: { height: '2cm' } };
+            const fileName: any = await docLaboratorio.informe(opciones);
+            res.download(fileName);
+
+        } catch (err) {
+            const dataError = {
+                id: req.params.id,
+                estado: req.query.estado,
+                documento: req.query.dni,
+                fechaNacimiento: req.query.fecNac,
+                apellido: req.query.apellido,
+                fechaDesde: req.query.fechaDde,
+                fechaHasta: req.query.fechaHta
+            };
+            await laboratorioLog.error('laboratorio-descargas', dataError, err, req);
+            return next(err);
+        }
+
+    } else {
+        return next(500);
+    }
 });
 
 router.post('/arancelamiento/:tipo?', Auth.authenticate(), async (req: any, res) => {
