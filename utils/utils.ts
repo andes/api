@@ -220,3 +220,8 @@ export function xmlToJson(xmlString) {
     const parser = new DOMParser();
     return _xmlToJson(parser.parseFromString(xmlString, 'application/xml'));
 }
+
+export function getDateStr(date: Date): String {
+    const dt = new Date(date);
+    return dt.getDate() + '/' + (dt.getMonth() + 1) + '/' + dt.getFullYear();
+}
