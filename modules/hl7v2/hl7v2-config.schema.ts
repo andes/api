@@ -41,4 +41,4 @@ export const HL7v2ConfigSchema = new Schema({
     mapping: Schema.Types.Mixed
 });
 
-export const HL7v2Config = model('hl7v2-config', HL7v2ConfigSchema, 'hl7v2-config');
+export const HL7v2Config = model('hl7v2config', HL7v2ConfigSchema, 'hl7v2config');
