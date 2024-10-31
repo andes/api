@@ -1,6 +1,7 @@
 import * as moment from 'moment';
 import { HTMLComponent } from '../model/html-component.class';
 import { loadImage } from '../model/informe.class';
+import { getDateStr } from '../../../utils/utils';
 
 export class CredencialProfesionalBody extends HTMLComponent {
     template = `
@@ -46,15 +47,16 @@ export class CredencialProfesionalBody extends HTMLComponent {
         const apellido = profesional.apellido;
         const sexo = profesional.sexo;
         const formacionGrado = profesional.formacionGrado.find((form) => form.id === formacionId);
+        const matriculaciones = formacionGrado.matriculacion && formacionGrado.matriculacion.sort((a, b) => (a.inicio - b.inicio));
         const formacion = formacionGrado.profesion.nombre;
-        const matricula = formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].matriculaNumero;
+        const matricula = matriculaciones && matriculaciones[matriculaciones.length - 1].matriculaNumero;
         const documento = profesional.documento;
         const nacionalidad = profesional.nacionalidad.nombre;
-        const fechaNacimiento = moment(profesional.fechaNacimiento).format('DD/MM/YYYY');
+        const fechaNacimiento = getDateStr(profesional.fechaNacimiento);
         const entidadFormadora = formacionGrado.entidadFormadora.nombre;
         const egreso = moment(formacionGrado.fechaEgreso).format('DD/MM/YYYY');
-        const primerMatricula = moment(formacionGrado.matriculacion[0].inicio).format('DD/MM/YYYY');
-        const vencimiento = moment(formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].fin).format('DD/MM/YYYY');
+        const primerMatricula = matriculaciones && moment(matriculaciones[0].fechaDeInscripcion).format('DD/MM/YYYY');
+        const vencimiento = matriculaciones && moment(matriculaciones[matriculaciones.length - 1].fin).format('DD/MM/YYYY');
         const fechaImpresion = moment().format('DD/MM/YYYY');
 
         this.data = {
