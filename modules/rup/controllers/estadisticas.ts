@@ -85,7 +85,7 @@ export async function estadisticaDemografica(ids) {
     }
 
     const ubicacionesPaciente = {};
-    andes.forEach((paciente) => { ubicacionesPaciente[paciente._id] = getLocalidad(paciente.direccion[0]); });
+    andes.forEach((paciente) => { ubicacionesPaciente[paciente._id] = getLocalidad(paciente.direccion[0]); }); 
     const respuesta = {};
 
     pacientes.forEach((paciente) => {

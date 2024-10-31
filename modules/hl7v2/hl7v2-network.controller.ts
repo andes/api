@@ -11,9 +11,10 @@ export class Hl7v2NetworkController {
             if (!this.connection) {
                 this.connection = await connect(queueConnectionString);
                 this.channel = await this.connection.createChannel();
-                // console.log("Connected to RabbitMQ");
+                console.log("Connected to RabbitMQ");
             }
         } catch (error) {
+            console.log("failed to connect")
             return new Error('Failed to connect to RabbitMQ: ' + error.message);
         }
     }
@@ -45,7 +46,7 @@ export class Hl7v2NetworkController {
             this.channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), {
                 persistent: true
             });
-            // console.log('Message sent to queue:', queue);
+            console.log('Message sent to queue:', queue);
         } catch (error) {
             return new Error('Failed to send message to queue: ' + error.message);
         } finally {
