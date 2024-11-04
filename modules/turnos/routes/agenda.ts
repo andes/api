@@ -548,10 +548,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         if (estadoAgenda !== 'pendienteAuditoria' && estadoAgenda !== 'auditada' && estadoAgenda !== 'pausada' && estadoAgenda !== 'suspendida') {
                             const errorPrestaciones = await validarProfesionalPrestaciones(objetoLog.data.profesional, objetoLog.data.prestaciones.map(p => p._id), objetoLog.data.organizacion);
                             if (errorPrestaciones) {
-                                return next({
-                                    msg: errorPrestaciones,
-                                    tipoError: 'errorPrestaciones'
-                                });
+                                return next(errorPrestaciones);
                             }
                             agendaCtrl.editarAgenda(req, data);
                             event = { object: 'agenda', accion: 'update', data };
