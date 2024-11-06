@@ -66,6 +66,10 @@ schema.add({
     /** Flag 'esCensable' indica si debe o no ser excluido dentro de los censos.
      * Para ser evaluado debe ser explicitamente definido. Si no está definido, es ignorado.
      * */
+    conceptoAsociado: {
+        type: SnomedConcept,
+        required: false,
+    },
     esCensable: {
         type: Boolean,
         required: false
