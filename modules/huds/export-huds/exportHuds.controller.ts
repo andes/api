@@ -94,7 +94,7 @@ export async function createFile(idExportHuds) {
                     const informe = new InformeRUP(prestacion.id, null, peticionExport.user);
                     const archivo = await informe.informe();
                     const nombreArchivo = peticionExport.prestaciones.length ? prestacion.paciente.documento : prestacion.solicitud.tipoPrestacion.term;
-                    const fechaArchivo = moment(prestacion.solicitud.fecha).format('YYYY-MM-DD');
+                    const fechaArchivo = moment(prestacion.solicitud.fecha).format('YYYY-MM-DD-hhmmss');
                     archive.file(`${archivo}`, { name: `${fechaArchivo} - ${nombreArchivo}.pdf` });
                 } catch (error) {
                     exportHudsLog.error('Crear pdf', objectLog, error);
@@ -108,7 +108,7 @@ export async function createFile(idExportHuds) {
                         const realName = cda.metadata.adjuntos[0].id;
                         try {
                             const fileCda = await getCdaAdjunto(cda, realName);
-                            archive.append(fileCda.stream, { name: `${moment(cda.metadata.fecha).format('YYYY-MM-DD')} - ${cda.metadata.prestacion.snomed.term}.pdf` });
+                            archive.append(fileCda.stream, { name: `${moment(cda.metadata.fecha).format('YYYY-MM-DD-hhmmss')} - ${cda.metadata.prestacion.snomed.term}.pdf` });
 
                         } catch (error) {
                             exportHudsLog.error('Crear cda', objectLog, error);
@@ -123,7 +123,7 @@ export async function createFile(idExportHuds) {
                                 cda.metadata['codificacion'] = codificacionCDA;
                                 const informe = new InformeCDA(cda.metadata, peticionExport.usuario);
                                 const archivo: any = await informe.informe();
-                                const fechaArchivo = moment(cda.metadata.fecha).format('YYYY-MM-DD');
+                                const fechaArchivo = moment(cda.metadata.fecha).format('YYYY-MM-DD-hhmmss');
                                 const nombreArchivo = cda.metadata.prestacion.snomed.term;
                                 archive.file(`${archivo}`, { name: `${fechaArchivo} - ${nombreArchivo}.pdf` });
                             } catch (error) {
