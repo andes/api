@@ -1,12 +1,12 @@
 import { EncuestasSql } from '../config.private';
 import * as sql from 'mssql';
-import { notificacionesEncuestaLog as notificacionesLog } from '../modules/turnos/citasLog';
+import { notificacionesEncuestaLog } from '../modules/turnos/citasLog';
 import { WebHook } from '../modules/webhook/webhook.schema';
 import * as mongoose from 'mongoose';
 import { handleHttpRequest } from '../utils/requestHandler';
 import { userScheduler } from '../config.private';
+import { Constantes } from '../modules/constantes/constantes.schema';
 import moment = require('moment');
-
 
 const constanteKey = 'encuesta-envio';
 const query = 'SELECT * FROM Mensajes WHERE MsgEnviado = 0 OR MsgEnviado IS NULL';
@@ -22,6 +22,10 @@ const config = {
 
 async function run(done) {
     try {
+        let time: number;
+        timeOut().then(num => {
+            time = num;
+        });
         const pool = await new sql.ConnectionPool(config).connect();
         const result = await new sql.Request(pool).query(query);
         for (const res of result.recordset) {
@@ -31,17 +35,17 @@ async function run(done) {
                 fecha: moment(res.Fecha).add(1, 'day').locale('es').format('dddd DD [de] MMMM'),
                 URL_Encuesta: res.URL_Encuesta,
             };
-            const resp = await send('notificaciones:enviar', dtoMensaje);
+            const resp = await send('encuestas:enviar', dtoMensaje);
             if (resp) {
                 const queryUp = 'UPDATE Mensajes SET MsgEnviado = 1 WHERE MensajeId = ' + res.MensajeId;
                 await new sql.Request(pool).query(queryUp);
             }
-            await new Promise(resolve => setTimeout(resolve, 7500));
+            await new Promise(resolve => setTimeout(resolve, time));
         }
         await pool.close();
         done();
     } catch (err) {
-        notificacionesLog.error('sql.request', query, err, userScheduler);
+        notificacionesEncuestaLog.error('sql.request', query, err, userScheduler);
         return done(err);
     }
 }
@@ -71,12 +75,25 @@ async function send(event, datos) {
             });
             return resultado;
         } catch (error) {
-            notificacionesLog.error('send:error', data, error, userScheduler);
+            notificacionesEncuestaLog.error('send:error', data, error, userScheduler);
             return null;
         }
     } else {
-        notificacionesLog.error('send:not-event', event, { error: 'evento no encontrado' }, userScheduler);
+        notificacionesEncuestaLog.error('send:not-event', event, { error: 'evento no encontrado' }, userScheduler);
         return null;
+    }
+}
+
+async function timeOut() {
+    let constante;
+    const time = 10000;
+    const key = 'waap-timeOut';
+    try {
+        constante = await Constantes.findOne({ key });
+        return constante ? parseInt(constante.nombre, 10) : time;
+    } catch (error) {
+        log.error('timeOut()', { constante, key }, { error: error.message }, userScheduler);
+        return time;
     }
 }
 

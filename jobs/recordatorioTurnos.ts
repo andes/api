@@ -5,6 +5,7 @@ import { userScheduler } from '../config.private';
 import * as mongoose from 'mongoose';
 import { WebHook } from '../modules/webhook/webhook.schema';
 import { handleHttpRequest } from '../utils/requestHandler';
+import { Constantes } from '../modules/constantes/constantes.schema';
 
 async function run(done) {
     try {
@@ -16,7 +17,11 @@ async function run(done) {
 }
 
 async function recorrerAgendas() {
-
+    let time: number;
+    timeOut().then(num => {
+        time = num;
+    });
+    const tipoTurno = ['programado', 'gestion'];
     const fechaAgenda: Date = moment().add(1, 'days').toDate();
     const match = {
         horaInicio: {
@@ -29,7 +34,6 @@ async function recorrerAgendas() {
         enviarSms: true,
         'bloques.turnos.estado': 'asignado'
     };
-
     const agendasMañana: any[] = await Agenda.find(match);
     for (let i = 0; i < agendasMañana.length; i++) {
         const agenda = agendasMañana[i];
@@ -37,9 +41,9 @@ async function recorrerAgendas() {
             const bloque = agenda.bloques[j];
             for (let k = 0; k < bloque.turnos.length; k++) {
                 const turno = bloque.turnos[k];
-                if (turno.estado === 'asignado' && turno.paciente?.telefono) {
+                if (turno.estado === 'asignado' && turno.paciente?.telefono && tipoTurno.includes(turno.tipoTurno)) {
                     await recordarTurno(agenda, turno);
-                    await new Promise(resolve => setTimeout(resolve, 7500));
+                    await new Promise(resolve => setTimeout(resolve, time));
                 }
             }
         }
@@ -63,7 +67,7 @@ async function recordarTurno(agenda, turno) {
                     profesional: datoAgenda.profesionales ? datoAgenda.profesionales : '',
                     organizacion: datoAgenda.organizacion ? datoAgenda.organizacion : ''
                 };
-                await send('notificaciones:enviar', dtoMensaje);
+                await send('recordatorio:enviar', dtoMensaje);
             }
         } else {
             notificacionesRecordatorioLog.error('obteneIdTurno', { turno, agenda }, { error: 'No se encontró el turno' }, userScheduler);
@@ -139,6 +143,18 @@ async function send(event, datos) {
     }
 
 }
+
+async function timeOut() {
+    let constante;
+    const time = 10000;
+    const key = 'waap-timeOut';
+    try {
+        constante = await Constantes.findOne({ key });
+        return constante ? parseInt(constante.nombre, 10) : time;
+    } catch (error) {
+        log.error('timeOut()', { constante, key }, { error: error.message }, userScheduler);
+        return time;
+    }
+}
+
 export = run;
-
-
