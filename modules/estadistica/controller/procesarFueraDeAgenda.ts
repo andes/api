@@ -70,7 +70,7 @@ export async function procesar(parametros: any) {
         const filtroEstado = parametros.estado ? parametros.estado : 'todos';
         await prestaciones.eachAsync(async (prestacion) => {
             let filtroOS = false;
-            const registro = prestacion.ejecucion?.registros?.find(x => x.valor?.informe !== null);
+            const registro = prestacion.ejecucion?.registros?.find(x => x.valor?.informe != null);
             const registroConAdjunto = prestacion.ejecucion?.registros?.find(x => x.nombre === 'documento adjunto');
             const dtoPrestacion = {
                 fecha: prestacion.ejecucion.fecha,
@@ -121,6 +121,6 @@ export async function procesar(parametros: any) {
         });
         return resultado;
     } catch (error) {
-        return (error);
+        throw error;
     }
 }

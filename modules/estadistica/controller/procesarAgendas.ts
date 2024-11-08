@@ -36,11 +36,12 @@ export async function procesar(parametros: any) {
         match['horaFin'] = { $lte: new Date(parametros.fechaHasta) };
     }
 
+    const estadoTurno = parametros.noNominalizada ? 'disponible' : 'asignado';
     if (parametros.prestacion) {
         match['tipoPrestaciones.conceptId'] = parametros.prestacion;
-        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }, { $eq: ['$_bloques.turnos.tipoPrestacion.conceptId', parametros.prestacion] }] };
+        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', estadoTurno] }, { $eq: ['$_bloques.turnos.tipoPrestacion.conceptId', parametros.prestacion] }] };
     } else {
-        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }] };
+        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', estadoTurno] }] };
     }
 
     if (parametros.profesional) {
@@ -149,6 +150,22 @@ export async function procesar(parametros: any) {
             }
         },
         {
+            $addFields: {
+                registroInforme: {
+                    $arrayElemAt: [
+                        {
+                            $filter: {
+                                input: { $ifNull: ['$prestacion0.ejecucion.registros', []] },
+                                as: 'reg',
+                                cond: { $ne: [{ $ifNull: ['$$reg.valor.informe', null] }, null] }
+                            }
+                        },
+                        0
+                    ]
+                }
+            }
+        },
+        {
             $project: {
                 fecha: '$turno.horaInicio',
                 paciente: '$turno.paciente',
@@ -189,6 +206,9 @@ export async function procesar(parametros: any) {
                 idPrestacion: '$prestacion0._id',
                 estadoFacturacion: '$turno.estadoFacturacion',
                 ambito: { $ifNull: ['$prestacion0.solicitud.ambitoOrigen', 'ambulatorio'] },
+                actividad: '$registroInforme.valor.informe.tipoActividad.term',
+                tematica: '$registroInforme.valor.informe.tematica',
+                estadoActual: '$prestacion0.estadoActual',
                 datosPaciente: {
                     $concat: [
                         '$turno.paciente.nombre',
@@ -215,7 +235,12 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
+    try {
+        const turnosAsignados = await Agenda.aggregate(pipelineBuscador);
+        return turnosAsignados;
+    } catch (error) {
+        throw error;
+    }
 
-    const turnosAsignados = await Agenda.aggregate(pipelineBuscador);
-    return turnosAsignados;
+
 }
