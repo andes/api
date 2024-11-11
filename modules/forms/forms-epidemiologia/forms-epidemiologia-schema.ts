@@ -35,7 +35,12 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: true
-    }
+    },
+    configLaboratorio: new mongoose.Schema({
+        interopera: Boolean,
+        nroIdentificacion: { type: Number, unique: true },
+        resultado: mongoose.Schema.Types.Mixed
+    }, { _id: false })
 });
 
 const assertUniquePCR = async function (next) {
@@ -52,6 +57,12 @@ const assertUniquePCR = async function (next) {
 
     return next();
 };
+
+const generarNumeroUnico = function (): number {
+    const numeroUnico = Math.floor(1000000000 + Math.random() * 9000000000);
+    return numeroUnico;
+};
+
 FormsEpidemiologiaSchema.index({
     createdAt: -1
 });
@@ -88,6 +99,10 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
             const user = seccionUsuario.fields.find(f => f.responsable)?.responsable;
             seccionClasificacion.fields.push({ usuariopcr: user });
         }
+    }
+    if (ficha.configLaboratorio?.interopera) {
+        const nroIdentificacion = generarNumeroUnico();
+        ficha.configLaboratorio.nroIdentificacion = nroIdentificacion;
     }
     next();
 });
