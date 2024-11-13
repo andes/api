@@ -1,3 +1,12 @@
+## [5.118.1](https://github.com/andes/api/compare/v5.118.0...v5.118.1) (2024-11-13)
+
+
+### Bug Fixes
+
+* **AM-305:** Nuevo Turno: Se visualiza prestación cuando no hay turno disponible ([#1968](https://github.com/andes/api/issues/1968)) ([d81033e](https://github.com/andes/api/commit/d81033eb69db4bd3c08b34e8d5d101fa323d10b8))
+* **CIT:** manejo de errores editando agenda ([#1988](https://github.com/andes/api/issues/1988)) ([5bd1d0d](https://github.com/andes/api/commit/5bd1d0df01ab0319a5e3607c6bba1d32bc264c16))
+* **TYP:** descarga de registros de un mismo dia ([#1987](https://github.com/andes/api/issues/1987)) ([bd1fdb9](https://github.com/andes/api/commit/bd1fdb9c06e96c12e2102497773e06ad5c9c72ae))
+
 # [5.118.0](https://github.com/andes/api/compare/v5.117.0...v5.118.0) (2024-10-23)
 
 
