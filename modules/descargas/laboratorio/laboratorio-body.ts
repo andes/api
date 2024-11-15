@@ -24,7 +24,9 @@ export class FarmaciaBody extends HTMLComponent {
       {{#each areas}}
         <div class="tituloGeneral"><u>{{area}}</u> </div>
         {{#each grupos}}
-          <div class="tituloSecundario"><b> {{grupo}}</b></div>
+          {{#if visible}}
+            <div class="tituloSecundario"><b> {{grupo}} </b></div>
+          {{/if}}
           {{#each items}}
             {{#if esTitulo}}
               <div class="tituloTabla"><u>{{nombre}}</u></div>
@@ -32,8 +34,8 @@ export class FarmaciaBody extends HTMLComponent {
               <table class="tituloTabla">
                 <tr>
                   <td width="25%">{{nombre}}</td>
-                  <td width="25%"><i>{{resultado }}{{ unidadMedida}}</i></td>
-                  <td width="25%">{{valorReferencia }}{{metodo}}</td>
+                  <td width="25%"><i>{{resultado }} {{ unidadMedida}}</i></td>
+                  <td width="25%">{{valorReferencia }} {{metodo}}</td>
                   <td width="25%"><i>{{userValida}}</i></td>
                 </tr>
               </table>
@@ -66,19 +68,20 @@ export class FarmaciaBody extends HTMLComponent {
                     const toItem = (e) => ({
                         nombre: e.item,
                         esTitulo: e.esTitulo === 'True' ? true : false,
-                        resultado: e.resultado,
+                        resultado: e.resultado || e.Resultado,
                         metodo: e.Metodo,
                         valorReferencia: e.valorReferencia,
-                        unidadMedida: e.unidadMedida,
+                        unidadMedida: e.unidadMedida || e.UnidadMedida,
                         userValida: e.userValida
                     });
+                    res.grupo = g;
                     if (detallesAreaGrupo.length === 1 && detallesAreaGrupo[0].grupo === g) {
-                        res.item = toItem(detallesAreaGrupo[0]);
+                        res.items = [toItem(detallesAreaGrupo[0])];
+                        res.visible = false;
                     } else {
-                        res.grupo = g;
+                        res.visible = true;
                         res.items = detallesAreaGrupo.map(toItem);
                     }
-
                     return res;
                 })
             };
