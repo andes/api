@@ -68,6 +68,10 @@ class FormsEpidemiologiaResource extends ResourceBase {
             field: 'paciente.documento',
             fn: MongoQuery.equalMatch
         },
+        nroIdentificacion: {
+            field: 'configLaboratorio.nroIdentificacion',
+            fn: MongoQuery.equalMatch
+        },
         active: (b) => b
     };
 }

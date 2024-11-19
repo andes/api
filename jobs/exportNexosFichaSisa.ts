@@ -6,7 +6,7 @@ import { userScheduler } from '../config.private';
 import { altaDeterminacion, altaEventoV2, altaMuestra } from '../modules/sisa/controller/sisa.controller';
 
 export async function exportFichaSNVS(done) {
-    const start = (moment(new Date()).startOf('day').subtract(2, 'days').toDate() as any);
+    const start = (moment(new Date()).startOf('day').subtract(3, 'days').toDate() as any);
     const end = (moment(new Date()).endOf('day').toDate() as any);
 
     const formulario = await Forms.find({ active: true, 'config.idEvento': { $exists: true } });
@@ -19,7 +19,8 @@ export async function exportFichaSNVS(done) {
                         $gte: start,
                         $lte: end
                     },
-                    'type.name': unForm.name
+                    'type.name': unForm.name,
+                    idCasoSnvs: null
                 }
             },
             {
@@ -115,8 +116,9 @@ export async function exportFichaSNVS(done) {
                 const idGrupoEvento = configSNVS.idGrupoEvento;
                 const idEstablecimientoCarga = unaFicha.Sisa.toString();
                 const idSisa = unaFicha.SisaInterno ? unaFicha.SisaInterno.toString() : unaFicha.Sisa.toString();
-                if (documento) {
+                if (documento && !unaFicha.idCasoSnvs) {
                     const clasificacion = buscarClasificacion(configSNVS, unaFicha.secciones);
+                    const codigoSisaEvento = unaFicha.secciones;
                     if (clasificacion) {
                         const eventoNominal = {
                             ciudadano: {
@@ -162,7 +164,16 @@ export async function exportFichaSNVS(done) {
                                         id_caso,
                                         description: response.description ? response.description : ''
                                     };
-
+                                    try {
+                                        await FormsEpidemiologia.updateOne({ _id: unaFicha._id }, { $set: { idCasoSnvs: id_caso } });
+                                    } catch (error) {
+                                        log.resultado = {
+                                            resultado: 'ERROR_DE_GUARDADO_ID_CASO',
+                                            id_caso,
+                                            description: error.toString()
+                                        };
+                                        await sisaLog.error('sisa:export:SNVS:evento', { error: log }, 'error al guardar el idCasoSisa', userScheduler);
+                                    }
                                 } else {
                                     log.resultado = {
                                         resultado: 'ERROR_DE_ENVIO',

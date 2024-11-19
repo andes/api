@@ -13,6 +13,7 @@ export interface FormTypes {
             value: string;
             event: string;
         }[];
+        interoperaLab: boolean;
     };
     active: boolean;
     sections: {
@@ -80,7 +81,8 @@ export const SectionSchema = new mongoose.Schema({
 export const FormConfigSchema = new mongoose.Schema({
     idEvento: String,
     idGrupoEvento: String,
-    configField: Array
+    configField: Array,
+    interoperaLab: Boolean
 });
 
 export const FormSchema = new mongoose.Schema({

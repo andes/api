@@ -30,11 +30,17 @@ export const FormsEpidemiologiaSchema = new mongoose.Schema({
     config: FormConfigSchema,
     zonaSanitaria: zonaSanitariasSchema,
     snvs: { type: Boolean, default: false },
+    idCasoSnvs: { type: String, default: '' },
     active: {
         type: Boolean,
         required: true,
         default: true
-    }
+    },
+    configLaboratorio: new mongoose.Schema({
+        interopera: Boolean,
+        nroIdentificacion: { type: String, unique: true },
+        resultado: mongoose.Schema.Types.Mixed
+    }, { _id: false })
 });
 
 const assertUniquePCR = async function (next) {
@@ -51,6 +57,18 @@ const assertUniquePCR = async function (next) {
 
     return next();
 };
+
+const generarIdUnico = function (): string {
+    const numero = Math.floor(1000 + Math.random() * 9000);
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    const charsLength = chars.length;
+    let characters = '';
+    for ( let i = 0 ; i < 4 ; i++ ) {
+        characters += chars.charAt(Math.floor(Math.random() * charsLength));
+    }
+    return `${characters}-${numero}`;
+};
+
 FormsEpidemiologiaSchema.index({
     createdAt: -1
 });
@@ -87,6 +105,10 @@ FormsEpidemiologiaSchema.pre('save', function (next) {
             const user = seccionUsuario.fields.find(f => f.responsable)?.responsable;
             seccionClasificacion.fields.push({ usuariopcr: user });
         }
+    }
+    if (ficha.configLaboratorio?.interopera) {
+        const nroIdentificacion = generarIdUnico();
+        ficha.configLaboratorio.nroIdentificacion = nroIdentificacion;
     }
     next();
 });
