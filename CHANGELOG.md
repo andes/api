@@ -1,3 +1,16 @@
+# [5.119.0](https://github.com/andes/api/compare/v5.118.1...v5.119.0) (2024-11-20)
+
+
+### Bug Fixes
+
+* **HUDS:** corrige descarga PDF laboratorios ([#1997](https://github.com/andes/api/issues/1997)) ([f14bf96](https://github.com/andes/api/commit/f14bf96b7f40b9eb2265a058c5268e29611a4635))
+* **MPI-431:** controles actualizar paciente sin dirección ([#1916](https://github.com/andes/api/issues/1916)) ([c9083f7](https://github.com/andes/api/commit/c9083f7574d079161f84d1f5899c0a3a48d1a63b))
+
+
+### Features
+
+* **HUDS-104:** Implementar descarga en PDF de laboratorios ([#1983](https://github.com/andes/api/issues/1983)) ([5432311](https://github.com/andes/api/commit/54323117095232c230baaa9dde762cf538814ea9))
+
 ## [5.118.1](https://github.com/andes/api/compare/v5.118.0...v5.118.1) (2024-11-13)
 
 
