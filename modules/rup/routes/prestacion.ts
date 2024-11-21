@@ -615,6 +615,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if (req.body.estado.tipo === 'rechazada') {
                         data.solicitud.organizacion = req.body.organizacion;
                     }
+                    if (req.body.estado.tipo === 'auditoria') {
+                        delete data.solicitud.registros[0].valor.solicitudPrestacion.prioridad;
+                        data.solicitud.registros[0].markModified('valor');
+                    }
                     data.estados.push(req.body.estado);
                     if (req.body.estado.tipo === 'asignada') {
                         if (req.body.profesional) {
@@ -760,6 +764,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     return console.error(errFrec);
                 });
 
+            }
+
+            if (req.body.estado.tipo === 'auditoria') {
+                await prestacion.save();
             }
 
             if (req.body.op === 'romperValidacion') {
