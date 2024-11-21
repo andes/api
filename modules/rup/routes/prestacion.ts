@@ -766,7 +766,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
 
             }
 
-            if (req.body.estado.tipo === 'auditoria') {
+            if (req.body.estado?.tipo === 'auditoria') {
                 await prestacion.save();
             }
 
