@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { checkCarpeta } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
-import { notificacionesLog } from '../../../modules/turnos/citasLog';
+import { notificacionesAsignacionLog, notificacionesSuspencionLog } from '../../../modules/turnos/citasLog';
 import { userScheduler } from './../../../config.private';
 import { Agenda } from '../../../modules/turnos/schemas/agenda';
 import { Prestacion } from '../../rup/schemas/prestacion';
@@ -441,11 +441,11 @@ async function dataAgenda(idTurno) {
                 enviarSms
             };
         } else {
-            notificacionesLog.error('verificarAgenda:agenda', { turno: idTurno }, { error: 'agenda no encontrada' }, userScheduler);
+            notificacionesAsignacionLog.error('verificarAgenda:agenda', { turno: idTurno }, { error: 'agenda no encontrada' }, userScheduler);
             return null;
         }
     } catch (error) {
-        notificacionesLog.error('verificarAgenda', { turno: idTurno }, { error: error.message }, userScheduler);
+        notificacionesAsignacionLog.error('verificarAgenda', { turno: idTurno }, { error: error.message }, userScheduler);
         return null;
     }
 }
@@ -458,7 +458,7 @@ async function buscarPrestacion(idTurno, idPaciente) {
         inicio: 'top'
     });
     if (!unaPrestacion) {
-        notificacionesLog.error('verificarPrestacion', { turno: idTurno, idPaciente }, { error: 'prestación no encontrada' }, userScheduler);
+        notificacionesAsignacionLog.error('verificarPrestacion', { turno: idTurno, idPaciente }, { error: 'prestación no encontrada' }, userScheduler);
         return null;
     }
     return unaPrestacion;
@@ -491,10 +491,10 @@ EventCore.on('citas:turno:asignar', async (turno) => {
                 }
             }
         } else {
-            notificacionesLog.error('obteneIdTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
+            notificacionesAsignacionLog.error('obteneIdTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
         }
     } catch (unError) {
-        notificacionesLog.error('obtenerAgenda', { turno }, unError, userScheduler);
+        notificacionesAsignacionLog.error('obtenerAgenda', { turno }, unError, userScheduler);
     }
 });
 
@@ -518,10 +518,10 @@ EventCore.on('notificaciones:turno:suspender', async (turno) => {
                 EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
             }
         } else {
-            notificacionesLog.error('obteneIdTurno-Suspender', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
+            notificacionesSuspencionLog.error('obteneIdTurno-Suspender', { turno }, { error: 'error al generar la notificacion' }, userScheduler);
         }
     } catch (unError) {
-        notificacionesLog.error('obtenerAgendaCancelar', { turno }, { error: 'error al generar la notificacion de cancelar' }, userScheduler);
+        notificacionesSuspencionLog.error('obtenerAgendaCancelar', { turno }, { error: 'error al generar la notificacion de cancelar' }, userScheduler);
     }
 });
 
