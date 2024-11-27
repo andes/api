@@ -1,3 +1,10 @@
+# [5.120.0](https://github.com/andes/api/compare/v5.119.0...v5.120.0) (2024-11-27)
+
+
+### Features
+
+* **CIT:** Separa logs por tipo de notificación ([#1967](https://github.com/andes/api/issues/1967)) ([6a6fbf8](https://github.com/andes/api/commit/6a6fbf8f5a98385c06a3707adb683cb3317a0d5e))
+
 # [5.119.0](https://github.com/andes/api/compare/v5.118.1...v5.119.0) (2024-11-20)
 
 
