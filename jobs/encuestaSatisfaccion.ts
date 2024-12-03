@@ -85,7 +85,7 @@ async function send(event, datos) {
 }
 
 async function timeOut() {
-    let constante;
+    let constante: any;
     const time = 10000;
     const key = 'waap-timeOut';
     try {

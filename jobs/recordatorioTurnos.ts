@@ -114,7 +114,6 @@ async function send(event, datos) {
     });
 
     if (subscriptions) {
-
         const data = {
             id: new mongoose.Types.ObjectId(),
             subscription: subscriptions._id,
@@ -130,13 +129,11 @@ async function send(event, datos) {
                 json: true,
                 timeout: 10000,
             });
-
             return resultado;
         } catch (err) {
             notificacionesRecordatorioLog.error('envioNotificacion', { error: err, turno: datos }, userScheduler);
             return null;
         }
-
     } else {
         notificacionesRecordatorioLog.error('envioNotificacion', { turno: datos }, { error: 'evento no encontrado' }, userScheduler);
         return null;
@@ -145,7 +142,7 @@ async function send(event, datos) {
 }
 
 async function timeOut() {
-    let constante;
+    let constante: any;
     const time = 10000;
     const key = 'waap-timeOut';
     try {
