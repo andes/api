@@ -1,3 +1,10 @@
+# [5.121.0](https://github.com/andes/api/compare/v5.120.0...v5.121.0) (2024-12-04)
+
+
+### Features
+
+* **TOP:** agrega filtros para conceptos asociados ([#1993](https://github.com/andes/api/issues/1993)) ([1022513](https://github.com/andes/api/commit/10225134c9f3a4bb627cd2d11ceac81293ed1251))
+
 # [5.120.0](https://github.com/andes/api/compare/v5.119.0...v5.120.0) (2024-11-27)
 
 
