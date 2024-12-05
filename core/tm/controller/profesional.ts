@@ -145,14 +145,40 @@ export async function search(filter, fields) {
             $match: match
         },
         {
-            $project: project
+            $project: project,
         },
 
     ];
 
     return await Profesional.aggregate(aggregate);
 }
+export async function searchMatriculaVigente(profesionalId) {
+    const _profesional: any = await Profesional.findById(profesionalId);
+    const filterFormaciones = (e) => {
+        return e.matriculado && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
+    };
+    const formacionGrado = _profesional.formacionGrado ?
+        _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+    return formacionGrado.length ? formacionGrado[0].numero : searchUltimaMatricula(_profesional);
 
+}
+export async function searchUltimaMatricula(profesional) {
+    let ultimaFechaFin: Date | null = null;
+    let matriculaNumero: number | null = null;
+    profesional.formacionGrado.forEach((fg) => {
+        if (fg.matriculacion && fg.matriculacion.length > 0) {
+            const sortedMatriculacion = fg.matriculacion.sort((a, b) => new Date(b.fin).getTime() - new Date(a.fin).getTime());
+            const ultimaMatriculacion = sortedMatriculacion[0];
+            if (!ultimaFechaFin || new Date(ultimaMatriculacion.fin) > ultimaFechaFin) {
+                ultimaFechaFin = new Date(ultimaMatriculacion.fin);
+                matriculaNumero = ultimaMatriculacion.matriculaNumero;
+            }
+        }
+    });
+
+    return matriculaNumero;
+
+}
 export async function searchMatriculas(profesionalId) {
     const _profesional: any = await Profesional.findById(profesionalId);
     const filterFormaciones = (e) => {
