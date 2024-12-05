@@ -103,71 +103,77 @@ export function quitarTurnoDoble(req, data, tid = null) {
 }
 
 
-// Turno
+// Turno y sobreturno
 export async function liberarTurno(req, data, turno) {
     const position = getPosition(req, data, turno._id);
     const enEjecucion = await prestacionController.enEjecucion(turno);
     if (enEjecucion) {
         return false;
     }
-
-    if (!data.dinamica) {
-        turno.estado = 'disponible';
-        turno.paciente = null;
-        turno.tipoPrestacion = null;
-        turno.nota = null;
-        turno.confirmedAt = null;
-        turno.reasignado = undefined; // Esto es necesario cuando se libera un turno reasignado
-        turno.updatedAt = new Date();
-        turno.updatedBy = req.user.usuario || req.user;
-        let cant = 1;
-
-        const turnoDoble = getTurnoSiguiente(req, data, turno._id);
-        if (turnoDoble) {
-            cant = cant + 1;
-            turnoDoble.estado = 'disponible';
-            turnoDoble.updatedAt = new Date();
-            turnoDoble.updatedBy = req.user.usuario || req.user;
+    if (req.body.sobreturno) { // Liberación de sobreturno
+        const index = data.sobreturnos.findIndex(st => st._id.toString() === turno._id.toString());
+        if (index === -1) { // En caso de que el sobreturno no exista o ya fue eliminado de la agenda.
+            return false;
         }
+        data.sobreturnos.splice(index, 1);
+    } else { // Liberación de turno
+        if (!data.dinamica) {
+            turno.estado = 'disponible';
+            turno.paciente = null;
+            turno.tipoPrestacion = null;
+            turno.nota = null;
+            turno.confirmedAt = null;
+            turno.reasignado = undefined; // Esto es necesario cuando se libera un turno reasignado
+            turno.updatedAt = new Date();
+            turno.updatedBy = req.user.usuario || req.user;
+            let cant = 1;
 
-        switch (turno.tipoTurno) {
-            case ('delDia'):
-                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-                data.bloques[position.indexBloque].restantesProgramados = 0;
-                data.bloques[position.indexBloque].restantesProfesional = 0;
-                data.bloques[position.indexBloque].restantesGestion = 0;
-                break;
-            case ('programado'):
-                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-                if (this.esVirtual(turno.emitidoPor)) {
-                    data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
-                }
-                turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
-                break;
-            case ('profesional'):
-                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
-                break;
-            case ('gestion'):
-                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
-                break;
-        }
-        if (turno.tipoTurno) {
-            turno.tipoTurno = undefined;
-        }
-        const fechaActualizar = moment().startOf('day').add(2, 'days');
-        // actualizamos turnos de la agenda si la hora de inicio esta dentro de las proxmas 48hs
-        if (moment(data.horaInicio).isBefore(fechaActualizar)) {
-            data = this.actualizarTurnos(data);
-        }
+            const turnoDoble = getTurnoSiguiente(req, data, turno._id);
+            if (turnoDoble) {
+                cant = cant + 1;
+                turnoDoble.estado = 'disponible';
+                turnoDoble.updatedAt = new Date();
+                turnoDoble.updatedBy = req.user.usuario || req.user;
+            }
 
-    } else {
-        if (data.cupo > -1) {
-            data.cupo++;
-        }
-        const newTurnos = data.bloques[position.indexBloque].turnos;
-        newTurnos.splice(position.indexTurno, 1);
-        data.bloques[position.indexBloque].turnos = newTurnos;
+            switch (turno.tipoTurno) {
+                case ('delDia'):
+                    data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                    data.bloques[position.indexBloque].restantesProgramados = 0;
+                    data.bloques[position.indexBloque].restantesProfesional = 0;
+                    data.bloques[position.indexBloque].restantesGestion = 0;
+                    break;
+                case ('programado'):
+                    data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                    if (this.esVirtual(turno.emitidoPor)) {
+                        data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
+                    }
+                    turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
+                    break;
+                case ('profesional'):
+                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                    break;
+                case ('gestion'):
+                    data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+                    break;
+            }
+            if (turno.tipoTurno) {
+                turno.tipoTurno = undefined;
+            }
+            const fechaActualizar = moment().startOf('day').add(2, 'days');
+            // actualizamos turnos de la agenda si la hora de inicio esta dentro de las proxmas 48hs
+            if (moment(data.horaInicio).isBefore(fechaActualizar)) {
+                data = this.actualizarTurnos(data);
+            }
 
+        } else {
+            if (data.cupo > -1) {
+                data.cupo++;
+            }
+            const newTurnos = data.bloques[position.indexBloque].turnos;
+            newTurnos.splice(position.indexTurno, 1);
+            data.bloques[position.indexBloque].turnos = newTurnos;
+        }
     }
     return true;
 }
