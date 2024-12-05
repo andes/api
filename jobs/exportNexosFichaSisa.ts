@@ -6,7 +6,7 @@ import { userScheduler } from '../config.private';
 import { altaDeterminacion, altaEventoV2, altaMuestra } from '../modules/sisa/controller/sisa.controller';
 
 export async function exportFichaSNVS(done) {
-    const start = (moment(new Date()).startOf('day').subtract(3, 'days').toDate() as any);
+    const start = (moment(new Date()).startOf('day').subtract(1, 'days').toDate() as any);
     const end = (moment(new Date()).endOf('day').toDate() as any);
 
     const formulario = await Forms.find({ active: true, 'config.idEvento': { $exists: true } });
@@ -20,7 +20,7 @@ export async function exportFichaSNVS(done) {
                         $lte: end
                     },
                     'type.name': unForm.name,
-                    idCasoSnvs: null
+                    idCasoSnvs: ''
                 }
             },
             {
@@ -103,20 +103,20 @@ export async function exportFichaSNVS(done) {
                     Organizacion_Nombre: '$Organization.nombre',
                     Sisa: '$Organization.codigo.sisa',
                     SisaInterno: '$Organization.codigo.internoSisa',
-                    secciones: '$secciones'
+                    secciones: '$secciones',
+                    idCasoSnvs: '$idCasoSnvs'
                 }
             }
         ];
         try {
             const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
-
             for (const unaFicha of fichas) {
                 const documento = unaFicha.Paciente_documento;
                 const idEvento = configSNVS.idEvento;
                 const idGrupoEvento = configSNVS.idGrupoEvento;
                 const idEstablecimientoCarga = unaFicha.Sisa.toString();
                 const idSisa = unaFicha.SisaInterno ? unaFicha.SisaInterno.toString() : unaFicha.Sisa.toString();
-                if (documento && !unaFicha.idCasoSnvs) {
+                if (documento && ((!unaFicha.idCasoSnvs) || unaFicha.idCasoSnvs === '')) {
                     const clasificacion = buscarClasificacion(configSNVS, unaFicha.secciones);
                     const codigoSisaEvento = unaFicha.secciones;
                     if (clasificacion) {
@@ -149,12 +149,13 @@ export async function exportFichaSNVS(done) {
                         const log = {
                             fecha: new Date(),
                             sistema: 'Sisa',
-                            key: unaFicha.tipo,
+                            key: unaFicha.Tipo,
                             idPaciente: unaFicha.Paciente_id,
                             info_enviada: eventoNominal,
                             resultado: {}
                         };
                         if (eventoNominal.eventoCasoNominal.idClasificacionManualCaso) {
+
                             try {
                                 const response = await altaEventoV2(eventoNominal);
                                 if (response) {
