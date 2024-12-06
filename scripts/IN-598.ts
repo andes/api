@@ -4,12 +4,12 @@ import moment = require('moment');
 async function egresosDuplicados(done) {
     const paramInicio = process.argv[3];
     const paramFin = process.argv[4];
-    const start = paramInicio ?
+    const start = moment(paramInicio, 'YYYY-MM-DD', true).isValid() ?
         moment(new Date(paramInicio).setHours(0, 0, 0, 0)).format('YYYY-MM-DD HH:mm:ss') :
         moment(new Date().setHours(0, 0, 0, 0)).subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss');
-    const end = paramFin ?
-        moment(new Date(paramFin).setHours(23, 59, 0, 0)).format('YYYY-MM-DD HH:mm:ss') :
-        moment(new Date().setHours(23, 59, 0, 0)).subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss');
+    const end = moment(paramFin, 'YYYY-MM-DD', true).isValid()
+        ? moment(paramFin).endOf('day').format('YYYY-MM-DD HH:mm:ss')
+        : moment().subtract(1, 'day').endOf('day').format('YYYY-MM-DD HH:mm:ss');
 
     const registroPrevios = CamaEstados.find({
         $and: [{
@@ -31,11 +31,10 @@ async function egresosDuplicados(done) {
             const createdAt = estado.createdAt;
 
             if (fecha && idInternacion) {
-
                 const existeEstadoIndex = estadoSinDuplicar.findIndex(e => {
                     const fechaConvertida = moment(e.fecha).format('YYYY-MM-DD');
-                    return (fechaConvertida === fecha && e.extras.idInternacion.toString() === idInternacion.toString()
-                        && e.createdAt < createdAt);
+                    return (fechaConvertida === fecha && e.extras?.idInternacion?.toString() === idInternacion.toString()
+                        && e.createdAt <= createdAt);
                 });
 
                 if (existeEstadoIndex >= 0) {
