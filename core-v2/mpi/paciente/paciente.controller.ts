@@ -10,12 +10,13 @@ import * as configPrivate from '../../../config.private';
 import * as Barrio from '../../../core/tm/schemas/barrio';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { IContacto } from '../../../shared/interfaces/contacto.interface';
-import { IFinanciador } from '../financiador';
+import { FinanciadorModel, IFinanciador } from '../financiador';
 import { ParentescoCtr } from '../parentesco/parentesco.routes';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { PacienteCtr } from './paciente.routes';
 import { Paciente, replaceChars } from './paciente.schema';
-
+import { Auth } from '../../../auth/auth.class';
+import { userScheduler } from '../../../config.private';
 
 /**
  * Crea un objeto paciente
@@ -49,7 +50,7 @@ export function getFinanciador(paciente: IPacienteDoc) {
     return paciente.financiador?.filter((financiador) => financiador?.origen === 'ANDES') || [];
 }
 
-export function updateFinanciador(currentFinanciador: IFinanciador[], nuevoFinanciador?: IFinanciador) {
+export async function updateFinanciador(currentFinanciador: IFinanciador[], nuevoFinanciador?: IFinanciador) {
     const financiador = currentFinanciador.length ? [...currentFinanciador] : [];
 
     if (nuevoFinanciador) {
@@ -70,6 +71,12 @@ export function updateFinanciador(currentFinanciador: IFinanciador[], nuevoFinan
             financiador.push(financiadorActualizado);
         }
     }
+
+    const itemFinanciador = new FinanciadorModel(financiador);
+
+    Auth.audit(itemFinanciador, (userScheduler as any));
+
+    await itemFinanciador.save();
 
     return financiador;
 }
@@ -119,11 +126,8 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     }
     const paciente = await queryFind;
     if (paciente) {
-        if (isSelected(fields, 'financiador')) {
-            const financiador = await updateObraSocial(paciente);
-
-            paciente.financiador = financiador;
-        }
+        const financiador = await updateObraSocial(paciente);
+        paciente.financiador = financiador;
         return paciente;
     }
     return null;
