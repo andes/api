@@ -1,4 +1,3 @@
-import { isSelected } from '@andes/core';
 import { AndesDrive, FileMetadata } from '@andes/drive';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
 import { Matching } from '@andes/match';
@@ -15,7 +14,6 @@ import { ParentescoCtr } from '../parentesco/parentesco.routes';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { PacienteCtr } from './paciente.routes';
 import { Paciente, replaceChars } from './paciente.schema';
-
 
 /**
  * Crea un objeto paciente
@@ -78,24 +76,22 @@ export async function updateObraSocial(paciente: IPacienteDoc) {
     const obraSocial = await getObraSocial(paciente);
     const financiador = obraSocial.length ? [...obraSocial] : [];
 
-    if (financiador.length) {
-        const fechaDeActualizacion = moment().toDate();
+    const fechaDeActualizacion = moment().toDate();
 
-        financiador.forEach(item => {
-            if (item.financiador === 'SUMAR' && !item.origen) {
-                item.origen = 'SUMAR';
-            }
-            if (item.codigoPuco && !item.origen) {
-                item.origen = 'PUCO';
-            }
+    financiador.forEach(item => {
+        if (item.financiador === 'SUMAR' && !item.origen) {
+            item.origen = 'SUMAR';
+        }
+        if (item.codigoPuco && !item.origen) {
+            item.origen = 'PUCO';
+        }
 
-            item.fechaDeActualizacion = fechaDeActualizacion;
-            item.prepaga = false;
-        });
+        item.fechaDeActualizacion = fechaDeActualizacion;
+        item.prepaga = false;
+    });
 
-        const currentFinanciador = getFinanciador(paciente);
-        financiador.push(...currentFinanciador);
-    }
+    const currentFinanciador = getFinanciador(paciente);
+    financiador.push(...currentFinanciador);
 
     return financiador;
 };
@@ -119,11 +115,8 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     }
     const paciente = await queryFind;
     if (paciente) {
-        if (isSelected(fields, 'financiador')) {
-            const financiador = await updateObraSocial(paciente);
-
-            paciente.financiador = financiador;
-        }
+        const financiador = await updateObraSocial(paciente);
+        paciente.financiador = financiador;
         return paciente;
     }
     return null;
