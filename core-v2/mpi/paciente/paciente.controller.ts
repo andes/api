@@ -119,11 +119,8 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     }
     const paciente = await queryFind;
     if (paciente) {
-        if (isSelected(fields, 'financiador')) {
-            const financiador = await updateObraSocial(paciente);
-
-            paciente.financiador = financiador;
-        }
+        const financiador = await updateObraSocial(paciente);
+        paciente.financiador = financiador;
         return paciente;
     }
     return null;
