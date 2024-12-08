@@ -1,4 +1,3 @@
-import { isSelected } from '@andes/core';
 import { AndesDrive, FileMetadata } from '@andes/drive';
 import { geoReferenciar, getBarrio } from '@andes/georeference';
 import { Matching } from '@andes/match';
@@ -15,7 +14,6 @@ import { ParentescoCtr } from '../parentesco/parentesco.routes';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { PacienteCtr } from './paciente.routes';
 import { Paciente, replaceChars } from './paciente.schema';
-
 
 /**
  * Crea un objeto paciente
@@ -119,11 +117,8 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     }
     const paciente = await queryFind;
     if (paciente) {
-        if (isSelected(fields, 'financiador')) {
-            const financiador = await updateObraSocial(paciente);
-
-            paciente.financiador = financiador;
-        }
+        const financiador = await updateObraSocial(paciente);
+        paciente.financiador = financiador;
         return paciente;
     }
     return null;
