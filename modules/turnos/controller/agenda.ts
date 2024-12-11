@@ -157,7 +157,8 @@ export async function liberarTurno(req, data, turno) {
         const fechaActualizar = moment().startOf('day').add(2, 'days');
         // actualizamos turnos de la agenda si la hora de inicio esta dentro de las proxmas 48hs
         if (moment(data.horaInicio).isBefore(fechaActualizar)) {
-            data = this.actualizarTurnos(data);
+            const { agenda } = this.actualizarTurnos(data);
+            data = agenda;
         }
 
     } else {
@@ -751,29 +752,47 @@ export async function actualizarTiposDeTurno() {
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(async doc => {
         try {
-            agenda = this.actualizarTurnos(doc);
+            const data = this.actualizarTurnos(doc);
+            agenda = data.agenda;
 
             Auth.audit(agenda, (userScheduler as any));
-            await saveAgenda(agenda);
+            await agenda.save();
             const objetoLog = {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
                 updatedAt: agenda.updatedAt,
-                updatedBy: agenda.updatedBy
+                updatedBy: agenda.updatedBy,
+                bloques: data.logs
             };
             agendaLog.info('actualizarTiposTurnos', objetoLog);
         } catch (error) {
             agendaLog.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
         }
     });
+}
 
-
+/**
+ * Método auxiliar para registrar los logs.
+ *
+ */
+function registrarLog(logs, bloque, estado, datos) {
+    logs.push({
+        bloque,
+        estado,
+        reservadoProfesional: datos.reservadoProfesional,
+        restantesGestion: datos.restantesGestion,
+        restantesProfesional: datos.restantesProfesional,
+    });
 }
 
 // Dada una agenda, actualiza los turnos restantes (Para agendas dentro de las 48hs a partir de hoy).
 export function actualizarTurnos(agenda) {
+    const logs = [];
+
     for (let j = 0; j < agenda.bloques.length; j++) {
+        registrarLog(logs, j, 'inicio', agenda.bloques[j]);
+
         const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
 
         if (cantAccesoDirecto > 0) {
@@ -786,8 +805,10 @@ export function actualizarTurnos(agenda) {
                 agenda.bloques[j].restantesProfesional = 0;
             }
         }
+
+        registrarLog(logs, j, 'final', agenda.bloques[j]);
     }
-    return agenda;
+    return { agenda, logs };
 }
 
 
