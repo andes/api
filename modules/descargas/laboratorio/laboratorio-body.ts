@@ -51,44 +51,6 @@ export class FarmaciaBody extends HTMLComponent {
     }
 
     public async process() {
-        const setAreas = new Set(this.detalle.map(d => d.area));
-        const areasStr = Array.from(setAreas);
-
-        const areas = [];
-        areasStr.forEach(area => {
-            const detallesArea = this.detalle.filter(d => d.area === area);
-            const setGrupos = new Set(detallesArea.map(d => d.grupo));
-            const grupos = Array.from(setGrupos);
-
-            const item = {
-                area,
-                grupos: grupos.map(g => {
-                    const detallesAreaGrupo = detallesArea.filter(da => da.grupo === g);
-                    const res: any = {};
-                    const toItem = (e) => ({
-                        nombre: e.item,
-                        esTitulo: e.esTitulo === 'True' ? true : false,
-                        resultado: e.resultado || e.Resultado,
-                        metodo: e.Metodo,
-                        valorReferencia: e.valorReferencia,
-                        unidadMedida: e.unidadMedida || e.UnidadMedida,
-                        userValida: e.userValida
-                    });
-                    res.grupo = g;
-                    if (detallesAreaGrupo.length === 1 && detallesAreaGrupo[0].grupo === g) {
-                        res.items = [toItem(detallesAreaGrupo[0])];
-                        res.visible = false;
-                    } else {
-                        res.visible = true;
-                        res.items = detallesAreaGrupo.map(toItem);
-                    }
-                    return res;
-                })
-            };
-
-            areas.push(item);
-        });
-
         this.encabezado.data.fecha = moment(this.encabezado.data.fecha).format('DD-MM-YYYY');
         this.encabezado.data.fechanacimiento = moment(this.encabezado.data.fechanacimiento).format('DD-MM-YYYY');
         this.encabezado.data.sexo = this.paciente[0].genero;
@@ -96,7 +58,7 @@ export class FarmaciaBody extends HTMLComponent {
             this.encabezado.data.nombre = this.paciente[0].alias;
         }
         this.data = {
-            areas,
+            areas: this.detalle,
             encabezado: this.encabezado
         };
     }
