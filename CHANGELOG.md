@@ -1,3 +1,10 @@
+## [5.121.1](https://github.com/andes/api/compare/v5.121.0...v5.121.1) (2024-12-11)
+
+
+### Bug Fixes
+
+* **JOB:** Cambia filtro para exportar fichas a SNVS ([#2001](https://github.com/andes/api/issues/2001)) ([7b4858e](https://github.com/andes/api/commit/7b4858e50ab10052936c9b41086cdb85507f7e7f))
+
 # [5.121.0](https://github.com/andes/api/compare/v5.120.0...v5.121.0) (2024-12-04)
 
 
