@@ -8,6 +8,21 @@ import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { InstitucionSchema } from '../institucion.schema';
 
+export const HistorialAgendaSchema = new mongoose.Schema({
+    estado: {
+        type: String,
+        required: false,
+    },
+    op: {
+        type: String,
+        required: false,
+    },
+});
+
+HistorialAgendaSchema.plugin(AuditPlugin);
+
+export const HistorialAgenda = mongoose.model('historial', HistorialAgendaSchema);
+
 export const AgendaSchema = new mongoose.Schema({
     organizacion: {
         type: nombreSchema,
@@ -77,7 +92,11 @@ export const AgendaSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    cupo: Number
+    cupo: Number,
+    historial: {
+        type: [HistorialAgendaSchema],
+        required: false
+    },
 }, { versionKey: false });
 
 // Defino Virtuals
