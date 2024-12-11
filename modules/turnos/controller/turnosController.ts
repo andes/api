@@ -482,6 +482,7 @@ EventCore.on('citas:turno:asignar', async (turno) => {
                         mensaje,
                         telefono,
                         nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
+                        idPaciente: turno.paciente?.id,
                         tipoPrestacion: turno.tipoPrestacion.term,
                         fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
                         profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
