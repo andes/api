@@ -101,7 +101,7 @@
         "jobs": "tsc && node jobs/scheduler.js",
         "lint": "eslint -c .eslintrc.js --ext .ts .",
         "lint:fix": "eslint -c .eslintrc.js --ext .ts . --fix",
-        "test": "jest",
+        "test": "MONGOMS_DEBUG=1 jest",
         "testing": "NODE_ENV=test npm start",
         "docker:up": "docker-compose -p andes_dev up -d ",
         "docker:down": "docker-compose -p andes_dev down",
