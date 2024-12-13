@@ -33,9 +33,15 @@ const otraUnidadOrganizativa = {
 };
 
 beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    mongoose.connect(mongoUri);
+    try {
+        mongoServer = await MongoMemoryServer.create();
+        const mongoUri = mongoServer.getUri();
+        await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error al iniciar mongoServer: ', error);
+        throw error; // Para que las pruebas no continúen si no se pudo iniciar mongoServer
+    }
 });
 
 beforeEach(async () => {
@@ -72,8 +78,13 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    try {
+        await mongoose.disconnect();
+        await mongoServer.stop();
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error al iniciar mongoServer: ', error);
+    }
 });
 
 function seedCama(cantidad, unidad, unidadOrganizativaCama = null) {

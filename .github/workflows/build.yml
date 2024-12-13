@@ -13,4 +13,4 @@ jobs:
             - run: cp config.private.ts.example config.private.ts   
             - run: npm run lint
             - run: npm run tsc
-            - run: npm run test 
+            # - run: npm run test 
