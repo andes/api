@@ -1,10 +1,9 @@
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import { extractFoto, findById, make, multimatch, set, suggest } from './paciente.controller';
+import { agregarFinanciador, extractFoto, findById, make, multimatch, set, suggest } from './paciente.controller';
 import { PatientNotFound } from './paciente.error';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from './paciente.schema';
@@ -185,7 +184,10 @@ export const post = async (req: Request, res: Response) => {
         const valor = numTramite ? numTramite.toString() : '';
         paciente.identificadores = valor ? [{ entidad: 'RENAPER', valor }] : null;
     }
-    const pacienteCreado = await PacienteCtr.create(paciente, req);
+
+    const pacienteConFinanciador = await agregarFinanciador(paciente);
+    const pacienteCreado = await PacienteCtr.create(pacienteConFinanciador, req);
+
     return res.json(pacienteCreado);
 };
 
