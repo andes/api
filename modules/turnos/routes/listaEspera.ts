@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
+import { getHistorialPaciente } from '../controller/turnosController';
 import { Agenda } from '../schemas/agenda';
 import { demanda, listaEspera } from '../schemas/listaEspera';
 import { defaultLimit, maxLimit } from './../../../config';
@@ -29,10 +30,10 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
         }
 
         if (req.query.fechaDesde) {
-            const fechaDesde = moment(req.query.fechaDesde).startOf('day').toDate();
+            const fechaDesde = moment(new Date(req.query.fechaDesde)).startOf('day').toDate();
 
             if (req.query.fechaHasta) {
-                const fechaHasta = moment(req.query.fechaHasta).endOf('day').toDate();
+                const fechaHasta = moment(new Date(req.query.fechaHasta)).endOf('day').toDate();
                 opciones['fecha'] = { $gte: fechaDesde, $lte: fechaHasta };
             } else {
                 opciones['fecha'] = { $gte: fechaDesde };
@@ -126,6 +127,19 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 });
 
 router.post('/listaEspera', async (req, res, next) => {
+    const historial = await getHistorialPaciente({
+        ...req, query: {
+            pacienteId: req.body.paciente.id, turnosProximos: true, estado: 'asignado', conceptId: req.body.tipoPrestacion.conceptId
+        }
+    });
+
+    const turno = historial.length ? historial.filter(item => moment(item.horaInicio).isAfter(moment())) : null;
+
+    if (turno?.length) {
+        // si existe un turno a futuro, no se debería poder cargar la demanda insatisfecha
+        return res.status(422).json({ code: 'turno_existente', data: turno[0] });
+    }
+
     const params = {
         'paciente.id': req.body.paciente.id,
         'tipoPrestacion.conceptId': req.body.tipoPrestacion.conceptId,
@@ -156,7 +170,8 @@ router.post('/listaEspera', async (req, res, next) => {
             Auth.audit(newListaDocument, req);
             listaSaved = await newListaDocument.save();
         }
-        res.json(listaSaved);
+
+        res.json({ data: { listado: listaSaved } });
     } catch (error) {
         return next(error);
     }
