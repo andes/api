@@ -1,7 +1,7 @@
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
-import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
-import { SnomedConcept } from '../schemas/snomed-concept';
+import { PacienteSubSchema } from '../../core-v2/mpi/paciente/paciente.schema';
+import { SnomedConcept } from '../rup/schemas/snomed-concept';
 
 const estadosSchema = new mongoose.Schema({
     estado: {
@@ -47,6 +47,17 @@ export const recetaSchema = new mongoose.Schema({
         tratamientoProlongado: Boolean,
         tiempoTratamiento: mongoose.SchemaTypes.Mixed,
     },
+    dispensa: [
+        {
+            codigo: String,
+            descripcion: String,
+            cantidad: Number,
+            organizacion: {
+                id: mongoose.SchemaTypes.ObjectId,
+                nombre: String
+            }
+        }
+    ],
     estados: [estadosSchema],
     estadoActual: {
         type: String,
@@ -55,8 +66,7 @@ export const recetaSchema = new mongoose.Schema({
     },
     paciente: PacienteSubSchema,
     renovacion: String, // (referencia al registro original)
-    vinculoRecetar: String,
-    vinculoSifaho: String
+    appNotificada: [{ app: String, fecha: Date }]
 });
 
 recetaSchema.plugin(AuditPlugin);
