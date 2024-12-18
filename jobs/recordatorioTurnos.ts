@@ -5,6 +5,7 @@ import { userScheduler } from '../config.private';
 import * as mongoose from 'mongoose';
 import { WebHook } from '../modules/webhook/webhook.schema';
 import { handleHttpRequest } from '../utils/requestHandler';
+import { Constantes } from '../modules/constantes/constantes.schema';
 
 async function run(done) {
     try {
@@ -16,8 +17,14 @@ async function run(done) {
 }
 
 async function recorrerAgendas() {
-
-    const fechaAgenda: Date = moment().add(1, 'days').toDate();
+    let instancia: number;
+    let instAnt: number;
+    let time: number;
+    await timeOut().then(num => {
+        time = num;
+    });
+    const tipoTurno = ['programado', 'gestion'];
+    const fechaAgenda: Date = moment().add(2, 'days').toDate();
     const match = {
         horaInicio: {
             $gte: moment(fechaAgenda).startOf('day').toDate(),
@@ -29,7 +36,6 @@ async function recorrerAgendas() {
         enviarSms: true,
         'bloques.turnos.estado': 'asignado'
     };
-
     const agendasMañana: any[] = await Agenda.find(match);
     for (let i = 0; i < agendasMañana.length; i++) {
         const agenda = agendasMañana[i];
@@ -37,9 +43,12 @@ async function recorrerAgendas() {
             const bloque = agenda.bloques[j];
             for (let k = 0; k < bloque.turnos.length; k++) {
                 const turno = bloque.turnos[k];
-                if (turno.estado === 'asignado' && turno.paciente?.telefono) {
+                if (turno.estado === 'asignado' && turno.paciente?.telefono && tipoTurno.includes(turno.tipoTurno)) {
+                    const ultNum = turno.paciente.telefono.slice(-1);
+                    instancia = ['0', '1', '2'].includes(ultNum) ? 1 : ['3', '4', '5'].includes(ultNum) ? 2 : 3;
+                    await new Promise(resolve => setTimeout(resolve, instancia === instAnt ? time : time / 2));
+                    instAnt = instancia;
                     await recordarTurno(agenda, turno);
-                    await new Promise(resolve => setTimeout(resolve, 7500));
                 }
             }
         }
@@ -52,6 +61,7 @@ async function recordarTurno(agenda, turno) {
             const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
             const idTurno = turno._id || turno.id;
             const datoAgenda = dataAgenda(agenda, idTurno);
+
             if (fechaMayor && turno.paciente.telefono && datoAgenda.organizacion) {
                 const dtoMensaje: any = {
                     idTurno: turno._id,
@@ -63,7 +73,7 @@ async function recordarTurno(agenda, turno) {
                     profesional: datoAgenda.profesionales ? datoAgenda.profesionales : '',
                     organizacion: datoAgenda.organizacion ? datoAgenda.organizacion : ''
                 };
-                await send('notificaciones:enviar', dtoMensaje);
+                await send('recordatorio:enviar', dtoMensaje);
             }
         } else {
             notificacionesRecordatorioLog.error('obteneIdTurno', { turno, agenda }, { error: 'No se encontró el turno' }, userScheduler);
@@ -110,7 +120,6 @@ async function send(event, datos) {
     });
 
     if (subscriptions) {
-
         const data = {
             id: new mongoose.Types.ObjectId(),
             subscription: subscriptions._id,
@@ -126,19 +135,29 @@ async function send(event, datos) {
                 json: true,
                 timeout: 10000,
             });
-
             return resultado;
         } catch (err) {
             notificacionesRecordatorioLog.error('envioNotificacion', { error: err, turno: datos }, userScheduler);
             return null;
         }
-
     } else {
         notificacionesRecordatorioLog.error('envioNotificacion', { turno: datos }, { error: 'evento no encontrado' }, userScheduler);
         return null;
     }
 
 }
+
+async function timeOut() {
+    let constante: any;
+    const time = 10000;
+    const key = 'waap-timeOut';
+    try {
+        constante = await Constantes.findOne({ key });
+        return constante ? parseInt(constante.nombre, 10) : time;
+    } catch (error) {
+        log.error('timeOut()', { constante, key }, { error: error.message }, userScheduler);
+        return time;
+    }
+}
+
 export = run;
-
-
