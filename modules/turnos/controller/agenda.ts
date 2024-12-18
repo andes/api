@@ -10,7 +10,7 @@ import { NotificationService } from '../../../modules/mobileApp/controller/Notif
 import { toArray } from '../../../utils/utils';
 import * as prestacionController from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
-import { Agenda } from '../../turnos/schemas/agenda';
+import { Agenda, HistorialAgenda } from '../../turnos/schemas/agenda';
 import { agendaLog } from '../citasLog';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
@@ -426,6 +426,13 @@ export async function agregarSobreturno(req, data) {
     }
 }
 
+function actualizarHistorial(elem, agenda, req) {
+    const itemHistorial = new HistorialAgenda(elem);
+
+    Auth.audit(itemHistorial, req);
+    agenda.historial.push(itemHistorial);
+}
+
 // Agenda
 export function actualizarEstado(req, data) {
 
@@ -504,8 +511,9 @@ export function actualizarEstado(req, data) {
                 sobreturno.avisoSuspension = 'no enviado';
             });
         }
-
     }
+
+    actualizarHistorial({ estado: req.body.estado }, data, req);
 }
 
 // Dada una Agenda completa + un id de Turno, busca y devuelve el Turno completo
@@ -849,6 +857,8 @@ export function actualizarEstadoAgendas(start, end) {
                         actualizarAux(agenda);
                     }
                 }
+
+                actualizarHistorial({ estado: agenda.estado }, agenda, (userScheduler as any));
             }
         } catch (error) {
             agendaLog.error('actualizarEstadoAgendas', { agenda }, error);
