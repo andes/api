@@ -1,3 +1,11 @@
+# [5.122.0](https://github.com/andes/api/compare/v5.121.2...v5.122.0) (2024-12-25)
+
+
+### Features
+
+* **CIT:** implementa control de turnos pendientes ([#1981](https://github.com/andes/api/issues/1981)) ([e9a21a2](https://github.com/andes/api/commit/e9a21a25cfb4361ad2a2bc190b0b2098ed739f11))
+* **CIT-346:** sobreturnos se guardan sin pacientes ([#1986](https://github.com/andes/api/issues/1986)) ([02b17d6](https://github.com/andes/api/commit/02b17d6a01220eefca215e9931fc89bc59d1fb2c))
+
 ## [5.121.2](https://github.com/andes/api/compare/v5.121.1...v5.121.2) (2024-12-18)
 
 ## [5.121.1](https://github.com/andes/api/compare/v5.121.0...v5.121.1) (2024-12-11)
