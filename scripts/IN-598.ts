@@ -1,30 +1,33 @@
 import { CamaEstados } from '../modules/rup/internacion/cama-estados.schema';
 import moment = require('moment');
 
-async function egresosDuplicados(done) {
+async function egresosDuplicados(done: () => void) {
     const paramInicio = process.argv[3];
     const paramFin = process.argv[4];
-    const start = moment(paramInicio, 'YYYY-MM-DD', true).isValid() ?
-        moment(new Date(paramInicio).setHours(0, 0, 0, 0)).format('YYYY-MM-DD HH:mm:ss') :
-        moment(new Date().setHours(0, 0, 0, 0)).subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss');
-    const end = moment(paramFin, 'YYYY-MM-DD', true).isValid()
-        ? moment(paramFin).endOf('day').format('YYYY-MM-DD HH:mm:ss')
-        : moment().subtract(1, 'day').endOf('day').format('YYYY-MM-DD HH:mm:ss');
 
-    const registroPrevios = CamaEstados.find({
-        $and: [{
-            ambito: 'internacion',
-            capa: 'estadistica',
-            start: { $gte: start },
-            end: { $lte: end },
-            'estados.extras.idInternacion': { $exists: true },
-            'estados.extras.egreso': true
-        }]
+    // Validar parámetros
+    if (!moment(paramInicio, 'YYYY-MM-DD', true).isValid() || !moment(paramFin, 'YYYY-MM-DD', true).isValid()) {
+        return done();
+    }
+
+    // Inicializar las fechas con inicio y fin del día
+    const start = moment(paramInicio).startOf('day').toDate();
+    const end = moment(paramFin).endOf('day').toDate();
+
+    const registrosPrevios = CamaEstados.find({
+        ambito: 'internacion',
+        capa: 'estadistica',
+        start: { $gte: start },
+        end: { $lte: end },
+        'estados.extras.idInternacion': { $exists: true },
+        'estados.extras.egreso': true,
+        deletedAt: { $exists: false }
     }).cursor({ batchSize: 100 });
 
-    for await (const registro of registroPrevios) {
+    for await (const registro of registrosPrevios) {
         const estados = registro.estados;
-        const estadoSinDuplicar = [];
+        const estadoSinDuplicar: typeof registro.estados = [];
+
         for (const estado of estados) {
             const fecha = moment(estado.fecha).format('YYYY-MM-DD');
             const idInternacion = estado.extras?.idInternacion;
@@ -32,9 +35,12 @@ async function egresosDuplicados(done) {
 
             if (fecha && idInternacion) {
                 const existeEstadoIndex = estadoSinDuplicar.findIndex(e => {
-                    const fechaConvertida = moment(e.fecha).format('YYYY-MM-DD');
-                    return (fechaConvertida === fecha && e.extras?.idInternacion?.toString() === idInternacion.toString()
-                        && e.createdAt <= createdAt);
+                    const fechaConvertida = moment(e.fecha);
+                    return (
+                        fechaConvertida.isSame(fecha, 'day') &&
+                        e.extras?.idInternacion?.toString() === idInternacion.toString() &&
+                        e.createdAt <= createdAt
+                    );
                 });
 
                 if (existeEstadoIndex >= 0) {
@@ -48,7 +54,7 @@ async function egresosDuplicados(done) {
         // Actualizar la colección CamaEstados
         await CamaEstados.updateOne(
             { _id: registro._id },
-            { $set: { estados: estadosUnicos } } // Reemplaza el array `estados` con `estadosUnicos`
+            { $set: { estados: estadosUnicos } }
         );
     }
     done();
