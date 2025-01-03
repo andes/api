@@ -179,7 +179,7 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
             if (!response.length || !paciente) {
                 throw new Error('Error al generar laboratorio.');
             }
-            const docLaboratorio = new Laboratorio(req.body.protocolo, response[0].Data, paciente, req.body.usuario);
+            const docLaboratorio = new Laboratorio(req.body.protocolo, response, paciente, req.body.usuario);
             const opciones = { header: { height: '2cm' } };
             const fileName: any = await docLaboratorio.informe(opciones);
             res.download(fileName);
