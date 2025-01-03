@@ -55,7 +55,7 @@ export class CredencialProfesionalBody extends HTMLComponent {
         const fechaNacimiento = getDateStr(profesional.fechaNacimiento);
         const entidadFormadora = formacionGrado.entidadFormadora.nombre;
         const egreso = moment(formacionGrado.fechaEgreso).format('DD/MM/YYYY');
-        const primerMatricula = matriculaciones && moment(matriculaciones[0].fechaDeInscripcion).format('DD/MM/YYYY');
+        const primerMatricula = formacionGrado.fechaDeInscripcion && moment(formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY');
         const vencimiento = matriculaciones && moment(matriculaciones[matriculaciones.length - 1].fin).format('DD/MM/YYYY');
         const fechaImpresion = moment().format('DD/MM/YYYY');
 
