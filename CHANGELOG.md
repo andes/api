@@ -1,3 +1,15 @@
+# [5.123.0](https://github.com/andes/api/compare/v5.122.0...v5.123.0) (2025-01-08)
+
+
+### Bug Fixes
+
+* **CITAS:** Cambia fecha fin job actualizar agendas ([#1974](https://github.com/andes/api/issues/1974)) ([001f3a5](https://github.com/andes/api/commit/001f3a562a99d8c72209b8191bed1c07eb969ac7))
+
+
+### Features
+
+* **CIT:** implementa historial de estados en agendas ([#2000](https://github.com/andes/api/issues/2000)) ([855ae22](https://github.com/andes/api/commit/855ae22914bf0f73048b594cfca34025604118d9))
+
 # [5.122.0](https://github.com/andes/api/compare/v5.121.2...v5.122.0) (2024-12-25)
 
 
