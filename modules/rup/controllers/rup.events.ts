@@ -42,16 +42,16 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
                     receta.fechaPrestacion = moment(prestacion.ejecucion.fecha).toDate();
                     receta.idPrestacion = idPrestacion;
                     receta.idRegistro = registro._id;
+                    receta.diagnostico = medicamento.diagnostico;
                     receta.medicamento = {
-                        conceptId: medicamento.generico.conceptId,
-                        term: medicamento.generico.term,
+                        concepto: medicamento.generico,
                         presentacion: medicamento.presentacion.term,
                         unidades: medicamento.unidades,
                         cantidad: medicamento.cantidad,
                         cantEnvases: medicamento.cantEnvases,
                         dosisDiaria: {
                             dosis: medicamento.dosisDiaria.dosis,
-                            frecuencia: medicamento.dosisDiaria.frecuencia,
+                            intervalo: medicamento.dosisDiaria.intervalo,
                             dias: medicamento.dosisDiaria.dias,
                             notaMedica: medicamento.dosisDiaria.notaMedica
                         },

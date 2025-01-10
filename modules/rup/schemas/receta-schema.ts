@@ -1,11 +1,12 @@
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { SnomedConcept } from '../schemas/snomed-concept';
 
 const estadosSchema = new mongoose.Schema({
     estado: {
         type: String,
-        enum: ['vigente', 'dispensada', 'vencida'],
+        enum: ['vigente', 'dispensada', 'vencida', 'suspendida',],
         required: true,
         default: 'vigente'
     },
@@ -30,16 +31,16 @@ export const recetaSchema = new mongoose.Schema({
     fechaPrestacion: Date,
     idPrestacion: String,
     idRegistro: String,
+    diagnostico: SnomedConcept,
     medicamento: {
-        conceptId: String,
-        term: String, // (Descripción)
+        concepto: SnomedConcept,
         presentacion: String,
         unidades: String, // (mg, cc, etc.)
         cantidad: Number,
         cantEnvases: Number,
         dosisDiaria: {
             dosis: String,
-            frecuencia: mongoose.SchemaTypes.Mixed,
+            intervalo: mongoose.SchemaTypes.Mixed,
             dias: Number,
             notaMedica: String
         },
