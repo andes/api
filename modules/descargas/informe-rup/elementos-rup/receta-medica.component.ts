@@ -26,21 +26,27 @@ export class RecetaMedicaComponent extends HTMLComponent {
                     {{ unidades }} {{presentacion.term }}(s)
                     </td>
                     <td>
-                    {{ cantidad }} envase(s)
+                    {{ cantEnvases}} envase(s) de {{ cantidad }} {{presentacion.term }}(s)  
                     </td>
                     <td>
-                    {{#if dosisDiaria.cantidad }}
-                    {{ dosisDiaria.cantidad }} {{presentacion.term }}(s) por {{ dosisDiaria.dias }} días
+                    {{#if dosisDiaria.dosis}}
+                    {{ dosisDiaria.dosis }}
+                    cada {{ dosisDiaria.intervalo.nombre }}  
                     {{/if}}
+                     {{#if dosisDiaria.dias}}
+                     durante {{ dosisDiaria.dias }} día(s)
+                     {{/if}}
                     </td>
                     <td>
-                    {{ diagnostico }}
+                    {{ diagnostico.term }}
                     </td>
                     <td>
                     {{#if tratamientoProlongado }}
                         Tratamiento prolongado |
                     {{/if}}
-                    {{ tipoReceta }}
+                    {{#if tipoReceta }}
+                    {{ tipoReceta.nombre }}
+                      {{/if}}
                     </td>
                 </tr>
             {{/each}}
