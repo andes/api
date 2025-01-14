@@ -4,14 +4,28 @@ import { PacienteSubSchema } from '../../core-v2/mpi/paciente/paciente.schema';
 import { SnomedConcept } from '../rup/schemas/snomed-concept';
 
 const estadosSchema = new mongoose.Schema({
-    estado: {
+    tipo: {
         type: String,
-        enum: ['vigente', 'dispensada', 'vencida', 'suspendida',],
+        enum: ['vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada'],
         required: true,
         default: 'vigente'
-    },
+    }
 });
 estadosSchema.plugin(AuditPlugin);
+
+const estadoDispensaSchema = new mongoose.Schema({
+    tipo: {
+        type: String,
+        enum: ['sin dispensa', 'dispensada', 'dispensa-parcial'],
+        required: true,
+        default: 'sin dispensa'
+    },
+    fecha: Date,
+    sistema: {
+        type: String,
+        enum: ['sifaho', 'recetar']
+    }
+});
 
 export const recetaSchema = new mongoose.Schema({
     organizacion: {
@@ -59,11 +73,9 @@ export const recetaSchema = new mongoose.Schema({
         }
     ],
     estados: [estadosSchema],
-    estadoActual: {
-        type: String,
-        required: true,
-        default: 'vigente'
-    },
+    estadoActual: estadosSchema,
+    estadosDispensa: [estadoDispensaSchema],
+    estadoDispensaActual: estadoDispensaSchema,
     paciente: PacienteSubSchema,
     renovacion: String, // (referencia al registro original)
     appNotificada: [{ app: String, fecha: Date }]

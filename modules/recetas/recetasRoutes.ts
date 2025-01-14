@@ -24,7 +24,7 @@ class RecetasResource extends ResourceBase {
             fn: MongoQuery.equalMatch
         },
         estado: {
-            field: 'estados.estado',
+            field: 'estados.tipo',
             fn: MongoQuery.equalMatch
         }
     };

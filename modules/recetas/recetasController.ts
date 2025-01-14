@@ -23,7 +23,7 @@ export async function BuscarRecetas(req) {
                 }
             }
         }
-        Object.assign(options, { estadoActual: 'vigente' });
+        Object.assign(options, { 'estadoActual.tipo': 'vigente' });
 
         const recetas: any = await Receta.find(options);
 
