@@ -35,7 +35,7 @@ export async function liberarRefTurno(turno, req) {
         } else if (prestacion.solicitud) {
             updateRegistroHistorialSolicitud(prestacion.solicitud, req.body);
             prestacion.solicitud.turno = null;
-            Auth.audit(prestacion, userScheduler as any);
+            Auth.audit(prestacion, req);
             return prestacion.save();
         }
     } catch (err) {
