@@ -221,7 +221,12 @@ export function xmlToJson(xmlString) {
     return _xmlToJson(parser.parseFromString(xmlString, 'application/xml'));
 }
 
-export function getDateStr(date: Date): String {
+export function getDateStr(date: string | Date): string {
     const dt = new Date(date);
-    return dt.getDate() + '/' + (dt.getMonth() + 1) + '/' + dt.getFullYear();
+
+    const day = dt.getUTCDate(); // Día en UTC
+    const month = dt.getUTCMonth() + 1; // Mes en UTC (getUTCMonth es base 0)
+    const year = dt.getUTCFullYear(); // Año en UTC
+
+    return `${day}/${month}/${year}`;
 }
