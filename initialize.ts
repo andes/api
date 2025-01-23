@@ -119,6 +119,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules', require('./modules/dispositivo/').DispositivoRouter);
     app.use('/api/modules', require('./modules/semaforo/').SemaforoRouter);
     app.use('/api/modules', require('./modules/constantes').ConstantesRouter);
+    app.use('/api/modules', require('./modules/recetas').RecetasRouter);
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(

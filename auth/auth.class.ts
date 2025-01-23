@@ -11,6 +11,7 @@ import { AppToken } from './schemas/app-token.interface';
 import { authApps } from './schemas/authApps';
 import { PacienteToken } from './schemas/paciente-token.interface';
 import { UserToken } from './schemas/user-token.interface';
+import { AuthUsers } from './schemas/authUsers';
 
 const shiroTrie = require('shiro-trie');
 
@@ -632,4 +633,51 @@ export class Auth {
         return null;
     }
 
+    static async authorizeByToken(req: express.Request, res: express.Response, next: express.NextFunction, requiredPermissions: string[]) {
+        try {
+            const token = req.headers.authorization?.substring(4) || req.query.token;
+
+            if (!token) {
+                return res.status(403).send('No token provided');
+            }
+
+            const decodedToken = jwt.verify(token, configPrivate.auth.jwtKey);
+
+            let permissions = [];
+
+            if (decodedToken.type === 'app-token') {
+                const app: any = await authApps.findById(decodedToken.app.id);
+
+                if (!app) {
+                    return res.status(403).send('App not found');
+                }
+
+                permissions = app.permisos;
+            } else if (decodedToken.type === 'user-token' || decodedToken.type === 'user-token-2') {
+                const user = await AuthUsers.findOne({ usuario: decodedToken.usuario });
+
+                if (!user) {
+                    return res.status(403).send('User not valid');
+                }
+
+                const organization = user.organizaciones.find(org => org._id.toString() === decodedToken.organizacion.toString());
+
+                if (organization) {
+                    permissions = organization.permisos;
+                }
+            } else {
+                return res.status(403).send('Invalid token type');
+            }
+
+            const hasPermission = requiredPermissions.some(perm => permissions.includes(perm));
+
+            if (!hasPermission) {
+                return res.status(403).send('Insufficient permissions');
+            }
+
+            return next();
+        } catch (error) {
+            return res.status(403).send('Invalid token');
+        }
+    }
 }
