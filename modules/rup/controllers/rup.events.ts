@@ -1,7 +1,7 @@
 import { userScheduler } from '../../../config.private';
 import { EventCore } from '@andes/event-bus';
 import * as moment from 'moment';
-import { Receta } from '../schemas/receta-schema';
+import { Receta } from '../../recetas/receta-schema';
 import * as mongoose from 'mongoose';
 import { rupEventsLog as logger } from './rup.events.log';
 
@@ -58,7 +58,10 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
                         tratamientoProlongado: medicamento.tratamientoProlongado,
                         tiempoTratamiento: medicamento.tiempoTratamiento
                     };
-                    receta.estados = [{ estado: 'vigente' }];
+                    receta.estados = [{ tipo: 'vigente' }];
+                    receta.estadoActual = { tipo: 'vigente' };
+                    receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
+                    receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
                     receta.paciente = prestacion.paciente;
                     receta.audit(userScheduler);
                     await receta.save();
