@@ -40,6 +40,4 @@ export const get = async (req, res) => {
 export const RecetasCtr = new RecetasResource({});
 export const RecetasRouter = RecetasCtr.makeRoutes();
 
-const auth = (req: Request, res: Response, next) => Auth.authorizeByToken(req, res, next, ['huds:visualizacionHuds', 'recetas:read']);
-
-RecetasRouter.get('/recetas', auth, asyncHandler(get));
+RecetasRouter.get('/recetas', Auth.authorize('recetas:read'), asyncHandler(get));
