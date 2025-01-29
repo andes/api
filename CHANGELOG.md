@@ -1,3 +1,15 @@
+# [5.124.0](https://github.com/andes/api/compare/v5.123.1...v5.124.0) (2025-01-29)
+
+
+### Bug Fixes
+
+* **receta:** elimina metodo de login ([#2017](https://github.com/andes/api/issues/2017)) ([a36fa0d](https://github.com/andes/api/commit/a36fa0d54665d2107085db60a7736bd74e55a1c0))
+
+
+### Features
+
+* **REC:** modifica rutas para recetas en Andes/RecetAR ([#2012](https://github.com/andes/api/issues/2012)) ([0e61aeb](https://github.com/andes/api/commit/0e61aebb54d548481717a4fe1639a3f74b4a34aa))
+
 ## [5.123.1](https://github.com/andes/api/compare/v5.123.0...v5.123.1) (2025-01-15)
 
 # [5.123.0](https://github.com/andes/api/compare/v5.122.0...v5.123.0) (2025-01-08)
