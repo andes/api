@@ -457,11 +457,7 @@ async function buscarPrestacion(idTurno, idPaciente) {
         'solicitud.turno': idT,
         inicio: 'top'
     });
-    if (!unaPrestacion) {
-        notificacionesAsignacionLog.error('verificarPrestacion', { turno: idTurno, idPaciente }, { error: 'prestación no encontrada' }, userScheduler);
-        return null;
-    }
-    return unaPrestacion;
+    return unaPrestacion ? unaPrestacion : null;
 }
 
 EventCore.on('citas:turno:asignar', async (turno) => {
@@ -472,24 +468,26 @@ EventCore.on('citas:turno:asignar', async (turno) => {
             const mensaje = turno.tipoTurno === 'gestion' ? 'turno-dacion' : 'turno-reasignar';
             const telefono = turno.paciente.telefono;
             let dataPrestacion = null;
-            if (!tipoTurno) { dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id); }
-            if ((tipoTurno || dataPrestacion)) {
-                const idTurno = turno._id || turno.id;
-                const dataTurno = await dataAgenda(idTurno);
-                if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion && dataTurno.enviarSms) {
-                    const dtoMensaje: any = {
-                        idTurno: turno._id,
-                        mensaje,
-                        telefono,
-                        nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
-                        idPaciente: turno.paciente?.id,
-                        tipoPrestacion: turno.tipoPrestacion.term,
-                        fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
-                        profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
-                        organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
-                    };
-                    EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
-                }
+            const idTurno = turno._id || turno.id;
+            const dataTurno = await dataAgenda(idTurno);
+            if (!tipoTurno) {
+                // se busca prestación por si el turno es de gestión, pero fue reasignado a uno de acceso directo (debería tener una prestación asociada)
+                dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id);
+            }
+            const enviarNotificacion = fechaMayor && turno.paciente.telefono && dataTurno.organizacion && dataTurno.enviarSms;
+            if ((tipoTurno || dataPrestacion) && enviarNotificacion) {
+                const dtoMensaje: any = {
+                    idTurno: turno._id,
+                    mensaje,
+                    telefono,
+                    nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
+                    idPaciente: turno.paciente?.id,
+                    tipoPrestacion: turno.tipoPrestacion.term,
+                    fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
+                    profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
+                    organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
+                };
+                EventCore.emitAsync('notificaciones:enviar', dtoMensaje);
             }
         } else {
             notificacionesAsignacionLog.error('obteneIdTurno', { turno }, { error: 'No se encontró el turno' }, userScheduler);
