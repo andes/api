@@ -412,7 +412,7 @@ export async function actualizarCarpeta(req: any, res: any, next: any, paciente:
             paciente.carpetaEfectores = req.body.carpetaEfectores;
             await PacienteCtr.update(paciente.id, paciente, req);
         } else {
-            return next('El nÚmero de carpeta ya existe');
+            return next('El número de carpeta ya existe');
         }
     }
 }
@@ -450,30 +450,14 @@ async function dataAgenda(idTurno) {
     }
 }
 
-async function buscarPrestacion(idTurno, idPaciente) {
-    const idT = mongoose.Types.ObjectId(idTurno);
-    const unaPrestacion = await Prestacion.findOne({
-        'paciente.id': idPaciente,
-        'solicitud.turno': idT,
-        inicio: 'top'
-    });
-    if (!unaPrestacion) {
-        notificacionesAsignacionLog.error('verificarPrestacion', { turno: idTurno, idPaciente }, { error: 'prestación no encontrada' }, userScheduler);
-        return null;
-    }
-    return unaPrestacion;
-}
-
 EventCore.on('citas:turno:asignar', async (turno) => {
     try {
-        if (turno?._id || turno.id) {
+        if (turno._id || turno.id) {
             const fechaMayor = moment(turno.horaInicio).toDate() > moment().toDate();
             const tipoTurno = turno.tipoTurno === 'gestion' || (turno.reasignado?.anterior && turno.notificar);
             const mensaje = turno.tipoTurno === 'gestion' ? 'turno-dacion' : 'turno-reasignar';
             const telefono = turno.paciente.telefono;
-            let dataPrestacion = null;
-            if (!tipoTurno) { dataPrestacion = await buscarPrestacion(turno._id, turno.paciente.id); }
-            if ((tipoTurno || dataPrestacion)) {
+            if (tipoTurno) {
                 const idTurno = turno._id || turno.id;
                 const dataTurno = await dataAgenda(idTurno);
                 if (fechaMayor && turno.paciente.telefono && dataTurno.organizacion && dataTurno.enviarSms) {
@@ -481,8 +465,8 @@ EventCore.on('citas:turno:asignar', async (turno) => {
                         idTurno: turno._id,
                         mensaje,
                         telefono,
-                        nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
-                        tipoPrestacion: turno.tipoPrestacion.term,
+                        nombrePaciente: `${turno.paciente.apellido.trim()}, ${turno.paciente.alias ? turno.paciente.alias.trim() : turno.paciente.nombre.trim()}`,
+                        tipoPrestacion: turno.tipoPrestacion.term.trim(),
                         fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
                         profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
                         organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
@@ -509,8 +493,8 @@ EventCore.on('notificaciones:turno:suspender', async (turno) => {
                     idTurno: turno._id,
                     mensaje: 'turno-suspencion',
                     telefono: turno.paciente.telefono,
-                    nombrePaciente: `${turno.paciente.apellido}, ${turno.paciente.alias ? turno.paciente.alias : turno.paciente.nombre}`,
-                    tipoPrestacion: turno.tipoPrestacion.term,
+                    nombrePaciente: `${turno.paciente.apellido.trim()}, ${turno.paciente.alias ? turno.paciente.alias.trim() : turno.paciente.nombre.trim()}`,
+                    tipoPrestacion: turno.tipoPrestacion.term.trim(),
                     fecha: moment(turno.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'),
                     profesional: dataTurno.profesionales ? dataTurno.profesionales : '',
                     organizacion: dataTurno.organizacion ? dataTurno.organizacion : ''
@@ -524,15 +508,3 @@ EventCore.on('notificaciones:turno:suspender', async (turno) => {
         notificacionesSuspencionLog.error('obtenerAgendaCancelar', { turno }, { error: 'error al generar la notificacion de cancelar' }, userScheduler);
     }
 });
-
-async function telefonoUnico() {
-    let constante;
-    const key = 'telefonoUnico';
-    try {
-        constante = await Constantes.findOne({ key });
-        return constante?.nombre;
-    } catch (error) {
-        log.error('cuerpoMensaje', { constante, key }, { error: error.message }, userScheduler);
-        return '';
-    }
-}
