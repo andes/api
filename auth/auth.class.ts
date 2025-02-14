@@ -591,7 +591,7 @@ export class Auth {
             type: 'huds-token'
 
         };
-        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 4 }); // 4 Horas
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 }); // 1 Hora
     }
 
     static refreshAPPToken(token: string) {
@@ -630,6 +630,17 @@ export class Auth {
         }
 
         return null;
+    }
+    static getTokenTimeLeft(token: any): number {
+        let timeLeft = 0;
+        const decodedToken: any = jwt.decode(token);
+        if (!decodedToken || !decodedToken.exp) {
+            timeLeft = -1;
+        } else {
+            const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+            timeLeft = decodedToken.exp - currentTime;
+        }
+        return timeLeft;
     }
 
     static async authorizeByToken(req: Request, res: Response, next: express.NextFunction, requiredPermissions: string[]) {

@@ -13,6 +13,11 @@ router.get('/accesos', asyncHandler(async (req: any, res) => {
     const result = await HudsAccesosCtr.search(req.query);
     res.json(result);
 }));
+router.get('/accesos/timeLeft', asyncHandler(async (req: any, res) => {
+    const result = await Auth.getTokenTimeLeft(req.query.token);
+    res.json(result);
+}));
+
 
 router.post('/accesos/token', asyncHandler(async (req: any, res) => {
     // Persiste los datos de accesos y genera el token para acceder a la HUDS del paciente
