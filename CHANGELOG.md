@@ -1,3 +1,10 @@
+## [5.124.1](https://github.com/andes/api/compare/v5.124.0...v5.124.1) (2025-02-19)
+
+
+### Bug Fixes
+
+* **TOP:** audit liberando turno de solicitud ([#2014](https://github.com/andes/api/issues/2014)) ([1c63943](https://github.com/andes/api/commit/1c63943c499615bf8b4b52690ba83219c251bf46))
+
 # [5.124.0](https://github.com/andes/api/compare/v5.123.1...v5.124.0) (2025-01-29)
 
 
