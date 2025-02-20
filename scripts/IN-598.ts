@@ -1,5 +1,6 @@
 import { CamaEstados } from '../modules/rup/internacion/cama-estados.schema';
 import moment = require('moment');
+import { Prestacion } from '../modules/rup/schemas/prestacion';
 
 async function egresosDuplicados(done: () => void) {
     const paramInicio = process.argv[3];
@@ -20,41 +21,46 @@ async function egresosDuplicados(done: () => void) {
         start: { $gte: start },
         end: { $lte: end },
         'estados.extras.idInternacion': { $exists: true },
-        'estados.extras.egreso': true,
-        deletedAt: { $exists: false }
+        'estados.extras.egreso': true
     }).cursor({ batchSize: 100 });
 
     for await (const registro of registrosPrevios) {
         const estados = registro.estados;
-        const estadoSinDuplicar: typeof registro.estados = [];
+        const estadosModificados: typeof registro.estados = [];
 
         for (const estado of estados) {
-            const fecha = moment(estado.fecha).format('YYYY-MM-DD');
+            const esEgreso = estado.extras?.egreso;
             const idInternacion = estado.extras?.idInternacion;
-            const createdAt = estado.createdAt;
-
-            if (fecha && idInternacion) {
-                const existeEstadoIndex = estadoSinDuplicar.findIndex(e => {
+            const tieneDeletedAt = estado.deletedAt;
+            const fechaInternacion = moment(estado.createdAt).startOf('day');
+            if (esEgreso && idInternacion && !tieneDeletedAt) {
+                estadosModificados.forEach(async e => {
                     const fechaConvertida = moment(e.fecha);
-                    return (
-                        fechaConvertida.isSame(fecha, 'day') &&
-                        e.extras?.idInternacion?.toString() === idInternacion.toString() &&
-                        e.createdAt <= createdAt
-                    );
-                });
 
-                if (existeEstadoIndex >= 0) {
-                    estadoSinDuplicar.splice(existeEstadoIndex, 1);
-                }
+                    if (fechaConvertida.isSame(fechaInternacion, 'day') &&
+                        e.extras?.idInternacion?.toString() === idInternacion.toString()) {
+                        const prestacionBuscada: any = await Prestacion.find({ _id: idInternacion });
+                        const fechaPrestacion = moment(prestacionBuscada.updatedAt).startOf('day');
+
+                        if (!fechaInternacion.isSame(fechaPrestacion, 'day')) {
+                            estado.deletedAt = moment().toDate();
+                            estado.deletedBy = 'script de eliminación de duplicados';
+                        }
+                        if (!fechaConvertida.isSame(fechaPrestacion, 'day')) {
+                            e.deletedAt = moment().toDate();
+                            e.deletedBy = 'script de eliminación de duplicados';
+                        }
+                    }
+                });
             }
-            estadoSinDuplicar.push(estado);
+            estadosModificados.push(estado);
         }
-        const estadosUnicos = Array.from(estadoSinDuplicar.values());
+        const estadosFiltrados = Array.from(estadosModificados.values());
 
         // Actualizar la colección CamaEstados
         await CamaEstados.updateOne(
             { _id: registro._id },
-            { $set: { estados: estadosUnicos } }
+            { $set: { estados: estadosFiltrados } }
         );
     }
     done();
