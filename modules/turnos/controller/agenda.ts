@@ -492,14 +492,6 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
-                    // TODO::: revisar envio de notificacion push
-                    /*
-                    if (turno.paciente) {
-                        const efector = data.organizacion;
-                        NotificationService.notificarSuspension(turno, efector);
-                    }
-                    */
-
                 });
             });
             data.sobreturnos.forEach(sobreturno => {
@@ -766,7 +758,6 @@ export async function actualizarTiposDeTurno() {
         try {
             const data = this.actualizarTurnos(doc);
             agenda = data.agenda;
-
             Auth.audit(agenda, (userScheduler as any));
             await agenda.save();
             const objetoLog = {
@@ -791,10 +782,13 @@ export async function actualizarTiposDeTurno() {
 function registrarLog(logs, bloque, estado, datos) {
     logs.push({
         bloque,
+        idBloque: datos._id,
         estado,
-        reservadoProfesional: datos.reservadoProfesional,
-        restantesGestion: datos.restantesGestion,
+        restantesDelDia: datos.restantesDelDia,
+        restantesProgramados: datos.restantesProgramados,
         restantesProfesional: datos.restantesProfesional,
+        restantesMobile: datos.restantesMobile,
+        restantesGestion: datos.restantesGestion,
     });
 }
 
