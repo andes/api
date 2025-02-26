@@ -4,10 +4,10 @@ import * as moment from 'moment';
 import { Receta } from '../../recetas/receta-schema';
 import * as mongoose from 'mongoose';
 import { rupEventsLog as logger } from './rup.events.log';
-
-const conceptId = '16076005'; // Receta.
+import { elementosRUPAsSet } from '../../rup/controllers/elementos-rup.controller';
 
 EventCore.on('prestacion:receta:create', async (prestacion) => {
+    let conceptId;
     try {
         if (prestacion.prestacion) {
             prestacion = prestacion.prestacion;
@@ -29,8 +29,18 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
             nombre: prestacion.ejecucion.organizacion.nombre
         };
 
+        // Buscamos dentro de la prestacion el registro de prescripción de medicamento para obtener su elemento RUP.
+        // y de esta forma poder obtener el conceptId correspondiente.
+        const index = prestacion.ejecucion.registros.findIndex(registro => registro.concepto.term === 'prescripción de medicamento');
+        if (index !== -1) {
+            const elementoRUP = prestacion.ejecucion.registros[index].elementoRUP;
+            const elementosRUPSet = await elementosRUPAsSet();
+            const elemento = elementosRUPSet.getByID(elementoRUP);
+            conceptId = elemento.conceptos[0].conceptId;
+        }
+
         for (const registro of registros) {
-            if (registro.concepto.conceptId === conceptId) { // Si es receta.
+            if (registro.concepto.conceptId === conceptId) { // Si es prescripción de medicamento.
                 for (const medicamento of registro.valor.medicamentos) {
                     let receta: any = await Receta.findOne({ idPrestacion: 0 });
                     if (!receta) {
