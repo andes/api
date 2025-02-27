@@ -5,7 +5,7 @@ import { Receta } from '../../recetas/receta-schema';
 import * as mongoose from 'mongoose';
 import { rupEventsLog as logger } from './rup.events.log';
 
-const conceptId = '16076005'; // Receta.
+const conceptId = '33633005'; // Receta.
 
 EventCore.on('prestacion:receta:create', async (prestacion) => {
     try {
@@ -38,7 +38,7 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
                     }
                     receta.organizacion = organizacion;
                     receta.profesional = profesional;
-                    receta.fechaRegistro = moment().toDate();
+                    receta.fechaRegistro = moment(prestacion.ejecucion.fecha).toDate();
                     receta.fechaPrestacion = moment(prestacion.ejecucion.fecha).toDate();
                     receta.idPrestacion = idPrestacion;
                     receta.idRegistro = registro._id;
@@ -56,7 +56,8 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
                             notaMedica: medicamento.dosisDiaria.notaMedica
                         },
                         tratamientoProlongado: medicamento.tratamientoProlongado,
-                        tiempoTratamiento: medicamento.tiempoTratamiento
+                        tiempoTratamiento: medicamento.tiempoTratamiento,
+                        tipoReceta: medicamento.tipoReceta || 'simple'
                     };
                     receta.estados = [{ tipo: 'vigente' }];
                     receta.estadoActual = { tipo: 'vigente' };

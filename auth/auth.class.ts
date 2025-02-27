@@ -11,7 +11,6 @@ import { AppToken } from './schemas/app-token.interface';
 import { authApps } from './schemas/authApps';
 import { PacienteToken } from './schemas/paciente-token.interface';
 import { UserToken } from './schemas/user-token.interface';
-import { AuthUsers } from './schemas/authUsers';
 
 const shiroTrie = require('shiro-trie');
 
@@ -633,5 +632,17 @@ export class Auth {
         return null;
     }
 
+    static async authorizeByToken(req: Request, res: Response, next: express.NextFunction, requiredPermissions: string[]) {
+        const permisos = req.user.permisos;
 
+        if (!permisos?.length) {
+            return next(403);
+        }
+
+        const hasPermission = requiredPermissions.some(perm =>
+            permisos.includes(perm) || permisos.includes(perm.split(':')[0] + ':*')
+        );
+
+        return !hasPermission ? next(403) : next();
+    }
 }
