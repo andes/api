@@ -4,9 +4,10 @@ import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
 import * as request from 'request';
 import { Auth } from '../../../auth/auth.class';
-import { userScheduler, diasNoLaborables } from '../../../config.private';
+import { diasNoLaborables, userScheduler } from '../../../config.private';
+import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
-import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 import { toArray } from '../../../utils/utils';
 import * as prestacionController from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
@@ -14,8 +15,6 @@ import { Agenda, HistorialAgenda } from '../../turnos/schemas/agenda';
 import { agendaLog } from '../citasLog';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
-import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -493,14 +492,6 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
-                    // TODO::: revisar envio de notificacion push
-                    /*
-                    if (turno.paciente) {
-                        const efector = data.organizacion;
-                        NotificationService.notificarSuspension(turno, efector);
-                    }
-                    */
-
                 });
             });
             data.sobreturnos.forEach(sobreturno => {
@@ -765,29 +756,49 @@ export async function actualizarTiposDeTurno() {
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(async doc => {
         try {
-            agenda = this.actualizarTurnos(doc);
-
+            const data = this.actualizarTurnos(doc);
+            agenda = data.agenda;
             Auth.audit(agenda, (userScheduler as any));
-            await saveAgenda(agenda);
+            await agenda.save();
             const objetoLog = {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
                 updatedAt: agenda.updatedAt,
-                updatedBy: agenda.updatedBy
+                updatedBy: agenda.updatedBy,
+                bloques: data.logs
             };
             agendaLog.info('actualizarTiposTurnos', objetoLog);
         } catch (error) {
             agendaLog.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
         }
     });
+}
 
-
+/**
+ * Método auxiliar para registrar los logs.
+ *
+ */
+function registrarLog(logs, bloque, estado, datos) {
+    logs.push({
+        bloque,
+        idBloque: datos._id,
+        estado,
+        restantesDelDia: datos.restantesDelDia,
+        restantesProgramados: datos.restantesProgramados,
+        restantesProfesional: datos.restantesProfesional,
+        restantesMobile: datos.restantesMobile,
+        restantesGestion: datos.restantesGestion,
+    });
 }
 
 // Dada una agenda, actualiza los turnos restantes (Para agendas dentro de las 48hs a partir de hoy).
 export function actualizarTurnos(agenda) {
+    const logs = [];
+
     for (let j = 0; j < agenda.bloques.length; j++) {
+        registrarLog(logs, j, 'inicio', agenda.bloques[j]);
+
         const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
 
         if (cantAccesoDirecto > 0) {
@@ -800,8 +811,10 @@ export function actualizarTurnos(agenda) {
                 agenda.bloques[j].restantesProfesional = 0;
             }
         }
+
+        registrarLog(logs, j, 'final', agenda.bloques[j]);
     }
-    return agenda;
+    return { agenda, logs };
 }
 
 
