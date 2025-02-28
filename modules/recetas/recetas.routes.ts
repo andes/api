@@ -2,7 +2,8 @@ import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
-import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender } from './recetasController';
+import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, rechazar } from './recetasController';
+import { ParamsIncorrect, RecetaNotFound } from './recetas.error';
 
 class RecetasResource extends ResourceBase {
     Model = Receta;
@@ -39,17 +40,29 @@ export const getMotivos = async (req, res) => {
 
 
 export const patch = async (req, res) => {
-    switch (req.body.op) {
-        case 'suspender':
-            const result = await suspender(req);
-            return res.json(result);
-        case 'dispensar':
-        case 'dispensa-parcial':
-        case 'rechazar':
-            const resultDispensa = await setEstadoDispensa(req);
-            return res.json(resultDispensa);
-        default:
-            return res.status(400).json({ error: 'Operación no soportada' });
+    const operacion = req.body.op ? req.body.op.toLowerCase() : '';
+    let result, status;
+    const { recetaId, recetas } = req.body;
+    const app = req.user.app?.nombre ? req.user.app.nombre.toLowerCase() : '';
+    if (!recetaId && !recetas) {
+        const error = new ParamsIncorrect();
+        res.status(error.status).json(error);
+    } else {
+        switch (operacion) {
+            case 'suspender':
+                result = await suspender(recetas, req); break;
+            case 'dispensar':
+            case 'dispensa-parcial':
+                result = await setEstadoDispensa(req, operacion, app); break;
+            case 'sin-dispensar': result = await actualizarAppNotificada(recetaId, app); break;
+            default: const error = new ParamsIncorrect();
+                status =
+                    res.status(error.status).json(error);
+        }
+        if (result) {
+            status = result?.status || 200;
+            res.status(status).json(result);
+        }
     }
 };
 
