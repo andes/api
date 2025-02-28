@@ -123,10 +123,9 @@ export async function getMotivosReceta(res) {
     }
 }
 
-export async function setEstadoDispensa(req) {
+export async function setEstadoDispensa(req, operacion) {
     try {
-        const operacion = req.body.op;
-        const dispensa = req.body.dispensa;
+        const dataDispensa = req.body.dispensa;
 
         const { recetaId } = req.body;
 
@@ -152,18 +151,44 @@ export async function setEstadoDispensa(req) {
             throw new ParamsIncorrect();
         }
 
-        if (operacion === 'dispensar' && dispensa) {
+        if (operacion === 'dispensar' && dataDispensa) {
+            const dispensa: any = {};
             const estadoReceta = { tipo: 'finalizada' };
-
+            dispensa.fecha = dataDispensa.fecha ? moment(dataDispensa.fecha).toDate() : moment().toDate();
+            if (dataDispensa.id) {
+                dispensa.idDispensaApp = dataDispensa.id;
+            }
+            let medicamentos = [];
+            if (dataDispensa?.medicamentos?.length) {
+                medicamentos = dataDispensa.medicamentos.map(med => {
+                    const medicamento: any = {};
+                    if (med.medicamento) {
+                        medicamento.medicamento = med.medicamento || {};
+                        medicamento.descripcion = (med.medicamento.nombre || '') + (med.cantidadEnvases || '');
+                    }
+                    medicamento.unidades = med.unidades || null;
+                    medicamento.cantidad = med.cantidad || null;
+                    medicamento.cantidadEnvases = med.cantidadEnvases || null;
+                    medicamento.presentacion = med.presentacion || null;
+                    return medicamento;
+                });
+                dispensa.medicamentos = medicamentos;
+            }
+            dispensa.organizacion = dataDispensa.organizacion || null;
             receta.dispensa.push(dispensa);
             receta.estados.push(estadoReceta);
             receta.estadoActual = estadoReceta;
         }
-
+        const token = req.headers.authorization?.substring(4) || req.query.token;
+        const decodedToken = Auth.decode(token);
+        let sistema;
+        if (decodedToken.type === 'app-token') {
+            sistema = decodedToken.app.nombre.toLowerCase();
+        }
         receta.estadosDispensa.push({
             tipo,
             fecha: new Date(),
-            sistema: req.body.sistema
+            sistema
         });
 
         Auth.audit(receta, userScheduler as any);
@@ -172,5 +197,12 @@ export async function setEstadoDispensa(req) {
         return { success: true };
     } catch (err) {
         return err;
+    }
+}
+export async function actualizarAppNotificada(idReceta) {
+    if (Types.ObjectId.isValid(idReceta)) {
+        const receta: any = await Receta.findById(idReceta);
+        receta.appNotificada = [];
+        await receta.save();
     }
 }

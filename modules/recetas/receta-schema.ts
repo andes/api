@@ -101,14 +101,23 @@ export const recetaSchema = new mongoose.Schema({
             required: false
         }
     },
+
     dispensa: [
         {
-            descripcion: String,
-            cantidad: Number,
-            medicamento: SnomedConcept,
-            presentacion: String,
-            unidades: String,
-            cantidadEnvases: Number,
+            idDispensaApp: String,
+            fecha: Date,
+            medicamentos: [{
+                cantidad: Number,
+                descripcion: String,
+                medicamento: mongoose.SchemaTypes.Mixed,
+                presentacion: String,
+                unidades: String,
+                cantidadEnvases: Number,
+                observacion: {
+                    type: String,
+                    required: false
+                }
+            }],
             organizacion: {
                 id: String,
                 nombre: String

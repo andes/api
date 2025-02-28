@@ -2,7 +2,7 @@ import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
-import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender } from './recetasController';
+import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada } from './recetasController';
 
 class RecetasResource extends ResourceBase {
     Model = Receta;
@@ -39,14 +39,23 @@ export const getMotivos = async (req, res) => {
 
 
 export const patch = async (req, res) => {
-    switch (req.body.op) {
+    const operacion = req.body.op || '';
+    let resultDispensa;
+    const { recetaId } = req.body;
+    switch (operacion) {
         case 'suspender':
             const result = await suspender(req);
             return res.json(result);
         case 'dispensar':
+            resultDispensa = await setEstadoDispensa(req, operacion);
+            return res.json(resultDispensa);
         case 'dispensa-parcial':
+            resultDispensa = await setEstadoDispensa(req, operacion);
+            return res.json(resultDispensa);
+        case 'sin-dispensar': await actualizarAppNotificada(recetaId);
+            return res.status(200).json({});
         case 'rechazar':
-            const resultDispensa = await setEstadoDispensa(req);
+            resultDispensa = await setEstadoDispensa(req, operacion);
             return res.json(resultDispensa);
         default:
             return res.status(400).json({ error: 'Operación no soportada' });
