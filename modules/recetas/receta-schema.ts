@@ -18,7 +18,7 @@ export const motivosRecetaSchema = new mongoose.Schema({
 const estadosSchema = new mongoose.Schema({
     tipo: {
         type: String,
-        enum: ['vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada'],
+        enum: ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada'],
         required: true,
         default: 'vigente'
     },
@@ -48,6 +48,12 @@ const estadosSchema = new mongoose.Schema({
 
 estadosSchema.plugin(AuditPlugin);
 
+
+const sistemaSchema = {
+    type: String,
+    enum: ['sifaho', 'recetar']
+};
+
 const estadoDispensaSchema = new mongoose.Schema({
     tipo: {
         type: String,
@@ -56,10 +62,8 @@ const estadoDispensaSchema = new mongoose.Schema({
         default: 'sin-dispensa'
     },
     fecha: Date,
-    sistema: {
-        type: String,
-        enum: ['sifaho', 'recetar']
-    }
+    sistema: sistemaSchema,
+
 });
 
 export const recetaSchema = new mongoose.Schema({
@@ -101,14 +105,23 @@ export const recetaSchema = new mongoose.Schema({
             required: false
         }
     },
+
     dispensa: [
         {
-            descripcion: String,
-            cantidad: Number,
-            medicamento: SnomedConcept,
-            presentacion: String,
-            unidades: String,
-            cantidadEnvases: Number,
+            idDispensaApp: String,
+            fecha: Date,
+            medicamentos: [{
+                cantidad: Number,
+                descripcion: String,
+                medicamento: mongoose.SchemaTypes.Mixed,
+                presentacion: String,
+                unidades: String,
+                cantidadEnvases: Number,
+                observacion: {
+                    type: String,
+                    required: false
+                }
+            }],
             organizacion: {
                 id: String,
                 nombre: String
@@ -121,7 +134,12 @@ export const recetaSchema = new mongoose.Schema({
     estadoDispensaActual: estadoDispensaSchema,
     paciente: PacienteSubSchema,
     renovacion: String,
-    appNotificada: [{ app: String, fecha: Date }]
+    appNotificada: [{ app: sistemaSchema, fecha: Date }],
+    origenExterno: {
+        id: String, // id receta creada por sistema que no es Andes
+        app: sistemaSchema,
+        fecha: Date
+    }
 });
 
 recetaSchema.pre('save', function (next) {
