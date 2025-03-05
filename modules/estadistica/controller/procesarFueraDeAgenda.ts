@@ -86,9 +86,9 @@ export async function procesar(parametros: any) {
                 estadoFacturacion: prestacion.estadoFacturacion,
                 ambito: prestacion.solicitud?.ambitoOrigen,
                 organizacion: prestacion.solicitud?.organizacion,
-                actividad: registro.valor?.informe?.tipoActividad?.term,
-                tematica: registro.valor?.informe?.tematica,
-                pacientes: registro.valor?.informe?.pacientes,
+                actividad: registro?.valor?.informe?.tipoActividad?.term,
+                tematica: registro?.valor?.informe?.tematica,
+                pacientes: registro?.valor?.informe?.pacientes,
                 documentos: registroConAdjunto?.valor?.documentos,
                 estadoActual: prestacion.estadoActual
             };
