@@ -1,3 +1,10 @@
+# [5.125.0](https://github.com/andes/api/compare/v5.124.1...v5.125.0) (2025-03-05)
+
+
+### Features
+
+* **RUP:** implementa suspension de recetas ([#2023](https://github.com/andes/api/issues/2023)) ([43b15ba](https://github.com/andes/api/commit/43b15baea3b3628fd72022b52dfcf429279bd5c3))
+
 ## [5.124.1](https://github.com/andes/api/compare/v5.124.0...v5.124.1) (2025-02-19)
 
 
