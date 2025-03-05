@@ -17,7 +17,7 @@ import { dashboardSolicitudes } from '../controllers/estadisticas';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 import { hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import { registrosProfundidad } from '../controllers/rup';
-import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
+import { buscarYCrearSolicitudes, cancelarPrestacionSolicitud } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
@@ -592,7 +592,6 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
         if (data.inicio === 'top') {
             updateRegistroHistorialSolicitud(data.solicitud, req.body);
         }
-
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -614,7 +613,11 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     }
                     if (req.body.estado.tipo === 'anulada') {
                         EventCore.emitAsync('rup:prestacion:anular', data);
-                        if (data.inicio !== 'top') {
+                        if (data.inicio === 'top') {
+                            req.body.estado.tipo = 'auditoria';
+                            data.ejecucion = { registros: [], organizacion: {}, fecha: null };
+                            data.solicitud.profesional = null;
+                        } else {
                             const prestacion = await saveEnHistorial(data, req.body.estado, req);
                             await Prestacion.findOneAndRemove({ _id: data._id });
                             return res.json(prestacion);
@@ -652,7 +655,6 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 if (req.body.solicitud?.tipoPrestacion) {
                     data.solicitud.tipoPrestacion = req.body.solicitud.tipoPrestacion;
                 }
-
                 break;
             case 'romperValidacion':
                 if (data.estadoActual.tipo !== 'validada') {
@@ -698,10 +700,14 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
                 break;
             case 'desasociarTurno':
-                data.solicitud.turno = null;
                 const prestation_back = await saveEnHistorial(data, { tipo: 'anulada' }, req);
                 EventCore.emitAsync('rup:prestacion:anular', data);
-                await Prestacion.findOneAndRemove({ _id: data._id });
+                if (data.inicio === 'top') {
+                    await cancelarPrestacionSolicitud(req, data);
+                } else {
+                    data.solicitud.turno = null;
+                    await Prestacion.findOneAndRemove({ _id: data._id });
+                }
                 return res.json(prestation_back);
 
             case 'referir':
