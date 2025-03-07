@@ -5,7 +5,7 @@ import { Receta } from '../../recetas/receta-schema';
 import * as mongoose from 'mongoose';
 import { rupEventsLog as logger } from './rup.events.log';
 
-const conceptId = '33633005'; // Receta.
+const conceptIds = ['33633005', '103742009']; // Receta y renovación de receta
 
 EventCore.on('prestacion:receta:create', async (prestacion) => {
     try {
@@ -30,7 +30,7 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
         };
 
         for (const registro of registros) {
-            if (registro.concepto.conceptId === conceptId) { // Si es receta.
+            if (conceptIds.includes(registro.concepto.conceptId)) {
                 for (const medicamento of registro.valor.medicamentos) {
                     let receta: any = await Receta.findOne({ idPrestacion: 0 });
                     if (!receta) {
