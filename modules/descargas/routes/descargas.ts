@@ -20,6 +20,8 @@ import { Laboratorio } from '../laboratorio/laboratorio';
 import * as laboratorioController from './../../rup/laboratorios.controller';
 import { laboratorioLog } from './../../rup/laboratorio.log';
 import { Paciente } from './../../../core-v2/mpi';
+import { FichaEpidemiologica } from '../ficha-epidemiologica/ficha';
+import { Forms } from '../../forms/forms.schema';
 
 const router = express.Router();
 
@@ -198,6 +200,25 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
             return next(err);
         }
 
+    } else {
+        return next(500);
+    }
+});
+
+router.post('/fichaEpidemiologia/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
+    if (req.body.ficha.type.id) {
+        try {
+            const ficha = await Forms.findById(req.body.ficha.type.id);
+            if (!ficha) {
+                throw new Error(`Error al generar ficha de ${req.body.ficha.type.name}`);
+            }
+            const docFichaEpidemiologica = new FichaEpidemiologica(req.body.ficha, req.body.usuario, ficha);
+            const opciones = { header: { height: '2cm' } };
+            const fileName: any = await docFichaEpidemiologica.informe(opciones);
+            res.download(fileName);
+        } catch (err) {
+            return next(err);
+        }
     } else {
         return next(500);
     }

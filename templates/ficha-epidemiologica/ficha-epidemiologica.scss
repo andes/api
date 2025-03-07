@@ -1,0 +1,44 @@
+.contenedor-secundario {
+    display: block;
+    text-align: center;
+    font-size: .25cm;
+}
+
+p {
+    margin: 5px 0;
+    font-family: Arial, sans-serif;
+    font-size: .27cm;
+}
+
+.foot {
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+}
+
+.contenedor-logos {
+    margin-top: .50cm;
+    width: 100%;
+    padding-bottom: 5px;
+
+    .logo-adicional {
+        filter: grayscale(100%);
+        -webkit-filter: grayscale(1);
+        height: .55cm;
+        width: auto;
+        float: right;
+    }
+
+    .logo-andes {
+        float: left;
+        height: .55cm;
+        width: auto;
+    }
+
+}
+
+.texto-centrado {
+    text-align: center;
+    font-size: 14px;
+    align-items: center;
+    font-weight: bold;
+}
