@@ -8,6 +8,12 @@ import { Types } from 'mongoose';
 import { CamaEstados } from './cama-estados.schema';
 import { Camas } from './camas.schema';
 import { internacionCamaEstadosLog as logger } from './internacion.log';
+import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { Prestacion } from '../../rup/schemas/prestacion';
+import { userScheduler } from '../../../config.private';
+const dataLog: any = new Object(userScheduler);
+dataLog.body = { _id: null };
 
 const router = express.Router();
 
@@ -133,6 +139,23 @@ router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(asy
 
 /** Edita los estados de una cama */
 router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
+    if (req.body.extras.ingreso) {
+        const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id);
+        const obraSocialUpdated = await updateObraSocial(pacienteMPI);
+        const financiador = updateFinanciador(obraSocialUpdated, req.body.paciente.obraSocial);
+        pacienteMPI.financiador = financiador;
+        await PacienteCtr.update(pacienteMPI.id, pacienteMPI, dataLog);
+        await Prestacion.update(
+            { _id: req.body.idInternacion },
+            {
+                $set: {
+                    'ejecucion.registros.$[elemento].valor.informeIngreso.obraSocial': req.body.paciente.obraSocial
+                }
+            },
+            { arrayFilters: [{ 'elemento.valor.informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate() }] }
+        );
+    }
+
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -150,7 +173,6 @@ router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncH
         };
         await logger.error('patchCamaEstados', dataErr, err, req);
     }
-
     if (result) {
         return res.json(result);
     } else {
