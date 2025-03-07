@@ -4,6 +4,7 @@ import { Engine } from 'json-rules-engine';
 import * as mongoose from 'mongoose';
 import { WebHook } from './webhook.schema';
 import { WebHookLog } from './webhooklog/webhooklog.schema';
+import { Paciente } from '../../core-v2/mpi';
 
 const request = require('request');
 
@@ -67,7 +68,16 @@ async function verificarFiltros(subscription, body) {
 
         const _body = JSON.parse(JSON.stringify(body)); // Engine tiene problemas al leer modelos de Mongoose
 
-        engine.addFact('data', _body);
+        engine.addFact('data', async (params) => {
+            const object = params.requiredObject;
+            const path = params.path;
+
+            if (object === 'paciente') {
+                const pac = await Paciente.findById(_body[path].id);
+                _body[path] = pac.toObject();
+            }
+            return _body;
+        }, { cache: false });
 
         engine.addRule({
             conditions: subscription.rules,
