@@ -30,3 +30,13 @@ export const createLog = new Logger({
     bucketSize: 100,
     expiredAt: '3 M'
 });
+
+export const jobsLog = new Logger({
+    connection: Connections.logs,
+    module: 'recetas',
+    type: 'jobs',
+    application: 'andes',
+    bucketBy: 'h',
+    bucketSize: 100,
+    expiredAt: '6 M'
+});
