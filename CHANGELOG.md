@@ -1,3 +1,16 @@
+# [5.126.0](https://github.com/andes/api/compare/v5.125.0...v5.126.0) (2025-03-12)
+
+
+### Bug Fixes
+
+* **TYP:** prestacion sin registros ([#2027](https://github.com/andes/api/issues/2027)) ([a49d705](https://github.com/andes/api/commit/a49d705bb1a459d3e97aeb3aa4eeebd29ea51e4f))
+
+
+### Features
+
+* **IN-619:** Modificar carga de OS en alta de internacion capa estadistica ([#1994](https://github.com/andes/api/issues/1994)) ([0bda301](https://github.com/andes/api/commit/0bda301fe19a24d2bfb9029991364d19be5ff869))
+* **MPI:** recupera financiador en paciente sin params ([#2007](https://github.com/andes/api/issues/2007)) ([b6b9e1e](https://github.com/andes/api/commit/b6b9e1ea8ef359ac123b9d3eb069808b140f7f92))
+
 # [5.125.0](https://github.com/andes/api/compare/v5.124.1...v5.125.0) (2025-03-05)
 
 
