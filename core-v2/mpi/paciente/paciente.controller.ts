@@ -55,18 +55,12 @@ export function updateFinanciador(currentFinanciador: IFinanciador[], nuevoFinan
         const fechaDeActualizacion = moment().toDate();
         const financiadorActualizado = { ...nuevoFinanciador, fechaDeActualizacion };
 
-        if (currentFinanciador.length) {
-            if (nuevoFinanciador.origen === 'ANDES') {
-                const index = currentFinanciador?.findIndex(f => f?.origen === 'ANDES');
+        const index = currentFinanciador?.findIndex(f => f?.nombre === nuevoFinanciador.nombre);
 
-                if (index > -1) {
-                    financiador[index] = financiadorActualizado;
-                } else {
-                    financiador.push(financiadorActualizado);
-                }
-            }
-        } else {
+        if (index === -1) {
             financiador.push(financiadorActualizado);
+        } else {
+            financiador[index] = financiadorActualizado;
         }
     }
 
