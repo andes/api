@@ -32,40 +32,42 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
         for (const registro of registros) {
             if (conceptIds.includes(registro.concepto.conceptId)) {
                 for (const medicamento of registro.valor.medicamentos) {
-                    let receta: any = await Receta.findOne({ idPrestacion: 0 });
-                    if (!receta) {
-                        receta = new Receta();
+                    const cantRecetas = medicamento.tratamientoProlongado ? parseInt(medicamento.tiempoTratamiento.id) : 1;
+                    for (let i = 0; i < cantRecetas; i++) {
+                        let receta: any = new Receta();
+                        receta.organizacion = organizacion;
+                        receta.profesional = profesional;
+                        receta.fechaRegistro = moment(prestacion.ejecucion.fecha).add(i * 30, 'days').toDate();
+                        receta.fechaPrestacion = moment(prestacion.ejecucion.fecha).toDate();
+                        receta.idPrestacion = idPrestacion;
+                        receta.idRegistro = registro._id;
+                        receta.diagnostico = medicamento.diagnostico;
+                        receta.medicamento = {
+                            concepto: medicamento.generico,
+                            presentacion: medicamento.presentacion.term,
+                            unidades: medicamento.unidades,
+                            cantidad: medicamento.cantidad,
+                            cantEnvases: medicamento.cantEnvases,
+                            dosisDiaria: {
+                                dosis: medicamento.dosisDiaria.dosis,
+                                intervalo: medicamento.dosisDiaria.intervalo,
+                                dias: medicamento.dosisDiaria.dias,
+                                notaMedica: medicamento.dosisDiaria.notaMedica
+                            },
+                            tratamientoProlongado: medicamento.tratamientoProlongado,
+                            tiempoTratamiento: medicamento.tiempoTratamiento,
+                            ordenTratamiento: i,
+                            tipoReceta: medicamento.tipoReceta || 'simple'
+                        };
+                        receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
+                        receta.estadoActual = i < 1 ? { tipo: 'vigente' } : { tipo: 'pendiente' };
+                        receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
+                        receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
+                        receta.paciente = prestacion.paciente;
+                        receta.audit(userScheduler);
+                        await receta.save();
                     }
-                    receta.organizacion = organizacion;
-                    receta.profesional = profesional;
-                    receta.fechaRegistro = moment(prestacion.ejecucion.fecha).toDate();
-                    receta.fechaPrestacion = moment(prestacion.ejecucion.fecha).toDate();
-                    receta.idPrestacion = idPrestacion;
-                    receta.idRegistro = registro._id;
-                    receta.diagnostico = medicamento.diagnostico;
-                    receta.medicamento = {
-                        concepto: medicamento.generico,
-                        presentacion: medicamento.presentacion.term,
-                        unidades: medicamento.unidades,
-                        cantidad: medicamento.cantidad,
-                        cantEnvases: medicamento.cantEnvases,
-                        dosisDiaria: {
-                            dosis: medicamento.dosisDiaria.dosis,
-                            intervalo: medicamento.dosisDiaria.intervalo,
-                            dias: medicamento.dosisDiaria.dias,
-                            notaMedica: medicamento.dosisDiaria.notaMedica
-                        },
-                        tratamientoProlongado: medicamento.tratamientoProlongado,
-                        tiempoTratamiento: medicamento.tiempoTratamiento,
-                        tipoReceta: medicamento.tipoReceta || 'simple'
-                    };
-                    receta.estados = [{ tipo: 'vigente' }];
-                    receta.estadoActual = { tipo: 'vigente' };
-                    receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-                    receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
-                    receta.paciente = prestacion.paciente;
-                    receta.audit(userScheduler);
-                    await receta.save();
+
                 }
             }
         }
