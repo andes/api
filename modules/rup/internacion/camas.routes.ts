@@ -139,30 +139,31 @@ router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(asy
 
 /** Edita los estados de una cama */
 router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
-    if (req.body.extras.ingreso) {
-        const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id);
-        const obraSocialUpdated = await updateObraSocial(pacienteMPI);
-        const financiador = updateFinanciador(obraSocialUpdated, req.body.paciente.obraSocial);
-        pacienteMPI.financiador = financiador;
-        await PacienteCtr.update(pacienteMPI.id, pacienteMPI, dataLog);
-        await Prestacion.update(
-            { _id: req.body.idInternacion },
-            {
-                $set: {
-                    'ejecucion.registros.$[elemento].valor.informeIngreso.obraSocial': req.body.paciente.obraSocial
-                }
-            },
-            { arrayFilters: [{ 'elemento.valor.informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate() }] }
-        );
-    }
-
-    const organizacion = {
-        _id: Auth.getOrganization(req),
-        nombre: Auth.getOrganization(req, 'nombre')
-    };
-    const data = { ...req.body, organizacion, id: req.params.idCama };
     let result;
     try {
+        if (req.body.extras?.ingreso) {
+            // Si se editan los datos de cobertura, se actualiza la obra social del paciente
+            const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id);
+            const obraSocialUpdated = await updateObraSocial(pacienteMPI);
+            const financiador = updateFinanciador(obraSocialUpdated, req.body.paciente.obraSocial);
+            pacienteMPI.financiador = financiador;
+            await PacienteCtr.update(pacienteMPI.id, pacienteMPI, dataLog);
+            await Prestacion.update(
+                { _id: req.body.idInternacion },
+                {
+                    $set: {
+                        'ejecucion.registros.$[elemento].valor.informeIngreso.obraSocial': req.body.paciente.obraSocial
+                    }
+                },
+                { arrayFilters: [{ 'elemento.valor.informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate() }] }
+            );
+        }
+
+        const organizacion = {
+            _id: Auth.getOrganization(req),
+            nombre: Auth.getOrganization(req, 'nombre')
+        };
+        const data = { ...req.body, organizacion, id: req.params.idCama };
         result = await CamasController.patchEstados(data, req);
     } catch (err) {
         const dataErr = {
