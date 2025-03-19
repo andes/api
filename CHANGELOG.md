@@ -1,3 +1,10 @@
+## [5.126.1](https://github.com/andes/api/compare/v5.126.0...v5.126.1) (2025-03-19)
+
+
+### Bug Fixes
+
+* **IN:** consulta por atributo ([#2033](https://github.com/andes/api/issues/2033)) ([ca809bd](https://github.com/andes/api/commit/ca809bd5703061bc6269df4ee917e0d066ee7284))
+
 # [5.126.0](https://github.com/andes/api/compare/v5.125.0...v5.126.0) (2025-03-12)
 
 
