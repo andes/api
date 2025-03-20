@@ -50,11 +50,14 @@ export const patch = async (req, res) => {
     } else {
         switch (operacion) {
             case 'suspender':
-                result = await suspender(recetas, req); break;
+                result = await suspender(recetas, req);
+                break;
             case 'dispensar':
             case 'dispensa-parcial':
-                result = await setEstadoDispensa(req, operacion, app); break;
-            case 'sin-dispensar': result = await actualizarAppNotificada(recetaId, app); break;
+                result = await setEstadoDispensa(req, operacion, app);
+                break;
+            case 'sin-dispensar': result = await actualizarAppNotificada(recetaId, app, req);
+                break;
             default: const error = new ParamsIncorrect();
                 status =
                     res.status(error.status).json(error);

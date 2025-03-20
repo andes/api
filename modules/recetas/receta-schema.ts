@@ -1,7 +1,7 @@
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { PacienteSubSchema } from '../../core-v2/mpi/paciente/paciente.schema';
-import { Profesional } from '../../core/tm/schemas/profesional';
+import { ProfesionalSubSchema } from '../../core/tm/schemas/profesional';
 import { SnomedConcept } from '../rup/schemas/snomed-concept';
 
 export const motivosRecetaSchema = new mongoose.Schema({
@@ -31,7 +31,7 @@ const estadosSchema = new mongoose.Schema({
         required: false
     },
     profesional: {
-        type: Profesional.schema,
+        type: ProfesionalSubSchema,
         required: false
     },
     organizacionExterna: {
@@ -77,8 +77,8 @@ export const recetaSchema = new mongoose.Schema({
         apellido: String,
         documento: String,
         profesion: String,
+        matricula: Number,
         especialidad: String,
-        matricula: Number
     },
     fechaRegistro: Date,
     fechaPrestacion: Date,
