@@ -73,6 +73,36 @@ export async function buscarRecetas(req) {
     }
 }
 
+async function cambiarEstadoRecetas(recetasIds: string[], estado: any, profesional: any) {
+    if (!recetasIds || recetasIds.length === 0) {
+        throw new ParamsIncorrect();
+    }
+
+    const promises = recetasIds.map(async (recetaId) => {
+        const receta: any = await Receta.findById(recetaId);
+
+        if (!receta) {
+            throw new RecetaNotFound();
+        }
+
+        receta.estados.push({
+            ...estado,
+            profesional,
+            fecha: new Date()
+        });
+
+        receta.estadoActual = {
+            tipo: estado.tipo,
+            fecha: new Date()
+        };
+
+        Auth.audit(receta, userScheduler as any);
+        await receta.save();
+    });
+
+    await Promise.all(promises);
+}
+
 export async function suspender(req) {
     try {
         const recetas = req.body.recetas;
@@ -80,30 +110,30 @@ export async function suspender(req) {
         const observacion = req.body.observacion;
         const profesional = req.body.profesional;
 
-        if (!recetas) {
-            throw new ParamsIncorrect();
-        }
+        const estado = {
+            tipo: 'suspendida',
+            motivo,
+            observacion
+        };
 
-        const promises = recetas.map(async (recetaId) => {
-            const receta: any = await Receta.findById(recetaId);
+        await cambiarEstadoRecetas(recetas, estado, profesional);
 
-            if (!receta) {
-                throw new RecetaNotFound();
-            }
+        return { success: true };
+    } catch (err) {
+        return err;
+    }
+}
 
-            receta.estados.push({
-                tipo: 'suspendida',
-                motivo,
-                observacion,
-                profesional,
-                fecha: new Date()
-            });
+export async function renovarReceta(req) {
+    try {
+        const recetas = req.body.recetas;
+        const profesional = req.body.profesional;
 
-            Auth.audit(receta, userScheduler as any);
-            await receta.save();
-        });
+        const estado = {
+            tipo: 'vigente'
+        };
 
-        await Promise.all(promises);
+        await cambiarEstadoRecetas(recetas, estado, profesional);
 
         return { success: true };
     } catch (err) {
