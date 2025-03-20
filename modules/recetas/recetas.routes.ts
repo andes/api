@@ -2,11 +2,12 @@ import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
-import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, rechazar } from './recetasController';
-import { ParamsIncorrect, RecetaNotFound } from './recetas.error';
+import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, renovarReceta } from './recetasController';
+import { ParamsIncorrect } from './recetas.error';
 
 class RecetasResource extends ResourceBase {
     Model = Receta;
+
     resourceName = 'recetas';
     routesEnable = ['get, patch'];
     middlewares = [Auth.authenticate()];
@@ -38,12 +39,13 @@ export const getMotivos = async (req, res) => {
     res.json(result);
 };
 
-
 export const patch = async (req, res) => {
-    const operacion = req.body.op ? req.body.op.toLowerCase() : '';
     let result, status;
+
+    const operacion = req.body.op ? req.body.op.toLowerCase() : '';
     const { recetaId, recetas } = req.body;
     const app = req.user.app?.nombre ? req.user.app.nombre.toLowerCase() : '';
+
     if (!recetaId && !recetas) {
         const error = new ParamsIncorrect();
         res.status(error.status).json(error);
@@ -54,9 +56,14 @@ export const patch = async (req, res) => {
                 break;
             case 'dispensar':
             case 'dispensa-parcial':
+            case 'rechazar':
                 result = await setEstadoDispensa(req, operacion, app);
                 break;
-            case 'sin-dispensar': result = await actualizarAppNotificada(recetaId, app, req);
+            case 'renovar':
+                result = await renovarReceta(req);
+                break;
+            case 'sin-dispensar':
+                result = await actualizarAppNotificada(recetaId, app, req);
                 break;
             default: const error = new ParamsIncorrect();
                 status =
