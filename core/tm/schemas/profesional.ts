@@ -186,5 +186,8 @@ export const ProfesionalSubSchema = new mongoose.Schema({
     id: mongoose.SchemaTypes.ObjectId,
     nombre: String,
     apellido: String,
-    documento: String
+    documento: String,
+    profesion: { type: String, required: false },
+    especialidad: { type: String, required: false },
+    matricula: { type: String, required: false },
 }, { _id: false });
