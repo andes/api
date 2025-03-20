@@ -111,12 +111,40 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     const paciente = await queryFind;
     if (paciente) {
         const financiador = await updateObraSocial(paciente);
-        paciente.financiador = financiador;
+        const resultado = financiador.map(item => {
+            const match = paciente.financiador.find(financPac => financPac.codigoPuco === item.codigoPuco);
+            return match ? { ...item, numeroAfiliado: match.numeroAfiliado } : item;
+        });
+        const faltantes = paciente.financiador.filter(financPac => !financiador.some(financ => financ.codigoPuco === financPac.codigoPuco));
+        const financiadorFinal = [...resultado, ...faltantes];
+        if (actualizarFinanciadores(paciente.financiador, financiador)) {
+            paciente.financiador = financiadorFinal;
+            await PacienteCtr.update(paciente.id, paciente, configPrivate.userScheduler as any);
+        }
         return paciente;
     }
     return null;
 }
 
+/**
+ * Verifica si se debe actualizar los financiadores del paciente ya sea porque no se ha actualizado en el mes actual o porque hay nuevos financiadores.
+ */
+function actualizarFinanciadores(financiadorPaciente: any[], financiadorActualizado: any[]) {
+    // Convertir los arrays en un Map para búsqueda rápida por codigoPuco
+    const mapFinanciadorPaciente = new Map(financiadorPaciente.map(item => [item.codigoPuco, item]));
+    const mapFinaciadorAct = new Map(financiadorActualizado.map(item => [item.codigoPuco, item]));
+    for (const [codigoPuco] of mapFinaciadorAct) {
+        const item = mapFinanciadorPaciente.get(codigoPuco);
+        if (item) {
+            if ((!item.fechaDeActualizacion) || moment(item.fechaDeActualizacion).month() + 1 < moment().month() + 1) {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+    return false;
+};
 
 /**
  * Busca paciente similares a partir de su documento
