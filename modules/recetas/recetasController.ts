@@ -137,8 +137,9 @@ export async function setEstadoDispensa(req, operacion, app) {
         if (!receta) {
             throw new RecetaNotFound();
         }
-        if (receta.estadoActual.tipo === 'suspendida') {
-            throw new RecetaNotEdit('suspendida');
+
+        if (receta.estadoActual.tipo !== 'vigente') {
+            throw new RecetaNotEdit(receta.estadoActual.tipo);
         }
 
         const operacionMap = {
@@ -147,41 +148,35 @@ export async function setEstadoDispensa(req, operacion, app) {
         };
 
         const tipoDispensa = operacionMap[operacion] || null;
-
-        if (!tipoDispensa) {
+        const idDispensaApp = dataDispensa.id;
+        if (!tipoDispensa || !dataDispensa || !idDispensaApp) {
             throw new ParamsIncorrect();
         }
 
-        if ((operacion === 'dispensar' || operacion === 'dispensa-parcial') && dataDispensa) {
-            const dispensa: any = {};
-            const tipo = (operacion === 'dispensar') ? 'finalizada' : receta.estadoActual.tipo;
-            const estadoReceta = { tipo };
-            dispensa.fecha = dataDispensa.fecha ? moment(dataDispensa.fecha).toDate() : moment().toDate();
-            if (dataDispensa.id) {
-                dispensa.idDispensaApp = dataDispensa.id;
-            }
-            let medicamentos = [];
-            if (dataDispensa?.medicamentos?.length) {
-                medicamentos = dataDispensa.medicamentos.map(med => {
-                    const medicamento: any = {};
-                    if (med.medicamento) {
-                        medicamento.medicamento = med.medicamento || {};
-                        medicamento.descripcion = (med.medicamento.nombre || '') + (med.cantidadEnvases || '');
-                    }
-                    medicamento.unidades = med.unidades || null;
-                    medicamento.cantidad = med.cantidad || null;
-                    medicamento.cantidadEnvases = med.cantidadEnvases || null;
-                    medicamento.presentacion = med.presentacion || null;
-                    return medicamento;
-                });
-                dispensa.medicamentos = medicamentos;
-            }
-            dispensa.organizacion = dataDispensa.organizacion || null;
-            receta.dispensa.push(dispensa);
-            receta.estados.push(estadoReceta);
-            receta.estadoActual = estadoReceta;
+        const dispensa: any = { idDispensaApp };
+        const tipo = (operacion === 'dispensar') ? 'finalizada' : receta.estadoActual.tipo;
+        const estadoReceta = { tipo };
+        dispensa.fecha = dataDispensa.fecha ? moment(dataDispensa.fecha).toDate() : moment().toDate();
+        let medicamentos = [];
+        if (dataDispensa?.medicamentos?.length) {
+            medicamentos = dataDispensa.medicamentos.map(med => {
+                const medicamento: any = {};
+                if (med.medicamento) {
+                    medicamento.medicamento = med.medicamento || {};
+                    medicamento.descripcion = (med.medicamento.nombre || '') + (med.cantidadEnvases || '');
+                }
+                medicamento.unidades = med.unidades || null;
+                medicamento.cantidad = med.cantidad || null;
+                medicamento.cantidadEnvases = med.cantidadEnvases || null;
+                medicamento.presentacion = med.presentacion || null;
+                return medicamento;
+            });
+            dispensa.medicamentos = medicamentos;
         }
-        const token = req.headers.authorization?.substring(4) || req.query.token;
+        dispensa.organizacion = dataDispensa.organizacion || null;
+        receta.dispensa.push(dispensa);
+        receta.estados.push(estadoReceta);
+        receta.estadoActual = estadoReceta;
 
 
         receta.estadosDispensa.push({
