@@ -121,8 +121,8 @@ router.get('/puco/padrones', Auth.authenticate(), async (req, res, next) => {
 
 /** Obtiene la obra social de un paciente (Usado en el punto de inicio de CITAS) */
 
-router.get('/obraSocial/:documento', Auth.authenticate(), async (req, res, next) => {
-    if (req.params.documento) {
+router.get('/obraSocialPaciente', Auth.authenticate(), async (req, res, next) => {
+    if (req.query.documento && req.query.sexo) {
         const resp = await obrasocialController.getObraSocial(req.params);
         res.json(resp);
     } else {
