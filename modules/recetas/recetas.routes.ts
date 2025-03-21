@@ -2,7 +2,7 @@ import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
-import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender } from './recetasController';
+import { buscarRecetas, getMotivosReceta, renovarReceta, setEstadoDispensa, suspender } from './recetasController';
 
 class RecetasResource extends ResourceBase {
     Model = Receta;
@@ -48,6 +48,9 @@ export const patch = async (req, res) => {
         case 'rechazar':
             const resultDispensa = await setEstadoDispensa(req);
             return res.json(resultDispensa);
+        case 'renovar':
+            const resultRenovar = await renovarReceta(req);
+            return res.json(resultRenovar);
         default:
             return res.status(400).json({ error: 'Operación no soportada' });
     }
