@@ -1,12 +1,12 @@
 import * as express from 'express';
 import * as NumeracionMatriculas from './../schemas/numeracionMatriculas';
-import * as SIISA from './../../../core/tm/schemas/siisa';
-
+import numeracionMatriculas = require('../../../modules/matriculaciones/schemas/numeracionMatriculas');
+import * as controller from '../controller/matriculaciones';
+import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 
-router.get('/numeraciones', (req, res, next) => {
-    let resultado;
+router.get('/numeraciones', Auth.authenticate(), (req, res, next) => {
     if (req.query.especialidad || req.query.profesion) {
         if (req.query.profesion) {
             NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, (err, data) => {
@@ -23,7 +23,6 @@ router.get('/numeraciones', (req, res, next) => {
                 }
                 res.json(data);
             });
-
         }
     } else {
 
@@ -73,14 +72,11 @@ router.get('/numeraciones', (req, res, next) => {
                         res.status(201)
                             .json(responseData);
                     });
-
             });
-
-
     }
 });
 
-router.post('/numeraciones', (request, response, errorHandler) => {
+router.post('/numeraciones', Auth.authenticate(), (request, response, errorHandler) => {
     const opciones = {};
 
     if (request.body.profesion) {
@@ -90,7 +86,6 @@ router.post('/numeraciones', (request, response, errorHandler) => {
     if (request.body.especialidad) {
         opciones['especialidad._id'] = request.body.especialidad._id;
     }
-
 
     const query = NumeracionMatriculas.find(opciones);
 
@@ -113,8 +108,7 @@ router.post('/numeraciones', (request, response, errorHandler) => {
     });
 });
 
-
-router.put('/numeraciones', (request, response, errorHandler) => {
+router.put('/numeraciones', Auth.authenticate(), (request, response, errorHandler) => {
     NumeracionMatriculas.findByIdAndUpdate(request.body.id, request.body, (error, numeracion) => {
 
         if (error) {
@@ -123,6 +117,24 @@ router.put('/numeraciones', (request, response, errorHandler) => {
 
         response.json(numeracion);
     });
+});
+
+router.get('/ultimoPosgrado', Auth.authenticate(), async (req, res, next) => {
+    const ultimoNumero = await controller.ultimoPosgrado();
+    res.json(ultimoNumero);
+});
+
+router.patch('/ultimoPosgrado', Auth.authenticate(), async (req, res, next) => {
+    const query = controller.query;
+    let set;
+    if (req.body.proximoNumero) {
+        set = req.body;
+    } else {
+        const proximoNumero = await controller.ultimoPosgrado();
+        set = { proximoNumero: proximoNumero + 1 };
+    }
+    const data: any = await numeracionMatriculas.updateOne(query, { $set: set });
+    res.json(data);
 });
 
 export = router;
