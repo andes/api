@@ -4,10 +4,12 @@ import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
+import { Types } from 'mongoose';
 import { extractFoto, findById, make, multimatch, set, suggest } from './paciente.controller';
 import { PatientNotFound } from './paciente.error';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from './paciente.schema';
+import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 
 class PacienteResource extends ResourceBase<IPacienteDoc> {
     Model = Paciente;
@@ -131,6 +133,24 @@ export const get = async (req: Request, res: Response) => {
     }
 };
 
+
+export const getEstadoInternacion = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const query = {
+        'paciente.id': new Types.ObjectId(id),
+        'ejecucion.registros.valor': { $exists: true, $ne: null },
+        'solicitud.ambitoOrigen': 'internacion'
+    };
+    const prestaciones: any[] = await Prestacion.find(query);
+    const options = req.apiOptions();
+
+    const paciente = await findById(id, options);
+    if (paciente) {
+        return res.json(prestaciones);
+    }
+    throw new PatientNotFound();
+};
+
 /**
  * @api {get} /pacientes/:id/foto
  * @apiName getPacientesFoto
@@ -233,6 +253,7 @@ export const patch = async (req: Request, res: Response) => {
 PacienteRouter.use(Auth.authenticate());
 PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(get));
 PacienteRouter.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(find));
+PacienteRouter.get('/pacientes/estadoActual/:id', asyncHandler(getEstadoInternacion));
 PacienteRouter.get('/pacientes/:id/foto/:fotoId', asyncHandler(getFoto));
 PacienteRouter.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(post));
 PacienteRouter.post('/pacientes/match', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(match));
