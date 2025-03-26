@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { userScheduler } from '../../config.private';
 import { MotivosReceta, Receta } from './receta-schema';
-import { ParamsIncorrect, RecetaNotFound } from './recetas.error';
+import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
 import moment = require('moment');
 
 async function notificarApp(req, recetas) {
@@ -15,7 +15,7 @@ async function notificarApp(req, recetas) {
         for (const receta of recetas) {
             receta.appNotificada = [{ app: sistema, fecha: moment().toDate() }];
 
-            Auth.audit(receta, userScheduler as any);
+            Auth.audit(receta, req);
             await receta.save();
         }
     }
@@ -73,9 +73,9 @@ export async function buscarRecetas(req) {
     }
 }
 
-export async function suspender(req) {
+export async function suspender(recetas, req) {
     try {
-        const recetas = req.body.recetas;
+
         const motivo = req.body.motivo;
         const observacion = req.body.observacion;
         const profesional = req.body.profesional;
@@ -98,8 +98,7 @@ export async function suspender(req) {
                 profesional,
                 fecha: new Date()
             });
-
-            Auth.audit(receta, userScheduler as any);
+            Auth.audit(receta, req);
             await receta.save();
         });
 
@@ -123,14 +122,13 @@ export async function getMotivosReceta(res) {
     }
 }
 
-export async function setEstadoDispensa(req) {
+export async function setEstadoDispensa(req, operacion, app) {
     try {
-        const operacion = req.body.op;
-        const dispensa = req.body.dispensa;
+        const dataDispensa = req.body.dispensa;
 
         const { recetaId } = req.body;
-
-        if (!recetaId) {
+        const sistema = app || '';
+        if (!recetaId && sistema) {
             throw new ParamsIncorrect();
         }
 
@@ -140,37 +138,115 @@ export async function setEstadoDispensa(req) {
             throw new RecetaNotFound();
         }
 
+        if (receta.estadoActual.tipo !== 'vigente') {
+            throw new RecetaNotEdit(receta.estadoActual.tipo);
+        }
+
         const operacionMap = {
             dispensar: 'dispensada',
-            'dispensa-parcial': 'dispensa-parcial',
-            rechazar: 'rechazada'
+            'dispensa-parcial': 'dispensa-parcial'
         };
 
-        const tipo = operacionMap[operacion];
-
-        if (!tipo) {
+        const tipoDispensa = operacionMap[operacion] || null;
+        const idDispensaApp = dataDispensa.id;
+        if (!tipoDispensa || !dataDispensa || !idDispensaApp) {
             throw new ParamsIncorrect();
         }
 
-        if (operacion === 'dispensar' && dispensa) {
-            const estadoReceta = { tipo: 'finalizada' };
-
-            receta.dispensa.push(dispensa);
-            receta.estados.push(estadoReceta);
-            receta.estadoActual = estadoReceta;
+        const dispensa: any = { idDispensaApp };
+        const tipo = (operacion === 'dispensar') ? 'finalizada' : receta.estadoActual.tipo;
+        const estadoReceta = { tipo };
+        dispensa.fecha = dataDispensa.fecha ? moment(dataDispensa.fecha).toDate() : moment().toDate();
+        let medicamentos = [];
+        if (dataDispensa?.medicamentos?.length) {
+            medicamentos = dataDispensa.medicamentos.map(med => {
+                const medicamento: any = {};
+                if (med.medicamento) {
+                    medicamento.medicamento = med.medicamento || {};
+                    medicamento.descripcion = (med.medicamento.nombre || '') + (med.cantidadEnvases || '');
+                }
+                medicamento.unidades = med.unidades || null;
+                medicamento.cantidad = med.cantidad || null;
+                medicamento.cantidadEnvases = med.cantidadEnvases || null;
+                medicamento.presentacion = med.presentacion || null;
+                return medicamento;
+            });
+            dispensa.medicamentos = medicamentos;
         }
+        dispensa.organizacion = dataDispensa.organizacion || null;
+        receta.dispensa.push(dispensa);
+        receta.estados.push(estadoReceta);
+        receta.estadoActual = estadoReceta;
+
 
         receta.estadosDispensa.push({
-            tipo,
+            tipo: tipoDispensa,
             fecha: new Date(),
-            sistema: req.body.sistema
+            sistema
         });
 
-        Auth.audit(receta, userScheduler as any);
+        Auth.audit(receta, req);
         await receta.save();
 
-        return { success: true };
-    } catch (err) {
-        return err;
+        return receta;
+    } catch (error) {
+        return error;
+    }
+}
+export async function actualizarAppNotificada(idReceta, sistema, req) {
+    try {
+        if (idReceta && Types.ObjectId.isValid(idReceta)) {
+            const receta: any = await Receta.findById(idReceta);
+            if (!receta) {
+                throw new RecetaNotFound();
+            }
+            const estadoActual = receta.estadoActual.tipo;
+            const estadoDispensa = receta.estadoDispensaActual.tipo;
+            if (estadoActual === 'vigente' && estadoDispensa === 'sin-dispensa') {
+                const app = receta.appNotificada.find(a => a.app === sistema);
+                if (app) {
+                    receta.appNotificada = receta.appNotificada.filter(a => a.app !== sistema);
+
+                    Auth.audit(receta, req);
+                    return await receta.save();
+                } else {
+                    throw new RecetaNotEdit(`${sistema.toUpperCase()} no puede marcar sin-dispensa una receta no consultada`);
+                }
+            } else {
+                const motivo = {
+                    'sin-dispensa': '',
+                    'dispensa-parcial': ' con dispensa parcial',
+                    dispensada: ' dispensada',
+                };
+                throw new RecetaNotEdit(`No se puede marcar sin-dispensar una receta ${estadoActual + motivo[estadoDispensa]}`);
+            }
+        }
+    } catch (error) {
+        return error;
+    }
+}
+
+export async function rechazar(idReceta, sistema) {
+    try {
+        if (idReceta && Types.ObjectId.isValid(idReceta)) {
+            const receta: any = await Receta.findById(idReceta);
+            if (!receta) {
+                throw new RecetaNotFound();
+            }
+            const estadoActual = receta.estadoActual.tipo;
+            if (estadoActual === 'vigente') {
+                const tipo = 'rechazada';
+                receta.estados.push({ tipo });
+                Auth.audit(receta, userScheduler as any);
+                await receta.save();
+                return receta;
+            } else {
+                throw new RecetaNotEdit(`${sistema.toUpperCase()} no puede rechazar la receta id ${idReceta} con estado ${estadoActual}`);
+            }
+        } else {
+            throw new ParamsIncorrect();
+        }
+    } catch (error) {
+        return error;
     }
 }
