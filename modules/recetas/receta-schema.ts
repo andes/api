@@ -54,6 +54,20 @@ const sistemaSchema = {
     enum: ['sifaho', 'recetar']
 };
 
+const cancelarSchema = new mongoose.Schema({
+    idDispensaApp: {
+        type: String,
+        required: false
+    },
+    motivo: {
+        type: String,
+        required: false
+    },
+    organizacion: {
+        id: String,
+        nombre: String
+    }
+});
 const estadoDispensaSchema = new mongoose.Schema({
     tipo: {
         type: String,
@@ -63,6 +77,10 @@ const estadoDispensaSchema = new mongoose.Schema({
     },
     fecha: Date,
     sistema: sistemaSchema,
+    cancelada: {
+        type: cancelarSchema,
+        required: false
+    }
 
 });
 
