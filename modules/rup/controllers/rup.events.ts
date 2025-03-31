@@ -73,18 +73,3 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
         logger.error('prestacion:receta:create', prestacion, err);
     }
 });
-
-EventCore.on('prestacion:receta:delete', async (prestacion) => {
-    if (prestacion.prestacion) {
-        prestacion = prestacion.prestacion;
-    }
-    try {
-        const idPrestacion = prestacion.id;
-        const recetas = await Receta.find({ idPrestacion });
-        for (const receta of recetas) {
-            await Receta.findOneAndDelete({ _id: mongoose.Types.ObjectId(receta._id) });
-        }
-    } catch (err) {
-        logger.error('prestacion:receta:delete', prestacion, err);
-    }
-});
