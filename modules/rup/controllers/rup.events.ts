@@ -1,8 +1,9 @@
-import { userScheduler } from '../../../config.private';
 import { EventCore } from '@andes/event-bus';
+import { getProfesionActualizada } from '../../recetas/recetasController';
 import * as moment from 'moment';
-import { Receta } from '../../recetas/receta-schema';
 import * as mongoose from 'mongoose';
+import { userScheduler } from '../../../config.private';
+import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
 
 const conceptIds = ['33633005', '103742009']; // Receta y renovación de receta
@@ -15,15 +16,19 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
         const idPrestacion = prestacion.id;
         const registros = prestacion.ejecucion.registros;
         const profPrestacion = prestacion.solicitud.profesional;
+
+        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
+
         const profesional = {
             id: profPrestacion.id,
             nombre: profPrestacion.nombre,
             apellido: profPrestacion.apellido,
             documento: profPrestacion.documento,
-            profesion: 'medico',
-            especialidad: 'especialidad',
-            matricula: 123
+            profesion: profesionGrado,
+            especialidad: especialidades,
+            matricula: matriculaGrado
         };
+
         const organizacion = {
             id: prestacion.ejecucion.organizacion.id,
             nombre: prestacion.ejecucion.organizacion.nombre
