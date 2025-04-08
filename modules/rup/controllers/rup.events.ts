@@ -62,7 +62,9 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
                         },
                         tratamientoProlongado: medicamento.tratamientoProlongado,
                         tiempoTratamiento: medicamento.tiempoTratamiento,
-                        tipoReceta: medicamento.tipoReceta || 'simple'
+                        tipoReceta: medicamento.tipoReceta || 'simple',
+                        serie: medicamento.serie,
+                        numero: medicamento.numero
                     };
                     receta.estados = [{ tipo: 'vigente' }];
                     receta.estadoActual = { tipo: 'vigente' };

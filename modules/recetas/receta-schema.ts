@@ -121,6 +121,14 @@ export const recetaSchema = new mongoose.Schema({
             type: String,
             enum: ['duplicado', 'triplicado', 'simple'],
             required: false
+        },
+        serie: {
+            type: String,
+            required: false
+        },
+        numero: {
+            type: Number,
+            required: false
         }
     },
 
