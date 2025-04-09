@@ -91,10 +91,11 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
     const observaciones = datos.op === 'estadoPush' || datos.op === 'citar' ? datos.estado.observaciones : datos.observaciones;
     if (observaciones) {
         registroHistorial.observaciones = observaciones;
-        if (observaciones.includes('agendaSuspendida')) {
+      if (observaciones.includes('agendaSuspendida') || registroHistorial.accion.includes('suspenderTurno')) {
             registroHistorial.idTurnoSuspendido = solicitud.turno;
         }
     }
+    
     if (datos.turnos) {
         registroHistorial.turno = datos.turnos[0];
     }

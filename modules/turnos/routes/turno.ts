@@ -373,7 +373,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
 
             // Se consulta si el turno estaba asociado a una solicitud
             if (req.body.reasignado) {
-                const fechaDesde = moment(turnoSeleccionado.horaInicio).subtract(6, 'months');
+              const fechaDesde = moment(turnoSeleccionado.horaInicio).subtract(6, 'months').toDate();
                 const fechaHasta = turnoSeleccionado.horaInicio;
                 const filtros = {
                     'solicitud.organizacion.id': req.user.organizacion.id,
@@ -382,6 +382,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                     inicio: 'top',
                     'solicitud.historial.idTurnoSuspendido': req.body.reasignado.anterior.idTurno
                 };
+                
                 const prestacion: any = await Prestacion.findOne(filtros);
                 if (prestacion) {
                     const dataHistorial = {
