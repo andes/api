@@ -19,9 +19,10 @@ async function getHistorialFueraAgendas(pacienteId) {
 
     const paramsFueraAgenda = {
         'paciente.id': { $in: paciente.vinculos },
-        'solicitud.ambitoOrigen': 'ambulatorio',
         'estadoActual.tipo': 'validada',
-        'ejecucion.fecha': { $gt: moment().subtract(6, 'months') },
+        inicio: 'fuera-agenda',
+        'solicitud.ambitoOrigen': 'ambulatorio',
+        'ejecucion.fecha': { $gt: moment().subtract(1, 'year').startOf('day').toDate() },
         'solicitud.turno': null
     };
 
