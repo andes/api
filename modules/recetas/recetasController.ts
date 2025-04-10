@@ -4,6 +4,7 @@ import { userScheduler } from '../../config.private';
 import { MotivosReceta, Receta } from './receta-schema';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
 import moment = require('moment');
+import { RecetaParametros, RecetasParametros } from './parametros.schema';
 
 async function notificarApp(req, recetas) {
     const token = req.headers.authorization?.substring(4) || req.query.token;
@@ -99,6 +100,40 @@ export async function suspender(recetas, req) {
                 fecha: new Date()
             });
             Auth.audit(receta, req);
+            await receta.save();
+        });
+
+        await Promise.all(promises);
+
+        return { success: true };
+    } catch (err) {
+        return err;
+    }
+}
+
+export async function renovar(req) {
+    try {
+        const recetas = req.body.recetas;
+        const profesional = req.body.profesional;
+
+        if (!recetas) {
+            throw new ParamsIncorrect();
+        }
+
+        const promises = recetas.map(async (recetaId) => {
+            const receta: any = await Receta.findById(recetaId);
+
+            if (!receta) {
+                throw new RecetaNotFound();
+            }
+
+            receta.estados.push({
+                tipo: 'renovada',
+                profesional,
+                fecha: new Date()
+            });
+
+            Auth.audit(receta, userScheduler as any);
             await receta.save();
         });
 
@@ -250,3 +285,48 @@ export async function rechazar(idReceta, sistema) {
         return error;
     }
 }
+export async function actualizarEstadosRecetas(done) {
+    try {
+        const parametro: any = await RecetasParametros.findOne({ key: 'fechaLimite' });
+        const days = Number(parametro.value);
+        const fechaLimite = parametro ? moment().subtract(days, 'days').toDate() : moment().subtract(30, 'days').toDate();
+
+        const recetasVigentes: any = await Receta.find({
+            'estadoActual.tipo': 'vigente',
+            'estadoDispensaActual.tipo': { $in: ['sin-dispensa', 'dispensa-parcial'] },
+            fechaRegistro: { $lt: fechaLimite }
+        });
+
+        for (const receta of recetasVigentes) {
+            receta.estados.push({
+                tipo: 'vencida',
+                fecha: new Date()
+            });
+            receta.estadoActual = { tipo: 'vencida' };
+
+            Auth.audit(receta, userScheduler as any);
+            await receta.save();
+        }
+
+        const recetasSuspendidas: any = await Receta.find({
+            'estadoActual.tipo': 'pendiente',
+            fechaRegistro: { $gte: fechaLimite }
+        });
+
+        for (const receta of recetasSuspendidas) {
+            receta.estados.push({
+                tipo: 'vigente',
+                fecha: new Date()
+            });
+            receta.estadoActual = { tipo: 'vigente' };
+
+            Auth.audit(receta, userScheduler as any);
+            await receta.save();
+        }
+    } catch (err) {
+        return (done(err));
+    }
+
+    done();
+}
+
