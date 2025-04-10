@@ -163,7 +163,7 @@ export async function searchMatriculas(profesionalId) {
     let formacionPosgrado;
     if (_profesional.profesionalMatriculado) {
         formacionGrado = _profesional.formacionGrado ?
-            _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+            _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ nombre: e.titulo, profesion: e.profesion.codigo, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
         formacionPosgrado = _profesional.formacionPosgrado ?
             _profesional.formacionPosgrado.filter(filterFormaciones).map(e => ({ nombre: e.especialidad.nombre, numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
     } else {

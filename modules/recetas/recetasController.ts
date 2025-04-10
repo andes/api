@@ -1,9 +1,11 @@
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { userScheduler } from '../../config.private';
+import { searchMatriculas } from '../../core/tm/controller/profesional';
 import { MotivosReceta, Receta } from './receta-schema';
-import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
+import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
 import moment = require('moment');
+
 
 async function notificarApp(req, recetas) {
     const token = req.headers.authorization?.substring(4) || req.query.token;
@@ -249,4 +251,30 @@ export async function rechazar(idReceta, sistema) {
     } catch (error) {
         return error;
     }
+}
+
+export async function getProfesionActualizada(profesional) {
+    let profesionGrado = '';
+    let matriculaGrado = 0;
+    let especialidades = '';
+
+    const infoMatriculas = await searchMatriculas(profesional.id);
+
+    if (infoMatriculas) {
+        // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
+        const rolesPermitidos = [1, 2, 23];
+        const formacionEncontrada = infoMatriculas.formacionGrado?.find(formacion =>
+            rolesPermitidos.includes(formacion.profesion)
+        );
+
+        profesionGrado = formacionEncontrada?.nombre;
+        matriculaGrado = formacionEncontrada?.numero;
+
+        const especialidadesTxt = infoMatriculas.formacionPosgrado
+            ?.map(({ nombre, numero }) => `${nombre} (Mat. ${numero})`);
+
+        especialidades = especialidadesTxt?.join(', ') || especialidades;
+    }
+
+    return { profesionGrado, matriculaGrado, especialidades };
 }
