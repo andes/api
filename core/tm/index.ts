@@ -5,6 +5,7 @@ import { ZonasSanitariasRouter } from './zonaSanitaria.routes';
 import { ServicionIntermedioRouter } from './servicio-intermedio.routes';
 import { FarmaciasRouter } from './farmacia.routes';
 import { AreaAraucaniaRouter } from './areaAraucania.routes';
+import { ECLQueriesRouter } from './eclqueries.routes';
 
 export const Routes = [
     ConceptosTurneablesRouter,
@@ -13,5 +14,6 @@ export const Routes = [
     ZonasSanitariasRouter,
     ServicionIntermedioRouter,
     FarmaciasRouter,
-    AreaAraucaniaRouter
+    AreaAraucaniaRouter,
+    ECLQueriesRouter
 ];
