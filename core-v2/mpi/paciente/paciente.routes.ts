@@ -213,7 +213,7 @@ export const match = async (req: Request, res: Response) => {
  */
 export const patch = async (req: Request, res: Response) => {
     const id = req.params.id;
-    const body = req.body;
+    const body = req.body.paciente;
     let paciente = await findById(id);
     if (paciente) {
 
@@ -222,6 +222,9 @@ export const patch = async (req: Request, res: Response) => {
         paciente = set(paciente, body);
         if (paciente.direccion?.[0]?.situacionCalle) {
             paciente.direccion[0].geoReferencia = null;
+        }
+        if (req.body.operacion === 'verificarContacto') {
+            paciente.contacto = req.body.paciente.contacto;
         }
         const updated = await PacienteCtr.update(id, paciente, req);
         return res.json(updated);
