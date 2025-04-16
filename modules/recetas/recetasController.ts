@@ -1,10 +1,9 @@
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
-import { Recetar } from '../../config.private';
 import { MotivosReceta, Receta } from './receta-schema';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
 import * as moment from 'moment';
-import { handleHttpRequest } from './../../utils/requestHandler';
+import { getReceta } from './services/receta';
 
 async function notificarApp(req, recetas) {
     const token = req.headers.authorization?.substring(4) || req.query.token;
@@ -26,7 +25,7 @@ async function notificarApp(req, recetas) {
                     // otro sistema, se verifica dispensa
                     let recetaDisp = null;
                     if (sistema !== 'recetar') {
-                        recetaDisp = await getRecetar(receta.id);
+                        recetaDisp = await getReceta(receta.id, sistema);
 
                         const tipo = recetaDisp.estadoDispensa?.tipo;
                         const dispensada = tipo !== 'sin-dispensa';
@@ -49,6 +48,7 @@ async function notificarApp(req, recetas) {
     }
     return [];
 }
+
 export async function buscarRecetas(req) {
     const options: any = {};
     const params = req.params.id ? req.params : req.query;
@@ -179,7 +179,6 @@ export async function setEstadoDispensa(req, operacion, app) {
 }
 
 async function dispensar(receta, operacion, dataDispensa, sistema) {
-
     const operacionMap = {
         dispensar: 'dispensada',
         'dispensa-parcial': 'dispensa-parcial'
@@ -284,35 +283,6 @@ export async function rechazar(idReceta, sistema, req) {
     }
 }
 
-export async function getRecetar(idReceta) {
-    try {
-        const token = Recetar.token;
-        if (idReceta && token && Recetar.url) {
-
-            const url = `${Recetar.url}/api/andes-prescriptions/?id=${idReceta}`;
-            const options = {
-                url,
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            };
-            const [status, res] = await handleHttpRequest(options);
-            const receta = res;
-            if (status === 200 && receta) {
-                return {
-                    id: receta.id,
-                    dispensa: receta.dispensa,
-                    estadoDispensa: receta.estadoDispensaActual
-                };
-            }
-        }
-    } catch (error) {
-        return null;
-    }
-    return null;
-}
-
 export async function cancelarDispensa(idReceta, dataDispensa, sistema, req) {
     try {
         const idDispensa = dataDispensa.idDispensa;
@@ -364,7 +334,6 @@ export async function calcularEstadoReceta(receta) {
     const fActual = moment();
     const fRegistro = moment(receta.fechaRegistro).startOf('day');
     const dias = fRegistro.diff(fActual, 'd');
-
     return (dias > 30) ? 'vencida' : 'vigente';
 }
 
