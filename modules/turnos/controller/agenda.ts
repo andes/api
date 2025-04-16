@@ -755,30 +755,28 @@ export async function actualizarTiposDeTurno() {
     };
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(async doc => {
-        try {
-            const data = this.actualizarTurnos(doc);
-            agenda = data.agenda;
-            Auth.audit(agenda, (userScheduler as any));
-            await agenda.save();
-            const objetoLog = {
-                idAgenda: agenda._id,
-                organizacion: agenda.organizacion,
-                horaInicio: agenda.horaInicio,
-                updatedAt: agenda.updatedAt,
-                updatedBy: agenda.updatedBy,
-                bloques: data.logs
-            };
+        const data = this.actualizarTurnos(doc);
+        agenda = data.agenda;
+        Auth.audit(agenda, (userScheduler as any));
+        await agenda.save();
+        const objetoLog = {
+            idAgenda: agenda._id,
+            organizacion: agenda.organizacion,
+            horaInicio: agenda.horaInicio,
+            updatedAt: agenda.updatedAt,
+            updatedBy: agenda.updatedBy,
+            bloques: data.logs
+        };
+        return saveAgenda(agenda).then(() => {
             agendaLog.info('actualizarTiposTurnos', objetoLog);
-        } catch (error) {
-            agendaLog.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
-        }
+            return Promise.resolve();
+        }).catch((err) => {
+            agendaLog.error('actualizarTiposTurnos', objetoLog, err, userScheduler);
+            return Promise.resolve();
+        });
     });
 }
 
-/**
- * Método auxiliar para registrar los logs.
- *
- */
 function registrarLog(logs, bloque, estado, datos) {
     logs.push({
         bloque,
@@ -828,7 +826,7 @@ export function actualizarTurnos(agenda) {
  * @param {any} end
  * @returns resultado
  */
-export function actualizarEstadoAgendas(start, end) {
+export async function actualizarEstadoAgendas(start, end) {
     // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado entre las fechas start y end
     const condicion = {
         $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }, { estado: 'pendienteAsistencia' }, { estado: 'pendienteAuditoria' }],
@@ -840,10 +838,10 @@ export function actualizarEstadoAgendas(start, end) {
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(doc => {
         const agenda: any = doc;
-        let turnos = [];
-        let todosAsistencia = false;
-        let todosAuditados = false;
         try {
+            let turnos = [];
+            let todosAsistencia = false;
+            let todosAuditados = false;
             for (let j = 0; j < agenda.bloques.length; j++) {
                 turnos = turnos.concat(agenda.bloques[j].turnos);
             }
@@ -870,11 +868,16 @@ export function actualizarEstadoAgendas(start, end) {
                         actualizarAux(agenda);
                     }
                 }
-
-                actualizarHistorial({ estado: agenda.estado }, agenda, (userScheduler as any));
             }
-        } catch (error) {
-            agendaLog.error('actualizarEstadoAgendas', { agenda }, error);
+        } catch (err) {
+            const datosLog = {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
+            };
+            agendaLog.error('actualizarEstadosAgenda', datosLog, err, userScheduler);
         }
     });
 }
