@@ -3,7 +3,7 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
 import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa } from './recetasController';
-import { ParamsIncorrect, RecetaNotFound } from './recetas.error';
+import { ParamsIncorrect } from './recetas.error';
 
 class RecetasResource extends ResourceBase {
     Model = Receta;
