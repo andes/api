@@ -1,3 +1,16 @@
+# [5.127.0](https://github.com/andes/api/compare/v5.126.1...v5.127.0) (2025-04-16)
+
+
+### Bug Fixes
+
+* **CITAS:** amplia periodo de fuera de agendas en historial de turnos ([#1965](https://github.com/andes/api/issues/1965)) ([e9c5387](https://github.com/andes/api/commit/e9c5387ebe9b1fee9e10c4fe52b9e37694c38c27))
+
+
+### Features
+
+* **RUP:** actualiza datos de profesional ([#2041](https://github.com/andes/api/issues/2041)) ([f4cf69e](https://github.com/andes/api/commit/f4cf69e2506c644ba13574869e4aa015da384a76))
+* **RUP:** Agrega API para ECLs ([#2030](https://github.com/andes/api/issues/2030)) ([127f194](https://github.com/andes/api/commit/127f194334f04c682d2a2dc3c948b5a35febf4ab))
+
 ## [5.126.1](https://github.com/andes/api/compare/v5.126.0...v5.126.1) (2025-03-19)
 
 
