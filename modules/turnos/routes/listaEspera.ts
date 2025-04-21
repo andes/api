@@ -34,9 +34,9 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 
             if (req.query.fechaHasta) {
                 const fechaHasta = moment(new Date(req.query.fechaHasta)).endOf('day').toDate();
-                opciones['fecha'] = { $gte: fechaDesde, $lte: fechaHasta };
+                opciones['demandas.fecha'] = { $gte: fechaDesde, $lte: fechaHasta };
             } else {
-                opciones['fecha'] = { $gte: fechaDesde };
+                opciones['demandas.fecha'] = { $gte: fechaDesde };
             }
         }
 
