@@ -1,3 +1,10 @@
+## [5.127.1](https://github.com/andes/api/compare/v5.127.0...v5.127.1) (2025-04-23)
+
+
+### Bug Fixes
+
+* **chore:** cambia version ubuntu en build ([#2042](https://github.com/andes/api/issues/2042)) ([4a80769](https://github.com/andes/api/commit/4a8076995e1cfa5a0e58bab9e29d7cfec7a14063))
+
 # [5.127.0](https://github.com/andes/api/compare/v5.126.1...v5.127.0) (2025-04-16)
 
 
