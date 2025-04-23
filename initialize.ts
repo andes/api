@@ -120,6 +120,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules', require('./modules/semaforo/').SemaforoRouter);
     app.use('/api/modules', require('./modules/constantes').ConstantesRouter);
     app.use('/api/modules', require('./modules/recetas').RecetasRouter);
+    app.use('/api/modules', require('./modules/recetas').RecetaDispositivoRouter);
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(
