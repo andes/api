@@ -10,6 +10,7 @@ import { PatientNotFound } from './paciente.error';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from './paciente.schema';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import moment = require('moment');
 
 class PacienteResource extends ResourceBase<IPacienteDoc> {
     Model = Paciente;
@@ -133,20 +134,39 @@ export const get = async (req: Request, res: Response) => {
     }
 };
 
-
-export const getEstadoInternacion = async (req: Request, res: Response) => {
+export const verificaInternacion = async (req: Request, res: Response) => {
     const id = req.params.id;
+    const fechaDesde = moment().subtract(2, 'years').toDate();
     const query = {
         'paciente.id': new Types.ObjectId(id),
         'ejecucion.registros.valor': { $exists: true, $ne: null },
-        'solicitud.ambitoOrigen': 'internacion'
+        'solicitud.ambitoOrigen': 'internacion',
+        'solicitud.tipoPrestacion.conceptId': '32485007',
+        'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $gte: fechaDesde }
     };
-    const prestaciones: any[] = await Prestacion.find(query);
-    const options = req.apiOptions();
 
+    const ultimaPrestacion: any = await Prestacion.findOne(query, {
+        'solicitud.organizacion': 1,
+        'ejecucion.registros.valor': 1
+    })
+        .sort({ 'ejecucion.registros.valor.informeIngreso.fechaIngreso': -1 })
+        .limit(1);
+
+    const options = req.apiOptions();
     const paciente = await findById(id, options);
     if (paciente) {
-        return res.json(prestaciones);
+        let resultado = null;
+        const ultimoRegistro = ultimaPrestacion?.ejecucion?.registros[ultimaPrestacion?.ejecucion?.registros.length - 1] || null;
+        if (ultimoRegistro) {
+            const estado = ultimoRegistro.valor?.InformeEgreso?.tipoEgreso?.id === 'Defunción' ? 'Defunción' : 'En Curso';
+            const organizacion = ultimaPrestacion.solicitud?.organizacion?.nombre;
+
+            resultado = {
+                organizacion,
+                estado
+            };
+        }
+        return res.json(resultado || {});
     }
     throw new PatientNotFound();
 };
@@ -253,7 +273,7 @@ export const patch = async (req: Request, res: Response) => {
 PacienteRouter.use(Auth.authenticate());
 PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(get));
 PacienteRouter.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(find));
-PacienteRouter.get('/pacientes/estadoActual/:id', asyncHandler(getEstadoInternacion));
+PacienteRouter.get('/pacientes/estadoActual/:id', asyncHandler(verificaInternacion));
 PacienteRouter.get('/pacientes/:id/foto/:fotoId', asyncHandler(getFoto));
 PacienteRouter.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(post));
 PacienteRouter.post('/pacientes/match', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(match));
