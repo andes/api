@@ -32,6 +32,12 @@ export interface ISnomedController {
      */
 
     searchTerms(text: String, options: { semanticTags?: String[]; languageCode?: 'es' | 'en'; expression?: string });
+
+    /**
+     * Busca valores concretos por relaciones entre conceptos
+     */
+
+    getValuesByRelationships(expression: String, type: string);
 }
 
 export const SnomedCtr: ISnomedController = SnomedSnowstorm as any;
