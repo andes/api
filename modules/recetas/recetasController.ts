@@ -6,7 +6,8 @@ import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error'
 import * as moment from 'moment';
 import { getReceta } from './services/receta';
 import { updateLog, informarLog } from './recetaLogs';
-
+import { rupEventsLog as logger } from '../../modules/rup/controllers/rup.events.log';
+import { userScheduler } from '../../config.private';
 
 async function registrarAppNotificadas(req, recetas) {
     const token = req.headers.authorization?.substring(4) || req.query.token;
@@ -390,3 +391,54 @@ export async function calcularEstadoReceta(receta) {
 }
 
 
+export async function crearReceta(reqBody) {
+    try {
+        const idPrestacion = reqBody.idPrestacion;
+        const idRegistro = reqBody.idRegistro;
+        const paciente = reqBody.paciente;
+        const profesional = reqBody.profesional;
+        const organizacion = reqBody.organizacion;
+        const medicamentos = reqBody.medicamentos;
+        if (!idPrestacion || !idRegistro || !medicamentos || !medicamentos.length || !paciente || !profesional || !organizacion) {
+            throw new ParamsIncorrect();
+        }
+        const recetas = [];
+        for (const medicamento of medicamentos) {
+            const receta: any = new Receta();
+            receta.idPrestacion = idPrestacion;
+            receta.idRegistro = idRegistro;
+            receta.diagnostico = medicamento.diagnostico;
+            receta.medicamento = {
+                concepto: medicamento.concepto,
+                presentacion: medicamento.presentacion,
+                unidades: medicamento.unidades,
+                cantidad: medicamento.cantidad,
+                cantEnvases: medicamento.cantEnvases,
+                dosisDiaria: {
+                    dosis: medicamento.dosisDiaria.dosis,
+                    intervalo: medicamento.dosisDiaria.intervalo,
+                    dias: medicamento.dosisDiaria.dias,
+                    notaMedica: medicamento.dosisDiaria.notaMedica
+                },
+                tratamientoProlongado: medicamento.tratamientoProlongado,
+                tiempoTratamiento: medicamento.tiempoTratamiento,
+                tipoReceta: medicamento.tipoReceta || 'simple'
+            };
+            receta.estados = [{ tipo: 'vigente' }];
+            receta.estadoActual = { tipo: 'vigente' };
+            receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
+            receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
+            receta.paciente = paciente;
+            receta.profesional = profesional;
+            receta.organizacion = organizacion;
+            receta.origenExterno = reqBody.origenExterno;
+            receta.audit(userScheduler);
+            await receta.save();
+            recetas.push(receta);
+        }
+        return recetas;
+    } catch (err) {
+        logger.error('crearReceta', reqBody, err);
+        return err;
+    }
+}
