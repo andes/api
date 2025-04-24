@@ -223,10 +223,10 @@ async function searchByExpression({ text, languageCode, expression, semanticTags
 }
 
 export async function getValuesByRelationships(expression: string, type: string) {
-    const response = await searchTerms(null, { semanticTags:null, languageCode: 'es',expression })
+    const response = await searchTerms(null, { semanticTags:null, languageCode: 'es',expression });
     if (response) {
         const ps = response.map(async (concept) => {
-            const concreteValues = await httpGetSnowstorm(`${snomed.snowstormBranch}/relationships?active=true&source=${concept.conceptId}&type=${type}`, { limit: 1000});
+            const concreteValues = await httpGetSnowstorm(`${snomed.snowstormBranch}/relationships?active=true&source=${concept.conceptId}&type=${type}`, { limit: 1000 });
             if (concreteValues && concreteValues.items) {
                 return concreteValues.items[0].concreteValue.value;
             }

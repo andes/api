@@ -96,10 +96,6 @@ router.get('/snomed/expression', async (req, res, next) => {
     return res.json(concepts);
 });
 
-/**
- * Devuelve un listado de valores concretos de relaciones entre conceptos 
- */
-
 router.get('/snomed/relationships', async (req, res, next) => {
     const sctids = req.query.expression;
     const types = req.query.type;
