@@ -1,4 +1,5 @@
 import { services } from '../../../services';
+import { informarLog } from './../recetaLogs';
 
 export async function getReceta(idReceta, sistema) {
     const name = 'obtener-receta-' + sistema;
@@ -13,7 +14,7 @@ export async function getReceta(idReceta, sistema) {
             };
         }
     } catch (e) {
-
+        await informarLog.error(name, { idReceta, sistema }, e);
     }
     return null;
 }

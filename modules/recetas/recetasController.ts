@@ -5,9 +5,10 @@ import { MotivosReceta, Receta } from './receta-schema';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
 import * as moment from 'moment';
 import { getReceta } from './services/receta';
+import { updateLog, informarLog } from './recetaLogs';
 
 
-async function actualizarAppNotificadas(req, recetas) {
+async function registrarAppNotificadas(req, recetas) {
     const token = req.headers.authorization?.substring(4) || req.query.token;
     const decodedToken = Auth.decode(token);
     let recetasPaciente = [];
@@ -105,24 +106,22 @@ export async function buscarRecetas(req) {
         if (!recetas) {
             return [];
         }
-        return await actualizarAppNotificadas(req, recetas);
+        return await registrarAppNotificadas(req, recetas);
 
     } catch (err) {
+        await informarLog.error('buscarRecetas', { params, options }, err);
         return err;
     }
 }
 
 export async function suspender(recetas, req) {
+    const motivo = req.body.motivo;
+    const observacion = req.body.observacion;
+    const profesional = req.body.profesional;
     try {
-
-        const motivo = req.body.motivo;
-        const observacion = req.body.observacion;
-        const profesional = req.body.profesional;
-
         if (!recetas) {
             throw new ParamsIncorrect();
         }
-
         const promises = recetas.map(async (recetaId) => {
             const receta: any = await Receta.findById(recetaId);
 
@@ -142,8 +141,9 @@ export async function suspender(recetas, req) {
         });
         await Promise.all(promises);
         return { success: true };
-    } catch (err) {
-        return err;
+    } catch (error) {
+        await updateLog.error('suspender', { motivo, observacion, profesional, recetas }, error);
+        return error;
     }
 }
 
@@ -160,11 +160,10 @@ export async function getMotivosReceta(res) {
 }
 
 export async function setEstadoDispensa(req, operacion, app) {
+    const { recetaId } = req.body;
+    const sistema = app || '';
+    const dataDispensa = req.body.dispensa;
     try {
-        const dataDispensa = req.body.dispensa;
-
-        const { recetaId } = req.body;
-        const sistema = app || '';
         if (!recetaId && sistema) {
             throw new ParamsIncorrect();
         }
@@ -183,6 +182,7 @@ export async function setEstadoDispensa(req, operacion, app) {
         await receta.save();
 
     } catch (error) {
+        await updateLog.error('setEstadoDispensa', { operacion, sistema, recetaId, dataDispensa }, error);
         return error;
     }
 }
@@ -253,10 +253,11 @@ export async function actualizarAppNotificada(idReceta, sistema, req) {
                 const app = receta.appNotificada.find(a => a.app === sistema);
                 if (app) {
                     receta.appNotificada = receta.appNotificada.filter(a => a.app !== sistema);
-
-                    // loguear no dispensa
                     Auth.audit(receta, req);
-                    return await receta.save();
+                    await receta.save();
+                    await updateLog.info('sin-dispensar', { sistema, idReceta, receta });
+                    return receta;
+
                 } else {
                     throw new RecetaNotEdit(`${sistema.toUpperCase()} no puede marcar sin-dispensa una receta no consultada`);
                 }
@@ -270,10 +271,14 @@ export async function actualizarAppNotificada(idReceta, sistema, req) {
             }
         }
     } catch (error) {
+        await updateLog.error('actualizarAppNotificada', { sistema, idReceta }, error);
         return error;
     }
 }
 
+/** Rechazo de una receta por farmacia
+ *
+ */
 export async function rechazar(idReceta, sistema, req) {
     try {
         if (idReceta && Types.ObjectId.isValid(idReceta)) {
@@ -295,6 +300,7 @@ export async function rechazar(idReceta, sistema, req) {
             throw new ParamsIncorrect();
         }
     } catch (error) {
+        await updateLog.error('rechazar', { sistema, idReceta }, error);
         return error;
     }
 }
@@ -357,9 +363,10 @@ export async function cancelarDispensa(idReceta, dataDispensa, sistema, req) {
                 });
 
                 receta.appNotificada = receta.appNotificada.filter(a => a.app !== sistema);
-                // loguear cancelar dispensa
                 Auth.audit(receta, req);
-                return await receta.save();
+                await receta.save();
+                await updateLog.info('cancelarDispensa', { sistema, idReceta, dataDispensa });
+                return receta;
 
             } else {
                 throw new RecetaNotEdit(`No se puede cancelar dispensa de una receta ${estadoActual} no dispensada`);
@@ -368,6 +375,7 @@ export async function cancelarDispensa(idReceta, dataDispensa, sistema, req) {
             throw new ParamsIncorrect();
         }
     } catch (error) {
+        await updateLog.error('cancelarDispensa', { sistema, idReceta, dataDispensa }, error);
         return error;
     }
 }
