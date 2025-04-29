@@ -76,6 +76,6 @@ const authorizeByToken = async (req: Request, res: Response, next) =>
     Auth.authorizeByToken(req, res, next, ['huds:visualizacionHuds', 'recetas:read']);
 
 RecetasRouter.use(Auth.authenticate());
-RecetasRouter.get('/recetas', authorizeByToken, asyncHandler(get));
+RecetasRouter.get('/recetas', Auth.authorize(''), asyncHandler(get));
 RecetasRouter.get('/recetas/motivos', asyncHandler(getMotivos));
 RecetasRouter.patch('/recetas', authorizeByToken, asyncHandler(patch));
