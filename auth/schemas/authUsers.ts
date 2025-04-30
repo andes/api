@@ -50,6 +50,7 @@ export const AuthUsersSchema = new mongoose.Schema({
     documento: String,
     password: String,
     foto: String,
+    lastLogin: Date,
     authMethod: {
         type: String,
         required: false
