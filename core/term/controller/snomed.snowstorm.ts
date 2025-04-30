@@ -227,7 +227,7 @@ export async function getValuesByRelationships(expression: string, type: string)
     if (response) {
         const ps = response.map(async (concept) => {
             const concreteValues = await httpGetSnowstorm(`${snomed.snowstormBranch}/relationships?active=true&source=${concept.conceptId}&type=${type}`, { limit: 1000 });
-            if (concreteValues && concreteValues.items) {
+            if (concreteValues?.items && concreteValues.items.length) {
                 return concreteValues.items[0].concreteValue.value;
             }
         });
