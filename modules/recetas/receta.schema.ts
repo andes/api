@@ -15,7 +15,7 @@ export const motivosRecetaSchema = new mongoose.Schema({
     }
 });
 
-const estadosSchema = new mongoose.Schema({
+export const estadosSchema = new mongoose.Schema({
     tipo: {
         type: String,
         enum: ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada'],
@@ -49,12 +49,12 @@ const estadosSchema = new mongoose.Schema({
 estadosSchema.plugin(AuditPlugin);
 
 
-const sistemaSchema = {
+export const sistemaSchema = {
     type: String,
     enum: ['sifaho', 'recetar']
 };
 
-const estadoDispensaSchema = new mongoose.Schema({
+export const estadoDispensaSchema = new mongoose.Schema({
     tipo: {
         type: String,
         enum: ['sin-dispensa', 'dispensada', 'dispensa-parcial'],

@@ -2,8 +2,8 @@ import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { userScheduler } from '../../config.private';
 import { searchMatriculas } from '../../core/tm/controller/profesional';
-import { MotivosReceta, Receta } from './receta-schema';
-import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
+import { MotivosReceta, Receta } from './receta.schema';
+import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './receta.error';
 import moment = require('moment');
 
 
