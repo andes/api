@@ -6,10 +6,20 @@ export async function getReceta(idReceta, sistema) {
     try {
         const response = await services.get(name).exec({ id: idReceta });
         if (response) {
-            const dispensa = response.dispensa || [];
+            let dispensas = response.dispensas || [];
             const estado = response.estado || '';
+            dispensas = dispensas.length ? dispensas.map(dis => ({
+                dispensa: {
+                    idDispensaApp: dis.dispensa.id,
+                    fecha: dis.dispensa.fecha,
+                    medicamentos: dis.dispensa.medicamentos,
+                    organizacion: dis.dispensa.organizacion
+                },
+                estado: dis.op || estado,
+            })) : [];
+
             return {
-                dispensa,
+                dispensas,
                 tipoDispensaActual: estado,
             };
         }
