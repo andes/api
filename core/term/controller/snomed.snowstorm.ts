@@ -222,6 +222,21 @@ async function searchByExpression({ text, languageCode, expression, semanticTags
     return [];
 }
 
+export async function getValuesByRelationships(expression: string, type: string) {
+    const response = await searchTerms(null, { semanticTags:null, languageCode: 'es',expression });
+    if (response) {
+        const ps = response.map(async (concept) => {
+            const concreteValues = await httpGetSnowstorm(`${snomed.snowstormBranch}/relationships?active=true&source=${concept.conceptId}&type=${type}`, { limit: 1000 });
+            if (concreteValues?.items && concreteValues.items.length) {
+                return concreteValues.items[0].concreteValue.value;
+            }
+        });
+        const salida = await Promise.all(ps);
+        return [...new Set(salida)];
+    }
+    return null;
+}
+
 type SearchTermParams = { semanticTags?: String[]; languageCode?: 'es' | 'en'; expression?: string };
 export async function searchTerms(text, { semanticTags, languageCode, expression }: SearchTermParams, conceptIds: string[] = null) {
     languageCode = languageCode || 'es';

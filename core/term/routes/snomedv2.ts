@@ -95,4 +95,16 @@ router.get('/snomed/expression', async (req, res, next) => {
     const concepts = await SnomedCtr.getConceptByExpression(expression, words, form, languageCode);
     return res.json(concepts);
 });
+
+router.get('/snomed/relationships', async (req, res, next) => {
+    const sctids = req.query.expression;
+    const types = req.query.type;
+    try {
+        const concepts = await SnomedCtr.getValuesByRelationships(sctids, types);
+        return res.json(concepts);
+    } catch (e) {
+        return next(e);
+    }
+});
+
 export = router;
