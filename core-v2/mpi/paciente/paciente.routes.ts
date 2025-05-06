@@ -1,13 +1,13 @@
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import { extractFoto, findById, make, multimatch, set, suggest } from './paciente.controller';
+import { extractFoto, findById, make, multimatch, set, suggest, verificaInternacionActual } from './paciente.controller';
 import { PatientNotFound } from './paciente.error';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from './paciente.schema';
+import moment = require('moment');
 
 class PacienteResource extends ResourceBase<IPacienteDoc> {
     Model = Paciente;
@@ -131,6 +131,17 @@ export const get = async (req: Request, res: Response) => {
     }
 };
 
+export const verificaInternacion = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const options = req.apiOptions();
+    const paciente = await findById(id, options);
+    if (paciente) {
+        const resultado = await verificaInternacionActual(id);
+        return res.json(resultado || {});
+    }
+    throw new PatientNotFound();
+};
+
 /**
  * @api {get} /pacientes/:id/foto
  * @apiName getPacientesFoto
@@ -233,6 +244,7 @@ export const patch = async (req: Request, res: Response) => {
 PacienteRouter.use(Auth.authenticate());
 PacienteRouter.get('/pacientes', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(get));
 PacienteRouter.get('/pacientes/:id', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(find));
+PacienteRouter.get('/pacientes/estadoActual/:id', asyncHandler(verificaInternacion));
 PacienteRouter.get('/pacientes/:id/foto/:fotoId', asyncHandler(getFoto));
 PacienteRouter.post('/pacientes', Auth.authorize('mpi:paciente:postAndes'), asyncHandler(post));
 PacienteRouter.post('/pacientes/match', Auth.authorize('mpi:paciente:getbyId'), asyncHandler(match));
