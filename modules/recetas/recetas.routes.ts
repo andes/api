@@ -2,8 +2,8 @@ import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
-import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, rechazar } from './recetasController';
-import { ParamsIncorrect, RecetaNotFound } from './recetas.error';
+import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa } from './recetasController';
+import { ParamsIncorrect } from './recetas.error';
 
 class RecetasResource extends ResourceBase {
     Model = Receta;
@@ -42,7 +42,7 @@ export const getMotivos = async (req, res) => {
 export const patch = async (req, res) => {
     const operacion = req.body.op ? req.body.op.toLowerCase() : '';
     let result, status;
-    const { recetaId, recetas } = req.body;
+    const { recetaId, recetas, dataDispensa } = req.body;
     const app = req.user.app?.nombre ? req.user.app.nombre.toLowerCase() : '';
     if (!recetaId && !recetas) {
         const error = new ParamsIncorrect();
@@ -57,6 +57,9 @@ export const patch = async (req, res) => {
                 result = await setEstadoDispensa(req, operacion, app);
                 break;
             case 'sin-dispensar': result = await actualizarAppNotificada(recetaId, app, req);
+                break;
+            case 'cancelar-dispensa':
+                result = await cancelarDispensa(recetaId, dataDispensa, app, req);
                 break;
             default: const error = new ParamsIncorrect();
                 status =
