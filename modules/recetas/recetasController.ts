@@ -1,15 +1,44 @@
+import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { searchMatriculas } from '../../core/tm/controller/profesional';
 import { MotivosReceta, Receta } from './receta-schema';
-import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
-import * as moment from 'moment';
+import { createLog, informarLog, updateLog } from './recetaLogs';
+import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
 import { getReceta } from './services/receta';
-import { updateLog, informarLog, createLog } from './recetaLogs';
+
+export async function consultarEstado(receta, sistema) {
+    try {
+        // Consultar estado en el sistema externo
+        const recetaDisp = await getReceta(Types.ObjectId(receta.id), Types.ObjectId(receta.paciente.id), sistema);
+
+        if (!recetaDisp) {
+            return {
+                success: false,
+                recetaDisp: null
+            };
+        }
+
+        const tipo = recetaDisp.tipoDispensaActual;
+        const dispensada = ['dispensada', 'dispensa-parcial'].includes(tipo);
+
+        return {
+            success: true,
+            recetaDisp,
+            tipo,
+            dispensada
+        };
+    } catch (error) {
+        await informarLog.error('consultarEstado', { recetaId: receta.id, sistema }, error);
+        return {
+            success: false,
+            error
+        };
+    }
+}
 
 
 async function registrarAppNotificadas(req, recetas, sistema) {
-    const pacienteId = recetas[0].paciente.id;
     let recetasPaciente = [];
     recetasPaciente = recetas.map(async receta => {
         let incluirReceta = true;
@@ -24,11 +53,15 @@ async function registrarAppNotificadas(req, recetas, sistema) {
             } else {
                 // otro sistema, se verifica dispensa
                 indiceApp = arrayApps.findIndex(a => a.app !== sistema);
+
                 const sistema2 = arrayApps[indiceApp].app;
-                const recetaDisp = await getReceta(Types.ObjectId(receta.id), pacienteId, sistema2);
-                if (recetaDisp) {
-                    const tipo = recetaDisp.tipoDispensaActual;
-                    const dispensada = ['dispensada', 'dispensa-parcial'].includes(tipo);
+
+                // Consulta el estado de una receta en un sistema externo
+                const resultado = await consultarEstado(receta, sistema2);
+
+                if (resultado.success) {
+                    const { recetaDisp, tipo, dispensada } = resultado;
+
                     if (dispensada) {
                         recetaDisp.dispensas.forEach(async d => {
                             receta = d.estado ? await dispensar(receta, d.estado, d.dispensa, sistema2) : receta;
@@ -49,6 +82,7 @@ async function registrarAppNotificadas(req, recetas, sistema) {
                     incluirReceta = false;
                 }
             }
+
         } else {
             receta.appNotificada.push(appN);
             incluirReceta = true;
@@ -192,7 +226,7 @@ export async function setEstadoDispensa(req, operacion, app) {
     }
 }
 
-async function dispensar(receta, operacion, dataDispensa, sistema) {
+export async function dispensar(receta, operacion, dataDispensa, sistema) {
     const operacionMap = {
         dispensar: 'dispensada',
         'dispensa-parcial': 'dispensa-parcial'
@@ -448,3 +482,68 @@ export async function crearReceta(req) {
     }
 }
 
+export async function actualizarEstadosDispensa() {
+    try {
+        // Buscar recetas con appNotificada y sin dispensa
+        const recetas: any = await Receta.find({
+            appNotificada: { $exists: true },
+            'estadoDispensaActual.tipo': 'sin-dispensa',
+            'estadoActual.tipo': 'vigente'
+        });
+
+
+        if (!recetas || recetas.length === 0) {
+            await informarLog.error('actualizarEstadosDispensa', {}, { message: 'No hay recetas para actualizar' });
+        }
+
+        const resultados = {
+            total: recetas.length,
+            dispensadas: 0,
+            sinDispensa: 0,
+            errores: 0
+        };
+
+        // Procesar cada receta
+        for (const receta of recetas) {
+            try {
+                // Verificar cada app notificada
+                for (const app of receta.appNotificada) {
+                    const sistema = app.app;
+
+                    // Consulta el estado de una receta en un sistema externo
+                    const resultado = await consultarEstado(receta, sistema);
+
+                    if (resultado.success) {
+                        const { recetaDisp, tipo, dispensada } = resultado;
+
+                        // Si la receta fue dispensada, actualizar estado
+                        if (dispensada) {
+                            recetaDisp.dispensas.forEach(async d => {
+                                if (d.estado) {
+                                    // Actualizar estado de dispensa
+                                    await dispensar(receta, d.estado, d.dispensa, sistema);
+                                    await receta.save();
+
+                                    resultados.dispensadas++;
+                                }
+                            });
+                        } else if (tipo === 'sin-dispensa') {
+                            // Si no fue dispensada, eliminar del array appNotificada
+                            const req = { user: { usuario: { nombre: 'JOB_ACTUALIZACION' } } };
+                            await actualizarAppNotificada(receta.id, sistema, req);
+
+                            resultados.sinDispensa++;
+                        }
+                    }
+                }
+            } catch (error) {
+                resultados.errores++;
+                await informarLog.error('actualizarEstadosDispensa', { recetaId: receta.id }, error);
+            }
+        }
+
+        await updateLog.info('actualizarEstadosDispensa', { resultados });
+    } catch (error) {
+        await informarLog.error('actualizarEstadosDispensa', {}, error);
+    }
+}
