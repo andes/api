@@ -5,8 +5,7 @@ import { MotivosReceta, Receta } from './receta-schema';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
 import * as moment from 'moment';
 import { getReceta } from './services/receta';
-import { updateLog, informarLog } from './recetaLogs';
-import { rupEventsLog as logger } from '../../modules/rup/controllers/rup.events.log';
+import { updateLog, informarLog, createLog } from './recetaLogs';
 import { userScheduler } from '../../config.private';
 
 async function registrarAppNotificadas(req, recetas) {
@@ -438,7 +437,7 @@ export async function crearReceta(reqBody) {
         }
         return recetas;
     } catch (err) {
-        logger.error('crearReceta', reqBody, err);
+        createLog.error('crearReceta', reqBody, err);
         return err;
     }
 }
