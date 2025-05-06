@@ -14,6 +14,7 @@ import { ParentescoCtr } from '../parentesco/parentesco.routes';
 import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { PacienteCtr } from './paciente.routes';
 import { Paciente, replaceChars } from './paciente.schema';
+import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 
 /**
  * Crea un objeto paciente
@@ -468,6 +469,36 @@ export async function getLocalidad(paciente) {
         if (unaDireccion.ubicacion && unaDireccion.ubicacion.localidad) {
             return unaDireccion.ubicacion.localidad;
         }
+    }
+    return null;
+}
+
+export async function verificaInternacionActual(idPaciente) {
+    const fechaDesde = moment().subtract(2, 'years').toDate();
+    const query = {
+        'paciente.id': new Types.ObjectId(idPaciente),
+        'ejecucion.registros.valor': { $exists: true, $ne: null },
+        'solicitud.ambitoOrigen': 'internacion',
+        'solicitud.tipoPrestacion.conceptId': '32485007',
+        'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $gte: fechaDesde }
+    };
+    const ultimaPrestacion: any = await Prestacion.findOne(query, {
+        'solicitud.organizacion': 1,
+        'ejecucion.registros.valor': 1
+    })
+        .sort({ 'ejecucion.registros.valor.informeIngreso.fechaIngreso': -1 })
+        .limit(1);
+
+    const ultimoRegistro = ultimaPrestacion?.ejecucion?.registros[ultimaPrestacion?.ejecucion?.registros.length - 1] || null;
+
+    if (ultimoRegistro) {
+        const estado = ultimoRegistro.valor?.InformeEgreso?.tipoEgreso?.id === 'Defunción' ? 'Paciente fallecido' : 'En Curso';
+        const organizacion = ultimaPrestacion.solicitud?.organizacion?.nombre;
+
+        return {
+            organizacion,
+            estado
+        };
     }
     return null;
 }

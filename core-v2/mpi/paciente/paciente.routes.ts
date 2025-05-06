@@ -1,15 +1,12 @@
 import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
-import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import { Types } from 'mongoose';
-import { extractFoto, findById, make, multimatch, set, suggest } from './paciente.controller';
+import { extractFoto, findById, make, multimatch, set, suggest, verificaInternacionActual } from './paciente.controller';
 import { PatientNotFound } from './paciente.error';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from './paciente.schema';
-import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import moment = require('moment');
 
 class PacienteResource extends ResourceBase<IPacienteDoc> {
@@ -136,36 +133,10 @@ export const get = async (req: Request, res: Response) => {
 
 export const verificaInternacion = async (req: Request, res: Response) => {
     const id = req.params.id;
-    const fechaDesde = moment().subtract(2, 'years').toDate();
-    const query = {
-        'paciente.id': new Types.ObjectId(id),
-        'ejecucion.registros.valor': { $exists: true, $ne: null },
-        'solicitud.ambitoOrigen': 'internacion',
-        'solicitud.tipoPrestacion.conceptId': '32485007',
-        'ejecucion.registros.valor.informeIngreso.fechaIngreso': { $gte: fechaDesde }
-    };
-
-    const ultimaPrestacion: any = await Prestacion.findOne(query, {
-        'solicitud.organizacion': 1,
-        'ejecucion.registros.valor': 1
-    })
-        .sort({ 'ejecucion.registros.valor.informeIngreso.fechaIngreso': -1 })
-        .limit(1);
-
     const options = req.apiOptions();
     const paciente = await findById(id, options);
     if (paciente) {
-        let resultado = null;
-        const ultimoRegistro = ultimaPrestacion?.ejecucion?.registros[ultimaPrestacion?.ejecucion?.registros.length - 1] || null;
-        if (ultimoRegistro) {
-            const estado = ultimoRegistro.valor?.InformeEgreso?.tipoEgreso?.id === 'Defunción' ? 'Defunción' : 'En Curso';
-            const organizacion = ultimaPrestacion.solicitud?.organizacion?.nombre;
-
-            resultado = {
-                organizacion,
-                estado
-            };
-        }
+        const resultado = await verificaInternacionActual(id);
         return res.json(resultado || {});
     }
     throw new PatientNotFound();
