@@ -173,13 +173,11 @@ export async function setEstadoDispensa(req, operacion, app) {
             throw new RecetaNotFound();
         }
 
-        if (receta.estadoActual.tipo !== 'vigente') {
-            throw new RecetaNotEdit(receta.estadoActual.tipo);
-        }
         receta = await dispensar(receta, operacion, dataDispensa, sistema);
 
         Auth.audit(receta, req);
-        await receta.save();
+        return await receta.save();
+
 
     } catch (error) {
         await updateLog.error('setEstadoDispensa', { operacion, sistema, recetaId, dataDispensa }, error);
