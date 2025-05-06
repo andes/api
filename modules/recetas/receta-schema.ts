@@ -48,7 +48,6 @@ const estadosSchema = new mongoose.Schema({
 
 estadosSchema.plugin(AuditPlugin);
 
-
 const sistemaSchema = {
     type: String,
     enum: ['sifaho', 'recetar']
@@ -81,7 +80,45 @@ const estadoDispensaSchema = new mongoose.Schema({
         type: cancelarSchema,
         required: false
     }
+});
 
+const profesionalSubschema = new mongoose.Schema({
+    id: String,
+    nombre: { type: String, required: true },
+    apellido: { type: String, required: true },
+    documento: { type: String, required: true },
+    profesion: String,
+    matricula: Number,
+    especialidad: String,
+});
+
+const medicamentoSubschema = new mongoose.Schema({
+    concepto: { type: SnomedConcept, required: true },
+    presentacion: String,
+    unidades: String, // (mg, cc, etc.)
+    cantidad: Number,
+    cantEnvases: { type: Number, required: true },
+    dosisDiaria: {
+        dosis: { type: String, required: true },
+        intervalo: mongoose.SchemaTypes.Mixed,
+        dias: Number,
+        notaMedica: String
+    },
+    tratamientoProlongado: Boolean,
+    tiempoTratamiento: mongoose.SchemaTypes.Mixed,
+    tipoReceta: {
+        type: String,
+        enum: ['duplicado', 'triplicado', 'simple'],
+        required: false
+    },
+    serie: {
+        type: String,
+        required: false
+    },
+    numero: {
+        type: Number,
+        required: false
+    }
 });
 
 export const recetaSchema = new mongoose.Schema({
@@ -90,48 +127,18 @@ export const recetaSchema = new mongoose.Schema({
         nombre: String
     },
     profesional: {
-        id: mongoose.SchemaTypes.ObjectId,
-        nombre: String,
-        apellido: String,
-        documento: String,
-        profesion: String,
-        matricula: Number,
-        especialidad: String,
+        type: profesionalSubschema,
+        required: true
     },
     fechaRegistro: Date,
     fechaPrestacion: Date,
-    idPrestacion: String,
-    idRegistro: String,
-    diagnostico: SnomedConcept,
+    idPrestacion: { type: String, required: true },
+    idRegistro: { type: String, required: true },
+    diagnostico: mongoose.SchemaTypes.Mixed,
     medicamento: {
-        concepto: SnomedConcept,
-        presentacion: String,
-        unidades: String, // (mg, cc, etc.)
-        cantidad: Number,
-        cantEnvases: Number,
-        dosisDiaria: {
-            dosis: String,
-            intervalo: mongoose.SchemaTypes.Mixed,
-            dias: Number,
-            notaMedica: String
-        },
-        tratamientoProlongado: Boolean,
-        tiempoTratamiento: mongoose.SchemaTypes.Mixed,
-        tipoReceta: {
-            type: String,
-            enum: ['duplicado', 'triplicado', 'simple'],
-            required: false
-        },
-        serie: {
-            type: String,
-            required: false
-        },
-        numero: {
-            type: Number,
-            required: false
-        }
+        type: medicamentoSubschema,
+        required: true
     },
-
     dispensa: [
         {
             idDispensaApp: String,
@@ -158,7 +165,7 @@ export const recetaSchema = new mongoose.Schema({
     estadoActual: estadosSchema,
     estadosDispensa: [estadoDispensaSchema],
     estadoDispensaActual: estadoDispensaSchema,
-    paciente: PacienteSubSchema,
+    paciente: { type: PacienteSubSchema, required: true },
     renovacion: String,
     appNotificada: [{ app: sistemaSchema, fecha: Date }],
     origenExterno: {
