@@ -8,63 +8,56 @@ import { getReceta } from './services/receta';
 import { updateLog, informarLog, createLog } from './recetaLogs';
 import { userScheduler } from '../../config.private';
 
-async function registrarAppNotificadas(req, recetas) {
-    const token = req.headers.authorization?.substring(4) || req.query.token;
-    const decodedToken = Auth.decode(token);
+async function registrarAppNotificadas(req, recetas, sistema) {
     let recetasPaciente = [];
-    if (decodedToken.type === 'app-token') {
-        const sistema = decodedToken.app.nombre.toLowerCase();
-        recetasPaciente = recetas.map(async receta => {
-            let incluirReceta = true;
-            const appN = { app: sistema, fecha: moment().toDate() };
-            const arrayApps = receta.appNotificada;
-            if (arrayApps.length) {
-                // receta ya enviada a algún sistema
-                let indiceApp = arrayApps.findIndex(a => a.app === sistema);
-                if (indiceApp !== -1) {
-                    // mismo sistema
-                    arrayApps[indiceApp].fecha = moment().toDate();
-                } else {
-                    // otro sistema, se verifica dispensa
-                    indiceApp = arrayApps.findIndex(a => a.app !== sistema);
-                    const sistema2 = arrayApps[indiceApp].app;
-                    const recetaDisp = await getReceta(receta.id, sistema2);
-                    if (recetaDisp) {
-                        const tipo = recetaDisp.tipoDispensaActual;
-                        const dispensada = ['dispensada', 'dispensa-parcial'].includes(tipo);
-                        if (dispensada) {
-                            recetaDisp.dispensas.forEach(async d => {
-                                receta = d.estado ? await dispensar(receta, d.estado, d.dispensa, sistema2) : receta;
-                            });
-                            incluirReceta = false;
-                        } else {
-                            // actualizar appNotificada
-                            if (tipo === 'sin-dispensa') {
-                                receta.appNotificada = arrayApps.filter(a => a.app !== sistema2);
-                                receta.appNotificada.push(appN);
-                            } else {
-                                // receta en uso por app
-                                receta.appNotificada[indiceApp].fecha = moment().toDate();
-                                incluirReceta = false;
-                            }
-                        }
-                    } else {
-                        incluirReceta = false;
-                    }
-                }
+    recetasPaciente = recetas.map(async receta => {
+        let incluirReceta = true;
+        const appN = { app: sistema, fecha: moment().toDate() };
+        const arrayApps = receta.appNotificada;
+        if (arrayApps.length) {
+            // receta ya enviada a algún sistema
+            let indiceApp = arrayApps.findIndex(a => a.app === sistema);
+            if (indiceApp !== -1) {
+                // mismo sistema
+                arrayApps[indiceApp].fecha = moment().toDate();
             } else {
-                receta.appNotificada.push(appN);
-                incluirReceta = true;
+                // otro sistema, se verifica dispensa
+                indiceApp = arrayApps.findIndex(a => a.app !== sistema);
+                const sistema2 = arrayApps[indiceApp].app;
+                const recetaDisp = await getReceta(receta.id, sistema2);
+                if (recetaDisp) {
+                    const tipo = recetaDisp.tipoDispensaActual;
+                    const dispensada = ['dispensada', 'dispensa-parcial'].includes(tipo);
+                    if (dispensada) {
+                        recetaDisp.dispensas.forEach(async d => {
+                            receta = d.estado ? await dispensar(receta, d.estado, d.dispensa, sistema2) : receta;
+                        });
+                        incluirReceta = false;
+                    } else {
+                        // actualizar appNotificada
+                        if (tipo === 'sin-dispensa') {
+                            receta.appNotificada = arrayApps.filter(a => a.app !== sistema2);
+                            receta.appNotificada.push(appN);
+                        } else {
+                            // receta en uso por app "receta-en-uso"
+                            receta.appNotificada[indiceApp].fecha = moment().toDate();
+                            incluirReceta = false;
+                        }
+                    }
+                } else {
+                    incluirReceta = false;
+                }
             }
-            Auth.audit(receta, req);
-            await receta.save();
-            return incluirReceta ? receta : null;
-        });
-        const recetasUpdated = await Promise.all(recetasPaciente);
-        return recetasUpdated.filter(r => r !== null);
-    } else {
-        return recetas;
-    }
+        } else {
+            receta.appNotificada.push(appN);
+            incluirReceta = true;
+        }
+        Auth.audit(receta, req);
+        await receta.save();
+        return incluirReceta ? receta : null;
+    });
+    const recetasUpdated = await Promise.all(recetasPaciente);
+    return recetasUpdated.filter(r => r !== null);
 }
 
 export async function buscarRecetas(req) {
@@ -103,12 +96,18 @@ export async function buscarRecetas(req) {
         if (params.estado === 'vigente') {
             options['fechaRegistro'] = { $gte: fechaVencimiento };
         }
-        const recetas: any = await Receta.find(options);
+        let recetas: any = await Receta.find(options);
         if (!recetas) {
             return [];
         }
-        return await registrarAppNotificadas(req, recetas);
+        const user = req.user;
 
+        if (user.type === 'app-token') {
+            // si es un usuario de app y no tiene nombre de sistema asignado, no se envia recetas
+            const sistema = user.app.nombre.toLowerCase();
+            recetas = sistema ? await registrarAppNotificadas(req, recetas, sistema) : [];
+        }
+        return recetas;
     } catch (err) {
         await informarLog.error('buscarRecetas', { params, options }, err);
         return err;
@@ -197,40 +196,40 @@ async function dispensar(receta, operacion, dataDispensa, sistema) {
     if (!tipoDispensa || !dataDispensa || !idDispensaApp) {
         throw new ParamsIncorrect();
     }
-    // controlar que la dispensa no exista ya cargada
-    // si existe ver si no cargar o modificar los datos que trae a la existente?
-    // calculo que no generar la dispensa devolviendo algun mensaje como "dispensa ya registrada"
-    const dispensa: any = { idDispensaApp };
-    const tipo = (operacion === 'dispensar') ? 'finalizada' : receta.estadoActual.tipo;
-    const estadoReceta = { tipo };
-    dispensa.fecha = dataDispensa.fecha ? moment(dataDispensa.fecha).toDate() : moment().toDate();
-    let medicamentos = [];
-    if (dataDispensa?.medicamentos?.length) {
-        medicamentos = dataDispensa.medicamentos.map(med => {
-            const medicamento: any = {};
-            if (med.medicamento) {
-                medicamento.medicamento = med.medicamento || {};
-                medicamento.descripcion = (med.medicamento.nombre || '') + (med.cantidadEnvases || '');
-            }
-            medicamento.unidades = med.unidades || null;
-            medicamento.cantidad = med.cantidad || null;
-            medicamento.cantidadEnvases = med.cantidadEnvases || null;
-            medicamento.presentacion = med.presentacion || null;
-            return medicamento;
+    // controlar que la dispensa no exista ya cargada en la receta
+    const dispensaExistente = receta.dispensa.find(d => d.idDispensaApp === idDispensaApp);
+    if (!dispensaExistente) {
+        const dispensa: any = { idDispensaApp };
+        const tipo = (operacion === 'dispensar') ? 'finalizada' : receta.estadoActual.tipo;
+        const estadoReceta = { tipo };
+        dispensa.fecha = dataDispensa.fecha ? moment(dataDispensa.fecha).toDate() : moment().toDate();
+        let medicamentos = [];
+        if (dataDispensa?.medicamentos?.length) {
+            medicamentos = dataDispensa.medicamentos.map(med => {
+                const medicamento: any = {};
+                if (med.medicamento) {
+                    medicamento.medicamento = med.medicamento || {};
+                    medicamento.descripcion = (med.medicamento.nombre || '') + (med.cantidadEnvases || '');
+                }
+                medicamento.unidades = med.unidades || null;
+                medicamento.cantidad = med.cantidad || null;
+                medicamento.cantidadEnvases = med.cantidadEnvases || null;
+                medicamento.presentacion = med.presentacion || null;
+                return medicamento;
+            });
+            dispensa.medicamentos = medicamentos;
+        }
+        dispensa.organizacion = dataDispensa.organizacion || null;
+        receta.dispensa.push(dispensa);
+        receta.estados.push(estadoReceta);
+        receta.estadoActual = estadoReceta;
+
+        receta.estadosDispensa.push({
+            tipo: tipoDispensa,
+            fecha: new Date(),
+            sistema
         });
-        dispensa.medicamentos = medicamentos;
     }
-    dispensa.organizacion = dataDispensa.organizacion || null;
-    receta.dispensa.push(dispensa);
-    receta.estados.push(estadoReceta);
-    receta.estadoActual = estadoReceta;
-
-    receta.estadosDispensa.push({
-        tipo: tipoDispensa,
-        fecha: new Date(),
-        sistema
-    });
-
     return receta;
 }
 
@@ -440,3 +439,4 @@ export async function crearReceta(reqBody) {
         return err;
     }
 }
+

@@ -644,16 +644,18 @@ export class Auth {
     }
 
     static async authorizeByToken(req: Request, res: Response, next: express.NextFunction, requiredPermissions: string[]) {
-        const permisos = req.user.permisos;
+        const permisos = req.user.permisos || [];
+        const paciente = req.query?.pacienteId || null;
+        let userMobile = false;
 
-        if (!permisos?.length) {
-            return next(403);
+        if (req.user.type === 'paciente-token' && paciente) {
+            const pacienteUser = req.user.pacientes.find(p => String(p.id) === String(paciente));
+            userMobile = pacienteUser ? true : false;
         }
 
         const hasPermission = requiredPermissions.some(perm =>
             permisos.includes(perm) || permisos.includes(perm.split(':')[0] + ':*')
         );
-
-        return !hasPermission ? next(403) : next();
+        return !hasPermission && !userMobile ? next(403) : next();
     }
 }
