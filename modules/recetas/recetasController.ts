@@ -62,8 +62,9 @@ async function registrarAppNotificadas(req, recetas) {
         });
         const recetasUpdated = await Promise.all(recetasPaciente);
         return recetasUpdated.filter(r => r !== null);
+    } else {
+        return recetas;
     }
-    return [];
 }
 
 export async function buscarRecetas(req) {
