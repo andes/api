@@ -1,3 +1,16 @@
+# [5.128.0](https://github.com/andes/api/compare/v5.127.1...v5.128.0) (2025-05-07)
+
+
+### Bug Fixes
+
+* **CIT:** corrección de errores varios ([#2046](https://github.com/andes/api/issues/2046)) ([b6582ed](https://github.com/andes/api/commit/b6582edcac68495f7fd7d04d7c419f2e19ff1134))
+
+
+### Features
+
+* **CIT:** guarda multiples financadores en paciente ([#2032](https://github.com/andes/api/issues/2032)) ([89a9641](https://github.com/andes/api/commit/89a9641f7adfbe13ac509a48c0eab25eb259fc49))
+* **RUP:** nuevos datos de medicamento triplicado ([#2040](https://github.com/andes/api/issues/2040)) ([0925f5a](https://github.com/andes/api/commit/0925f5ae21883cb90fc8f4d596156e9fe075f1bc))
+
 ## [5.127.1](https://github.com/andes/api/compare/v5.127.0...v5.127.1) (2025-04-23)
 
 
