@@ -37,7 +37,12 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
         for (const registro of registros) {
             if (conceptIds.includes(registro.concepto.conceptId)) {
                 for (const medicamento of registro.valor.medicamentos) {
-                    let receta: any = await Receta.findOne({ idPrestacion: 0 });
+                    let receta: any = await Receta.findOne(
+                        {
+                            'medicamento.concepto.conceptId': medicamento.generico.conceptId,
+                            idRegistro: registro._id,
+                        });
+
                     if (!receta) {
                         receta = new Receta();
                     }
@@ -78,20 +83,5 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
         }
     } catch (err) {
         logger.error('prestacion:receta:create', prestacion, err);
-    }
-});
-
-EventCore.on('prestacion:receta:delete', async (prestacion) => {
-    if (prestacion.prestacion) {
-        prestacion = prestacion.prestacion;
-    }
-    try {
-        const idPrestacion = prestacion.id;
-        const recetas = await Receta.find({ idPrestacion });
-        for (const receta of recetas) {
-            await Receta.findOneAndDelete({ _id: mongoose.Types.ObjectId(receta._id) });
-        }
-    } catch (err) {
-        logger.error('prestacion:receta:delete', prestacion, err);
     }
 });
