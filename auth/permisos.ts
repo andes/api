@@ -257,10 +257,19 @@ export default [
         comment: 'Visualiza historias de salud',
         avoidAll: true,
         child: [
-            { key: 'visualizacionHuds', title: 'Visualización HUDS por paciente', type: 'boolean' },
+            { key: 'visualizacionHuds', title: 'Ver HUDS completa', type: 'boolean' },
             { key: 'soloEfectorActual', title: 'Visualizar HUDS solo de prestaciones realizadas en el efector actual', type: 'boolean' },
             { key: 'impresion', title: 'Imprimir cualquier prestación', type: 'boolean', visibility: 'restricted' },
-            { key: 'exportarHuds', title: 'Exportar HUDS de un paciente', type: 'boolean', visibility: 'restricted' }
+            { key: 'exportarHuds', title: 'Exportar HUDS de un paciente', type: 'boolean', visibility: 'restricted' },
+            {
+                key: 'visualizacionParcialHuds',
+                title: 'Visualización parcial de la HUDS',
+                child: [
+                    { key: 'laboratorio', title: 'Ver solo laboratorios', type: 'boolean' },
+                    { key: 'vacuna', title: 'Ver solo vacunas', type: 'boolean' },
+                    { key: 'receta', title: 'Ver solo recetas', type: 'boolean' }
+                ]
+            }
         ]
     },
     {

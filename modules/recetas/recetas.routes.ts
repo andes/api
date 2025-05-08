@@ -80,7 +80,13 @@ export const RecetasCtr = new RecetasResource({});
 export const RecetasRouter = RecetasCtr.makeRoutes();
 
 const authorizeByToken = async (req: Request, res: Response, next) =>
-    Auth.authorizeByToken(req, res, next, ['huds:visualizacionHuds', 'recetas:read']);
+    Auth.authorizeByToken(req, res, next, [
+        'huds:visualizacionHuds',
+        'huds:visualizacionParcialHuds:laboratorio',
+        'huds:visualizacionParcialHuds:vacuna',
+        'huds:visualizacionParcialHuds:receta',
+        'huds:visualizacionParcialHuds:*',
+        'recetas:read']);
 
 RecetasRouter.use(Auth.authenticate());
 RecetasRouter.get('/recetas', authorizeByToken, asyncHandler(get));
