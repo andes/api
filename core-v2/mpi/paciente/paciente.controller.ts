@@ -110,13 +110,35 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     }
     const paciente = await queryFind;
     if (paciente) {
+        // Si el paciente tiene dentro de financiador una obra social que no es de puco entonces no se elimina
+        // pero si tiene una de puco y la funcion updateObraSocial me trae otra OS de puco que no es la misma
+        // del paciente entonces lo elimina del mismo, en caso contrario actualiza su fechaDeActualizacion.
         const financiador = await updateObraSocial(paciente);
-        paciente.financiador = financiador;
+        if (!financiador.length) {
+            return paciente;
+        }
+        if (!paciente.financiador.length) {
+            paciente.financiador = financiador;
+        } else {
+            const codigosFinanciadores = financiador.map(f => f.codigoPuco);
+            paciente.financiador = paciente.financiador.filter(f => (f.origen && f.origen !== 'PUCO') || codigosFinanciadores.includes(f.codigoPuco));
+
+            financiador.forEach(nuevoFinanciador => {
+                const index = paciente.financiador.findIndex(f => f.codigoPuco === nuevoFinanciador.codigoPuco);
+                if (index === -1) {
+                    paciente.financiador.push(nuevoFinanciador);
+                } else if (!('origen' in paciente.financiador[index])) {
+                    paciente.financiador[index] = nuevoFinanciador;
+                } else {
+                    paciente.financiador[index].fechaDeActualizacion = moment().toDate();
+                }
+            });
+        }
+        await PacienteCtr.update(paciente.id, paciente, configPrivate.userScheduler as any);
         return paciente;
     }
     return null;
 }
-
 
 /**
  * Busca paciente similares a partir de su documento

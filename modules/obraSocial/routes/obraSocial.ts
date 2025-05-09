@@ -8,6 +8,7 @@ import * as sumarController from '../controller/sumar';
 import { ObraSocial } from '../schemas/obraSocial';
 import { Profe } from '../schemas/profe';
 import { IPuco } from '../schemas/puco';
+import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 
 const router = express.Router();
 
@@ -121,9 +122,11 @@ router.get('/puco/padrones', Auth.authenticate(), async (req, res, next) => {
 
 /** Obtiene la obra social de un paciente (Usado en el punto de inicio de CITAS) */
 
-router.get('/obraSocial/:documento', Auth.authenticate(), async (req, res, next) => {
-    if (req.params.documento) {
-        const resp = await obrasocialController.getObraSocial(req.params);
+router.get('/obraSocialPaciente', Auth.authenticate(), async (req, res, next) => {
+    if (req.query.documento && req.query.sexo) {
+        const resp = await obrasocialController.getObraSocial(req.query);
+        const paciente = await Paciente.find({ documento: req.query.documento });
+        resp.push(...paciente[0]?.financiador);
         res.json(resp);
     } else {
         return next('Parámetros incorrectos');
