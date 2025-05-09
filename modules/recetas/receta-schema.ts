@@ -99,7 +99,7 @@ const medicamentoSubschema = new mongoose.Schema({
     cantidad: Number,
     cantEnvases: { type: Number, required: true },
     dosisDiaria: {
-        dosis: { type: String, required: true },
+        dosis: { type: String, required: false },
         intervalo: mongoose.SchemaTypes.Mixed,
         dias: Number,
         notaMedica: String
