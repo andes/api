@@ -1125,7 +1125,18 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
-                    resultado.notas = req.body.data;
+                    if (req.body.accion === 'editar') {
+                        resultado.notas[req.body.indice].descripcion = req.body.data;
+                    } else if (req.body.accion === 'eliminar') {
+                        resultado.notas.splice(req.body.indice, 1);
+                    } else { // si no es editar ni eliminar, es agregar.
+                        const nota = {
+                            descripcion: req.body.data,
+                            usuario: req.body.agente,
+                            fecha: req.body.fecha
+                        };
+                        resultado.notas.push(nota);
+                    }
                     break;
                 case 'updateSancion':
                     resultado.sansiones.push(req.body.data);
