@@ -114,6 +114,67 @@ export async function buscarRecetas(req) {
     }
 }
 
+async function cambiarEstadoRecetas(recetasIds: string[], estado: any, profesionalReceta: any, organizacion?: any) {
+    if (!recetasIds || recetasIds.length === 0) {
+        throw new ParamsIncorrect();
+    }
+
+    const promises = recetasIds.map(async (recetaId) => {
+        const receta: any = await Receta.findById(recetaId);
+
+        if (!receta) {
+            throw new RecetaNotFound();
+        }
+
+        if (estado.tipo === 'vigente') {
+            const profesion = await getDatosProfesion(profesionalReceta);
+
+            receta.profesional = {
+                id: profesionalReceta.id,
+                nombre: profesionalReceta.nombre,
+                apellido: profesionalReceta.apellido,
+                documento: profesionalReceta.documento,
+                profesion: profesion.profesionGrado,
+                especialidad: profesion.especialidades,
+                matricula: profesion.matriculaGrado,
+            };
+
+            receta.organizacion = organizacion;
+        }
+
+        const estadoNuevo = {
+            ...estado,
+            fecha: new Date()
+        };
+
+        if (estado.tipo === 'suspendida') {
+            estadoNuevo.profesional = {
+                id: profesionalReceta.id,
+                nombre: profesionalReceta.nombre,
+                apellido: profesionalReceta.apellido,
+                documento: profesionalReceta.documento,
+            };
+        }
+
+        receta.estados.push(estadoNuevo);
+
+        receta.estadoActual = {
+            tipo: estado.tipo,
+            fecha: new Date()
+        };
+
+        if (organizacion) {
+            receta.organizacion = organizacion;
+        }
+
+        Auth.audit(receta, userScheduler as any);
+        await receta.save();
+    });
+
+    await Promise.all(promises);
+}
+
+
 export async function suspender(recetas, req) {
     const motivo = req.body.motivo;
     const observacion = req.body.observacion;
@@ -122,6 +183,7 @@ export async function suspender(recetas, req) {
         if (!recetas) {
             throw new ParamsIncorrect();
         }
+
         const promises = recetas.map(async (recetaId) => {
             const receta: any = await Receta.findById(recetaId);
 
@@ -139,6 +201,7 @@ export async function suspender(recetas, req) {
             Auth.audit(receta, req);
             await receta.save();
         });
+
         await Promise.all(promises);
         return { success: true };
     } catch (error) {
@@ -307,28 +370,32 @@ export async function rechazar(idReceta, sistema, req) {
     }
 }
 
-export async function getProfesionActualizada(profesional) {
+export async function getDatosProfesion(profesional) {
+    let infoMatriculas = null;
     let profesionGrado = '';
     let matriculaGrado = 0;
     let especialidades = '';
 
-    const infoMatriculas = await searchMatriculas(profesional.id);
-
-    if (infoMatriculas) {
-        // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
-        const rolesPermitidos = [1, 2, 23];
-        const formacionEncontrada = infoMatriculas.formacionGrado?.find(formacion =>
-            rolesPermitidos.includes(formacion.profesion)
-        );
-
-        profesionGrado = formacionEncontrada?.nombre;
-        matriculaGrado = formacionEncontrada?.numero;
-
-        const especialidadesTxt = infoMatriculas.formacionPosgrado
-            ?.map(({ nombre, numero }) => `${nombre} (Mat. ${numero})`);
-
-        especialidades = especialidadesTxt?.join(', ') || especialidades;
+    if (profesional.formacionPosgrado) {
+        infoMatriculas = {
+            formacionGrado: profesional.formacionGrado,
+            formacionPosgrado: profesional.formacionPosgrado,
+        };
+    } else {
+        infoMatriculas = await searchMatriculas(profesional.id);
     }
+
+    // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
+    const rolesPermitidos = [1, 2, 23];
+    const formacionEncontrada = infoMatriculas.formacionGrado?.find(formacion => rolesPermitidos.includes(formacion.profesion.codigo || formacion.profesion));
+
+    profesionGrado = formacionEncontrada?.nombre || formacionEncontrada.profesion.nombre;
+    matriculaGrado = formacionEncontrada?.numero || formacionEncontrada.matriculacion[formacionEncontrada.matriculacion.length - 1].matriculaNumero;
+
+    const especialidadesTxt = infoMatriculas.formacionPosgrado
+        ?.map(({ especialidad: { nombre }, matriculacion }) => `${nombre} (Mat. ${matriculacion[0].matriculaNumero})`);
+
+    especialidades = especialidadesTxt?.join(', ') || especialidades;
 
     return { profesionGrado, matriculaGrado, especialidades };
 }
@@ -439,5 +506,74 @@ export async function crearReceta(reqBody) {
     } catch (err) {
         createLog.error('crearReceta', reqBody, err);
         return err;
+    }
+}
+export async function renovarReceta(req) {
+    try {
+        const { recetas, profesional, observacion, organizacion } = req.body;
+
+        if (!recetas || !profesional) {
+            throw new ParamsIncorrect();
+        }
+
+        if (recetas.length === 0) {
+            throw new ParamsIncorrect();
+        }
+
+        const profesion = await getDatosProfesion(profesional);
+
+        for (const recetaId of recetas) {
+            const recetaOriginal: any = await Receta.findById(recetaId);
+
+            if (!recetaOriginal) {
+                continue;
+            }
+
+            const recetaNueva: any = new Receta(recetaOriginal.toObject());
+
+            recetaNueva._id = new Types.ObjectId();
+            recetaNueva.fechaRegistro = moment().toDate();
+            recetaNueva.profesional = {
+                id: profesional.id,
+                nombre: profesional.nombre,
+                apellido: profesional.apellido,
+                documento: profesional.documento,
+                profesion: profesion.profesionGrado,
+                especialidad: profesion.especialidades,
+                matricula: profesion.matriculaGrado,
+            };
+
+            if (organizacion) {
+                recetaNueva.organizacion = organizacion;
+            }
+
+            const estadoNuevo = {
+                tipo: 'vigente',
+                fecha: new Date(),
+                observacion: observacion || ''
+            };
+
+            recetaNueva.estados = [estadoNuevo];
+            recetaNueva.estadoActual = estadoNuevo;
+
+            recetaNueva.estadosDispensa = [{
+                tipo: 'sin-dispensa',
+                fecha: new Date()
+            }];
+            recetaNueva.estadoDispensaActual = {
+                tipo: 'sin-dispensa',
+                fecha: new Date()
+            };
+
+            recetaNueva.dispensa = [];
+            recetaNueva.appNotificada = [];
+
+            Auth.audit(recetaNueva, req);
+            await recetaNueva.save();
+        }
+
+        return { success: true };
+    } catch (error) {
+        return error;
     }
 }
