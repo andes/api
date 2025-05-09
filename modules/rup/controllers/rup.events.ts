@@ -1,8 +1,6 @@
 import { EventCore } from '@andes/event-bus';
 import { getProfesionActualizada } from '../../recetas/recetasController';
 import * as moment from 'moment';
-import * as mongoose from 'mongoose';
-import { userScheduler } from '../../../config.private';
 import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
 
@@ -76,7 +74,7 @@ EventCore.on('prestacion:receta:create', async (prestacion) => {
                     receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
                     receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
                     receta.paciente = prestacion.paciente;
-                    receta.audit(userScheduler);
+                    receta.audit(prestacion.createdBy);
                     await receta.save();
                 }
             }
