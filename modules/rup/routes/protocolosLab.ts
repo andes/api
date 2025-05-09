@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { laboratorioLog } from '../laboratorio.log';
+import { laboratorioLog, protocoloLog } from '../laboratorio.log';
 import * as laboratorioController from '../laboratorios.controller';
 
 const router = express.Router();
@@ -26,8 +26,12 @@ router.get('/protocolosLab/:id?', async (req, res, next) => {
         }
         res.json(response);
     } catch (err) {
-        dataSearch['id'] = req.params.id;
-        await laboratorioLog.error('resultado-protocolo', dataSearch, err, req);
+        if (req.params.id) {
+            dataSearch['id'] = req.params.id;
+            await protocoloLog.error('resultado-protocolo', dataSearch, err, req);
+        } else {
+            await laboratorioLog.error('resultado-protocolo', dataSearch, err, req);
+        }
         res.json('error:' + err.message);
     }
 });
