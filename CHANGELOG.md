@@ -1,3 +1,18 @@
+# [5.129.0](https://github.com/andes/api/compare/v5.128.0...v5.129.0) (2025-05-14)
+
+
+### Bug Fixes
+
+* **receta:** cambia campo dosis obligatorio a false ([#2057](https://github.com/andes/api/issues/2057)) ([be9fdee](https://github.com/andes/api/commit/be9fdeed3285c478e093c9228d028cc79c953e12))
+* **receta:** corrige respuesta al dispensar u obtener recetas ([#2055](https://github.com/andes/api/issues/2055)) ([a20349f](https://github.com/andes/api/commit/a20349fc372fa0abde6811ecef4b2351f15186e8))
+
+
+### Features
+
+* **HUDS-127:** Habilitacion parcial de la HUDS ([#2019](https://github.com/andes/api/issues/2019)) ([e03204d](https://github.com/andes/api/commit/e03204dfbe856365d2bd49fe8ec284cce808a4e9))
+* **MPI-443:** Convivientes ([#2053](https://github.com/andes/api/issues/2053)) ([52b6fd4](https://github.com/andes/api/commit/52b6fd42ec9343c92d25ac8b304d7aee7ca3399b))
+* **RUP:** quita evento de eliminacion de receta ([#2039](https://github.com/andes/api/issues/2039)) ([b2cc629](https://github.com/andes/api/commit/b2cc629805b17b18e57612f866168f4ba0c65560))
+
 # [5.128.0](https://github.com/andes/api/compare/v5.127.1...v5.128.0) (2025-05-07)
 
 
