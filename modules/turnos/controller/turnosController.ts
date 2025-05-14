@@ -170,180 +170,6 @@ export function getTurno(req) {
 
 }
 
-/**
- * Este método va a ser reemplazado por uno del mismo nombre pero dentro del controller de paciente
- * @deprecated
- *
- */
-export async function getHistorialPaciente(req) {
-    // console.warn('Deprecation warning: getHistorialPaciente is deprecated. Use getHistorialPaciente in core/mpi/controller/paciente');
-    if (req.query?.pacienteId) {
-        const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
-        const paciente: any = await PacienteCtr.findById(idPaciente);
-        try {
-            const pipelineTurno = [];
-            const pipelineSobreturno = [];
-            if (req.query.turnosProximos) {
-                pipelineTurno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
-                pipelineSobreturno.push({ $match: { horaInicio: { $gte: moment().startOf('day').toDate() } } });
-            }
-            if (req.query.organizacion) {
-                pipelineTurno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
-                pipelineSobreturno.push({ $match: { 'organizacion._id': { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) } } });
-            }
-            if (req.query.conceptId) {
-                pipelineTurno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });
-                pipelineSobreturno.push({ $match: { 'tipoPrestaciones.conceptId': req.query.conceptId } });
-            }
-            const turnos = [];
-            let turno;
-            pipelineTurno.push(
-
-                {
-                    $match: {
-                        estado: {
-                            $in: [
-                                'publicada',
-                                'pendienteAsistencia',
-                                'pendienteAuditoria',
-                                'auditada',
-                                'disponible',
-                                'pausada'
-                            ]
-                        },
-                        'bloques.turnos.paciente.id': { $in: paciente.vinculos }
-                    }
-                },
-                {
-                    $unwind: {
-                        path: '$bloques'
-                    }
-                },
-                {
-                    $unwind: {
-                        path: '$bloques.turnos'
-                    }
-                },
-                {
-                    $match: {
-                        'bloques.turnos.paciente.id': { $in: paciente.vinculos }
-                    }
-                },
-                {
-                    $group: {
-                        _id: {
-                            id: '$_id',
-                            turnoId: '$bloques.turnos._id'
-                        },
-                        agenda_id: {
-                            $first: '$_id'
-                        },
-                        bloque_id: { $first: '$bloques._id' },
-                        organizacion: {
-                            $first: '$organizacion'
-                        },
-                        profesionales: {
-                            $first: '$profesionales'
-                        },
-                        turno: {
-                            $first: '$bloques.turnos'
-                        },
-                        espacioFisico: {
-                            $first: '$espacioFisico'
-                        },
-                        otroEspacioFisico: {
-                            $first: '$otroEspacioFisico'
-                        }
-                    }
-                },
-                {
-                    $sort: {
-                        'turno.horaInicio': -1.0
-                    }
-                }
-            );
-            pipelineSobreturno.push(
-
-                {
-                    $match: {
-                        estado: {
-                            $in: [
-                                'publicada',
-                                'pendienteAsistencia',
-                                'pendienteAuditoria',
-                                'auditada',
-                                'disponible',
-                                'pausada'
-                            ]
-                        },
-                        'sobreturnos.paciente.id': { $in: paciente.vinculos }
-                    }
-                },
-                {
-                    $unwind: {
-                        path: '$sobreturnos'
-                    }
-                },
-                {
-                    $match: {
-                        'sobreturnos.paciente.id': { $in: paciente.vinculos }
-                    }
-                },
-                {
-                    $group: {
-                        _id: {
-                            id: '$_id',
-                            turnoId: '$sobreturnos._id'
-                        },
-                        agenda_id: {
-                            $first: '$_id'
-                        },
-                        organizacion: {
-                            $first: '$organizacion'
-                        },
-                        profesionales: {
-                            $first: '$profesionales'
-                        },
-                        turno: {
-                            $first: '$sobreturnos'
-                        },
-                        espacioFisico: {
-                            $first: '$espacioFisico'
-                        }
-                    }
-                },
-                {
-                    $sort: {
-                        'turno.horaInicio': -1.0
-                    }
-                }
-
-            );
-            let data2 = await Agenda.aggregate(pipelineTurno).exec();
-            const sobreturnos = await Agenda.aggregate(pipelineSobreturno).exec();
-            data2 = data2.concat(sobreturnos);
-            data2.forEach(elem => {
-                turno = elem.turno;
-                turno.id = turno._id;
-                turno.agenda_id = elem.agenda_id;
-                turno.bloque_id = (elem.bloque_id) ? elem.bloque_id : null;
-                turno.organizacion = elem.organizacion;
-                turno.profesionales = elem.profesionales;
-                turno.paciente = elem.turno.paciente;
-                turno.espacioFisico = elem.espacioFisico;
-                turno.otroEspacioFisico = elem.otroEspacioFisico;
-                turnos.push(turno);
-            });
-            return (turnos);
-        } catch (error) {
-            return (error);
-        }
-    } else {
-        return ('Datos insuficientes');
-    }
-
-}
-
 export async function getLiberadosPaciente(req) {
     if (req.query?.pacienteId) {
         try {
@@ -356,6 +182,25 @@ export async function getLiberadosPaciente(req) {
 
             if (req.user.organizacion?.id) {
                 query['dataTurno.turno.updatedBy.organizacion._id'] = req.user.organizacion.id;
+            }
+
+            if (req.query.desde && req.query.hasta) {
+                query['dataTurno.turno.horaInicio'] = {
+                    $gte: moment(req.query.desde).startOf('day').toDate(),
+                    $lte: moment(req.query.hasta).endOf('day').toDate()
+                };
+            } else if (req.query.desde) {
+                query['dataTurno.turno.horaInicio'] = {
+                    $gte: moment(req.query.desde).startOf('day').toDate(),
+                };
+            } else if (req.query.hasta) {
+                query['dataTurno.turno.horaInicio'] = {
+                    $lte: moment(req.query.hasta).endOf('day').toDate()
+                };
+            }
+
+            if (req.query.prestacion) {
+                query['dataTurno.turno.tipoPrestacion._id'] = new mongoose.Types.ObjectId(req.query.prestacion);
             }
 
             const resultado: any = await logPaciente.find(query).exec();
