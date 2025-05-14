@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import { getHistorialPaciente } from '../controller/turnosController';
+import { getHistorialPaciente } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { Agenda } from '../schemas/agenda';
 import { demanda, listaEspera } from '../schemas/listaEspera';
 import { defaultLimit, maxLimit } from './../../../config';
