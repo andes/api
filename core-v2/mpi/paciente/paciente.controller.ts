@@ -117,7 +117,7 @@ export async function findById(id: string | String | Types.ObjectId, options = n
         if (!financiador.length) {
             return paciente;
         }
-        if (!paciente.financiador.length) {
+        if (!paciente.financiador?.length) {
             paciente.financiador = financiador;
         } else {
             const codigosFinanciadores = financiador.map(f => f.codigoPuco);
