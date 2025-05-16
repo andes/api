@@ -80,27 +80,25 @@ export async function getOSPuco(documento, sexo, periodo = null) {
 
     // si se consultó por la ultima version y el paciente no está en puco con esa version,
     //  entonces lo actualizamos con sisa
-    if (lastPeriodo(padron) && (!osPatientPuco.length ||
-        (osPatientPuco.length && !lastPeriodo(lastVersionPuco)))) {
+    if (lastPeriodo(padron) && (!osPatientPuco.length || (osPatientPuco.length && !lastPeriodo(lastVersionPuco)))) {
         // obtenemos de sisa
-        EventCore.emitAsync('os:puco:create', dni, sexo);
-
+        osPatientPuco = await createOSpuco(documento, sexo);
     }
     return osPatientPuco;
 }
 
-EventCore.on('os:puco:create', async (documento, sexo) => {
+export async function createOSpuco(documento, sexo) {
     let obrasSociales: IPuco[] = await coberturaSalud(documento, sexo); // consultamos a sisa el padron de Puco
+    let arreObraSocial = [];
     if (obrasSociales.length > 0) {
         // filtramos objetos repetidos (solo cambia en la obra social: codigoOS)
         obrasSociales = obrasSociales.filter((os: IPuco, index) => {
             return index === obrasSociales.findIndex(osFind => (osFind.codigoOS === os.codigoOS));
         });
-        obrasSociales.forEach(async (osPuco: IPuco) => {
+        arreObraSocial = await Promise.all(obrasSociales.map(async (osPuco: IPuco) => {
             if (osPuco.coberturaSocial) {
                 let obraSocial: IObraSocial = await ObraSocial.findOne({ codigoPuco: osPuco.codigoOS });
                 if (!obraSocial) {
-                    // si la OS no existe en la colección de ObraSocial => la insertamos
                     obraSocial = {
                         codigoPuco: osPuco.codigoOS,
                         nombre: osPuco.coberturaSocial
@@ -108,12 +106,12 @@ EventCore.on('os:puco:create', async (documento, sexo) => {
                     await createObraSocial(obraSocial);
                 }
             }
-            // insertamos la os del paciente en puco
-            await createPuco(osPuco);
-        });
+            // Insertamos la obra social del paciente en Puco
+            return await createPuco(osPuco);
+        }));
     }
-});
-
+    return arreObraSocial;
+}
 
 export async function createPuco(data) {
     delete data.coberturaSocial; // no se guarda el campo coberturaSocial en la coleccion de puco
