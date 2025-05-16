@@ -1,12 +1,13 @@
+import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
-import { searchMatriculas } from '../../core/tm/controller/profesional';
-import { MotivosReceta, Receta } from './receta-schema';
-import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
-import * as moment from 'moment';
-import { getReceta } from './services/receta';
-import { updateLog, informarLog, createLog } from './recetaLogs';
 import { userScheduler } from '../../config.private';
+import { searchMatriculas } from '../../core/tm/controller/profesional';
+import { RecetasParametros } from './parametros.schema';
+import { MotivosReceta, Receta } from './receta-schema';
+import { createLog, informarLog, updateLog } from './recetaLogs';
+import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
+import { getReceta } from './services/receta';
 
 async function registrarAppNotificadas(req, recetas) {
     const token = req.headers.authorization?.substring(4) || req.query.token;
@@ -145,6 +146,40 @@ export async function suspender(recetas, req) {
     } catch (error) {
         await updateLog.error('suspender', { motivo, observacion, profesional, recetas }, error);
         return error;
+    }
+}
+
+export async function renovar(req) {
+    try {
+        const recetas = req.body.recetas;
+        const profesional = req.body.profesional;
+
+        if (!recetas) {
+            throw new ParamsIncorrect();
+        }
+
+        const promises = recetas.map(async (recetaId) => {
+            const receta: any = await Receta.findById(recetaId);
+
+            if (!receta) {
+                throw new RecetaNotFound();
+            }
+
+            receta.estados.push({
+                tipo: 'renovada',
+                profesional,
+                fecha: new Date()
+            });
+
+            Auth.audit(receta, userScheduler as any);
+            await receta.save();
+        });
+
+        await Promise.all(promises);
+
+        return { success: true };
+    } catch (err) {
+        return err;
     }
 }
 
@@ -440,3 +475,49 @@ export async function crearReceta(reqBody) {
         return err;
     }
 }
+
+export async function actualizarEstadosRecetas(done) {
+    try {
+        const parametro: any = await RecetasParametros.findOne({ key: 'fechaLimite' });
+        const days = Number(parametro.value);
+        const fechaLimite = parametro ? moment().subtract(days, 'days').toDate() : moment().subtract(30, 'days').toDate();
+
+        const recetasVigentes: any = await Receta.find({
+            'estadoActual.tipo': 'vigente',
+            'estadoDispensaActual.tipo': { $in: ['sin-dispensa', 'dispensa-parcial'] },
+            fechaRegistro: { $lt: fechaLimite }
+        });
+
+        for (const receta of recetasVigentes) {
+            receta.estados.push({
+                tipo: 'vencida',
+                fecha: moment().toDate()
+            });
+            receta.estadoActual = { tipo: 'vencida' };
+
+            Auth.audit(receta, userScheduler as any);
+            await receta.save();
+        }
+
+        const recetasPendientes: any = await Receta.find({
+            'estadoActual.tipo': 'pendiente',
+            fechaRegistro: { $gte: moment().toDate() }
+        });
+
+        for (const receta of recetasPendientes) {
+            receta.estados.push({
+                tipo: 'vigente',
+                fecha: moment().toDate()
+            });
+            receta.estadoActual = { tipo: 'vigente' };
+
+            Auth.audit(receta, userScheduler as any);
+            await receta.save();
+        }
+    } catch (err) {
+        return (done(err));
+    }
+
+    done();
+}
+
