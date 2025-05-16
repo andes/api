@@ -117,6 +117,11 @@ export async function findById(id: string | String | Types.ObjectId, options = n
         if (!financiador.length) {
             return paciente;
         }
+        // Bloque de codigo temporal, hasta depurar OS con valor [null]  ---------------
+        if (paciente.financiador && paciente.financiador[0] === null) {
+            paciente.financiador = null;
+        }
+        // fin bloque temporal  --------------------------------------------------------
         if (!paciente.financiador?.length) {
             paciente.financiador = financiador;
         } else {
