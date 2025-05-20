@@ -15,6 +15,7 @@ import { Agenda, HistorialAgenda } from '../../turnos/schemas/agenda';
 import { agendaLog } from '../citasLog';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
+import { ECLQueriesCtr } from './../../../core/tm/eclqueries.routes';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -1217,10 +1218,12 @@ export function findByTurnoId(turnoId) {
 }
 
 async function getConceptosNoAsistio() {
+    const expression = await ECLQueriesCtr.findOne({
+        key: 'turnos:noasistio'
+    });
     const form = 'stated';
-    const expression = '<<281399006';
     const languageCode = 'es';
-    return SnomedCtr.getConceptByExpression(expression, null, form, languageCode);
+    return SnomedCtr.getConceptByExpression(expression.valor, null, form, languageCode);
 }
 
 /**
