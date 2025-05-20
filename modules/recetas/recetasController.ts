@@ -9,6 +9,7 @@ import { updateLog, informarLog, createLog } from './recetaLogs';
 import { userScheduler } from '../../config.private';
 
 async function registrarAppNotificadas(req, recetas, sistema) {
+    const pacienteId = recetas[0].paciente.id;
     let recetasPaciente = [];
     recetasPaciente = recetas.map(async receta => {
         let incluirReceta = true;
@@ -24,7 +25,7 @@ async function registrarAppNotificadas(req, recetas, sistema) {
                 // otro sistema, se verifica dispensa
                 indiceApp = arrayApps.findIndex(a => a.app !== sistema);
                 const sistema2 = arrayApps[indiceApp].app;
-                const recetaDisp = await getReceta(receta.id, sistema2);
+                const recetaDisp = await getReceta(Types.ObjectId(receta.id), pacienteId, sistema2);
                 if (recetaDisp) {
                     const tipo = recetaDisp.tipoDispensaActual;
                     const dispensada = ['dispensada', 'dispensa-parcial'].includes(tipo);
@@ -39,7 +40,7 @@ async function registrarAppNotificadas(req, recetas, sistema) {
                             receta.appNotificada = arrayApps.filter(a => a.app !== sistema2);
                             receta.appNotificada.push(appN);
                         } else {
-                            // receta en uso por app "receta-en-uso"
+                            // receta en uso por app tipo="receta-en-uso"
                             receta.appNotificada[indiceApp].fecha = moment().toDate();
                             incluirReceta = false;
                         }
@@ -64,7 +65,13 @@ export async function buscarRecetas(req) {
     const options: any = {};
     const params = req.params.id ? req.params : req.query;
     const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
+    const pacienteId = params.pacienteId || null;
+    const documento = params.documento || null;
+    const sexo = params.sexo || null;
     try {
+        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
+            throw new ParamsIncorrect();
+        }
         const paramMap = {
             id: '_id',
             pacienteId: 'paciente.id',
