@@ -1,3 +1,11 @@
+## [5.129.1](https://github.com/andes/api/compare/v5.129.0...v5.129.1) (2025-05-21)
+
+
+### Bug Fixes
+
+* **mpi:** verifica existencia de financiador ([#2061](https://github.com/andes/api/issues/2061)) ([05e1ef3](https://github.com/andes/api/commit/05e1ef3d45bba4bc29e0d45a0cea357597118f0c))
+* **MPI:** os array null ([#2062](https://github.com/andes/api/issues/2062)) ([6944ebf](https://github.com/andes/api/commit/6944ebf51e1d62f3a6e4ffc5e4f0976c7adc6d99))
+
 # [5.129.0](https://github.com/andes/api/compare/v5.128.0...v5.129.0) (2025-05-14)
 
 
