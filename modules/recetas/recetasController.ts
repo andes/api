@@ -6,7 +6,7 @@ import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error'
 import * as moment from 'moment';
 import { getReceta } from './services/receta';
 import { updateLog, informarLog, createLog } from './recetaLogs';
-import { userScheduler } from '../../config.private';
+
 
 async function registrarAppNotificadas(req, recetas, sistema) {
     const pacienteId = recetas[0].paciente.id;
@@ -395,7 +395,8 @@ export async function calcularEstadoReceta(receta) {
 }
 
 
-export async function crearReceta(reqBody) {
+export async function crearReceta(req) {
+    const reqBody = req.body;
     try {
         const idPrestacion = reqBody.idPrestacion;
         const idRegistro = reqBody.idRegistro;
@@ -436,7 +437,7 @@ export async function crearReceta(reqBody) {
             receta.profesional = profesional;
             receta.organizacion = organizacion;
             receta.origenExterno = reqBody.origenExterno;
-            receta.audit(userScheduler);
+            receta.audit(req);
             await receta.save();
             recetas.push(receta);
         }
