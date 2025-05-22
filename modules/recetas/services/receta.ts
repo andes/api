@@ -1,10 +1,10 @@
 import { services } from '../../../services';
 import { informarLog } from './../recetaLogs';
 
-export async function getReceta(idReceta, sistema) {
+export async function getReceta(idReceta, pacienteId, sistema) {
     const name = 'obtener-receta-' + sistema;
     try {
-        const response = await services.get(name).exec({ id: idReceta });
+        const response = await services.get(name).exec({ id: idReceta, pacienteId });
         if (response) {
             let dispensas = response.dispensas || [];
             const estado = response.estado || '';
