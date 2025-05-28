@@ -22,6 +22,7 @@ import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
+import { Agenda } from '../../turnos/schemas/agenda';
 
 const router = express.Router();
 
@@ -702,6 +703,27 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 const prestation_back = await saveEnHistorial(data, { tipo: 'anulada' }, req);
                 EventCore.emitAsync('rup:prestacion:anular', data);
                 await Prestacion.findOneAndRemove({ _id: data._id });
+                const agenda: any = await Agenda.findById({ _id: req.body.idAgenda });
+                if (agenda) {
+                    if (req.body.tipoTurno === 'turno') {
+                        for (const bloque of agenda.bloques) {
+                            const turno = bloque.turnos.find(t => t._id.toString() === req.body.idTurno);
+                            if (turno) {
+                                turno.asistencia = undefined;
+                                turno.horaAsistencia = undefined;
+                                break;
+                            };
+                        }
+                    } else {
+                        const index = agenda.sobreturnos.findIndex(st => st._id.toString() === req.body.idTurno);
+                        if (index > -1) {
+                            agenda.sobreturnos[index].asistencia = undefined;
+                            agenda.sobreturnos[index].horaAsistencia = undefined;
+                        }
+                    }
+                    Auth.audit(agenda, req);
+                    await agenda.save();
+                }
                 return res.json(prestation_back);
 
             case 'referir':
