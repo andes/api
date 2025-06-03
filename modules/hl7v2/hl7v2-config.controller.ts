@@ -14,5 +14,3 @@ export async function getConfigHl7(organizacionId: ObjectId, conceptId: string, 
 
     return config;
 }
-
-// TODO: getConfigByQueueName
