@@ -33,7 +33,11 @@ router.get('/turno/:id*?', async (req, res, next) => {
 });
 router.get('/historial', async (req, res, next) => {
     try {
-        res.json(await getHistorial(req));
+        let turno = await getHistorial(req);
+        if (req.query.skip && req.query.limit) {
+            turno = turno.splice(req.query.skip, req.query.limit);
+        }
+        res.json(turno);
     } catch (err) {
         return next(err);
     }
