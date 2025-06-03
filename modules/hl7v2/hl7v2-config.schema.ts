@@ -10,6 +10,7 @@ export interface IHL7v2Config {
         id: ObjectId;
         nombre: string;
     };
+    elementoRUP: any;
     tipoPrestacion: ISnomedConcept[];
     hl7Destinations: {
         ipAddress: string;
@@ -17,8 +18,7 @@ export interface IHL7v2Config {
     }[];
     tipoMensaje: string;
     queueName: string;
-    queueConnectionString: string;
-    deadLetterQueue: any[];
+    msgQueue: any[];
     mapping: any;
 };
 
@@ -27,6 +27,7 @@ export const HL7v2ConfigSchema = new Schema({
         type: NombreSchema,
         required: true,
     },
+    elementoRUP: SnomedConcept,
     tipoPrestacion: [SnomedConcept],
     hl7Destinations: [
         {
@@ -36,8 +37,7 @@ export const HL7v2ConfigSchema = new Schema({
     ],
     tipoMensaje: String,
     queueName: String,
-    queueConnectionString: String,
-    deadLetterQueue: [Schema.Types.Mixed],
+    msgQueue: [Schema.Types.Mixed],
     mapping: Schema.Types.Mixed
 });
 
