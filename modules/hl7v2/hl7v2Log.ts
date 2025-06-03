@@ -10,3 +10,13 @@ export const adt04Hl7v2Log = new Logger({
     bucketSize: 100,
     expiredAt: '3 M'
 });
+
+export const mdmt02Hl7v2Log = new Logger({
+    connection: Connections.logs,
+    module: 'hl7v2',
+    type: 'mdmt02',
+    application: 'andes',
+    bucketBy: 'h',
+    bucketSize: 100,
+    expiredAt: '3 M'
+});
