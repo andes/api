@@ -520,8 +520,6 @@ router.get('/prestaciones', async (req: any, res, next) => {
             return next(404);
         }
         if (data) {
-            console.log('entra a prestaciones ')
-
             const profesional = Auth.getProfesional(req);
             const profesionalId = profesional && profesional.id && profesional.id.toString();
             for (let i = 0; i < data.length; i++) {
@@ -530,7 +528,6 @@ router.get('/prestaciones', async (req: any, res, next) => {
                     profId = data[i].solicitud.profesional.id.toString();
                 }
                 const registros = data[i].ejecucion.registros;
-                console.log(registros)
                 if (registros) {
                     for (let j = 0; j < registros.length; j++) {
                         const privacy = registros[j].privacy || { scope: 'public' };
@@ -561,6 +558,7 @@ router.post('/prestaciones', async (req, res, next) => {
         if (dto.inicio === 'top') {
             updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
         }
+
         const estado = dto.estados[dto.estados.length - 1].tipo;
 
         if (dto.solicitud.turno && estado !== 'modificada' && !dto.groupId) {
