@@ -17,7 +17,6 @@ const SEXO_FEMENINO_HL7 = 'F';
 const SEXO_OTRO_HL7 = 'O';
 const USE_DNI_ID = true;
 
-// Define an interface for the identifier structure to be consistent
 interface PatientIdentifier {
     identificador: string;
     assigning_authority: string;
@@ -25,7 +24,6 @@ interface PatientIdentifier {
 }
 
 export async function addMetadataHL7v2(prestacion: any, config: IHL7v2Config): Promise<void> {
-    // Crear el array de metadatos a agregar
     const arrayMetadata = [
         { key: HL7V2_METADATA_KEY, valor: 'true' },
         { key: HL7V2_CONFIG_METADATA_KEY, valor: config.queueName }
@@ -37,10 +35,9 @@ export async function addMetadataHL7v2(prestacion: any, config: IHL7v2Config): P
     if (!hl7v2MetadataExists) {
         prestacion.metadata = [...(prestacion.metadata || []), ...arrayMetadata];
         try {
-            Auth.audit(prestacion, userScheduler as any); // Asumiendo que userScheduler tiene el tipo correcto o que el uso de (userScheduler as any) es inevitable.
+            Auth.audit(prestacion, userScheduler as any);
             await prestacion.save();
         } catch (error) {
-            console.error('Error al guardar la prestación con metadatos HL7v2:', error);
             throw error;
         }
     }
@@ -53,7 +50,7 @@ export async function adt04(turno: any): Promise<void> {
 
     const paciente = await PacienteCtr.findById(idPaciente);
 
-    const direccionInfo = paciente.direccion?.[0]; // Acceder de forma segura a la primera dirección
+    const direccionInfo = paciente.direccion?.[0];
     const direccionCompleta = {
         direccion: direccionInfo?.valor || '',
         localidad: direccionInfo?.ubicacion?.localidad?.nombre || '',
@@ -62,19 +59,17 @@ export async function adt04(turno: any): Promise<void> {
 
     const sexoPaciente = turno.paciente.sexo;
     const sexoHl7 = sexoPaciente === 'masculino' ? SEXO_MASCULINO_HL7 :
-                    sexoPaciente === 'femenino' ? SEXO_FEMENINO_HL7 : SEXO_OTRO_HL7;
+        sexoPaciente === 'femenino' ? SEXO_FEMENINO_HL7 : SEXO_OTRO_HL7;
 
-    // --- Start of HL7v2 Identifier Generation ---
-    // Initialize an array to hold all identifiers
     const identifiers: PatientIdentifier[] = [];
 
-    // 1. HL7v2 ID (from document or generated) with "HPNHL7" assigning authority
+    // 1. HL7v2 ID (desde document o generado)
     let hl7id: string;
-    if (USE_DNI_ID && turno.paciente.documento && turno.paciente.documento !== "") {
+    if (USE_DNI_ID && turno.paciente.documento && turno.paciente.documento !== '') {
         hl7id = turno.paciente.documento;
     } else {
-        const apellidoCorto = (turno.paciente.apellido || "").slice(0, 5);
-        let hl7idBase = "";
+        const apellidoCorto = (turno.paciente.apellido || '').slice(0, 5);
+        let hl7idBase = '';
         if (turno.paciente.documento) {
             hl7idBase = turno.paciente.documento;
         } else if (turno.paciente.numeroIdentificacion) {
@@ -97,10 +92,10 @@ export async function adt04(turno: any): Promise<void> {
         id_type_code: 'MR' // Identifier Type Code for Medical Record
     });
 
-    // Controlar que no lo tenga y agregarlo si es necesario (this part is for the ANDES identifier in the patient's record, not the HL7 message)
+    // Controlar que no lo tenga y agregarlo si es necesario
     if (!paciente.identificadores?.some(id => id.entidad === IDENTIFIER_ENTITY_ANDESHL7V2 && id.valor === hl7id)) {
         if (!paciente.identificadores) {
-            paciente.identificadores = []; // Initialize if null/undefined
+            paciente.identificadores = [];
         }
         paciente.identificadores.push({ entidad: IDENTIFIER_ENTITY_ANDESHL7V2, valor: hl7id });
         try {
@@ -117,7 +112,7 @@ export async function adt04(turno: any): Promise<void> {
         }
     }
 
-    // 2. idAndes: idPaciente.toHexString() with "ANDES" assigning authority and "MR"
+    // 2. idAndes: idPaciente.toHexString() with 'ANDES' assigning authority and 'MR'
     identifiers.push({
         // identificador: turno.paciente.documento,
         identificador: turno.paciente.id.toString(),
@@ -125,8 +120,8 @@ export async function adt04(turno: any): Promise<void> {
         id_type_code: 'MR'
     });
 
-    // 3. documento (DNI) with "RENAPER" assigning authority and "NI" (National Identifier)
-    if (turno.paciente.documento && turno.paciente.documento !== "") {
+    // 3. documento (DNI) with 'RENAPER' assigning authority and 'NI' (National Identifier)
+    if (turno.paciente.documento && turno.paciente.documento !== '') {
         identifiers.push({
             identificador: turno.paciente.documento,
             assigning_authority: 'RENAPER',
@@ -136,16 +131,11 @@ export async function adt04(turno: any): Promise<void> {
     // --- End of HL7v2 Identifier Generation ---
 
     const pacienteSubconjunto: any = {
-        id: turno.paciente.id, // This `id` is still relevant for other parts of your system
+        id: turno.paciente.id,
         nombre: turno.paciente.nombre,
         apellido: turno.paciente.apellido,
-        // Removed flat hl7id, idAndes, documento
-        // hl7id: hl7id,
-        // idAndes: idPaciente.toHexString(),
-        // documento: turno.paciente.documento,
 
-        // NEW: Add the array of structured identifiers
-        identifiers: identifiers,
+        identifiers,
 
         direccion: direccionCompleta.direccion,
         localidad: direccionCompleta.localidad,
@@ -189,8 +179,16 @@ export async function adt04(turno: any): Promise<void> {
 }
 
 EventCore.on('citas:turno:asignar', async (turno) => {
-    console.log(turno);
     adt04(turno).catch(error => {
-        console.error(`Error no manejado en adt04 gatillado por 'citas:turno:asignar' para el turno relacionado con el paciente ${turno?.paciente?.id}:`, error);
+        adt04Hl7v2Log.error(
+            'adt04:processing_error',
+            {
+                error: error.message,
+                tipoMensaje: MESSAGE_TYPE_ADT04,
+                pacienteId: turno.paciente.id,
+            },
+            'Error procesando HL7ADT.',
+            userScheduler
+        );
     });
 });
