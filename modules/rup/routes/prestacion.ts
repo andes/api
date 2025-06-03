@@ -2,7 +2,6 @@ import { asyncHandler, Request } from '@andes/api-tool';
 import { MongoQuery } from '@andes/core';
 import { EventCore } from '@andes/event-bus';
 import * as express from 'express';
-import { saveTurnoProfesional } from '../../turnos/controller/agenda';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { AppCache } from '../../../connections';
@@ -11,6 +10,7 @@ import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { removeDiacritics } from '../../../utils/utils';
 import { getVisualizadorURL } from '../../pacs';
+import { saveTurnoProfesional } from '../../turnos/controller/agenda';
 import { getTurnoById } from '../../turnos/controller/turnosController';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
@@ -286,7 +286,15 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         if (req.query.estados) {
             match.$and.push({ 'estadoActual.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } });
         }
+
         pipeline.push({ $match: match });
+
+        if (req.query.conceptoAsociado) {
+            pipeline.push({
+                $match: { 'solicitud.registros.valor.solicitudPrestacion.conceptoAsociado.conceptId': req.query.conceptoAsociado }
+            });
+        }
+
         pipeline.push({ $addFields: { registroSolicitud: { $arrayElemAt: ['$solicitud.registros', 0] } } });
         const project = {
             $project: {
@@ -308,7 +316,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                         then: -1,
                         else: 1
                     }
-                }
+                },
             }
         };
 
@@ -411,7 +419,10 @@ router.get('/prestaciones', async (req: any, res, next) => {
         query.where('solicitud.profesional.id').equals(req.query.idProfesional);
     }
     if (req.query.idPaciente) {
-        const paciente: any = await PacienteCtr.findById(req.query.idPaciente);
+        let paciente = await PacienteCtr.findById(req.query.idPaciente);
+        if (paciente.idPacientePrincipal) {
+            paciente = await PacienteCtr.findById(paciente.idPacientePrincipal);
+        }
         if (paciente) {
             query.where('paciente.id').in(paciente.vinculos);
         }
@@ -508,8 +519,6 @@ router.get('/prestaciones', async (req: any, res, next) => {
             return next(404);
         }
         if (data) {
-            console.log('entra a prestaciones ')
-
             const profesional = Auth.getProfesional(req);
             const profesionalId = profesional && profesional.id && profesional.id.toString();
             for (let i = 0; i < data.length; i++) {
@@ -518,7 +527,6 @@ router.get('/prestaciones', async (req: any, res, next) => {
                     profId = data[i].solicitud.profesional.id.toString();
                 }
                 const registros = data[i].ejecucion.registros;
-                console.log(registros)
                 if (registros) {
                     for (let j = 0; j < registros.length; j++) {
                         const privacy = registros[j].privacy || { scope: 'public' };
@@ -549,6 +557,7 @@ router.post('/prestaciones', async (req, res, next) => {
         if (dto.inicio === 'top') {
             updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
         }
+
         const estado = dto.estados[dto.estados.length - 1].tipo;
 
         if (dto.solicitud.turno && estado !== 'modificada' && !dto.groupId) {
@@ -613,6 +622,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     }
                     if (req.body.estado.tipo === 'rechazada') {
                         data.solicitud.organizacion = req.body.organizacion;
+                    }
+                    if (req.body.estado.tipo === 'auditoria') {
+                        delete data.solicitud.registros[0].valor.solicitudPrestacion.prioridad;
+                        data.solicitud.registros[0].markModified('valor');
                     }
                     data.estados.push(req.body.estado);
                     if (req.body.estado.tipo === 'asignada') {
@@ -759,6 +772,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     return console.error(errFrec);
                 });
 
+            }
+
+            if (req.body.estado?.tipo === 'auditoria') {
+                await prestacion.save();
             }
 
             if (req.body.op === 'romperValidacion') {
