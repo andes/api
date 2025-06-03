@@ -71,7 +71,7 @@ export const patch = async (req, res) => {
 };
 
 export const post = async (req, res) => {
-    const resp = await crearReceta(req.body);
+    const resp = await crearReceta(req);
     const status = resp?.status || resp?.errors || 200;
     res.status(status).json(resp);
 };
