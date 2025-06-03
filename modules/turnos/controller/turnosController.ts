@@ -351,12 +351,9 @@ export async function getLiberadosPaciente(req) {
             const paciente: any = await PacienteCtr.findById(idPaciente);
             const query = {
                 paciente: { $in: paciente.vinculos },
-                operacion: 'turnos:liberar'
+                operacion: 'turnos:liberar',
+                'dataTurno.turno.updatedBy.organizacion._id': { $exists: true }
             };
-
-            if (req.user.organizacion?.id) {
-                query['dataTurno.turno.updatedBy.organizacion._id'] = req.user.organizacion.id;
-            }
 
             const resultado: any = await logPaciente.find(query).exec();
 
