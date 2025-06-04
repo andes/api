@@ -150,7 +150,11 @@ router.get('/laboratorios/(:id)', async (req: any, res, next) => {
         }
         const limit = parseInt(req.query.limit || 10, 10);
         const skip = parseInt(req.query.skip || 0, 10);
-        const cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip });
+        const fechaDesde = req.query.fechaDesde;
+        const fechaHasta = req.query.fechaHasta;
+
+        const cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip, fechaDesde, fechaHasta });
+
         for (const cda of cdas) {
             const _xml = await cdaCtr.loadCDA(cda.cda_id);
             if (_xml) {
