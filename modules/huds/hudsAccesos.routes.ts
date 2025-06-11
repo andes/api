@@ -3,7 +3,7 @@ import { Auth } from '../../auth/auth.class';
 import { asyncHandler } from '@andes/api-tool';
 import { logAcceso } from './hudsAccesos';
 import { HudsAccesosCtr } from './hudsAccesos.controller';
-import { search } from './../../core/tm/controller/profesional';
+import { search, searchMatriculaVigente } from './../../core/tm/controller/profesional';
 
 
 const router = express.Router();
@@ -28,7 +28,7 @@ router.post('/accesos/token', asyncHandler(async (req: any, res) => {
     let matricula = null;
     if (idProfesional) {
         const datosProfesional: any = await search({ id: idProfesional }, { matricula: 1 });
-        matricula = (datosProfesional.length && datosProfesional[0].matricula && datosProfesional[0].matricula.length) ? datosProfesional[0].matricula[0] : null;
+        matricula = await searchMatriculaVigente(idProfesional);
     }
     logAcceso(req, req.body.paciente.id, matricula, req.body.motivo, req.body.idTurno, req.body.idPrestacion, req.body.detalleMotivo);
     return res.json({ token: Auth.generateHudsToken(req.body.usuario, organizacionId, req.body.paciente) });
