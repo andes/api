@@ -5,7 +5,7 @@ export async function getReceta(idReceta, pacienteId, sistema) {
     const name = 'obtener-receta-' + sistema;
     try {
         const response = await services.get(name).exec({ id: idReceta, pacienteId });
-        if (response) {
+        if (response?.status === 200) {
             let dispensas = response.dispensas || [];
             const estado = response.estado || '';
             dispensas = dispensas.length ? dispensas.map(dis => ({
@@ -21,6 +21,11 @@ export async function getReceta(idReceta, pacienteId, sistema) {
             return {
                 dispensas,
                 tipoDispensaActual: estado,
+            };
+        } else if (response?.status === 404) {
+            return {
+                dispensas: [],
+                tipoDispensaActual: 'sin-dispensa',
             };
         }
     } catch (e) {
