@@ -13,6 +13,7 @@ export const ContactoSchema = new mongoose.Schema({
         required: true,
         default: true
     },
+    validado: Boolean
 });
 
 export const Contacto = mongoose.model<IContactoDoc>('contacto', ContactoSchema);
