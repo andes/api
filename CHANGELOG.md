@@ -1,3 +1,15 @@
+# [5.130.0](https://github.com/andes/api/compare/v5.129.1...v5.130.0) (2025-06-18)
+
+
+### Bug Fixes
+
+* **CIT-375:** Gestor de Agendas-Botón de suspender agenda ([#2064](https://github.com/andes/api/issues/2064)) ([9eb3302](https://github.com/andes/api/commit/9eb3302839630d63284d84c8958e3f876d476bd2))
+
+
+### Features
+
+* **CIT-341:** Visualización de historial de turnos ([#2058](https://github.com/andes/api/issues/2058)) ([e703b78](https://github.com/andes/api/commit/e703b78aee1566c974e7698b4fa4f03e4dadb1ad))
+
 ## [5.129.1](https://github.com/andes/api/compare/v5.129.0...v5.129.1) (2025-05-21)
 
 
