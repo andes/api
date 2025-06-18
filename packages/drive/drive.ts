@@ -1,4 +1,3 @@
-
 import { FileAdapter, MongoAdapter, SeaweedAdapter } from './adapters';
 import MulterMiddleware from './middleware/multer';
 import { IFileDescriptor } from './file-descriptor/schemas';
@@ -40,14 +39,15 @@ export class AndesDrive {
                     adapter: file.adapter,
                     originalname: file.originalname,
                     extension,
-                    mimetype: file.mimetype
+                    mimetype: file.mimetype,
+                    size: file.size
                 };
                 if (req.body.origen) {
                     data.origin = req.body.origen;
                 }
                 const fd = await FileDescriptor.create(data, req);
                 if (fd) {
-                    return res.send({ id: fd._id });
+                    return res.send({ id: fd._id, size: file.size });
                 }
                 return next(422);
             } catch (err) {

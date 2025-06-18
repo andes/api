@@ -1,4 +1,3 @@
-
 const multer = require('multer');
 
 
@@ -8,7 +7,7 @@ function AdapterStorage(adapter) {
 
 AdapterStorage.prototype._handleFile = function _handleFile(req, file, cb) {
     this.adapter.write(file.stream).then(id => {
-        cb(null, { id, adapter: this.adapter.name });
+        cb(null, { id, adapter: this.adapter.name, size: file.size });
     });
 };
 
