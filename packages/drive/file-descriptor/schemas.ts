@@ -8,6 +8,7 @@ export interface IFileDescriptor {
     originalname: string;
     extension: string;
     origin?: string;
+    size?: number;
 }
 
 export interface FileDescriptorDocument extends Document, IFileDescriptor { }
@@ -18,7 +19,8 @@ export const FileDescriptorSchema: Schema = new Schema({
     mimetype: String,
     extension: String,
     originalname: String,
-    origin: String
+    origin: String,
+    size: Number
 });
 
 FileDescriptorSchema.plugin(AuditPlugin);
