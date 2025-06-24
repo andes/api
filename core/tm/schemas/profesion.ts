@@ -13,7 +13,9 @@ const profesionSchema = new mongoose.Schema({
         required: true,
         default: []
     },
-    gestionaColegio: Boolean
+    gestionaColegio: Boolean,
+    habilitado: Boolean,
+    profesionColegiada: Boolean
 });
 
 export = profesionSchema;
