@@ -1,5 +1,7 @@
+import { PacienteCtr } from '../../core-v2/mpi';
 import { services } from './../../services';
-
+import { IDENTIFICACION } from '../../shared/constantes';
+import * as moment from 'moment';
 
 function agrupar(elementos) {
     const setAreas = new Set(elementos.map(d => d.area));
@@ -54,11 +56,53 @@ export async function search(data) {
                 parametros: `nombre=LABAPI_GetProtocolos&parametros=${data.estado}|${data.dni}|${data.fechaNac}|${data.apellido}|${data.fechaDesde}|${data.fechaHasta}`
             };
         }
-    } catch (e) {
-        throw new Error('Error al obtener laboratorio.');
-    }
 
-    const response = await services.get(service).exec(params);
-    const salida = data.idProtocolo ? agrupar(response[0].Data) : response;
-    return salida;
+
+        const response = await services.get(service).exec(params);
+        const salida = data.idProtocolo ? agrupar(response[0].Data) : response;
+        return salida;
+    } catch (e) {
+        throw new Error('Error al obtener laboratorio');
+    }
+}
+
+export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
+    let dataSearch;
+    fechaDesde = fechaDesde ? moment(fechaDesde).format('YYYYMMDD') : moment('01/01/2020', 'DD-MM-YYYY').format('YYYYMMDD');
+    fechaHasta = fechaHasta ? moment(fechaHasta).format('YYYYMMDD') : moment().format('YYYYMMDD');
+    try {
+        const paciente = await PacienteCtr.findById(pacienteId);
+        if (paciente) {
+            let estado;
+            let documento = paciente.documento;
+            const documentosExtranjeros = IDENTIFICACION.enum.filter(item => item !== null);
+
+            if (documento) { // dni argentino
+                estado = 'validado';
+            } else if (documentosExtranjeros.includes(paciente.tipoIdentificacion)) { // dni extranjero o pasaporte
+                estado = 'EX';
+                documento = paciente.numeroIdentificacion;
+            } else {
+                if (paciente.edad <= 5) { // recien nacido (aun din dni)
+                    estado = 'RN';
+                    const tutorProgenitor = paciente.relaciones.find(rel => rel.relacion.nombre === 'progenitor/a') || paciente.relaciones.find(rel => rel.relacion.nombre === 'tutor');
+                    documento = tutorProgenitor?.documento || tutorProgenitor?.numeroIdentificacion || null;
+                }
+            }
+            if (!estado || !documento) {
+                return [];
+            }
+            dataSearch = {
+                estado,
+                dni: documento,
+                fechaNac: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
+                apellido: paciente.apellido,
+                fechaDesde,
+                fechaHasta
+            };
+            return await this.search(dataSearch);
+        }
+    } catch (err) {
+        return { err, dataSearch };
+    }
 }
