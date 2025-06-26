@@ -1,5 +1,7 @@
+import { PacienteCtr } from '../../core-v2/mpi';
 import { services } from './../../services';
-
+import { IDENTIFICACION } from '../../shared/constantes';
+import * as moment from 'moment';
 
 function agrupar(elementos) {
     const setAreas = new Set(elementos.map(d => d.area));
@@ -61,4 +63,43 @@ export async function search(data) {
     const response = await services.get(service).exec(params);
     const salida = data.idProtocolo ? agrupar(response[0].Data) : response;
     return salida;
+}
+
+export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
+    let dataSearch;
+    try {
+        const paciente = await PacienteCtr.findById(pacienteId);
+        if (paciente) {
+            let estado;
+            let documento = paciente.documento;
+            const documentosExtranjeros = IDENTIFICACION.enum.filter(item => item.length);
+
+            if (documento) { // dni argentino
+                estado = 'validado';
+            } else if (documentosExtranjeros.includes(paciente.tipoIdentificacion)) { // dni extranjero o pasaporte
+                estado = 'EX';
+                documento = paciente.numeroIdentificacion;
+            } else {
+                if (paciente.edad <= 5) { // recien nacido (aun din dni)
+                    estado = 'RN';
+                    const tutorProgenitor = paciente.relaciones.find(rel => rel.relacion.nombre === 'progenitor/a') || paciente.relaciones.find(rel => rel.relacion.nombre === 'tutor');
+                    documento = tutorProgenitor?.documento || tutorProgenitor?.numeroIdentificacion || null;
+                }
+            }
+            dataSearch = {
+                estado,
+                dni: documento,
+                fechaNac: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
+                apellido: paciente.apellido,
+                fechaDesde,
+                fechaHasta
+            };
+            if (dataSearch.dni) {
+                return await this.search(dataSearch);
+            }
+            throw new Error('No se encontró un documento válido para el paciente.');
+        }
+    } catch (err) {
+        return { err, dataSearch };
+    }
 }
