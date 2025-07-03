@@ -22,6 +22,11 @@ export const PrestacionEstadoSchema = new mongoose.Schema({
         type: String,
         required: false,
         default: null
+    },
+    prioridad: {
+        type: String,
+        required: false,
+        default: null
     }
 });
 
