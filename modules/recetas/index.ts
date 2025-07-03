@@ -1,1 +1,2 @@
-export { RecetasRouter } from './recetas.routes';
+export { RecetasRouter } from './receta.routes';
+export { RecetaDispositivoRouter } from './receta-dispositivo.routes';
