@@ -6,6 +6,7 @@ import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error'
 import * as moment from 'moment';
 import { getReceta } from './services/receta';
 import { updateLog, informarLog, createLog } from './recetaLogs';
+import { userScheduler } from 'config.private';
 
 
 async function registrarAppNotificadas(req, recetas, sistema) {
@@ -121,6 +122,67 @@ export async function buscarRecetas(req) {
     }
 }
 
+async function cambiarEstadoRecetas(recetasIds: string[], estado: any, profesionalReceta: any, organizacion?: any) {
+    if (!recetasIds || recetasIds.length === 0) {
+        throw new ParamsIncorrect();
+    }
+
+    const promises = recetasIds.map(async (recetaId) => {
+        const receta: any = await Receta.findById(recetaId);
+
+        if (!receta) {
+            throw new RecetaNotFound();
+        }
+
+        if (estado.tipo === 'vigente') {
+            const profesion = await getDatosProfesion(profesionalReceta);
+
+            receta.profesional = {
+                id: profesionalReceta.id,
+                nombre: profesionalReceta.nombre,
+                apellido: profesionalReceta.apellido,
+                documento: profesionalReceta.documento,
+                profesion: profesion.profesionGrado,
+                especialidad: profesion.especialidades,
+                matricula: profesion.matriculaGrado,
+            };
+
+            receta.organizacion = organizacion;
+        }
+
+        const estadoNuevo = {
+            ...estado,
+            fecha: new Date()
+        };
+
+        if (estado.tipo === 'suspendida') {
+            estadoNuevo.profesional = {
+                id: profesionalReceta.id,
+                nombre: profesionalReceta.nombre,
+                apellido: profesionalReceta.apellido,
+                documento: profesionalReceta.documento,
+            };
+        }
+
+        receta.estados.push(estadoNuevo);
+
+        receta.estadoActual = {
+            tipo: estado.tipo,
+            fecha: new Date()
+        };
+
+        if (organizacion) {
+            receta.organizacion = organizacion;
+        }
+
+        Auth.audit(receta, userScheduler as any);
+        await receta.save();
+    });
+
+    await Promise.all(promises);
+}
+
+
 export async function suspender(recetas, req) {
     const motivo = req.body.motivo;
     const observacion = req.body.observacion;
@@ -129,6 +191,7 @@ export async function suspender(recetas, req) {
         if (!recetas) {
             throw new ParamsIncorrect();
         }
+
         const promises = recetas.map(async (recetaId) => {
             const receta: any = await Receta.findById(recetaId);
 
@@ -146,6 +209,7 @@ export async function suspender(recetas, req) {
             Auth.audit(receta, req);
             await receta.save();
         });
+
         await Promise.all(promises);
         return { success: true };
     } catch (error) {
@@ -312,28 +376,32 @@ export async function rechazar(idReceta, sistema, req) {
     }
 }
 
-export async function getProfesionActualizada(profesional) {
+export async function getDatosProfesion(profesional) {
+    let infoMatriculas = null;
     let profesionGrado = '';
     let matriculaGrado = 0;
     let especialidades = '';
 
-    const infoMatriculas = await searchMatriculas(profesional.id);
-
-    if (infoMatriculas) {
-        // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
-        const rolesPermitidos = [1, 2, 23];
-        const formacionEncontrada = infoMatriculas.formacionGrado?.find(formacion =>
-            rolesPermitidos.includes(formacion.profesion)
-        );
-
-        profesionGrado = formacionEncontrada?.nombre;
-        matriculaGrado = formacionEncontrada?.numero;
-
-        const especialidadesTxt = infoMatriculas.formacionPosgrado
-            ?.map(({ nombre, numero }) => `${nombre} (Mat. ${numero})`);
-
-        especialidades = especialidadesTxt?.join(', ') || especialidades;
+    if (profesional.formacionPosgrado) {
+        infoMatriculas = {
+            formacionGrado: profesional.formacionGrado,
+            formacionPosgrado: profesional.formacionPosgrado,
+        };
+    } else {
+        infoMatriculas = await searchMatriculas(profesional.id);
     }
+
+    // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
+    const rolesPermitidos = [1, 2, 23];
+    const formacionEncontrada = infoMatriculas.formacionGrado?.find(formacion => rolesPermitidos.includes(formacion.profesion.codigo || formacion.profesion));
+
+    profesionGrado = formacionEncontrada?.nombre || formacionEncontrada.profesion.nombre;
+    matriculaGrado = formacionEncontrada?.numero || formacionEncontrada.matriculacion[formacionEncontrada.matriculacion.length - 1].matriculaNumero;
+
+    const especialidadesTxt = infoMatriculas.formacionPosgrado
+        ?.map(({ especialidad: { nombre }, matriculacion }) => `${nombre} (Mat. ${matriculacion[0].matriculaNumero})`);
+
+    especialidades = especialidadesTxt?.join(', ') || especialidades;
 
     return { profesionGrado, matriculaGrado, especialidades };
 }
@@ -354,10 +422,12 @@ export async function cancelarDispensa(idReceta, dataDispensa, sistema, req) {
             if (estadoDispensa !== 'sin-dispensa') {
                 const tipo = (receta.estadoActual.tipo === 'finalizada') ? calcularEstadoReceta(receta) : receta.estadoActual.tipo;
                 const estadoReceta = { tipo };
-                receta.estados.push(estadoReceta);
 
+                receta.estados.push(estadoReceta);
                 receta.dispensa = receta.dispensa.filter(disp => disp.idDispensaApp !== idDispensa);
+
                 const tipoDispensa = (receta.dispensa.length) ? 'dispensa-parcial' : 'sin-dispensa';
+
                 receta.estadosDispensa.push({
                     tipo: tipoDispensa,
                     fecha: new Date(),
@@ -400,48 +470,53 @@ export async function crearReceta(req) {
     try {
         const idPrestacion = reqBody.idPrestacion;
         const idRegistro = reqBody.idRegistro;
+        const idRecetaOriginal = reqBody.idRecetaOriginal;
         const paciente = reqBody.paciente;
         const profesional = reqBody.profesional;
         const organizacion = reqBody.organizacion;
-        const medicamentos = reqBody.medicamentos;
-        if (!idPrestacion || !idRegistro || !medicamentos || !medicamentos.length || !paciente || !profesional || !organizacion) {
+        const medicamento = reqBody.medicamento;
+        const diagnostico = reqBody.diagnostico;
+
+        if (!idPrestacion || !idRegistro || !medicamento || !paciente || !profesional || !organizacion) {
             throw new ParamsIncorrect();
         }
-        const recetas = [];
-        for (const medicamento of medicamentos) {
-            const receta: any = new Receta();
-            receta.idPrestacion = idPrestacion;
-            receta.idRegistro = idRegistro;
-            receta.diagnostico = medicamento.diagnostico;
-            receta.medicamento = {
-                concepto: medicamento.concepto,
-                presentacion: medicamento.presentacion,
-                unidades: medicamento.unidades,
-                cantidad: medicamento.cantidad,
-                cantEnvases: medicamento.cantEnvases,
-                dosisDiaria: {
-                    dosis: medicamento.dosisDiaria.dosis,
-                    intervalo: medicamento.dosisDiaria.intervalo,
-                    dias: medicamento.dosisDiaria.dias,
-                    notaMedica: medicamento.dosisDiaria.notaMedica
-                },
-                tratamientoProlongado: medicamento.tratamientoProlongado,
-                tiempoTratamiento: medicamento.tiempoTratamiento,
-                tipoReceta: medicamento.tipoReceta || 'simple'
-            };
-            receta.estados = [{ tipo: 'vigente' }];
-            receta.estadoActual = { tipo: 'vigente' };
-            receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
-            receta.paciente = paciente;
-            receta.profesional = profesional;
-            receta.organizacion = organizacion;
-            receta.origenExterno = reqBody.origenExterno;
-            receta.audit(req);
-            await receta.save();
-            recetas.push(receta);
-        }
-        return recetas;
+
+        const receta: any = new Receta();
+
+        receta.idPrestacion = idPrestacion;
+        receta.idRegistro = idRegistro;
+        receta.diagnostico = diagnostico;
+        receta.fechaRegistro = moment().toDate();
+        receta.medicamento = {
+            concepto: medicamento.concepto,
+            presentacion: medicamento.presentacion,
+            unidades: medicamento.unidades,
+            cantidad: medicamento.cantidad,
+            cantEnvases: medicamento.cantEnvases,
+            dosisDiaria: {
+                dosis: medicamento.dosisDiaria.dosis,
+                intervalo: medicamento.dosisDiaria.intervalo,
+                dias: medicamento.dosisDiaria.dias,
+                notaMedica: medicamento.dosisDiaria.notaMedica
+            },
+            tratamientoProlongado: medicamento.tratamientoProlongado,
+            tiempoTratamiento: medicamento.tiempoTratamiento,
+            tipoReceta: medicamento.tipoReceta || 'simple'
+        };
+        receta.estados = [{ tipo: 'vigente' }];
+        receta.estadoActual = { tipo: 'vigente' };
+        receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
+        receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
+        receta.paciente = paciente;
+        receta.profesional = profesional;
+        receta.organizacion = organizacion;
+        receta.idRecetaOriginal = idRecetaOriginal;
+        receta.origenExterno = reqBody.origenExterno;
+        receta.audit(userScheduler);
+
+        await receta.save();
+
+        return receta;
     } catch (err) {
         createLog.error('crearReceta', reqBody, err);
         return err;
