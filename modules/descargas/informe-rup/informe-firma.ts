@@ -11,6 +11,7 @@ export class InformeRupFirma extends HTMLComponent {
             <span class="contenedor-firmas">
                 <div class="contenedor-bloque-texto">
                     {{#if firma}}
+                    <p style="font-weight: bold;font-style: italic;">Este documento ha sido firmado electronicamente por: </p>
                         <img src="data:image/png;base64,{{{firma}}}">
                     {{/if}}
                     {{#if matriculas}}
@@ -20,7 +21,6 @@ export class InformeRupFirma extends HTMLComponent {
                             {{ detalle2 }} <br>
                             {{{ matriculas }}}
                         </h6>
-                        <h6 class="subdata-italic"> </h6>
                     {{/if}}
                 </div>
             </span>
