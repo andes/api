@@ -1,3 +1,10 @@
+## [5.130.1](https://github.com/andes/api/compare/v5.130.0...v5.130.1) (2025-07-09)
+
+
+### Bug Fixes
+
+* **mat:** atributo 'habilitado' como boolean ([#2074](https://github.com/andes/api/issues/2074)) ([481f79c](https://github.com/andes/api/commit/481f79c0e34231ea23060e9e0a0bd9da2e63e4ed))
+
 # [5.130.0](https://github.com/andes/api/compare/v5.129.1...v5.130.0) (2025-06-18)
 
 
