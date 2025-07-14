@@ -8,6 +8,7 @@ import { diasNoLaborables, userScheduler } from '../../../config.private';
 import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
+import { Constantes } from '../../../modules/constantes/constantes.schema';
 import { toArray } from '../../../utils/utils';
 import * as prestacionController from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
@@ -462,11 +463,6 @@ export function actualizarEstado(req, data) {
                     data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
                     data.bloques[j].restantesGestion = 0;
                     data.bloques[j].restantesProfesional = 0;
-                } else {
-                    if (data.bloques[j].reservadoProfesional > 0) {
-                        data.bloques[j].restantesGestion = data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
-                        data.bloques[j].restantesProfesional = 0;
-                    }
                 }
             }
         }
@@ -718,7 +714,7 @@ function esFeriado(fecha) {
  * @returns resultado
  */
 export async function actualizarTiposDeTurno() {
-    const hsActualizar = 48;
+    const hsActualizar = await actualizarTurnosHs();
     const cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
     const esDomingo = false;
@@ -801,23 +797,16 @@ export function actualizarTurnos(agenda) {
         registrarLog(logs, j, 'inicio', agenda.bloques[j]);
 
         const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
-
         if (cantAccesoDirecto > 0) {
             agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
             agenda.bloques[j].restantesGestion = 0;
             agenda.bloques[j].restantesProfesional = 0;
-        } else {
-            if (agenda.bloques[j].reservadoProfesional > 0) {
-                agenda.bloques[j].restantesGestion = agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
-                agenda.bloques[j].restantesProfesional = 0;
-            }
         }
 
         registrarLog(logs, j, 'final', agenda.bloques[j]);
     }
     return { agenda, logs };
 }
-
 
 /**
  * Actualiza los estados de las agendas que se ejecutaron el día anterior a Pendiente Asistencia o
@@ -1556,4 +1545,16 @@ export function agendaNueva(data, clon, req) {
     nueva['estado'] = 'planificacion';
     nueva['sobreturnos'] = [];
     return nueva;
+}
+
+async function actualizarTurnosHs() {
+    let constante;
+    const key = 'actualizarTurnosHs';
+    try {
+        constante = await Constantes.findOne({ key });
+        return constante ? parseInt(constante.nombre, 10) : 48;
+    } catch (error) {
+        log.error('actualizarTurnosHs', { constante, key }, { error: error.message }, userScheduler);
+        return 48;
+    }
 }
