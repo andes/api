@@ -1,8 +1,8 @@
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { searchMatriculas } from '../../core/tm/controller/profesional';
-import { MotivosReceta, Receta } from './receta-schema';
-import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
+import { MotivosReceta, Receta } from './receta.schema';
+import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './receta.error';
 import * as moment from 'moment';
 import { getReceta } from './services/receta';
 import { updateLog, informarLog, createLog } from './recetaLogs';
