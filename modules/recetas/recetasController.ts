@@ -83,10 +83,8 @@ export async function suspender(recetas, req) {
         if (!recetas) {
             throw new ParamsIncorrect();
         }
-
         const promises = recetas.map(async (recetaId) => {
             const receta: any = await Receta.findById(recetaId);
-
             if (!receta) {
                 throw new RecetaNotFound();
             }
@@ -100,8 +98,12 @@ export async function suspender(recetas, req) {
             });
             Auth.audit(receta, req);
             await receta.save();
-        });
 
+            const idRegistro = receta.idRegistro;
+            const medicamento = receta.medicamento?.concepto.conceptId;
+            await Receta.deleteMany({ idRegistro, 'medicamento.concepto.conceptId': medicamento, 'estadoActual.tipo': 'pendiente' });
+
+        });
         await Promise.all(promises);
 
         return { success: true };
