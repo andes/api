@@ -106,6 +106,7 @@ const medicamentoSubschema = new mongoose.Schema({
     },
     tratamientoProlongado: Boolean,
     tiempoTratamiento: mongoose.SchemaTypes.Mixed,
+    ordenTratamiento: Number,
     tipoReceta: {
         type: String,
         enum: ['duplicado', 'triplicado', 'simple'],
