@@ -235,11 +235,11 @@ async function dispensar(receta, operacion, dataDispensa, sistema) {
         dispensa.organizacion = dataDispensa.organizacion || null;
         receta.dispensa.push(dispensa);
         receta.estados.push(estadoReceta);
-        receta.estadoActual = estadoReceta;
 
         receta.estadosDispensa.push({
             tipo: tipoDispensa,
-            fecha: new Date(),
+            idDispensaApp,
+            fecha: dispensa.fecha,
             sistema
         });
     }

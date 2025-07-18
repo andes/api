@@ -74,6 +74,10 @@ const estadoDispensaSchema = new mongoose.Schema({
         required: true,
         default: 'sin-dispensa'
     },
+    idDispensaApp: {
+        type: String,
+        required: false
+    },
     fecha: Date,
     sistema: sistemaSchema,
     cancelada: {
