@@ -1,15 +1,68 @@
+import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { searchMatriculas } from '../../core/tm/controller/profesional';
 import { MotivosReceta, Receta } from './receta-schema';
-import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
-import * as moment from 'moment';
+import { createLog, informarLog, updateLog } from './recetaLogs';
+import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
 import { getReceta } from './services/receta';
-import { updateLog, informarLog, createLog } from './recetaLogs';
+
+export async function consultarDispensa(receta, sistema) {
+    try {
+        // Consultar estado en el sistema externo
+        const pacienteId = receta.paciente.id;
+        const recetaDisp = await getReceta(Types.ObjectId(receta.id), pacienteId, sistema);
+
+        if (!recetaDisp) {
+            return {
+                success: false,
+                dispensas: null
+            };
+        }
+        const tipo = recetaDisp.tipoDispensaActual;
+        const dispensada = ['dispensada', 'dispensa-parcial'].includes(tipo);
+
+        return {
+            success: true,
+            dispensas: recetaDisp.dispensas,
+            tipo,
+            dispensada
+        };
+    } catch (error) {
+        await informarLog.error('consultarEstado', { recetaId: receta.id, sistema }, error);
+        return {
+            success: false,
+            error
+        };
+    }
+}
 
 
+export async function actualizarDispensa(receta, dispensada: boolean, dispensas, tipo, sistema, indiceApp) {
+    if (dispensada) {
+        dispensas.forEach(async d => {
+            receta = d.estado ? dispensar(receta, d.estado, d.dispensa, sistema) : receta;
+        });
+    } else {
+        // actualizar appNotificada
+        if (tipo === 'sin-dispensa') {
+            receta.appNotificada = receta.appNotificada.filter(a => a.app !== sistema);
+        } else {
+            // receta en uso por app tipo="receta-en-uso"
+            receta.appNotificada[indiceApp].fecha = moment().toDate();
+        }
+    }
+    return receta;
+}
+
+/**
+ *
+ * @param req
+ * @param recetas recetas solicitadas para un paciente
+ * @param sistema que solicita la receta
+ * @returns
+ */
 async function registrarAppNotificadas(req, recetas, sistema) {
-    const pacienteId = recetas[0].paciente.id;
     let recetasPaciente = [];
     recetasPaciente = recetas.map(async receta => {
         let incluirReceta = true;
@@ -24,26 +77,16 @@ async function registrarAppNotificadas(req, recetas, sistema) {
             } else {
                 // otro sistema, se verifica dispensa
                 indiceApp = arrayApps.findIndex(a => a.app !== sistema);
+                // sistema2: sistema que ya tiene la receta
                 const sistema2 = arrayApps[indiceApp].app;
-                const recetaDisp = await getReceta(Types.ObjectId(receta.id), pacienteId, sistema2);
-                if (recetaDisp) {
-                    const tipo = recetaDisp.tipoDispensaActual;
-                    const dispensada = ['dispensada', 'dispensa-parcial'].includes(tipo);
-                    if (dispensada) {
-                        recetaDisp.dispensas.forEach(async d => {
-                            receta = d.estado ? await dispensar(receta, d.estado, d.dispensa, sistema2) : receta;
-                        });
-                        incluirReceta = false;
-                    } else {
-                        // actualizar appNotificada
-                        if (tipo === 'sin-dispensa') {
-                            receta.appNotificada = arrayApps.filter(a => a.app !== sistema2);
-                            receta.appNotificada.push(appN);
-                        } else {
-                            // receta en uso por app tipo="receta-en-uso"
-                            receta.appNotificada[indiceApp].fecha = moment().toDate();
-                            incluirReceta = false;
-                        }
+                // Consulta el estado de una receta en un sistema externo
+                const resultado = await consultarDispensa(receta, sistema2);
+                if (resultado.success) {
+                    const { dispensas, tipo, dispensada } = resultado;
+                    incluirReceta = tipo === 'sin-dispensa';
+                    receta = await actualizarDispensa(receta, dispensada, dispensas, tipo, sistema2, indiceApp);
+                    if (incluirReceta) {
+                        receta.appNotificada.push(appN);
                     }
                 } else {
                     incluirReceta = false;
@@ -198,7 +241,7 @@ export async function setEstadoDispensa(req, operacion, app) {
     }
 }
 
-async function dispensar(receta, operacion, dataDispensa, sistema) {
+function dispensar(receta, operacion, dataDispensa, sistema) {
     const operacionMap = {
         dispensar: 'dispensada',
         'dispensa-parcial': 'dispensa-parcial'
@@ -268,7 +311,7 @@ export async function actualizarAppNotificada(idReceta, sistema, req) {
                     receta.appNotificada = receta.appNotificada.filter(a => a.app !== sistema);
                     Auth.audit(receta, req);
                     await receta.save();
-                    await updateLog.info('sin-dispensar', { sistema, idReceta, receta });
+                    await updateLog.info('sin-dispensar', { sistema, idReceta }, req);
                     return receta;
 
                 } else {
@@ -284,7 +327,7 @@ export async function actualizarAppNotificada(idReceta, sistema, req) {
             }
         }
     } catch (error) {
-        await updateLog.error('actualizarAppNotificada', { sistema, idReceta }, error);
+        await updateLog.error('actualizarAppNotificada', { sistema, idReceta }, error, req);
         return error;
     }
 }
