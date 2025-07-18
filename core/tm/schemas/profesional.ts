@@ -73,7 +73,11 @@ ProfesionalSchema.add({
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
         exportadoSisa: Boolean,
-        fechaDeInscripcion: Date
+        fechaDeInscripcion: Date,
+        configuracionSisa: {
+            idProfesionSisa: { type: Number, required: false },
+            idMatriculaSisa: { type: Number, required: false }
+        }
     }],
     formacionPosgrado: [{
         profesion: { type: ObjSIISASchema, required: false },
@@ -151,6 +155,10 @@ ProfesionalSchema.add({
             extension: String,
         },
     }],
+    configuracionSisa: {
+        idSisa: { type: Number, required: false },
+        codigoSisa: { type: Number, required: false }
+    }
 });
 
 // Virtuals
