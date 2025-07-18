@@ -104,7 +104,7 @@ export async function buscarRecetas(req) {
             options['fechaRegistro'] = { $gte: fechaVencimiento };
         }
         let recetas: any = await Receta.find(options);
-        if (!recetas) {
+        if (!recetas.length) {
             return [];
         }
         const user = req.user;
