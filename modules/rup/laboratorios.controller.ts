@@ -56,13 +56,17 @@ export async function search(data) {
                 parametros: `nombre=LABAPI_GetProtocolos&parametros=${data.estado}|${data.dni}|${data.fechaNac}|${data.apellido}|${data.fechaDesde}|${data.fechaHasta}`
             };
         }
-
-
         const response = await services.get(service).exec(params);
+
+        if (!response || (Array.isArray(response) && response.length === 0)) {
+            throw new Error('El servicio no devolvió datos');
+        }
+
         const salida = data.idProtocolo ? agrupar(response[0].Data) : response;
         return salida;
     } catch (e) {
-        throw new Error('Error al obtener laboratorio');
+        const errorMessage = e.message || 'Error desconocido';
+        throw new Error('Error al obtener laboratorio: ' + errorMessage);
     }
 }
 
