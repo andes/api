@@ -1,3 +1,16 @@
+# [5.131.0](https://github.com/andes/api/compare/v5.130.1...v5.131.0) (2025-07-23)
+
+
+### Bug Fixes
+
+* **Receta:** actualiza respuesta cuando no hay recetas ([#2080](https://github.com/andes/api/issues/2080)) ([8dc2b40](https://github.com/andes/api/commit/8dc2b4099a0316870c6f93483322172805e556a3))
+* **Receta:** se agrega idDispensaApp en estados de dispensa ([#2079](https://github.com/andes/api/issues/2079)) ([e16f386](https://github.com/andes/api/commit/e16f3865e1f5406e83ee95d8edfd740d46dea72d))
+
+
+### Features
+
+* **RUP:** Agrega codigo de barras al PDF de la receta ([#2076](https://github.com/andes/api/issues/2076)) ([1011aa2](https://github.com/andes/api/commit/1011aa2b1ff8675dd2aae299ab6945f4f8661212))
+
 ## [5.130.1](https://github.com/andes/api/compare/v5.130.0...v5.130.1) (2025-07-09)
 
 
