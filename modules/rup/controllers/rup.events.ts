@@ -1,5 +1,5 @@
 import { EventCore } from '@andes/event-bus';
-import { getProfesionActualizada } from '../../recetas/recetasController';
+import { getDatosProfesion } from '../../recetas/recetasController';
 import * as moment from 'moment';
 import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
@@ -8,7 +8,8 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
         const idPrestacion = prestacion.id;
         const profPrestacion = prestacion.solicitud.profesional;
-        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
+
+        const { profesionGrado, matriculaGrado, especialidades } = await getDatosProfesion(profPrestacion);
 
         const profesional = {
             id: profPrestacion.id,
