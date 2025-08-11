@@ -10,6 +10,8 @@ import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { CamaEstados } from '../../../modules/rup/internacion/cama-estados.schema';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { InternacionResumen } from '../../../modules/rup/internacion/resumen/internacion-resumen.schema';
+import { userScheduler } from '../../../config.private';
+import { updatePacientesInternados } from '../mpi.log';
 
 // TODO: Handlear errores
 EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
@@ -113,105 +115,109 @@ function addressChanged(addOld, newAdd) {
 
 // Verifica si el paciente se encuentra internado y de ser asi actualiza sus datos basicos
 async function checkAndUpdateInternacion(paciente) {
-    let ultimoEstadoCapaMedica: any = await CamaEstados.findOne({
-        idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
-        capa: 'medica', // habitualmente se registra primero ingreso/egreso en capa medica
-        'estados.paciente.id': paciente._id
-    }).sort({ start: -1 });
-
-    if (!ultimoEstadoCapaMedica) {
-        // nunca internado
-        return;
-    }
-    // ultima ocupación de cama del paciente (capa medica)
-    ultimoEstadoCapaMedica = ultimoEstadoCapaMedica.toObject();
-
-    const idInternacionMedica = ultimoEstadoCapaMedica.estados.find(e => {
-        const id = e.paciente?.id ? (e.paciente?.id).toString() : '';
-        return id === paciente.id;
-    }).idInternacion;
-
-    const ultimoEgresoCapaMedica = await CamaEstados.findOne({
-        'estados.extras.idInternacion': idInternacionMedica
-    });
-
-    if (!ultimoEgresoCapaMedica) {
-        // como el paciente no esta egresado, obtenemos capa estadistica para tambien actualizar sus datos..
-        let ultimoEstadoEstadistica: any = await CamaEstados.findOne({
+    try {
+        let ultimoEstadoCapaMedica: any = await CamaEstados.findOne({
             idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
-            capa: 'estadistica',
-            start: { $gte: ultimoEstadoCapaMedica.start },
+            capa: 'medica', // habitualmente se registra primero ingreso/egreso en capa medica
             'estados.paciente.id': paciente._id
         }).sort({ start: -1 });
 
-        // ultima ocupación de cama del paciente (capa estadistica)
-        ultimoEstadoEstadistica = ultimoEstadoEstadistica?.toObject();
+        if (!ultimoEstadoCapaMedica) {
+            // nunca internado
+            return;
+        }
+        // ultima ocupación de cama del paciente (capa medica)
+        ultimoEstadoCapaMedica = ultimoEstadoCapaMedica.toObject();
 
-        const idInternacionEstadistica = ultimoEstadoEstadistica?.estados.find(e => {
+        const idInternacionMedica = ultimoEstadoCapaMedica.estados.find(e => {
             const id = e.paciente?.id ? (e.paciente?.id).toString() : '';
             return id === paciente.id;
         }).idInternacion;
 
-        const pac = {
-            id: paciente._id,
-            documento: paciente.documento,
-            numeroIdentificacion: paciente.numeroIdentificacion,
-            nombre: paciente.nombre,
-            alias: paciente.alias,
-            apellido: paciente.apellido,
-            sexo: paciente.sexo,
-            genero: paciente.genero,
-            fechaNacimiento: paciente.fechaNacimiento
-        };
+        const ultimoEgresoCapaMedica = await CamaEstados.findOne({
+            'estados.extras.idInternacion': idInternacionMedica
+        });
 
-        // actualizamos datos en capa medica
-        await CamaEstados.update(
-            {
-                idOrganizacion: ultimoEstadoCapaMedica.idOrganizacion,
-                ambito: 'internacion',
-                capa: 'medica',
-                'estados.idInternacion': idInternacionMedica
-            },
-            {
-                $set: { 'estados.$[elemento].paciente': pac }
-            },
-            {
-                arrayFilters: [{ 'elemento.paciente.id': paciente.id }],
-                multi: true
+        if (!ultimoEgresoCapaMedica) {
+            // como el paciente no esta egresado, obtenemos capa estadistica para tambien actualizar sus datos..
+            let ultimoEstadoEstadistica: any = await CamaEstados.findOne({
+                idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
+                capa: 'estadistica',
+                start: { $gte: ultimoEstadoCapaMedica.start },
+                'estados.paciente.id': paciente._id
+            }).sort({ start: -1 });
+
+            // ultima ocupación de cama del paciente (capa estadistica)
+            ultimoEstadoEstadistica = ultimoEstadoEstadistica?.toObject();
+
+            const idInternacionEstadistica = ultimoEstadoEstadistica?.estados.find(e => {
+                const id = e.paciente?.id ? (e.paciente?.id).toString() : '';
+                return id === paciente.id;
+            }).idInternacion;
+
+            const pac = {
+                id: paciente._id,
+                documento: paciente.documento,
+                numeroIdentificacion: paciente.numeroIdentificacion,
+                nombre: paciente.nombre,
+                alias: paciente.alias,
+                apellido: paciente.apellido,
+                sexo: paciente.sexo,
+                genero: paciente.genero,
+                fechaNacimiento: paciente.fechaNacimiento
+            };
+
+            // actualizamos datos en capa medica
+            await CamaEstados.update(
+                {
+                    idOrganizacion: ultimoEstadoCapaMedica.idOrganizacion,
+                    ambito: 'internacion',
+                    capa: 'medica',
+                    'estados.idInternacion': idInternacionMedica
+                },
+                {
+                    $set: { 'estados.$[elemento].paciente': pac }
+                },
+                {
+                    arrayFilters: [{ 'elemento.paciente.id': paciente.id }],
+                    multi: true
+                }
+            );
+            // actualizamos resumen de la internacion
+            const resumenUpdated = await InternacionResumen.findByIdAndUpdate(idInternacionMedica, { paciente: pac });
+            let idPrestacion; // id de la prestacion donde se encuentra el informe
+
+            // si es necesario, actualizamos datos en capa estadistica
+            if (idInternacionEstadistica) {
+                if (idInternacionEstadistica !== idInternacionMedica) {
+                    /* si fuera mismo idInternacion significaria que el efector usa capas
+                        fusionadas y solo habria que actualizar capa medica (No es el caso) */
+                    await CamaEstados.update(
+                        {
+                            idOrganizacion: ultimoEstadoCapaMedica.idOrganizacion,
+                            ambito: 'internacion',
+                            capa: 'estadistica',
+                            'estados.idInternacion': idInternacionEstadistica
+                        },
+                        {
+                            $set: { 'estados.$[elemento].paciente': pac }
+                        },
+                        {
+                            arrayFilters: [{ 'elemento.paciente.id': paciente.id }],
+                            multi: true
+                        }
+                    );
+                    idPrestacion = idInternacionEstadistica;
+                } else {
+                    idPrestacion = (resumenUpdated as any).idPrestacion;
+                }
             }
-        );
-        // actualizamos resumen de la internacion
-        const resumenUpdated = await InternacionResumen.findByIdAndUpdate(idInternacionMedica, { paciente: pac });
-        let idPrestacion; // id de la prestacion donde se encuentra el informe
-
-        // si es necesario, actualizamos datos en capa estadistica
-        if (idInternacionEstadistica) {
-            if (idInternacionEstadistica !== idInternacionMedica) {
-                /* si fuera mismo idInternacion significaria que el efector usa capas
-                    fusionadas y solo habria que actualizar capa medica (No es el caso) */
-                await CamaEstados.update(
-                    {
-                        idOrganizacion: ultimoEstadoCapaMedica.idOrganizacion,
-                        ambito: 'internacion',
-                        capa: 'estadistica',
-                        'estados.idInternacion': idInternacionEstadistica
-                    },
-                    {
-                        $set: { 'estados.$[elemento].paciente': pac }
-                    },
-                    {
-                        arrayFilters: [{ 'elemento.paciente.id': paciente.id }],
-                        multi: true
-                    }
-                );
-                idPrestacion = idInternacionEstadistica;
-            } else {
-                idPrestacion = (resumenUpdated as any).idPrestacion;
+            if (idPrestacion) {
+                // actualizamos la prestacion donde se encuentra el informe (Necesario para el listado de internación)
+                await Prestacion.findByIdAndUpdate(idInternacionEstadistica, { paciente: pac });
             }
         }
-        if (idPrestacion) {
-            // actualizamos la prestacion donde se encuentra el informe (Necesario para el listado de internación)
-            await Prestacion.findByIdAndUpdate(idInternacionEstadistica, { paciente: pac });
-        }
+    } catch (error) {
+        updatePacientesInternados.error('checkAndUpdateInternacion', paciente, error, userScheduler);
     }
 }

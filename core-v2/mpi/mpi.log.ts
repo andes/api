@@ -28,3 +28,10 @@ export const updateRelacionesLog = new Logger({
     type: 'mpi-update-relaciones',
     application: 'andes'
 });
+
+export const updatePacientesInternados = new Logger({
+    connection: Connections.logs,
+    module: 'mpi',
+    type: 'mpi-update-internados',
+    application: 'andes'
+});
