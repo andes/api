@@ -403,9 +403,13 @@ export async function calcularEstadoReceta(receta) {
 
 export async function crearReceta(req) {
     const reqBody = req.body;
+    const sistema = req.user.app?.nombre.toLowerCase();
+    let receta;
     try {
         const idPrestacion = reqBody.idPrestacion;
         const idRegistro = reqBody.idRegistro;
+        const fechaRegistro = reqBody.fechaRegistro;
+        const fechaPrestacion = reqBody.fechaPrestacion;
         const paciente = reqBody.paciente;
         const profesional = reqBody.profesional;
         const organizacion = reqBody.organizacion;
@@ -415,10 +419,11 @@ export async function crearReceta(req) {
         }
         const recetas = [];
         for (const medicamento of medicamentos) {
-            const receta: any = new Receta();
+            receta = new Receta();
             receta.idPrestacion = idPrestacion;
             receta.idRegistro = idRegistro;
-            receta.diagnostico = medicamento.diagnostico;
+            const diagnostico = medicamento.diagnostico;
+            receta.diagnostico = (typeof diagnostico === 'string') ? { descripcion: diagnostico } : diagnostico;
             receta.medicamento = {
                 concepto: medicamento.concepto,
                 presentacion: medicamento.presentacion,
@@ -436,20 +441,24 @@ export async function crearReceta(req) {
                 tipoReceta: medicamento.tipoReceta || 'simple'
             };
             receta.estados = [{ tipo: 'vigente' }];
-            receta.estadoActual = { tipo: 'vigente' };
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
             receta.paciente = paciente;
             receta.profesional = profesional;
             receta.organizacion = organizacion;
-            receta.origenExterno = reqBody.origenExterno;
+            receta.fechaRegistro = fechaRegistro ? new Date(fechaRegistro) : moment().toDate();
+            receta.fechaPrestacion = fechaPrestacion ? new Date(fechaPrestacion) : new Date(fechaRegistro);
+            receta.origenExterno = {
+                id: reqBody.origenExterno.id || '',
+                app: sistema || '',
+                fecha: reqBody.origenExterno.fecha || null,
+            };
             receta.audit(req);
             await receta.save();
             recetas.push(receta);
         }
         return recetas;
     } catch (err) {
-        createLog.error('crearReceta', reqBody, err);
+        createLog.error('crearReceta', { reqBody, receta }, err, req);
         return err;
     }
 }
