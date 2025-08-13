@@ -1,3 +1,15 @@
+# [5.132.0](https://github.com/andes/api/compare/v5.131.0...v5.132.0) (2025-08-13)
+
+
+### Bug Fixes
+
+* **Receta:** completa post ([#2087](https://github.com/andes/api/issues/2087)) ([1dfafe1](https://github.com/andes/api/commit/1dfafe1b1b38b32ff9064687386f7e73c4413c88))
+
+
+### Features
+
+* **MPI:** agrega consulta por paciente extranjero ([#2088](https://github.com/andes/api/issues/2088)) ([779f0ea](https://github.com/andes/api/commit/779f0ead6bb8026a46a436b7e2e21db87458daa7))
+
 # [5.131.0](https://github.com/andes/api/compare/v5.130.1...v5.131.0) (2025-07-23)
 
 
