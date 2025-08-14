@@ -1,29 +1,41 @@
 @page {
     size: portrait;
 }
+
 html {
     display: inline-block;
     padding: 0 2rem;
     margin: 0;
     font-family: sans-serif;
 }
+
 .logoHeader {
     width: 100%;
 }
+
 main {
     font-size: 0.7rem;
     margin-top: 3rem;
 }
+
 section {
     margin-top: 2rem;
+
     p {
         margin-top: 1.5rem;
     }
 }
+
 img.firmas {
     margin: 1cm 1.2cm;
     width: 150px;
 }
+
+img.sello {
+    margin: 1cm 1.2cm;
+    width: 100px;
+}
+
 footer {
     height: 1cm;
     font-size: 0.5rem;
@@ -31,12 +43,15 @@ footer {
     padding: 0;
     vertical-align: bottom;
 }
+
 .w-100 {
     width: 100%;
 }
+
 .w-75 {
     width: 75%;
 }
+
 hr {
     width: 95%;
     margin: 2px 0 4px 2px;

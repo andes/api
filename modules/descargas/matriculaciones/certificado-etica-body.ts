@@ -56,6 +56,8 @@ export class CertificadoEticaBody extends HTMLComponent {
                 <div class="col">
                     <!-- <img class="firmas" src="data:image/png;base64,{{ firmaJefeRegistro }}"> -->
                     <img class="firmas" src="data:image/png;base64,{{ firmaSupervisor }}">
+                    <img  class="sello" src="data:image/png;base64,{{ selloSubse }}">
+
                 </div>
             </div>
         </section>
@@ -67,7 +69,7 @@ export class CertificadoEticaBody extends HTMLComponent {
 
         const tienePosgrados = (_data.matricula.posgrados?.length > 0);
         const firmaSupervisor = loadImage('templates/matriculaciones/img/firma-supervisor.png');
-        // const firmaJefeRegistro = loadImage('templates/matriculaciones/img/firma-jefe-registro.png');
+        const selloSubse = loadImage('templates/matriculaciones/img/sello.png');
         const footer = 'Dirección de Fiscalización Sanitaria | Antártida Argentina y Colón, Edif. CAM 3 | CP (8300) Neuquén | Tel.: 0299 - 4495590 / 5591';
         const detalleExtension = `Por pedido del interesado/a, a los fines que hubiere lugar, se extiende el presente, en Neuquén a los ${moment().format('D')} días del mes de ${(moment().format('MMMM'))} de ${moment().format('YYYY')}.`;
         _data.matricula.grado.fechaAlta = moment(_data.matricula.grado.fechaAlta).format('DD/MM/YYYY');
@@ -79,7 +81,7 @@ export class CertificadoEticaBody extends HTMLComponent {
             detalleExtension,
             footer,
             firmaSupervisor,
-            // firmaJefeRegistro
+            selloSubse
         };
     }
 
