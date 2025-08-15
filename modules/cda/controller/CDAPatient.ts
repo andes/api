@@ -440,7 +440,7 @@ export async function CDAExists(id, fecha, orgId) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient(pacienteId, prestacion, { limit, skip }, org = null): Promise<any[]> {
+export function searchByPatient(pacienteId, prestacion, { limit, skip, fechaDesde = null, fechaHasta = null }, org = null): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         const ids = Array.isArray(pacienteId) ? pacienteId : [Types.ObjectId(pacienteId)];
         try {
@@ -451,6 +451,15 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }, org = n
             };
             if (prestacion) {
                 conditions['metadata.prestacion.snomed.conceptId'] = prestacion;
+            }
+            if (fechaDesde || fechaHasta) {
+                conditions['metadata.fecha'] = {};
+                if (fechaDesde) {
+                    conditions['metadata.fecha']['$gte'] = moment(fechaDesde).startOf('day').toDate();
+                }
+                if (fechaHasta) {
+                    conditions['metadata.fecha']['$lte'] = moment(fechaHasta).endOf('day').toDate();
+                }
             }
             if (limit === null) {
                 limit = 100;
@@ -879,4 +888,3 @@ export function cdaToJSON(idCDA) {
         }
     });
 }
-
