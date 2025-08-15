@@ -137,30 +137,27 @@ export async function liberarTurno(req, data, turno) {
                 turnoDoble.updatedBy = req.user.usuario || req.user;
             }
 
-            switch (turno.tipoTurno) {
-                case ('delDia'):
-                    data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-                    data.bloques[position.indexBloque].restantesProgramados = 0;
-                    data.bloques[position.indexBloque].restantesProfesional = 0;
-                    data.bloques[position.indexBloque].restantesGestion = 0;
-                    break;
-                case ('programado'):
-                    data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-                    if (this.esVirtual(turno.emitidoPor)) {
-                        data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
-                    }
-                    turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
-                    break;
-                case ('profesional'):
+            const turnosAsignados = {
+                programados: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'programado').length || 0,
+                delDia: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'delDia').length || 0,
+                autocitados: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'profesional').length || 0,
+                gestion: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'gestion').length || 0
+            };
+
+            if (data.bloques[position.indexBloque].restantesGestion < (data.bloques[position.indexBloque].reservadoGestion - turnosAsignados.gestion)) {
+                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+            } else {
+                if (data.bloques[position.indexBloque].restantesProfesional < (data.bloques[position.indexBloque].reservadoProfesional - turnosAsignados.autocitados)) {
                     data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
-                    break;
-                case ('gestion'):
-                    data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
-                    break;
+                } else {
+                    if (data.bloques[position.indexBloque].restantesProgramados < (data.bloques[position.indexBloque].accesoDirectoProgramado - turnosAsignados.programados)) {
+                        data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                    } else {
+                        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                    }
+                }
             }
-            if (turno.tipoTurno) {
-                turno.tipoTurno = undefined;
-            }
+
             const fechaActualizar = moment().startOf('day').add(2, 'days');
             // actualizamos turnos de la agenda si la hora de inicio esta dentro de las proxmas 48hs
             if (moment(data.horaInicio).isBefore(fechaActualizar)) {
@@ -211,25 +208,23 @@ export function suspenderTurno(req, data, turno) {
     if (!(data.sobreturnos && data.sobreturnos.length > 0)) {
         // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
         const position = getPosition(req, data, turno._id);
-        if (!turno.tipoTurno) {
-            if (data.bloques[position.indexBloque].restantesDelDia > 0) {
-                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
+
+        if (data.bloques[position.indexBloque].restantesDelDia > 0) {
+            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
+        } else {
+            if (data.bloques[position.indexBloque].restantesProgramados > 0) {
+                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
             } else {
-                if (data.bloques[position.indexBloque].restantesProgramados > 0) {
-                    data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
+                if (data.bloques[position.indexBloque].restantesProfesional > 0) {
+                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
                 } else {
-                    if (data.bloques[position.indexBloque].restantesProfesional > 0) {
-                        data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
-                    } else {
-                        if (data.bloques[position.indexBloque].restantesGestion > 0) {
-                            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
-                        }
+                    if (data.bloques[position.indexBloque].restantesGestion > 0) {
+                        data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
                     }
                 }
             }
         }
     }
-    // NotificationService.notificarSuspension(datosTurno, efector);
 }
 
 // Turno
