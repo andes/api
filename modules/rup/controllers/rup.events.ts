@@ -8,7 +8,7 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
         const idPrestacion = prestacion.id;
         const profPrestacion = prestacion.solicitud.profesional;
-        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
+        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion.id);
 
         const profesional = {
             id: profPrestacion.id,
@@ -32,12 +32,12 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             });
             if (!receta) {
                 const cantRecetas = medicamento.tratamientoProlongado ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
-                for (let i = 0; i < cantRecetas; i++) {
-
+                for (let i = 0;i < cantRecetas;i++) {
                     try {
                         receta = new Receta();
                         receta.organizacion = organizacion;
                         receta.profesional = profesional;
+                        receta.profesional._id = profesional.id;
                         receta.fechaRegistro = moment(prestacion.ejecucion.fecha).add(i * 30, 'days').toDate();
                         receta.fechaPrestacion = moment(prestacion.ejecucion.fecha).toDate();
                         receta.idPrestacion = idPrestacion;
@@ -63,9 +63,7 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
                             numero: medicamento.numero
                         };
                         receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
-                        receta.estadoActual = i < 1 ? { tipo: 'vigente' } : { tipo: 'pendiente' };
                         receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-                        receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
                         receta.paciente = prestacion.paciente;
                         receta.audit(prestacion.createdBy);
                         await receta.save();
