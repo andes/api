@@ -8,6 +8,8 @@ import { MotivosReceta, Receta } from './receta-schema';
 import { createLog, informarLog, updateLog, jobsLog } from './recetaLogs';
 import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
 import { getReceta } from './services/receta';
+import { Paciente } from '../../core-v2/mpi/paciente/paciente.schema';
+import { Profesional } from '../../core/tm/schemas/profesional';
 
 
 async function registrarAppNotificadas(req, recetas, sistema) {
@@ -321,12 +323,12 @@ export async function rechazar(idReceta, sistema, req) {
     }
 }
 
-export async function getProfesionActualizada(profesional) {
+export async function getProfesionActualizada(idProfesional) {
     let profesionGrado = '';
     let matriculaGrado = 0;
     let especialidades = '';
 
-    const infoMatriculas = await searchMatriculas(profesional.id);
+    const infoMatriculas = await searchMatriculas(idProfesional);
 
     if (infoMatriculas) {
         // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
@@ -407,23 +409,64 @@ export async function calcularEstadoReceta(receta) {
 
 
 export async function crearReceta(req) {
-    const reqBody = req.body;
+    const dataReceta = req.body;
     const sistema = req.user.app?.nombre.toLowerCase();
-    let receta;
+    let receta, pacienteAndes, profesional, paciente;
+    const recetas = [];
+    const idPrestacion = dataReceta.idPrestacion;
+    const idRegistro = dataReceta.idRegistro || idPrestacion;
+    const pacienteRecetar = dataReceta.paciente;
+    const organizacion = dataReceta.organizacion;
+    const medicamento = dataReceta.medicamento;
+    const profRecetar = dataReceta.profesional;
     try {
-        const idPrestacion = reqBody.idPrestacion;
-        const idRegistro = reqBody.idRegistro;
-        const fechaRegistro = reqBody.fechaRegistro;
-        const fechaPrestacion = reqBody.fechaPrestacion;
-        const paciente = reqBody.paciente;
-        const profesional = reqBody.profesional;
-        const organizacion = reqBody.organizacion;
-        const medicamentos = reqBody.medicamentos;
-        if (!idPrestacion || !idRegistro || !medicamentos || !medicamentos.length || !paciente || !profesional || !organizacion) {
-            throw new ParamsIncorrect();
+        const fechaRegistro = dataReceta.fechaRegistro ? new Date(dataReceta.fechaRegistro) : moment().toDate();
+        const fechaPrestacion = dataReceta.fechaPrestacion ? new Date(dataReceta.fechaPrestacion) : new Date(fechaRegistro);
+        const medicamentoIncompleto = !medicamento || !medicamento.concepto?.conceptId || !medicamento.cantidad || !medicamento.cantEnvases;
+        if (medicamentoIncompleto) {
+            throw new ParamsIncorrect('Faltan datos del medicamento');
         }
-        const recetas = [];
-        for (const medicamento of medicamentos) {
+        if (!idPrestacion || !organizacion) {
+            throw new ParamsIncorrect('Faltan datos de la receta');
+        }
+        if (!pacienteRecetar || !pacienteRecetar.id) {
+            throw new ParamsIncorrect('Faltan datos del paciente');
+        } else {
+            pacienteAndes = await Paciente.findById(pacienteRecetar.id);
+            if (!pacienteAndes) {
+                throw new ParamsIncorrect('Paciente no encontrado');
+            } else if (pacienteRecetar.obraSocial) {
+                pacienteAndes.obraSocial = {
+                    origen: pacienteRecetar.obraSocial.otraOS ? 'RECETAR' : 'PUCO',
+                    nombre: pacienteRecetar.obraSocial.nombre,
+                    financiador: pacienteRecetar.obraSocial.nombre,
+                    codigoPuco: pacienteRecetar.obraSocial.codigoPuco || null,
+                    numeroAfiliado: pacienteRecetar.obraSocial.numeroAfiliado || null
+                };
+            }
+        }
+        if (!profRecetar || !profRecetar.id) {
+            throw new ParamsIncorrect('Faltan datos del profesional');
+        } else {
+            const profAndes = await Profesional.findById(profRecetar.id);
+            if (!profAndes) {
+                throw new ParamsIncorrect('Profesional no encontrado');
+            }
+            const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profRecetar.id);
+            profesional = {
+                _id: profAndes._id,
+                id: profAndes._id,
+                nombre: profAndes.nombre,
+                apellido: profAndes.apellido,
+                documento: profAndes.documento,
+                profesion: profesionGrado,
+                especialidad: especialidades,
+                matricula: matriculaGrado
+            };
+        }
+
+        const cantRecetas = medicamento.tratamientoProlongado ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
+        for (let i = 0;i < cantRecetas;i++) {
             receta = new Receta();
             receta.idPrestacion = idPrestacion;
             receta.idRegistro = idRegistro;
@@ -443,19 +486,23 @@ export async function crearReceta(req) {
                 },
                 tratamientoProlongado: medicamento.tratamientoProlongado,
                 tiempoTratamiento: medicamento.tiempoTratamiento,
-                tipoReceta: medicamento.tipoReceta || 'simple'
+                ordenTratamiento: i,
+                tipoReceta: medicamento.tipoReceta || 'simple',
+                serie: medicamento.serie,
+                numero: medicamento.numero,
             };
-            receta.estados = [{ tipo: 'vigente' }];
+            receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            receta.paciente = paciente;
+            receta.paciente = pacienteAndes;
+            receta.paciente.id = pacienteAndes._id;
             receta.profesional = profesional;
             receta.organizacion = organizacion;
-            receta.fechaRegistro = fechaRegistro ? new Date(fechaRegistro) : moment().toDate();
-            receta.fechaPrestacion = fechaPrestacion ? new Date(fechaPrestacion) : new Date(fechaRegistro);
+            receta.fechaRegistro = moment(fechaRegistro).add(i * 30, 'days').toDate();
+            receta.fechaPrestacion = fechaPrestacion;
             receta.origenExterno = {
-                id: reqBody.origenExterno.id || '',
+                id: dataReceta.origenExterno.id || '',
                 app: sistema || '',
-                fecha: reqBody.origenExterno.fecha || null,
+                fecha: dataReceta.origenExterno.fecha || null,
             };
             receta.audit(req);
             await receta.save();
@@ -463,7 +510,7 @@ export async function crearReceta(req) {
         }
         return recetas;
     } catch (err) {
-        createLog.error('crearReceta', { reqBody, receta }, err, req);
+        createLog.error('crearReceta', { dataReceta, recetas, pacienteRecetar, profRecetar }, err, req);
         return err;
     }
 }

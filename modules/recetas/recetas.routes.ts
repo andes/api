@@ -60,8 +60,7 @@ export const patch = async (req, res) => {
                 result = await cancelarDispensa(recetaId, dataDispensa, app, req);
                 break;
             default: const error = new ParamsIncorrect();
-                status =
-                    res.status(error.status).json(error);
+                status = res.status(error.status).json(error);
         }
         if (result) {
             status = result?.status || 200;
