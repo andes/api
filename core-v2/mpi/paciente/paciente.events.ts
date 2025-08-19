@@ -116,9 +116,14 @@ function addressChanged(addOld, newAdd) {
 // Verifica si el paciente se encuentra internado y de ser asi actualiza sus datos basicos
 async function checkAndUpdateInternacion(paciente) {
     try {
+        if (!paciente.updatedBy.organizacion?.id) {
+            return;
+        }
+
         let ultimoEstadoCapaMedica: any = await CamaEstados.findOne({
-            idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
+            ambito: 'internacion',
             capa: 'medica', // habitualmente se registra primero ingreso/egreso en capa medica
+            idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
             'estados.paciente.id': paciente._id
         }).sort({ start: -1 });
 
@@ -141,8 +146,9 @@ async function checkAndUpdateInternacion(paciente) {
         if (!ultimoEgresoCapaMedica) {
             // como el paciente no esta egresado, obtenemos capa estadistica para tambien actualizar sus datos..
             let ultimoEstadoEstadistica: any = await CamaEstados.findOne({
-                idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
+                ambito: 'internacion',
                 capa: 'estadistica',
+                idOrganizacion: Types.ObjectId(paciente.updatedBy.organizacion.id),
                 start: { $gte: ultimoEstadoCapaMedica.start },
                 'estados.paciente.id': paciente._id
             }).sort({ start: -1 });
