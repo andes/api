@@ -1,3 +1,10 @@
+# [5.133.0](https://github.com/andes/api/compare/v5.132.0...v5.133.0) (2025-08-20)
+
+
+### Features
+
+* **IO:** agrega filtro de fechas en recuperacion de CDAs ([#2068](https://github.com/andes/api/issues/2068)) ([e1bb252](https://github.com/andes/api/commit/e1bb252fde15d2c0ca68deec3f8f25788301013c))
+
 # [5.132.0](https://github.com/andes/api/compare/v5.131.0...v5.132.0) (2025-08-13)
 
 
