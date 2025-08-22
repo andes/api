@@ -1,11 +1,13 @@
+import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
+import { userScheduler } from '../../config.private';
 import { searchMatriculas } from '../../core/tm/controller/profesional';
+import { RecetasParametros } from './parametros.schema';
 import { MotivosReceta, Receta } from './receta-schema';
-import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from './recetas.error';
-import * as moment from 'moment';
+import { createLog, informarLog, updateLog, jobsLog } from './recetaLogs';
+import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
 import { getReceta } from './services/receta';
-import { updateLog, informarLog, createLog } from './recetaLogs';
 
 
 async function registrarAppNotificadas(req, recetas, sistema) {
@@ -116,7 +118,7 @@ export async function buscarRecetas(req) {
         }
         return recetas;
     } catch (err) {
-        await informarLog.error('buscarRecetas', { params, options }, err);
+        await informarLog.error('buscarRecetas', { params, options }, err, req);
         return err;
     }
 }
@@ -159,6 +161,7 @@ export async function suspender(recetas, req) {
         return error;
     }
 }
+
 
 export async function getMotivosReceta(res) {
     try {
@@ -461,5 +464,76 @@ export async function crearReceta(req) {
         createLog.error('crearReceta', { reqBody, receta }, err, req);
         return err;
     }
+}
+
+
+/**
+ * Actualiza estado de recetas:
+ * pendientes pasan a estado vigentes y
+ * vigentes pasan a estado vencidas.
+ *
+ */
+export async function actualizarEstadosRecetas(done) {
+    let totalRecetasAVigentes = 0;
+    let totalRecetasAVencidas = 0;
+    let query = {};
+    try {
+        const parametro: any = await RecetasParametros.findOne({ key: 'fechaLimite' });
+        const days = (parametro && parametro.value) ? Number(parametro.value) : 30;
+        const fechaFinVigentes = moment().startOf('day').subtract(days, 'days').toDate();
+        const fechaFinPendientes = moment().add(1, 'd').endOf('day').toDate();
+        const fechaInicioPendientes = moment().subtract(3, 'month').endOf('day').toDate();
+        // actualizar recetas pendientes a vigentes
+        query = {
+            'estadoActual.tipo': 'pendiente',
+            fechaRegistro: {
+                $lte: fechaFinPendientes,
+                $gte: fechaInicioPendientes
+
+            }
+        };
+        const recetasPendientes: any = await Receta.find(query);
+        for (const receta of recetasPendientes) {
+            try {
+                receta.estados.push({
+                    tipo: 'vigente',
+                    fecha: moment().toDate(),
+                });
+                totalRecetasAVigentes++;
+                Auth.audit(receta, userScheduler as any);
+                await receta.save();
+            } catch (error) {
+                await jobsLog.error('actualizarEstadosRecetas:pendientes', receta, error);
+            }
+        }
+
+        // actualizar recetas vigentes a vencidas
+        query = {
+            'estadoActual.tipo': 'vigente',
+            fechaRegistro: { $lt: fechaFinVigentes },
+            'estadoDispensaActual.tipo': { $in: ['sin-dispensa', 'dispensa-parcial'] },
+        };
+
+        const recetasVigentes: any = await Receta.find(query);
+
+        for (const receta of recetasVigentes) {
+            try {
+                receta.estados.push({
+                    tipo: 'vencida',
+                    fecha: moment().toDate()
+                });
+                Auth.audit(receta, userScheduler as any);
+                await receta.save();
+                totalRecetasAVencidas++;
+            } catch (error) {
+                await jobsLog.error('actualizarEstadosRecetas:vencidas', receta, error);
+            }
+        }
+        await jobsLog.info('actualizarEstadosRecetas', { totalRecetasAVigentes, totalRecetasAVencidas });
+    } catch (err) {
+        await jobsLog.error('actualizarEstadosRecetas', { totalRecetasAVigentes, totalRecetasAVencidas, query }, err);
+        return (done(err));
+    }
+    done();
 }
 
