@@ -34,6 +34,10 @@ export interface IAuthUsers {
         createdAt: Date;
     }[];
     pacienteRestringido: Object;
+    otp?: {
+        code: String;
+        expiresAt: Date;
+    };
 }
 
 export type IAuthUsersDoc = AndesDocWithAudit<IAuthUsers>;
