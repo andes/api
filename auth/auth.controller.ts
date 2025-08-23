@@ -7,6 +7,7 @@ import { Profesional } from './../core/tm/schemas/profesional';
 import { MailOptions, renderHTML, sendMail } from './../utils/roboSender/sendEmail';
 import { Auth } from './auth.class';
 import { AuthUsers } from './schemas/authUsers';
+import * as crypto from 'crypto';
 const sha1Hash = require('sha1');
 
 
@@ -189,6 +190,74 @@ export async function setValidationTokenAndNotify(username) {
         }
     } catch (error) {
         throw error;
+    }
+}
+
+/**
+ * Envía un codigo OTP para recuperar la contraseña en caso que sea un usuario temporal con email (fuera de onelogin).
+ * AuthUser
+ */
+export async function sendOtpAndNotify(username): Promise<any> {
+    try {
+        const usuario = await AuthUsers.findOne({ usuario: username });
+
+        // Se mantiene la validación para usuarios temporales con email
+        if (usuario && usuario.tipo === 'temporal' && usuario.email) {
+            // Genera un código OTP de 6 dígitos
+            const otpCode = crypto.randomInt(100000, 999999).toString();
+
+            usuario.otp = {
+                code: otpCode,
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutos en milisegundos
+            };
+
+            usuario.audit(userScheduler);
+            await usuario.save();
+
+            const extras: any = {
+                titulo: 'Código de Verificación',
+                usuario,
+                otpCode,
+            };
+            const htmlToSend = await renderHTML('emails/otp-code.html', extras);
+
+            const options: MailOptions = {
+                from: enviarMail.auth.user,
+                to: usuario.email.toString(),
+                subject: 'Tu código de verificación',
+                text: '',
+                html: htmlToSend,
+                attachments: null,
+            };
+            await sendMail(options);
+            return usuario;
+        } else {
+            // El usuario no existe o no es un usuario temporal con email
+            return null;
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * Valida el código OTP ingresado por el usuario.
+ * @param username - El nombre de usuario o correo electrónico.
+ * @param otpCode - El código OTP que el usuario ha ingresado.
+ */
+export async function validateOtp(username, otpCode): Promise<boolean> {
+    try {
+        const usuario = await AuthUsers.findOne({ usuario: username });
+        if (!usuario || !usuario.otp || !usuario.otp.code) {
+            return false;
+        }
+        const now = new Date();
+        if (usuario.otp.code !== otpCode.toString() || usuario.otp.expiresAt < now) {
+            return false;
+        }
+        return true;
+    } catch (error) {
+        return false;
     }
 }
 
