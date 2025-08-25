@@ -126,10 +126,13 @@ router.get('/obraSocialPaciente', Auth.authenticate(), async (req, res, next) =>
     if (req.query.documento && req.query.sexo) {
         const resp = await obrasocialController.getObraSocial(req.query);
         const paciente = await Paciente.find({ documento: req.query.documento });
-        const codigosExistentes = new Set(resp.map(item => item.codigoPuco));
-        const financiadoresUnicos = paciente[0]?.financiador?.filter(item =>
-            !codigosExistentes.has(item.codigoPuco)
-        ) || [];
+        const codigosExistentes = new Set(resp.map(item => item.codigoPuco || item.nombre));
+        const financiadoresUnicos = paciente[0]?.financiador?.filter(item => {
+            if (!item) { return false; }
+            const clave = item.codigoPuco || item.nombre;
+            if (!clave) { return false; }
+            return !codigosExistentes.has(clave);
+        }) || [];
         return res.json([...resp, ...financiadoresUnicos]);
     } else {
         return next('Parámetros incorrectos');
