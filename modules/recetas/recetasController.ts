@@ -643,6 +643,35 @@ export async function crearReceta(dataReceta, req) {
     }
     return recetas;
 }
+export async function buscarRecetasPorProfesional(req) {
+    try {
+        const profesionalId = req.params.id;
+        const { estadoReceta, desde, hasta } = req.query;
+        if (!profesionalId || !Types.ObjectId.isValid(profesionalId)) {
+            throw new ParamsIncorrect();
+        }
+        const filter: any = {
+            'profesional.id': Types.ObjectId(profesionalId)
+        };
+        if (estadoReceta) {
+            filter['estadoActual.tipo'] = estadoReceta;
+        }
+        if (desde || hasta) {
+            filter['fechaRegistro'] = {};
+            if (desde) {
+                filter['fechaRegistro'].$gte = moment(desde).startOf('day').toDate();
+            }
+            if (hasta) {
+                filter['fechaRegistro'].$lte = moment(hasta).endOf('day').toDate();
+            }
+        }
+        const recetas = await Receta.find(filter);
+        return recetas;
+    } catch (err) {
+        await informarLog.error('buscarRecetasPorProfesional', { params: req.params, query: req.query }, err);
+        return err;
+    }
+}
 
 
 /**
