@@ -7,6 +7,8 @@ import { DICOMPaciente } from './dicom/paciente-encode';
 import { DICOMPrestacion } from './dicom/prestacion-encode';
 import { PacsConfigController } from './pacs-config.controller';
 import { createPaciente, createWorkList, enviarInforme, loginPacs, anularPacs } from './pacs-network';
+import { userScheduler } from '../../config.private';
+import { pacsLogs } from './pacs.logs';
 
 export async function syncWorkList(prestacion: IPrestacion) {
     try {
@@ -16,7 +18,6 @@ export async function syncWorkList(prestacion: IPrestacion) {
         }
 
         const organizacion = prestacion.ejecucion.organizacion;
-
         const tipoPrestacion = prestacion.solicitud.tipoPrestacion;
 
         if (!tipoPrestacion) {
@@ -27,10 +28,7 @@ export async function syncWorkList(prestacion: IPrestacion) {
         if (config) {
             const token = await loginPacs(config);
 
-
             const uniqueID = `${config.ui}.${Date.now()}`;
-
-
             const pacienteDICOM = DICOMPaciente(prestacion.paciente);
             const prestacionDICOM = DICOMPrestacion(
                 prestacion,
@@ -44,8 +42,9 @@ export async function syncWorkList(prestacion: IPrestacion) {
             await createPaciente(config, pacienteDICOM, token);
             const response = await createWorkList(config, prestacionDICOM, token);
             const dataResponse = response?.['00400100']?.['Value']?.[0]['00400009']?.['Value']?.[0];
-            const spsID = dataResponse || null;
 
+            const spsID = dataResponse || null;
+            pacsLogs.info('syncWorkList', { prestacion: prestacion.id, respuestaPacs: spsID, pacienteDICOM, prestacionDICOM }, userScheduler);
             const query = prestacion.groupId ?
                 { groupId: prestacion.groupId } :
                 { _id: (prestacion as any)._id };
@@ -56,6 +55,7 @@ export async function syncWorkList(prestacion: IPrestacion) {
             ];
             if (dataResponse) {
                 arrayMetadata.push({ key: 'pacs-spsID', valor: spsID }); // id de la orden
+                pacsLogs.info('syncWorkList', { prestacion: prestacion.id, respuestaPacs: arrayMetadata }, userScheduler);
             }
             await Prestacion.update(
                 query,
@@ -67,11 +67,9 @@ export async function syncWorkList(prestacion: IPrestacion) {
                     }
                 }
             );
-
         }
     } catch (err) {
-        // [TODO] Logger
-        // console.error(err);
+        pacsLogs.error('syncWorkList', { prestacion: prestacion.id }, err, userScheduler);
     }
 }
 

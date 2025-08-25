@@ -827,7 +827,7 @@ export = router;
 
 
 EventCore.on('rup:prestacion:validate', async (prestacion) => {
-    if (!prestacion.paciente.id || prestacion.paciente?.obraSocial?.nombre) {
+    if (!prestacion.paciente?.id || prestacion.paciente?.obraSocial?.nombre) {
         return;
     }
     if (prestacion.solicitud.turno) {
