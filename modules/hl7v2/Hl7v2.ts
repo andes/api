@@ -23,26 +23,6 @@ interface PatientIdentifier {
     id_type_code: string;
 }
 
-export async function addMetadataHL7v2(prestacion: any, config: IHL7v2Config): Promise<void> {
-    const arrayMetadata = [
-        { key: HL7V2_METADATA_KEY, valor: 'true' },
-        { key: HL7V2_CONFIG_METADATA_KEY, valor: config.queueName }
-    ];
-
-    // Verificar si ya existe la clave 'hl7v2' en los metadatos de la prestación
-    const hl7v2MetadataExists = prestacion.metadata && prestacion.metadata.some(meta => meta.key === HL7V2_METADATA_KEY);
-
-    if (!hl7v2MetadataExists) {
-        prestacion.metadata = [...(prestacion.metadata || []), ...arrayMetadata];
-        try {
-            Auth.audit(prestacion, userScheduler as any);
-            await prestacion.save();
-        } catch (error) {
-            throw error;
-        }
-    }
-}
-
 export async function adt04(turno: any): Promise<void> {
     const organizacionId = turno.updatedBy.organizacion.id;
     const tipoPrestacionConceptId = turno.tipoPrestacion.conceptId;
