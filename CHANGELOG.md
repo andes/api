@@ -1,3 +1,15 @@
+# [5.134.0](https://github.com/andes/api/compare/v5.133.0...v5.134.0) (2025-08-27)
+
+
+### Bug Fixes
+
+* **PACS:** Agrega logs en pacs ([#2093](https://github.com/andes/api/issues/2093)) ([c30c9ef](https://github.com/andes/api/commit/c30c9ef037737aee090a7686826d354f80cd89be))
+
+
+### Features
+
+* **RUP:** implementa job para actualizar estado de recetas ([#2029](https://github.com/andes/api/issues/2029)) ([6b1c42f](https://github.com/andes/api/commit/6b1c42f10ad7bee53b9df88318fa542a9240b63c))
+
 # [5.133.0](https://github.com/andes/api/compare/v5.132.0...v5.133.0) (2025-08-20)
 
 
