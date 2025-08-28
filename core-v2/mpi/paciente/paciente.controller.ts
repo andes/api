@@ -18,6 +18,7 @@ import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { PacienteCtr } from './paciente.routes';
 import { Paciente, replaceChars } from './paciente.schema';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { Constantes } from '../../../modules/constantes/constantes.schema';
 
 /**
  * Crea un objeto paciente
@@ -131,13 +132,17 @@ export async function findById(id: string | String | Types.ObjectId, options = n
             const codigosFinanciadores = financiador.map(f => f.codigoPuco);
             paciente.financiador = paciente.financiador.filter(f => (f.origen && f.origen !== 'PUCO') || codigosFinanciadores.includes(f.codigoPuco));
 
-            financiador.forEach(nuevoFinanciador => {
+            financiador.forEach(async nuevoFinanciador => {
                 const index = paciente.financiador.findIndex(f => f.codigoPuco === nuevoFinanciador.codigoPuco);
                 if (index === -1) {
                     paciente.financiador.push(nuevoFinanciador);
                 } else if (!('origen' in paciente.financiador[index])) {
                     paciente.financiador[index] = nuevoFinanciador;
                 } else {
+                    const codigoPuco = await Constantes.findOne({ nombre: 'codigoPuco' });
+                    if (!paciente.financiador[index].numeroAfiliado && paciente.financiador[index].codigoPuco === parseInt(codigoPuco.key, 10)) {
+                        paciente.financiador[index].numeroAfiliado = nuevoFinanciador.numeroAfiliado;
+                    }
                     paciente.financiador[index].fechaDeActualizacion = moment().toDate();
                 }
             });
