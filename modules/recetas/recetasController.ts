@@ -408,43 +408,65 @@ export async function calcularEstadoReceta(receta) {
 }
 
 
-export async function crearReceta(req) {
-    const dataReceta = req.body;
-    const sistema = req.user.app?.nombre.toLowerCase();
-    let receta, pacienteAndes, profesional, paciente;
-    const recetas = [];
-    const idPrestacion = dataReceta.idPrestacion;
-    const idRegistro = dataReceta.idRegistro || idPrestacion;
-    const pacienteRecetar = dataReceta.paciente;
-    const organizacion = dataReceta.organizacion;
-    const medicamento = dataReceta.medicamento;
-    const profRecetar = dataReceta.profesional;
+export async function create(req) {
+    const pacienteRecetar = req.body.paciente;
+    const profRecetar = req.body.profesional;
+    const dataReceta = {
+        medicamento: req.body.medicamento,
+        idPrestacion: req.body.idPrestacion,
+        idRegistro: req.body.idRegistro || req.body.idPrestacion,
+        fechaRegistro: null,
+        fechaPrestacion: null,
+        paciente: null,
+        profesional: null,
+        organizacion: req.body.organizacion,
+        diagnostoco: null,
+        origenExterno: null
+
+    };
     try {
-        const fechaRegistro = dataReceta.fechaRegistro ? new Date(dataReceta.fechaRegistro) : moment().toDate();
-        const fechaPrestacion = dataReceta.fechaPrestacion ? new Date(dataReceta.fechaPrestacion) : new Date(fechaRegistro);
-        const medicamentoIncompleto = !medicamento || !medicamento.concepto?.conceptId || !medicamento.cantidad || !medicamento.cantEnvases;
+        dataReceta.fechaRegistro = dataReceta.fechaRegistro ? moment(dataReceta.fechaRegistro).toDate() : moment().toDate();
+        dataReceta.fechaPrestacion = dataReceta.fechaPrestacion ? dataReceta.fechaPrestacion : dataReceta.fechaRegistro;
+        const medicamentoIncompleto = !req.body.medicamento || !req.body.medicamento.concepto?.conceptId || !req.body.medicamento.cantidad || !req.body.medicamento.cantEnvases;
+        dataReceta.origenExterno = {
+            id: req.body.origenExterno.id || '',
+            app: req.user.app?.nombre.toLowerCase() || '',
+            fecha: req.body.origenExterno.fecha ? new Date(req.body.origenExterno.fecha) : dataReceta.fechaRegistro,
+        };
         if (medicamentoIncompleto) {
             throw new ParamsIncorrect('Faltan datos del medicamento');
+        } else {
+            const receta = await Receta.findOne({
+                'medicamento.concepto.conceptId': dataReceta.medicamento.concepto.conceptId,
+                idRegistro: dataReceta.idRegistro
+            });
+            if (receta) {
+                throw new ParamsIncorrect('Receta ya registrada');
+            }
         }
-        if (!idPrestacion || !organizacion) {
+        if (!req.body.idPrestacion || !dataReceta.organizacion) {
             throw new ParamsIncorrect('Faltan datos de la receta');
         }
         if (!pacienteRecetar || !pacienteRecetar.id) {
             throw new ParamsIncorrect('Faltan datos del paciente');
         } else {
-            pacienteAndes = await Paciente.findById(pacienteRecetar.id);
+            const pacienteAndes: any = await Paciente.findById(pacienteRecetar.id);
             if (!pacienteAndes) {
                 throw new ParamsIncorrect('Paciente no encontrado');
-            } else if (pacienteRecetar.obraSocial) {
-                pacienteAndes.obraSocial = {
-                    origen: pacienteRecetar.obraSocial.otraOS ? 'RECETAR' : 'PUCO',
-                    nombre: pacienteRecetar.obraSocial.nombre,
-                    financiador: pacienteRecetar.obraSocial.nombre,
-                    codigoPuco: pacienteRecetar.obraSocial.codigoPuco || null,
-                    numeroAfiliado: pacienteRecetar.obraSocial.numeroAfiliado || null
-                };
+            } else {
+                if (pacienteRecetar.obraSocial) {
+                    pacienteAndes.financiador = {
+                        origen: pacienteRecetar.obraSocial.otraOS ? 'RECETAR' : 'PUCO',
+                        nombre: pacienteRecetar.obraSocial.nombre,
+                        financiador: pacienteRecetar.obraSocial.nombre,
+                        codigoPuco: pacienteRecetar.obraSocial.codigoPuco || null,
+                        numeroAfiliado: pacienteRecetar.obraSocial.numeroAfiliado || null
+                    };
+                }
+                dataReceta.paciente = pacienteAndes;
             }
         }
+
         if (!profRecetar || !profRecetar.id) {
             throw new ParamsIncorrect('Faltan datos del profesional');
         } else {
@@ -453,7 +475,7 @@ export async function crearReceta(req) {
                 throw new ParamsIncorrect('Profesional no encontrado');
             }
             const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profRecetar.id);
-            profesional = {
+            dataReceta.profesional = {
                 _id: profAndes._id,
                 id: profAndes._id,
                 nombre: profAndes.nombre,
@@ -464,17 +486,30 @@ export async function crearReceta(req) {
                 matricula: matriculaGrado
             };
         }
+        return await crearReceta(dataReceta, req);
+    } catch (err) {
+        createLog.error('create', { dataReceta, pacienteRecetar, profRecetar }, err, req);
+        return err;
+    }
+}
 
-        const cantRecetas = medicamento.tratamientoProlongado ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
-        for (let i = 0;i < cantRecetas;i++) {
+
+export async function crearReceta(dataReceta, req) {
+    const medicamento = dataReceta.medicamento;
+    const tratamientoProlongado: Boolean = medicamento.tratamientoProlongado && medicamento.tiempoTratamiento && medicamento.tiempoTratamiento.id !== null;
+    const cantRecetas = (tratamientoProlongado) ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
+    const recetas = [];
+    let receta;
+    for (let i = 0;i < cantRecetas;i++) {
+        try {
             receta = new Receta();
-            receta.idPrestacion = idPrestacion;
-            receta.idRegistro = idRegistro;
-            const diagnostico = medicamento.diagnostico;
-            receta.diagnostico = (typeof diagnostico === 'string') ? { descripcion: diagnostico } : diagnostico;
+            receta.idPrestacion = dataReceta.idPrestacion;
+            receta.idRegistro = dataReceta.idRegistro;
+            const diag = medicamento.diagnostico;
+            receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
             receta.medicamento = {
-                concepto: medicamento.concepto,
-                presentacion: medicamento.presentacion,
+                concepto: medicamento.concepto || medicamento.generico,
+                presentacion: medicamento.presentacion?.term || medicamento.presentacion,
                 unidades: medicamento.unidades,
                 cantidad: medicamento.cantidad,
                 cantEnvases: medicamento.cantEnvases,
@@ -484,35 +519,40 @@ export async function crearReceta(req) {
                     dias: medicamento.dosisDiaria.dias,
                     notaMedica: medicamento.dosisDiaria.notaMedica
                 },
-                tratamientoProlongado: medicamento.tratamientoProlongado,
-                tiempoTratamiento: medicamento.tiempoTratamiento,
+                tratamientoProlongado,
+                tiempoTratamiento: tratamientoProlongado ? medicamento.tiempoTratamiento : null,
                 ordenTratamiento: i,
-                tipoReceta: medicamento.tipoReceta || 'simple',
+                tipoReceta: medicamento.tipoReceta?.id || medicamento.tipoReceta || 'simple',
                 serie: medicamento.serie,
                 numero: medicamento.numero,
             };
             receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            receta.paciente = pacienteAndes;
-            receta.paciente.id = pacienteAndes._id;
-            receta.profesional = profesional;
-            receta.organizacion = organizacion;
-            receta.fechaRegistro = moment(fechaRegistro).add(i * 30, 'days').toDate();
-            receta.fechaPrestacion = fechaPrestacion;
-            receta.origenExterno = {
-                id: dataReceta.origenExterno.id || '',
-                app: sistema || '',
-                fecha: dataReceta.origenExterno.fecha || null,
-            };
-            receta.audit(req);
+            receta.paciente = dataReceta.paciente;
+            receta.paciente.obraSocial = dataReceta.paciente.financiador;
+            receta.paciente.id = dataReceta.paciente.id || dataReceta.paciente._id;
+            receta.profesional = dataReceta.profesional;
+            receta.profesional._id = dataReceta.profesional.id || dataReceta.profesional._id; // revisar como se generan ids en ambos casos
+            receta.organizacion = dataReceta.organizacion;
+            receta.fechaRegistro = moment(dataReceta.fechaRegistro).add(i * 30, 'days').toDate();
+            receta.fechaPrestacion = moment(dataReceta.fechaPrestacion).toDate();
+            if (dataReceta.origenExterno) {
+                receta.origenExterno = dataReceta.origenExterno;
+            }
+            if (req.user) {
+                Auth.audit(receta, req as any);
+            } else {
+                receta.audit(req);
+            }
             await receta.save();
             recetas.push(receta);
+        } catch (err) {
+            createLog.error('crearReceta', { dataReceta, receta }, err, req);
+            return err;
         }
-        return recetas;
-    } catch (err) {
-        createLog.error('crearReceta', { dataReceta, recetas, pacienteRecetar, profRecetar }, err, req);
-        return err;
+
     }
+    return recetas;
 }
 
 
