@@ -36,11 +36,13 @@ export async function pacientePuco(documento, sexo) {
                 resultOS[i] = {
                     codigoPuco: osPuco[i].codigoOS,
                     nombre: '',
-                    financiador: ''
+                    financiador: '',
+                    numeroAfiliado: ''
                 };
                 if (obraSocial) {
                     resultOS[i].nombre = obraSocial.nombre;
                     resultOS[i].financiador = obraSocial.nombre;
+                    resultOS[i].numeroAfiliado = osPuco[i].numeroAfiliado;
                 }
             }
         }
@@ -77,10 +79,9 @@ export async function getOSPuco(documento, sexo, periodo = null) {
         }
     }
     const lastPeriodo = (p: any) => (compare(p, lastVersion) === 0);
-
     // si se consultó por la ultima version y el paciente no está en puco con esa version,
     //  entonces lo actualizamos con sisa
-    if (lastPeriodo(padron) && (!osPatientPuco.length || (osPatientPuco.length && !lastPeriodo(lastVersionPuco)))) {
+    if (lastPeriodo(padron) && (!osPatientPuco.length || (osPatientPuco.length && !lastPeriodo(lastVersionPuco)) || !osPatientPuco[0].numeroAfiliado)) {
         // obtenemos de sisa
         osPatientPuco = await createOSpuco(documento, sexo);
     }
@@ -161,6 +162,7 @@ export async function coberturaSalud(documento, sexo) {
                             transmite: 'N',
                             nombre: '',
                             coberturaSocial: osPatient.cobertura || '',
+                            numeroAfiliado: documento,
                             version
                         };
 

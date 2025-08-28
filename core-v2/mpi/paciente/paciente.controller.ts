@@ -138,6 +138,9 @@ export async function findById(id: string | String | Types.ObjectId, options = n
                 } else if (!('origen' in paciente.financiador[index])) {
                     paciente.financiador[index] = nuevoFinanciador;
                 } else {
+                    if (!paciente.financiador[index].numeroAfiliado && (paciente.financiador[index].origen === 'PUCO' && !paciente.financiador[index].prepaga)) {
+                        paciente.financiador[index].numeroAfiliado = nuevoFinanciador.numeroAfiliado;
+                    }
                     paciente.financiador[index].fechaDeActualizacion = moment().toDate();
                 }
             });
