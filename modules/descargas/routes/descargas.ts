@@ -175,6 +175,9 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
     let dataSearch;
     if (req.body.protocolo.data.idProtocolo) {
         try {
+            if (!req.body.protocolo.data.documento) {
+                throw new Error('Error al generar laboratorio.');
+            }
             const paciente = await Paciente.find({ documento: req.body.protocolo.data.documento });
             dataSearch = { idProtocolo: req.body.protocolo.data.idProtocolo };
             const response = await laboratorioController.search(dataSearch);
@@ -189,6 +192,7 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
         } catch (err) {
             const dataError = {
                 id: req.params.id,
+                idProtocolo: req.query.idProtocolo,
                 estado: req.query.estado,
                 documento: req.query.dni,
                 fechaNacimiento: req.query.fecNac,
