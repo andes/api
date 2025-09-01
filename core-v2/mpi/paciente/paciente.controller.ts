@@ -555,15 +555,15 @@ export async function getHistorialPaciente(req) {
             matchTurnos1['estado'] = {
                 $in: ['publicada', 'pendienteAsistencia', 'pendienteAuditoria', 'auditada', 'disponible', 'pausada', 'suspendida']
             };
-            matchTurnos1['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(paciente.id);
-            matchSobreturnos['sobreturnos.paciente.id'] = mongoose.Types.ObjectId(paciente.id);
+            matchTurnos1['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
+            matchSobreturnos['sobreturnos.paciente.id'] = { $in: paciente.vinculos };
 
             if (req.query?.estado) {
                 matchTurnos2['bloques.turnos.estado'] = req.query.estado;
                 matchSobreturnos['sobreturnos.estado'] = req.query.estado;
             }
 
-            matchTurnos2['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(paciente.id);
+            matchTurnos2['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
 
             if (req.query?.desde && req.query?.hasta) {
                 matchTurnos2['bloques.turnos.horaInicio'] = {
