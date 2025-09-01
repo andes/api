@@ -173,11 +173,9 @@ router.post('/constanciaPuco/:tipo?', Auth.authenticate(), async (req: any, res)
 
 router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
     let dataSearch;
-    if (req.body.protocolo.data.idProtocolo) {
+
+    if (req.body.protocolo.data.idProtocolo && req.body.protocolo.data.documento) {
         try {
-            if (!req.body.protocolo.data.documento) {
-                throw new Error('Error al generar laboratorio.');
-            }
             const paciente = await Paciente.find({ documento: req.body.protocolo.data.documento });
             dataSearch = { idProtocolo: req.body.protocolo.data.idProtocolo };
             const response = await laboratorioController.search(dataSearch);
@@ -192,7 +190,7 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
         } catch (err) {
             const dataError = {
                 id: req.params.id,
-                idProtocolo: req.query.idProtocolo,
+                idProtocolo: req.body.protocolo.data.idProtocolo,
                 estado: req.query.estado,
                 documento: req.query.dni,
                 fechaNacimiento: req.query.fecNac,
@@ -205,7 +203,8 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
         }
 
     } else {
-        return next(500);
+        await laboratorioLog.error('laboratorio-descargas', req.body, req);
+        return next(404);
     }
 });
 
