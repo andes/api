@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { sisa, renaperToAndes, sisaToAndes, renaperv3 } from '@andes/fuentes-autenticas';
 import { busInteroperabilidad } from '../../../config.private';
 import { sisa as sisaConfig } from '../../../config.private';
