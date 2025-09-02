@@ -237,6 +237,10 @@ router.get('/:id', async (req: any, res, next) => {
     const CDAFiles = makeFs();
     const contexto = await CDAFiles.findOne({ _id: _base64 });
     CDAFiles.readFile({ _id: _base64 }, (err, buffer) => {
+
+        if (err || !buffer) {
+            res.status(200).json({});
+        }
         res.contentType(contexto.contentType);
         res.end(buffer);
     });
