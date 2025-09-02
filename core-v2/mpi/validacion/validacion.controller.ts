@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { sisa, renaperToAndes, sisaToAndes, renaperv3 } from '@andes/fuentes-autenticas';
 import { busInteroperabilidad } from '../../../config.private';
 import { sisa as sisaConfig } from '../../../config.private';
@@ -24,8 +25,9 @@ function identidadSinAcentos(ciudadano) {
  */
 
 export async function validar(documento: string, sexo: string) {
+    let ciudadanoRenaper = null;
     try {
-        const ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
+        ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
         if (ciudadanoRenaper) {
             // Valida el tamaño de la foto
             ciudadanoRenaper.foto = ciudadanoRenaper.foto?.includes('image/jpg') ? await validarTamañoFoto(ciudadanoRenaper.foto) : null;
@@ -38,6 +40,10 @@ export async function validar(documento: string, sexo: string) {
                 return ciudadanoRenaper;
             }
         }
+    } catch (error) {
+        // RENAPER caído, se continúa con SISA
+    }
+    try {
         const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
         if (ciudadanoSisa) {
             ciudadanoSisa.direccion[0] = await matchDireccion(ciudadanoSisa);
@@ -49,13 +55,11 @@ export async function validar(documento: string, sexo: string) {
                 ciudadanoSisa.idTramite = ciudadanoRenaper.idTramite;
             }
             return ciudadanoSisa;
-        } else {
-            return ciudadanoRenaper;
         }
     } catch (error) {
-        return null;
+        // Error también en SISA
     }
-
+    return ciudadanoRenaper;
 }
 
 
