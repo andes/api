@@ -361,7 +361,7 @@ export async function cancelarDispensa(idReceta, dataDispensa, sistema, req) {
             const estadoActual = receta.estadoActual.tipo;
             const estadoDispensa = receta.estadoDispensaActual.tipo;
             if (estadoDispensa !== 'sin-dispensa') {
-                const tipo = (receta.estadoActual.tipo === 'finalizada') ? calcularEstadoReceta(receta) : receta.estadoActual.tipo;
+                const tipo = (receta.estadoActual.tipo === 'finalizada') ? await calcularEstadoReceta(receta) : receta.estadoActual.tipo;
                 const estadoReceta = { tipo };
                 receta.estados.push(estadoReceta);
 
@@ -400,7 +400,9 @@ export async function calcularEstadoReceta(receta) {
     const fActual = moment();
     const fRegistro = moment(receta.fechaRegistro).startOf('day');
     const dias = fRegistro.diff(fActual, 'd');
-    return (dias > 30) ? 'vencida' : 'vigente';
+    const parametro: any = await RecetasParametros.findOne({ key: 'fechaLimite' });
+    const days = (parametro && parametro.value) ? Number(parametro.value) : 30;
+    return (dias > days) ? 'vencida' : 'vigente';
 }
 
 
