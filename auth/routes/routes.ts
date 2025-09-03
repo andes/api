@@ -1,9 +1,8 @@
 import { Modulos } from '../../core/tm/schemas/modulos.schema';
-import { findIndex } from 'core-js/core/array';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
-import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser, updateOrganizacion } from '../auth.controller';
+import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser, updateOrganizacion, sendOtpAndNotify, validateOtp } from '../auth.controller';
 import { checkPassword } from '../ldap.controller';
 import { AuthUsers } from '../schemas/authUsers';
 import { Organizacion } from './../../core/tm/schemas/organizacion';
@@ -258,6 +257,44 @@ router.post('/resetPassword', async (req, res, next) => {
             }
         } else {
             return next(403);
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/sendOTPCode', async (req, res, next) => {
+    try {
+        const username = req.body.username;
+        if (username) {
+            const result = await sendOtpAndNotify(username);
+            if (result) {
+                return res.json({ status: 'ok' });
+            } else {
+                return res.json({ status: 'redirectOneLogin' });
+            }
+        } else {
+            return next(403);
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/validateOTPCode', async (req, res, next) => {
+    try {
+        const { username, otpCode } = req.body;
+
+        if (!username || !otpCode) {
+            return next(400);
+        }
+
+        const isValid = await validateOtp(username, otpCode);
+
+        if (isValid) {
+            return res.json({ status: 'ok' });
+        } else {
+            return res.json({ status: 'invalidCode' });
         }
     } catch (error) {
         return next(error);
