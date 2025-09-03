@@ -1,3 +1,11 @@
+## [5.134.1](https://github.com/andes/api/compare/v5.134.0...v5.134.1) (2025-09-03)
+
+
+### Bug Fixes
+
+* Agrega control de documento en descarga de labo ([#2098](https://github.com/andes/api/issues/2098)) ([cca10ba](https://github.com/andes/api/commit/cca10ba9d60c74054dc5b5a824cd0692bee86321))
+* cambia el codigo de error al intentar devolver el pdf de labos ([#2099](https://github.com/andes/api/issues/2099)) ([ab9b90d](https://github.com/andes/api/commit/ab9b90d5679a91cef93eb8d140dd82a92221daa3))
+
 # [5.134.0](https://github.com/andes/api/compare/v5.133.0...v5.134.0) (2025-08-27)
 
 
