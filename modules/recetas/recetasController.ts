@@ -8,6 +8,8 @@ import { MotivosReceta, Receta } from './receta-schema';
 import { createLog, informarLog, updateLog, jobsLog } from './recetaLogs';
 import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
 import { getReceta } from './services/receta';
+import { Paciente } from '../../core-v2/mpi/paciente/paciente.schema';
+import { Profesional } from '../../core/tm/schemas/profesional';
 
 
 async function registrarAppNotificadas(req, recetas, sistema) {
@@ -321,12 +323,12 @@ export async function rechazar(idReceta, sistema, req) {
     }
 }
 
-export async function getProfesionActualizada(profesional) {
+export async function getProfesionActualizada(idProfesional) {
     let profesionGrado = '';
     let matriculaGrado = 0;
     let especialidades = '';
 
-    const infoMatriculas = await searchMatriculas(profesional.id);
+    const infoMatriculas = await searchMatriculas(idProfesional);
 
     if (infoMatriculas) {
         // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
@@ -406,32 +408,108 @@ export async function calcularEstadoReceta(receta) {
 }
 
 
-export async function crearReceta(req) {
-    const reqBody = req.body;
-    const sistema = req.user.app?.nombre.toLowerCase();
-    let receta;
+export async function create(req) {
+    const pacienteRecetar = req.body.paciente;
+    const profRecetar = req.body.profesional;
+    const dataReceta = {
+        medicamento: req.body.medicamento,
+        idPrestacion: req.body.idPrestacion,
+        idRegistro: req.body.idRegistro || req.body.idPrestacion,
+        fechaRegistro: null,
+        fechaPrestacion: null,
+        paciente: null,
+        profesional: null,
+        organizacion: req.body.organizacion,
+        diagnostoco: null,
+        origenExterno: null
+
+    };
     try {
-        const idPrestacion = reqBody.idPrestacion;
-        const idRegistro = reqBody.idRegistro;
-        const fechaRegistro = reqBody.fechaRegistro;
-        const fechaPrestacion = reqBody.fechaPrestacion;
-        const paciente = reqBody.paciente;
-        const profesional = reqBody.profesional;
-        const organizacion = reqBody.organizacion;
-        const medicamentos = reqBody.medicamentos;
-        if (!idPrestacion || !idRegistro || !medicamentos || !medicamentos.length || !paciente || !profesional || !organizacion) {
-            throw new ParamsIncorrect();
+        dataReceta.fechaRegistro = dataReceta.fechaRegistro ? moment(dataReceta.fechaRegistro).toDate() : moment().toDate();
+        dataReceta.fechaPrestacion = dataReceta.fechaPrestacion ? dataReceta.fechaPrestacion : dataReceta.fechaRegistro;
+        const medicamentoIncompleto = !req.body.medicamento || !req.body.medicamento.concepto?.conceptId || !req.body.medicamento.cantidad || !req.body.medicamento.cantEnvases;
+        dataReceta.origenExterno = {
+            id: req.body.origenExterno.id || '',
+            app: req.user.app?.nombre.toLowerCase() || '',
+            fecha: req.body.origenExterno.fecha ? new Date(req.body.origenExterno.fecha) : dataReceta.fechaRegistro,
+        };
+        if (medicamentoIncompleto) {
+            throw new ParamsIncorrect('Faltan datos del medicamento');
+        } else {
+            const receta = await Receta.findOne({
+                'medicamento.concepto.conceptId': dataReceta.medicamento.concepto.conceptId,
+                idRegistro: dataReceta.idRegistro
+            });
+            if (receta) {
+                throw new ParamsIncorrect('Receta ya registrada');
+            }
         }
-        const recetas = [];
-        for (const medicamento of medicamentos) {
+        if (!req.body.idPrestacion || !dataReceta.organizacion) {
+            throw new ParamsIncorrect('Faltan datos de la receta');
+        }
+        if (!pacienteRecetar || !pacienteRecetar.id) {
+            throw new ParamsIncorrect('Faltan datos del paciente');
+        } else {
+            const pacienteAndes: any = await Paciente.findById(pacienteRecetar.id);
+            if (!pacienteAndes) {
+                throw new ParamsIncorrect('Paciente no encontrado');
+            } else {
+                if (pacienteRecetar.obraSocial) {
+                    pacienteAndes.financiador = {
+                        origen: pacienteRecetar.obraSocial.otraOS ? 'RECETAR' : 'PUCO',
+                        nombre: pacienteRecetar.obraSocial.nombre,
+                        financiador: pacienteRecetar.obraSocial.nombre,
+                        codigoPuco: pacienteRecetar.obraSocial.codigoPuco || null,
+                        numeroAfiliado: pacienteRecetar.obraSocial.numeroAfiliado || null
+                    };
+                }
+                dataReceta.paciente = pacienteAndes;
+            }
+        }
+
+        if (!profRecetar || !profRecetar.id) {
+            throw new ParamsIncorrect('Faltan datos del profesional');
+        } else {
+            const profAndes = await Profesional.findById(profRecetar.id);
+            if (!profAndes) {
+                throw new ParamsIncorrect('Profesional no encontrado');
+            }
+            const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profRecetar.id);
+            dataReceta.profesional = {
+                _id: profAndes._id,
+                id: profAndes._id,
+                nombre: profAndes.nombre,
+                apellido: profAndes.apellido,
+                documento: profAndes.documento,
+                profesion: profesionGrado,
+                especialidad: especialidades,
+                matricula: matriculaGrado
+            };
+        }
+        return await crearReceta(dataReceta, req);
+    } catch (err) {
+        createLog.error('create', { dataReceta, pacienteRecetar, profRecetar }, err, req);
+        return err;
+    }
+}
+
+
+export async function crearReceta(dataReceta, req) {
+    const medicamento = dataReceta.medicamento;
+    const tratamientoProlongado: Boolean = medicamento.tratamientoProlongado && medicamento.tiempoTratamiento && medicamento.tiempoTratamiento.id !== null;
+    const cantRecetas = (tratamientoProlongado) ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
+    const recetas = [];
+    let receta;
+    for (let i = 0;i < cantRecetas;i++) {
+        try {
             receta = new Receta();
-            receta.idPrestacion = idPrestacion;
-            receta.idRegistro = idRegistro;
-            const diagnostico = medicamento.diagnostico;
-            receta.diagnostico = (typeof diagnostico === 'string') ? { descripcion: diagnostico } : diagnostico;
+            receta.idPrestacion = dataReceta.idPrestacion;
+            receta.idRegistro = dataReceta.idRegistro;
+            const diag = medicamento.diagnostico;
+            receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
             receta.medicamento = {
-                concepto: medicamento.concepto,
-                presentacion: medicamento.presentacion,
+                concepto: medicamento.concepto || medicamento.generico,
+                presentacion: medicamento.presentacion?.term || medicamento.presentacion,
                 unidades: medicamento.unidades,
                 cantidad: medicamento.cantidad,
                 cantEnvases: medicamento.cantEnvases,
@@ -441,31 +519,40 @@ export async function crearReceta(req) {
                     dias: medicamento.dosisDiaria.dias,
                     notaMedica: medicamento.dosisDiaria.notaMedica
                 },
-                tratamientoProlongado: medicamento.tratamientoProlongado,
-                tiempoTratamiento: medicamento.tiempoTratamiento,
-                tipoReceta: medicamento.tipoReceta || 'simple'
+                tratamientoProlongado,
+                tiempoTratamiento: tratamientoProlongado ? medicamento.tiempoTratamiento : null,
+                ordenTratamiento: i,
+                tipoReceta: medicamento.tipoReceta?.id || medicamento.tipoReceta || 'simple',
+                serie: medicamento.serie,
+                numero: medicamento.numero,
             };
-            receta.estados = [{ tipo: 'vigente' }];
+            receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            receta.paciente = paciente;
-            receta.profesional = profesional;
-            receta.organizacion = organizacion;
-            receta.fechaRegistro = fechaRegistro ? new Date(fechaRegistro) : moment().toDate();
-            receta.fechaPrestacion = fechaPrestacion ? new Date(fechaPrestacion) : new Date(fechaRegistro);
-            receta.origenExterno = {
-                id: reqBody.origenExterno.id || '',
-                app: sistema || '',
-                fecha: reqBody.origenExterno.fecha || null,
-            };
-            receta.audit(req);
+            receta.paciente = dataReceta.paciente;
+            receta.paciente.obraSocial = dataReceta.paciente.financiador;
+            receta.paciente.id = dataReceta.paciente.id || dataReceta.paciente._id;
+            receta.profesional = dataReceta.profesional;
+            receta.profesional._id = dataReceta.profesional.id || dataReceta.profesional._id; // revisar como se generan ids en ambos casos
+            receta.organizacion = dataReceta.organizacion;
+            receta.fechaRegistro = moment(dataReceta.fechaRegistro).add(i * 30, 'days').toDate();
+            receta.fechaPrestacion = moment(dataReceta.fechaPrestacion).toDate();
+            if (dataReceta.origenExterno) {
+                receta.origenExterno = dataReceta.origenExterno;
+            }
+            if (req.user) {
+                Auth.audit(receta, req as any);
+            } else {
+                receta.audit(req);
+            }
             await receta.save();
             recetas.push(receta);
+        } catch (err) {
+            createLog.error('crearReceta', { dataReceta, receta }, err, req);
+            return err;
         }
-        return recetas;
-    } catch (err) {
-        createLog.error('crearReceta', { reqBody, receta }, err, req);
-        return err;
+
     }
+    return recetas;
 }
 
 

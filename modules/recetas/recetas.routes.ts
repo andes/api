@@ -2,7 +2,7 @@ import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
-import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa, crearReceta } from './recetasController';
+import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa, create } from './recetasController';
 import { ParamsIncorrect } from './recetas.error';
 
 class RecetasResource extends ResourceBase {
@@ -60,8 +60,7 @@ export const patch = async (req, res) => {
                 result = await cancelarDispensa(recetaId, dataDispensa, app, req);
                 break;
             default: const error = new ParamsIncorrect();
-                status =
-                    res.status(error.status).json(error);
+                status = res.status(error.status).json(error);
         }
         if (result) {
             status = result?.status || 200;
@@ -71,7 +70,7 @@ export const patch = async (req, res) => {
 };
 
 export const post = async (req, res) => {
-    const resp = await crearReceta(req);
+    const resp = await create(req);
     const status = resp?.status || resp?.errors || 200;
     res.status(status).json(resp);
 };
