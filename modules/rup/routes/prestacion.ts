@@ -584,6 +584,11 @@ router.post('/prestaciones', async (req, res, next) => {
 });
 
 router.patch('/prestaciones/:id', (req: Request, res, next) => {
+    const fechaIngreso = req.body.registros?.[0]?.valor?.informeIngreso?.fechaIngreso;
+    const fechaEgreso = req.body.registros?.[req.body.registros?.length - 1]?.valor?.InformeEgreso?.fechaEgreso;
+    if (fechaIngreso && fechaEgreso && moment(fechaIngreso).isAfter(moment(fechaEgreso))) {
+        return next('La fecha de ingreso no puede ser posterior a la fecha de egreso ');
+    }
     Prestacion.findById(req.params.id, async (err, data: any) => {
         if (err) {
             return next(err);
