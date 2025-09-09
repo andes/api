@@ -12,6 +12,9 @@ import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { InternacionResumen } from '../../../modules/rup/internacion/resumen/internacion-resumen.schema';
 import { userScheduler } from '../../../config.private';
 import { updatePacientesInternados } from '../mpi.log';
+import { mpiUpdatePacientesLog } from '../mpi.log';
+
+const logUpdatePaciente = mpiUpdatePacientesLog.startTrace();
 
 // TODO: Handlear errores
 EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
@@ -46,61 +49,68 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     };
     const direccionOriginal = paciente._original.direccion?.[0] || null;
     const direccionActual = paciente.direccion?.[0] || null;
-    // Verifica si hubo algun cambio en direccion, localidad y/o provincia
-    if (!paciente.direccion[0]?.situacionCalle && addressChanged(direccionOriginal, direccionActual)) {
-        await updateGeoreferencia(paciente);
-    }
-    // Verifica si se realizó alguna operación de vinculación de pacientes
-    const vinculado = changeFields.includes('idPacientePrincipal');
-    if (vinculado && paciente.idPacientePrincipal) {
-        AppCache.clear(`huds-${paciente.idPacientePrincipal}`);
-        AppCache.clear(`huds-${paciente.id}`);
-        setTimeout(() => {
-            EventCore.emitAsync('mpi:pacientes:link', {
-                target: new Types.ObjectId(paciente.idPacientePrincipal),
-                source: new Types.ObjectId(paciente.id)
-            });
-        }, 10000);
-        const pacienteVinculado = await findById(paciente.idPacientePrincipal);
-        await updatePrestacionPatient(pacienteVinculado, paciente.id, paciente.idPacientePrincipal);
-    }
-    if (vinculado && paciente.idPacientePrincipal === null && paciente.activo) {
-        AppCache.clear(`huds-${paciente._original.idPacientePrincipal}`);
-        AppCache.clear(`huds-${paciente.id}`);
-        setTimeout(() => {
-            EventCore.emitAsync('mpi:pacientes:unlink', {
-                target: new Types.ObjectId(paciente._original.idPacientePrincipal),
-                source: new Types.ObjectId(paciente.id)
-            });
-        }, 10000);
-        await updatePrestacionPatient(paciente, paciente.id, null);
-    }
-    if (paciente.estado === 'validado') {
-        // si el paciente tiene algun reporte de error, verificamos que sea nuevo
-        if (paciente.reportarError) {
-            const reportes = await logPaciente.find({ paciente: paciente.id, operacion: 'error:reportar' });
-            if (!reportes.some((rep: any) => rep.error === paciente.notaError)) {
-                LoggerPaciente.logReporteError(patientRequest, 'error:reportar', paciente, paciente.notaError);
+
+    try {
+        // Verifica si hubo algun cambio en direccion, localidad y/o provincia
+        if (!paciente.direccion[0]?.situacionCalle && addressChanged(direccionOriginal, direccionActual)) {
+            await updateGeoreferencia(paciente);
+        }
+        // Verifica si se realizó alguna operación de vinculación de pacientes
+        const vinculado = changeFields.includes('idPacientePrincipal');
+        if (vinculado && paciente.idPacientePrincipal) {
+            AppCache.clear(`huds-${paciente.idPacientePrincipal}`);
+            AppCache.clear(`huds-${paciente.id}`);
+            setTimeout(() => {
+                EventCore.emitAsync('mpi:pacientes:link', {
+                    target: new Types.ObjectId(paciente.idPacientePrincipal),
+                    source: new Types.ObjectId(paciente.id)
+                });
+            }, 10000);
+            const pacienteVinculado = await findById(paciente.idPacientePrincipal);
+            await updatePrestacionPatient(pacienteVinculado, paciente.id, paciente.idPacientePrincipal);
+        }
+        if (vinculado && paciente.idPacientePrincipal === null && paciente.activo) {
+            AppCache.clear(`huds-${paciente._original.idPacientePrincipal}`);
+            AppCache.clear(`huds-${paciente.id}`);
+            setTimeout(() => {
+                EventCore.emitAsync('mpi:pacientes:unlink', {
+                    target: new Types.ObjectId(paciente._original.idPacientePrincipal),
+                    source: new Types.ObjectId(paciente.id)
+                });
+            }, 10000);
+            await updatePrestacionPatient(paciente, paciente.id, null);
+        }
+        if (paciente.estado === 'validado') {
+            // si el paciente tiene algun reporte de error, verificamos que sea nuevo
+            if (paciente.reportarError) {
+                const reportes = await logPaciente.find({ paciente: paciente.id, operacion: 'error:reportar' });
+                if (!reportes.some((rep: any) => rep.error === paciente.notaError)) {
+                    LoggerPaciente.logReporteError(patientRequest, 'error:reportar', paciente, paciente.notaError);
+                }
             }
         }
-    }
-    if (changeFields.includes('activo') && paciente.relaciones) {
-        // Obtenemos todos los pacientes relacionados del paciente desactivado/activado en un array de promesas.
-        let relacionados = paciente.relaciones.map(r => Paciente.findById(r.referencia));
-        relacionados = await Promise.all(relacionados);
-        // Por cada uno de esos pacientes relacionados buscamos en que posición del array de relaciones del paciente desactivado/activado
-        // se encuentra y luego cambiamos el atributo activo a true/false segun corresponde.
-        relacionados.map(async pac => {
-            const index = pac.relaciones.findIndex(rel => rel.referencia.toString() === paciente._id.toString());
-            if (index > -1) {
-                pac.relaciones[index].activo = paciente.activo;
+        if (changeFields.includes('activo') && paciente.relaciones) {
+            // Obtenemos todos los pacientes relacionados del paciente desactivado/activado en un array de promesas.
+            let relacionados = paciente.relaciones.map(r => Paciente.findById(r.referencia));
+            relacionados = await Promise.all(relacionados);
+            // Por cada uno de esos pacientes relacionados buscamos en que posición del array de relaciones del paciente desactivado/activado
+            // se encuentra y luego cambiamos el atributo activo a true/false segun corresponde.
+            relacionados.map(async pac => {
+                const index = pac.relaciones.findIndex(rel => rel.referencia.toString() === paciente._id.toString());
+                if (index > -1) {
+                    pac.relaciones[index].activo = paciente.activo;
+                }
+                await Paciente.findByIdAndUpdate(pac._id, { relaciones: pac.relaciones });
+            });
+        }
+        // Verifica si el paciente esta actualmente internado para replicar los cambios
+        if (['nombre', 'apellido', 'sexo', 'alias', 'genero'].some(field => changeFields.includes(field))) {
+            if (paciente?._id) {
+                await checkAndUpdateInternacion(paciente);
             }
-            await Paciente.findByIdAndUpdate(pac._id, { relaciones: pac.relaciones });
-        });
-    }
-    // Verifica si el paciente esta actualmente internado para replicar los cambios
-    if (['nombre', 'apellido', 'sexo', 'alias', 'genero'].map(field => changeFields.includes(field))) {
-        await checkAndUpdateInternacion(paciente);
+        }
+    } catch (error) {
+        logUpdatePaciente.error('pacienteUpdate', paciente, error, userScheduler);
     }
 });
 
