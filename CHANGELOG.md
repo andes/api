@@ -1,3 +1,10 @@
+## [5.134.2](https://github.com/andes/api/compare/v5.134.1...v5.134.2) (2025-09-10)
+
+
+### Bug Fixes
+
+* **PUCO:** Corrige filtro por codigo Puco ([#2095](https://github.com/andes/api/issues/2095)) ([78dd665](https://github.com/andes/api/commit/78dd66541f0d631f217fbeb613a4b658762be561))
+
 ## [5.134.1](https://github.com/andes/api/compare/v5.134.0...v5.134.1) (2025-09-03)
 
 
