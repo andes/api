@@ -34,6 +34,10 @@ export interface IAuthUsers {
         createdAt: Date;
     }[];
     pacienteRestringido: Object;
+    otp?: {
+        code: String;
+        expiresAt: Date;
+    };
 }
 
 export type IAuthUsersDoc = AndesDocWithAudit<IAuthUsers>;
@@ -63,6 +67,10 @@ export const AuthUsersSchema = new mongoose.Schema({
     validationToken: {
         type: String,
         required: false
+    },
+    otp: {
+        code: String,
+        expiresAt: Date
     },
     configuracion: {
         type: mongoose.SchemaTypes.Mixed,
