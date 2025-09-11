@@ -125,6 +125,46 @@ export async function buscarRecetas(req) {
     }
 }
 
+/**
+ * Groups recetas by idRegistro and selects the one with the smallest ordenTratamiento from each group
+ * @param recetaIds Array of receta IDs
+ * @returns Array of selected recetas (one per group)
+ */
+export async function obtenerRecetasPorGrupo(recetaIds) {
+    try {
+        const recetasPromises = recetaIds.map(async (recetaId) => {
+            const receta: any = await Receta.findById(recetaId);
+            return receta;
+        });
+        const recetas = await Promise.all(recetasPromises);
+        const grupos = {};
+        recetas.forEach(receta => {
+            if (receta) {
+                const idRegistro = receta.idRegistro;
+                if (!grupos[idRegistro]) {
+                    grupos[idRegistro] = [];
+                }
+                grupos[idRegistro].push(receta);
+            }
+        });
+
+        const recetasASuspender = [];
+        Object.values(grupos).forEach((grupo: any[]) => {
+            if (grupo.length > 0) {
+                const recetaMenorOrden = grupo.reduce((min, receta) =>
+                    receta.medicamento.ordenTratamiento < min.medicamento.ordenTratamiento ? receta : min
+                );
+                recetasASuspender.push(recetaMenorOrden);
+            }
+        });
+
+        return recetasASuspender;
+    } catch (error) {
+        await updateLog.error('obtenerRecetasPorGrupo', { recetaIds }, error);
+        throw error;
+    }
+}
+
 export async function suspender(recetas, req) {
     const motivo = req.body.motivo;
     const observacion = req.body.observacion;
@@ -133,6 +173,7 @@ export async function suspender(recetas, req) {
         if (!recetas) {
             throw new ParamsIncorrect();
         }
+        const recetasASuspender = await obtenerRecetasPorGrupo(recetas);
         const promises = recetas.map(async (recetaId) => {
 
             const receta: any = await Receta.findById(recetaId);
@@ -140,21 +181,37 @@ export async function suspender(recetas, req) {
             if (!receta) {
                 throw new RecetaNotFound();
             }
+            if (!receta.medicamento.tratamientoProlongado) {
+                receta.estados.push({
+                    tipo: 'suspendida',
+                    motivo,
+                    observacion,
+                    profesional,
+                    fecha: new Date()
+                });
+                Auth.audit(receta, req);
+                await receta.save();
 
-            receta.estados.push({
-                tipo: 'suspendida',
-                motivo,
-                observacion,
-                profesional,
-                fecha: new Date()
-            });
-            Auth.audit(receta, req);
-            await receta.save();
-
-            const idRegistro = receta.idRegistro;
-            const medicamento = receta.medicamento?.concepto.conceptId;
-            await Receta.deleteMany({ idRegistro, 'medicamento.concepto.conceptId': medicamento, 'estadoActual.tipo': 'pendiente' });
-
+                const idRegistro = receta.idRegistro;
+                const medicamento = receta.medicamento?.concepto.conceptId;
+                await Receta.deleteMany({ idRegistro, 'medicamento.concepto.conceptId': medicamento, 'estadoActual.tipo': 'pendiente' ,'estadoDispensaActual.tipo': 'sin-dispensa' });
+            } else {
+                if (recetasASuspender.some(r => r.id.toString() === receta.id.toString())) {
+                    receta.estados.push({
+                        tipo: 'suspendida',
+                        motivo,
+                        observacion,
+                        profesional,
+                        fecha: new Date()
+                    });
+                    Auth.audit(receta, req);
+                    await receta.save();
+                } else {
+                    const _id = receta.id;
+                    const medicamento = receta.medicamento?.concepto.conceptId;
+                    await Receta.deleteOne({ _id });
+                }
+            }
         });
         await Promise.all(promises);
         return { success: true };
