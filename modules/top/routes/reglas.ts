@@ -143,4 +143,28 @@ router.delete('/reglas', async (req, res, next) => {
     });
 });
 
+router.delete('/reglas/:id', async (req, res, next) => {
+    ReglasTOP.deleteOne({ _id: new mongoose.Types.ObjectId(req.params.id) })
+        .exec((err, data) => {
+            if (err) {return next(err);}
+            res.json(data);
+        });
+});
+
+router.delete('/reglas/:id/prestaciones/:prestacionId', async (req, res, next) => {
+    try {
+        const { id, prestacionId } = req.params;
+
+        const result = await ReglasTOP.updateOne(
+            { _id: new mongoose.Types.ObjectId(id) },
+            { $pull: { 'origen.prestaciones': { _id: new mongoose.Types.ObjectId(prestacionId) } } }
+        );
+
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+});
+
+
 export = router;
