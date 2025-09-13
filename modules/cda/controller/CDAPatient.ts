@@ -507,13 +507,17 @@ export async function loadCDA(cdaID) {
         try {
             const CDAFiles = makeFs();
             CDAFiles.readFile({ filename: String(cdaID) + '.xml' }, (err, buffer) => {
+                if (err || !buffer) {
+                    return resolve({ error: true, message: `No se pudo leer el archivo CDA con ID ${cdaID}. El archivo está vacío o no existe.` });
+                }
+
                 const xml = buffer.toString('utf8');
-                return resolve(xml);
+                return resolve({ error: false, data: xml });
+
             });
         } catch (e) {
-            return reject(null);
+            return resolve({ error: true, message: 'Error inesperado al cargar el CDA.' });
         }
-
     });
 }
 
@@ -849,7 +853,7 @@ export function cdaToJSON(idCDA) {
         const _base64 = idCDA;
         let contexto = await cdaCtr.loadCDA(_base64);
         let setText = false;
-        if (contexto) {
+        if (!(contexto as { error: boolean })?.error) {
             // Limpiamos xml previo al parsing
             contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
             contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
@@ -884,7 +888,12 @@ export function cdaToJSON(idCDA) {
                 }
             });
         } else {
-            return reject(null);
+
+            if ((contexto as { error: boolean })?.error) {
+                return resolve({});
+            } else {
+                return reject(null);
+            }
         }
     });
 }
