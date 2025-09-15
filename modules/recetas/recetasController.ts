@@ -89,6 +89,12 @@ export async function buscarRecetas(req) {
             }
         });
 
+        const estadoArray = params.estado ? params.estado.split(',') : [];
+
+        if (params.estado) {
+            options['estadoActual.tipo'] = { $in: estadoArray };
+        }
+
         if (params.estadoDispensa) {
             const estadoDispensaArray = params.estadoDispensa.split(',');
             options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
@@ -104,9 +110,13 @@ export async function buscarRecetas(req) {
         if (Object.keys(options).length === 0) {
             throw new ParamsIncorrect();
         }
-        if (params.estado === 'vigente') {
+
+        const includeVigente = estadoArray.includes('vigente');
+
+        if (includeVigente) {
             options['fechaRegistro'] = { $gte: fechaVencimiento };
         }
+
         let recetas: any = await Receta.find(options);
         if (!recetas.length) {
             return [];
