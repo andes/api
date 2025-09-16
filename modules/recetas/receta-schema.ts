@@ -127,6 +127,10 @@ const medicamentoSubschema = new mongoose.Schema({
 });
 
 export const recetaSchema = new mongoose.Schema({
+    idReceta: {
+        type: String,
+        required: false
+    },
     organizacion: {
         id: mongoose.SchemaTypes.ObjectId,
         nombre: String
