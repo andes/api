@@ -1,5 +1,7 @@
 import { HTMLComponent } from '../../model/html-component.class';
 import { generateBarcodeBase64 } from '../../model/barcode';
+import { Receta } from '../../../recetas/receta-schema';
+
 export class RecetaMedicaComponent extends HTMLComponent {
     template = `
     <div class="nivel-1">
@@ -15,7 +17,7 @@ export class RecetaMedicaComponent extends HTMLComponent {
             <td style="width:70%; vertical-align:top; padding:0;border:0px none;">
                 <div class="barcode">
                 {{#if esReceta}}
-                    <img src="data:image/png;base64,{{barcodeBase64}}" alt="{{registro.id}}" />
+                    <img src="data:image/png;base64,{{barcodeBase64}}" alt="{{idReceta}}" />
                      {{/if}}
                 </div>
             </td>
@@ -74,10 +76,26 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
     }
 
     async process() {
+        // Buscar receta asociada al registro para obtener idReceta
+        let idReceta = this.registro.idReceta;
+        if (!idReceta && this.registro.id) {
+            try {
+                const receta: any = await Receta.findOne({ idRegistro: this.registro.id });
+                if (receta) {
+                    idReceta = receta.idReceta;
+                }
+            } catch (error) {
+                idReceta = null;
+            }
+        }
+
+        const finalIdReceta = idReceta || this.registro.id;
+
         this.data = {
             registro: this.registro,
             esReceta: this.depth ? 1 : 0, // Si es 0 no muestra el código de barras
-            barcodeBase64: await generateBarcodeBase64(this.registro.id, 'code128')
+            idReceta: finalIdReceta,
+            barcodeBase64: await generateBarcodeBase64(finalIdReceta, 'code128')
         };
     }
 }
