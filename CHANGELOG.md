@@ -1,3 +1,10 @@
+# [5.135.0](https://github.com/andes/api/compare/v5.134.2...v5.135.0) (2025-09-17)
+
+
+### Features
+
+* envio de código OTP para resetear contraseña ([#2092](https://github.com/andes/api/issues/2092)) ([88d906d](https://github.com/andes/api/commit/88d906d3e542f30aadd4655823a2d5bbde590d3c))
+
 ## [5.134.2](https://github.com/andes/api/compare/v5.134.1...v5.134.2) (2025-09-10)
 
 
