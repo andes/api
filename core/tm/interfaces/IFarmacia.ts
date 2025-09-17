@@ -23,6 +23,7 @@ export interface IFarmacia {
     expedientePapel: string;
     expedienteGDE: string;
     nroCaja: string;
+    tipoEstablecimiento: string;
     disposiciones: [{
         numero: string;
         descripcion: string;
