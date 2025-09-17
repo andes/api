@@ -95,6 +95,15 @@ export async function search({ organizacion, capa, ambito }: InternacionConfig, 
     return await CamasEstadosController.snapshotEstados({ fecha: timestamp, organizacion: organizacion._id, ambito, capa }, params);
 }
 
+export async function searchCamas({ organizacion, capa, ambito }: InternacionConfig, params: SearchParams): Promise<ICama[]> {
+    let timestamp = moment().toDate();
+
+    if (params.fecha) {
+        timestamp = moment(params.fecha).toDate();
+    }
+    return await CamasEstadosController.contadorCamasEstados({ fecha: timestamp, organizacion: organizacion._id, ambito, capa }, params);
+}
+
 export async function historial({ organizacion, capa, ambito }, cama: ObjectId, internacion: ObjectId, desde: Date, hasta: Date, esMovimiento: boolean = null) {
     const movimientos = await CamasEstadosController.searchEstados({ desde, hasta, organizacion, capa, ambito }, { cama, internacion, esMovimiento });
     return movimientos;
