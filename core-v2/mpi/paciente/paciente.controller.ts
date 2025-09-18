@@ -142,7 +142,8 @@ export async function findById(id: string | String | Types.ObjectId, options = n
                 }
             });
         }
-        await PacienteCtr.update(paciente.id, paciente, configPrivate.userScheduler as any);
+        // uso excepcional de update directo para no producir una llamada el evento de paciente:update
+        await Paciente.updateOne({ _id: paciente.id }, { financiador: paciente.financiador });
         return paciente;
     }
     return null;
