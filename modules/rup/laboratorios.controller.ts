@@ -47,6 +47,7 @@ export async function search(data) {
     let params;
     const service = 'get-LABAPI';
     try {
+
         if (data.idProtocolo) {
             params = {
                 parametros: `nombre=LABAPI_GetResultadoProtocolo&parametros=${data.idProtocolo}`
@@ -56,6 +57,7 @@ export async function search(data) {
                 parametros: `nombre=LABAPI_GetProtocolos&parametros=${data.estado}|${data.dni}|${data.fechaNac}|${data.apellido}|${data.fechaDesde}|${data.fechaHasta}`
             };
         }
+
         const response = await services.get(service).exec(params);
 
         if (!response || (Array.isArray(response) && response.length === 0)) {
@@ -99,7 +101,7 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
             dataSearch = {
                 estado,
                 dni: documento,
-                fechaNac: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
+                fechaNac: moment(paciente.fechaNacimiento).utc().format('YYYYMMDD'),
                 apellido: paciente.apellido,
                 fechaDesde,
                 fechaHasta
