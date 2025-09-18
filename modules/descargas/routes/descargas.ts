@@ -188,17 +188,7 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
             res.download(fileName);
 
         } catch (err) {
-            const dataError = {
-                id: req.params.id,
-                idProtocolo: req.body.protocolo.data.idProtocolo,
-                estado: req.query.estado,
-                documento: req.query.dni,
-                fechaNacimiento: req.query.fecNac,
-                apellido: req.query.apellido,
-                fechaDesde: req.query.fechaDde,
-                fechaHasta: req.query.fechaHta
-            };
-            await laboratorioLog.error('laboratorio-descargas', dataError, err, req);
+            await laboratorioLog.error('laboratorio-descargas', req.body.protocolo.data, err, req);
             return next(err);
         }
 
