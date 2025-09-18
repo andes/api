@@ -89,7 +89,7 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
                 estado = 'EX';
                 documento = paciente.numeroIdentificacion;
             } else {
-                if (paciente.edad <= 5) { // recien nacido (aun din dni)
+                if (paciente.edad <= 5 && paciente.relaciones.length) { // recien nacido (aún sin dni)
                     estado = 'RN';
                     const tutorProgenitor = paciente.relaciones.find(rel => rel.relacion.nombre === 'progenitor/a') || paciente.relaciones.find(rel => rel.relacion.nombre === 'tutor');
                     documento = tutorProgenitor?.documento || tutorProgenitor?.numeroIdentificacion || null;
