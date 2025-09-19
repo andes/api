@@ -107,6 +107,25 @@ export async function buscarRecetas(req) {
             const fechaFin = params.fechaFin ? moment(params.fechaFin).endOf('day').toDate() : moment().endOf('day').toDate();
             options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
         }
+
+        // Para recetas pendientes sin filtro de fechas, limitar a próximos 10 días
+        const includePendiente = estadoArray.includes('pendiente');
+        if (includePendiente && !params.fechaInicio && !params.fechaFin) {
+            const fechaLimite = moment().add(10, 'days').endOf('day').toDate();
+            const fechaActual = moment().startOf('day').toDate();
+
+            if (options['fechaRegistro']) {
+                // Si ya existe un filtro de fecha, combinarlo con el límite de 10 días
+                options['fechaRegistro'] = {
+                    ...options['fechaRegistro'],
+                    $lte: fechaLimite
+                };
+            } else {
+                // Aplicar filtro de próximos 10 días para recetas pendientes
+                options['fechaRegistro'] = { $gte: fechaActual, $lte: fechaLimite };
+            }
+        }
+
         if (Object.keys(options).length === 0) {
             throw new ParamsIncorrect();
         }
