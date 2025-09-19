@@ -11,6 +11,7 @@ export interface IPuco {
     nombre: string;
     coberturaSocial?: string;
     version: Date;
+    numeroAfiliado?: string;
 }
 
 export type IPucoDocument = AndesDoc<IPuco>;
@@ -21,7 +22,8 @@ const PucoSchema = new mongoose.Schema({
     codigoOS: Number,
     transmite: String,
     nombre: String,
-    version: Date
+    version: Date,
+    numeroAfiliado: String
 });
 
 PucoSchema.index({ dni: 1, version: 1 });
