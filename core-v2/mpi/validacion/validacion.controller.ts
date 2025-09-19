@@ -23,6 +23,34 @@ function identidadSinAcentos(ciudadano) {
  * Busca en fuentes auntenticas los datos de un ciudadano.
  */
 
+function generarCUIL(dni, sexo) {
+    const sexoNorm = (sexo || '').toString().trim().toLowerCase();
+    let sexoFinal = 'M';
+    if (sexoNorm.startsWith('f')) {
+        sexoFinal = 'F';
+    }
+    const dniStr = dni.toString().padStart(8, '0');
+    let prefijo = (sexoFinal === 'F') ? '27' : '20';
+    function calcularDigito(p, d) {
+        const base = (p + d).split('').map(Number);
+        const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+        const suma = base.reduce((acc, num, i) => acc + num * pesos[i], 0);
+        const resto = suma % 11;
+        let verificador = 11 - resto;
+        if (verificador === 11) {verificador = 0;}
+        if (verificador === 10) {return null;}
+
+        return verificador;
+    }
+    let digito = calcularDigito(prefijo, dniStr);
+    if (digito === null) {
+        prefijo = '23';
+        digito = calcularDigito(prefijo, dniStr);
+    }
+    return `${prefijo}${dniStr}${digito}`;
+}
+
+
 export async function validar(documento: string, sexo: string) {
     try {
         const ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
@@ -33,6 +61,9 @@ export async function validar(documento: string, sexo: string) {
             ciudadanoRenaper.estado = 'validado';
             ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
             ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
+            if (!ciudadanoRenaper.cuil || ciudadanoRenaper.cuil === '0') {
+                ciudadanoRenaper.cuil = generarCUIL(documento, sexo);
+            }
             ciudadanoRenaper.validateAt = new Date();
             if (identidadSinAcentos(ciudadanoRenaper)) {
                 return ciudadanoRenaper;
