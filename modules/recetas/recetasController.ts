@@ -194,7 +194,7 @@ export async function suspender(recetas, req) {
 
                 const idRegistro = receta.idRegistro;
                 const medicamento = receta.medicamento?.concepto.conceptId;
-                await Receta.deleteMany({ idRegistro, 'medicamento.concepto.conceptId': medicamento, 'estadoActual.tipo': 'pendiente' ,'estadoDispensaActual.tipo': 'sin-dispensa' });
+                await Receta.deleteMany({ idRegistro, 'medicamento.concepto.conceptId': medicamento, 'estadoActual.tipo': 'pendiente', 'estadoDispensaActual.tipo': 'sin-dispensa' });
             } else {
                 if (recetasASuspender.some(r => r.id.toString() === receta.id.toString())) {
                     receta.estados.push({
@@ -586,7 +586,7 @@ export async function crearReceta(dataReceta, req) {
             receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
             receta.paciente = dataReceta.paciente;
-            receta.paciente.obraSocial = dataReceta.paciente.financiador;
+            receta.paciente.obraSocial = dataReceta.paciente.financiador ? dataReceta.paciente.financiador : dataReceta.paciente.obraSocial;
             receta.paciente.id = dataReceta.paciente.id || dataReceta.paciente._id;
             receta.profesional = dataReceta.profesional;
             receta.profesional._id = dataReceta.profesional.id || dataReceta.profesional._id; // revisar como se generan ids en ambos casos
