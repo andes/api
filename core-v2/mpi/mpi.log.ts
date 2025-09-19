@@ -8,6 +8,13 @@ export const mpiCorrectorLog = new Logger({
     application: 'andes'
 });
 
+export const mpiUpdatePacientesLog = new Logger({
+    connection: Connections.logs,
+    module: 'mpi',
+    type: 'mpi-update-pacientes',
+    application: 'andes'
+});
+
 export const mpiNacimientosLog = new Logger({
     connection: Connections.logs,
     module: 'mpi',
