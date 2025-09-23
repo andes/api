@@ -890,7 +890,7 @@ export function cdaToJSON(idCDA) {
         } else {
 
             if ((contexto as { error: boolean })?.error) {
-                return resolve({});
+                return resolve(contexto);
             } else {
                 return reject(null);
             }

@@ -255,8 +255,13 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:get')) {
         return next(403);
     }
-    cdaCtr.cdaToJSON(req.params.id).then((cda) => {
-        return res.json(cda ? cda : {});
+    cdaCtr.cdaToJSON(req.params.id).then((cda: any) => {
+
+        if (cda?.error) {
+            return res.status(400).json(cda.message);
+        }
+
+        return res.json(cda ?? {});
     }).catch(err => {
         return next(err);
     });
