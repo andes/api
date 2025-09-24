@@ -1,3 +1,13 @@
+## [5.135.1](https://github.com/andes/api/compare/v5.135.0...v5.135.1) (2025-09-24)
+
+
+### Bug Fixes
+
+* **HUDS:** Corrige formato de fecha de nacimiento al buscar laboratorios ([#2112](https://github.com/andes/api/issues/2112)) ([b7e5f4b](https://github.com/andes/api/commit/b7e5f4ba9481b5342e42007a707dc4eb2e586ce5))
+* **MPI:** Cambia metodo para actualizar OS en find paciente ([#2111](https://github.com/andes/api/issues/2111)) ([e24ae28](https://github.com/andes/api/commit/e24ae289d654e5490ab52703dd9242c3f201ee12))
+* **REC-119:** Suspención de receta con tratamiento prolongado ([#2103](https://github.com/andes/api/issues/2103)) ([d0efc10](https://github.com/andes/api/commit/d0efc10f1511111953af5204e2f04b123b452539))
+* **Receta:** carga de OS al crear una receta ([#2114](https://github.com/andes/api/issues/2114)) ([6bff9cc](https://github.com/andes/api/commit/6bff9cca77ad3e29a33c04cc17ed187837c73e4a))
+
 # [5.135.0](https://github.com/andes/api/compare/v5.134.2...v5.135.0) (2025-09-17)
 
 
