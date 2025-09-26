@@ -18,6 +18,7 @@ import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { PacienteCtr } from './paciente.routes';
 import { Paciente, replaceChars } from './paciente.schema';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { EventCore } from '@andes/event-bus/index';
 
 /**
  * Crea un objeto paciente
@@ -112,41 +113,8 @@ export async function findById(id: string | String | Types.ObjectId, options = n
         queryFind.select(fields);
     }
     const paciente = await queryFind;
-    if (paciente) {
-        // Si el paciente tiene dentro de financiador una obra social que no es de puco entonces no se elimina
-        // pero si tiene una de puco y la funcion updateObraSocial me trae otra OS de puco que no es la misma
-        // del paciente entonces lo elimina del mismo, en caso contrario actualiza su fechaDeActualizacion.
-        const financiador = await updateObraSocial(paciente);
-        if (!financiador.length) {
-            return paciente;
-        }
-        // Bloque de codigo temporal, hasta depurar OS con valor [null]  ---------------
-        if (paciente.financiador && paciente.financiador[0] === null) {
-            paciente.financiador = null;
-        }
-        // fin bloque temporal  --------------------------------------------------------
-        if (!paciente.financiador?.length) {
-            paciente.financiador = financiador;
-        } else {
-            const codigosFinanciadores = financiador.map(f => f.codigoPuco);
-            paciente.financiador = paciente.financiador.filter(f => (f.origen && f.origen !== 'PUCO') || codigosFinanciadores.includes(f.codigoPuco));
-
-            financiador.forEach(nuevoFinanciador => {
-                const index = paciente.financiador.findIndex(f => f.codigoPuco === nuevoFinanciador.codigoPuco);
-                if (index === -1) {
-                    paciente.financiador.push(nuevoFinanciador);
-                } else if (!('origen' in paciente.financiador[index])) {
-                    paciente.financiador[index] = nuevoFinanciador;
-                } else {
-                    paciente.financiador[index].fechaDeActualizacion = moment().toDate();
-                }
-            });
-        }
-        // uso excepcional de update directo para no producir una llamada el evento de paciente:update
-        await Paciente.updateOne({ _id: paciente.id }, { financiador: paciente.financiador });
-        return paciente;
-    }
-    return null;
+    EventCore.emitAsync('mpi:pacientes:findById', paciente);
+    return paciente;
 }
 
 /**
