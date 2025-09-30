@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { updatePrestacionPatient } from './../../../modules/rup/controllers/prestacion';
-import { findById, linkPacientesDuplicados, updateGeoreferencia } from './paciente.controller';
+import { findById, linkPacientesDuplicados, updateGeoreferencia, updateObraSocial } from './paciente.controller';
 import { IPacienteDoc } from './paciente.interface';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { CamaEstados } from '../../../modules/rup/internacion/cama-estados.schema';
@@ -12,6 +12,7 @@ import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { InternacionResumen } from '../../../modules/rup/internacion/resumen/internacion-resumen.schema';
 import { userScheduler } from '../../../config.private';
 import { updatePacientesInternados } from '../mpi.log';
+import moment = require('moment');
 
 // TODO: Handlear errores
 EventCore.on('mpi:pacientes:create', async (paciente: IPacienteDoc) => {
@@ -101,6 +102,43 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
     // Verifica si el paciente esta actualmente internado para replicar los cambios
     if (['nombre', 'apellido', 'sexo', 'alias', 'genero'].map(field => changeFields.includes(field))) {
         await checkAndUpdateInternacion(paciente);
+    }
+});
+
+EventCore.on('mpi:pacientes:findById', async (paciente: IPacienteDoc) => {
+    if (paciente._id) {
+        // Bloque de codigo temporal, hasta depurar OS con valor [null]  ---------------
+        if (paciente.financiador && paciente.financiador[0] === null) {
+            paciente.financiador = null;
+        }
+        // Si ya se realizó una actualización en el último mes no se vuelve a consultar
+        if (!paciente.financiador.some(f => f.fechaDeActualizacion && f.origen && f.origen === 'PUCO'
+            && moment(f.fechaDeActualizacion).isAfter(moment().subtract(1, 'months')))) {
+            // Si el paciente tiene dentro de financiador una obra social que no es de puco entonces no se elimina
+            // pero si tiene una de puco y la funcion updateObraSocial me trae otra OS de puco que no es la misma
+            // del paciente entonces lo elimina del mismo, en caso contrario actualiza su fechaDeActualizacion.
+            const financiador = await updateObraSocial(paciente);
+            if (financiador.length) {
+                // Bloque de codigo temporal, hasta depurar OS con valor [null]  ---------------
+                if (paciente.financiador && paciente.financiador[0] === null) {
+                    paciente.financiador = null;
+                }
+                // fin bloque temporal  --------------------------------------------------------
+                if (!paciente.financiador?.length) {
+                    paciente.financiador = financiador;
+                } else {
+                    paciente.financiador = paciente.financiador.filter(f => (f.origen && f.origen !== 'PUCO'));
+                    financiador.forEach(nuevoFinanciador => {
+                        const index = paciente.financiador.findIndex(f => f.codigoPuco === nuevoFinanciador.codigoPuco);
+                        if (index === -1) {
+                            paciente.financiador.push(nuevoFinanciador);
+                        }
+                    });
+                }
+                // uso excepcional de update directo para no producir una llamada el evento de paciente:update
+                await Paciente.updateOne({ _id: paciente.id }, { financiador: paciente.financiador });
+            }
+        }
     }
 });
 
