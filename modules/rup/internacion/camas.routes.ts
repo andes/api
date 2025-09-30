@@ -68,17 +68,21 @@ router.get('/camas/historial', Auth.authenticate(), capaMiddleware, asyncHandler
     return res.json(result);
 }));
 
-router.get('/camas/resumen/:id?', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
-
-    const organizacion = {
-        _id: req.params?.id || Auth.getOrganization(req),
-        nombre: Auth.getOrganization(req, 'nombre')
-    };
+router.get('/camas/resumen', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
+    let organizacion;
     const params = {
-        unidadOrganizativa: req.query.unidadOrganizativa,
         fecha: req.query.fecha
     };
-    const camas = await CamasController.searchCamas({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, params);
+
+    if (req.query.organizacion) {
+        organizacion = req.query.organizacion;
+    }
+
+    if (req.query.unidadOrganizativa) {
+        params['unidadOrganizativa'] = req.query.unidadOrganizativa;
+    }
+
+    const camas = await CamasController.searchCamas({ organizacion, capa: req.query.capa, ambito: req.query.ambito }, params);
 
     return res.json(camas);
 }));

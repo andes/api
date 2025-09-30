@@ -230,7 +230,7 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
         'estados.fecha': { $lte: fechaSeleccionada }
     };
     if (filtros.unidadOrganizativa) {
-        secondMatch['estados.unidadOrganizativa._id'] = filtros.unidadOrganizativa;
+        secondMatch['estados.unidadOrganizativa.conceptId'] = filtros.unidadOrganizativa;
     }
 
     let groupStage: any;
@@ -245,7 +245,7 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
                 camasDisponibles: { $sum: '$camasDisponibles' },
                 camasBloqueadas: { $sum: '$camasBloqueadas' },
                 totalCamas: { $sum: '$totalCamas' },
-                organizaciones: { $push: '$organizacion' }, // lista de orgs donde aparece la unidad
+                organizacion: { $first: '$organizacion' }, // lista de orgs donde aparece la unidad
                 unidad: { $first: '$unidad' }
             }
         };

@@ -101,7 +101,7 @@ export async function searchCamas({ organizacion, capa, ambito }: InternacionCon
     if (params.fecha) {
         timestamp = moment(params.fecha).toDate();
     }
-    return await CamasEstadosController.contadorCamasEstados({ fecha: timestamp, organizacion: organizacion._id, ambito, capa }, params);
+    return await CamasEstadosController.contadorCamasEstados({ fecha: timestamp, organizacion, ambito, capa }, params);
 }
 
 export async function historial({ organizacion, capa, ambito }, cama: ObjectId, internacion: ObjectId, desde: Date, hasta: Date, esMovimiento: boolean = null) {
