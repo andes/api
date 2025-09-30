@@ -112,7 +112,7 @@ EventCore.on('mpi:pacientes:findById', async (paciente: IPacienteDoc) => {
             paciente.financiador = null;
         }
         // Si ya se realizó una actualización en el último mes no se vuelve a consultar
-        if (!paciente.financiador.some(f => f.fechaDeActualizacion && f.origen && f.origen === 'PUCO'
+        if (!paciente.financiador?.some(f => f.fechaDeActualizacion && f.origen && f.origen === 'PUCO'
             && moment(f.fechaDeActualizacion).isAfter(moment().subtract(1, 'months')))) {
             // Si el paciente tiene dentro de financiador una obra social que no es de puco entonces no se elimina
             // pero si tiene una de puco y la funcion updateObraSocial me trae otra OS de puco que no es la misma
