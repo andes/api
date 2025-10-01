@@ -163,10 +163,13 @@ export async function setValidationTokenAndNotify(username) {
     try {
         const usuario = await AuthUsers.findOne({ usuario: username });
         if (usuario && usuario.tipo === 'temporal' && usuario.email) {
-            usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
-            usuario.audit(userScheduler);
-            await usuario.save();
-
+            if (!usuario.validationToken || usuario.validationTokenExpiration < new Date()) {
+                // Si no tiene un token de validación o esta vencido, se genera uno nuevo
+                usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
+                usuario.validationTokenExpiration = new Date(Date.now() + 72 * 60 * 60 * 1000); // Expira en 72 horas
+                usuario.audit(userScheduler);
+                await usuario.save();
+            }
             const extras: any = {
                 titulo: 'Recuperación de contraseña',
                 usuario,
@@ -268,8 +271,9 @@ export async function validateOtp(username, otpCode): Promise<boolean> {
 export async function reset(token, password) {
     try {
         const usuario = await AuthUsers.findOne({ validationToken: token });
-        if (usuario) {
+        if (usuario && usuario.validationTokenExpiration > new Date()) {
             usuario.validationToken = null;
+            usuario.validationTokenExpiration = null;
             usuario.password = sha1Hash(password);
             usuario.audit(userScheduler);
             await usuario.save();
