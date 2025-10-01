@@ -1,3 +1,10 @@
+## [5.135.2](https://github.com/andes/api/compare/v5.135.1...v5.135.2) (2025-10-01)
+
+
+### Bug Fixes
+
+* **MPI:** Cambia la actualizacion de obra social de puco a un evento asincronico ([#2116](https://github.com/andes/api/issues/2116)) ([d41ff11](https://github.com/andes/api/commit/d41ff1164066e38b485fc934bd497a62900be0b5))
+
 ## [5.135.1](https://github.com/andes/api/compare/v5.135.0...v5.135.1) (2025-09-24)
 
 
