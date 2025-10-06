@@ -40,8 +40,10 @@ export async function validar(documento: string, sexo: string) {
             }
         }
     } catch (error) {
-        // RENAPER caído, se continúa con SISA
+        throw new Error(`Error al consultar RENAPER: ${ error.message }`);
     }
+
+
     try {
         const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
         if (ciudadanoSisa) {
@@ -56,8 +58,9 @@ export async function validar(documento: string, sexo: string) {
             return ciudadanoSisa;
         }
     } catch (error) {
-        // Error también en SISA
+        throw new Error(`Error al consultar SISA: ${ error.message }`);
     }
+
     return ciudadanoRenaper;
 }
 
