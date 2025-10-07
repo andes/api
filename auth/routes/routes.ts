@@ -2,7 +2,7 @@ import { Modulos } from '../../core/tm/schemas/modulos.schema';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
-import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser, updateOrganizacion, sendOtpAndNotify, validateOtp } from '../auth.controller';
+import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser, updateOrganizacion, sendOtpAndNotify, validateOtpAndResetPassword } from '../auth.controller';
 import { checkPassword } from '../ldap.controller';
 import { AuthUsers } from '../schemas/authUsers';
 import { Organizacion } from './../../core/tm/schemas/organizacion';
@@ -281,15 +281,19 @@ router.post('/sendOTPCode', async (req, res, next) => {
     }
 });
 
-router.post('/validateOTPCode', async (req, res, next) => {
+router.post('/validateOTPCodeAndReset', async (req, res, next) => {
     try {
-        const { username, otpCode } = req.body;
+        const { username, otpCode, newPassword } = req.body;
 
-        if (!username || !otpCode) {
+        if (!username || !otpCode || !newPassword) {
             return next(400);
         }
 
-        const isValid = await validateOtp(username, otpCode);
+        const isValid = await validateOtpAndResetPassword(
+            username,
+            otpCode,
+            newPassword
+        );
 
         if (isValid) {
             return res.json({ status: 'ok' });
