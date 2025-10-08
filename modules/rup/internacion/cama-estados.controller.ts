@@ -217,138 +217,248 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
 export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }, filtros) {
     const fechaSeleccionada = moment(fecha).toDate();
 
-    const firstMatch: any = { capa, ambito };
-    firstMatch.start = { $lte: fechaSeleccionada };
-    if (organizacion) {
-        firstMatch.idOrganizacion = new mongoose.Types.ObjectId(organizacion);
-    }
+    try {
+        const firstMatch: any = { ambito, capa };
+        firstMatch.start = { $lte: fechaSeleccionada };
+        if (organizacion) {
+            firstMatch.idOrganizacion = new mongoose.Types.ObjectId(organizacion);
+        }
 
-    const secondMatch: any = {
-        'estados.esCensable': true,
-        'estados.deletedAt': { $exists: false },
-        'estados.esMovimiento': true,
-        'estados.fecha': { $lte: fechaSeleccionada }
-    };
-    if (filtros.unidadOrganizativa) {
-        secondMatch['estados.unidadOrganizativa.conceptId'] = filtros.unidadOrganizativa;
-    }
-
-    let groupStage: any;
-    if (filtros.unidadOrganizativa && !organizacion) {
-        // Caso: solo unidadOrganizativa
-        groupStage = {
-            $group: {
-                _id: '$_id.unidad',
-                ambito: { $first: '$ambito' },
-                capa: { $first: '$capa' },
-                camasOcupadas: { $sum: '$camasOcupadas' },
-                camasDisponibles: { $sum: '$camasDisponibles' },
-                camasBloqueadas: { $sum: '$camasBloqueadas' },
-                totalCamas: { $sum: '$totalCamas' },
-                organizacion: { $first: '$organizacion' }, // lista de orgs donde aparece la unidad
-                unidad: { $first: '$unidad' }
-            }
+        const secondMatch: any = {
+            'estados.deletedAt': { $exists: false },
+            'estados.esMovimiento': true,
+            'estados.fecha': { $lte: fechaSeleccionada }
         };
-    } else {
-        // Caso: organización (con o sin unidadOrganizativa)
-        groupStage = {
-            $group: {
-                _id: '$_id.organizacion',
-                organizacion: { $first: '$organizacion' },
-                ambito: { $first: '$ambito' },
-                capa: { $first: '$capa' },
-                camasOcupadas: { $sum: '$camasOcupadas' },
-                camasDisponibles: { $sum: '$camasDisponibles' },
-                camasBloqueadas: { $sum: '$camasBloqueadas' },
-                totalCamas: { $sum: '$totalCamas' },
-                unidadesOrganizativas: {
-                    $push: {
-                        _id: '$unidad._id',
-                        conceptId: '$unidad.conceptId',
-                        term: '$unidad.term',
-                        fsn: '$unidad.fsn',
-                        semanticTag: '$unidad.semanticTag',
-                        id: '$unidad.id',
-                        totalCamas: '$totalCamas',
-                        camasOcupadas: '$camasOcupadas',
-                        camasDisponibles: '$camasDisponibles',
-                        camasBloqueadas: '$camasBloqueadas'
+        if (filtros.unidadOrganizativa) {
+            secondMatch['estados.unidadOrganizativa.conceptId'] = filtros.unidadOrganizativa;
+        }
+
+        let groupStage: any;
+        if (filtros.unidadOrganizativa && !organizacion) {
+            // Caso: solo unidadOrganizativa
+            groupStage = {
+                $group: {
+                    _id: '$_id.unidad',
+                    ambito: { $first: '$ambito' },
+                    capa: { $first: '$capa' },
+                    camasOcupadas: { $sum: '$camasOcupadas' },
+                    camasDisponibles: { $sum: '$camasDisponibles' },
+                    camasBloqueadas: { $sum: '$camasBloqueadas' },
+                    totalCamas: { $sum: '$totalCamas' },
+                    organizacion: { $first: '$organizacion' }, // lista de orgs donde aparece la unidad
+                    unidad: { $first: '$unidad' }
+                }
+            };
+        } else {
+            // Caso: organización (con o sin unidadOrganizativa)
+            groupStage = {
+                $group: {
+                    _id: '$_id.organizacion',
+                    organizacion: { $first: '$organizacion' },
+                    ambito: { $first: '$ambito' },
+                    capa: { $first: '$capa' },
+                    camasOcupadas: { $sum: '$camasOcupadas' },
+                    camasDisponibles: { $sum: '$camasDisponibles' },
+                    camasBloqueadas: { $sum: '$camasBloqueadas' },
+                    totalCamas: { $sum: '$totalCamas' },
+                    unidadesOrganizativas: {
+                        $push: {
+                            _id: '$unidad._id',
+                            conceptId: '$unidad.conceptId',
+                            term: '$unidad.term',
+                            fsn: '$unidad.fsn',
+                            semanticTag: '$unidad.semanticTag',
+                            id: '$unidad.id',
+                            totalCamas: '$totalCamas',
+                            camasOcupadas: '$camasOcupadas',
+                            camasDisponibles: '$camasDisponibles',
+                            camasBloqueadas: '$camasBloqueadas'
+                        }
                     }
                 }
-            }
-        };
-    }
+            };
+        }
 
-    const aggregate: any[] = [
-        { $match: firstMatch },
-        { $unwind: '$estados' },
-        { $match: secondMatch },
-        { $sort: { idCama: 1, 'estados.fecha': -1 } },
-        {
-            $group: {
-                _id: '$idCama',
-                fechaMax: {
-                    $max: '$estados.fecha'
-                },
-                estadoCama: { $first: '$estados' },
-                cama: { $first: '$cama' }
-            }
-        },
-        {
-            $addFields: {
-                ambito: 'internacion',
-                capa: 'medica'
-            }
-        },
-        {
-            $lookup: {
-                from: 'internacionCamas',
-                localField: '_id',
-                foreignField: '_id',
-                as: 'cama'
-            }
-        },
-        { $unwind: '$cama' },
-        {
-            $group: {
-                _id: filtros.unidadOrganizativa && !organizacion
-                    ? { unidad: '$estadoCama.unidadOrganizativa._id' }
-                    : {
-                        organizacion: '$cama.organizacion._id',
-                        unidad: '$estadoCama.unidadOrganizativa._id'
+        const aggregate: any[] = [
+            { $match: firstMatch },
+            {
+                $lookup: {
+                    from: 'organizacion',
+                    localField: 'idOrganizacion',
+                    foreignField: '_id',
+                    as: 'organizacion'
+                }
+            },
+            { $unwind: '$organizacion' },
+            {
+                $match: { 'organizacion.activo': true, 'organizacion.tipoEstablecimiento._id': { $ne: new mongoose.Types.ObjectId('5ef7ad4c99923a42cf01bff2') } }
+            },
+            { $unwind: '$estados' },
+            { $match: secondMatch },
+            {
+                $group: {
+                    _id: '$idCama',
+                    fechaMax: {
+                        $max: '$estados.fecha'
                     },
-                organizacion: { $first: '$cama.organizacion' },
-                unidad: { $first: '$estadoCama.unidadOrganizativa' },
-                ambito: { $first: '$ambito' },
-                capa: { $first: '$capa' },
-                camasOcupadas: {
-                    $sum: {
-                        $cond: [{ $eq: ['$estadoCama.estado', 'ocupada'] }, 1, 0]
-                    }
-                },
-                camasDisponibles: {
-                    $sum: {
-                        $cond: [{ $eq: ['$estadoCama.estado', 'disponible'] }, 1, 0]
-                    }
-                },
-                camasBloqueadas: {
-                    $sum: {
-                        $cond: [{ $eq: ['$estadoCama.estado', 'bloqueada'] }, 1, 0]
+                    ambito: {
+                        $first: '$ambito'
+                    },
+                    capa: {
+                        $first: '$capa'
                     }
                 }
-            }
-        },
-        {
-            $addFields: {
-                totalCamas: {
-                    $add: ['$camasOcupadas', '$camasDisponibles', '$camasBloqueadas']
+            },
+            {
+                $lookup: {
+                    from: 'internacionCamaEstados',
+                    let: {
+                        idCama: '$_id',
+                        fechaMax: '$fechaMax'
+                    },
+                    pipeline: [
+                        {
+                            $match: {
+                                ambito,
+                                capa,
+                                idOrganizacion: organizacion ? new mongoose.Types.ObjectId(organizacion) : { $exists: true },
+                                $expr: {
+                                    $and: [
+                                        {
+                                            $eq: [
+                                                '$idCama',
+                                                '$$idCama'
+                                            ]
+                                        },
+                                        {
+                                            $lte: [
+                                                '$start',
+                                                '$$fechaMax'
+                                            ]
+                                        },
+                                        {
+                                            $gte: [
+                                                '$end',
+                                                '$$fechaMax'
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $unwind: '$estados'
+                        },
+                        {
+                            $match: {
+                                'estados.deletedAt': {
+                                    $exists: false
+                                },
+                                $expr: {
+                                    $gte: [
+                                        '$estados.fecha',
+                                        '$$fechaMax'
+                                    ]
+                                },
+                                'estados.fecha': {
+                                    $lte: fechaSeleccionada
+                                }
+                            }
+                        },
+                        {
+                            $sort: {
+                                'estados.fecha': 1
+                            }
+                        },
+                        {
+                            $replaceRoot: {
+                                newRoot: '$estados'
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                mergedObject: {
+                                    $mergeObjects: '$$ROOT'
+                                }
+                            }
+                        },
+                        {
+                            $replaceRoot: {
+                                newRoot: '$mergedObject'
+                            }
+                        }
+                    ],
+                    as: 'estadoCama'
                 }
-            }
-        },
-        groupStage
-    ];
-    const result = await CamaEstados.aggregate(aggregate);
-    return result;
+            },
+            {
+                $unwind: '$estadoCama'
+            },
+            {
+                $match: {
+                    'estadoCama.estado': { $ne: 'inactiva' },
+                    'estadoCama.esCensable': true
+                }
+            },
+            {
+                $addFields: {
+                    ambito: 'internacion',
+                    capa: 'medica'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'internacionCamas',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'cama'
+                }
+            },
+            { $unwind: '$cama' },
+            {
+                $group: {
+                    _id: filtros.unidadOrganizativa && !organizacion
+                        ? { unidad: '$estadoCama.unidadOrganizativa._id' }
+                        : {
+                            organizacion: '$cama.organizacion._id',
+                            unidad: '$estadoCama.unidadOrganizativa._id'
+                        },
+                    organizacion: { $first: '$cama.organizacion' },
+                    unidad: { $first: '$estadoCama.unidadOrganizativa' },
+                    ambito: { $first: '$ambito' },
+                    capa: { $first: '$capa' },
+                    camasOcupadas: {
+                        $sum: {
+                            $cond: [{ $eq: ['$estadoCama.estado', 'ocupada'] }, 1, 0]
+                        }
+                    },
+                    camasDisponibles: {
+                        $sum: {
+                            $cond: [{ $eq: ['$estadoCama.estado', 'disponible'] }, 1, 0]
+                        }
+                    },
+                    camasBloqueadas: {
+                        $sum: {
+                            $cond: [{ $eq: ['$estadoCama.estado', 'bloqueada'] }, 1, 0]
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    totalCamas: {
+                        $add: ['$camasOcupadas', '$camasDisponibles', '$camasBloqueadas']
+                    }
+                }
+            },
+            groupStage
+        ];
+        const result = await CamaEstados.aggregate(aggregate);
+        return result;
+    } catch (error) {
+        return [];
+    }
 }
 
 function wrapObjectId(objectId: ObjectId) {
