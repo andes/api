@@ -15,6 +15,7 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
         const idRegistro = registro.id;
         return PlanIndicacionesCtr.findOne({ registro: idRegistro });
     });
+
     indicaciones = await Promise.all(indicaciones);
     const savePromises = indicaciones.map(async indicacion => {
         if (indicacion) {
@@ -35,6 +36,30 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
     });
     await Promise.all(savePromises);
 });
+
+// EventCore.on('internacion:plan-indicaciones-eventos:create', async (evento) => {
+//     if (evento.estado === 'realizado') {
+//         const indicacion = await PlanIndicacionesCtr.findById(evento.idIndicacion);
+//         if (!indicacion || !indicacion.requiereFrecuencia) {
+//             return;
+//         }
+//         await crearEventosSegunPrescripcionDesdeEnfermeria(indicacion, evento.fecha);
+//         const ultimaFrecuencia = indicacion.valor.frecuencias[indicacion.valor.frecuencias.length - 1];
+//         if (ultimaFrecuencia) {
+//             const frecuenciaHoras = ultimaFrecuencia.frecuencia.key;
+//             const fechaDesde = moment(evento.fecha);
+//             const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
+//             const horaFinEfector = moment(evento.fecha).startOf('day').add(configOrganizacion.planIndicaciones.horaInicio + 24, 'hours');
+//             const nuevosHorarios = calcularHorarios(fechaDesde, horaFinEfector, frecuenciaHoras);
+
+//             const futuros = nuevosHorarios.filter(h => moment(h).isAfter(moment(evento.fecha)));
+
+//             if (futuros.length) {
+//                 await crearEventos(futuros, indicacion);
+//             }
+//         }
+//     }
+// });
 
 EventCore.on('internacion:plan-indicaciones-eventos:create', async (evento) => {
     if (evento.estado === 'realizado' && !evento.updatedAt) {
@@ -88,6 +113,7 @@ EventCore.on('internacion:plan-indicaciones:create', async (indicacion) => {
     }
 });
 
+
 EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
     switch (indicacion.estadoActual.tipo) {
         case 'active':
@@ -120,12 +146,29 @@ EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
             await crearEventos(horarios, indicacion);
             break;
         case 'draft':
-            // Se editó una prescripción existente
             await PlanIndicacionesEventosCtr.deleteByIndicacion(indicacion._id);
             if (indicacion.requiereFrecuencia) {
                 await crearEventosSegunPrescripcion(indicacion);
             }
             break;
+
+        case 'bypass':
+            if (indicacion.requiereFrecuencia) {
+                await crearEventosSegunPrescripcion(indicacion);
+            }
+            break;
+    }
+});
+
+EventCore.on('internacion:plan-indicaciones-eventos:update', async (evento) => {
+    if (evento.estado === 'realizado') {
+        const indicacion = await PlanIndicacionesCtr.findById(evento.idIndicacion);
+
+        if (!indicacion || !indicacion.requiereFrecuencia) {
+            return;
+        }
+
+        await crearEventosSegunPrescripcionDesdeEnfermeria(indicacion, evento.fecha);
     }
 });
 
@@ -163,6 +206,35 @@ async function crearEventosSegunPrescripcion(indicacion) {
     }
 }
 
+async function crearEventosSegunPrescripcionDesdeEnfermeria(indicacion, fechaEvento) {
+    const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
+    const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
+
+    if (indicacion.valor.unicaVez) {
+        return;
+    }
+
+    const frecuencias = indicacion.valor.frecuencias
+        .filter(frec => frec.frecuencia?.type === 'number')
+        .sort((f1, f2) => moment(f1.horario).diff(moment(f2.horario)));
+
+    if (!frecuencias.length) {
+        return;
+    }
+
+    const ultimaFrecuencia = frecuencias[frecuencias.length - 1];
+    const frecuenciaHoras = ultimaFrecuencia.frecuencia.key;
+
+    const fechaDesde = moment(fechaEvento);
+    const fechaHasta = moment(fechaEvento).startOf('day').add(horaInicioEfector + 24, 'hours');
+
+    const nuevosHorarios = calcularHorarios(fechaDesde, fechaHasta, frecuenciaHoras)
+        .filter(h => moment(h).isAfter(moment(fechaEvento)));
+
+    if (nuevosHorarios.length) {
+        await crearEventos(nuevosHorarios, indicacion);
+    }
+}
 
 // retorna un array de horarios entre dos fechas, separados por una frecuencia determinada
 function calcularHorarios(fechaDesde, fechaHasta, frecuencia) {
