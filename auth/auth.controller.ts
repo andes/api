@@ -20,6 +20,26 @@ if (RedisWebSockets.active) {
 }
 
 /**
+ * Envuelve una promesa con un tiempo límite.
+ * @param {Promise<T>} promise La promesa a la que se aplicará el timeout.
+ * @param {number} ms El tiempo límite en milisegundos.
+ * @param {string} errorMsg Mensaje de error para el timeout.
+ * @returns {Promise<T>} Una promesa que se resuelve con el resultado de la promesa original o se rechaza por timeout.
+ */
+function timeoutPromise(promise, ms, errorMsg = 'Timeout') {
+    const timeout = new Promise((_, reject) => {
+        const id = setTimeout(() => {
+            clearTimeout(id);
+            reject(new Error(errorMsg));
+        }, ms);
+    });
+    return Promise.race([
+        promise,
+        timeout
+    ]);
+}
+
+/**
  * Genera los datos de sesion de un usuarios.
  * Son los que antes viajaban en el token.
  */
@@ -160,6 +180,7 @@ export const checkMobile = (profesionalId) => {
  * AuthUser
  */
 export async function setValidationTokenAndNotify(username) {
+    const EMAIL_TIMEOUT_MS = 5000;
     try {
         const usuario = await AuthUsers.findOne({ usuario: username });
         if (usuario && usuario.tipo === 'temporal' && usuario.email) {
@@ -182,7 +203,15 @@ export async function setValidationTokenAndNotify(username) {
                 html: htmlToSend,
                 attachments: null
             };
-            await sendMail(options);
+            try {
+                await timeoutPromise(
+                    sendMail(options),
+                    EMAIL_TIMEOUT_MS,
+                    'El servicio de correo superó el tiempo límite (timeout).'
+                );
+            } catch (mailError) {
+                return null;
+            }
             return usuario;
         } else {
             // El usuario no existe o es de gobierno => debe operar por onelogin
@@ -208,7 +237,7 @@ export async function sendOtpAndNotify(username): Promise<any> {
 
             usuario.otp = {
                 code: otpCode,
-                expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutos en milisegundos
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 10 minutos en milisegundos
             };
 
             usuario.audit(userScheduler);
@@ -241,23 +270,33 @@ export async function sendOtpAndNotify(username): Promise<any> {
 }
 
 /**
- * Valida el código OTP ingresado por el usuario.
+ * Valida el código OTP ingresado por el usuario y actualiza su contraseña
  * @param username - El nombre de usuario o correo electrónico.
  * @param otpCode - El código OTP que el usuario ha ingresado.
+ * @param newPassword - La nueva contraseña a setear
  */
-export async function validateOtp(username, otpCode): Promise<boolean> {
+export async function validateOtpAndResetPassword(username, otpCode, newPassword) {
     try {
         const usuario = await AuthUsers.findOne({ usuario: username });
         if (!usuario || !usuario.otp || !usuario.otp.code) {
             return false;
         }
         const now = new Date();
-        if (usuario.otp.code !== otpCode.toString() || usuario.otp.expiresAt < now) {
+        if (
+            usuario.otp.code !== otpCode.toString() ||
+            usuario.otp.expiresAt < now
+        ) {
             return false;
         }
+        usuario.password = sha1Hash(newPassword);
+        // limpiar otpCode del usuario
+        usuario.otp.code = null;
+        usuario.otp.expiresAt = null;
+        usuario.audit(userScheduler);
+        await usuario.save();
         return true;
     } catch (error) {
-        return false;
+        throw new CustomError(error, 500);
     }
 }
 
