@@ -199,6 +199,7 @@ export default [
             { key: 'mapaDeCamas', title: 'Mapa de camas', type: 'boolean' },
             { key: 'descargarListado', title: 'Descargar listado internación', type: 'boolean' },
             { key: 'registros', title: 'Ver registros de la internación', type: 'boolean' },
+            { key: 'mapaProvincial', title: 'Ver ocupación de camas provincial', type: 'boolean', visibility: 'restricted' }
         ]
 
     },
