@@ -511,19 +511,17 @@ export async function create(req) {
             if (!pacienteAndes) {
                 throw new ParamsIncorrect('Paciente no encontrado');
             } else {
-                if (pacienteRecetar.obraSocial) {
-                    pacienteAndes.financiador = {
+                pacienteAndes.obraSocial = (!pacienteRecetar.obraSocial) ? null :
+                    {
                         origen: pacienteRecetar.obraSocial.otraOS ? 'RECETAR' : 'PUCO',
                         nombre: pacienteRecetar.obraSocial.nombre,
                         financiador: pacienteRecetar.obraSocial.nombre,
                         codigoPuco: pacienteRecetar.obraSocial.codigoPuco || null,
                         numeroAfiliado: pacienteRecetar.obraSocial.numeroAfiliado || null
                     };
-                }
-                dataReceta.paciente = pacienteAndes;
             }
+            dataReceta.paciente = pacienteAndes;
         }
-
         if (!profRecetar || !profRecetar.id) {
             throw new ParamsIncorrect('Faltan datos del profesional');
         } else {
@@ -586,7 +584,7 @@ export async function crearReceta(dataReceta, req) {
             receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
             receta.paciente = dataReceta.paciente;
-            receta.paciente.obraSocial = dataReceta.paciente.financiador ? dataReceta.paciente.financiador : dataReceta.paciente.obraSocial;
+            receta.paciente.obraSocial = dataReceta.paciente.obraSocial;
             receta.paciente.id = dataReceta.paciente.id || dataReceta.paciente._id;
             receta.profesional = dataReceta.profesional;
             receta.profesional._id = dataReceta.profesional.id || dataReceta.profesional._id; // revisar como se generan ids en ambos casos
