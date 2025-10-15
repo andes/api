@@ -1,3 +1,16 @@
+# [5.136.0](https://github.com/andes/api/compare/v5.135.2...v5.136.0) (2025-10-15)
+
+
+### Bug Fixes
+
+* **AUTH:** Agerga permiso para mapa provincial ([#2120](https://github.com/andes/api/issues/2120)) ([88bbb6f](https://github.com/andes/api/commit/88bbb6f5dc63df6ab2e230e9b9272e767486be53))
+* **Receta:** corrige dato de obra social en receta ([#2121](https://github.com/andes/api/issues/2121)) ([e593851](https://github.com/andes/api/commit/e5938510e78104010f319e76a600a86af0bce493))
+
+
+### Features
+
+* agregar reset al validateOtp y timeout al envio de mail ([#2119](https://github.com/andes/api/issues/2119)) ([396f1c0](https://github.com/andes/api/commit/396f1c0a1412264aa9b4bec466a18d7e39870e73))
+
 ## [5.135.2](https://github.com/andes/api/compare/v5.135.1...v5.135.2) (2025-10-01)
 
 
