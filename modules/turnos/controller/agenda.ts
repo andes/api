@@ -2,9 +2,8 @@ import { EventCore } from '@andes/event-bus';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
-import * as request from 'request';
 import { Auth } from '../../../auth/auth.class';
-import { diasNoLaborables, userScheduler } from '../../../config.private';
+import { diasNoLaborables, diasNoLaborables2, userScheduler } from '../../../config.private';
 import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
@@ -13,10 +12,11 @@ import { toArray } from '../../../utils/utils';
 import * as prestacionController from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { Agenda, HistorialAgenda } from '../../turnos/schemas/agenda';
-import { agendaLog } from '../citasLog';
+import { agendaLog, agendaJob } from '../citasLog';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import { ECLQueriesCtr } from './../../../core/tm/eclqueries.routes';
+import { handleHttpRequest } from '../../../utils/requestHandler';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -452,7 +452,7 @@ export function actualizarEstado(req, data) {
         // Si se esta publicando una agenda de hoy o mañana se pasan los turnos igual q en job
         const tomorrow = moment(new Date()).add(1, 'days');
         if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
-            for (let j = 0; j < data.bloques.length; j++) {
+            for (let j = 0;j < data.bloques.length;j++) {
                 const cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
                 if (cantAccesoDirecto > 0) {
                     data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
@@ -506,7 +506,7 @@ export function getTurno(req, data, idTurno = null) {
 
     // Loop en los bloques
     if (data && data.bloques) {
-        for (let x = 0; x < data.bloques.length; x++) {
+        for (let x = 0;x < data.bloques.length;x++) {
             // Si existe este bloque...
             if (data.bloques[x] != null) {
                 // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
@@ -535,7 +535,7 @@ export function getPosition(req, agenda, idTurno = null) {
     let turnos;
     const position = { indexBloque: -1, indexTurno: -1 };
     // Loop en los bloques
-    for (let x = 0; x < agenda.bloques.length; x++) {
+    for (let x = 0;x < agenda.bloques.length;x++) {
         // Si existe este bloque...
         turnos = agenda.bloques[x].turnos;
         index = turnos?.findIndex((t) => t._id?.toString() === idTurno?.toString());
@@ -626,9 +626,9 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
 }
 
 export function getBloque(agenda, turno) {
-    for (let i = 0; i < agenda.bloques.length; i++) {
+    for (let i = 0;i < agenda.bloques.length;i++) {
         const bloque = agenda.bloques[i];
-        for (let j = 0; j < bloque.turnos.length; j++) {
+        for (let j = 0;j < bloque.turnos.length;j++) {
             const turnoTemp = bloque.turnos[j];
             if (turnoTemp._id === turno._id) {
                 return bloque;
@@ -675,41 +675,62 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
 
 }
 
-function esFeriado(fecha) {
-    return new Promise((resolve, reject) => {
-
-        const anio = moment(fecha).year();
-        const mes = moment(fecha).month(); // de 0 a 11
-        const dia = moment(fecha).date(); // de 1 a 31
-        const url = diasNoLaborables + anio;
-
-        request({ url, json: true }, (err, response, body) => {
-            if (err) {
-                reject(err);
-            }
-            if (body) {
-                const feriados = body.filter(item => {
-                    return ((item.mes).toString() === (mes + 1).toString() && (item.dia).toString() === (dia).toString());
-                });
-                if (feriados.length > 0) {
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            }
-        });
-    });
+async function esFeriado(fecha) {
+    const anio = moment(fecha).year();
+    const feriados = await getFeriados(anio);
+    const fechaStr = moment(fecha).format('YYYY-MM-DD');
+    const feriado = (feriados.length > 0 && feriados.find(f => f === fechaStr)) ? true : false;
+    return feriado;
 }
 
 /**
- * Recupera las agendas a 48hs de la fecha actual y actualiza la cantidad de turnos restantes antes
+ * Consulta feriados y dias no laborables a 2 apis externas,
+ * una se usa como alternativa si la primera falla
+ * @param anio
+ * @returns fechas ['YYYY-MM-DD']
+ */
+async function getFeriados(anio) {
+
+    const url = diasNoLaborables + anio;
+    const options = {
+        url,
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+    };
+    let feriados = [];
+    let errorApi = true;
+    let status, body;
+    try {
+        [status, body] = await handleHttpRequest(options);
+        if (status === 200) {
+            errorApi = false;
+            feriados = body.map(item => anio + '-' + (item.mes).toString() + '-' + (item.dia).toString());
+        }
+    } catch (error) {
+        agendaJob.error('getFeriados', { urlError: url }, error);
+    }
+    if (errorApi) {
+        options.url = diasNoLaborables2 + anio;
+        [status, body] = await handleHttpRequest(options);
+        if (status === 200) {
+            feriados = JSON.parse(body).map(item => item.fecha);
+        }
+
+    }
+    return feriados;
+}
+
+/**
+ * Recupera las agendas a 48hs (segun constante getCantidadHsActualizar) de la fecha actual y actualiza la cantidad de turnos restantes antes
  * de su fecha de inicio. Se ejecuta una vez al día por el scheduler.
  *
  * @export actualizarTiposDeTurno()
  * @returns resultado
  */
 export async function actualizarTiposDeTurno() {
-    const hsActualizar = await actualizarTurnosHs();
+    // cantidad de horas a partir para actualizar las agendas (48hs por defecto)
+    const hsActualizar = await getCantidadHsActualizar();
     const cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
     const esDomingo = false;
@@ -733,11 +754,10 @@ export async function actualizarTiposDeTurno() {
             feriado = await esFeriado(fechaActualizar);
         }
     } catch (error) {
-        agendaLog.error('actualizarTiposTurnos', { feriado, fechaActualizar }, error);
+        agendaJob.error('actualizarTiposTurnos', { feriado, fechaActualizar: fechaActualizar.toString() }, error);
         return null;
     }
 
-    // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
     condicion = {
         estado: 'publicada',
         horaInicio: {
@@ -760,9 +780,9 @@ export async function actualizarTiposDeTurno() {
                 updatedBy: agenda.updatedBy,
                 bloques: data.logs
             };
-            agendaLog.info('actualizarTiposTurnos', objetoLog);
+            agendaJob.info('actualizarTiposTurnos', objetoLog);
         } catch (error) {
-            agendaLog.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
+            agendaJob.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
         }
     });
 }
@@ -788,7 +808,7 @@ function registrarLog(logs, bloque, estado, datos) {
 export function actualizarTurnos(agenda) {
     const logs = [];
 
-    for (let j = 0; j < agenda.bloques.length; j++) {
+    for (let j = 0;j < agenda.bloques.length;j++) {
         registrarLog(logs, j, 'inicio', agenda.bloques[j]);
 
         const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
@@ -829,7 +849,7 @@ export function actualizarEstadoAgendas(start, end) {
         let todosAsistencia = false;
         let todosAuditados = false;
         try {
-            for (let j = 0; j < agenda.bloques.length; j++) {
+            for (let j = 0;j < agenda.bloques.length;j++) {
                 turnos = turnos.concat(agenda.bloques[j].turnos);
             }
             if (agenda.sobreturnos) {
@@ -859,7 +879,7 @@ export function actualizarEstadoAgendas(start, end) {
                 actualizarHistorial({ estado: agenda.estado }, agenda, (userScheduler as any));
             }
         } catch (error) {
-            agendaLog.error('actualizarEstadoAgendas', { agenda }, error);
+            agendaJob.error('actualizarEstadoAgendas', { agenda }, error);
         }
     });
 }
@@ -1040,7 +1060,7 @@ export function actualizarTurnosDelDia() {
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(doc => {
         const agenda: any = doc;
-        for (let j = 0; j < agenda.bloques.length; j++) {
+        for (let j = 0;j < agenda.bloques.length;j++) {
             if (agenda.bloques[j].restantesProgramados > 0) {
                 agenda.bloques[j].restantesDelDia += agenda.bloques[j].restantesProgramados;
                 agenda.bloques[j].restantesProgramados = 0;
@@ -1087,7 +1107,7 @@ export function actualizarTurnosMobile() {
     return cursor.eachAsync(async doc => {
         const agenda: any = doc;
         try {
-            for (let j = 0; j < agenda.bloques.length; j++) {
+            for (let j = 0;j < agenda.bloques.length;j++) {
                 if (agenda.bloques[j].restantesMobile > 0) {
                     agenda.bloques[j].restantesMobile = 0;
                 }
@@ -1347,7 +1367,7 @@ export function getCantidadConsultaXPrestacion(params) {
         function removeDuplicates(arr) {
             const unique_array = [];
             const arrMap = arr.map(m => { return m._id; });
-            for (let i = 0; i < arr.length; i++) {
+            for (let i = 0;i < arr.length;i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
                 }
@@ -1542,12 +1562,12 @@ export function agendaNueva(data, clon, req) {
     return nueva;
 }
 
-async function actualizarTurnosHs() {
+async function getCantidadHsActualizar() {
     let constante;
     const key = 'actualizarTurnosHs';
     try {
         constante = await Constantes.findOne({ key });
-        return constante ? parseInt(constante.nombre, 10) : 48;
+        return constante ? parseInt(constante.nombre, 10) : 48; // valor por defecto 48hs
     } catch (error) {
         log.error('actualizarTurnosHs', { constante, key }, { error: error.message }, userScheduler);
         return 48;

@@ -10,6 +10,15 @@ export const agendaLog = new Logger({
     bucketSize: 100,
     expiredAt: '3 M'
 });
+export const agendaJob = new Logger({
+    connection: Connections.logs,
+    module: 'citas',
+    type: 'agendas-job',
+    application: 'andes',
+    bucketBy: 'd',
+    bucketSize: 100,
+    expiredAt: '3 M'
+});
 
 export const turnosLog = new Logger({
     connection: Connections.logs,
