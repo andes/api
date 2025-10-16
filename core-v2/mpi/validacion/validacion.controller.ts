@@ -24,10 +24,6 @@ function identidadSinAcentos(ciudadano) {
  * Busca en fuentes auntenticas los datos de un ciudadano.
  */
 
-function errorCiudadano({ origen, documento, error, fecha }: { origen: string; documento: string; error: any; fecha: Date}) {
-    // eslint-disable-next-line no-console
-    console.error(`[${fecha.toISOString()}] Error en ${origen} para documento ${documento}: ${error}`);
-}
 export async function validar(documento: string, sexo: string) {
     // ---------- RENAPER ----------
 
@@ -52,7 +48,6 @@ export async function validar(documento: string, sexo: string) {
             }
         }
     } catch (error) {
-        // 🔸 En lugar de lanzar un throw, registramos el error y seguimos al siguiente bloque (SISA)
         updateValidadosLog.error('consultaRenaper', { documento, sexo }, error, userScheduler);
 
     }
@@ -76,13 +71,6 @@ export async function validar(documento: string, sexo: string) {
         }
     } catch (error) {
         updateValidadosLog.error('consultaSisa', { documento, sexo }, error, userScheduler);
-
-        await errorCiudadano({
-            origen: 'SISA',
-            documento,
-            error: error.message,
-            fecha: new Date()
-        });
 
         throw new Error(`Error al consultar SISA: ${error.message}`);
     }
