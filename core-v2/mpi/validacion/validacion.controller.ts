@@ -4,7 +4,8 @@ import { sisa as sisaConfig } from '../../../config.private';
 import { matchUbicacion } from '../../../core/tm/controller/localidad';
 import { IDireccion } from '../../../shared/interfaces';
 import { Types } from 'mongoose';
-
+import { updateValidadosLog } from '../mpi.log';
+import { userScheduler } from '../../../config.private';
 const sharp = require('sharp');
 
 function caracteresInvalidos(texto) {
@@ -51,13 +52,11 @@ export async function validar(documento: string, sexo: string) {
             }
         }
     } catch (error) {
-        await errorCiudadano({
-            origen: 'RENAPER',
-            documento,
-            error: error.message,
-            fecha: new Date()
-        });
+        // 🔸 En lugar de lanzar un throw, registramos el error y seguimos al siguiente bloque (SISA)
+        updateValidadosLog.error('consultaRenaper', { documento, sexo }, error, userScheduler);
+
     }
+
 
     // ---------- SISA ----------
     try {
@@ -76,12 +75,15 @@ export async function validar(documento: string, sexo: string) {
             return ciudadanoSisa;
         }
     } catch (error) {
+        updateValidadosLog.error('consultaSisa', { documento, sexo }, error, userScheduler);
+
         await errorCiudadano({
             origen: 'SISA',
             documento,
             error: error.message,
             fecha: new Date()
         });
+
         throw new Error(`Error al consultar SISA: ${error.message}`);
     }
 
