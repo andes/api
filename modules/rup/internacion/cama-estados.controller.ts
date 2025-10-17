@@ -229,55 +229,39 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
             'estados.esMovimiento': true,
             'estados.fecha': { $lte: fechaSeleccionada }
         };
+        let match: any = {};
         if (filtros.unidadOrganizativa) {
-            secondMatch['estados.unidadOrganizativa.conceptId'] = filtros.unidadOrganizativa;
+            match = {
+                $match: { 'unidad.conceptId': filtros.unidadOrganizativa }
+            };
         }
 
-        let groupStage: any;
-        if (filtros.unidadOrganizativa && !organizacion) {
-            // Caso: solo unidadOrganizativa
-            groupStage = {
-                $group: {
-                    _id: '$_id.unidad',
-                    ambito: { $first: '$ambito' },
-                    capa: { $first: '$capa' },
-                    camasOcupadas: { $sum: '$camasOcupadas' },
-                    camasDisponibles: { $sum: '$camasDisponibles' },
-                    camasBloqueadas: { $sum: '$camasBloqueadas' },
-                    totalCamas: { $sum: '$totalCamas' },
-                    organizacion: { $first: '$organizacion' }, // lista de orgs donde aparece la unidad
-                    unidad: { $first: '$unidad' }
-                }
-            };
-        } else {
-            // Caso: organización (con o sin unidadOrganizativa)
-            groupStage = {
-                $group: {
-                    _id: '$_id.organizacion',
-                    organizacion: { $first: '$organizacion' },
-                    ambito: { $first: '$ambito' },
-                    capa: { $first: '$capa' },
-                    camasOcupadas: { $sum: '$camasOcupadas' },
-                    camasDisponibles: { $sum: '$camasDisponibles' },
-                    camasBloqueadas: { $sum: '$camasBloqueadas' },
-                    totalCamas: { $sum: '$totalCamas' },
-                    unidadesOrganizativas: {
-                        $push: {
-                            _id: '$unidad._id',
-                            conceptId: '$unidad.conceptId',
-                            term: '$unidad.term',
-                            fsn: '$unidad.fsn',
-                            semanticTag: '$unidad.semanticTag',
-                            id: '$unidad.id',
-                            totalCamas: '$totalCamas',
-                            camasOcupadas: '$camasOcupadas',
-                            camasDisponibles: '$camasDisponibles',
-                            camasBloqueadas: '$camasBloqueadas'
-                        }
+        const groupStage = {
+            $group: {
+                _id: '$_id.organizacion',
+                organizacion: { $first: '$organizacion' },
+                ambito: { $first: '$ambito' },
+                capa: { $first: '$capa' },
+                camasOcupadas: { $sum: '$camasOcupadas' },
+                camasDisponibles: { $sum: '$camasDisponibles' },
+                camasBloqueadas: { $sum: '$camasBloqueadas' },
+                totalCamas: { $sum: '$totalCamas' },
+                unidadesOrganizativas: {
+                    $push: {
+                        _id: '$unidad._id',
+                        conceptId: '$unidad.conceptId',
+                        term: '$unidad.term',
+                        fsn: '$unidad.fsn',
+                        semanticTag: '$unidad.semanticTag',
+                        id: '$unidad.id',
+                        totalCamas: '$totalCamas',
+                        camasOcupadas: '$camasOcupadas',
+                        camasDisponibles: '$camasDisponibles',
+                        camasBloqueadas: '$camasBloqueadas'
                     }
                 }
-            };
-        }
+            }
+        };
 
         const aggregate: any[] = [
             { $match: firstMatch },
@@ -452,8 +436,12 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
                     }
                 }
             },
-            groupStage
         ];
+        if (filtros.unidadOrganizativa) {
+            aggregate.push(match);
+        } else {
+            aggregate.push(groupStage);
+        }
         const result = await CamaEstados.aggregate(aggregate);
         return result;
     } catch (error) {
