@@ -735,7 +735,7 @@ export async function actualizarTiposDeTurno() {
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
     const esDomingo = false;
     let feriado;
-    let agenda = null;
+    const agenda = null;
     let condicion = {};
     try {
         feriado = await esFeriado(fechaActualizar);
@@ -758,29 +758,46 @@ export async function actualizarTiposDeTurno() {
         return null;
     }
 
+    // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
+    // considerando agendas con bloques de turnos de acceso directo que tienen restantes de gestion o profesional
     condicion = {
         estado: 'publicada',
         horaInicio: {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
-        }
+        },
+        $and: [
+            {
+                $or: [
+                    { 'bloques.accesoDirectoDelDia': { $gt: 0 } },
+                    { 'bloques.accesoDirectoProgramado': { $gt: 0 } }
+                ]
+            },
+            {
+                $or: [
+                    { 'bloques.restantesGestion': { $gt: 0 } },
+                    { 'bloques.restantesProfesional': { $gt: 0 } },
+                ],
+            }
+        ]
     };
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(async doc => {
         try {
-            const data = this.actualizarTurnos(doc);
-            agenda = data.agenda;
-            Auth.audit(agenda, (userScheduler as any));
-            await agenda.save();
-            const objetoLog = {
-                idAgenda: agenda._id,
-                organizacion: agenda.organizacion,
-                horaInicio: agenda.horaInicio,
-                updatedAt: agenda.updatedAt,
-                updatedBy: agenda.updatedBy,
-                bloques: data.logs
-            };
-            agendaJob.info('actualizarTiposTurnos', objetoLog);
+            const { agenda: a, logs: bloques } = actualizarTurnos(doc);
+            if (bloques.length > 0) {
+                Auth.audit(a, (userScheduler as any));
+                await a.save();
+                const objetoLog = {
+                    idAgenda: a._id,
+                    organizacion: a.organizacion,
+                    horaInicio: a.horaInicio,
+                    updatedAt: a.updatedAt,
+                    updatedBy: a.updatedBy,
+                    bloques
+                };
+                agendaJob.info('actualizarTiposTurnos', objetoLog);
+            }
         } catch (error) {
             agendaJob.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
         }
@@ -788,37 +805,43 @@ export async function actualizarTiposDeTurno() {
 }
 
 /**
- * Método auxiliar para registrar los logs.
+ * Método auxiliar para registrar los logs de bloques modificados.
  *
  */
 function registrarLog(logs, bloque, estado, datos) {
-    logs.push({
-        bloque,
-        idBloque: datos._id,
-        estado,
+    const dataEstado = {
         restantesDelDia: datos.restantesDelDia,
         restantesProgramados: datos.restantesProgramados,
         restantesProfesional: datos.restantesProfesional,
         restantesMobile: datos.restantesMobile,
         restantesGestion: datos.restantesGestion,
-    });
+    };
+    const index = logs.findIndex(l => l.idBloque === datos._id);
+    if (index === -1) {
+        const log = {
+            bloque,
+            idBloque: datos._id
+        };
+        log[estado] = dataEstado;
+        logs.push(log);
+    } else {
+        logs[index][estado] = dataEstado;
+    }
 }
 
 // Dada una agenda, actualiza los turnos restantes (Para agendas dentro de las 48hs a partir de hoy).
 export function actualizarTurnos(agenda) {
     const logs = [];
-
     for (let j = 0;j < agenda.bloques.length;j++) {
-        registrarLog(logs, j, 'inicio', agenda.bloques[j]);
-
         const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
-        if (cantAccesoDirecto > 0) {
-            agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+        const restantesReservados = agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+        if (cantAccesoDirecto > 0 && restantesReservados > 0) {
+            registrarLog(logs, j, 'inicio', agenda.bloques[j]);
+            agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + restantesReservados;
             agenda.bloques[j].restantesGestion = 0;
             agenda.bloques[j].restantesProfesional = 0;
+            registrarLog(logs, j, 'fin', agenda.bloques[j]);
         }
-
-        registrarLog(logs, j, 'final', agenda.bloques[j]);
     }
     return { agenda, logs };
 }
