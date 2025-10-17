@@ -13,6 +13,32 @@ import { Organizacion } from '../schemas/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
+
+/**
+ * GET /organizaciones/configuracion
+ * Devuelve todas las unidades organizativas existentes.
+ *
+ *
+ */
+router.get('/organizaciones/unidadesOrganizativasTotales', Auth.authenticate(), async (req, res, next) => {
+    const unidadesOrganizativasAggregate = ([
+        { $unwind: '$unidadesOrganizativas' },
+        {
+            $group: {
+                _id: '$unidadesOrganizativas.term',
+                unidad: { $first: '$unidadesOrganizativas' }
+            }
+        },
+        { $replaceRoot: { newRoot: '$unidad' } }
+    ]);
+    try {
+        const unidadesOrganizativas: any = await Organizacion.aggregate(unidadesOrganizativasAggregate);
+        return res.json(unidadesOrganizativas || {});
+    } catch (error) {
+        return next(error);
+    }
+});
+
 router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     if (req.params.id) {
         Organizacion
@@ -253,6 +279,7 @@ router.get('/organizaciones/:id/unidadesOrganizativas', Auth.authenticate(), asy
         return next(error);
     }
 });
+
 router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:create')) {
         return next(403);
