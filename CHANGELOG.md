@@ -1,3 +1,10 @@
+# [5.137.0](https://github.com/andes/api/compare/v5.136.0...v5.137.0) (2025-10-22)
+
+
+### Features
+
+* **CITAS:** Modifica api dias feriados ([#2125](https://github.com/andes/api/issues/2125)) ([a7dea8e](https://github.com/andes/api/commit/a7dea8e37dd24524831fdb8273067160c1d3f9bf))
+
 # [5.136.0](https://github.com/andes/api/compare/v5.135.2...v5.136.0) (2025-10-15)
 
 
