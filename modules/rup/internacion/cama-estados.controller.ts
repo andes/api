@@ -229,55 +229,6 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
             'estados.esMovimiento': true,
             'estados.fecha': { $lte: fechaSeleccionada }
         };
-        if (filtros.unidadOrganizativa) {
-            secondMatch['estados.unidadOrganizativa.conceptId'] = filtros.unidadOrganizativa;
-        }
-
-        let groupStage: any;
-        if (filtros.unidadOrganizativa && !organizacion) {
-            // Caso: solo unidadOrganizativa
-            groupStage = {
-                $group: {
-                    _id: '$_id.unidad',
-                    ambito: { $first: '$ambito' },
-                    capa: { $first: '$capa' },
-                    camasOcupadas: { $sum: '$camasOcupadas' },
-                    camasDisponibles: { $sum: '$camasDisponibles' },
-                    camasBloqueadas: { $sum: '$camasBloqueadas' },
-                    totalCamas: { $sum: '$totalCamas' },
-                    organizacion: { $first: '$organizacion' }, // lista de orgs donde aparece la unidad
-                    unidad: { $first: '$unidad' }
-                }
-            };
-        } else {
-            // Caso: organización (con o sin unidadOrganizativa)
-            groupStage = {
-                $group: {
-                    _id: '$_id.organizacion',
-                    organizacion: { $first: '$organizacion' },
-                    ambito: { $first: '$ambito' },
-                    capa: { $first: '$capa' },
-                    camasOcupadas: { $sum: '$camasOcupadas' },
-                    camasDisponibles: { $sum: '$camasDisponibles' },
-                    camasBloqueadas: { $sum: '$camasBloqueadas' },
-                    totalCamas: { $sum: '$totalCamas' },
-                    unidadesOrganizativas: {
-                        $push: {
-                            _id: '$unidad._id',
-                            conceptId: '$unidad.conceptId',
-                            term: '$unidad.term',
-                            fsn: '$unidad.fsn',
-                            semanticTag: '$unidad.semanticTag',
-                            id: '$unidad.id',
-                            totalCamas: '$totalCamas',
-                            camasOcupadas: '$camasOcupadas',
-                            camasDisponibles: '$camasDisponibles',
-                            camasBloqueadas: '$camasBloqueadas'
-                        }
-                    }
-                }
-            };
-        }
 
         const aggregate: any[] = [
             { $match: firstMatch },
@@ -297,7 +248,11 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
             { $match: secondMatch },
             {
                 $group: {
-                    _id: '$idCama',
+                    _id: {
+                        idCama: '$idCama',
+                        idOrganizacion: '$organizacion._id',
+                        nombreOrganizacion: '$organizacion.nombre'
+                    },
                     fechaMax: {
                         $max: '$estados.fecha'
                     },
@@ -313,7 +268,7 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
                 $lookup: {
                     from: 'internacionCamaEstados',
                     let: {
-                        idCama: '$_id',
+                        idCama: '$_id.idCama',
                         fechaMax: '$fechaMax'
                     },
                     pipeline: [
@@ -362,7 +317,8 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
                                 },
                                 'estados.fecha': {
                                     $lte: fechaSeleccionada
-                                }
+                                },
+                                'estados.unidadOrganizativa.conceptId': filtros.unidadOrganizativa ? filtros.unidadOrganizativa : { $exists: true }
                             }
                         },
                         {
@@ -410,7 +366,7 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
             {
                 $lookup: {
                     from: 'internacionCamas',
-                    localField: '_id',
+                    localField: '_id.idCama',
                     foreignField: '_id',
                     as: 'cama'
                 }
@@ -418,16 +374,12 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
             { $unwind: '$cama' },
             {
                 $group: {
-                    _id: filtros.unidadOrganizativa && !organizacion
-                        ? { unidad: '$estadoCama.unidadOrganizativa._id' }
-                        : {
-                            organizacion: '$cama.organizacion._id',
-                            unidad: '$estadoCama.unidadOrganizativa._id'
-                        },
-                    organizacion: { $first: '$cama.organizacion' },
-                    unidad: { $first: '$estadoCama.unidadOrganizativa' },
-                    ambito: { $first: '$ambito' },
-                    capa: { $first: '$capa' },
+                    _id: {
+                        idUnidad: '$estadoCama.unidadOrganizativa.conceptId',
+                        unidad: '$estadoCama.unidadOrganizativa.term',
+                        idOrganizacion: '$_id.idOrganizacion',
+                        organizacion: '$_id.nombreOrganizacion'
+                    },
                     camasOcupadas: {
                         $sum: {
                             $cond: [{ $eq: ['$estadoCama.estado', 'ocupada'] }, 1, 0]
@@ -452,8 +404,42 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
                     }
                 }
             },
-            groupStage
+            {
+                $group: {
+                    _id: {
+                        idOrganizacion: '$_id.idOrganizacion',
+                        organizacion: '$_id.organizacion'
+                    },
+                    camasOcupadas: { $sum: '$camasOcupadas' },
+                    camasDisponibles: { $sum: '$camasDisponibles' },
+                    camasBloqueadas: { $sum: '$camasBloqueadas' },
+                    totalCamas: { $sum: '$totalCamas' },
+                    unidadesOrganizativas: {
+                        $push: {
+                            _id: '$_id.idUnidad',
+                            conceptId: '$_id.idUnidad',
+                            term: '$_id.unidad',
+                            totalCamas: '$totalCamas',
+                            camasOcupadas: '$camasOcupadas',
+                            camasDisponibles: '$camasDisponibles',
+                            camasBloqueadas: '$camasBloqueadas'
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    organizacion: { _id: '$_id.idOrganizacion', nombre: '$_id.organizacion' },
+                    camasOcupadas: 1,
+                    camasDisponibles: 1,
+                    camasBloqueadas: 1,
+                    totalCamas: 1,
+                    unidadesOrganizativas: 1
+                }
+            }
         ];
+
         const result = await CamaEstados.aggregate(aggregate);
         return result;
     } catch (error) {
