@@ -201,26 +201,24 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
 
         let posTurno: number;
 
-        let esHoy = false;
+        const posBloque = agendaRes.bloques.findIndex(item => item._id.toString() === req.body.idBloque.toString());
 
-        const posBloque = (agendaRes as any).bloques.findIndex(item => item._id.toString() === req.body.idBloque.toString());
+        // Verificamos si el día de la agenda coincide con la fecha actual
+        const hoyHrInicio = moment(new Date()).startOf('day').toDate();
+        const hoyHrFin = moment(new Date()).endOf('day').toDate();
+        const esHoy = (agendaRes.horaInicio >= hoyHrInicio && agendaRes.horaInicio <= hoyHrFin);
 
-        // Ver si el día de la agenda coincide con el día de hoy
-        if ((agendaRes as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (agendaRes as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
-            esHoy = true;
-        }
-
-        const contieneBloqueSoloGestion = agendaRes.bloques.some((bloque: any) => bloque.reservadoGestion > 0 && bloque.accesoDirectoDelDia === 0 && bloque.accesoDirectoProgramado === 0 && bloque.reservadoProfesional === 0);
-        const contieneBloqueSoloProfesional = agendaRes.bloques.some((bloque: any) => bloque.reservadoProfesional > 0 && bloque.accesoDirectoDelDia === 0 && bloque.accesoDirectoProgramado === 0 && bloque.reservadoGestion === 0);
         // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
+        // agenda creada con turnos de acceso directo
+        const contieneAccesoDirecto = agendaRes.bloques[posBloque].accesoDirectoDelDia > 0 || agendaRes.bloques[posBloque].accesoDirectoProgramado > 0;
+
         const countBloques = {
-            delDia: esHoy && !contieneBloqueSoloGestion ? (
-                ((agendaRes as any).bloques[posBloque].restantesDelDia as number) +
-                ((agendaRes as any).bloques[posBloque].restantesProgramados as number)
-            ) : (agendaRes as any).bloques[posBloque].restantesDelDia,
-            programado: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProgramados,
-            gestion: esHoy && !contieneBloqueSoloGestion ? 0 : (agendaRes as any).bloques[posBloque].restantesGestion,
-            profesional: esHoy && !contieneBloqueSoloProfesional ? 0 : (agendaRes as any).bloques[posBloque].restantesProfesional,
+            delDia: (esHoy && contieneAccesoDirecto) ?
+                ((agendaRes.bloques[posBloque].restantesDelDia as number) + (agendaRes.bloques[posBloque].restantesProgramados as number))
+                : agendaRes.bloques[posBloque].restantesDelDia,
+            programado: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesProgramados,
+            gestion: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesGestion,
+            profesional: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesProfesional,
             mobile: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesMobile,
         };
         posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(item => item._id.toString() === req.body.idTurno.toString());
