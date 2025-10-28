@@ -106,33 +106,46 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         const organizacion = allMovimientos[0].organizacion._id;
         const ultimoMovimientoUO = allMovimientos.slice().reverse().find(m => m.unidadOrganizativa.conceptId === unidadOrganizativa);
         let prestacion;
+        let informesInternacion = null;
         if (capa === 'medica') {
             const idPrestacion = resumenPrestacionMap.find(r => String(r.idResumen) === String(allMovimientos[0].idInternacion))?.idPrestacion;
             prestacion = prestaciones.find(p => String(p.id) === String(idPrestacion));
 
         } else {
             prestacion = prestaciones.find(p => String(p.id) === String(allMovimientos[0].idInternacion));
-
             // filtra los periodos que se superponen con la fecha de egreso
-            const informes: any = getInformesInternacion(prestacion);
-            const fechaEgreso = informes?.egreso?.fechaEgreso;
+            if (prestacion) {
+                informesInternacion = getInformesInternacion(prestacion);
+                const fechaEgreso = informesInternacion?.egreso?.fechaEgreso;
 
-            if (fechaEgreso) {
-                prestacion.periodosCensables = eliminarPeriodoEnEgreso(fechaEgreso, prestacion.periodosCensables);
-            }
+                if (fechaEgreso) {
+                    prestacion.periodosCensables = eliminarPeriodoEnEgreso(fechaEgreso, prestacion.periodosCensables);
+                }
 
-            // verifica si la prestación tiene periodos que incluyan la fecha del censo
-            if (!incluyePeriodo(prestacion, timestampStart)) {
-                prestacion = null;
+                // verifica si la prestación tiene periodos que incluyan la fecha del censo
+                if (!incluyePeriodo(prestacion, timestampStart)) {
+                    prestacion = null;
+                    informesInternacion = null;
+                }
+            } else {
+                const dataErr = {
+                    fecha: moment().toDate(),
+                    organizacion: allMovimientos[0].organizacion,
+                    unidadOrganizativa,
+                    idInternacion: idInter
+                };
+                await logger.error('censoDiario', dataErr, userScheduler);
             }
         }
 
         if (prestacion) {
-            const informesInternacion: any = getInformesInternacion(prestacion);
+            if (!informesInternacion) {
+                informesInternacion = getInformesInternacion(prestacion);
+            }
             const desde = informesInternacion.ingreso.fechaIngreso;
 
-            dataInternaciones[idInter] = {};
-            dataInternaciones[idInter]['informesInternacion'] = informesInternacion;
+            dataInternaciones[idInter] = { informesInternacion };
+
             if (ultimoMovimientoUO) {
                 // obtengo movimientos desde la fecha de ingreso hasta el día del censo
                 const estadosInter = await CamasEstadosController.searchEstados({ desde, hasta: timestampEnd, organizacion, ambito, capa }, filtros);
@@ -162,11 +175,14 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     esPaseA = moment(movEgresaUO[0].fecha).isSame(timestampEnd, 'day');
                 }
 
-                dataInternaciones[idInter]['allMovimientos'] = allMovimientos;
-                dataInternaciones[idInter]['ultimoMovimientoUO'] = ultimoMovimientoUO;
-                dataInternaciones[idInter]['fechaIngresoUO'] = fechaIngresoUO;
-                dataInternaciones[idInter]['prestacion'] = prestacion;
-                dataInternaciones[idInter]['esPaseA'] = esPaseA;
+                dataInternaciones[idInter] = {
+                    ...dataInternaciones[idInter],
+                    allMovimientos,
+                    ultimoMovimientoUO,
+                    fechaIngresoUO,
+                    prestacion,
+                    esPaseA
+                };
             }
         }
     }
@@ -451,8 +467,7 @@ export async function censoMensual({ organizacion, unidadOrganizativa, fechaDesd
         });
 
         for (const bucket of bucketsCensos) {
-            const censos = bucket.censos.filter(censo =>
-                (moment(censo.fecha).isSameOrAfter(fechaDesde, 'day')
+            const censos = bucket.censos.filter(censo => (moment(censo.fecha).isSameOrAfter(fechaDesde, 'day')
                 && moment(censo.fecha).isSameOrBefore(fechaHasta, 'day')));
             resultado.push(...censos);
         }
