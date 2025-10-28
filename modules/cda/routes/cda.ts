@@ -108,7 +108,15 @@ router.post('/', async (req: any, res, next) => {
                 }
 
                 cdaData.fecha = moment(cdaData.fecha, 'YYYYMMDDhhmmss').toDate();
-                cdaData.paciente.fechaNacimiento = moment(cdaData.paciente.fechaNacimiento, 'YYYYMMDDhhmmss');
+                const fechaLocal = moment(cdaData.paciente.fechaNacimiento, 'YYYYMMDDhhmmss');
+                if (fechaLocal.isValid()) {
+                    cdaData.paciente.fechaNacimiento = moment.utc({
+                        year: fechaLocal.year(),
+                        month: fechaLocal.month(),
+                        date: fechaLocal.date()
+                    }).toDate();
+                }
+
                 cdaData.paciente.sexo = cdaData.paciente.sexo === 'M' ? 'masculino' : 'femenino';
 
                 const yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
