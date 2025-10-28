@@ -9,7 +9,7 @@ import { IPushNotification, sendPushNotification } from './PushClientFCM';
 
 const log = debug('AuthController');
 
-export const expirationOffset = 1000 * 60 * 60 * 24;
+export const expirationOffset = 1000 * 60 * 60 * 72; // 72 horas
 
 export function verificarCodigo(codigoIngresado, codigo) {
     if (codigoIngresado === codigo) {
