@@ -10,6 +10,7 @@ import { makeFsFirma } from '../schemas/firmaProf';
 import { Profesional } from '../schemas/profesional';
 import { Auth } from './../../../auth/auth.class';
 import { findUsersByUsername } from './../../../auth/auth.controller';
+import { IProfesional } from '../interfaces/profesional.interface';
 
 
 /**
@@ -152,9 +153,33 @@ export async function search(filter, fields) {
 
     return await Profesional.aggregate(aggregate);
 }
+export async function searchMatriculaVigente(profesionalId) {
+    const _profesional: IProfesional = await Profesional.findById(profesionalId);
+    const filterFormaciones = (e) => {
+        return e.matriculado && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
+    };
+    const formacionGrado = _profesional.formacionGrado ?
+        _profesional.formacionGrado.filter(filterFormaciones).map(e => ({ numero: e.matriculacion[e.matriculacion.length - 1].matriculaNumero })) : [];
+    return formacionGrado.length ? formacionGrado[0].numero : searchUltimaMatricula(_profesional);
 
+}
+export async function searchUltimaMatricula(profesional) {
+    let ultimaFechaFin: Date | null = null;
+    let matriculaNumero: number | null = null;
+    profesional.formacionGrado.forEach((fg) => {
+        if (fg.matriculacion?.length) {
+            const sortedMatriculacion = fg.matriculacion.sort((a, b) => moment(b.fin).valueOf() - moment(a.fin).valueOf());
+            const ultimaMatriculacion = sortedMatriculacion[0];
+            if (!ultimaFechaFin || moment(ultimaMatriculacion.fin).isAfter(ultimaFechaFin)) {
+                ultimaFechaFin = moment(ultimaMatriculacion.fin).toDate();
+                matriculaNumero = ultimaMatriculacion.matriculaNumero;
+            }
+        }
+    });
+    return matriculaNumero;
+}
 export async function searchMatriculas(profesionalId) {
-    const _profesional: any = await Profesional.findById(profesionalId);
+    const _profesional: IProfesional = await Profesional.findById(profesionalId);
     const filterFormaciones = (e) => {
         return e.matriculacion && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
     };
