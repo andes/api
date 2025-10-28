@@ -23,7 +23,7 @@ export function crearSolicitud(prestacion: IPrestacion, solicitud: IPrestacionRe
         servicioIntermedioId: regla.destino.servicioIntermedioId || null,
         solicitud: {
             prestacionOrigen: prestacion.id,
-            fecha: prestacion.solicitud.fecha,
+            fecha: prestacion.ejecucion.fecha ? prestacion.ejecucion.fecha : new Date(),
             turno: null,
             tipoPrestacion: prestacionDestino,
             tipoPrestacionOrigen: prestacionOrigen.prestacion ? prestacionOrigen.prestacion : prestacion.solicitud.tipoPrestacion,
