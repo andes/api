@@ -73,7 +73,13 @@ ProfesionalSchema.add({
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
         exportadoSisa: Boolean,
-        fechaDeInscripcion: Date
+        fechaDeInscripcion: Date,
+        configuracionSisa: {
+            idProfesional: { type: Number, required: false },
+            idProfesion: { type: Number, required: false },
+            idMatricula: { type: Number, required: false },
+            codigoProfesional: { type: String, required: false },
+        }
     }],
     formacionPosgrado: [{
         profesion: { type: ObjSIISASchema, required: false },
