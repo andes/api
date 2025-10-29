@@ -65,6 +65,17 @@ async function registrarAppNotificadas(req, recetas, sistema) {
     return recetasUpdated.filter(r => r !== null);
 }
 
+/**
+ * Se ontienen las recetas de un paciente segun filtros:
+ * @param pacienteId (optativo con documento y sexo)
+ * @param documento
+ * @param sexo
+ * @param fechaInicio (optativo) si no se envía sólo para sistemas: de dispensas es hasta 1 año atrás (desde fechaFin u hoy)
+ * @param fechaFin (optativo) si no se envía sólo para sistemas de dispensas: por defecto es hoy, salvo estado "pendiente" que se limita a próximos 10 días
+ * @param estado   (optativo)
+ * @param estadoDispensa (optativo) por defecto 'sin-dispensa'
+ * @returns
+ */
 export async function buscarRecetas(req) {
     const options: any = {};
     const params = req.params.id ? req.params : req.query;
@@ -72,6 +83,7 @@ export async function buscarRecetas(req) {
     const pacienteId = params.pacienteId || null;
     const documento = params.documento || null;
     const sexo = params.sexo || null;
+    const user = req.user;
     try {
         if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
             throw new ParamsIncorrect();
@@ -80,68 +92,61 @@ export async function buscarRecetas(req) {
             id: '_id',
             pacienteId: 'paciente.id',
             documento: 'paciente.documento',
-            sexo: 'paciente.sexo',
-            estado: 'estadoActual.tipo'
+            sexo: 'paciente.sexo'
         };
         Object.keys(paramMap).forEach(key => {
             if (params[key]) {
                 options[paramMap[key]] = key === 'id' ? Types.ObjectId(params[key]) : params[key];
             }
         });
-
-        const estadoArray = params.estado ? params.estado.split(',') : [];
-
-        if (params.estado) {
-            options['estadoActual.tipo'] = { $in: estadoArray };
-        }
-
-        if (params.estadoDispensa) {
-            const estadoDispensaArray = params.estadoDispensa.split(',');
-            options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
-        } else {
-            options['estadoDispensaActual.tipo'] = 'sin-dispensa';
-        }
-
-        if (params.fechaInicio || params.fechaFin) {
-            const fechaInicio = params.fechaInicio ? moment(params.fechaInicio).startOf('day').toDate() : moment().subtract(1, 'years').startOf('day').toDate();
-            const fechaFin = params.fechaFin ? moment(params.fechaFin).endOf('day').toDate() : moment().endOf('day').toDate();
-            options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
-        }
-
-        // Para recetas pendientes sin filtro de fechas, limitar a próximos 10 días
-        const includePendiente = estadoArray.includes('pendiente');
-        if (includePendiente && !params.fechaInicio && !params.fechaFin) {
-            const fechaLimite = moment().add(10, 'days').endOf('day').toDate();
-            const fechaActual = moment().startOf('day').toDate();
-
-            if (options['fechaRegistro']) {
-                // Si ya existe un filtro de fecha, combinarlo con el límite de 10 días
-                options['fechaRegistro'] = {
-                    ...options['fechaRegistro'],
-                    $lte: fechaLimite
-                };
-            } else {
-                // Aplicar filtro de próximos 10 días para recetas pendientes
-                options['fechaRegistro'] = { $gte: fechaActual, $lte: fechaLimite };
-            }
-        }
-
         if (Object.keys(options).length === 0) {
             throw new ParamsIncorrect();
         }
 
-        const includeVigente = estadoArray.includes('vigente');
+        if (params.estadoDispensa) {
+            const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
+            options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
+        } else {
+            options['estadoDispensaActual.tipo'] = 'sin-dispensa';
+        }
+        const estadoArray = params.estado ? params.estado.replace(/ /g, '').split(',') : [];
+        const fechaFin = params.fechaFin ? moment(params.fechaFin).endOf('day').toDate() : moment().endOf('day').toDate();
+        const fechaInicio = params.fechaInicio ? moment(params.fechaInicio).startOf('day').toDate() : moment(fechaFin).subtract(1, 'years').startOf('day').toDate();
 
-        if (includeVigente) {
-            options['fechaRegistro'] = { $gte: fechaVencimiento };
+        if (estadoArray.length) {
+            const optPendientes = {};
+            const optVigentes = {};
+            const optOtros = {};
+            // Para recetas pendientes sin filtro de fechas, limitar a próximos 10 días
+            const includePendiente = estadoArray.includes('pendiente');
+            if (includePendiente) {
+                optPendientes['fechaRegistro'] = {
+                    $gte: fechaInicio,
+                    $lte: params.fechaFin ? fechaFin : moment().add(10, 'days').endOf('day').toDate()
+                };
+                optPendientes['estadoActual.tipo'] = 'pendiente';
+            }
+            // Para recetas vigentes sin filtro de fechas, limitar a 30 días atrás
+            const includeVigente = estadoArray.includes('vigente');
+            if (includeVigente) {
+                const fInicio = params.fechaInicio ? fechaInicio : fechaVencimiento;
+                optVigentes['fechaRegistro'] = params.fechaFin ? { $gte: fInicio, $lte: fechaFin } : { $gte: fInicio };
+                optVigentes['estadoActual.tipo'] = 'vigente';
+            }
+            const includeOtros = estadoArray.filter(e => e !== 'pendiente' && e !== 'vigente');
+            if (includeOtros.length) {
+                optOtros['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
+                optOtros['estadoActual.tipo'] = { $in: includeOtros };
+            }
+            options['$or'] = [optPendientes, optVigentes, optOtros].filter(o => o.hasOwnProperty('estadoActual.tipo'));
+        } else if (user.type === 'app-token') {
+            options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
         }
 
         let recetas: any = await Receta.find(options);
         if (!recetas.length) {
             return [];
         }
-        const user = req.user;
-
         if (user.type === 'app-token') {
             // si es un usuario de app y no tiene nombre de sistema asignado, no se envia recetas
             const sistema = user.app.nombre.toLowerCase();
@@ -584,7 +589,7 @@ export async function crearReceta(dataReceta, req) {
     const cantRecetas = (tratamientoProlongado) ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
     const recetas = [];
     let receta;
-    for (let i = 0;i < cantRecetas;i++) {
+    for (let i = 0; i < cantRecetas; i++) {
         try {
             receta = new Receta();
             receta.idPrestacion = dataReceta.idPrestacion;
