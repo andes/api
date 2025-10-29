@@ -25,8 +25,16 @@ const InformeIngresoSchema = new Schema({
     },
     // datos estadisticos
     ocupacionHabitual: OcupacionSchema,
-    situacionLaboral: { type: String, required: false },
-    nivelInstruccion: { type: String, required: false },
+    situacionLaboral: {
+        id: String,
+        nombre: String
+    },
+    nivelInstruccion: {
+        id: String,
+        nombre: String
+    },
+    // situacionLaboral: { type: String, required: false },
+    // nivelInstruccion: { type: String, required: false },
     especialidades: [SnomedConcept],
     nroCarpeta: String, // evaluar continuidad de este dato
     motivo: String,

@@ -8,7 +8,7 @@ class InformeEstadisticaResource extends ResourceBase {
     resourceName = 'informe-estadistica';
     keyId = '_id';
     middlewares = [Auth.authenticate()];
-    searchFileds = {
+    searchFields = {
         paciente: {
             field: 'paciente.id',
             fn: MongoQuery.equalMatch
