@@ -1,3 +1,11 @@
+## [5.137.1](https://github.com/andes/api/compare/v5.137.0...v5.137.1) (2025-10-29)
+
+
+### Bug Fixes
+
+* **COM:** Se cambia aggregate de mapa provincial ([#2132](https://github.com/andes/api/issues/2132)) ([6b606a4](https://github.com/andes/api/commit/6b606a4804cb3e299a1cc9e313b499c0a8d42232))
+* **IN-629:** Error en censos ([#2066](https://github.com/andes/api/issues/2066)) ([3a281e7](https://github.com/andes/api/commit/3a281e7e2418aade79514fa519a42306db622fe1))
+
 # [5.137.0](https://github.com/andes/api/compare/v5.136.0...v5.137.0) (2025-10-22)
 
 
