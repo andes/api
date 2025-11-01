@@ -28,15 +28,18 @@ export async function syncWorkList(prestacion: IPrestacion) {
         if (config) {
             const token = await loginPacs(config);
 
+            const pacienteIdDicom = (config.featureFlags?.usoIdDNI && prestacion.paciente.documento)
+                ? prestacion.paciente.documento
+                : prestacion.paciente.id;
+
             const uniqueID = `${config.ui}.${Date.now()}`;
-            const pacienteDICOM = DICOMPaciente(prestacion.paciente);
+
+            const pacienteDICOM = DICOMPaciente(prestacion.paciente, pacienteIdDicom,config);
             const prestacionDICOM = DICOMPrestacion(
                 prestacion,
-                {
-                    aet: config.aet,
-                    modality: config.modalidad,
-                    ui: uniqueID
-                }
+                uniqueID,
+                pacienteIdDicom,
+                config
             );
 
             await createPaciente(config, pacienteDICOM, token);
@@ -51,7 +54,8 @@ export async function syncWorkList(prestacion: IPrestacion) {
 
             const arrayMetadata = [
                 { key: 'pacs-uid', valor: uniqueID },
-                { key: 'pacs-config', valor: config.id }
+                { key: 'pacs-config', valor: config.id },
+                { key: 'pacs-pacienteIdDicom', valor: pacienteIdDicom }
             ];
             if (dataResponse) {
                 arrayMetadata.push({ key: 'pacs-spsID', valor: spsID }); // id de la orden
@@ -112,11 +116,13 @@ export async function sendInformePDF(prestacion: IPrestacion) {
     try {
         const { valor: uid } = prestacion.metadata.find(item => item.key === 'pacs-uid');
         const { valor: configId } = prestacion.metadata.find(item => item.key === 'pacs-config');
+        const { valor: pacienteIdDicom } = prestacion.metadata.find(item => item.key === 'pacs-pacienteIdDicom');
+
         const config = await PacsConfigController.findById(configId);
         if (config) {
             const token = await loginPacs(config);
 
-            const metadata = DICOMInformePDF(prestacion);
+            const metadata = DICOMInformePDF(prestacion, pacienteIdDicom, config);
 
             const informe = new InformeRUP(prestacion.id, null, {});
             const fileName = await informe.informe();

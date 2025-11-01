@@ -21,6 +21,9 @@ export interface IPacsConfig {
         clientId: string;
         clientSecret: string;
     };
+    featureFlags: {
+            usoIdDNI: boolean;
+        };
 }
 
 export const PacsConfigSchema = new Schema({
@@ -37,6 +40,16 @@ export const PacsConfigSchema = new Schema({
         host: String,
         clientId: String,
         clientSecret: String,
+    },
+    featureFlags: {
+        type: {
+            usoIdDNI: {
+                type: Boolean,
+                default: false
+            }
+        },
+        default: () => ({ usoIdDNI: false }),
+        _id: false
     }
 });
 
