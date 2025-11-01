@@ -1,6 +1,7 @@
 import * as moment from 'moment';
+import { IPacsConfig } from '../pacs-config.schema';
 
-export function DICOMPaciente(patient) {
+export function DICOMPaciente(paciente: any, pacienteIdDicom: string, config: IPacsConfig) {
     const json = {
         '00080005': {
             vr: 'CS',
@@ -11,7 +12,7 @@ export function DICOMPaciente(patient) {
         '00100020': {
             vr: 'LO',
             Value: [
-                String(patient.id)
+                pacienteIdDicom
             ]
         },
         '00100021': {
@@ -23,18 +24,18 @@ export function DICOMPaciente(patient) {
         '00100010': {
             vr: 'PN',
             Value: [
-                toISOIR100(`${patient.apellido}^${patient.nombre}`)
+                toISOIR100(`${paciente.apellido}^${paciente.nombre}`)
             ]
         },
         '00100040': {
             vr: 'CS',
             Value: [
-                patient.sexo === 'masculino' ? 'M' : 'F'
+                paciente.sexo === 'masculino' ? 'M' : 'F'
             ]
         }
     };
 
-    if (patient.documento) {
+    if (paciente.documento) {
         json['00101002'] = {
             vr: 'SQ',
             Value: [
@@ -42,18 +43,18 @@ export function DICOMPaciente(patient) {
                     '00100020': {
                         vr: 'LO',
                         Value: [
-                            patient.documento
+                            paciente.documento
                         ]
                     }
                 }
             ]
         };
     }
-    if (patient.fechaNacimiento) {
+    if (paciente.fechaNacimiento) {
         json['00100030'] = {
             vr: 'DA',
             Value: [
-                moment(patient.fechaNacimiento).format('YYYYMMDD')
+                moment(paciente.fechaNacimiento).format('YYYYMMDD')
             ]
         };
     }
