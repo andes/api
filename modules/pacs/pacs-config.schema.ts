@@ -22,8 +22,8 @@ export interface IPacsConfig {
         clientSecret: string;
     };
     featureFlags: {
-            usoIdDNI: boolean;
-        };
+        usoIdDNI: boolean;
+    };
 }
 
 export const PacsConfigSchema = new Schema({
