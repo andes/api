@@ -1,16 +1,13 @@
 import { IPrestacion } from '../../rup/prestaciones.interface';
 import * as moment from 'moment';
+import { IPacsConfig } from '../pacs-config.schema';
 /** *
  *
  * https://www.dicomlibrary.com/dicom/dicom-tags/
  * http://dicom.nema.org/dicom/2013/output/chtml/part05/sect_6.2.html
  */
-export interface DICOMWorklistConfig {
-    modality: string;
-    aet: string;
-    ui: string;
-}
-export function DICOMInformePDF(prestacion: IPrestacion) {
+
+export function DICOMInformePDF(prestacion: IPrestacion, config: IPacsConfig) {
     const { valor: uid } = prestacion.metadata.find(item => item.key === 'pacs-uid');
 
 
