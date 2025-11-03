@@ -123,7 +123,7 @@ export async function buscarRecetas(req) {
             const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
             options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
         } else {
-            options['estadoDispensaActual.tipo'] = 'sin-dispensa';
+            options['estadoActual.tipo'] = null;
         }
         const estadoArray = params.estado ? params.estado.replace(/ /g, '').split(',') : [];
         const fechaFin = params.fechaFin ? moment(params.fechaFin).endOf('day').toDate() : moment().endOf('day').toDate();
@@ -160,6 +160,7 @@ export async function buscarRecetas(req) {
         }
 
         let recetas: any = await Receta.find(options);
+
         if (!recetas.length) {
             return [];
         }
@@ -184,6 +185,100 @@ export async function buscarRecetas(req) {
         return recetas;
     } catch (err) {
         await informarLog.error('buscarRecetas', { params, options }, err, req);
+
+        return err;
+    }
+}
+
+/**
+ * Busca recetas filtrando por rango de fechas y estado.
+ * Incluye estados de receta y de dispensa simultáneamente.
+ *
+ * Parámetros (req.query):
+ * - fechaInicio: fecha inicial del rango (opcional)
+ * - fechaFin: fecha final del rango (opcional)
+ * - estado: uno o varios estados separados por coma (opcional)
+ *
+ * Ejemplo de estados: 'pendiente,vigente,vencida,sin-dispensa,dispensada,dispensa-parcial'
+ */
+export async function buscarRecetasConFiltros(req) {
+    try {
+        const { fechaInicio, fechaFin, estado, documento, sexo } = req.query;
+        const filter: any = {};
+        const statusVal = req.query.status;
+        const estadoVal = estado;
+        let estadoParam = null;
+
+        if (estadoVal && statusVal) {
+            estadoParam = `${estadoVal},${statusVal}`;
+        } else {
+            estadoParam = estadoVal ?? statusVal;
+        }
+        if (!estadoParam || String(estadoParam).trim() === '') {
+            estadoParam = 'vigente';
+        }
+
+        // Validación mínima: al menos un filtro
+        if (!documento && !sexo && !estadoParam) {
+            throw new ParamsIncorrect();
+        }
+
+        // Filtro por rango de fechas sobre fechaRegistro
+        if (fechaInicio || fechaFin) {
+            filter['fechaRegistro'] = {};
+            if (fechaInicio) {
+                filter['fechaRegistro'].$gte = moment(fechaInicio, 'DD-MM-YYYY').startOf('day').toDate();
+            }
+            if (fechaFin) {
+                filter['fechaRegistro'].$lte = moment(fechaFin, 'DD-MM-YYYY').endOf('day').toDate();
+            }
+        } else {
+            // Default: último mes hasta hoy si no se especifican fechas
+            filter['fechaRegistro'] = {
+                $gte: moment().subtract(1, 'months').startOf('day').toDate(),
+                $lte: moment().endOf('day').toDate()
+            };
+        }
+
+        // Filtro por estado aplicado tanto a receta como a dispensa
+        if (estadoParam) {
+            const estadosRaw = String(estadoParam).replace(/ /g, '').split(',').filter(Boolean);
+            const incluyeTodas = estadosRaw.some(e => e.toLowerCase() === 'todas');
+            // Si llega "todas" (solo o incluido), no aplicar filtro de estado
+            if (!incluyeTodas) {
+                const estados = estadosRaw; // ya normalizado
+                if (estados.length) {
+                    const or: any[] = [];
+                    if (estados.length === 1) {
+                        const val = estados[0];
+                        or.push({ 'estadoActual.tipo': val });
+                        or.push({ 'estadoDispensaActual.tipo': val });
+                    } else {
+                        estados.forEach(val => {
+                            or.push({ 'estadoActual.tipo': val });
+                            or.push({ 'estadoDispensaActual.tipo': val });
+                        });
+                    }
+                    filter['$or'] = or;
+                }
+            } else {
+                // Forzar que se tome cualquier estadoActual.tipo
+                filter['estadoActual.tipo'] = { $exists: true };
+            }
+        }
+
+        // Filtros por datos del paciente
+        if (documento) {
+            filter['paciente.documento'] = documento;
+        }
+        if (sexo) {
+            filter['paciente.sexo'] = sexo;
+        }
+
+        const recetas = await Receta.find(filter);
+        return recetas;
+    } catch (err) {
+        await informarLog.error('buscarRecetasConFiltros', { query: req.query }, err, req);
         return err;
     }
 }
