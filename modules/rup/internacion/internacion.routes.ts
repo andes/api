@@ -24,6 +24,16 @@ router.get('/prestaciones', async (req, res, next) => {
     const prestacionesInternacion = await InternacionController.obtenerPrestaciones(organizacionId, req.query);
     return res.json(prestacionesInternacion);
 });
+// Nuevo get para informe estadistica
+router.get('/informe-estadistica', async (req: Request, res: Response, next) => {
+    try {
+        const organizacionId = Auth.getOrganization(req);
+        const informes = await InternacionController.obtenerInformeEstadistica(organizacionId, req.query);
+        return res.json(informes);
+    } catch (err) {
+        return next(err);
+    }
+});
 
 router.get('/:capa/:idInternacion/historial', capaMiddleware, async (req: Request, res: Response, next) => {
     const organizacionId = (req.query.organizacionID) ? req.query.organizacionID : Auth.getOrganization(req);

@@ -10,6 +10,7 @@ import { historial as historialCamas } from './camas.controller';
 import { InternacionResumen } from './resumen/internacion-resumen.schema';
 import { historial as historialSalas } from './sala-comun/sala-comun.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { InformeEstadistica } from './informe-estadistica.schema';
 
 
 export async function obtenerPrestaciones(organizacion, filtros) {
@@ -58,6 +59,56 @@ export async function obtenerPrestaciones(organizacion, filtros) {
         'estadoActual.tipo': { $in: ['ejecucion', 'validada'] }
 
     });
+}
+
+
+export async function obtenerInformeEstadistica(organizacion, filtros) {
+    const matchIngreso: any = {};
+    if (filtros.fechaIngresoDesde || filtros.fechaIngresoHasta) {
+        const fechaIngresoFilter: any = {};
+        if (filtros.fechaIngresoDesde) {
+            fechaIngresoFilter['$gte'] = moment(filtros.fechaIngresoDesde).startOf('day').toDate();
+        }
+        if (filtros.fechaIngresoHasta) {
+            fechaIngresoFilter['$lte'] = moment(filtros.fechaIngresoHasta).endOf('day').toDate();
+        }
+        matchIngreso['informeIngreso.fechaIngreso'] = fechaIngresoFilter;
+    }
+
+    const matchEgreso: any = {};
+    if (filtros.fechaEgresoDesde || filtros.fechaEgresoHasta) {
+        const fechaEgresoFilter: any = {};
+        if (filtros.fechaEgresoDesde) {
+            fechaEgresoFilter['$gte'] = moment(filtros.fechaEgresoDesde).startOf('day').toDate();
+        }
+        if (filtros.fechaEgresoHasta) {
+            fechaEgresoFilter['$lte'] = moment(filtros.fechaEgresoHasta).endOf('day').toDate();
+        }
+        matchEgreso['informeEgreso.fechaEgreso'] = fechaEgresoFilter;
+    }
+
+    const $match: any = {};
+
+    if (filtros.idProfesional) {
+        $match['informeIngreso.profesional.id'] = filtros.idProfesional;
+    }
+
+    if (filtros.idPaciente) {
+        $match['paciente.id'] = filtros.idPaciente;
+    }
+
+    const query = {
+        'organizacion._id': mongoose.Types.ObjectId(organizacion as any),
+        ...matchIngreso,
+        ...matchEgreso,
+        ...$match
+    };
+
+    const resultados = await InformeEstadistica.find(query)
+        .sort({ 'informeIngreso.fechaIngreso': -1 })
+        .lean();
+
+    return resultados;
 }
 
 export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: string, idInternacion: ObjectId, desde: Date, hasta: Date) {
