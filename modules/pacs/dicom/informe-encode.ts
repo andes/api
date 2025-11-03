@@ -7,11 +7,11 @@ import { IPacsConfig } from '../pacs-config.schema';
  * http://dicom.nema.org/dicom/2013/output/chtml/part05/sect_6.2.html
  */
 
-export function DICOMInformePDF(prestacion: IPrestacion, config: IPacsConfig) {
+export function DICOMInformePDF(prestacion: IPrestacion, pacienteIdDicom: string, config: IPacsConfig) {
     const { valor: uid } = prestacion.metadata.find(item => item.key === 'pacs-uid');
 
 
-    const patientID = String(prestacion.paciente.id);
+    const patientID = pacienteIdDicom;
 
     const profesional = prestacion.solicitud.profesionalOrigen || prestacion.solicitud.profesional;
     const profesionalID = String(profesional.id);

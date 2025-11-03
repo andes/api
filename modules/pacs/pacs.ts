@@ -30,11 +30,11 @@ export async function syncWorkList(prestacion: IPrestacion) {
 
             const pacienteIdDicom = (config.featureFlags?.usoIdDNI && prestacion.paciente.documento)
                 ? prestacion.paciente.documento
-                : prestacion.paciente.id;
+                : String(prestacion.paciente.id);
 
             const uniqueID = `${config.ui}.${Date.now()}`;
 
-            const pacienteDICOM = DICOMPaciente(prestacion.paciente, pacienteIdDicom,config);
+            const pacienteDICOM = DICOMPaciente(prestacion.paciente, pacienteIdDicom, config);
             const prestacionDICOM = DICOMPrestacion(
                 prestacion,
                 uniqueID,
