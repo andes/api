@@ -646,7 +646,7 @@ export async function crearReceta(dataReceta, req) {
 export async function buscarRecetasPorProfesional(req) {
     try {
         const profesionalId = req.params.id;
-        const { estadoReceta, desde, hasta } = req.query;
+        const { estadoReceta, desde, hasta, origenExternoApp, excluirEstado } = req.query;
         if (!profesionalId || !Types.ObjectId.isValid(profesionalId)) {
             throw new ParamsIncorrect();
         }
@@ -664,6 +664,12 @@ export async function buscarRecetasPorProfesional(req) {
             if (hasta) {
                 filter['fechaRegistro'].$lte = moment(hasta).endOf('day').toDate();
             }
+        }
+        if (origenExternoApp) {
+            filter['origenExterno.app'] = origenExternoApp;
+        }
+        if (excluirEstado) {
+            filter['estadoActual.tipo'] = { $ne: excluirEstado };
         }
         const recetas = await Receta.find(filter);
         return recetas;
