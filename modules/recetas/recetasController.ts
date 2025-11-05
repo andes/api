@@ -11,6 +11,22 @@ import { getReceta } from './services/receta';
 import { Paciente } from '../../core-v2/mpi/paciente/paciente.schema';
 import { Profesional } from '../../core/tm/schemas/profesional';
 
+// Función para generar ID único basado en fecha
+export function generarIdDesdeFecha(fecha = new Date()) {
+    // genera id unico de acuerdo a una fecha
+    const pad = (num: number, size: number) => num.toString().padStart(size, '0');
+    return String(
+        fecha.getFullYear().toString() +
+        pad(fecha.getMonth() + 1, 2) +
+        pad(fecha.getDate(), 2) +
+        pad(fecha.getHours(), 2) +
+        pad(fecha.getMinutes(), 2) +
+        pad(fecha.getSeconds(), 2) +
+        pad(fecha.getMilliseconds(), 3) +
+        pad(Math.floor(Math.random() * 999), 3)
+    );
+}
+
 
 async function registrarAppNotificadas(req, recetas, sistema) {
     const pacienteId = recetas[0].paciente.id;
@@ -147,6 +163,19 @@ export async function buscarRecetas(req) {
         if (!recetas.length) {
             return [];
         }
+
+        // Generar idAndes para recetas que no lo tengan
+        const recetasActualizadas = [];
+        for (const receta of recetas) {
+            if (!receta.idReceta) {
+                receta.idReceta = generarIdDesdeFecha(receta.createdAt || new Date());
+                Auth.audit(receta, req);
+                await receta.save();
+            }
+            recetasActualizadas.push(receta);
+        }
+        recetas = recetasActualizadas;
+
         if (user.type === 'app-token') {
             // si es un usuario de app y no tiene nombre de sistema asignado, no se envia recetas
             const sistema = user.app.nombre.toLowerCase();

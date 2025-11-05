@@ -3,6 +3,7 @@ import * as mongoose from 'mongoose';
 import { PacienteSubSchema } from '../../core-v2/mpi/paciente/paciente.schema';
 import { ProfesionalSubSchema } from '../../core/tm/schemas/profesional';
 import { SnomedConcept } from '../rup/schemas/snomed-concept';
+import { generarIdDesdeFecha } from './recetasController';
 
 export const motivosRecetaSchema = new mongoose.Schema({
     label: {
@@ -127,6 +128,10 @@ const medicamentoSubschema = new mongoose.Schema({
 });
 
 export const recetaSchema = new mongoose.Schema({
+    idReceta: {
+        type: String,
+        required: false
+    },
     organizacion: {
         id: mongoose.SchemaTypes.ObjectId,
         nombre: String
@@ -191,6 +196,13 @@ recetaSchema.pre('save', function (next) {
     }
 
     next();
+});
+
+recetaSchema.post('save', async (prescription: any) => {
+    if (!prescription.idReceta) {
+        const id = generarIdDesdeFecha(prescription.createdAt);
+        await mongoose.model('receta').updateOne({ _id: prescription._id }, { $set: { idReceta: id } });
+    }
 });
 
 recetaSchema.plugin(AuditPlugin);
