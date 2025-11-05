@@ -199,23 +199,18 @@ export async function obtenerRecetasPorGrupo(recetaIds) {
     }
 }
 
-export async function suspender(recetas, req) {
+export async function suspender(recetaId, req) {
     const motivo = req.body.motivo;
     const observacion = req.body.observacion;
     const profesional = req.body.profesional;
     try {
-        if (!recetas) {
-            throw new ParamsIncorrect();
-        }
-        const recetasASuspender = await obtenerRecetasPorGrupo(recetas);
-        const promises = recetas.map(async (recetaId) => {
-
-            const receta: any = await Receta.findById(recetaId);
-
-            if (!receta) {
-                throw new RecetaNotFound();
-            }
-            if (!receta.medicamento.tratamientoProlongado) {
+        const recetaR: any = await Receta.findById(recetaId);
+        const recetasASuspender = await Receta.find( {
+            'medicamento.concepto.conceptId': recetaR.medicamento.concepto.conceptId,
+            idRegistro: recetaR.idRegistro
+        });
+        const promises = recetasASuspender.map(async (receta: any) => {
+            if ((receta.estadoActual.tipo === 'vigente') || (receta.estadoDispensaActual.tipo === 'dispensa-parcial' && receta.estadoActual.tipo === 'pendiente')) {
                 receta.estados.push({
                     tipo: 'suspendida',
                     motivo,
@@ -225,14 +220,10 @@ export async function suspender(recetas, req) {
                 });
                 Auth.audit(receta, req);
                 await receta.save();
-
-                const idRegistro = receta.idRegistro;
-                const medicamento = receta.medicamento?.concepto.conceptId;
-                await Receta.deleteMany({ idRegistro, 'medicamento.concepto.conceptId': medicamento, 'estadoActual.tipo': 'pendiente', 'estadoDispensaActual.tipo': 'sin-dispensa' });
             } else {
-                if (recetasASuspender.some(r => r.id.toString() === receta.id.toString())) {
+                if (receta.estadoDispensaActual.tipo === 'sin-dispensa' && receta.estadoActual.tipo === 'pendiente') {
                     receta.estados.push({
-                        tipo: 'suspendida',
+                        tipo: 'eliminada',
                         motivo,
                         observacion,
                         profesional,
@@ -240,17 +231,14 @@ export async function suspender(recetas, req) {
                     });
                     Auth.audit(receta, req);
                     await receta.save();
-                } else {
-                    const _id = receta.id;
-                    const medicamento = receta.medicamento?.concepto.conceptId;
-                    await Receta.deleteOne({ _id });
                 }
             }
         });
         await Promise.all(promises);
+
         return { success: true };
     } catch (error) {
-        await updateLog.error('suspender', { motivo, observacion, profesional, recetas }, error);
+        await updateLog.error('suspender', { motivo, observacion, profesional, recetaId }, error);
         return error;
     }
 }
