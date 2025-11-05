@@ -1,3 +1,15 @@
+# [5.138.0](https://github.com/andes/api/compare/v5.137.1...v5.138.0) (2025-11-05)
+
+
+### Bug Fixes
+
+* **HUDS:** Agrega control por secciones al generar pdf de fichas ([#2135](https://github.com/andes/api/issues/2135)) ([71c85d8](https://github.com/andes/api/commit/71c85d8e8eaa56f02822b6e9671bd7e4afe86684))
+
+
+### Features
+
+* **REC:** implementa ID unico de receta ([#2110](https://github.com/andes/api/issues/2110)) ([b1b7bde](https://github.com/andes/api/commit/b1b7bde4a97a677c4c88e5dc1e7ae0ddf6e2b954))
+
 ## [5.137.1](https://github.com/andes/api/compare/v5.137.0...v5.137.1) (2025-10-29)
 
 
