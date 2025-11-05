@@ -4,7 +4,7 @@ import * as laboratorioController from '../laboratorios.controller';
 
 const router = express.Router();
 
-router.get('/protocolosLab', async (req, res, next) => {
+router.get('/protocolosLab', async (req: any, res, next) => {
     if (!req.query.pacienteId) {
         return next('Faltan parámetros requeridos');
     }
@@ -14,6 +14,9 @@ router.get('/protocolosLab', async (req, res, next) => {
         await laboratorioLog.error('busqueda-idPaciente', response.dataSearch, response.err, req);
         return res.json(errorMessage);
     } else {
+        if (req.user?.type === 'paciente-token') {
+            response[0].Data = response[0].Data.filter(protocolo => protocolo.estado !== 'EnProceso');
+        }
         return res.json(response);
     }
 });
