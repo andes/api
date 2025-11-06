@@ -507,16 +507,11 @@ export async function loadCDA(cdaID) {
         try {
             const CDAFiles = makeFs();
             CDAFiles.readFile({ filename: String(cdaID) + '.xml' }, (err, buffer) => {
-                if (err || !buffer) {
-                    return resolve({ error: true, message: `No se pudo leer el archivo CDA con ID ${cdaID}. El archivo está vacío o no existe.` });
-                }
-
                 const xml = buffer.toString('utf8');
-                return resolve({ error: false, data: xml });
-
+                return resolve(xml);
             });
         } catch (e) {
-            return resolve({ error: true, message: 'Error inesperado al cargar el CDA.' });
+            return resolve(null);
         }
     });
 }
