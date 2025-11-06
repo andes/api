@@ -853,7 +853,7 @@ export function cdaToJSON(idCDA) {
         const _base64 = idCDA;
         let contexto = await cdaCtr.loadCDA(_base64);
         let setText = false;
-        if (!(contexto as { error: boolean })?.error) {
+        if (contexto) {
             // Limpiamos xml previo al parsing
             contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
             contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
@@ -888,12 +888,7 @@ export function cdaToJSON(idCDA) {
                 }
             });
         } else {
-
-            if ((contexto as { error: boolean })?.error) {
-                return resolve(contexto);
-            } else {
-                return reject(null);
-            }
+            return reject(null);
         }
     });
 }
