@@ -64,9 +64,9 @@ const InformeEgresoSchema = new Schema({
         }
     ],
     causaExterna: {
-        producidaPor: { type: String, required: false },
-        lugar: { type: String, required: false },
-        comoSeProdujo: { type: String, required: false }
+        producidaPor: Schema.Types.Mixed, // acepta string o objeto
+        lugar: Schema.Types.Mixed,
+        comoSeProdujo: Schema.Types.Mixed
     },
     diasDeEstada: Number,
     tipoEgreso: {
