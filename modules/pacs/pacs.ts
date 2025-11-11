@@ -8,6 +8,7 @@ import { DICOMPrestacion } from './dicom/prestacion-encode';
 import { PacsConfigController } from './pacs-config.controller';
 import { createPaciente, createWorkList, enviarInforme, loginPacs, anularPacs } from './pacs-network';
 import { userScheduler } from '../../config.private';
+import { IPacsConfig } from './pacs-config.schema';
 import { pacsLogs } from './pacs.logs';
 
 export function DICOMPacienteID(config: IPacsConfig, paciente: any) {
@@ -40,7 +41,7 @@ export async function syncWorkList(prestacion: IPrestacion) {
 
             const uniqueID = `${config.ui}.${Date.now()}`;
 
-            const pacienteDICOM = DICOMPaciente(prestacion.paciente, pacienteIdDicom, config);
+            const pacienteDICOM = DICOMPaciente(prestacion.paciente, pacienteIdDicom);
             const prestacionDICOM = DICOMPrestacion(
                 prestacion,
                 uniqueID,
@@ -122,13 +123,15 @@ export async function sendInformePDF(prestacion: IPrestacion) {
     try {
         const { valor: uid } = prestacion.metadata.find(item => item.key === 'pacs-uid');
         const { valor: configId } = prestacion.metadata.find(item => item.key === 'pacs-config');
-        const { valor: pacienteIdDicom } = prestacion.metadata.find(item => item.key === 'pacs-pacienteIdDicom');
+
+        const pacienteIdDicomMeta = prestacion.metadata.find(item => item.key === 'pacs-pacienteIdDicom');
 
         const config = await PacsConfigController.findById(configId);
         if (config) {
+            const pacienteIdDicom = pacienteIdDicomMeta?.valor || DICOMPacienteID(config, prestacion.paciente);
             const token = await loginPacs(config);
 
-            const metadata = DICOMInformePDF(prestacion, pacienteIdDicom, config);
+            const metadata = DICOMInformePDF(prestacion, pacienteIdDicom);
 
             const informe = new InformeRUP(prestacion.id, null, {});
             const fileName = await informe.informe();
