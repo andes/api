@@ -10,6 +10,14 @@ import { createPaciente, createWorkList, enviarInforme, loginPacs, anularPacs } 
 import { userScheduler } from '../../config.private';
 import { pacsLogs } from './pacs.logs';
 
+export function DICOMPacienteID(config: IPacsConfig, paciente: any) {
+    const pacienteIdDicom = (config.featureFlags?.usoIdDNI && paciente.documento)
+        ? paciente.documento
+        : String(paciente.id);
+
+    return pacienteIdDicom;
+}
+
 export async function syncWorkList(prestacion: IPrestacion) {
     try {
         const hasPacs = !!prestacion.metadata?.find(item => item.key === 'pacs-uid');
@@ -28,9 +36,7 @@ export async function syncWorkList(prestacion: IPrestacion) {
         if (config) {
             const token = await loginPacs(config);
 
-            const pacienteIdDicom = (config.featureFlags?.usoIdDNI && prestacion.paciente.documento)
-                ? prestacion.paciente.documento
-                : String(prestacion.paciente.id);
+            const pacienteIdDicom = DICOMPacienteID(config, prestacion.paciente);
 
             const uniqueID = `${config.ui}.${Date.now()}`;
 
@@ -138,11 +144,9 @@ export async function sendInformePDF(prestacion: IPrestacion) {
     }
 }
 
-
 EventCore.on('rup:prestacion:ejecucion', (prestacion) => {
     syncWorkList(prestacion);
 });
-
 
 EventCore.on('rup:prestacion:anular', (prestacion) => {
     if (prestacion?.metadata?.length) {
@@ -150,5 +154,3 @@ EventCore.on('rup:prestacion:anular', (prestacion) => {
         updateWork(prestacion.metadata, estado);
     };
 });
-
-
