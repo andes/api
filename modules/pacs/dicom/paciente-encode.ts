@@ -1,7 +1,6 @@
 import * as moment from 'moment';
-import { IPacsConfig } from '../pacs-config.schema';
 
-export function DICOMPaciente(paciente: any, pacienteIdDicom: string, config: IPacsConfig) {
+export function DICOMPaciente(paciente: any, pacienteIdDicom: string) {
     const json = {
         '00080005': {
             vr: 'CS',

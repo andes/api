@@ -42,11 +42,9 @@ export const PacsConfigSchema = new Schema({
         clientSecret: String,
     },
     featureFlags: {
-        type: {
-            usoIdDNI: {
-                type: Boolean,
-                default: false
-            }
+        usoIdDNI: {
+            type: Boolean,
+            default: false
         },
         default: () => ({ usoIdDNI: false }),
         _id: false
