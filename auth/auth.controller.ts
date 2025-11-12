@@ -145,6 +145,13 @@ export async function updateUser(documento, nombre, apellido, password) {
     );
 }
 
+export async function updateEmailUser(documento, email) {
+    return await AuthUsers.findOneAndUpdate(
+        { usuario: documento },
+        { email }
+    );
+}
+
 export async function updateOrganizacion(usuario, idOrg) {
     const org = usuario.user.organizaciones.find(organizacion => idOrg.toString() === organizacion._id.toString());
     org.lastLogin = new Date();
@@ -327,7 +334,7 @@ export async function updateUserPermisos(req) {
 
     const permisos = getPermisosByType(req.body.tipoPermisos);
 
-    if (permisos && permisos.length) {
+    if (permisos?.length) {
         const organizacionPermisos = user.organizaciones;
         if (organizacionPermisos && organizacionPermisos.length) {
             permisos.forEach(e => {
