@@ -1,3 +1,12 @@
+## [5.138.1](https://github.com/andes/api/compare/v5.138.0...v5.138.1) (2025-11-12)
+
+
+### Bug Fixes
+
+* cambia load xml ([#2143](https://github.com/andes/api/issues/2143)) ([aee2df4](https://github.com/andes/api/commit/aee2df4c9c86ada2b03f043cd83a0d97c8c3d4db))
+* control de cdas ([#2142](https://github.com/andes/api/issues/2142)) ([b983c24](https://github.com/andes/api/commit/b983c24f60ad44ad42eb1893c444c785d82793d3))
+* **HUDS:** Se agregar un control para filtrar labos en proceso ([#2141](https://github.com/andes/api/issues/2141)) ([9594960](https://github.com/andes/api/commit/95949607fa8d46e8a0e5135237fd2c6a31ab9f8c))
+
 # [5.138.0](https://github.com/andes/api/compare/v5.137.1...v5.138.0) (2025-11-05)
 
 
