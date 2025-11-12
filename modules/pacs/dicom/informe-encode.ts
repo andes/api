@@ -5,16 +5,12 @@ import * as moment from 'moment';
  * https://www.dicomlibrary.com/dicom/dicom-tags/
  * http://dicom.nema.org/dicom/2013/output/chtml/part05/sect_6.2.html
  */
-export interface DICOMWorklistConfig {
-    modality: string;
-    aet: string;
-    ui: string;
-}
-export function DICOMInformePDF(prestacion: IPrestacion) {
+
+export function DICOMInformePDF(prestacion: IPrestacion, pacienteIdDicom: string) {
     const { valor: uid } = prestacion.metadata.find(item => item.key === 'pacs-uid');
 
 
-    const patientID = String(prestacion.paciente.id);
+    const patientID = pacienteIdDicom;
 
     const profesional = prestacion.solicitud.profesionalOrigen || prestacion.solicitud.profesional;
     const profesionalID = String(profesional.id);
