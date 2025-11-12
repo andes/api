@@ -130,6 +130,20 @@ async function registrarAppNotificadas(req, recetas, sistema) {
 export async function buscarRecetas(req) {
     const options: any = {};
     const params = req.params.id ? req.params : req.query;
+    let identificadores = [];
+    if (params.documento) {
+        const pacienteAndes: any = await Paciente.find({ documento: params.documento });
+        identificadores = pacienteAndes[0].identificadores.filter(ident => ident.entidad === 'ANDES');
+        identificadores = identificadores.map(item => Types.ObjectId(item.valor));
+        identificadores.push(Types.ObjectId(pacienteAndes[0]._id));
+    } else {
+        const pacienteAndes: any = await Paciente.findById(params.pacienteId);
+        if (pacienteAndes.identificadores) {
+            identificadores = pacienteAndes.identificadores?.filter(ident => ident.entidad === 'ANDES');
+            identificadores = identificadores?.map(item => Types.ObjectId(item.valor));
+            identificadores.push(Types.ObjectId(params.pacienteId));
+        }
+    }
     const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
     const pacienteId = params.pacienteId || null;
     const documento = params.documento || null;
@@ -144,7 +158,8 @@ export async function buscarRecetas(req) {
             pacienteId: 'paciente.id',
             documento: 'paciente.documento',
             sexo: 'paciente.sexo',
-            idRegistro: 'idRegistro'
+            idRegistro: 'idRegistro',
+            estado: 'estadoActual.tipo'
         };
         Object.keys(paramMap).forEach(key => {
             if (params[key]) {
@@ -153,6 +168,10 @@ export async function buscarRecetas(req) {
         });
         if (Object.keys(options).length === 0) {
             throw new ParamsIncorrect();
+        }
+
+        if (identificadores.length > 0) {
+            options['paciente.id'] = { $in: identificadores };
         }
 
         if (params.estadoDispensa) {
