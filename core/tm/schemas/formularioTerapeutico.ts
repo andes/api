@@ -1,54 +1,35 @@
-import * as mongoose from 'mongoose';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { model, Schema } from 'mongoose';
 
-const schema = new mongoose.Schema({
-    idpadre: {
-        type: mongoose.Schema.Types.ObjectId,
+
+export const formularioTerapeuticoSchema = new Schema({
+    sistema: {
+        _id: { type: Schema.Types.ObjectId },
+        nombre: String
     },
-    descripcion: String,
+    funcion: {
+        _id: { type: Schema.Types.ObjectId },
+        nombre: String
+    },
+    grupoFarmacologico: {
+        _id: { type: Schema.Types.ObjectId },
+        nombre: String
+    },
     nivelComplejidad: String,
-    especialidades: [String],
+    especialidad: String,
     requisitos: String,
     carroEmergencia: String,
-    recomendaciones: String,
+    medicamento: String,
     indicaciones: String,
-    comentario: String,
-    conceptId: String,
-    borrado: Boolean,
-    concepto: Object
-    // padre: {
-    //     nombre: String,
-    //     conceptId: String,
-    // },
-    // nombre: String,
-    // conceptId: String,
-    // capitulo: Number,
-    // nombre: String,
-    // medicamentos: [{
-    //         clasificacion: String,
-    //         numero: Number,
-    //         nivelComplejidad: String,
-    //         recomendaciones: String,
-    //         especialidades: [String], // enum?
-    //         requisitos: String, // enum
-    //         carroEmergencia: Boolean,
-    //         indicaciones: String, // estandarizar?
-    //         comentario: String, // estandarizar?
-    //         concepto: {
-    //             conceptId: String,
-    //             term: String,
-    //             fsn: String,
-    //             semanticTag: String,
-    //             words: [String]
-    //         }
-    //     }]
-    // }]
+    recomendacionesDeUso: String,
+    principioActivo: String,
+    via: String,
+    formaFarmaceutica: String,
+    potencia: String,
+    unidades: String,
+    presentacion: String,
+    atcVia: String,
+    snomed: String
 });
 
-// Habilitar plugin de auditoría
-schema.plugin(AuditPlugin);
+export const FormularioTerapeutico = model('formulario-terapeutico', formularioTerapeuticoSchema, 'formulario-terapeutico');
 
-// Exportar modelo
-const model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');
-
-export = model;
