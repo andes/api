@@ -443,26 +443,23 @@ export async function rechazar(idReceta, sistema, req) {
     }
 }
 
-export async function getProfesionActualizada(idProfesional) {
+export async function getProfesionActualizada(profesional) {
     let profesionGrado = '';
     let matriculaGrado = 0;
     let especialidades = '';
 
-    const infoMatriculas = await searchMatriculas(idProfesional);
-
-    if (infoMatriculas) {
+    if (profesional.formacionGrado) {
         // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
-        const rolesPermitidos = [1, 2, 23];
-        const formacionEncontrada = infoMatriculas.formacionGrado?.find(formacion =>
-            rolesPermitidos.includes(formacion.profesion)
-        );
+        const filterFormaciones = (e) => { return e.matriculacion?.length && [1, 2, 23].includes(e.profesion.codigo); };
 
-        profesionGrado = formacionEncontrada?.nombre;
-        matriculaGrado = formacionEncontrada?.numero;
+        const formacionEncontrada = profesional.formacionGrado.find(filterFormaciones);
 
-        const especialidadesTxt = infoMatriculas.formacionPosgrado
-            ?.map(({ nombre, numero }) => `${nombre} (Mat. ${numero})`);
-
+        profesionGrado = formacionEncontrada ? formacionEncontrada.profesion.nombre : '';
+        matriculaGrado = formacionEncontrada ? formacionEncontrada.matriculacion[formacionEncontrada.matriculacion.length - 1].matriculaNumero : '';
+    }
+    if (profesional.formacionPosgrado) {
+        const especialidadesTxt = profesional.formacionPosgrado.length ? profesional.formacionPosgrado.map(postgrado => postgrado.matriculacion ? `${postgrado.especialidad?.nombre} 
+                                                                                   (Mat. ${postgrado.matriculacion[postgrado.matriculacion.length - 1].matriculaNumero})` : '') : [];
         especialidades = especialidadesTxt?.join(', ') || especialidades;
     }
 
@@ -592,7 +589,7 @@ export async function create(req) {
             if (!profAndes) {
                 throw new ParamsIncorrect('Profesional no encontrado');
             }
-            const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profRecetar.id);
+            const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profAndes);
             dataReceta.profesional = {
                 _id: profAndes._id,
                 id: profAndes._id,
