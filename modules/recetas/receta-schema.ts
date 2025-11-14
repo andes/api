@@ -95,6 +95,11 @@ const profesionalSubschema = new mongoose.Schema({
     profesion: String,
     matricula: Number,
     especialidad: String,
+    efector: {
+        id: String,
+        nombre: String,
+        direccion: String
+    }
 });
 
 const medicamentoSubschema = new mongoose.Schema({
