@@ -452,7 +452,7 @@ export function actualizarEstado(req, data) {
         // Si se esta publicando una agenda de hoy o mañana se pasan los turnos igual q en job
         const tomorrow = moment(new Date()).add(1, 'days');
         if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
-            for (let j = 0;j < data.bloques.length;j++) {
+            for (let j = 0; j < data.bloques.length; j++) {
                 const cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
                 if (cantAccesoDirecto > 0) {
                     data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
@@ -506,7 +506,7 @@ export function getTurno(req, data, idTurno = null) {
 
     // Loop en los bloques
     if (data && data.bloques) {
-        for (let x = 0;x < data.bloques.length;x++) {
+        for (let x = 0; x < data.bloques.length; x++) {
             // Si existe este bloque...
             if (data.bloques[x] != null) {
                 // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
@@ -535,7 +535,7 @@ export function getPosition(req, agenda, idTurno = null) {
     let turnos;
     const position = { indexBloque: -1, indexTurno: -1 };
     // Loop en los bloques
-    for (let x = 0;x < agenda.bloques.length;x++) {
+    for (let x = 0; x < agenda.bloques.length; x++) {
         // Si existe este bloque...
         turnos = agenda.bloques[x].turnos;
         index = turnos?.findIndex((t) => t._id?.toString() === idTurno?.toString());
@@ -626,9 +626,9 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
 }
 
 export function getBloque(agenda, turno) {
-    for (let i = 0;i < agenda.bloques.length;i++) {
+    for (let i = 0; i < agenda.bloques.length; i++) {
         const bloque = agenda.bloques[i];
-        for (let j = 0;j < bloque.turnos.length;j++) {
+        for (let j = 0; j < bloque.turnos.length; j++) {
             const turnoTemp = bloque.turnos[j];
             if (turnoTemp._id === turno._id) {
                 return bloque;
@@ -832,7 +832,7 @@ function registrarLog(logs, bloque, estado, datos) {
 // Dada una agenda, actualiza los turnos restantes (Para agendas dentro de las 48hs a partir de hoy).
 export function actualizarTurnos(agenda) {
     const logs = [];
-    for (let j = 0;j < agenda.bloques.length;j++) {
+    for (let j = 0; j < agenda.bloques.length; j++) {
         const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
         const restantesReservados = agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
         if (cantAccesoDirecto > 0 && restantesReservados > 0) {
@@ -872,7 +872,7 @@ export function actualizarEstadoAgendas(start, end) {
         let todosAsistencia = false;
         let todosAuditados = false;
         try {
-            for (let j = 0;j < agenda.bloques.length;j++) {
+            for (let j = 0; j < agenda.bloques.length; j++) {
                 turnos = turnos.concat(agenda.bloques[j].turnos);
             }
             if (agenda.sobreturnos) {
@@ -1083,7 +1083,7 @@ export function actualizarTurnosDelDia() {
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(doc => {
         const agenda: any = doc;
-        for (let j = 0;j < agenda.bloques.length;j++) {
+        for (let j = 0; j < agenda.bloques.length; j++) {
             if (agenda.bloques[j].restantesProgramados > 0) {
                 agenda.bloques[j].restantesDelDia += agenda.bloques[j].restantesProgramados;
                 agenda.bloques[j].restantesProgramados = 0;
@@ -1130,7 +1130,7 @@ export function actualizarTurnosMobile() {
     return cursor.eachAsync(async doc => {
         const agenda: any = doc;
         try {
-            for (let j = 0;j < agenda.bloques.length;j++) {
+            for (let j = 0; j < agenda.bloques.length; j++) {
                 if (agenda.bloques[j].restantesMobile > 0) {
                     agenda.bloques[j].restantesMobile = 0;
                 }
@@ -1390,7 +1390,7 @@ export function getCantidadConsultaXPrestacion(params) {
         function removeDuplicates(arr) {
             const unique_array = [];
             const arrMap = arr.map(m => { return m._id; });
-            for (let i = 0;i < arr.length;i++) {
+            for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
                 }
@@ -1582,6 +1582,7 @@ export function agendaNueva(data, clon, req) {
     });
     nueva['estado'] = 'planificacion';
     nueva['sobreturnos'] = [];
+    nueva['historial'] = [];
     return nueva;
 }
 
