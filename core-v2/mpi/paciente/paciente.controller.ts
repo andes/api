@@ -481,13 +481,15 @@ export async function verificaInternacionActual(idPaciente) {
     })
         .sort({ 'ejecucion.registros.valor.informeIngreso.fechaIngreso': -1 })
         .limit(1);
+    if (ultimaPrestacion) {
 
-    const ultimoRegistro = ultimaPrestacion?.ejecucion?.registros[ultimaPrestacion?.ejecucion?.registros.length - 1] || null;
+        const ultimoRegistro = ultimaPrestacion.ejecucion?.registros[ultimaPrestacion?.ejecucion?.registros.length - 1] || null;
+        let estado;
 
-    if (ultimoRegistro) {
-        const estado = ultimoRegistro.valor?.InformeEgreso?.tipoEgreso?.id === 'Defunción' ? 'Paciente fallecido' : 'En Curso';
-        const organizacion = ultimaPrestacion.solicitud?.organizacion?.nombre;
-
+        if (ultimoRegistro?.valor?.InformeIngreso) {
+            estado = 'En curso';
+        }
+        const organizacion = ultimaPrestacion?.solicitud?.organizacion?.nombre;
         return {
             organizacion,
             estado
