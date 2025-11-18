@@ -416,6 +416,8 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             'formacionGrado.matriculado': 1,
             'formacionGrado.exportadoSisa': 1,
             'formacionGrado.fechaDeInscripcion': 1,
+            'formacionGrado.matriculacion': 1,
+            'formacionGrado.renovacionOnline': 1,
             ultimaMatricula: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] },
             sanciones: 1,
             notas: 1,
@@ -1295,6 +1297,9 @@ function createResponseArray(matriculas: any[], req: any) {
             prof['fechaBaja1'] = matriculas[i].ultimaMatricula && matriculas[i].ultimaMatricula.baja && matriculas[i].ultimaMatricula.baja.fecha ? moment(matriculas[i].ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
             prof['motivoBaja1'] = matriculas[i].ultimaMatricula && matriculas[i].ultimaMatricula.baja ? matriculas[i].ultimaMatricula.baja.motivo : '';
             prof['fechaInscripcion1'] = matriculas[i].formacionGrado ? moment(matriculas[i].formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY') : '';
+            prof['esRenovacion'] = matriculas[i].formacionGrado.matriculacion?.length > 1 ? 'Si' : 'No';
+            prof['esRenovacionOnline'] = matriculas[i].formacionGrado.renovacionOnline?.estado === 'aprobada' ? 'Si' : 'No';
+
         } else {
             // formacionPosgrado1
             prof['especialidad1'] = matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.especialidad.nombre : '';
