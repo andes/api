@@ -676,7 +676,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 });
                 break;
             case 'registros':
-                if (req.body.registros) {
+                if (req.body.registros && data.estadoActual.tipo !== 'ejecucion') {
                     data.ejecucion.registros = req.body.registros;
 
                     if (req.body.solicitud) {
@@ -685,6 +685,8 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if (req.body.paciente) {
                         data.paciente = req.body.paciente;
                     }
+                } else {
+                    return next('Solo se pueden modificar los registros en estado de ejecución.');
                 }
                 break;
             case 'informeIngreso':
