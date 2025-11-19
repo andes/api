@@ -70,12 +70,10 @@ const InformeEgresoSchema = new Schema({
     },
     diasDeEstada: Number,
     tipoEgreso: {
-        tipo: String, // ver si pasa a un enumerado: alta, traslado, defuncion
+        id: { type: String, required: false },
+        nombre: { type: String, required: false },
         OrganizacionDestino: OrganizacionSchema,
-        otraOrganizacion: { // solo para "traslado" (ex UnidadOrganizativaDestino)
-            type: String,
-            required: false
-        }
+        otraOrganizacion: { type: String, required: false }
     },
     diagnosticos: {
         principal: Cie10, // diagnosticoPrincipal

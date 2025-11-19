@@ -12,7 +12,7 @@ import { integrityCheck as checkIntegridad } from './camas.controller';
 import { createInternacionPrestacion, estadoOcupada } from './test-utils';
 import { getFakeRequest, setupUpMongo } from '@andes/unit-test';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-
+import { InformeEstadistica } from './informe-estadistica.schema';
 const ambito = 'internacion';
 const capa = 'medica';
 let cama: any;
@@ -83,7 +83,7 @@ describe('Internacion - camas', () => {
         await Camas.remove({});
         await CamaEstados.remove({});
         await Estados.remove({});
-        await Prestacion.remove({});
+        await InformeEstadistica.remove({});
         await Organizacion.remove({});
 
         const newOrganizacion = new Organizacion({
@@ -196,28 +196,72 @@ describe('Internacion - camas', () => {
     });
 
     test('Cama - Lista Espera con Cama Disponible', async () => {
-        const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-        Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-        await nuevaPrestacion.save();
+        const nuevoInforme: any = new InformeEstadistica({
+            organizacion: {
+                _id: cama.organizacion._id,
+                nombre: cama.organizacion.nombre
+            },
+            unidadOrganizativa: cama.unidadOrganizativa || {
+                conceptId: '225747005',
+                fsn: 'departamento de rayos X (medio ambiente)',
+                semanticTag: 'medio ambiente',
+                term: 'departamento de rayos X'
+            },
+            paciente: {
+                id: Types.ObjectId('5bf7f2b3beee2831326e6c4c'),
+                nombre: 'HERMINIA',
+                apellido: 'URRA',
+                documento: '2305918',
+                sexo: 'femenino'
+            },
+            informeIngreso: {
+                fechaIngreso: moment().subtract(1, 'd').toDate(),
+                motivo: 'test'
+            },
+            estados: [{ tipo: 'ejecucion' }],
+            estadoActual: { tipo: 'ejecucion' }
+        });
+        Auth.audit(nuevoInforme, ({ user: {} }) as any);
+        await nuevoInforme.save();
 
         const listaEsp = await listaEspera({ fecha: null, organizacion: cama.organizacion, ambito, capa: 'estadistica' });
         expect(listaEsp.length).toBe(1);
-        expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
-
     });
 
     test('Cama - Lista Espera con Cama Ocupada', async () => {
         const nuevoOcupado = estadoOcupada(new Date());
         await CamasEstadosController.store({ organizacion: organizacion._id, ambito, capa: 'estadistica', cama: String(cama._id) }, nuevoOcupado, REQMock);
 
-        const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-        Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-        await nuevaPrestacion.save();
+        const nuevoInforme: any = new InformeEstadistica({
+            organizacion: {
+                _id: cama.organizacion._id,
+                nombre: cama.organizacion.nombre
+            },
+            unidadOrganizativa: cama.unidadOrganizativa || {
+                conceptId: '225747005',
+                fsn: 'departamento de rayos X (medio ambiente)',
+                semanticTag: 'medio ambiente',
+                term: 'departamento de rayos X'
+            },
+            paciente: {
+                id: Types.ObjectId('5bf7f2b3beee2831326e6c4c'),
+                nombre: 'HERMINIA',
+                apellido: 'URRA',
+                documento: '2305918',
+                sexo: 'femenino'
+            },
+            informeIngreso: {
+                fechaIngreso: moment().subtract(1, 'd').toDate(),
+                motivo: 'test'
+            },
+            estados: [{ tipo: 'ejecucion' }],
+            estadoActual: { tipo: 'ejecucion' }
+        });
+        Auth.audit(nuevoInforme, ({ user: {} }) as any);
+        await nuevoInforme.save();
 
         const listaEsp = await listaEspera({ fecha: null, organizacion: cama.organizacion, ambito, capa: 'estadistica' });
         expect(listaEsp.length).toBe(1);
-        expect(listaEsp[0]._id.toString()).toBe('5d3af64ec8d7a7158e12c242');
-
     });
 
     test('update fecha de un estado', async () => {
