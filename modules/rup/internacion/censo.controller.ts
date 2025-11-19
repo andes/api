@@ -26,68 +26,103 @@ const groupBy = (xs: any[], key: string) => {
  *    - internacion presente a cierta hora y no tiene movimientos (viene de días anteriores)
  *    - internacion no presente a cierta hora pero tiene movimientos (ingresa el día de la fecha)
  */
+
 async function unificarMovimientos(snapshots, movimientos) {
     const internacionIDSFromSnapshots = Object.keys(snapshots).filter(snap => mongoose.Types.ObjectId.isValid(snap));
     const internacionIDSFromMovimientos = Object.keys(movimientos).filter(snap => mongoose.Types.ObjectId.isValid(snap));
+
     const idInternacionesUnicos = [
         ...new Set([...internacionIDSFromSnapshots, ...internacionIDSFromMovimientos])
     ];
+
     const mapping = {};
     idInternacionesUnicos.forEach(idInternacion => {
-        if (snapshots[idInternacion] && movimientos[idInternacion]) {
-            mapping[idInternacion] = [...snapshots[idInternacion], ...movimientos[idInternacion]];
-        } else if (snapshots[idInternacion]) {
-            mapping[idInternacion] = snapshots[idInternacion];
-        } else if (movimientos[idInternacion]) {
-            mapping[idInternacion] = movimientos[idInternacion];
-        }
+        const snapArr = snapshots[idInternacion] || [];
+        const movArr = movimientos[idInternacion] || [];
+
+
+        mapping[idInternacion] = [...snapArr, ...movArr];
 
         mapping[idInternacion].sort((a, b) => (a.fecha - b.fecha));
+
+
+        const ultimo = mapping[idInternacion][mapping[idInternacion].length - 1];
+
+
     });
+
 
     return mapping;
 }
+function incluyePeriodo(estadistico, date) {
 
-// function incluyePeriodo(prestacion, date) {
-//     return prestacion.periodosCensables.length ? prestacion.periodosCensables?.some(periodo => periodo.hasta
-//         ? date.isBetween(periodo.desde, periodo.hasta, undefined, '[]')
-//         : date.isSameOrAfter(periodo.desde)) : true;
-// }
 
-function incluyePeriodo(informe, date) {
-    const periodos = informe?.periodosCensables;
-
-    // ✔ Si NO hay periodos censables → se considera censable SIEMPRE
-    if (!Array.isArray(periodos) || periodos.length === 0) {
-        return true;
+    if (!estadistico || !estadistico.periodosCensables) {
+        return false;
     }
 
-    // ✔ Si hay periodos → evaluamos cada uno
-    return periodos.some(periodo => {
-        const desde = periodo.desde;
-        const hasta = periodo.hasta || null;
 
-        if (hasta) {
-            return date.isBetween(desde, hasta, undefined, '[]');
-        }
+    const resultado = estadistico.periodosCensables.length
+        ? estadistico.periodosCensables.some(periodo => {
 
-        return date.isSameOrAfter(desde);
-    });
+            if (periodo.hasta) {
+                const dentro = date.isBetween(periodo.desde, periodo.hasta, undefined, '[]');
+                return dentro;
+            } else {
+                const after = date.isSameOrAfter(periodo.desde);
+                return after;
+            }
+        })
+        : true;
+
+
+    return resultado;
 }
 
+
 function eliminarPeriodoEnEgreso(fechaEgreso, periodosCensables) {
+
+
     if (!fechaEgreso) {
         return periodosCensables;
     }
 
     const egreso = moment(fechaEgreso);
 
-    return periodosCensables.filter(periodo => {
-        if (periodo.hasta) {
-            return !(egreso.isBetween(periodo.desde, periodo.hasta) || egreso.isBefore(periodo.desde));
-        }
-        return false;
-    });
+    const resultado = periodosCensables
+        .map((periodo, idx) => {
+
+            const desde = moment(periodo.desde);
+            const hasta = periodo.hasta ? moment(periodo.hasta) : null;
+
+            if (hasta && hasta.isBefore(egreso)) {
+                return periodo;
+            }
+
+            const egresoDentro =
+                egreso.isSameOrAfter(desde) &&
+                (!hasta || egreso.isBefore(hasta));
+
+            if (egresoDentro) {
+                return {
+                    ...periodo,
+                    hasta: egreso.toDate()
+                };
+            }
+
+            if (desde.isAfter(egreso)) {
+                return null;
+            }
+
+            return periodo;
+        })
+        .filter(p => {
+            const keep = p !== null;
+            return keep;
+        });
+
+
+    return resultado;
 }
 
 
@@ -95,6 +130,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
     let prestaciones;
     let informes;
     let resumenPrestacionMap: any = [];
+    const internacionKeys = Object.keys(internaciones);
+
     if (capa === 'medica') {// solo para efectores -> estadistica-v2
         const condicion1 = { _id: { $in: [...Object.keys(internaciones)] } };// busca resumen de internacion por id.
         const condicion2 = { idPrestacion: { $exists: true } };// que exista idPrestacion.
@@ -102,7 +139,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         resumenPrestacionMap = resumenes.map(r => { return { idPrestacion: r.idPrestacion, idResumen: r.id }; });
         prestaciones = await Prestacion.find({ _id: { $in: resumenPrestacionMap.map(r => r.idPrestacion) } });
     } else {
-        informes = await InformeEstadistica.find({ _id: { $in: [...Object.keys(internaciones)] } });
+        informes = await InformeEstadistica.find({ _id: { $in: [...Object.keys(internaciones)] } });;
     }
 
     let existenciaALas0 = 0;
@@ -117,7 +154,6 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
     let diasEstada = 0;
     const arrayCamas = [];
     const tablaPacientes = {};
-
     const idInternaciones = Object.keys(internaciones);
     const dataInternaciones = {};
 
@@ -133,42 +169,43 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         if (capa === 'medica') {
             const idPrestacion = resumenPrestacionMap.find(r => String(r.idResumen) === String(allMovimientos[0].idInternacion))?.idPrestacion;
             prestacion = prestaciones.find(p => String(p.id) === String(idPrestacion));
-
         } else {
             estadistico = informes.find(p => String(p.id) === String(allMovimientos[0].idInternacion));
-            // filtra los periodos que se superponen con la fecha de egreso
-            const fechaEgreso = informes?.informeEgreso?.fechaEgreso;
 
+            const informesEstadistico: any = getInformesInternacion(estadistico);
+            const fechaEgreso = informesEstadistico?.informeEgreso?.fechaEgreso;
             if (fechaEgreso) {
-                estadistico.periodosCensables = eliminarPeriodoEnEgreso(fechaEgreso, estadistico.periodosCensables);
+                estadistico.periodosCensables =
+                    eliminarPeriodoEnEgreso(
+                        fechaEgreso,
+                        estadistico.periodosCensables
+                    );
             }
-            // verifica si la prestación tiene periodos que incluyan la fecha del censo
             if (!incluyePeriodo(estadistico, timestampStart)) {
-                estadistico = null;
+                // estadistico = null;
             }
         }
 
         if (estadistico) {
             const informesInternacion: any = getInformesInternacion(estadistico);
             const desde = informesInternacion.informeIngreso.fechaIngreso;
-
             dataInternaciones[idInter] = {};
             dataInternaciones[idInter]['informesInternacion'] = informesInternacion;
             if (ultimoMovimientoUO) {
-                // obtengo movimientos desde la fecha de ingreso hasta el día del censo
                 const estadosInter = await CamasEstadosController.searchEstados({ desde, hasta: timestampEnd, organizacion, ambito, capa }, filtros);
 
                 const movimientosUO = estadosInter.filter(e => e.unidadOrganizativa.conceptId === unidadOrganizativa);
-                // verificamos si hubo cambios de UO
                 const movIngUO = movimientosUO.filter(e => e.extras && e.extras.unidadOrganizativaOrigen &&
                     e.extras.unidadOrganizativaOrigen.conceptId !== unidadOrganizativa);
                 const movEgresaUO = estadosInter.filter(e => e.extras && e.extras.unidadOrganizativaOrigen &&
                     e.extras.unidadOrganizativaOrigen.conceptId === unidadOrganizativa);
 
                 let fechaIngresoUO = null;
+
                 if (movimientosUO.length) {
                     movimientosUO.sort((a, b) => (a.fecha - b.fecha));
                     fechaIngresoUO = movimientosUO[0]?.fecha;
+
                     if (movIngUO.length) { // obtengo el ultimo ingreso a la UO
                         movIngUO.sort((a, b) => (b.fecha - a.fecha));
                         fechaIngresoUO = movIngUO[0].fecha;
@@ -182,7 +219,6 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     // si se egresa de la UO el mismo dia de consulta en el censo
                     esPaseA = moment(movEgresaUO[0].fecha).isSame(timestampEnd, 'day');
                 }
-
                 dataInternaciones[idInter]['allMovimientos'] = allMovimientos;
                 dataInternaciones[idInter]['ultimoMovimientoUO'] = ultimoMovimientoUO;
                 dataInternaciones[idInter]['fechaIngresoUO'] = fechaIngresoUO;
@@ -191,53 +227,31 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             }
         }
     }
-
-    // idInternaciones.map(async idInter => {
-    //     const allMovimientos = dataInternaciones[idInter]['allMovimientos'];
-    //     if (!internaciones || !allMovimientos) {
-    //         return;
-    //     }
-    await Promise.all(idInternaciones.map(async idInter => {
+    idInternaciones.map(async idInter => {
         const allMovimientos = dataInternaciones[idInter]['allMovimientos'];
         if (!internaciones || !allMovimientos) {
             return;
         }
-
-        const ultimoMovimiento = allMovimientos[allMovimientos.length - 1];
-        // ultimo movimiento en la unidad organizattipoEgresoiva que se está filtrando
-        const ultimoMovimientoUO = dataInternaciones[idInter]['ultimoMovimientoUO'];
-        // const prestacion = dataInternaciones[idInter]['prestacion'];
         const estadistico = dataInternaciones[idInter]['estadistico'];
-
-        const informesInternacion = dataInternaciones[idInter]['informesInternacion'];
-        const fechaIngresoInforme = informesInternacion?.informeIngreso?.fechaIngreso ?? null;
-        const fechaEgresoInforme = informesInternacion?.informeEgreso?.fechaEgreso
-            ? moment(informesInternacion.informeEgreso.fechaEgreso)
-            : null;
-
+        const ultimoMovimiento = allMovimientos[allMovimientos.length - 1];
+        const estadisticoInternacion = (estadistico as any);
+        const ultimoMovimientoUO = dataInternaciones[idInter]['ultimoMovimientoUO'];
         const indiceCama = arrayCamas.findIndex(x => x.toString() === ultimoMovimiento.idCama.toString());
-        const fechaMovimiento = ultimoMovimiento?.fecha || new Date();
-
-        const esCensable = informesInternacion?.periodosCensables?.some(p =>
-            fechaMovimiento >= p.desde && fechaMovimiento <= p.hasta
-        );
-
         if (!estadistico) {
             return;
-        }
-        if (!esCensable && indiceCama === -1) {
+        } else if (estadisticoInternacion.esCensable && indiceCama === -1) {
             arrayCamas.push(ultimoMovimiento.idCama);
             disponibles++;
         }
         const esPaseA = dataInternaciones[idInter]['esPaseA'];
-        const fechaIngreso = fechaIngresoInforme || (ultimoMovimiento?.fechaIngreso || null);
-        const fechaEgreso = fechaEgresoInforme || (ultimoMovimiento?.fechaEgreso || null);
+        const informesInternacion = dataInternaciones[idInter]['informesInternacion'];
+        const fechaIngreso = informesInternacion?.informeIngreso?.fechaIngreso || null;
+        const fechaEgreso = informesInternacion?.informeEgreso?.fechaEgreso || null;
         const fechaIngresoUO = dataInternaciones[idInter]['fechaIngresoUO'] || fechaIngreso;
         const primerUO = allMovimientos[0].unidadOrganizativa.conceptId;
         const ultimaUO = ultimoMovimiento.unidadOrganizativa.conceptId;
         let ingresoEgresoCargado = false;
         let diasEstadaUO = 0;
-
         function checkPaciente(movimiento) {
             if (!tablaPacientes[movimiento.paciente.id]) {
                 tablaPacientes[movimiento.paciente.id] = {
@@ -255,11 +269,12 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         }
         const egresaDiaCenso = fechaEgreso && (moment(fechaEgreso).isSameOrBefore(timestampEnd.toDate()));
 
-        if (fechaIngreso && (egresaDiaCenso || esPaseA)) {
-            diasEstadaUO = timestampEnd.diff(fechaIngreso, 'days');
+        if (fechaIngresoUO && (egresaDiaCenso || esPaseA)) {
+            diasEstadaUO = timestampEnd.diff(fechaIngresoUO, 'days');
             diasEstadaUO = (diasEstadaUO === 0) ? 1 : diasEstadaUO;
         }
 
+        const tipoEgresoId = informesInternacion?.informeEgreso?.tipoEgreso?.id || null;
         if (fechaEgreso) {
             if ((primerUO === unidadOrganizativa) && (ultimaUO === unidadOrganizativa)) {
                 if (moment(fechaEgreso).isSame(fechaIngreso, 'day')) {
@@ -269,7 +284,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                         ingreso: 'SI',
                         fechaIngreso,
-                        egreso: informesInternacion?.informeEgreso?.tipoEgreso?.tipo,
+                        egreso: informesInternacion?.informeEgreso?.tipoEgreso?.id || null,
                         diasEstada: diasEstadaUO,
                         cama: {
                             nombre: ultimoMovimiento.nombre,
@@ -282,7 +297,8 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             }
             if (ultimaUO === String(unidadOrganizativa)) {
                 if (egresaDiaCenso) {
-                    if (informesInternacion?.informeEgreso?.tipoEgreso?.tipo === 'Defunción') {
+
+                    if (tipoEgresoId === 'defuncion') {
                         defunciones++;
                     } else {
                         altas++;
@@ -291,7 +307,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                         checkPaciente(ultimoMovimiento);
                         tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                             fechaIngreso,
-                            egreso: informesInternacion?.informeEgreso?.tipoEgreso?.tipo,
+                            egreso: informesInternacion?.informeEgreso?.tipoEgreso?.id || null,
                             diasEstada: diasEstadaUO,
                             cama: {
                                 nombre: ultimoMovimiento.nombre,
@@ -385,8 +401,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             movimientoAnterior = movimiento;
         }
         diasEstada += diasEstadaUO;
-        // });
-    }));
+    });
 
     existenciaALas24 = existenciaALas0 + ingresos + pasesDe - altas - defunciones - pasesA;
 
@@ -407,16 +422,13 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
         }
     };
 }
-
-
-/**
- * Genera el censo diario para una organizacion, unidad organizativa, y fecha dada
- */
 export async function censoDiario({ organizacion, timestamp, unidadOrganizativa }) {
     try {
         const organizacionFound = await Organizacion.findById(organizacion);
         const ambito = 'internacion';
         const capa = organizacionFound?.usaEstadisticaV2 ? 'medica' : 'estadistica';
+
+
         if (!timestamp) {
             timestamp = moment();
         }
@@ -424,28 +436,55 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
         const timestampStart = moment(timestamp).startOf('day');
         const timestampEnd = moment(timestamp).endOf('day');
 
-        const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa }, {});
-        const movimientos = await CamasEstadosController.searchEstados({ desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa }, {});
+
+        const snapshots = await CamasEstadosController.snapshotEstados(
+            { fecha: timestampStart, organizacion, ambito, capa },
+            {}
+        );
+
+        const movimientos = await CamasEstadosController.searchEstados(
+            { desde: timestampStart, hasta: timestampEnd, organizacion, ambito, capa },
+            {}
+        );
 
         const snapshotsAgrupados = groupBy(snapshots, 'idInternacion');
         const snapshotsPorCama = groupBy(snapshots, 'idCama');
         const movimientosPorCama = groupBy(movimientos, 'idCama');
         const movimientosAgrupados = groupBy(movimientos, 'idInternacion');
+
+
         const internaciones = await unificarMovimientos(snapshotsAgrupados, movimientosAgrupados);
-        const resultado = await realizarConteo(internaciones, unidadOrganizativa, timestampStart, timestampEnd, capa);
+
+        const resultado = await realizarConteo(
+            internaciones,
+            unidadOrganizativa,
+            timestampStart,
+            timestampEnd,
+            capa
+        );
 
         const camas = await unificarMovimientos(snapshotsPorCama, movimientosPorCama);
+
         Object.keys(camas).forEach(idCama => {
             const ultimoMov = camas[idCama][camas[idCama].length - 1];
-            const esDisponible = (ultimoMov.estado !== 'bloqueada' && ultimoMov.estado !== 'inactiva');
-            const estaUnidadOrganizativa = String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
+
+
+            const esDisponible =
+                ultimoMov.estado !== 'bloqueada' &&
+                ultimoMov.estado !== 'inactiva';
+
+            const estaUnidadOrganizativa =
+                String(ultimoMov.unidadOrganizativa.conceptId) === unidadOrganizativa;
 
             if (esDisponible && estaUnidadOrganizativa && ultimoMov.esCensable) {
                 resultado.censo.disponibles++;
+            } else {
             }
         });
 
+
         return resultado;
+
     } catch (err) {
         const dataErr = {
             fecha: timestamp,
@@ -457,38 +496,38 @@ export async function censoDiario({ organizacion, timestamp, unidadOrganizativa 
     }
 }
 
-function getInformesInternacion(estadistica: any) {
 
-    // Nuevo esquema InformeEstadistica
-    if (estadistica?.informeIngreso || estadistica?.informeEgreso) {
+function getInformesInternacion(data: any) {
+    if (data?.informeIngreso || data?.informeEgreso) {
+
 
         return {
-            informeIngreso: estadistica.informeIngreso,
-            informeEgreso: estadistica.informeEgreso
+            informeIngreso: data.informeIngreso ?? null,
+            informeEgreso: data.informeEgreso ?? null,
+            periodosCensables: data.periodosCensables ?? []
+        };
+    }
+
+    if (!data?.ejecucion?.registros) {
+
+        return {
+            informeIngreso: null,
+            informeEgreso: null,
+            periodosCensables: []
         };
     }
 
 
-    if (!estadistica?.ejecucion?.registros) {
-        return {};
-    }
+    const registros = data.ejecucion.registros;
 
-    const registros = estadistica.ejecucion.registros;
+    const egreso = registros.find(r => r.concepto?.conceptId === '58000006');
+    const ingreso = registros.find(r => r.concepto?.conceptId === '721915006');
 
-    const CONCEPTO_EGRESO = '58000006';
-    const CONCEPTO_INGRESO = '721915006';
-
-    const egreso = registros.find(reg => reg.concepto?.conceptId === CONCEPTO_EGRESO);
-    const ingreso = registros.find(reg => reg.concepto?.conceptId === CONCEPTO_INGRESO);
-
-
-    const resultado = {
-        informeIngreso: ingreso?.valor?.informeIngreso,
-        informeEgreso: egreso?.valor?.InformeEgreso
+    return {
+        informeIngreso: ingreso?.valor?.informeIngreso ?? null,
+        informeEgreso: egreso?.valor?.InformeEgreso ?? null,
+        periodosCensables: []
     };
-
-
-    return resultado;
 }
 
 export async function censoMensual({ organizacion, unidadOrganizativa, fechaDesde, fechaHasta }) {

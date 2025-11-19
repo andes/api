@@ -6,10 +6,13 @@ import { CamaEstados } from './cama-estados.schema';
 import moment = require('moment');
 
 export async function snapshotEstados({ fecha, organizacion, ambito, capa }, filtros) {
+
     const fechaSeleccionada = moment(fecha).toDate();
+
     const firstMatch = {};
     const secondMatch = {};
     const thirdMatch = {};
+
     if (filtros.cama) {
         firstMatch['idCama'] = mongoose.Types.ObjectId(filtros.cama);
     }
@@ -17,6 +20,7 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
     if (filtros.paciente) {
         secondMatch['paciente.id'] = mongoose.Types.ObjectId(filtros.paciente);
     }
+
     if (ambito) {
         firstMatch['ambito'] = ambito;
     }
@@ -36,18 +40,21 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         thirdMatch['sectores._id'] = mongoose.Types.ObjectId(filtros.sector);
     }
 
+
     const aggregate: any[] = [
         {
             $match: {
                 idOrganizacion: mongoose.Types.ObjectId(organizacion),
                 capa,
                 start: { $lte: fechaSeleccionada },
-                ...firstMatch,
-
+                ...firstMatch
             }
         },
         {
-            $unwind: '$estados',
+            $unwind: {
+                path: '$estados',
+                includeArrayIndex: 'indexEstados'
+            }
         },
         {
             $match: {
@@ -59,118 +66,73 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         {
             $group: {
                 _id: '$idCama',
-                fechaMax: {
-                    $max: '$estados.fecha'
-                },
+                fechaMax: { $max: '$estados.fecha' },
                 ambito: { $first: '$ambito' },
-                capa: { $first: '$capa' },
+                capa: { $first: '$capa' }
             }
         },
         {
             $lookup: {
                 from: 'internacionCamaEstados',
-                let: {
-                    idCama: '$_id',
-                    fechaMax: '$fechaMax'
-                },
+                let: { idCama: '$_id', fechaMax: '$fechaMax' },
                 pipeline: [
                     {
                         $match: {
                             idOrganizacion: mongoose.Types.ObjectId(organizacion),
-
                             capa,
-                            $or: [
-                                {
-                                    $expr: {
-                                        $and: [
-                                            { $eq: ['$idCama', '$$idCama'] },
-                                            { $lte: ['$start', '$$fechaMax'] },
-                                            { $gte: ['$end', '$$fechaMax'] }
-                                        ]
-                                    },
-                                },
-                                {
-                                    $expr: {
-                                        $and: [
-                                            { $eq: ['$idCama', '$$idCama'] },
-                                            { $lte: ['$start', fechaSeleccionada] },
-                                            { $gte: ['$end', fechaSeleccionada] }
-                                        ]
-                                    },
-                                }
-                            ]
-                        },
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$idCama', '$$idCama'] }
+                                ]
+                            }
+                        }
                     },
-                    {
-                        $match: firstMatch
-                    },
-                    {
-                        $unwind: '$estados',
-                    },
+                    { $match: firstMatch },
+                    { $unwind: '$estados' },
                     {
                         $match: {
                             'estados.deletedAt': { $exists: false },
-                            $expr: {
-                                $gte: ['$estados.fecha', '$$fechaMax'],
-                            },
+                            $expr: { $gte: ['$estados.fecha', '$$fechaMax'] },
                             'estados.fecha': { $lte: fechaSeleccionada }
                         }
                     },
-                    {
-                        $sort: { 'estados.fecha': 1, 'estados.createdAt': 1 }
-                    },
-                    {
-                        $replaceRoot: { newRoot: '$estados' }
-                    },
+                    { $sort: { 'estados.fecha': 1, 'estados.createdAt': 1 } },
+                    { $replaceRoot: { newRoot: '$estados' } },
                     {
                         $group: {
                             _id: null,
                             mergedObject: { $mergeObjects: '$$ROOT' }
                         }
                     },
-                    {
-                        $replaceRoot: { newRoot: '$mergedObject' }
-                    }
-                    // {
-                    //     $limit: 1
-                    // }
+                    { $replaceRoot: { newRoot: '$mergedObject' } }
                 ],
                 as: 'estado'
             }
         },
         {
-            $unwind: '$estado'
+            $unwind: {
+                path: '$estado',
+                preserveNullAndEmptyArrays: false
+            }
         },
         {
             $addFields: {
                 'estado.id': '$_id',
                 'estado.idCama': '$_id',
                 'estado.ambito': '$ambito',
-                'estado.capa': '$capa',
+                'estado.capa': '$capa'
             }
         },
-        {
-            $replaceRoot: {
-                newRoot: '$estado'
-            }
-        },
-        {
-            $match: secondMatch
-        },
+        { $replaceRoot: { newRoot: '$estado' } },
+        { $match: secondMatch },
         {
             $lookup: {
                 from: 'internacionCamas',
-                let: {
-                    id: '$idCama',
-                },
+                let: { id: '$idCama' },
                 pipeline: [
                     {
                         $match: {
-                            $expr: {
-                                $and: [
-                                    { $eq: ['$_id', '$$id'] },
-                                ]
-                            }
+                            $expr: { $eq: ['$_id', '$$id'] }
                         }
                     },
                     { $project: { createdAt: 0, createdBy: 0 } }
@@ -180,16 +142,18 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
         },
         {
             $replaceRoot: {
-                newRoot: { $mergeObjects: ['$$ROOT', { $arrayElemAt: ['$cama', 0] }] }
+                newRoot: {
+                    $mergeObjects: [
+                        '$$ROOT',
+                        { $arrayElemAt: ['$cama', 0] }
+                    ]
+                }
             }
         },
-        {
-            $match: thirdMatch
-        },
-        {
-            $project: { cama: 0, __v: 0, }
-        }
+        { $match: thirdMatch },
+        { $project: { cama: 0 } }
     ];
+
 
     aggregate.push({
         $lookup: {
@@ -199,20 +163,29 @@ export async function snapshotEstados({ fecha, organizacion, ambito, capa }, fil
             as: 'estado_internacion'
         }
     });
+
     aggregate.push({ $unwind: { path: '$estado_internacion', preserveNullAndEmptyArrays: true } });
+
     aggregate.push({
         $addFields: {
             fechaIngreso: '$estado_internacion.fechaIngreso',
             fechaAtencion: '$estado_internacion.fechaAtencion',
             prioridad: '$estado_internacion.prioridad',
-            registros: '$estado_internacion.registros',
+            registros: '$estado_internacion.registros'
         }
     });
-    aggregate.push({
-        $unset: 'estado_internacion'
-    });
-    return await CamaEstados.aggregate(aggregate);
+
+
+    aggregate.push({ $unset: 'estado_internacion' });
+
+
+    const result = await CamaEstados.aggregate(aggregate);
+
+    if (result.length > 0) {
+    }
+    return result;
 }
+
 
 function wrapObjectId(objectId: ObjectId) {
     return new mongoose.Types.ObjectId(objectId);
@@ -353,7 +326,6 @@ export async function searchEstados({ desde, hasta, organizacion, ambito, capa }
     ];
 
     const movimientos = await CamaEstados.aggregate(aggregate);
-
     if (filtros.esMovimiento === undefined || filtros.esMovimiento === null) {
         const movSorted = movimientos.sort(sortByCamaDate);
         movSorted.forEach(rellenarMovimientos);
@@ -389,33 +361,44 @@ export async function store({ organizacion, ambito, capa, cama }, estado, req: R
     delete estado['updatedBy'];
     delete estado['deletedAt'];
     delete estado['deletedBy'];
+
     AuditDocument(estado, req.user);
-    return await CamaEstados.update(
-        {
+
+    const query = {
+        idOrganizacion: mongoose.Types.ObjectId(organizacion),
+        ambito,
+        capa,
+        idCama: mongoose.Types.ObjectId(cama),
+        start: { $lte: estado.fecha },
+        end: { $gte: estado.fecha }
+    };
+
+    const update = {
+        $push: { estados: estado },
+        $setOnInsert: {
             idOrganizacion: mongoose.Types.ObjectId(organizacion),
             ambito,
             capa,
             idCama: mongoose.Types.ObjectId(cama),
-            start: { $lte: estado.fecha },
-            end: { $gte: estado.fecha }
-        },
-        {
-            $push: { estados: estado },
-            $setOnInsert: {
-                idOrganizacion: mongoose.Types.ObjectId(organizacion),
-                ambito,
-                capa,
-                idCama: mongoose.Types.ObjectId(cama),
-                start: moment(estado.fecha).startOf('month').toDate(),
-                end: moment(estado.fecha).endOf('month').toDate(),
-            }
-        },
-        {
-            upsert: true
+            start: moment(estado.fecha).startOf('month').toDate(),
+            end: moment(estado.fecha).endOf('month').toDate(),
         }
-    );
-}
+    };
 
+    const result = await CamaEstados.update(query, update, { upsert: true });
+
+    const finalDoc = await CamaEstados.findOne({
+        idOrganizacion: mongoose.Types.ObjectId(organizacion),
+        ambito,
+        capa,
+        idCama: mongoose.Types.ObjectId(cama),
+        start: { $lte: estado.fecha },
+        end: { $gte: estado.fecha }
+    });
+
+
+    return result;
+}
 /**
  * Operación especial para modificar la fecha de un estado
 */
