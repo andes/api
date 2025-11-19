@@ -32,6 +32,121 @@ export function createUnidadOrganizativa(conceptId: string) {
     };
 }
 
+export function createInternacionInforme(organizacion, unidadOrganizativa, fechaEgreso = null) {
+
+    const fechaIngreso = moment().subtract(1, 'day').toDate();
+
+    return {
+        _id: new Types.ObjectId('5d3af64ec8d7a7158e12c242'),
+
+        organizacion: {
+            _id: organizacion._id,
+            nombre: organizacion.nombre
+        },
+
+        unidadOrganizativa,
+
+        paciente: {
+            id: Types.ObjectId('5bf7f2b3beee2831326e6c4c'),
+            nombre: 'HERMINIA',
+            apellido: 'URRA',
+            documento: '2305918',
+            sexo: 'femenino',
+            fechaNacimiento: '1932-08-15T04:00:00.000Z'
+        },
+
+        informeIngreso: {
+            fechaIngreso,
+            origen: {
+                tipo: 'Emergencia',
+                organizacionOrigen: null,
+                otraOrganizacion: null
+            },
+            ocupacionHabitual: {
+                id: null,
+                nombre: 'Jubilado, retirado'
+            },
+            situacionLaboral: {
+                id: null,
+                nombre: 'No trabaja y no busca trabajo'
+            },
+            nivelInstruccion: {
+                id: null,
+                nombre: 'Primario completo'
+            },
+            especialidades: [
+                {
+                    conceptId: '394802001',
+                    fsn: 'medicina general (calificador)',
+                    semanticTag: 'calificador',
+                    term: 'medicina general'
+                }
+            ],
+            nroCarpeta: null,
+            motivo: 'neumonia',
+
+            profesional: {
+                id: Types.ObjectId('58f74fd4d03019f919ea1a4b'),
+                nombre: 'LEANDRO MARIANO JAVIER',
+                apellido: 'DERGO',
+                documento: '26331447'
+            },
+
+            paseAunidadOrganizativa: null,
+
+            cobertura: {
+                tipo: null,
+                obraSocial: {
+                    nombre: 'INSTITUTO NACIONAL DE SERVICIOS SOCIALES PARA JUBILADOS Y PENSIONADOS',
+                    codigoFinanciador: 500807
+                }
+            }
+        },
+
+        informeEgreso: fechaEgreso
+            ? {
+                fechaEgreso,
+                nacimientos: [],
+                procedimientosQuirurgicos: [],
+                causaExterna: {
+                    producidaPor: null,
+                    lugar: null,
+                    comoSeProdujo: null
+                },
+                diasDeEstada: 1,
+                tipoEgreso: {
+                    tipo: 'Alta médica',
+                    OrganizacionDestino: null,
+                    otraOrganizacion: null
+                },
+                diagnosticos: {
+                    principal: {
+                        _id: Types.ObjectId('59bbf1ed53916746547cbdba'),
+                        idCie10: 1187,
+                        idNew: 3568,
+                        capitulo: '10',
+                        grupo: '02',
+                        causa: 'J12',
+                        subcausa: '9',
+                        codigo: 'J12.9',
+                        nombre: '(J12.9) Neumonía viral, no especificada'
+                    },
+                    secundarios: [],
+                    otrasCircunstancias: null,
+                    diasEstadaOtrasCircunstancias: null,
+                    diasDePermisoDeSalida: null
+                }
+            }
+            : undefined,
+
+        periodosCensables: [],
+
+        estados: [{ tipo: 'ejecucion' }],
+
+        estadoActual: { tipo: 'ejecucion' }
+    };
+}
+
 export function createInternacionPrestacion(organizacion, fechaEgreso = null) {
     return {
         _id: Types.ObjectId('5d3af64ec8d7a7158e12c242'),
