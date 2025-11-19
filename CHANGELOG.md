@@ -1,3 +1,11 @@
+## [5.138.2](https://github.com/andes/api/compare/v5.138.1...v5.138.2) (2025-11-19)
+
+
+### Bug Fixes
+
+* actualizar expiración en el cuerpo del email de otp ([#2129](https://github.com/andes/api/issues/2129)) ([95303ba](https://github.com/andes/api/commit/95303ba659dac60f0a3c4b95870eb2e750d080d8))
+* **TOP:** Se cambia la fecha desde la cual se genera una solicitud ([#2117](https://github.com/andes/api/issues/2117)) ([527300d](https://github.com/andes/api/commit/527300d0364a86b800d271284fafacda53f0d07a))
+
 ## [5.138.1](https://github.com/andes/api/compare/v5.138.0...v5.138.1) (2025-11-12)
 
 
