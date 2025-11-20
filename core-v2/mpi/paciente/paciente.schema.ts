@@ -165,8 +165,8 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     localidad: NombreSchemaV2,
     zona: NombreSchemaV2,
     areaPrograma: NombreSchemaV2,
-    addAt: Date
-
+    addAt: Date,
+    cuil: String
 
 }, { _id: false });
 
