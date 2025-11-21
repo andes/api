@@ -49,8 +49,8 @@ export async function syncWorkList(prestacion: IPrestacion) {
 
             const spsID = dataResponse || null;
             pacsLogs.info('syncWorkList', { prestacion: prestacion.id, respuestaPacs: spsID, pacienteDICOM, prestacionDICOM }, userScheduler);
-                const query = prestacion.groupId ?
-                    { groupId: prestacion.groupId } :
+            const query = prestacion.groupId ?
+                { groupId: prestacion.groupId } :
                 { _id: (prestacion as any)._id };
 
             const arrayMetadata = [
