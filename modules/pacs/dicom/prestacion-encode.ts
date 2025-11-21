@@ -40,7 +40,7 @@ export function DICOMPrestacionObject(prestacion: IDicomPrestacionData) {
                     '00400001': { vr: 'AE', Value: [prestacion.aet] },
                     '00400002': { vr: 'DA', Value: [prestacion.scheduledDate] },
                     '00400003': { vr: 'TM', Value: [prestacion.scheduledTime] },
-                    '00400020': { vr: 'CS', Value: ["SCHEDULED"] },
+                    '00400020': { vr: 'CS', Value: ['SCHEDULED'] },
                     '00400006': { vr: 'PN', Value: [prestacion.tecnicoName] }
                 }
             ]

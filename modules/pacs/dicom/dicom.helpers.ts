@@ -9,11 +9,11 @@ export const toISOIR100 = (text: string) => {
     return latin1Buffer.toString('latin1');
 };
 
-export const normalizeShortString = (value?: string, reverse = false): string  => {
+export const normalizeShortString = (value?: string, reverse = false): string => {
     if (!value) {
         return '';
     }
-    
+
     const trimmed = value.trim().replace(/\s+/g, ' ');
 
     if (trimmed.length <= DICOM_SHORT_STRING_MAX_LENGTH) {
