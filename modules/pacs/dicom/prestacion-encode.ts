@@ -14,7 +14,7 @@ export function DICOMPrestacionObject(prestacion: IDicomPrestacionData) {
         },
         '00100020': {
             vr: 'LO',
-            Value: [prestacion.patientID]
+            Value: [prestacion.pacienteID]
         },
         '00100021': {
             vr: 'LO',
@@ -36,7 +36,7 @@ export function DICOMPrestacionObject(prestacion: IDicomPrestacionData) {
             vr: 'SQ',
             Value: [
                 {
-                    '00080060': { vr: 'CS', Value: [prestacion.modality] },
+                    '00080060': { vr: 'CS', Value: [prestacion.modalidad] },
                     '00400001': { vr: 'AE', Value: [prestacion.aet] },
                     '00400002': { vr: 'DA', Value: [prestacion.scheduledDate] },
                     '00400003': { vr: 'TM', Value: [prestacion.scheduledTime] },

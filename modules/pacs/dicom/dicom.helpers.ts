@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import { IPrestacion } from '../../rup/prestaciones.interface';
 import { IPacsConfig } from '../pacs-config.schema';
 import { IDicomPatientData, DICOM_SHORT_STRING_MAX_LENGTH, IDicomPrestacionData, IDicomInformeData } from './dicom.interfaces';
+import { constant } from 'async';
 
 export const toISOIR100 = (text: string) => {
     const buffer = require('buffer');
@@ -53,48 +54,52 @@ export const formatDicomTime = (fecha?: string | Date ) => {
 export const mapDicomGender = (sexo?: string) => sexo === 'masculino' ? 'M' : 'F';
 
 export function DICOMPaciente(config: IPacsConfig, paciente: any): IDicomPatientData {
+    const pacienteIDtrimmed = normalizeShortString(String(paciente.id),false);
     const pacienteIdDicom = (config.featureFlags?.usoIdDNI && paciente.documento)
         ? paciente.documento
         : String(paciente.id);
-
+    const id = pacienteIdDicom;
     const dicomName = buildDicomName(paciente.apellido, paciente.nombre);
+    const documento = paciente.documento;
+    const fechaNacimiento = formatDicomDate(paciente.fechaNacimiento);
+    const sexo = mapDicomGender(paciente.sexo);
 
     return {
-        id: pacienteIdDicom,
-        documento: paciente.documento,
-        fechaNacimiento: formatDicomDate(paciente.fechaNacimiento),
-        sexo: mapDicomGender(paciente.sexo),
+        id,
+        pacienteIDtrimmed,
+        documento,
+        fechaNacimiento,
+        sexo,
         dicomName
     };
 }
 
 export function DICOMPrestacion(prestacion: IPrestacion, pacienteIdDicom: string, config: IPacsConfig): IDicomPrestacionData {
-
     const { modalidad, aet } = config;
-    const patientID = pacienteIdDicom;
-
+    const pacienteID = pacienteIdDicom;
     const profesional = prestacion.solicitud.profesionalOrigen || prestacion.solicitud.profesional;
     const profesionalName = buildDicomName(profesional.apellido, profesional.nombre);
-
     const tecnico = prestacion.estadoActual.createdBy;
     const tecnicoName = buildDicomName(tecnico.apellido, tecnico.nombre);
-
     const scheduledDate = formatDicomDate(prestacion.ejecucion.fecha);
     const scheduledTime = formatDicomTime(prestacion.ejecucion.fecha);
     const uniqueID = `${config.ui}.${Date.now()}`;
+    const accessionNumber = `${Date.now()}`;
+    const procedureCode = normalizeShortString(prestacion.solicitud.tipoPrestacion.conceptId);
+    const procedureDescription = toISOIR100(normalizeShortString(prestacion.solicitud.tipoPrestacion.term));
 
     return {
-        patientID,
+        pacienteID,
         uniqueID,
-        accessionNumber: normalizeShortString(prestacion.id,true),
-        modality: modalidad,
+        accessionNumber,
+        modalidad,
         aet,
         scheduledDate,
         scheduledTime,
         profesionalName,
         tecnicoName,
-        procedureCode: normalizeShortString(prestacion.solicitud.tipoPrestacion.conceptId),
-        procedureDescription: toISOIR100(normalizeShortString(prestacion.solicitud.tipoPrestacion.term))
+        procedureCode,
+        procedureDescription
     };
 }
 
@@ -112,7 +117,7 @@ export function DICOMInforme(prestacion: IPrestacion, paciente: IDicomPatientDat
         studyUID: uid,
         seriesUID: `${uid}.2`,
         sopInstanceUID: `${uid}.1`,
-        patientID: paciente.id,
+        pacienteID: paciente.id,
         patientName: paciente.dicomName,
         profesionalName,
         orderCode,

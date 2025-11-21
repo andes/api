@@ -56,7 +56,9 @@ export async function syncWorkList(prestacion: IPrestacion) {
             const arrayMetadata = [
                 { key: 'pacs-uid', valor: dicomPrestacion.uniqueID },
                 { key: 'pacs-config', valor: config.id },
-                { key: 'pacs-pacienteIdDicom', valor: dicomPaciente.id }
+                { key: 'pacs-pacienteIdDicom', valor: dicomPaciente.id },
+                { key: 'pacs-pacienteOtherIdDicom', valor: dicomPaciente.pacienteIDtrimmed },
+                { key: 'pacs-accessionNumber', valor: dicomPrestacion.accessionNumber }
             ];
             if (dataResponse) {
                 arrayMetadata.push({ key: 'pacs-spsID', valor: spsID }); // id de la orden

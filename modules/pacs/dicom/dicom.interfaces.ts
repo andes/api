@@ -2,6 +2,7 @@ export const DICOM_SHORT_STRING_MAX_LENGTH = 16;
 
 export interface IDicomPatientData {
     id: string;
+    pacienteIDtrimmed: string;
     dicomName: string;
     documento?: string;
     fechaNacimiento?: string;
@@ -9,10 +10,10 @@ export interface IDicomPatientData {
 }
 
 export interface IDicomPrestacionData {
-    patientID: string;
+    pacienteID: string;
     uniqueID: string;
     accessionNumber: string;
-    modality: string;
+    modalidad: string;
     aet: string;
     scheduledDate: string;
     scheduledTime: string;
@@ -26,7 +27,7 @@ export interface IDicomInformeData {
     studyUID: string;
     seriesUID: string;
     sopInstanceUID: string;
-    patientID: string;
+    pacienteID: string;
     patientName: string;
     profesionalName: string;
     orderCode: string;

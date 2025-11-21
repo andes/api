@@ -88,7 +88,7 @@ export function DICOMInformePDFObject(data: IDicomInformeData) {
         '00100020': {
             vr: 'LO',
             Value: [
-                data.patientID
+                data.pacienteID
             ]
         },
         '0020000D': {

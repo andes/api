@@ -45,9 +45,7 @@ export const PacsConfigSchema = new Schema({
         usoIdDNI: {
             type: Boolean,
             default: false
-        },
-        default: () => ({ usoIdDNI: false }),
-        _id: false
+        }
     }
 });
 

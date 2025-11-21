@@ -42,7 +42,7 @@ export function DICOMPacienteObject(paciente: IDicomPatientData) {
                     '00100020': {
                         vr: 'LO',
                         Value: [
-                            paciente.documento
+                            paciente.pacienteIDtrimmed
                         ]
                     }
                 }
