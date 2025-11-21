@@ -16,7 +16,8 @@ class FarmaciasResourse extends ResourceBase<IFarmaciaDoc> {
         matriculaDTResponsable: MongoQuery.equalMatch,
         disposicionAltaDT: MongoQuery.equalMatch,
         asociadoA: MongoQuery.equalMatch,
-        disposicionHabilitacion: MongoQuery.equalMatch
+        disposicionHabilitacion: MongoQuery.equalMatch,
+        tipoEstablecimiento: MongoQuery.equalMatch
     };
     eventBus = EventCore;
 }
