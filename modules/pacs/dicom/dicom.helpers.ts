@@ -9,25 +9,22 @@ export const toISOIR100 = (text: string) => {
     return latin1Buffer.toString('latin1');
 };
 
-export const normalizeShortString = (
-    value?: string,
-    reverse = false
-    ): string  => {
-        if (!value) {
-            return '';
-        }
-        
-        const trimmed = value.trim().replace(/\s+/g, ' ');
+export const normalizeShortString = (value?: string, reverse = false): string  => {
+    if (!value) {
+        return '';
+    }
+    
+    const trimmed = value.trim().replace(/\s+/g, ' ');
 
-        if (trimmed.length <= DICOM_SHORT_STRING_MAX_LENGTH) {
-            return trimmed;
-        }
+    if (trimmed.length <= DICOM_SHORT_STRING_MAX_LENGTH) {
+        return trimmed;
+    }
 
-        if (reverse) {
-            return trimmed.slice(-DICOM_SHORT_STRING_MAX_LENGTH);
-        }
+    if (reverse) {
+        return trimmed.slice(-DICOM_SHORT_STRING_MAX_LENGTH);
+    }
 
-        return trimmed.substring(0, DICOM_SHORT_STRING_MAX_LENGTH);
+    return trimmed.substring(0, DICOM_SHORT_STRING_MAX_LENGTH);
 };
 
 export const buildDicomName = (apellido?: string, nombre?: string) => {
