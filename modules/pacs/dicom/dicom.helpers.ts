@@ -86,7 +86,7 @@ export function DICOMPrestacion(prestacion: IPrestacion, pacienteIdDicom: string
     return {
         patientID,
         uniqueID,
-        accessionNumber: normalizeShortString(prestacion.id,true),
+        accessionNumber: normalizeShortString(String(prestacion.id),true),
         modality: modalidad,
         aet,
         scheduledDate,
