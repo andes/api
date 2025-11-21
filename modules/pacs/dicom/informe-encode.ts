@@ -1,28 +1,11 @@
-import { IPrestacion } from '../../rup/prestaciones.interface';
-import * as moment from 'moment';
+import { IDicomInformeData } from './dicom.interfaces';
 /** *
  *
  * https://www.dicomlibrary.com/dicom/dicom-tags/
  * http://dicom.nema.org/dicom/2013/output/chtml/part05/sect_6.2.html
  */
 
-export function DICOMInformePDF(prestacion: IPrestacion, pacienteIdDicom: string) {
-    const { valor: uid } = prestacion.metadata.find(item => item.key === 'pacs-uid');
-
-
-    const patientID = pacienteIdDicom;
-
-    const profesional = prestacion.solicitud.profesionalOrigen || prestacion.solicitud.profesional;
-    const profesionalID = String(profesional.id);
-    const profesionalName = `${profesional.apellido}, ${profesional.nombre}`;
-
-    const tecnico = prestacion.estadoActual.createdBy;
-    const tecnicoName = `${tecnico.apellido}, ${tecnico.nombre}`;
-
-    const fecha = prestacion.ejecucion.fecha;
-
-    const patient = prestacion.paciente;
-
+export function DICOMInformePDFObject(data: IDicomInformeData) {
     const json = {
         '00080005': {
             vr: 'CS',
@@ -33,13 +16,13 @@ export function DICOMInformePDF(prestacion: IPrestacion, pacienteIdDicom: string
         '00080012': {
             vr: 'DA',
             Value: [
-                moment().format('YYYYMMDD')
+                data.instanceCreationDate
             ]
         },
         '00080013': {
             vr: 'TM',
             Value: [
-                moment().format('HHMM')
+                data.instanceCreationTime
             ]
         },
         '00080016': {
@@ -51,25 +34,25 @@ export function DICOMInformePDF(prestacion: IPrestacion, pacienteIdDicom: string
         '00080018': {
             vr: 'UI',
             Value: [
-                `${uid}.1`
+                data.sopInstanceUID
             ]
         },
         '00080020': {
             vr: 'DA',
             Value: [
-                moment(fecha).format('YYYYMMDD')
+                data.studyDate
             ]
         },
         '00080030': {
             vr: 'TM',
             Value: [
-                moment(fecha).format('HHMM')
+                data.studyTime
             ],
         },
         '00080050': {
             vr: 'SH',
             Value: [
-                toBase64(prestacion.solicitud.tipoPrestacion.conceptId)
+                data.orderCode
             ],
         },
         '00080060': {
@@ -87,7 +70,7 @@ export function DICOMInformePDF(prestacion: IPrestacion, pacienteIdDicom: string
         '00080090': {
             vr: 'PN',
             Value: [
-                profesionalName
+                data.profesionalName
             ]
         },
         '0008103E': {
@@ -99,25 +82,25 @@ export function DICOMInformePDF(prestacion: IPrestacion, pacienteIdDicom: string
         '00100010': {
             vr: 'PN',
             Value: [
-                `${patient.apellido}^${patient.nombre}`
+                data.patientName
             ]
         },
         '00100020': {
             vr: 'LO',
             Value: [
-                patientID
+                data.patientID
             ]
         },
         '0020000D': {
             vr: 'UI',
             Value: [
-                `${uid}`
+                data.studyUID
             ]
         },
         '0020000E': {
             vr: 'UI',
             Value: [
-                `${uid}.2`
+                data.seriesUID
             ]
         },
         '00200010': {
@@ -160,8 +143,4 @@ export function DICOMInformePDF(prestacion: IPrestacion, pacienteIdDicom: string
     };
 
     return json;
-}
-
-export function toBase64(text: string) {
-    return Buffer.from(text).toString('base64');
 }

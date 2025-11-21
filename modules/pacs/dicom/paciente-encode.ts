@@ -1,6 +1,6 @@
-import * as moment from 'moment';
+import { IDicomPatientData } from './dicom.interfaces';
 
-export function DICOMPaciente(paciente: any, pacienteIdDicom: string) {
+export function DICOMPacienteObject(paciente: IDicomPatientData) {
     const json = {
         '00080005': {
             vr: 'CS',
@@ -11,7 +11,7 @@ export function DICOMPaciente(paciente: any, pacienteIdDicom: string) {
         '00100020': {
             vr: 'LO',
             Value: [
-                pacienteIdDicom
+                paciente.id
             ]
         },
         '00100021': {
@@ -23,13 +23,13 @@ export function DICOMPaciente(paciente: any, pacienteIdDicom: string) {
         '00100010': {
             vr: 'PN',
             Value: [
-                toISOIR100(`${paciente.apellido}^${paciente.nombre}`)
+                paciente.dicomName
             ]
         },
         '00100040': {
             vr: 'CS',
             Value: [
-                paciente.sexo === 'masculino' ? 'M' : 'F'
+                paciente.sexo
             ]
         }
     };
@@ -49,23 +49,14 @@ export function DICOMPaciente(paciente: any, pacienteIdDicom: string) {
             ]
         };
     }
+
     if (paciente.fechaNacimiento) {
         json['00100030'] = {
             vr: 'DA',
             Value: [
-                moment(paciente.fechaNacimiento).format('YYYYMMDD')
+                paciente.fechaNacimiento
             ]
         };
     }
     return json;
-}
-
-export function toBase64(text: string) {
-    return Buffer.from(text).toString('base64');
-}
-
-export function toISOIR100(text: string) {
-    const buffer = require('buffer');
-    const latin1Buffer = buffer.transcode(Buffer.from(text), 'utf8', 'latin1');
-    return latin1Buffer.toString('latin1');
 }
