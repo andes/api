@@ -7,7 +7,8 @@ import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { PacienteSubSchema } from '../../../core-v2/mpi';
 import { schema as procQuirurgicosSchema } from '../../../core/tm/schemas/procedimientoQuirurgico';
 import { schema as Cie10 } from '../../../core/term/schemas/cie10';
-import { model as OcupacionSchema } from '../../../core/tm/schemas/ocupacion';
+// import { model as OcupacionSchema } from '../../../core/tm/schemas/ocupacion';
+import { schema as OcupacionSchema } from '../../../core/tm/schemas/ocupacion';
 
 const InformeIngresoSchema = new Schema({
     fechaIngreso: {
@@ -16,15 +17,24 @@ const InformeIngresoSchema = new Schema({
     },
     origen: {
         tipo: String, // Origen hospitalización  enumerado?
-        organizacionOrigen: OrganizacionSchema, // Organización origen - solo para "traslado"
+        organizacionOrigen: { type: OrganizacionSchema, required: false }, // Organización origen - solo para "traslado"
         otraOrganizacion: { // solo para "traslado"
             type: String,
             required: false
         },
     },
+    // datos estadisticos
     ocupacionHabitual: OcupacionSchema,
-    situacionLaboral: String,
-    nivelInstruccion: String,
+    situacionLaboral: {
+        id: String,
+        nombre: String
+    },
+    nivelInstruccion: {
+        id: String,
+        nombre: String
+    },
+    // situacionLaboral: { type: String, required: false },
+    // nivelInstruccion: { type: String, required: false },
     especialidades: [SnomedConcept],
     nroCarpeta: String, // evaluar continuidad de este dato
     motivo: String,
@@ -54,18 +64,16 @@ const InformeEgresoSchema = new Schema({
         }
     ],
     causaExterna: {
-        producidaPor: null,
-        lugar: null,
-        comoSeProdujo: null
+        producidaPor: Schema.Types.Mixed, // acepta string o objeto
+        lugar: Schema.Types.Mixed,
+        comoSeProdujo: Schema.Types.Mixed
     },
     diasDeEstada: Number,
     tipoEgreso: {
-        tipo: String, // ver si pasa a un enumerado: alta, traslado, defuncion
+        id: { type: String, required: false },
+        nombre: { type: String, required: false },
         OrganizacionDestino: OrganizacionSchema,
-        otraOrganizacion: { // solo para "traslado" (ex UnidadOrganizativaDestino)
-            type: String,
-            required: false
-        }
+        otraOrganizacion: { type: String, required: false }
     },
     diagnosticos: {
         principal: Cie10, // diagnosticoPrincipal
@@ -100,7 +108,7 @@ export const InformeEstadisticaSchema = new Schema({
     },
     informeEgreso: {
         type: InformeEgresoSchema,
-        required: true
+        required: false
     },
     periodosCensables: [{ desde: Date, hasta: Date }],
     estados: [InternacionEstadoSchema],

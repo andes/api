@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-const schema = new mongoose.Schema({
+export const schema = new mongoose.Schema({ // Export the schema itself
     codigo: {
         type: String
     },
@@ -8,5 +8,5 @@ const schema = new mongoose.Schema({
         type: String
     }
 });
-// export let ocupacionSchema = schema;
+
 export const model = mongoose.model('ocupaciones', schema, 'ocupaciones');

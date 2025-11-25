@@ -10,54 +10,101 @@ import { historial as historialCamas } from './camas.controller';
 import { InternacionResumen } from './resumen/internacion-resumen.schema';
 import { historial as historialSalas } from './sala-comun/sala-comun.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { InformeEstadistica } from './informe-estadistica.schema';
 
 
 export async function obtenerPrestaciones(organizacion, filtros) {
-    const matchIngreso = {};
+    const orgId = mongoose.Types.ObjectId(organizacion as any);
+
+    const query: any = {
+        'organizacion._id': orgId
+    };
+
     if (filtros.fechaIngresoDesde || filtros.fechaIngresoHasta) {
-        const fechaIngresoFilter = {};
+        query['informeIngreso.fechaIngreso'] = {};
+
+        if (filtros.fechaIngresoDesde) {
+            query['informeIngreso.fechaIngreso']['$gte'] = moment(filtros.fechaIngresoDesde).startOf('day').toDate();
+        }
+        if (filtros.fechaIngresoHasta) {
+            query['informeIngreso.fechaIngreso']['$lte'] = moment(filtros.fechaIngresoHasta).endOf('day').toDate();
+        }
+    }
+
+    if (filtros.fechaEgresoDesde || filtros.fechaEgresoHasta) {
+        query['informeEgreso.fechaEgreso'] = {};
+
+        if (filtros.fechaEgresoDesde) {
+            query['informeEgreso.fechaEgreso']['$gte'] = moment(filtros.fechaEgresoDesde).startOf('day').toDate();
+        }
+        if (filtros.fechaEgresoHasta) {
+            query['informeEgreso.fechaEgreso']['$lte'] = moment(filtros.fechaEgresoHasta).endOf('day').toDate();
+        }
+    }
+
+    if (filtros.idProfesional) {
+        query['informeIngreso.profesional.id'] = filtros.idProfesional;
+    }
+
+    if (filtros.idPaciente) {
+        const pac = await PacienteCtr.findById(filtros.idPaciente).lean();
+        const ids = pac?.vinculos?.length ? pac.vinculos : [filtros.idPaciente];
+        query['paciente.id'] = { $in: ids };
+    }
+
+    return InformeEstadistica
+        .find(query)
+        .sort({ 'informeIngreso.fechaIngreso': -1 })
+        .lean();
+}
+
+export async function obtenerInformeEstadistica(organizacion, filtros) {
+    const matchIngreso: any = {};
+    if (filtros.fechaIngresoDesde || filtros.fechaIngresoHasta) {
+        const fechaIngresoFilter: any = {};
         if (filtros.fechaIngresoDesde) {
             fechaIngresoFilter['$gte'] = moment(filtros.fechaIngresoDesde).startOf('day').toDate();
         }
         if (filtros.fechaIngresoHasta) {
             fechaIngresoFilter['$lte'] = moment(filtros.fechaIngresoHasta).endOf('day').toDate();
         }
-        matchIngreso['ejecucion.registros.valor.informeIngreso.fechaIngreso'] = fechaIngresoFilter;
+        matchIngreso['informeIngreso.fechaIngreso'] = fechaIngresoFilter;
     }
 
-    const matchEgreso = {};
+    const matchEgreso: any = {};
     if (filtros.fechaEgresoDesde || filtros.fechaEgresoHasta) {
-        const fechaEgresoFilter = {};
+        const fechaEgresoFilter: any = {};
         if (filtros.fechaEgresoDesde) {
             fechaEgresoFilter['$gte'] = moment(filtros.fechaEgresoDesde).startOf('day').toDate();
         }
         if (filtros.fechaEgresoHasta) {
             fechaEgresoFilter['$lte'] = moment(filtros.fechaEgresoHasta).endOf('day').toDate();
         }
-        matchEgreso['ejecucion.registros.valor.InformeEgreso.fechaEgreso'] = fechaEgresoFilter;
+        matchEgreso['informeEgreso.fechaEgreso'] = fechaEgresoFilter;
     }
 
-    const $match = {};
+    const $match: any = {};
 
     if (filtros.idProfesional) {
-        $match['solicitud.profesional.id'] = filtros.idProfesional;
+        $match['informeIngreso.profesional.id'] = filtros.idProfesional;
     }
+
     if (filtros.idPaciente) {
         $match['paciente.id'] = filtros.idPaciente;
-        const paciente = await PacienteCtr.findById(filtros.idPaciente);
-        $match['paciente.id'] = { $in: paciente.vinculos };
     }
 
-    return Prestacion.find({
-        'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
-        'solicitud.ambitoOrigen': 'internacion',
-        'solicitud.tipoPrestacion.conceptId': '32485007',
+    const query = {
+        'organizacion._id': mongoose.Types.ObjectId(organizacion as any),
         ...matchIngreso,
         ...matchEgreso,
-        ...$match,
-        'estadoActual.tipo': { $in: ['ejecucion', 'validada'] }
+        ...$match
+    };
 
-    });
+    const resultados = await InformeEstadistica.find(query)
+        .sort({ 'informeIngreso.fechaIngreso': -1 })
+        .lean();
+
+    return resultados;
 }
 
 export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: string, idInternacion: ObjectId, desde: Date, hasta: Date) {
@@ -90,11 +137,11 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
     let internacion;
 
     if (capa === 'estadistica') {
-        internacion = await Prestacion.findById(idInternacion);
+        internacion = await InformeEstadistica.findById(idInternacion);
         if (!internacion) {
             return false;
         }
-        fechaDesde = internacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso;
+        fechaDesde = internacion.informeIngreso.fechaIngreso;
     } else { // capa médica, enfermeria o estadistica-v2
         internacion = await InternacionResumen.findById(idInternacion);
         fechaDesde = internacion?.fechaIngreso || moment().subtract(-12, 'months').toDate();
@@ -154,3 +201,5 @@ export async function deshacerInternacion(organizacion, capa: string, ambito: st
     }
     return false;
 }
+
+
