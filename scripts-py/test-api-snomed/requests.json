@@ -1,0 +1,1514 @@
+[
+    {
+        "conceptId": "543521000221108",
+        "term": "OMEGAFLEX SPECIAL EMULSION PARA PERFUSION BOLSA de 1875 ML",
+        "fsn": "OMEGAFLEX SPECIAL EMULSION PARA PERFUSION BOLSA de 1875 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "542901000221101",
+        "term": "TAFIROL RESACA [CAFEINA 33 MG + PARACETAMOL 194 MG + HIDROXIDO DE ALUMINIO 25 MG + HIDROXIDO DE MAGNESIO 50 MG + ASPIRINA 227 MG] COMPRIMIDO",
+        "fsn": "TAFIROL RESACA [CAFEINA 33 MG + PARACETAMOL 194 MG + HIDROXIDO DE ALUMINIO 25 MG + HIDROXIDO DE MAGNESIO 50 MG + ASPIRINA 227 MG] COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "535681000221106",
+        "term": "producto medicinal especial",
+        "fsn": "producto medicinal especial (producto)",
+        "semanticTag": "producto"
+    },
+    {
+        "conceptId": "508861000221103",
+        "term": "OCTAPLEX [500 UI] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "OCTAPLEX [500 UI] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508691000221109",
+        "term": "REDPET 18F-COLINA [FLUORCOLINA (18F) 1 GBQ / ML (27 MCI / ML)] SOLUCION INYECTABLE FRASCO AMPOLLA de 10 ML",
+        "fsn": "REDPET 18F-COLINA [FLUORCOLINA (18F) 1 GBQ / ML (27 MCI / ML)] SOLUCION INYECTABLE FRASCO AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508571000221109",
+        "term": "XOFIGO [DICLORURO DE RADIO 223 1100 KBQ / ML] SOLUCION INYECTABLE FRASCO de 6 ML",
+        "fsn": "XOFIGO [DICLORURO DE RADIO 223 1100 KBQ / ML] SOLUCION INYECTABLE FRASCO de 6 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508451000221103",
+        "term": "VAGICURAL PLUS OVULO",
+        "fsn": "VAGICURAL PLUS OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508441000221100",
+        "term": "VAGICURAL COMPRIMIDO VAGINAL",
+        "fsn": "VAGICURAL COMPRIMIDO VAGINAL (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508431000221107",
+        "term": "VACUNACE POLVO ORAL SOBRE",
+        "fsn": "VACUNACE POLVO ORAL SOBRE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508421000221109",
+        "term": "VACUNA ORAL CASASCO SOLUCION ORAL FRASCO GOTERO de 30 ML",
+        "fsn": "VACUNA ORAL CASASCO SOLUCION ORAL FRASCO GOTERO de 30 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508411000221104",
+        "term": "VACUNA ORAL CASASCO COMPRIMIDO",
+        "fsn": "VACUNA ORAL CASASCO COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508401000221102",
+        "term": "VACUNA ANTIPIOGENA POLIVALENTE BIOL SOLUCION INYECTABLE AMPOLLA de 1 ML",
+        "fsn": "VACUNA ANTIPIOGENA POLIVALENTE BIOL SOLUCION INYECTABLE AMPOLLA de 1 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508241000221101",
+        "term": "TRAXIMIN INYECTABLE PARA PERFUSION FRASCO de 500 ML",
+        "fsn": "TRAXIMIN INYECTABLE PARA PERFUSION FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508231000221108",
+        "term": "TRAXIMIN INYECTABLE PARA PERFUSION FRASCO de 250 ML",
+        "fsn": "TRAXIMIN INYECTABLE PARA PERFUSION FRASCO de 250 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508221000221105",
+        "term": "TRAXIMIN INYECTABLE PARA PERFUSION BOLSA de 100 ML",
+        "fsn": "TRAXIMIN INYECTABLE PARA PERFUSION BOLSA de 100 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508211000221100",
+        "term": "TRACUTIL INYECTABLE PARA PERFUSION FRASCO AMPOLLA de 10 ML",
+        "fsn": "TRACUTIL INYECTABLE PARA PERFUSION FRASCO AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508181000221104",
+        "term": "TOTAL MAGNESIANO VITALIZANTE PLUS COMPRIMIDO RECUBIERTO",
+        "fsn": "TOTAL MAGNESIANO VITALIZANTE PLUS COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508171000221102",
+        "term": "TOTAL MAGNESIANO VITALIZANTE PLUS COMPRIMIDO EFERVESCENTE",
+        "fsn": "TOTAL MAGNESIANO VITALIZANTE PLUS COMPRIMIDO EFERVESCENTE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508151000221109",
+        "term": "TOTAL MAGNESIANO SPORT POLVO EFERVESCENTE SOBRE",
+        "fsn": "TOTAL MAGNESIANO SPORT POLVO EFERVESCENTE SOBRE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508141000221107",
+        "term": "TOTAL MAGNESIANO SPORT COMPRIMIDO RECUBIERTO",
+        "fsn": "TOTAL MAGNESIANO SPORT COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508121000221103",
+        "term": "TOTAL MAGNESIANO [60 MG/100 G Y 60 G/100 G] GRANULADO PARA SUSPENSIÓN ORAL FRASCO de 50 G",
+        "fsn": "TOTAL MAGNESIANO [60 MG/100 G Y 60 G/100 G] GRANULADO PARA SUSPENSIÓN ORAL FRASCO de 50 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508111000221108",
+        "term": "TOTAL MAGNESIANO [60 MG/100 G Y 60 G/100 G] GRANULADO PARA SUSPENSIÓN ORAL FRASCO de 100 G",
+        "fsn": "TOTAL MAGNESIANO [60 MG/100 G Y 60 G/100 G] GRANULADO PARA SUSPENSIÓN ORAL FRASCO de 100 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508101000221105",
+        "term": "TOTAL MAGNESIANO GRANULADO [10 MG/100 G Y 99,96 G/100 G] GRANULADO PARA SUSPENSIÓN ORAL FRASCO de 50 G",
+        "fsn": "TOTAL MAGNESIANO GRANULADO [10 MG/100 G Y 99,96 G/100 G] GRANULADO PARA SUSPENSIÓN ORAL FRASCO de 50 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508091000221102",
+        "term": "TOTAL MAGNESIANO GRANULADO [10 MG/100 G Y 99,96 G/100 G] GRANULADO PARA SUSPENSIÓN ORAL FRASCO de 100 G",
+        "fsn": "TOTAL MAGNESIANO GRANULADO [10 MG/100 G Y 99,96 G/100 G] GRANULADO PARA SUSPENSIÓN ORAL FRASCO de 100 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508081000221100",
+        "term": "TOTAL MAGNESIANO ENERGIZANTE COMPRIMIDO RECUBIERTO",
+        "fsn": "TOTAL MAGNESIANO ENERGIZANTE COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508071000221103",
+        "term": "TOTAL MAGNESIANO ENERGIZANTE COMPRIMIDO EFERVESCENTE",
+        "fsn": "TOTAL MAGNESIANO ENERGIZANTE COMPRIMIDO EFERVESCENTE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508061000221107",
+        "term": "TOTAL MAGNESIANO CON VITAMINA C POLVO EFERVESCENTE SOBRE de 8 G",
+        "fsn": "TOTAL MAGNESIANO CON VITAMINA C POLVO EFERVESCENTE SOBRE de 8 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508051000221105",
+        "term": "TOTAL MAGNESIANO CON VITAMINA C POLVO EFERVESCENTE SOBRE",
+        "fsn": "TOTAL MAGNESIANO CON VITAMINA C POLVO EFERVESCENTE SOBRE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508041000221108",
+        "term": "TOTAL MAGNESIANO CON VITAMINA C COMPRIMIDO EFERVESCENTE",
+        "fsn": "TOTAL MAGNESIANO CON VITAMINA C COMPRIMIDO EFERVESCENTE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "508031000221101",
+        "term": "TOTAL MAGNESIANO CON GINSENG POLVO ORAL SOBRE",
+        "fsn": "TOTAL MAGNESIANO CON GINSENG POLVO ORAL SOBRE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507931000221103",
+        "term": "TIN - TEC [PIROFOSFATO DE SODIO DECAHIDRATO 20 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "TIN - TEC [PIROFOSFATO DE SODIO DECAHIDRATO 20 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507921000221101",
+        "term": "TERABAC [IODURO DE SODIO (131I) 1 HASTA 300 MCI] SOLUCION ORAL FRASCO AMPOLLA de 10 ML",
+        "fsn": "TERABAC [IODURO DE SODIO (131I) 1 HASTA 300 MCI] SOLUCION ORAL FRASCO AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507911000221106",
+        "term": "TECNONUCLEAR MIBG-I-131 [META IODO BENCILGUANIDINA (131I) 1 MG / AMP] SOLUCION INYECTABLE FRASCO AMPOLLA",
+        "fsn": "TECNONUCLEAR MIBG-I-131 [META IODO BENCILGUANIDINA (131I) 1 MG / AMP] SOLUCION INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507821000221107",
+        "term": "TANVIMIL M CAPSULA",
+        "fsn": "TANVIMIL M CAPSULA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507801000221100",
+        "term": "TANVIMIL GINSENG CAPSULA",
+        "fsn": "TANVIMIL GINSENG CAPSULA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507761000221106",
+        "term": "TANVIMIL AMINOACIDOS COMPRIMIDO RECUBIERTO",
+        "fsn": "TANVIMIL AMINOACIDOS COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507661000221100",
+        "term": "SUPRADYN PRONATAL COMPRIMIDO RECUBIERTO",
+        "fsn": "SUPRADYN PRONATAL COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507651000221102",
+        "term": "SUPRADYN FORTE GRAGEA",
+        "fsn": "SUPRADYN FORTE GRAGEA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507641000221104",
+        "term": "SUPRADYN FORTE COMPRIMIDO EFERVESCENTE",
+        "fsn": "SUPRADYN FORTE COMPRIMIDO EFERVESCENTE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507631000221106",
+        "term": "SUMMAVAC R [FRACCION RIBOSOMAL: RIBOSOMAS TITULADOS AL 70% DE ARN ,75 MG + FRACCION MEMBRANOSA: PROTEOGLICANOS DE KLEBSIELLA PNEUMONIAE 1,125 MG] COMPRIMIDO",
+        "fsn": "SUMMAVAC R [FRACCION RIBOSOMAL: RIBOSOMAS TITULADOS AL 70% DE ARN ,75 MG + FRACCION MEMBRANOSA: PROTEOGLICANOS DE KLEBSIELLA PNEUMONIAE 1,125 MG] COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507621000221108",
+        "term": "SUMMAVAC P SOLUCION INYECTABLE FRASCO AMPOLLA de 1 ML",
+        "fsn": "SUMMAVAC P SOLUCION INYECTABLE FRASCO AMPOLLA de 1 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507611000221103",
+        "term": "SUMMAVAC ORAL [PROTEIDOS BACTERIANOS 4 MG / 4 ML + POLISACARIDOS ESCHERICHIA COLI 4 MG / 4 ML] SOLUCIÓN PARA GOTAS ORAL GOTERO DOSIFICADOR de 4 ML",
+        "fsn": "SUMMAVAC ORAL [PROTEIDOS BACTERIANOS 4 MG / 4 ML + POLISACARIDOS ESCHERICHIA COLI 4 MG / 4 ML] SOLUCIÓN PARA GOTAS ORAL GOTERO DOSIFICADOR de 4 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507601000221101",
+        "term": "SUMMAVAC ORAL [PROTEIDOS BACTERIANOS ,2 MG/COMPRIMIDO + POLISACARIDOS ESCHERICHIA COLI ,2 MG/COMPRIMIDO] COMPRIMIDO SUBLINGUAL",
+        "fsn": "SUMMAVAC ORAL [PROTEIDOS BACTERIANOS ,2 MG/COMPRIMIDO + POLISACARIDOS ESCHERICHIA COLI ,2 MG/COMPRIMIDO] COMPRIMIDO SUBLINGUAL (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507591000221106",
+        "term": "SUMMAVAC M INYECTABLE PARA PERFUSION AMPOLLA de 1 ML",
+        "fsn": "SUMMAVAC M INYECTABLE PARA PERFUSION AMPOLLA de 1 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507571000221105",
+        "term": "STANDARD XXI [ALCOHOL BENCILICO 1,5 % + DIETILTOLUAMIDA 3 % + N, N-DIETIL-N-TOLUAMIDA 3 % + ETILBUTIL ACETILAMINO PROPIONATO 1,5 %] CREMA ENJUAGUE CAPILAR MEDICAMENTOSA FRASCO de 150 ML",
+        "fsn": "STANDARD XXI [ALCOHOL BENCILICO 1,5 % + DIETILTOLUAMIDA 3 % + N, N-DIETIL-N-TOLUAMIDA 3 % + ETILBUTIL ACETILAMINO PROPIONATO 1,5 %] CREMA ENJUAGUE CAPILAR MEDICAMENTOSA FRASCO de 150 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507531000221107",
+        "term": "SOLUVIT N POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "SOLUVIT N POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507521000221109",
+        "term": "SOLUMERIN [TIROTRICINA 25 MG / 100 ML + BUTIMERINA 500 MG / 100 ML + BENCETONIO CLORURO 250 MG / 100 ML + CETILPIRIDINIUM CLORHIDRATO 25 MG / 100 ML] SOLUCION DERMICA FRASCO de 100 ML",
+        "fsn": "SOLUMERIN [TIROTRICINA 25 MG / 100 ML + BUTIMERINA 500 MG / 100 ML + BENCETONIO CLORURO 250 MG / 100 ML + CETILPIRIDINIUM CLORHIDRATO 25 MG / 100 ML] SOLUCION DERMICA FRASCO de 100 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507511000221104",
+        "term": "SOLUCIONES PARA PERFUSION SANGUINEA RIVERO SIN POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML",
+        "fsn": "SOLUCIONES PARA PERFUSION SANGUINEA RIVERO SIN POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507501000221102",
+        "term": "SOLUCIONES PARA PERFUSION SANGUINEA RIVERO CON 15 MEQ. DE POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML",
+        "fsn": "SOLUCIONES PARA PERFUSION SANGUINEA RIVERO CON 15 MEQ. DE POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507491000221107",
+        "term": "SOLUCION POLIELECTROLITICA ISOTONICA RIVERO SOLUCION PARENTERAL DE GRAN VOLUMEN BOLSA de 500 ML",
+        "fsn": "SOLUCION POLIELECTROLITICA ISOTONICA RIVERO SOLUCION PARENTERAL DE GRAN VOLUMEN BOLSA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507481000221109",
+        "term": "SOLUCION PARENTERAL AMINOACIDOS RIVERO AL 8.5% INYECTABLE PARA PERFUSION BOLSA de 500 ML",
+        "fsn": "SOLUCION PARENTERAL AMINOACIDOS RIVERO AL 8.5% INYECTABLE PARA PERFUSION BOLSA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507461000221102",
+        "term": "SOLUCION PARA CARDIOPLEGIA SANGUINEA RIVERO CON 60 MEQ. DE POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML",
+        "fsn": "SOLUCION PARA CARDIOPLEGIA SANGUINEA RIVERO CON 60 MEQ. DE POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507451000221104",
+        "term": "SOLUCION PARA CARDIOPLEGIA SANGUINEA RIVERO CON 30 MEQ DE POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML",
+        "fsn": "SOLUCION PARA CARDIOPLEGIA SANGUINEA RIVERO CON 30 MEQ DE POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507441000221101",
+        "term": "SOLUCION PARA CARDIOPLEGIA SANGUINEA RIVERO CON 15 MEQ. DE POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML",
+        "fsn": "SOLUCION PARA CARDIOPLEGIA SANGUINEA RIVERO CON 15 MEQ. DE POTASIO SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507431000221108",
+        "term": "SOLUCION HIDRATANTE DE MANTENIMIENTO SOLUCION PARENTERAL DE GRAN VOLUMEN BOLSA de 500 ML",
+        "fsn": "SOLUCION HIDRATANTE DE MANTENIMIENTO SOLUCION PARENTERAL DE GRAN VOLUMEN BOLSA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507421000221105",
+        "term": "SOLUCION HIDRATANTE DE MANTENIMIENTO SOLUCION PARENTERAL DE GRAN VOLUMEN BOLSA de 1000 ML",
+        "fsn": "SOLUCION HIDRATANTE DE MANTENIMIENTO SOLUCION PARENTERAL DE GRAN VOLUMEN BOLSA de 1000 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507411000221100",
+        "term": "SOLUCION HIDRATANTE (REPOSICION) SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML",
+        "fsn": "SOLUCION HIDRATANTE (REPOSICION) SOLUCION PARENTERAL DE GRAN VOLUMEN ENVASE de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507401000221103",
+        "term": "SOLUCION ELECTROLITICA BALANCEADA RIVERO SOLUCION INYECTABLE BOLSA de 500 ML",
+        "fsn": "SOLUCION ELECTROLITICA BALANCEADA RIVERO SOLUCION INYECTABLE BOLSA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507391000221100",
+        "term": "SOLUCION ELECTROLITICA BALANCEADA RIGECIN INYECTABLE BOLSA de 500 ML",
+        "fsn": "SOLUCION ELECTROLITICA BALANCEADA RIGECIN INYECTABLE BOLSA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507381000221103",
+        "term": "SOLUCION ELECTROLITICA BALANCEADA BRAUN SOLUCION INYECTABLE ENVASE de 500 ML",
+        "fsn": "SOLUCION ELECTROLITICA BALANCEADA BRAUN SOLUCION INYECTABLE ENVASE de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507371000221101",
+        "term": "SOLUCION DE FOSFATO DE SODIO RIVERO [FOSFATO MONOSODICO MONOHIDRATO ,276 G / ML + FOSFATO DISODICO ANHIDRO ,142 G / ML] SOLUCION INYECTABLE AMPOLLA de 10 ML",
+        "fsn": "SOLUCION DE FOSFATO DE SODIO RIVERO [FOSFATO MONOSODICO MONOHIDRATO ,276 G / ML + FOSFATO DISODICO ANHIDRO ,142 G / ML] SOLUCION INYECTABLE AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507361000221105",
+        "term": "SOLUCION DE FOSFATO DE POTASIO [FOSFATO DIBASICO DE POTASIO ANHIDRO ,236 G / ML + FOSFATO MONOBASICO DE POTASIO ANHIDRO ,224 G / ML] SOLUCION INYECTABLE AMPOLLA de 10 ML",
+        "fsn": "SOLUCION DE FOSFATO DE POTASIO [FOSFATO DIBASICO DE POTASIO ANHIDRO ,236 G / ML + FOSFATO MONOBASICO DE POTASIO ANHIDRO ,224 G / ML] SOLUCION INYECTABLE AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507351000221108",
+        "term": "SOLUCION DE AMINOACIDOS AL 5% EN AGUA INYECTABLE PARA PERFUSION FRASCO de 500 ML",
+        "fsn": "SOLUCION DE AMINOACIDOS AL 5% EN AGUA INYECTABLE PARA PERFUSION FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507341000221106",
+        "term": "SOLUCION DE AMINOACIDOS AL 11.5% EN AGUA INYECTABLE PARA PERFUSION FRASCO de 500 ML",
+        "fsn": "SOLUCION DE AMINOACIDOS AL 11.5% EN AGUA INYECTABLE PARA PERFUSION FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507331000221104",
+        "term": "SOLUCION CARDIOPLEGICA S.T. SOLUCION INYECTABLE BOLSA de 1000 ML",
+        "fsn": "SOLUCION CARDIOPLEGICA S.T. SOLUCION INYECTABLE BOLSA de 1000 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507311000221107",
+        "term": "SMOFLIPID 20% EMULSION PARA INFUSION FRASCO de 500 ML",
+        "fsn": "SMOFLIPID 20% EMULSION PARA INFUSION FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507301000221109",
+        "term": "SMOFKABIVEN PERIFERICO EMULSION INYECTABLE BOLSA de 1904 ML",
+        "fsn": "SMOFKABIVEN PERIFERICO EMULSION INYECTABLE BOLSA de 1904 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507291000221108",
+        "term": "SMOFKABIVEN EXTRA NITROGENO EMULSION PARA INFUSION IV INYECTABLE BOLSA de 2025 ML",
+        "fsn": "SMOFKABIVEN EXTRA NITROGENO EMULSION PARA INFUSION IV INYECTABLE BOLSA de 2025 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507281000221105",
+        "term": "SMOFKABIVEN CENTRAL SIN ELECTROLITOS EMULSION INYECTABLE BOLSA de 986 ML",
+        "fsn": "SMOFKABIVEN CENTRAL SIN ELECTROLITOS EMULSION INYECTABLE BOLSA de 986 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507271000221107",
+        "term": "SMOFKABIVEN CENTRAL EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1970 ML",
+        "fsn": "SMOFKABIVEN CENTRAL EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1970 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507201000221104",
+        "term": "SEROCUTINA POMADA DERMICA POMO de 30 G",
+        "fsn": "SEROCUTINA POMADA DERMICA POMO de 30 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507181000221100",
+        "term": "SEPTIGYN OVULO",
+        "fsn": "SEPTIGYN OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507161000221107",
+        "term": "SENEXON PLUS CAPSULA BLANDA",
+        "fsn": "SENEXON PLUS CAPSULA BLANDA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507151000221105",
+        "term": "SEBULEX SOLUCION TOPICA ENVASE de 60 ML",
+        "fsn": "SEBULEX SOLUCION TOPICA ENVASE de 60 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507141000221108",
+        "term": "SEBULEX SOLUCION TOPICA ENVASE de 100 ML",
+        "fsn": "SEBULEX SOLUCION TOPICA ENVASE de 100 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507101000221106",
+        "term": "SAMARIO 153 - EDTMP - RADIOFARMA - BACON SOLUCION INYECTABLE FRASCO AMPOLLA de 6 ML",
+        "fsn": "SAMARIO 153 - EDTMP - RADIOFARMA - BACON SOLUCION INYECTABLE FRASCO AMPOLLA de 6 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507091000221103",
+        "term": "SAMARIO 153 - EDTMP - RADIOFARMA - BACON SOLUCION INYECTABLE FRASCO AMPOLLA de 4 ML",
+        "fsn": "SAMARIO 153 - EDTMP - RADIOFARMA - BACON SOLUCION INYECTABLE FRASCO AMPOLLA de 4 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507041000221109",
+        "term": "RIVIAL PEDIATRICO LIOFILIZADO POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "RIVIAL PEDIATRICO LIOFILIZADO POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507031000221102",
+        "term": "RIVIAL MV 12 POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "RIVIAL MV 12 POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "507021000221100",
+        "term": "RITRAZ SOLUCION INYECTABLE AMPOLLA de 10 ML",
+        "fsn": "RITRAZ SOLUCION INYECTABLE AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506941000221108",
+        "term": "RENO-TEC [BZ-MAG-3 (BENZOIL MERCAPTO ACETIL TRIGLICINA) 1 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "RENO-TEC [BZ-MAG-3 (BENZOIL MERCAPTO ACETIL TRIGLICINA) 1 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506921000221104",
+        "term": "REFENAX CARAMELO CARAMELO",
+        "fsn": "REFENAX CARAMELO CARAMELO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506911000221109",
+        "term": "REDPET FDG [FLUDESOXIGLUCOSA (18F) 1,8 MCG /AMP] SOLUCION INYECTABLE FRASCO AMPOLLA",
+        "fsn": "REDPET FDG [FLUDESOXIGLUCOSA (18F) 1,8 MCG /AMP] SOLUCION INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506871000221106",
+        "term": "RATI SALIL CREMA DERMICA POMO de 40 G",
+        "fsn": "RATI SALIL CREMA DERMICA POMO de 40 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506791000221104",
+        "term": "PROTROMPLEX TOTAL [600 UI] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "PROTROMPLEX TOTAL [600 UI] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506751000221107",
+        "term": "PROCTO VENART POMADA RECTAL POMO de 30 G",
+        "fsn": "PROCTO VENART POMADA RECTAL POMO de 30 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506741000221105",
+        "term": "PROCTO VENART POMADA RECTAL POMO de 10 G",
+        "fsn": "PROCTO VENART POMADA RECTAL POMO de 10 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506701000221108",
+        "term": "POLPER VASCULAR SOLUCION ORAL FRASCO UNIDOSIS",
+        "fsn": "POLPER VASCULAR SOLUCION ORAL FRASCO UNIDOSIS (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506691000221108",
+        "term": "POLPER VASCULAR COMPRIMIDO RECUBIERTO RANURADO",
+        "fsn": "POLPER VASCULAR COMPRIMIDO RECUBIERTO RANURADO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506681000221105",
+        "term": "POLPER CALCIO - MAGNESIO COMPRIMIDO RECUBIERTO",
+        "fsn": "POLPER CALCIO - MAGNESIO COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506671000221107",
+        "term": "POLPER B12 SOLUCION ORAL FRASCO UNIDOSIS",
+        "fsn": "POLPER B12 SOLUCION ORAL FRASCO UNIDOSIS (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506661000221103",
+        "term": "POLPER B12 FORTE COMPRIMIDO RECUBIERTO",
+        "fsn": "POLPER B12 FORTE COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506651000221100",
+        "term": "POLPER B12 AF GRANULADO PARA SUSPENSIÓN ORAL SOBRE",
+        "fsn": "POLPER B12 AF GRANULADO PARA SUSPENSIÓN ORAL SOBRE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506641000221102",
+        "term": "POLIENZIM 200 GRAGEA",
+        "fsn": "POLIENZIM 200 GRAGEA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506531000221105",
+        "term": "PHARMATON COMPRIMIDO RECUBIERTO",
+        "fsn": "PHARMATON COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506341000221109",
+        "term": "OVUMIX OVULO",
+        "fsn": "OVUMIX OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506331000221102",
+        "term": "OVUFEM OVULO",
+        "fsn": "OVUFEM OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506321000221100",
+        "term": "OSTEOBAC - RADIOFARMA [ACIDO METILENDIFOSFONICO 10 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "OSTEOBAC - RADIOFARMA [ACIDO METILENDIFOSFONICO 10 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506311000221105",
+        "term": "OSTEO-TEC [OXIDRONATO (99M TC) 2 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "OSTEO-TEC [OXIDRONATO (99M TC) 2 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506291000221106",
+        "term": "OSEOPET RADIOFARMA [FLUORURO DE SODIO 18F 10 HASTA 300 MCI / ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 5 ML",
+        "fsn": "OSEOPET RADIOFARMA [FLUORURO DE SODIO 18F 10 HASTA 300 MCI / ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 5 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506241000221100",
+        "term": "OMMUNAL NIÑOS [LISADO BACTERIANO LIOFILIZADO 20 MG] GRANULADO PARA SUSPENSIÓN ORAL, SOBRE",
+        "fsn": "OMMUNAL NIÑOS [LISADO BACTERIANO LIOFILIZADO 20 MG] GRANULADO PARA SUSPENSIÓN ORAL, SOBRE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506231000221107",
+        "term": "OMMUNAL NINOS [LISADO BACTERIANO LIOFILIZADO 3,5 MG] CAPSULA DURA",
+        "fsn": "OMMUNAL NINOS [LISADO BACTERIANO LIOFILIZADO 3,5 MG] CAPSULA DURA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506221000221109",
+        "term": "OMMUNAL ADULTOS [LISADO BACTERIANO LIOFILIZADO 7 MG] CAPSULA DURA",
+        "fsn": "OMMUNAL ADULTOS [LISADO BACTERIANO LIOFILIZADO 7 MG] CAPSULA DURA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506191000221100",
+        "term": "OCTREOTIDO [OCTREOTIDA 50 MCG / ML] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "OCTREOTIDO [OCTREOTIDA 50 MCG / ML] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506181000221103",
+        "term": "OCTREO-TEC [CLORURO DE INDIO (111-IN) 185 MBQ + PENTETREOTIDE 10 MCG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "OCTREO-TEC [CLORURO DE INDIO (111-IN) 185 MBQ + PENTETREOTIDE 10 MCG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506171000221101",
+        "term": "NUTRIFLEX OMEGA ESPECIAL EMULSION INYECTABLE BOLSA de 1875 ML",
+        "fsn": "NUTRIFLEX OMEGA ESPECIAL EMULSION INYECTABLE BOLSA de 1875 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506161000221105",
+        "term": "NUTRIFLEX OMEGA ESPECIAL EMULSION INYECTABLE BOLSA de 1250 ML",
+        "fsn": "NUTRIFLEX OMEGA ESPECIAL EMULSION INYECTABLE BOLSA de 1250 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506151000221108",
+        "term": "NUTRIFLEX LIPID PLUS EMULSION PARA INFUSION IV INYECTABLE BOLSA de 2500 ML",
+        "fsn": "NUTRIFLEX LIPID PLUS EMULSION PARA INFUSION IV INYECTABLE BOLSA de 2500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506141000221106",
+        "term": "NUTRIFLEX LIPID PLUS EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1875 ML",
+        "fsn": "NUTRIFLEX LIPID PLUS EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1875 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506131000221104",
+        "term": "NUTRIFLEX LIPID PERI EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1875 ML",
+        "fsn": "NUTRIFLEX LIPID PERI EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1875 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506121000221102",
+        "term": "NUTRIFLEX LIPID PERI EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1250 ML",
+        "fsn": "NUTRIFLEX LIPID PERI EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1250 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506111000221107",
+        "term": "NUTRIFLEX LIPID ESPECIAL EMULSION PARA INFUSION IV INYECTABLE BOLSA de 625 ML",
+        "fsn": "NUTRIFLEX LIPID ESPECIAL EMULSION PARA INFUSION IV INYECTABLE BOLSA de 625 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506101000221109",
+        "term": "NUTRIFLEX LIPID ESPECIAL EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1875 ML",
+        "fsn": "NUTRIFLEX LIPID ESPECIAL EMULSION PARA INFUSION IV INYECTABLE BOLSA de 1875 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506081000221104",
+        "term": "NOTOXIN UNGUENTO [NOTOXIN PATENTE 18,16 G / 100 G + COLESTERINA 3 G / 100 G] UNGÜENTO DERMICO ENVASE de 20 G",
+        "fsn": "NOTOXIN UNGUENTO [NOTOXIN PATENTE 18,16 G / 100 G + COLESTERINA 3 G / 100 G] UNGÜENTO DERMICO ENVASE de 20 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506051000221109",
+        "term": "NODE TEC [SULFURO DE ANTIMONIO (99M TC) 1% 2,7 ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 3 ML - VIAL A con 2,7 ML + 0,3 ML estabilizador",
+        "fsn": "NODE TEC [SULFURO DE ANTIMONIO (99M TC) 1% 2,7 ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 3 ML - VIAL A con 2,7 ML + 0,3 ML estabilizador (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "506041000221107",
+        "term": "NILFLUX BIOL VACUNA ORAL GRAGEA",
+        "fsn": "NILFLUX BIOL VACUNA ORAL GRAGEA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505991000221109",
+        "term": "NEURO - TEC [BICISATO DIHIDROCLORHIDRICO (ESTER DIETIL DIHIDROCLORHIDRICO DE N,N-(1,2 ETILENDIEIL)BIS-L-CISTEINA ,9 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "NEURO - TEC [BICISATO DIHIDROCLORHIDRICO (ESTER DIETIL DIHIDROCLORHIDRICO DE N,N-(1,2 ETILENDIEIL)BIS-L-CISTEINA ,9 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505891000221104",
+        "term": "NEO PELVICILLIN OVULO",
+        "fsn": "NEO PELVICILLIN OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505881000221102",
+        "term": "NEFRO-TEC [ACIDO DIETILENTRIAMINOPENTAACETICO 5 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "NEFRO-TEC [ACIDO DIETILENTRIAMINOPENTAACETICO 5 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505821000221101",
+        "term": "NANO-TEC [ALBUMINA HUMANA COMO NANOCOLOIDE ,5 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "NANO-TEC [ALBUMINA HUMANA COMO NANOCOLOIDE ,5 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505791000221107",
+        "term": "MYOCARDIUM - TEC [TETRAFLUORBORATO DE TETRAKIS (2-METOXI ISOBUTIL ISONITRILO) DE COBRE (I) 1 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "MYOCARDIUM - TEC [TETRAFLUORBORATO DE TETRAKIS (2-METOXI ISOBUTIL ISONITRILO) DE COBRE (I) 1 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505781000221109",
+        "term": "MYOCARDIUM - TEC [TETRAFLUORBORATO DE TETRAKIS (2-METOXI ISOBUTIL ISONITRILO) DE COBRE (I) ,5 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "MYOCARDIUM - TEC [TETRAFLUORBORATO DE TETRAKIS (2-METOXI ISOBUTIL ISONITRILO) DE COBRE (I) ,5 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505771000221106",
+        "term": "MYOCARDIUM - TEC [TETRAFLUORBORATO DE TETRAKIS (2-METOXI ISOBUTIL ISONITRILO) DE COBRE (I) ,25 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "MYOCARDIUM - TEC [TETRAFLUORBORATO DE TETRAKIS (2-METOXI ISOBUTIL ISONITRILO) DE COBRE (I) ,25 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505641000221109",
+        "term": "MIN 14C UBT [14C UREA 5 uCi / ML] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "MIN 14C UBT [14C UREA 5 uCi / ML] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505631000221102",
+        "term": "MIL COBALIN POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "MIL COBALIN POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505581000221100",
+        "term": "MICOCLIN OVULOS OVULO",
+        "fsn": "MICOCLIN OVULOS OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505521000221104",
+        "term": "MEMOREX COMPUESTO JARABE FRASCO de 200 ML",
+        "fsn": "MEMOREX COMPUESTO JARABE FRASCO de 200 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505511000221109",
+        "term": "MEMOREX COMPUESTO COMPRIMIDO RECUBIERTO",
+        "fsn": "MEMOREX COMPUESTO COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505471000221102",
+        "term": "MEGABRON CAPSULA DURA",
+        "fsn": "MEGABRON CAPSULA DURA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505401000221105",
+        "term": "MARATHON CAPSULA BLANDA",
+        "fsn": "MARATHON CAPSULA BLANDA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505381000221105",
+        "term": "MANZAN POMADA DERMICA POMO de 34 G",
+        "fsn": "MANZAN POMADA DERMICA POMO de 34 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505311000221101",
+        "term": "MACROAGREGADO DE ALBUMINA [ALBUMINA COMO MACROAGREGADO 2 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "MACROAGREGADO DE ALBUMINA [ALBUMINA COMO MACROAGREGADO 2 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505291000221100",
+        "term": "MACRIL OVULOS OVULO",
+        "fsn": "MACRIL OVULOS OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505261000221105",
+        "term": "LUPAN POMADA DERMICA POMO de 50 G",
+        "fsn": "LUPAN POMADA DERMICA POMO de 50 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505211000221107",
+        "term": "LONGEVITAL 5000 COMPRIMIDO RECUBIERTO",
+        "fsn": "LONGEVITAL 5000 COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505191000221106",
+        "term": "LIPOVENOS MCT 20 % [ACEITE DE SOJA 100 G / 100 ML + TRIGLICERIDOS DE CADENA MEDIA 100 G / 100 ML + LECITINA DE HUEVO 12 G / 100 ML] EMULSION INYECTABLE FRASCO de 500 ML",
+        "fsn": "LIPOVENOS MCT 20 % [ACEITE DE SOJA 100 G / 100 ML + TRIGLICERIDOS DE CADENA MEDIA 100 G / 100 ML + LECITINA DE HUEVO 12 G / 100 ML] EMULSION INYECTABLE FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505181000221108",
+        "term": "LIPOVENOS 10% PLR [ACEITE DE SOJA 100 G / 1000 ML + GLICERINA (GLICEROL) 25 G / 1000 ML + FOSFOLIPIDOS DEL HUEVO (CON 73-80% DE {3-SN-FOSFATIDILCONA}) 6 G / 1000 ML] EMULSION INYECTABLE FRASCO de 500 ML",
+        "fsn": "LIPOVENOS 10% PLR [ACEITE DE SOJA 100 G / 1000 ML + GLICERINA (GLICEROL) 25 G / 1000 ML + FOSFOLIPIDOS DEL HUEVO (CON 73-80% DE {3-SN-FOSFATIDILCONA}) 6 G / 1000 ML] EMULSION INYECTABLE FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505171000221105",
+        "term": "LIPOFUNDIN MCT/LCT 20 %E [ACEITE DE SOJA 100 MG / 1 ML + TRIGLICERIDOS DE CADENA MEDIA 100 MG / 1 ML + ALFATOCOFEROL ,17 MG / 1 ML + LECITINA DE HUEVO 12 MG / 1 ML] EMULSION INYECTABLE FRASCO de 500 ML",
+        "fsn": "LIPOFUNDIN MCT/LCT 20 %E [ACEITE DE SOJA 100 MG / 1 ML + TRIGLICERIDOS DE CADENA MEDIA 100 MG / 1 ML + ALFATOCOFEROL ,17 MG / 1 ML + LECITINA DE HUEVO 12 MG / 1 ML] EMULSION INYECTABLE FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505161000221101",
+        "term": "LIPOFUNDIN MCT/LCT 10%E [ACEITE DE SOJA 50 MG / 1 ML + TRIGLICERIDOS DE CADENA MEDIA 50 MG / 1 ML + ALFATOCOFEROL ,085 MG / 1 ML + LECITINA DE HUEVO 8 MG / 1 ML] EMULSION INYECTABLE FRASCO de 500 ML",
+        "fsn": "LIPOFUNDIN MCT/LCT 10%E [ACEITE DE SOJA 50 MG / 1 ML + TRIGLICERIDOS DE CADENA MEDIA 50 MG / 1 ML + ALFATOCOFEROL ,085 MG / 1 ML + LECITINA DE HUEVO 8 MG / 1 ML] EMULSION INYECTABLE FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505151000221103",
+        "term": "LIPIDEM [ACEITE DE SOJA 80 G / 1000 ML + L - TRIGLICERIDOS DE CADENA MEDIA 100 G / 1000 ML + L - TRIGLICERIDOS DE CADENA MEDIA 20 G / 1000 ML] EMULSION INYECTABLE FRASCO de 500 ML",
+        "fsn": "LIPIDEM [ACEITE DE SOJA 80 G / 1000 ML + L - TRIGLICERIDOS DE CADENA MEDIA 100 G / 1000 ML + L - TRIGLICERIDOS DE CADENA MEDIA 20 G / 1000 ML] EMULSION INYECTABLE FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505141000221100",
+        "term": "LINFOL CICATRIZANTE OVULO",
+        "fsn": "LINFOL CICATRIZANTE OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "505071000221109",
+        "term": "LAROTABE CAPSULA BLANDA",
+        "fsn": "LAROTABE CAPSULA BLANDA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504981000221107",
+        "term": "KIDNEY-TEC [ACIDO 2,4 DIMERCAPTOSUCCINICO 1 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "KIDNEY-TEC [ACIDO 2,4 DIMERCAPTOSUCCINICO 1 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504961000221100",
+        "term": "KANTRILEX [TRIPTOFANO ,4085 G / L + HISTIDINA 27,9289 G / L + HISTIDINA CLORHIDRATO 3,7733 G / L] SOLUCION INYECTABLE ENVASE de 500 ML",
+        "fsn": "KANTRILEX [TRIPTOFANO ,4085 G / L + HISTIDINA 27,9289 G / L + HISTIDINA CLORHIDRATO 3,7733 G / L] SOLUCION INYECTABLE ENVASE de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504951000221102",
+        "term": "KANTRILEX [TRIPTOFANO ,4085 G / L + HISTIDINA 27,9289 G / L + HISTIDINA CLORHIDRATO 3,7733 G / L] SOLUCION INYECTABLE ENVASE de 1000 ML",
+        "fsn": "KANTRILEX [TRIPTOFANO ,4085 G / L + HISTIDINA 27,9289 G / L + HISTIDINA CLORHIDRATO 3,7733 G / L] SOLUCION INYECTABLE ENVASE de 1000 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504931000221106",
+        "term": "ISOFUNDIN SOLUCION INYECTABLE FRASCO de 500 ML",
+        "fsn": "ISOFUNDIN SOLUCION INYECTABLE FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504921000221108",
+        "term": "ISOFUNDIN SOLUCION INYECTABLE FRASCO de 1000 ML",
+        "fsn": "ISOFUNDIN SOLUCION INYECTABLE FRASCO de 1000 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504911000221103",
+        "term": "ISMIGEN [LISADO BACTERIANO LIOFILIZADO 7 MG] COMPRIMIDO SUBLINGUAL",
+        "fsn": "ISMIGEN [LISADO BACTERIANO LIOFILIZADO 7 MG] COMPRIMIDO SUBLINGUAL (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504831000221104",
+        "term": "IODURO DE SODIO (131I) [IODURO DE SODIO (131I) 185 MBQ] SOLUCION ORAL FRASCO AMPOLLA de 20 ML",
+        "fsn": "IODURO DE SODIO (131I) [IODURO DE SODIO (131I) 185 MBQ] SOLUCION ORAL FRASCO AMPOLLA de 20 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504791000221108",
+        "term": "INFECTION-TEC [CIPROFLOXACINA 4 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "INFECTION-TEC [CIPROFLOXACINA 4 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504781000221105",
+        "term": "INESPECIN [SALMONELLA TYPHI 20000000000 UNIDADES] COMPRIMIDO",
+        "fsn": "INESPECIN [SALMONELLA TYPHI 20000000000 UNIDADES] COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504641000221105",
+        "term": "HIPOGLOS CICATRIZANTE POLVO DERMICO TALQUERA de 40 G",
+        "fsn": "HIPOGLOS CICATRIZANTE POLVO DERMICO TALQUERA de 40 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504521000221100",
+        "term": "HEPATO-TEC [TIOSULFATO DE SODIO 10 %] SOLUCION INYECTABLE FRASCO de 2 ML",
+        "fsn": "HEPATO-TEC [TIOSULFATO DE SODIO 10 %] SOLUCION INYECTABLE FRASCO de 2 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504371000221108",
+        "term": "GINKAN BALIARDA OVULO",
+        "fsn": "GINKAN BALIARDA OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504341000221103",
+        "term": "GINAL CENT CAPSULA BLANDA VAGINAL",
+        "fsn": "GINAL CENT CAPSULA BLANDA VAGINAL (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504311000221102",
+        "term": "GEMIPASMOL COMPRIMIDO",
+        "fsn": "GEMIPASMOL COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504301000221100",
+        "term": "GELOPLASMA [GELATINA FLUIDA MODIFICADA 3 G / 100 ML] SOLUCION INYECTABLE BOLSA de 500 ML",
+        "fsn": "GELOPLASMA [GELATINA FLUIDA MODIFICADA 3 G / 100 ML] SOLUCION INYECTABLE BOLSA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504261000221106",
+        "term": "GADO-TEC [GADOPENTETATO DE DIMEGLUMINA 469 MG/ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 15 ML",
+        "fsn": "GADO-TEC [GADOPENTETATO DE DIMEGLUMINA 469 MG/ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 15 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504131000221108",
+        "term": "FENOGYNOL OVULO",
+        "fsn": "FENOGYNOL OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504111000221100",
+        "term": "FARM X AEROSOL CUTANEO ENVASE de 170 ml",
+        "fsn": "FARM X AEROSOL CUTANEO ENVASE de 170 ml (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504101000221103",
+        "term": "FANGAN PLUS OVULO",
+        "fsn": "FANGAN PLUS OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "504031000221107",
+        "term": "ETILENDIAMINOTETRAMETIL FOSFATO-SAMARIO 153 (EDTMP-153 SM) [EDTMP (SM-153) 1,3 GBQ/ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 10 ML",
+        "fsn": "ETILENDIAMINOTETRAMETIL FOSFATO-SAMARIO 153 (EDTMP-153 SM) [EDTMP (SM-153) 1,3 GBQ/ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503921000221106",
+        "term": "EMPECID PIE CREMA DERMICA POMO de 15 G",
+        "fsn": "EMPECID PIE CREMA DERMICA POMO de 15 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503821000221100",
+        "term": "DOPA-TEC [TRODAT-1 60 MCG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "DOPA-TEC [TRODAT-1 60 MCG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503811000221105",
+        "term": "DOM POLIENZIM 200 GRAGEA",
+        "fsn": "DOM POLIENZIM 200 GRAGEA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503791000221106",
+        "term": "DIPEPTIVEN [L-ALANINA 8,2 G / 100 ML + L-GLUTAMINA 13,46 G / 100 ML] SOLUCION INYECTABLE FRASCO de 100 ML",
+        "fsn": "DIPEPTIVEN [L-ALANINA 8,2 G / 100 ML + L-GLUTAMINA 13,46 G / 100 ML] SOLUCION INYECTABLE FRASCO de 100 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503721000221109",
+        "term": "DIARIS CAPSULA DURA",
+        "fsn": "DIARIS CAPSULA DURA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503581000221104",
+        "term": "DIAGNOBAC [IODURO DE SODIO (NA131I) 25 MCI] SOLUCION ORAL FRASCO AMPOLLA de 10 ML",
+        "fsn": "DIAGNOBAC [IODURO DE SODIO (NA131I) 25 MCI] SOLUCION ORAL FRASCO AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503461000221105",
+        "term": "DAYAMINERAL COMPRIMIDO FILMTAB",
+        "fsn": "DAYAMINERAL COMPRIMIDO FILMTAB (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503451000221108",
+        "term": "DAPODER CAPSULA DURA",
+        "fsn": "DAPODER CAPSULA DURA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503391000221107",
+        "term": "CUSTOPLEX [TRIPTOFANO 2 MMOL/L + HISTIDINA 180 MMOL/L + HISTIDINA CLORHIDRATO 18 MMOL/L] SOLUCION INYECTABLE PARA INFUSION BOLSA de 2000 ML",
+        "fsn": "CUSTOPLEX [TRIPTOFANO 2 MMOL/L + HISTIDINA 180 MMOL/L + HISTIDINA CLORHIDRATO 18 MMOL/L] SOLUCION INYECTABLE PARA INFUSION BOLSA de 2000 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503381000221109",
+        "term": "CUSTOPLEX [TRIPTOFANO 2 MMOL/L + HISTIDINA 180 MMOL/L + HISTIDINA CLORHIDRATO 18 MMOL/L] SOLUCION INYECTABLE PARA INFUSION BOLSA de 1000 ML",
+        "fsn": "CUSTOPLEX [TRIPTOFANO 2 MMOL/L + HISTIDINA 180 MMOL/L + HISTIDINA CLORHIDRATO 18 MMOL/L] SOLUCION INYECTABLE PARA INFUSION BOLSA de 1000 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503371000221106",
+        "term": "CUSTODIOL SOLUCION PARA CARDIOPLEGIA Y CONSERVACION DE ORGANOS BOLSA de 2000 ML",
+        "fsn": "CUSTODIOL SOLUCION PARA CARDIOPLEGIA Y CONSERVACION DE ORGANOS BOLSA de 2000 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503361000221102",
+        "term": "CUSTODIOL SOLUCION PARA CARDIOPLEGIA Y CONSERVACION DE ORGANOS BOLSA de 1000 ML",
+        "fsn": "CUSTODIOL SOLUCION PARA CARDIOPLEGIA Y CONSERVACION DE ORGANOS BOLSA de 1000 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503351000221104",
+        "term": "CROMO RIVERO [CLORURO DE CROMO HEXAHIDRATO 2,05 MG / 100 ML] SOLUCION INYECTABLE AMPOLLA de 10 ML",
+        "fsn": "CROMO RIVERO [CLORURO DE CROMO HEXAHIDRATO 2,05 MG / 100 ML] SOLUCION INYECTABLE AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503341000221101",
+        "term": "CROMO KABI [CROMO 4 MCG / ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 50 ML",
+        "fsn": "CROMO KABI [CROMO 4 MCG / ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 50 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503301000221103",
+        "term": "COROPAR SOLUCION PARENTERAL DE GRAN VOLUMEN BOLSA de 500 ML",
+        "fsn": "COROPAR SOLUCION PARENTERAL DE GRAN VOLUMEN BOLSA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503191000221105",
+        "term": "COBRE RIVERO [SULFATO DE COBRE PENTAHIDRATO 157 MG / 100 ML] SOLUCION INYECTABLE AMPOLLA de 10 ML",
+        "fsn": "COBRE RIVERO [SULFATO DE COBRE PENTAHIDRATO 157 MG / 100 ML] SOLUCION INYECTABLE AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503181000221107",
+        "term": "COBRE KABI [SULFATO DE COBRE PENTAHIDRATO 1,57 MG / 1 ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 50 ML",
+        "fsn": "COBRE KABI [SULFATO DE COBRE PENTAHIDRATO 1,57 MG / 1 ML] SOLUCION INYECTABLE FRASCO AMPOLLA de 50 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503161000221100",
+        "term": "CLORURO ESTANNOSO RADIOFARMA [CLORURO ESTANNOSO DIHIDRATADO 5 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "CLORURO ESTANNOSO RADIOFARMA [CLORURO ESTANNOSO DIHIDRATADO 5 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503151000221102",
+        "term": "CLORURO DE TALIO (TI-201) [CLORURO DE TALIO (TI-201) 97 %] SOLUCION INYECTABLE FRASCO AMPOLLA de 2 ML",
+        "fsn": "CLORURO DE TALIO (TI-201) [CLORURO DE TALIO (TI-201) 97 %] SOLUCION INYECTABLE FRASCO AMPOLLA de 2 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503141000221104",
+        "term": "CLORURO DE POTASIO B. BRAUN 3 MG/ML EN GLUCOSA 5% [CLORURO DE POTASIO 3 G / L + GLUCOSA MONOHIDRATO 55 G / L] SOLUCION PARA INFUSION BOTELLA de 500 ML",
+        "fsn": "CLORURO DE POTASIO B. BRAUN 3 MG/ML EN GLUCOSA 5% [CLORURO DE POTASIO 3 G / L + GLUCOSA MONOHIDRATO 55 G / L] SOLUCION PARA INFUSION BOTELLA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503131000221106",
+        "term": "CLORURO DE POTASIO B. BRAUN 3 MG/ML EN FISIOLÓGICA 0,9% [CLORURO DE POTASIO 3 G / L + CLORURO DE SODIO 9 G / L] SOLUCION PARA INFUSION BOTELLA de 500 ML",
+        "fsn": "CLORURO DE POTASIO B. BRAUN 3 MG/ML EN FISIOLÓGICA 0,9% [CLORURO DE POTASIO 3 G / L + CLORURO DE SODIO 9 G / L] SOLUCION PARA INFUSION BOTELLA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503121000221108",
+        "term": "CLORURO DE POTASIO B. BRAUN 1,5 MG/ML EN GLUCOSA 5% [CLORURO DE POTASIO 1,5 G / L + GLUCOSA MONOHIDRATO 55 G / L] SOLUCION PARA INFUSION BOTELLA de 500 ML",
+        "fsn": "CLORURO DE POTASIO B. BRAUN 1,5 MG/ML EN GLUCOSA 5% [CLORURO DE POTASIO 1,5 G / L + GLUCOSA MONOHIDRATO 55 G / L] SOLUCION PARA INFUSION BOTELLA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503111000221103",
+        "term": "CLORURO DE POTASIO B. BRAUN 1,5 MG/ML EN FISIOLÓGICA 0,9% [CLORURO DE POTASIO 1,5 G / L + CLORURO DE SODIO 9 G / L] SOLUCION PARA INFUSION BOTELLA de 500 ML",
+        "fsn": "CLORURO DE POTASIO B. BRAUN 1,5 MG/ML EN FISIOLÓGICA 0,9% [CLORURO DE POTASIO 1,5 G / L + CLORURO DE SODIO 9 G / L] SOLUCION PARA INFUSION BOTELLA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "503051000221101",
+        "term": "CITRATO DE GALIO (GA-67) [CITRATO DE GALIO (67GA) 99 %] SOLUCION INYECTABLE FRASCO AMPOLLA de 2 ML",
+        "fsn": "CITRATO DE GALIO (GA-67) [CITRATO DE GALIO (67GA) 99 %] SOLUCION INYECTABLE FRASCO AMPOLLA de 2 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502991000221101",
+        "term": "CIPROVIT MAGNESICO GRANULADO ORAL SOBRE",
+        "fsn": "CIPROVIT MAGNESICO GRANULADO ORAL SOBRE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502941000221107",
+        "term": "CICATREX BIOTIC CREMA DERMICA ENVASE de 15 G",
+        "fsn": "CICATREX BIOTIC CREMA DERMICA ENVASE de 15 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502801000221102",
+        "term": "CAPSULAS DE IODURO DE SODIO (131I) CAPSULA",
+        "fsn": "CAPSULAS DE IODURO DE SODIO (131I) CAPSULA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502621000221105",
+        "term": "CALCIMAX MAGNESIO COMPRIMIDO",
+        "fsn": "CALCIMAX MAGNESIO COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502541000221102",
+        "term": "CAL-C-VITA [ACIDO ASCORBICO 1000 MG + VITAMINA D3 300 UI + CALCIO (COMO CARBONATO DE CALCIO) 250 MG + VITAMINA B6 15 MG] COMPRIMIDO EFERVESCENTE",
+        "fsn": "CAL-C-VITA [ACIDO ASCORBICO 1000 MG + VITAMINA D3 300 UI + CALCIO (COMO CARBONATO DE CALCIO) 250 MG + VITAMINA B6 15 MG] COMPRIMIDO EFERVESCENTE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502531000221109",
+        "term": "CAL-C-VITA FLUOR [CALCIO 250 MG + PIRIDOXINA 15 MG + ACIDO ASCORBICO 1000 MG + VITAMINA D2 300 UI] COMPRIMIDO EFERVESCENTE",
+        "fsn": "CAL-C-VITA FLUOR [CALCIO 250 MG + PIRIDOXINA 15 MG + ACIDO ASCORBICO 1000 MG + VITAMINA D2 300 UI] COMPRIMIDO EFERVESCENTE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502521000221106",
+        "term": "BUTIMERIN [NEOMICINA SULFATO ,15 G + PAPAINA 2 G + BUTIMERINA 30 G + BACITRACINA ,25 G] POLVO DERMICO FRASCO de 20 G",
+        "fsn": "BUTIMERIN [NEOMICINA SULFATO ,15 G + PAPAINA 2 G + BUTIMERINA 30 G + BACITRACINA ,25 G] POLVO DERMICO FRASCO de 20 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502511000221101",
+        "term": "BUTIMERIN [BUTIMERINA 15 G + BENCETONIO CLORURO ,75 G + DIOXIDO DE TITANIO 20 G] PASTA DERMICA POTE de 30 G",
+        "fsn": "BUTIMERIN [BUTIMERINA 15 G + BENCETONIO CLORURO ,75 G + DIOXIDO DE TITANIO 20 G] PASTA DERMICA POTE de 30 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502501000221104",
+        "term": "BRONCHO VAXOM [LISADO BACTERIANO LIOFILIZADO 7 MG / CAP] CAPSULA DURA",
+        "fsn": "BRONCHO VAXOM [LISADO BACTERIANO LIOFILIZADO 7 MG / CAP] CAPSULA DURA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502491000221109",
+        "term": "BRONCHO VAXOM [LISADO BACTERIANO LIOFILIZADO 3,5 MG / CAP] CAPSULA DURA",
+        "fsn": "BRONCHO VAXOM [LISADO BACTERIANO LIOFILIZADO 3,5 MG / CAP] CAPSULA DURA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502481000221106",
+        "term": "BRONCHO VAXOM [LISADO BACTERIANO LIOFILIZADO 20 MG / SOBRE] GRANULADO ORAL, SOBRE",
+        "fsn": "BRONCHO VAXOM [LISADO BACTERIANO LIOFILIZADO 20 MG / SOBRE] GRANULADO ORAL, SOBRE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502451000221101",
+        "term": "BONE - TEC [METILENDIFOSFONATO DE SODIO 10 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "BONE - TEC [METILENDIFOSFONATO DE SODIO 10 MG] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502421000221107",
+        "term": "BLAST OVULO",
+        "fsn": "BLAST OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502351000221105",
+        "term": "BIOL-PREO SOLUCION INYECTABLE AMPOLLA de 1 ML",
+        "fsn": "BIOL-PREO SOLUCION INYECTABLE AMPOLLA de 1 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502331000221101",
+        "term": "BIO GRIP PLUS COMPRIMIDO",
+        "fsn": "BIO GRIP PLUS COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502321000221104",
+        "term": "BILIO-TEC [MEBROFENIN 40 MG] POLVO LIOFILIZADO ESTERIL, APIROGENO Y NO RADIACTIVO FRASCO AMPOLLA",
+        "fsn": "BILIO-TEC [MEBROFENIN 40 MG] POLVO LIOFILIZADO ESTERIL, APIROGENO Y NO RADIACTIVO FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502291000221105",
+        "term": "BIL 13 COMPRIMIDO RECUBIERTO",
+        "fsn": "BIL 13 COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502231000221106",
+        "term": "BEROCCA PLUS COMPRIMIDO RECUBIERTO",
+        "fsn": "BEROCCA PLUS COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502221000221108",
+        "term": "BEROCCA PLUS COMPRIMIDO EFERVESCENTE",
+        "fsn": "BEROCCA PLUS COMPRIMIDO EFERVESCENTE (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502211000221103",
+        "term": "BERIPLEX P/N 500 [500 UI / AMP] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA",
+        "fsn": "BERIPLEX P/N 500 [500 UI / AMP] POLVO LIOFILIZADO PARA INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502171000221100",
+        "term": "BECOZYM NF SOLUCION INYECTABLE AMPOLLA de 2 ML",
+        "fsn": "BECOZYM NF SOLUCION INYECTABLE AMPOLLA de 2 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502051000221108",
+        "term": "ATOMO DESINFLAMANTE CLASICO CREMA DERMICA POTE de 220 G",
+        "fsn": "ATOMO DESINFLAMANTE CLASICO CREMA DERMICA POTE de 220 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502041000221106",
+        "term": "ATOMO DESINFLAMANTE CLASICO CREMA DERMICA POTE de 110 G",
+        "fsn": "ATOMO DESINFLAMANTE CLASICO CREMA DERMICA POTE de 110 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502031000221104",
+        "term": "ATOMO DESINFLAMANTE CLASICO CREMA DERMICA POMO de 40 G",
+        "fsn": "ATOMO DESINFLAMANTE CLASICO CREMA DERMICA POMO de 40 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502021000221102",
+        "term": "ATOMO DESINFLAMANTE CLASICO CREMA DERMICA ENVASE MONODOSIS de 10 G",
+        "fsn": "ATOMO DESINFLAMANTE CLASICO CREMA DERMICA ENVASE MONODOSIS de 10 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "502011000221107",
+        "term": "ATOMO DESINFLAMANTE AEROSOL envase de 125 G",
+        "fsn": "ATOMO DESINFLAMANTE AEROSOL envase de 125 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501911000221100",
+        "term": "ANUSOL SUPOSITORIO",
+        "fsn": "ANUSOL SUPOSITORIO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501901000221103",
+        "term": "ANUSOL - HC SUPOSITORIO",
+        "fsn": "ANUSOL - HC SUPOSITORIO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501891000221102",
+        "term": "ANUSOL - A UNGÜENTO RECTAL POMO de 10 G",
+        "fsn": "ANUSOL - A UNGÜENTO RECTAL POMO de 10 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501841000221108",
+        "term": "AMINOVEN INFANT 10 % SOLUCION FRASCO de 250 ML",
+        "fsn": "AMINOVEN INFANT 10 % SOLUCION FRASCO de 250 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501831000221101",
+        "term": "AMINOVEN 15% SOLUCION INYECTABLE FRASCO de 500 ML",
+        "fsn": "AMINOVEN 15% SOLUCION INYECTABLE FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501821000221104",
+        "term": "AMINOVEN 10 % SOLUCION INYECTABLE FRASCO de 500 ML",
+        "fsn": "AMINOVEN 10 % SOLUCION INYECTABLE FRASCO de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501811000221109",
+        "term": "AMINOPLASMAL 10% B.BRAUN SOLUCION PARENTERAL DE GRAN VOLUMEN BOTELLA de 500 ML",
+        "fsn": "AMINOPLASMAL 10% B.BRAUN SOLUCION PARENTERAL DE GRAN VOLUMEN BOTELLA de 500 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501761000221100",
+        "term": "ADHESOL BIOL [ESENCIA DE TREMENTINA ,5 G / 100 G + RESINA DE COLOFONIA 37 G / 100 G] SOLUCION TOPICA FRASCO de 92 ML",
+        "fsn": "ADHESOL BIOL [ESENCIA DE TREMENTINA ,5 G / 100 G + RESINA DE COLOFONIA 37 G / 100 G] SOLUCION TOPICA FRASCO de 92 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501751000221102",
+        "term": "ADHESOL BIOL [ESENCIA DE TREMENTINA ,5 G / 100 G + RESINA DE COLOFONIA 37 G / 100 G] SOLUCION TOPICA FRASCO de 30 ML",
+        "fsn": "ADHESOL BIOL [ESENCIA DE TREMENTINA ,5 G / 100 G + RESINA DE COLOFONIA 37 G / 100 G] SOLUCION TOPICA FRASCO de 30 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501721000221108",
+        "term": "ADERMICINA CREMA DERMICA POMO de 30 G",
+        "fsn": "ADERMICINA CREMA DERMICA POMO de 30 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501711000221103",
+        "term": "ADERMICINA A CREMA DERMICA POMO de 30 G",
+        "fsn": "ADERMICINA A CREMA DERMICA POMO de 30 G (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501631000221100",
+        "term": "18F-FLT [3 -DEOXI-(18F)-FLUOROTIMIDINA 290 MCI] SOLUCION INYECTABLE FRASCO AMPOLLA de 10 ML",
+        "fsn": "18F-FLT [3 -DEOXI-(18F)-FLUOROTIMIDINA 290 MCI] SOLUCION INYECTABLE FRASCO AMPOLLA de 10 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501621000221103",
+        "term": "18F-COLINA [FLUOROMETIL-(18F)-DIMETIL-2-HIDROXIETILAMONIO 446 MCI] SOLUCION INYECTABLE FRASCO AMPOLLA de 20 ML",
+        "fsn": "18F-COLINA [FLUOROMETIL-(18F)-DIMETIL-2-HIDROXIETILAMONIO 446 MCI] SOLUCION INYECTABLE FRASCO AMPOLLA de 20 ML (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "501611000221108",
+        "term": "18F FDG RADIOFARMA [2-DESOXI-2-(18F)FLUOR-D-GLUCOSA 1,8 MCG / ML] SOLUCION INYECTABLE FRASCO AMPOLLA",
+        "fsn": "18F FDG RADIOFARMA [2-DESOXI-2-(18F)FLUOR-D-GLUCOSA 1,8 MCG / ML] SOLUCION INYECTABLE FRASCO AMPOLLA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "497261000221107",
+        "term": "PENTOL OVULO",
+        "fsn": "PENTOL OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "497251000221105",
+        "term": "producto que contiene antibiótico y antimicótico en forma farmacéutica para administración vaginal",
+        "fsn": "producto que contiene antibiótico y antimicótico en forma farmacéutica para administración vaginal (producto)",
+        "semanticTag": "producto"
+    },
+    {
+        "conceptId": "497241000221108",
+        "term": "producto para tratamiento de urolitiasis",
+        "fsn": "producto para tratamiento de urolitiasis (producto)",
+        "semanticTag": "producto"
+    },
+    {
+        "conceptId": "494431000221109",
+        "term": "MAILEN CAPSULA BLANDA VAGINAL",
+        "fsn": "MAILEN CAPSULA BLANDA VAGINAL (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "494411000221101",
+        "term": "producto con antibiótico, antimicótico y corticoesteroide en forma farmacéutica vaginal",
+        "fsn": "producto que contiene antibiótico, antimicótico y corticoesteroide en forma farmacéutica para administración vaginal (producto)",
+        "semanticTag": "producto"
+    },
+    {
+        "conceptId": "494401000221104",
+        "term": "producto con antibiótico, antimicótico y Centella asiática en forma farmacéutica vaginal",
+        "fsn": "producto que contiene antibiótico, antimicótico y Centella asiática en forma farmacéutica para administración vaginal (producto)",
+        "semanticTag": "producto"
+    },
+    {
+        "conceptId": "494391000221101",
+        "term": "producto medicinal que actúa como cicatrizante",
+        "fsn": "producto medicinal que actúa como cicatrizante (producto)",
+        "semanticTag": "producto"
+    },
+    {
+        "conceptId": "494381000221104",
+        "term": "producto con vitaminas y aminoácidos",
+        "fsn": "producto con vitaminas y aminoácidos (producto)",
+        "semanticTag": "producto"
+    },
+    {
+        "conceptId": "423661000221106",
+        "term": "TETRALGIN [CAFEINA ANHIDRA 100 MG + METOCLOPRAMIDA CLORHIDRATO 7,5 MG + CLORFENIRAMINA MALEATO 1 MG + ERGOTAMINA TARTRATO 1 MG + DIPIRONA 400 MG] COMPRIMIDO RECUBIERTO",
+        "fsn": "TETRALGIN [CAFEINA ANHIDRA 100 MG + METOCLOPRAMIDA CLORHIDRATO 7,5 MG + CLORFENIRAMINA MALEATO 1 MG + ERGOTAMINA TARTRATO 1 MG + DIPIRONA 400 MG] COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "415881000221109",
+        "term": "TETRALGIN NOVO [CAFEINA ANHIDRA 100 MG + DOMPERIDONA 7 MG + ERGOTAMINA TARTRATO 1 MG + MALEATO DE CLORFENIRAMINA 1 MG + DIPIRONA 400 MG] COMPRIMIDO RECUBIERTO",
+        "fsn": "TETRALGIN NOVO [CAFEINA ANHIDRA 100 MG + DOMPERIDONA 7 MG + ERGOTAMINA TARTRATO 1 MG + MALEATO DE CLORFENIRAMINA 1 MG + DIPIRONA 400 MG] COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "374641000221102",
+        "term": "ANEMIDOX INYECTABLE ampolla II (vitaminas complejo B) - sólo disponible en multimepaque",
+        "fsn": "ANEMIDOX INYECTABLE ampolla II (vitaminas complejo B) - sólo disponible en multimepaque (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "366841000221104",
+        "term": "FALGOS [CAFEINA 33 MG + ASPIRINA 227 MG + PARACETAMOL 194 MG + HIDROXIDO DE ALUMINIO 25 MG + HIDROXIDO DE MAGNESIO 50 MG] COMPRIMIDO",
+        "fsn": "FALGOS [CAFEINA 33 MG + ASPIRINA 227 MG + PARACETAMOL 194 MG + HIDROXIDO DE ALUMINIO 25 MG + HIDROXIDO DE MAGNESIO 50 MG] COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "364111000221103",
+        "term": "RESAQUIT [CAFEINA ANHIDRA 33 MG + PARACETAMOL 194 MG + HIDROXIDO DE ALUMINIO 25 MG + HIDROXIDO DE MAGNESIO 50 MG + ACIDO ACETIL SALICILICO 90% 252,22 MG] COMPRIMIDO BICAPA",
+        "fsn": "RESAQUIT [CAFEINA ANHIDRA 33 MG + PARACETAMOL 194 MG + HIDROXIDO DE ALUMINIO 25 MG + HIDROXIDO DE MAGNESIO 50 MG + ACIDO ACETIL SALICILICO 90% 252,22 MG] COMPRIMIDO BICAPA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "211061000221109",
+        "term": "ROWATINEX [ANETOL 4 MG + PINENO 31 MG + CINEOL 3 MG + FENCHONA 4 MG + CANFENO 15 MG + BORNEOL 10 MG] CAPSULA",
+        "fsn": "ROWATINEX [ANETOL 4 MG + PINENO 31 MG + CINEOL 3 MG + FENCHONA 4 MG + CANFENO 15 MG + BORNEOL 10 MG] CAPSULA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "192941000221102",
+        "term": "ANUSOL DUO S SUPOSITORIO",
+        "fsn": "ANUSOL DUO S SUPOSITORIO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "187921000221107",
+        "term": "POLI-B-FUERTE COMPRIMIDO RECUBIERTO",
+        "fsn": "POLI-B-FUERTE COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "183331000221100",
+        "term": "FALGOS (Gerardo Ramon y CIA) [CAFEINA 33 MG + ASPIRINA 227 MG + PARACETAMOL 194 MG + HIDROXIDO DE ALUMINIO 25 MG + HIDROXIDO DE MAGNESIO 50 MG] COMPRIMIDO",
+        "fsn": "FALGOS (Gerardo Ramon y CIA) [CAFEINA 33 MG + ASPIRINA 227 MG + PARACETAMOL 194 MG + HIDROXIDO DE ALUMINIO 25 MG + HIDROXIDO DE MAGNESIO 50 MG] COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "174351000221103",
+        "term": "VAGISAN COMPUESTO [DIHIDROESTREPTOMICINA 25 MG + TIROTRICINA ,5 MG + NITROFURAZONA 10 MG + CLOTRIMAZOL 200 MG + ACIDO BORICO 170 MG] OVULO",
+        "fsn": "VAGISAN COMPUESTO [DIHIDROESTREPTOMICINA 25 MG + TIROTRICINA ,5 MG + NITROFURAZONA 10 MG + CLOTRIMAZOL 200 MG + ACIDO BORICO 170 MG] OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "153661000221106",
+        "term": "VAGILEN [NISTATINA 100000 UI + METRONIDAZOL 500 MG + LIDOCAINA 10 MG + DEXAMETASONA ,2 MG + NEOMICINA SULFATO 5 MG] OVULO",
+        "fsn": "VAGILEN [NISTATINA 100000 UI + METRONIDAZOL 500 MG + LIDOCAINA 10 MG + DEXAMETASONA ,2 MG + NEOMICINA SULFATO 5 MG] OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "142791000221104",
+        "term": "FLEXICAMIN B12 [CARISOPRODOL 250 MG + PIROXICAM 10 MG + HIDROXOCOBALAMINA 2,5 MG + DEXAMETASONA 1 MG + PIRIDOXINA 150 MG] COMPRIMIDO RECUBIERTO",
+        "fsn": "FLEXICAMIN B12 [CARISOPRODOL 250 MG + PIROXICAM 10 MG + HIDROXOCOBALAMINA 2,5 MG + DEXAMETASONA 1 MG + PIRIDOXINA 150 MG] COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "135071000221109",
+        "term": "SOLOCALM PLUS [CARISOPRODOL 250 MG + PIROXICAM 10 MG + HIDROXOCOBALAMINA 2,5 MG + DEXAMETASONA 1 MG + PIRIDOXINA CLORHIDRATO 150 MG] COMPRIMIDO RECUBIERTO",
+        "fsn": "SOLOCALM PLUS [CARISOPRODOL 250 MG + PIROXICAM 10 MG + HIDROXOCOBALAMINA 2,5 MG + DEXAMETASONA 1 MG + PIRIDOXINA CLORHIDRATO 150 MG] COMPRIMIDO RECUBIERTO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "121261000221106",
+        "term": "BECOZYM GRAGEA",
+        "fsn": "BECOZYM GRAGEA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "118891000221102",
+        "term": "ESTREPTOCARBOCAFTIAZOL [DIHIDROESTREPTOMICINA 39,93 MG + FTALILSULFATIAZOL 500 MG + SIMETICONA 20 MG + CARBON ACTIVADO 200 MG + MENADIONA ,5 MG] COMPRIMIDO",
+        "fsn": "ESTREPTOCARBOCAFTIAZOL [DIHIDROESTREPTOMICINA 39,93 MG + FTALILSULFATIAZOL 500 MG + SIMETICONA 20 MG + CARBON ACTIVADO 200 MG + MENADIONA ,5 MG] COMPRIMIDO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "118251000221106",
+        "term": "NAXO-TV [NISTATINA 100000 UI + METRONIDAZOL 500 MG + LIDOCAINA 10 MG + DEXAMETASONA 200 MCG + NEOMICINA SULFATO 5 MG] OVULO",
+        "fsn": "NAXO-TV [NISTATINA 100000 UI + METRONIDAZOL 500 MG + LIDOCAINA 10 MG + DEXAMETASONA 200 MCG + NEOMICINA SULFATO 5 MG] OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "104951000221105",
+        "term": "LINFOL ÓVULOS [NISTATINA 100000 UI + METRONIDAZOL 500 MG + LIDOCAINA 10 MG + DEXAMETASONA ,2 MG + NEOMICINA 5 MG] OVULO",
+        "fsn": "LINFOL ÓVULOS [NISTATINA 100000 UI + METRONIDAZOL 500 MG + LIDOCAINA 10 MG + DEXAMETASONA ,2 MG + NEOMICINA 5 MG] OVULO (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    },
+    {
+        "conceptId": "101101000221107",
+        "term": "ESCLEROVITAN ANTIOXIDANTE CAPSULA DURA",
+        "fsn": "ESCLEROVITAN ANTIOXIDANTE CAPSULA DURA (fármaco de uso clínico comercial)",
+        "semanticTag": "fármaco de uso clínico comercial"
+    }
+]
