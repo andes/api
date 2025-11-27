@@ -67,7 +67,6 @@ export async function validar(documento: string, sexo: string) {
             ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
             if (!ciudadanoRenaper.cuil || ciudadanoRenaper.cuil === '0') {
                 ciudadanoRenaper.cuil = generarCUIL(documento, sexo);
-                ciudadanoRenaper.cuil = formatearCUIL(ciudadanoRenaper.cuil);
             }
             ciudadanoRenaper.validateAt = new Date();
             if (identidadSinAcentos(ciudadanoRenaper)) {
