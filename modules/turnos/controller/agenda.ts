@@ -1552,6 +1552,9 @@ export function agendaNueva(data, clon, req) {
                 turno.usuarioDacion = undefined;
                 turno.profesional = undefined;
                 turno.horaAsistencia = undefined;
+                turno.motivoSuspension = undefined;
+                turno.avisoSuspension = undefined;
+                turno.motivoConsulta = undefined;
             });
         } else {
             bloque.turnos = [];
