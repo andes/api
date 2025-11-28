@@ -42,7 +42,7 @@ export async function pacientePuco(documento, sexo) {
                     const codigoPuco = await Constantes.findOne({ nombre: 'codigoPuco' });
                     resultOS[i].nombre = obraSocial.nombre;
                     resultOS[i].financiador = obraSocial.nombre;
-                    if (obraSocial.codigoPuco === parseInt(codigoPuco.key, 10)) {
+                    if (codigoPuco && obraSocial.codigoPuco === parseInt(codigoPuco.key, 10)) {
                         resultOS[i]['numeroAfiliado'] = osPuco[i].numeroAfiliado;
                     }
                 }
