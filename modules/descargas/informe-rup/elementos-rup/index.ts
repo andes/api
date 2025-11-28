@@ -28,6 +28,7 @@ import { InformeEpicrisisComponent } from './informe-epicrisis.component';
 import { ChecklistComponent } from './checklist.component';
 import { OdontogramaRefsetComponent } from './odontograma.component';
 import { ProcedimientoDeEnfermeriaComponent } from './procedicimiento-enfermeria.component';
+import { ColposcopiaComponent } from './colposcopia.component';
 /**
  * [TODO] ProcedimientoDeEnfermeriaComponent
  * [TODO] OdontogramaRefsetComponent
@@ -108,5 +109,6 @@ export const ElementosRUPHTML = {
     AdjuntarDocumentoComponent,
     ElementoDeRegistroComponent: SeccionComponent,
     InformeEpicrisisComponent,
-    RecetaMedicaComponent
+    RecetaMedicaComponent,
+    ColposcopiaComponent
 };
