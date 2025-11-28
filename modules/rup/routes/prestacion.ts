@@ -676,7 +676,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 });
                 break;
             case 'registros':
-                if (req.body.registros) {
+                if (req.body.registros && data.estadoActual.tipo !== 'validada') {
                     data.ejecucion.registros = req.body.registros;
 
                     if (req.body.solicitud) {
@@ -685,6 +685,8 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if (req.body.paciente) {
                         data.paciente = req.body.paciente;
                     }
+                } else {
+                    return next('Esta prestación ya ha sido validada.');
                 }
                 break;
             case 'informeIngreso':
