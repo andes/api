@@ -535,7 +535,7 @@ export async function create(req) {
         medicamento: req.body.medicamento,
         idPrestacion: req.body.idPrestacion,
         idRegistro: req.body.idRegistro || req.body.idPrestacion,
-        fechaRegistro: null,
+        fechaRegistro: req.body.fechaRegistro,
         fechaPrestacion: null,
         paciente: null,
         profesional: null,
