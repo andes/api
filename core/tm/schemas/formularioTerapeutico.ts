@@ -2,15 +2,15 @@ import { model, Schema } from 'mongoose';
 
 
 export const formularioTerapeuticoSchema = new Schema({
-    sistema: {
+    ftpSistema: {
         _id: { type: Schema.Types.ObjectId },
         nombre: String
     },
-    funcion: {
+    ftpFuncion: {
         _id: { type: Schema.Types.ObjectId },
         nombre: String
     },
-    grupoFarmacologico: {
+    ftpGrupoFarmacologico: {
         _id: { type: Schema.Types.ObjectId },
         nombre: String
     },
