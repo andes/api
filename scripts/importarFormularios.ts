@@ -3,37 +3,37 @@ import { FtpFuncion } from '../../api/core/tm/schemas/ftpFuncion';
 import { FtpGrupoFarmacologico } from '../../api/core/tm/schemas/ftpGrupoFarmacologico';
 import { FormularioTerapeutico } from '../../api/core/tm/schemas/formularioTerapeutico';
 
-const baseFarmacias = '../api/scripts/baseFarmacia.json';
+const baseFarmacologico = '../api/scripts/baseFarmacologico.json';
 const fsp = require('fs/promises');
 
 
 async function run(done) {
     try {
 
-        const dataFarmacia = await fsp.readFile(baseFarmacias, { encoding: 'utf8' });
+        const dataFarmacia = await fsp.readFile(baseFarmacologico, { encoding: 'utf8' });
         const dataFarmaciaArray = JSON.parse(dataFarmacia) as any[];
 
         for (const item of dataFarmaciaArray) {
-            let sistema = await FtpSistema.findOne({ nombre: item.sistema });
-            if (!sistema) {
-                sistema = await FtpSistema.create({ nombre: item.sistema });
+            let ftpSistema = await FtpSistema.findOne({ nombre: item.sistema });
+            if (!ftpSistema) {
+                ftpSistema = await FtpSistema.create({ nombre: item.sistema });
             }
 
-            let funcion = await FtpFuncion.findOne({ nombre: item.funcion });
-            if (!funcion) {
-                funcion = await FtpFuncion.create({ nombre: item.funcion });
+            let ftpFuncion = await FtpFuncion.findOne({ nombre: item.funcion });
+            if (!ftpFuncion) {
+                ftpFuncion = await FtpFuncion.create({ nombre: item.funcion });
             }
 
-            let grupo = await FtpGrupoFarmacologico.findOne({ nombre: item.grupoFarmacologico });
-            if (!grupo) {
-                grupo = await FtpGrupoFarmacologico.create({ nombre: item.grupoFarmacologico });
+            let ftpGrupoFarmacologico = await FtpGrupoFarmacologico.findOne({ nombre: item.grupoFarmacologico });
+            if (!ftpGrupoFarmacologico) {
+                ftpGrupoFarmacologico = await FtpGrupoFarmacologico.create({ nombre: item.grupoFarmacologico });
             }
 
             // Crear el formulario terapéutico
             await FormularioTerapeutico.create({
-                sistema: sistema.toObject(),
-                funcion: funcion.toObject(),
-                grupoFarmacologico: grupo.toObject().nombre ? grupo.toObject() : null,
+                ftpSistema: ftpSistema.toObject(),
+                ftpFuncion: ftpFuncion.toObject(),
+                ftpGrupoFarmacologico: ftpGrupoFarmacologico.toObject().nombre ? ftpGrupoFarmacologico.toObject() : null,
                 nivelComplejidad: item.nivelComplejidad,
                 especialidad: item.especialidad,
                 requisitos: item.requisitos,
