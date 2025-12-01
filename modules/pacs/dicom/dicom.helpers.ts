@@ -10,22 +10,22 @@ export const toISOIR100 = (text: string) => {
     return latin1Buffer.toString('latin1');
 };
 
-export const normalizeShortString = (value?: string, reverse = false): string => {
+export const normalizeShortString = (value?: string, reverse = false, maxLength = DICOM_SHORT_STRING_MAX_LENGTH): string => {
     if (!value) {
         return '';
     }
 
     const trimmed = value.trim().replace(/\s+/g, ' ');
 
-    if (trimmed.length <= DICOM_SHORT_STRING_MAX_LENGTH) {
+    if (trimmed.length <= maxLength) {
         return trimmed;
     }
 
     if (reverse) {
-        return trimmed.slice(-DICOM_SHORT_STRING_MAX_LENGTH);
+        return trimmed.slice(-maxLength);
     }
 
-    return trimmed.substring(0, DICOM_SHORT_STRING_MAX_LENGTH);
+    return trimmed.substring(0, maxLength);
 };
 
 export const buildDicomName = (apellido?: string, nombre?: string) => {
@@ -54,10 +54,11 @@ export const formatDicomTime = (fecha?: string | Date ) => {
 export const mapDicomGender = (sexo?: string) => sexo === 'masculino' ? 'M' : 'F';
 
 export function DICOMPaciente(config: IPacsConfig, paciente: any): IDicomPatientData {
-    const pacienteIDtrimmed = normalizeShortString(String(paciente.id),false);
-    const pacienteIdDicom = (config.featureFlags?.usoIdDNI && paciente.documento)
-        ? paciente.documento
-        : String(paciente.id);
+    const pacienteId = String(paciente.id);
+    const pacienteIDtrimmed = normalizeShortString(pacienteId, true, 15);
+    const pacienteIdDicom = (config.featureFlags?.usoIdDNI)
+        ? (paciente.documento || pacienteIDtrimmed)
+        : pacienteId;
     const id = pacienteIdDicom;
     const dicomName = buildDicomName(paciente.apellido, paciente.nombre);
     const documento = paciente.documento;
