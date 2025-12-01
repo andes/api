@@ -10,9 +10,9 @@ class FormularioTerapeuticoResource extends ResourceBase {
     resourceName = 'formularioTerapeutico';
     keyId = '_id';
     searchFields = {
-        sistema: MongoQuery.partialString,
-        funcion: MongoQuery.partialString,
-        grupoFarmacologico: MongoQuery.partialString,
+        ftpSistema: MongoQuery.partialString,
+        ftpFuncion: MongoQuery.partialString,
+        ftpGrupoFarmacologico: MongoQuery.partialString,
         nivelComplejidad: MongoQuery.partialString,
         especialidad: MongoQuery.partialString,
         carroEmergencia: MongoQuery.partialString,
