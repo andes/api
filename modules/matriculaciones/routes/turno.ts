@@ -4,7 +4,7 @@ import { Profesional } from '../../../core/tm/schemas/profesional';
 import * as turno from '../schemas/turno';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { userScheduler } from '../../../config.private';
-import { matriculacionLog } from './matriculaciones.log';
+import { matriculacionLog } from '../controller/matriculaciones.log';
 import moment = require('moment');
 const router = express.Router();
 

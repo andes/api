@@ -3,7 +3,7 @@ import * as express from 'express';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
-import { matriculacionLog } from './matriculaciones.log';
+import { matriculacionLog } from '../controller/matriculaciones.log';
 const router = express.Router();
 
 router.post('/turnoSolicitados', async (req, res, next) => {
