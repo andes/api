@@ -2,6 +2,7 @@ import { HTMLComponent } from '../model/html-component.class';
 import * as moment from 'moment';
 import { registroToHTML } from './utils/registro-to-html';
 import { InformeRupFirma } from './informe-firma';
+import { Receta } from '../../recetas/receta-schema';
 
 export class InformeRupBody extends HTMLComponent {
     template = `
@@ -36,6 +37,16 @@ export class InformeRupBody extends HTMLComponent {
                             </h6>
                         {{/if}}
                     </div>
+                    {{#if estadoReceta}}
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
+                            Estado Receta
+                        </h6>
+                        <h6>
+                            {{ estadoReceta }}
+                        </h6>
+                    </div>
+                    {{/if}}
                     <div class="contenedor-bloque-texto">
                         <h6 class="bolder">
                             Inicio de Prestación
@@ -68,6 +79,7 @@ export class InformeRupBody extends HTMLComponent {
         const fechaValidacion = this.getFechaEstado('validada');
         const fechaPrestacion = this.prestacion.estados.find(estado => { return estado.tipo === 'ejecucion'; }).createdAt;
         const esValidada = (fechaValidacion !== null);
+        const estadoReceta = await this.getEstadoReceta();
 
         if (this.registroId) {
             const registro = this.prestacion.findRegistroById(this.registroId);
@@ -95,6 +107,7 @@ export class InformeRupBody extends HTMLComponent {
             titulo: this.prestacion.solicitud.tipoPrestacion.term,
             registros,
             esValidada,
+            estadoReceta,
             firmaHTML
         };
     }
@@ -129,6 +142,34 @@ export class InformeRupBody extends HTMLComponent {
 
     validada() {
         return (this.prestacion.estadoActual.tipo === 'validada');
+    }
+
+    async getEstadoReceta() {
+        const tieneReceta = this.prestacion.ejecucion.registros.some(registro =>
+            registro.concepto?.conceptId === '182836005' || // Prescripción de medicamento
+            registro.valor?.medicamentos?.length > 0
+        );
+
+        if (!tieneReceta) {
+            return null;
+        }
+
+        try {
+            const receta: any = await Receta.findOne({
+                idPrestacion: this.prestacion._id.toString()
+            }).sort({ createdAt: -1 });
+
+            if (receta && receta.estadoActual && receta.estadoActual.tipo) {
+                return receta.estadoActual.tipo
+                    .split('-')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+            }
+
+            return null;
+        } catch (error) {
+            return null;
+        }
     }
 
 }
