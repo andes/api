@@ -4,6 +4,7 @@ import { Profesional } from '../../../core/tm/schemas/profesional';
 import * as turno from '../schemas/turno';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { userScheduler } from '../../../config.private';
+import { matriculacionLog } from './matriculaciones.log';
 import moment = require('moment');
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.patch('/turnos/save/:turnoId', Auth.authenticate(), async (request, respo
         await turnoFound.save();
         response.status(201).json(turnoFound);
     } catch (err) {
+        matriculacionLog.error('matriculaciones:turno', { turno: request.params.turnoId }, err);
         return next(err);
     }
 });
@@ -57,6 +59,7 @@ router.post('/turnos/:tipo/:profesionalId/', async (req, res, next) => {
             return next('El horario seleccionado ya no se encuentra disponible.');
         }
     } catch (err) {
+        matriculacionLog.error('matriculaciones:profesionalId:turno', req.body, err);
         return next(err);
     }
 });

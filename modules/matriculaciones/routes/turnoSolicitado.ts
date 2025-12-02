@@ -3,6 +3,7 @@ import * as express from 'express';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
+import { matriculacionLog } from './matriculaciones.log';
 const router = express.Router();
 
 router.post('/turnoSolicitados', async (req, res, next) => {
@@ -19,6 +20,7 @@ router.post('/turnoSolicitados', async (req, res, next) => {
         const saved = await newProfesional.save();
         res.json(saved);
     } catch (err) {
+        matriculacionLog.error('matriculaciones:turnoSolicitados', req.body, err);
         return next('error-turno');
     }
 });
