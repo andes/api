@@ -211,6 +211,8 @@ export async function getLiberadosPaciente(req) {
                 turno.bloque_id = elem.dataTurno.idBloque;
                 turno.organizacion = elem.dataTurno.turno.updatedBy.organizacion;
                 turno.profesionales = elem.dataTurno.profesionales;
+                turno.createdAt = elem.createdAt;
+                turno.createdBy = elem.createdBy;
                 turno.estado = 'liberado';
                 turnos.push(turno);
             });
