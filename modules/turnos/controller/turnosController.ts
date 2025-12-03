@@ -234,27 +234,35 @@ export async function getLiberadosPaciente(req) {
  * @returns
  */
 export async function actualizarCarpeta(req: any, res: any, next: any, paciente: any, carpetas) {
-    const carpetasAux = (carpetas && carpetas.length > 0) ? (carpetas[0] as any).carpetaEfectores : [];
+    const carpetasAux = (carpetas && carpetas.length > 0)
+        ? (carpetas[0] as any).carpetaEfectores || []
+        : [];
+
     if (paciente) {
-        if (paciente.carpetaEfectores.length) {
-            if (carpetasAux.length < paciente.carpetaEfectores.length) {
-                req.body.carpetaEfectores = paciente.carpetaEfectores;
+        const carpetasPaciente = Array.isArray(paciente.carpetaEfectores)
+            ? paciente.carpetaEfectores
+            : [];
+
+        if (carpetasPaciente.length > 0) {
+            if (carpetasAux.length < carpetasPaciente.length) {
+                req.body.carpetaEfectores = carpetasPaciente;
             } else {
-                if (carpetasAux) {
+                if (carpetasAux && carpetasAux.length > 0) {
                     req.body.carpetaEfectores = carpetasAux;
                 }
             }
         } else {
-            if (carpetas.length) {
+            if (carpetasAux.length > 0) {
                 req.body.carpetaEfectores = carpetasAux;
             }
         }
+
         const repetida = await checkCarpeta(req);
         if (!repetida) {
             paciente.carpetaEfectores = req.body.carpetaEfectores;
             await PacienteCtr.update(paciente.id, paciente, req);
         } else {
-            return next('El nÚmero de carpeta ya existe');
+            return next('El número de carpeta ya existe');
         }
     }
 }
