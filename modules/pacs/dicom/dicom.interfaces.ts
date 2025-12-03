@@ -1,4 +1,5 @@
 export const DICOM_SHORT_STRING_MAX_LENGTH = 16;
+export const DICOM_LONG_STRING_MAX_LENGTH = 64;
 
 export interface IDicomPatientData {
     id: string;

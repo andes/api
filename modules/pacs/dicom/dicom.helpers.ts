@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import { IPrestacion } from '../../rup/prestaciones.interface';
 import { IPacsConfig } from '../pacs-config.schema';
-import { IDicomPatientData, DICOM_SHORT_STRING_MAX_LENGTH, IDicomPrestacionData, IDicomInformeData } from './dicom.interfaces';
+import { IDicomPatientData, DICOM_SHORT_STRING_MAX_LENGTH, DICOM_LONG_STRING_MAX_LENGTH, IDicomPrestacionData, IDicomInformeData } from './dicom.interfaces';
 import { constant } from 'async';
 
 export const toISOIR100 = (text: string) => {
@@ -14,27 +14,27 @@ export const normalizeShortString = (value?: string, reverse = false, maxLength 
     if (!value) {
         return '';
     }
-
     const trimmed = value.trim().replace(/\s+/g, ' ');
-
     if (trimmed.length <= maxLength) {
         return trimmed;
     }
-
     if (reverse) {
         return trimmed.slice(-maxLength);
     }
-
     return trimmed.substring(0, maxLength);
 };
 
 export const buildDicomName = (apellido?: string, nombre?: string) => {
-    const normalizedApellido = normalizeShortString(apellido);
-    const normalizedNombre = normalizeShortString(nombre);
+    const normalizedApellido = normalizeShortString(apellido, false, DICOM_LONG_STRING_MAX_LENGTH);
+    const normalizedNombre = normalizeShortString(nombre, false, DICOM_LONG_STRING_MAX_LENGTH);
 
-    const dicomNameRaw = `${normalizedApellido}^${normalizedNombre}`;
-    const truncatedDicomName = dicomNameRaw.substring(0, DICOM_SHORT_STRING_MAX_LENGTH);
-    return toISOIR100(truncatedDicomName);
+    const dicomNameRaw = normalizeShortString(
+        `${normalizedApellido}^${normalizedNombre}`,
+        false,
+        DICOM_LONG_STRING_MAX_LENGTH
+    );
+
+    return toISOIR100(dicomNameRaw);
 };
 
 export const formatDicomDate = (fecha?: string | Date) => {
