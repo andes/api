@@ -1,3 +1,10 @@
+# [5.139.0](https://github.com/andes/api/compare/v5.138.2...v5.139.0) (2025-12-03)
+
+
+### Features
+
+* **citas:** Mejoras job actualización de turnos restantes ([#2127](https://github.com/andes/api/issues/2127)) ([fb63d39](https://github.com/andes/api/commit/fb63d3948c7e0b49012c65721ab3256bd9323959))
+
 ## [5.138.2](https://github.com/andes/api/compare/v5.138.1...v5.138.2) (2025-11-19)
 
 
