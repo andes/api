@@ -1,4 +1,3 @@
-import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Insumo } from './insumos-schema';
@@ -9,7 +8,7 @@ class InsumosResource extends ResourceBase {
     middlewares = [Auth.authenticate()];
     searchFileds = {
         insumo: MongoQuery.partialString,
-        tipo: MongoQuery.equalMatch,
+        tipo: MongoQuery.inArray,
         requiereEspecificacion: MongoQuery.equalMatch,
     };
 }
@@ -17,4 +16,3 @@ class InsumosResource extends ResourceBase {
 
 export const InsumosCtr = new InsumosResource({});
 export const InsumosRouter = InsumosCtr.makeRoutes();
-
