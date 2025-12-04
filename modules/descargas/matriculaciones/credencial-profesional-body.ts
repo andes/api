@@ -52,7 +52,19 @@ export class CredencialProfesionalBody extends HTMLComponent {
         const matricula = matriculaciones && matriculaciones[matriculaciones.length - 1].matriculaNumero;
         const documento = profesional.documento;
         const nacionalidad = profesional.nacionalidad.nombre;
-        const fechaNacimiento = moment(profesional.fechaNacimiento).format('DD/MM/YYYY');
+
+        const fechaRaw = profesional.fechaNacimiento;
+        let fechaNacimiento;
+        if (fechaRaw) {
+            const tieneOffset = /[+-]\d{2}:\d{2}$/.test(fechaRaw);
+
+            if (tieneOffset) {
+                fechaNacimiento = moment(fechaRaw).format('DD/MM/YYYY');
+
+            } else {
+                fechaNacimiento = moment.utc(fechaRaw).local().format('DD/MM/YYYY');
+            }
+        }
         const entidadFormadora = formacionGrado.entidadFormadora.nombre;
         const egreso = moment(formacionGrado.fechaEgreso).format('DD/MM/YYYY');
         const primerMatricula = formacionGrado.fechaDeInscripcion && moment(formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY');
