@@ -3,7 +3,6 @@ import { Camas, INTERNACION_CAPAS } from './camas.schema';
 import * as CamasEstadosController from './cama-estados.controller';
 import * as moment from 'moment';
 import { EstadosCtr } from './estados.routes';
-import { Prestacion } from '../schemas/prestacion';
 import { Request } from '@andes/api-tool';
 import { ObjectId } from '@andes/core';
 import { ISnomedConcept } from '../schemas/snomed-concept';
@@ -11,7 +10,7 @@ import { EventCore } from '@andes/event-bus';
 import { Auth } from '../../../auth/auth.class';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { internacionCamaEstadosLog as logger } from './internacion.log';
-
+import { InformeEstadistica } from './informe-estadistica.schema';
 interface INombre {
     _id: ObjectId;
     nombre?: String;
@@ -135,44 +134,34 @@ function wrapOrganizacion(organizacion) {
     return organizacion.id || organizacion._id || organizacion;
 }
 
+
 export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha: Date; organizacion: INombre; ambito: String; capa: String }) {
 
     const $match = {};
     if (fecha) {
-        $match['ejecucion.registros.valor.informeIngreso.fechaIngreso'] = {
+        $match['informeIngreso.fechaIngreso'] = {
             $lte: moment(fecha).toDate().toISOString()
         };
     } else {
         fecha = new Date();
     }
 
-
-    const prestaciones$ = Prestacion.aggregate([
-        {
-            $match: {
-                'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion._id as any),
-                'solicitud.ambitoOrigen': 'internacion',
-                'solicitud.tipoPrestacion.conceptId': '32485007',
-                ...$match
-            }
-        },
-        {
-            $addFields: { lastState: { $arrayElemAt: ['$estados', -1] } }
-        },
-        {
-            $match: { 'lastState.tipo': 'ejecucion' }
-        },
-        { $project: { _v: 0, lastState: 0 } }
-    ]);
+    const informes$ = InformeEstadistica.find({
+        'organizacion._id': mongoose.Types.ObjectId(organizacion._id as any),
+        'informeIngreso.fechaIngreso': { $lte: moment(fecha).toDate() },
+        'estadoActual.tipo': 'ejecucion',
+        ...$match
+    }).lean();
 
     const estadoCama$ = CamasEstadosController.snapshotEstados({ fecha, organizacion: organizacion._id, ambito, capa }, {});
 
-    const [prestaciones, estadoCama] = await Promise.all([prestaciones$, estadoCama$]);
+    const [informes, estadoCama] = await Promise.all([informes$, estadoCama$]);
 
-    const listaDeEspera = prestaciones.filter(prest => !estadoCama.find(est => String(prest._id) === String(est.idInternacion)));
+    const listaDeEspera = informes.filter(inf => !estadoCama.find(est => String(inf._id) === String(est.idInternacion)));
 
     return listaDeEspera;
 }
+
 
 /**
  *
@@ -181,7 +170,10 @@ export async function listaEspera({ fecha, organizacion, ambito, capa }: { fecha
  * @returns array de nuevos estados
  */
 export async function storeEstados(cama: Partial<ICama>, req: Request) {
+
+
     const fecha = cama.fecha || moment().toDate();
+
     const nuevoEstado = {
         fecha,
         estado: 'disponible',
@@ -193,54 +185,120 @@ export async function storeEstados(cama: Partial<ICama>, req: Request) {
         equipamiento: cama.equipamiento,
         nota: cama.nota,
     };
-    const organizacion = await Organizacion.findById(cama.organizacion._id);
+
+
+    const organizacionId =
+        (cama.organizacion as any)._id
+            ? (cama.organizacion as any)._id
+            : cama.organizacion;
+
+
+    const organizacion = await Organizacion.findById(organizacionId);
+
     let capas = INTERNACION_CAPAS;
-    if (organizacion.usaEstadisticaV2) {
+    if (organizacion?.usaEstadisticaV2) {
         capas = capas.filter(capa => capa !== 'estadistica');
-    };
-    const [estadosSaved] = await Promise.all(
-        capas.map(capa => {
-            return CamasEstadosController.store({ organizacion: cama.organizacion._id, ambito: cama.ambito, capa, cama: cama._id }, nuevoEstado, req);
+    }
+
+    const resultados = await Promise.all(
+        capas.map(async capa => {
+
+            const params = {
+                organizacion: organizacionId,
+                ambito: cama.ambito,
+                capa,
+                cama: cama._id
+            };
+
+
+            const result = await CamasEstadosController.store(params, nuevoEstado, req);
+
+
+            return { capa, result };
         })
     );
-    return estadosSaved.nModified > 0 && estadosSaved.ok === 1;
-}
 
+
+    const [estadosSaved] = resultados.map(r => r.result);
+
+    return estadosSaved?.nModified > 0 && estadosSaved?.ok === 1;
+}
 
 /**
  * Modifica el estado de una cama.
  * @param data nuevos atributos de cama/estadoCama
  * @param req
  */
+
 export async function patchEstados(data: Partial<ICama>, req: Request) {
+    const organizacionConfig = {
+        organizacion: data.organizacion,
+        capa: data.capa,
+        ambito: data.ambito
+    };
+
+    const estadoCama = await findById(organizacionConfig, data.id, data.fecha);
+
     let cambioPermitido = true;
-    const estadoCama = await findById({ organizacion: data.organizacion, capa: data.capa, ambito: data.ambito }, data.id, data.fecha);
 
     if (data.esMovimiento) {
-        const maquinaEstado = await EstadosCtr.encontrar(data.organizacion._id, data.ambito, data.capa);
-        cambioPermitido = await maquinaEstado.check(estadoCama.estado, data.estado, estadoCama?.idInternacion, data?.idInternacion);
 
+        const orgId = data.organizacion && data.organizacion._id
+            ? data.organizacion._id
+            : data.organizacion;
+
+
+        const maquinaEstado = await EstadosCtr.encontrar(
+            orgId,
+            data.ambito,
+            data.capa
+        );
+
+        const estadoAnterior = estadoCama?.estado || 'null';
+
+        cambioPermitido = await maquinaEstado.check(
+            estadoAnterior,
+            data.estado,
+            estadoCama?.idInternacion,
+            data.idInternacion
+        );
     } else {
-        // Datos que no deberian cambiar
         delete data['idInternacion'];
         delete data['estado'];
         delete data['paciente'];
     }
+
     if (cambioPermitido) {
-        // La APP debería mandar solo lo que quiere modificar. Por las dudas limpiamos el objeto
+
         delete data['idCama'];
         delete data['createdAt'];
         delete data['createdBy'];
         delete data['updatedAt'];
         delete data['updatedBy'];
 
-        estadoCama.extras = null; // Los extras no se transfieren entre estados
+        if (estadoCama && data.esMovimiento) {
+            estadoCama.extras = null;
+        }
+
         const nuevoEstado = {
-            ... (data.esMovimiento ? estadoCama : {}),
+            ...(data.esMovimiento ? estadoCama : {}),
             ...data,
-            esMovimiento: data.esMovimiento
+            esMovimiento: data.esMovimiento,
+            idInternacion: data.idInternacion
+
+
         };
-        await CamasEstadosController.store({ organizacion: data.organizacion._id, ambito: data.ambito, capa: data.capa, cama: data.id }, nuevoEstado, req);
+
+        const orgId = data.organizacion && data.organizacion._id
+            ? data.organizacion._id
+            : data.organizacion;
+
+        await CamasEstadosController.store({
+            organizacion: orgId,
+            ambito: data.ambito,
+            capa: data.capa,
+            cama: data.id
+        }, nuevoEstado, req);
 
         if (nuevoEstado.extras?.egreso) {
             EventCore.emitAsync('mapa-camas:paciente:egreso', nuevoEstado);
@@ -251,18 +309,24 @@ export async function patchEstados(data: Partial<ICama>, req: Request) {
         if (nuevoEstado.extras?.unidadOrganizativaOrigen) {
             EventCore.emitAsync('mapa-camas:paciente:pase', { ...nuevoEstado });
         }
+
         return nuevoEstado;
     }
-    logger.info('patchEstados', { info: 'cambio no permitido', fecha: moment().toDate(), estadoAnterior: estadoCama, nuevoEstado: data }, req);
+
+    logger.info('patchEstados', {
+        info: 'cambio no permitido',
+        fecha: moment().toDate(),
+        estadoAnterior: estadoCama,
+        nuevoEstado: data
+    }, req);
 
     return null;
 }
-
-
 /**
  * Operacion especial para cambiar la fecha de un estado.
  */
 export async function changeTime({ organizacion, capa, ambito }: InternacionConfig, cama: ObjectId, from: Date, to: Date, internacionId: ObjectId, req) {
+
     let start, end;
     if (from.getTime() <= to.getTime()) {
         start = from;
@@ -271,26 +335,37 @@ export async function changeTime({ organizacion, capa, ambito }: InternacionConf
         start = to;
         end = from;
     }
-    const movements = await CamasEstadosController.searchEstados({ desde: start, hasta: end, organizacion: organizacion._id, capa, ambito }, { internacion: internacionId });
-    // Porque el movimiento a cambiar de fecha va a ser encontrado
+
+    const movements = await CamasEstadosController.searchEstados(
+        { desde: start, hasta: end, organizacion: organizacion._id, capa, ambito },
+        { internacion: internacionId }
+    );
+
     if (movements.length > 1) {
         return false;
     }
 
     const myMov = movements[0];
-    await CamasEstadosController.remove({ organizacion: organizacion._id, capa, ambito, cama }, from);
+
+    await CamasEstadosController.remove(
+        { organizacion: organizacion._id, capa, ambito, cama },
+        from
+    );
 
     myMov.fecha = to;
 
-    const valid = await CamasEstadosController.store({ organizacion: organizacion._id, capa, ambito, cama }, myMov, req);
+    const valid = await CamasEstadosController.store(
+        { organizacion: organizacion._id, capa, ambito, cama },
+        myMov,
+        req
+    );
+
     return valid;
 }
-
 /**
  * Chequea la integridad de los estados de las camas.
  */
 export async function integrityCheck({ organizacion, capa, ambito }: InternacionConfig, { cama, from, to }) {
-    const res = [];
     let start = from || moment('1900-01-01').toDate();
     let end = to || moment().toDate();
     if (start.getTime() > end.getTime()) {
@@ -300,23 +375,39 @@ export async function integrityCheck({ organizacion, capa, ambito }: Internacion
     }
 
     const allMovements = await CamasEstadosController.searchEstados({ desde: start, hasta: end, organizacion: organizacion._id, capa, ambito }, { cama });
-    const groupedMovements = Object.entries(groupBy(allMovements, 'idCama'));
+    const groupedMovements = groupBy(allMovements, 'idCama');
     const maquinaEstado = await EstadosCtr.encontrar(organizacion._id, ambito, capa);
 
-    groupedMovements.map(async ([idCama, movementsCama]: [string, ICama[]]) => {
-        movementsCama.slice(1).map(async (movement, index) => {
+    const checkPromises = Object.values(groupedMovements).map((movementsCama: ICama[]) => {
+        return movementsCama.slice(1).map(async (movement, index) => {
+            const sourceMovement = movementsCama[index];
             if (movement.esMovimiento) {
                 let cambioPermitido = false;
-                if (movementsCama[index].estado !== 'ocupada' || movement.estado !== 'ocupada') {
-                    cambioPermitido = await maquinaEstado.check(movementsCama[index].estado, movement.estado);
+
+                if (sourceMovement.estado !== movement.estado) {
+                    cambioPermitido = await maquinaEstado.check(sourceMovement.estado, movement.estado);
+                } else {
+                    if (movement.estado === 'ocupada') {
+                        cambioPermitido = false;
+                    } else {
+                        cambioPermitido = true;
+                    }
                 }
 
+
                 if (!cambioPermitido) {
-                    res.push({ source: movementsCama[index], target: movement });
+                    return { source: sourceMovement, target: movement };
                 }
             }
+            return null;
         });
     });
+
+    const flattened = [].concat(...checkPromises);
+    const allViolations = await Promise.all(flattened);
+
+
+    const res = allViolations.filter(violation => violation !== null);
 
     return res;
 }
@@ -361,10 +452,12 @@ export async function checkSectorDelete(idOrganizacion: string, idSector: string
 
 EventCore.on('mapa-camas:paciente:pase', async (estado) => {
     if (estado?.idInternacion && estado.capa === 'estadistica') {
-        const prestacion: any = await Prestacion.findById(estado.idInternacion);
-        prestacion.unidadOrganizativa = estado.unidadOrganizativa;
-        const user = Auth.getUserFromResource(prestacion);
-        Auth.audit(prestacion, user as any);
-        await prestacion.save();
+        const informe: any = await InformeEstadistica.findById(estado.idInternacion);
+        if (informe) {
+            informe.unidadOrganizativa = estado.unidadOrganizativa;
+            const user = Auth.getUserFromResource(informe);
+            Auth.audit(informe, user as any);
+            await informe.save();
+        }
     }
 });
