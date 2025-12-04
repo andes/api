@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import { IPrestacion } from '../../rup/prestaciones.interface';
 import { IPacsConfig } from '../pacs-config.schema';
-import { IDicomPatientData, DICOM_SHORT_STRING_MAX_LENGTH, IDicomPrestacionData, IDicomInformeData } from './dicom.interfaces';
+import { IDicomPatientData, DICOM_SHORT_STRING_MAX_LENGTH, DICOM_LONG_STRING_MAX_LENGTH, IDicomPrestacionData, IDicomInformeData } from './dicom.interfaces';
 import { constant } from 'async';
 
 export const toISOIR100 = (text: string) => {
@@ -10,31 +10,31 @@ export const toISOIR100 = (text: string) => {
     return latin1Buffer.toString('latin1');
 };
 
-export const normalizeShortString = (value?: string, reverse = false): string => {
+export const normalizeShortString = (value?: string, reverse = false, maxLength = DICOM_SHORT_STRING_MAX_LENGTH): string => {
     if (!value) {
         return '';
     }
-
     const trimmed = value.trim().replace(/\s+/g, ' ');
-
-    if (trimmed.length <= DICOM_SHORT_STRING_MAX_LENGTH) {
+    if (trimmed.length <= maxLength) {
         return trimmed;
     }
-
     if (reverse) {
-        return trimmed.slice(-DICOM_SHORT_STRING_MAX_LENGTH);
+        return trimmed.slice(-maxLength);
     }
-
-    return trimmed.substring(0, DICOM_SHORT_STRING_MAX_LENGTH);
+    return trimmed.substring(0, maxLength);
 };
 
 export const buildDicomName = (apellido?: string, nombre?: string) => {
-    const normalizedApellido = normalizeShortString(apellido);
-    const normalizedNombre = normalizeShortString(nombre);
+    const normalizedApellido = normalizeShortString(apellido, false, DICOM_LONG_STRING_MAX_LENGTH);
+    const normalizedNombre = normalizeShortString(nombre, false, DICOM_LONG_STRING_MAX_LENGTH);
 
-    const dicomNameRaw = `${normalizedApellido}^${normalizedNombre}`;
-    const truncatedDicomName = dicomNameRaw.substring(0, DICOM_SHORT_STRING_MAX_LENGTH);
-    return toISOIR100(truncatedDicomName);
+    const dicomNameRaw = normalizeShortString(
+        `${normalizedApellido}^${normalizedNombre}`,
+        false,
+        DICOM_LONG_STRING_MAX_LENGTH
+    );
+
+    return toISOIR100(dicomNameRaw);
 };
 
 export const formatDicomDate = (fecha?: string | Date) => {
@@ -54,10 +54,11 @@ export const formatDicomTime = (fecha?: string | Date ) => {
 export const mapDicomGender = (sexo?: string) => sexo === 'masculino' ? 'M' : 'F';
 
 export function DICOMPaciente(config: IPacsConfig, paciente: any): IDicomPatientData {
-    const pacienteIDtrimmed = normalizeShortString(String(paciente.id),false);
-    const pacienteIdDicom = (config.featureFlags?.usoIdDNI && paciente.documento)
-        ? paciente.documento
-        : String(paciente.id);
+    const pacienteId = String(paciente.id);
+    const pacienteIDtrimmed = normalizeShortString(pacienteId, true, 15);
+    const pacienteIdDicom = (config.featureFlags?.usoIdDNI)
+        ? (paciente.documento || pacienteIDtrimmed)
+        : pacienteId;
     const id = pacienteIdDicom;
     const dicomName = buildDicomName(paciente.apellido, paciente.nombre);
     const documento = paciente.documento;
