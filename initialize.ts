@@ -122,6 +122,8 @@ export function initAPI(app: Express) {
     app.use('/api/modules', require('./modules/constantes').ConstantesRouter);
     app.use('/api/modules', require('./modules/recetas').RecetasRouter);
     app.use('/api/modules', require('./modules/insumos').InsumosRouter);
+    app.use('/api/modules', require('./modules/recetas/recetasInsumos').RecetaInsumoRouter);
+
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(
