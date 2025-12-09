@@ -3,8 +3,8 @@ import { crearRecetaInsumo } from '../../recetas/recetasInsumos/recetaInsumosCon
 import { getProfesionActualizada } from '../../recetas/recetasController';
 import * as moment from 'moment';
 import { RecetaInsumo } from './receta-insumo.schema';
-import { createLog } from './../recetaLogs';
 import { Profesional } from '../../../core/tm/schemas/profesional';
+import { createLog } from './../recetaLogs';
 
 EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) => {
     let dataReceta: any = {};
@@ -45,7 +45,6 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
 
         for (const insumo of registro.valor.insumos) {
             const receta: any = await RecetaInsumo.findOne({
-                'insumo.id': insumo.generico.id,
                 'insumo.nombre': insumo.generico.nombre,
                 idRegistro
             });
