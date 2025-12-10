@@ -1,3 +1,11 @@
+## [5.139.1](https://github.com/andes/api/compare/v5.139.0...v5.139.1) (2025-12-10)
+
+
+### Bug Fixes
+
+* **CITAS:** Agegar datos de usuario en historial de turnos liberados ([#2159](https://github.com/andes/api/issues/2159)) ([b943741](https://github.com/andes/api/commit/b94374133e0abd7fdd76966585688065385ca0f7))
+* **PACS:** agregar id recortado para pacientes sin DNI ([#2155](https://github.com/andes/api/issues/2155)) ([ecf8dff](https://github.com/andes/api/commit/ecf8dffd9527731f3d3967d4773d3bfe7beff18c))
+
 # [5.139.0](https://github.com/andes/api/compare/v5.138.2...v5.139.0) (2025-12-03)
 
 
