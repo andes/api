@@ -362,161 +362,70 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         match['rematriculado'] = false;
     }
     if (req.query.especialidadCodigo) {
-        match2['formacionPosgrado.especialidad.codigo'] = parseInt(req.query.especialidadCodigo, 10);
+        match2['formacionPosgrado.especialidad.codigo.sisa'] = parseInt(req.query.especialidadCodigo, 10);
     }
     if (req.query.profesionCodigo) {
         match2['formacionGrado.profesion.codigo'] = parseInt(req.query.profesionCodigo, 10);
     }
     let unwindOptions = {};
-    let projections = {};
+    let ultimaMatricula = {};
+    const estadoMatriculaConditions = [];
     if (req.query.tipoMatricula === 'grado') {
         match['formacionGrado.matriculacion.0'] = { $exists: true };
-
-        if (req.query.estado) {
-            if (req.query.estado === 'Vigentes') {
-                match['formacionGrado.matriculado'] = true;
-            }
-            if (req.query.estado === 'Suspendidas') {
-                match['formacionGrado.matriculado'] = false;
-            }
-        }
         if (req.query.vencidas) {
-            match2['ultimaMatricula.fin'] = { $lte: new Date() };
+            estadoMatriculaConditions.push({
+                'ultimaMatricula.fin': { $lte: new Date() },
+                'formacionGrado.renovacion': false,
+                'formacionGrado.papelesVerificados': true,
+                'formacionGrado.matriculado': true
+            });
         }
         if (req.query.bajaMatricula) {
-            match2['ultimaMatricula.baja.fecha'] = { $nin: [null, ''] };
+            estadoMatriculaConditions.push({
+                'ultimaMatricula.baja.fecha': { $nin: [null, ''] },
+                'formacionGrado.renovacion': false,
+                'formacionGrado.papelesVerificados': false,
+                'formacionGrado.matriculado': false
+            });
         }
         unwindOptions = { path: '$formacionGrado' };
-        projections = {
-            habilitado: 1,
-            nombre: 1,
-            apellido: 1,
-            tipoDocumento: 1,
-            documento: 1,
-            documentoVencimiento: 1,
-            cuit: 1,
-            fechaNacimiento: 1,
-            lugarNacimiento: 1,
-            fechaFallecimiento: 1,
-            nacionalidad: 1,
-            sexo: 1,
-            contactos: 1,
-            domicilios: 1,
-            fotoArchivo: 1,
-            firmas: 1,
-            incluidoSuperintendencia: 1,
-            formacionPosgrado: 1,
-            'formacionGrado.profesion': 1,
-            'formacionGrado.entidadFormadora': 1,
-            'formacionGrado.titulo': 1,
-            'formacionGrado.fechaTitulo': 1,
-            'formacionGrado.fechaEgreso': 1,
-            'formacionGrado.renovacion': 1,
-            'formacionGrado.papelesVerificados': 1,
-            'formacionGrado.matriculado': 1,
-            'formacionGrado.exportadoSisa': 1,
-            'formacionGrado.fechaDeInscripcion': 1,
-            'formacionGrado.matriculacion': 1,
-            'formacionGrado.renovacionOnline': 1,
-            ultimaMatricula: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] },
-            sanciones: 1,
-            notas: 1,
-            rematriculado: 1,
-            agenteMatriculador: 1,
-            supervisor: 1,
-            OtrosDatos: 1,
-            idRenovacion: 1,
-            documentoViejo: 1,
-            turno: 1,
-            profesionalMatriculado: 1
-        };
-
+        ultimaMatricula = { ultimaMatricula: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] } };
     } else {
-
         match['formacionPosgrado.matriculacion.0'] = { $exists: true };
-
-        if (req.query.estado) {
-            if (req.query.estado === 'Vigentes') {
-                match['formacionPosgrado.matriculado'] = true;
-            }
-            if (req.query.estado === 'Suspendidas') {
-                match['formacionPosgrado.matriculado'] = false;
-            }
-        }
         if (req.query.bajaMatricula) {
-            match2['ultimaMatriculaPosgrado.baja.fecha'] = { $nin: [null, ''] };
+            estadoMatriculaConditions.push({
+                'formacionPosgrado.revalida': false,
+                'formacionPosgrado.papelesVerificados': false,
+                'formacionPosgrado.matriculado': false
+            });
         }
         if (req.query.vencidas) {
-            match2['formacionPosgrado.tieneVencimiento'] = true;
-            match2['ultimaMatriculaPosgrado.fin'] = { $lte: new Date() };
+            estadoMatriculaConditions.push({
+                'formacionPosgrado.tieneVencimiento': true,
+                'formacionPosgrado.matriculado': true,
+                'ultimaMatricula.fin': { $lte: new Date() }
+            });
         }
         unwindOptions = { path: '$formacionPosgrado' };
-        projections = {
-            habilitado: 1,
-            nombre: 1,
-            apellido: 1,
-            tipoDocumento: 1,
-            documento: 1,
-            documentoVencimiento: 1,
-            cuit: 1,
-            fechaNacimiento: 1,
-            lugarNacimiento: 1,
-            fechaFallecimiento: 1,
-            nacionalidad: 1,
-            sexo: 1,
-            contactos: 1,
-            domicilios: 1,
-            fotoArchivo: 1,
-            firmas: 1,
-            incluidoSuperintendencia: 1,
-            formacionGrado: 1,
-            'formacionPosgrado.profesion': 1,
-            'formacionPosgrado.institucionFormadora': 1,
-            'formacionPosgrado.especialidad': 1,
-            'formacionPosgrado.fechaIngreso': 1,
-            'formacionPosgrado.fechaEgreso': 1,
-            'formacionPosgrado.observacion': 1,
-            'formacionPosgrado.certificacion': 1,
-            'formacionPosgrado.fechasDeAltas': 1,
-            'formacionPosgrado.matriculado': 1,
-            'formacionPosgrado.revalida': 1,
-            'formacionPosgrado.papelesVerificados': 1,
-            'formacionPosgrado.exportadoSisa': 1,
-            'formacionPosgrado.tieneVencimiento': 1,
-            'formacionPosgrado.notas': 1,
-            ultimaMatriculaPosgrado: { $arrayElemAt: ['$formacionPosgrado.matriculacion', -1] },
-            sanciones: 1,
-            notas: 1,
-            rematriculado: 1,
-            agenteMatriculador: 1,
-            supervisor: 1,
-            OtrosDatos: 1,
-            idRenovacion: 1,
-            documentoViejo: 1,
-            turno: 1,
-            profesionalMatriculado: 1
-        };
+        ultimaMatricula = { ultimaMatricula: { $arrayElemAt: ['$formacionPosgrado.matriculacion', -1] } };
     }
     if (req.query.fechaDesde && req.query.fechaHasta) {
         if (req.query.matriculasPorVencer) {
-            if (req.query.tipoMatricula === 'grado') {
-                match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
-            } else {
-                match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
-            }
-        } else if (req.query.matriculasPorVencer === false) {
-            if (req.query.tipoMatricula === 'grado') {
-                match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
-            } else {
-                match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
-            }
+            match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+        } else {
+            match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
         }
     }
 
+    if (estadoMatriculaConditions.length === 1) {
+        Object.assign(match2, estadoMatriculaConditions[0]);
+    } else if (estadoMatriculaConditions.length > 1) {
+        match2['$or'] = estadoMatriculaConditions;
+    }
     const pipeline = [];
     pipeline.push({ $match: match });
     pipeline.push({ $unwind: unwindOptions });
-    pipeline.push({ $project: projections });
+    pipeline.push({ $addFields: ultimaMatricula });
     pipeline.push({ $match: match2 });
     if (!req.query.exportarPlanillaCalculo) {
         const radix = 10;
@@ -526,8 +435,6 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         limit = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
         pipeline.push({ $skip: skip });
         pipeline.push({ $limit: limit });
-    }
-    if (!req.query.exportarPlanillaCalculo) {
         const data = await Profesional.aggregate(pipeline);
         try {
             res.json(data);
