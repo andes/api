@@ -101,13 +101,25 @@ export class InformeRupBody extends HTMLComponent {
 
     async getFirmaHTML() {
         if (this.validada()) {
-            const prof = this.prestacion.estadoActual.createdBy;
-            const firmaHTMLComponent = new InformeRupFirma(prof, this.prestacion.solicitud.organizacion);
+            const prof =
+                this.prestacion.estadoActual.createdBy ||
+                this.prestacion.estadoActual.updatedBy;
+
+            if (!prof) {
+                return null;
+            }
+
+            const firmaHTMLComponent = new InformeRupFirma(
+                prof,
+                this.prestacion.solicitud.organizacion
+            );
+
             await firmaHTMLComponent.process();
-            return firmaHTMLComponent.profesional ? firmaHTMLComponent.render() : null;
-        } else {
-            return null;
+            return firmaHTMLComponent.profesional
+                ? firmaHTMLComponent.render()
+                : null;
         }
+        return null;
     }
 
     getFechaEstado(tipo: 'validada' | 'ejecucion') {
