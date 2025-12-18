@@ -16,7 +16,7 @@ const REQMock: any = {
     user: {}
 };
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
+jest.setTimeout(600000);
 
 let mongoServer: any;
 const ambito = 'internacion';
@@ -374,8 +374,9 @@ test('Censo diario - Paciente ingresa y tiene alta', async () => {
         capa,
         cama: idCama
     }, estadoOcupada(
-        moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
-    REQMock
+        moment().subtract(2, 'm').toDate(),
+        internacion._id, cama.unidadOrganizativaOriginal
+    ), REQMock
     );
 
     await CamasEstadosController.store({

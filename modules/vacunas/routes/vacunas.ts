@@ -3,7 +3,6 @@ import * as vacunaCtr from '../controller/vacunas.controller';
 import { asyncHandler } from '@andes/api-tool';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Auth } from '../../../auth/auth.class';
-import { vacunas as vacunasModel } from '../schemas/vacunas';
 
 const router = express.Router();
 

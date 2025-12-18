@@ -20,7 +20,7 @@ dataLog.body = { _id: null };
 const router = express.Router();
 
 const capaMiddleware = (req: Request, res: Response, next: express.NextFunction) => {
-    if (req.query?.capa && req.query.capa !== 'estadistica') {
+    if (req.query?.capa && req.query.capa as any !== 'estadistica') {
         req.query.capa = 'medica';
     }
     if (req.body?.capa && req.body.capa !== 'estadistica') {
@@ -37,17 +37,17 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
     const { capa, fecha } = req.query;
 
     let salas = [];
-    if (capa !== 'estadistica' && !req.query.idInternacion) {
+    if (capa !== 'estadistica' && !req.query.idInternacion as any) {
         salas = await SalaComunController.listarSalaComun({
             organizacion: organizacion._id,
-            fecha: moment(fecha).toDate(),
-            ambito: req.query.ambito,
-            id: req.query.cama
+            fecha: moment(fecha as any).toDate(),
+            ambito: req.query.ambito as any,
+            id: req.query.cama as any
         });
         salas = populateSalaComun(salas);
     }
 
-    const camas = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
+    const camas = await CamasController.search({ organizacion, capa: req.query.capa as any, ambito: req.query.ambito as any, }, req.query);
 
     const result = [...camas, ...salas];
 
@@ -56,13 +56,13 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
 
 router.get('/camas/historial', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = Auth.getOrganization(req);
-    const ambito = req.query.ambito;
-    const capa = req.query.capa;
-    const cama = req.query.idCama;
-    const internacion = req.query.idInternacion;
-    const desde = req.query.desde;
-    const hasta = req.query.hasta;
-    const esMovimiento = req.query.esMovimiento;
+    const ambito = req.query.ambito as any;
+    const capa = req.query.capa as any;
+    const cama = req.query.idCama as any;
+    const internacion = req.query.idInternacion as any;
+    const desde = req.query.desde as any;
+    const hasta = req.query.hasta as any;
+    const esMovimiento = req.query.esMovimiento as any;
 
     const result = await CamasController.historial({ organizacion, ambito, capa }, cama, internacion, desde, hasta, esMovimiento);
     return res.json(result);
@@ -71,27 +71,27 @@ router.get('/camas/historial', Auth.authenticate(), capaMiddleware, asyncHandler
 router.get('/camas/resumen', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     let organizacion;
     const params = {
-        fecha: req.query.fecha
+        fecha: req.query.fecha as any
     };
 
-    if (req.query.organizacion) {
-        organizacion = req.query.organizacion;
+    if (req.query.organizacion as any) {
+        organizacion = req.query.organizacion as any;
     }
 
-    if (req.query.unidadOrganizativa) {
-        params['unidadOrganizativa'] = req.query.unidadOrganizativa;
+    if (req.query.unidadOrganizativa as any) {
+        params['unidadOrganizativa'] = req.query.unidadOrganizativa as any;
     }
 
-    const camas = await CamasController.searchCamas({ organizacion, capa: req.query.capa, ambito: req.query.ambito }, params);
+    const camas = await CamasController.searchCamas({ organizacion, capa: req.query.capa as any, ambito: req.query.ambito as any }, params);
 
     return res.json(camas);
 }));
 
 router.get('/lista-espera', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = Auth.getOrganization(req);
-    const ambito = req.query.ambito;
-    const capa = req.query.capa;
-    const fecha = req.query.fecha;
+    const ambito = req.query.ambito as any;
+    const capa = req.query.capa as any;
+    const fecha = req.query.fecha as any;
 
     const listaEspera = await CamasController.listaEspera({ fecha, organizacion: { _id: organizacion }, ambito, capa });
     return res.json(listaEspera);
@@ -104,7 +104,7 @@ router.get('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async
         nombre: Auth.getOrganization(req, 'nombre')
     };
 
-    const result = await CamasController.findById({ organizacion, ambito: req.query.ambito, capa: req.query.capa }, req.params.id, req.query.fecha);
+    const result = await CamasController.findById({ organizacion, ambito: req.query.ambito as any, capa: req.query.capa as any }, (req.params as any).id, req.query.fecha as any);
 
     if (result) {
         return res.json(result);

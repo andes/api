@@ -1,5 +1,5 @@
 import { Profesional } from '../core/tm/schemas/profesional';
-import { Especialidad, SIISAEspecialidad } from '../core/tm/schemas/siisa';
+import { Especialidad } from '../core/tm/schemas/siisa';
 import { removeDiacritics } from '../utils/utils';
 
 async function run(done) {
