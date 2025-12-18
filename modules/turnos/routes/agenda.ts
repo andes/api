@@ -17,6 +17,7 @@ import * as AgendasEstadisticas from '../controller/estadisticas';
 import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
 import { Agenda } from '../schemas/agenda';
 import { Auth } from './../../../auth/auth.class';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 const router = express.Router();
 
@@ -155,11 +156,10 @@ router.get('/agenda/diagnosticos', async (req, res, next) => {
     } catch (err) { return next(err); }
 });
 
-router.get('/agenda/:id?', (req, res, next) => {
+router.get('/agenda/:id?', async (req, res, next) => {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-
-        Agenda.findById(req.params.id, (err, data) => {
+        await Agenda.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -250,6 +250,17 @@ router.get('/agenda/:id?', (req, res, next) => {
             query.where('bloques.turnos._id').equals(req.query.turno);
         }
 
+        if (!req.query.teleConsulta) {
+            const conceptosTurneables: any = await tipoPrestacion.find({ teleConsulta: true });
+            const conceptId = [];
+            if (conceptosTurneables.length > 0) {
+                for (const ct of conceptosTurneables) {
+                    conceptId.push(ct.conceptId);
+                }
+                query.where('tipoPrestaciones.conceptId').nin(conceptId);
+            }
+        }
+
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             const variable: any[] = [];
@@ -274,7 +285,7 @@ router.get('/agenda/:id?', (req, res, next) => {
             query.limit(parseInt(req.query.limit || 0, 10));
         }
 
-        query.exec((err, data) => {
+        await query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -678,9 +689,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
 router.post('/dashboard', async (req, res, next) => {
     const permisos: any = {};
-    const tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
-    if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
-        permisos.tipoPrestacion = tipoPrestacion;
+    const tipo_Prestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
+    if (tipo_Prestacion.length > 0 && tipo_Prestacion[0] !== '*') {
+        permisos.tipoPrestacion = tipo_Prestacion;
     }
 
     try {
@@ -734,9 +745,9 @@ router.post('/dashboard/descargarCsv', async (req, res, next) => {
 
 router.post('/dashboard/localidades', async (req, res, next) => {
     const permisos: any = {};
-    const tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
-    if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
-        permisos.tipoPrestacion = tipoPrestacion;
+    const tipo_Prestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
+    if (tipo_Prestacion.length > 0 && tipo_Prestacion[0] !== '*') {
+        permisos.tipoPrestacion = tipo_Prestacion;
     }
 
     try {
