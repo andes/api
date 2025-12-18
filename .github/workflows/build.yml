@@ -12,5 +12,5 @@ jobs:
             - run: npm ci
             - run: cp config.private.ts.example config.private.ts   
             - run: npm run lint
-            - run: npm run tsc
+            - run: NODE_OPTIONS=--max-old-space-size=4096 npm run tsc
             - run: npm run test 

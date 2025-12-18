@@ -25,7 +25,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
         } else {
             if (req.query.nombreMedicamento) {
                 // Parámetro texto ingresado
-                if (isNaN(req.query.nombreMedicamento)) {
+                if (isNaN(req.query.nombreMedicamento as any)) {
 
                     opciones['$and'] = [];
                     const words = String(req.query.nombreMedicamento).split(' ');
@@ -78,7 +78,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
                         out.push(nodo);
                     });
                 } else {
-                    const idpadre = req.query.idpadre;
+                    const idpadre = req.query.idpadre as any;
                     data = await toArray(formularioTerapeutico.aggregate(
                         [
                             { $match: { idpadre: mongoose.Types.ObjectId(idpadre), borrado: { $exists: false } } },

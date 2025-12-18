@@ -8,7 +8,7 @@ const router = express.Router();
 
 
 router.get('/', async (req, res, next) => {
-    const { fechaValidacion, documento, sexo } = req.query;
+    const { fechaValidacion, documento, sexo } = req.query as any;
     const paciente: IPacienteDoc = await Paciente.findOne({ documento, sexo });
     const pacienteId = paciente?.id;
     if (!pacienteId) {

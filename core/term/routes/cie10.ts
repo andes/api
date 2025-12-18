@@ -31,7 +31,7 @@ router.get('/cie10', async (req, res, next) => {
         whereConditions['$and'] = [];
         const orRango = {};
         orRango['$or'] = [];
-        const filtroRango = JSON.parse(req.query.filtroRango);
+        const filtroRango = JSON.parse(req.query.filtroRango as any);
         for (const rango of filtroRango) {
             orRango['$or'].push({ codigo: { $gt: rango.desde, $lt: rango.hasta } });
         }
@@ -41,8 +41,8 @@ router.get('/cie10', async (req, res, next) => {
         whereConditions = conditions;
     }
     const query = cie10.model.find(whereConditions);
-    const skip = parseInt(req.query.skip || 0, 10);
-    const limit = Math.min(parseInt(req.query.limit || defaultLimit, 15), maxLimit);
+    const skip = parseInt(req.query.skip as any || 0, 10);
+    const limit = Math.min(parseInt(req.query.limit as any || defaultLimit, 15), maxLimit);
     query.skip(skip);
     query.limit(limit);
     try {
