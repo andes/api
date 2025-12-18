@@ -304,7 +304,7 @@ export const updateGeoreferencia = async (paciente: IPacienteDoc) => {
             // georeferencia exitosa?
             if (geoRef && Object.keys(geoRef).length) {
                 direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                const nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, configPrivate.geoNode.auth.user, configPrivate.geoNode.auth.password);
+                const nombreBarrio = await getBarrio(geoRef, configPrivate.geoNode.host, configPrivate.geoNode.auth.user, configPrivate.geoNode.auth.password, null);
                 // consulta exitosa?
                 if (nombreBarrio) {
                     const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));

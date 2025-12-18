@@ -1,4 +1,4 @@
-import { model, Schema, Model, Document } from 'mongoose';
+import { model, Schema, Document } from 'mongoose';
 import * as direccionSchema from '../../core/tm/schemas/direccion';
 import * as contactoSchema from '../../core/tm/schemas/contacto';
 
@@ -35,4 +35,4 @@ export const InstitucionSchema = new Schema({
 });
 
 
-export const Institucion: Model<IInstitucion> = model('institucion', InstitucionSchema, 'institucion');
+export const Institucion = model<IInstitucion>('institucion', InstitucionSchema, 'institucion');

@@ -5,16 +5,16 @@ async function run(done) {
     const inscripciones = InscripcionVacuna.find({}).cursor({ batchSize: 100 });
     for await (const inscripcion of inscripciones) {
         try {
-            inscripcion._createTokens();
+            (inscripcion as any)._createTokens();
             if (i % 100 === 0) {
                 // eslint-disable-next-line no-console
                 console.log(i++);
             }
-            await InscripcionVacuna.update(
+            await InscripcionVacuna.updateOne(
                 { _id: inscripcion.id },
                 {
                     $set: {
-                        tokens: inscripcion.tokens
+                        tokens: (inscripcion as any).tokens
                     }
                 }
             );

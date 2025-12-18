@@ -10,13 +10,19 @@
         "noImplicitAny": false,
         "noImplicitReturns": true,
         "allowUnusedLabels": false,
+        "incremental": true,
+        "tsBuildInfoFile": "./.tsbuildinfo",
+        "skipLibCheck": true,
         "baseUrl": ".",
         "paths": {
-            "@andes/event-bus/*": [
-                "./packages/event-bus/*"
+            "@andes/fhir": [
+                "./types/andes-fhir.d.ts"
             ],
             "@andes/fhir/*": [
-                "./packages/fhir/*"
+                "./packages/andes-fhir.d.ts"
+            ],
+            "@andes/event-bus/*": [
+                "./packages/event-bus/*"
             ],
             "@andes/drive/*": [
                 "./packages/drive/*"
@@ -24,10 +30,15 @@
             "@andes/unit-test": [
                 "./packages/unit-testing/index.ts"
             ]
-        },
-        "typeRoots": [
-            "node_modules/@types",
-            "./packages/*",
-        ]
-    }
+        }
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.d.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "build"
+    ]
 }

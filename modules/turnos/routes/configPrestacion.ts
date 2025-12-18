@@ -4,8 +4,8 @@ import * as configPrestacion from '../schemas/configPrestacion';
 const router = express.Router();
 
 router.get('/configPrestacion/:id*?', (req, res, next) => {
-    if (req.params.id) {
-        configPrestacion.findById(req.params.id, (err, data) => {
+    if ((req.params as any).id) {
+        configPrestacion.findById((req.params as any).id, (err, data) => {
             if (err) {
                 return next(err);
             }

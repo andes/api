@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/georeferenciar', async (req, res, next) => {
     if (req.query.direccion) {
         try {
-            const resultado: any = await geoReferenciar(req.query.direccion, geoKey);
+            const resultado: any = await geoReferenciar(req.query.direccion as any, geoKey);
             if (resultado) {
                 res.json(resultado);
             } else {
@@ -24,9 +24,9 @@ router.get('/georeferenciar', async (req, res, next) => {
 });
 
 router.get('/autocompletar/', async (req, res, next) => {
-    if (req.query.texto) {
+    if (req.query.texto as any) {
         try {
-            const resultado: any = await autocompletarDireccion(req.query.texto, geoKey);
+            const resultado: any = await autocompletarDireccion(req.query.texto as any, geoKey);
             res.json(resultado);
         } catch (err) {
             return next(err);

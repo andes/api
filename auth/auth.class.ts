@@ -631,7 +631,7 @@ export class Auth {
         try {
             let tokenSettings;
             if (req.query.hudsToken) {
-                tokenSettings = Auth.decode(req.query.hudsToken);
+                tokenSettings = Auth.decode(String(req.query.hudsToken));
                 return (String(tokenSettings.paciente) === String(paciente));
             }
         } catch (e) {

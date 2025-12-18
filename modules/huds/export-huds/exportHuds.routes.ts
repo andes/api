@@ -13,14 +13,14 @@ ExportHudsRouter.get('/export', async (req, res, next) => {
         'user.usuario.id': req.query.id,
         status: { $in: ['pending', 'completed'] }
     };
-    if (req.query.fechaDesde && req.query.fechaHasta) {
-        query.createdAt = { $gte: new Date(req.query.fechaDesde), $lte: new Date(req.query.fechaHasta) };
+    if (req.query.fechaDesde as any && req.query.fechaHasta as any) {
+        query.createdAt = { $gte: new Date(req.query.fechaDesde as any), $lte: new Date(req.query.fechaHasta as any) };
     } else {
-        if (req.query.fechaDesde) {
-            query.createdAt = { $gte: new Date(req.query.fechaDesde) };
+        if (req.query.fechaDesde as any) {
+            query.createdAt = { $gte: new Date(req.query.fechaDesde as any) };
         }
-        if (req.query.fechaHasta) {
-            query.createdAt = { $lte: new Date(req.query.fechaHasta) };
+        if (req.query.fechaHasta as any) {
+            query.createdAt = { $lte: new Date(req.query.fechaHasta as any) };
         }
     }
     const pending = await ExportHudsModel.find(query).sort({ createdAt: -1 });

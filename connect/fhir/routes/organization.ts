@@ -18,8 +18,8 @@ router.get('/organization/([\$])match', async (req, res, next) => {
             RegExp('^.*' + req.query.name + '.*$', 'i');
     }
 
-    if (req.query.identifier) {
-        opciones['codigo.sisa'] = utils.makePattern(req.query.identifier);
+    if (req.query.identifier as any) {
+        opciones['codigo.sisa'] = utils.makePattern(req.query.identifier as any);
     }
 
     const organizacionesFHIR = [];

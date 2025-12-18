@@ -57,8 +57,8 @@ const router = express.Router();
  */
 router.get('/paises/:id*?', (req, res, next) => {
 
-    if (req.params.id) {
-        pais.findById(req.params.id, (err, data) => {
+    if ((req.params as any).id) {
+        pais.findById((req.params as any).id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -67,8 +67,8 @@ router.get('/paises/:id*?', (req, res, next) => {
         });
     } else {
         const query = pais.find({});
-        if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+        if (req.query.nombre as any) {
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre as any + '.*$', 'i'));
         }
         query.sort({ nombre: 1 }).exec((err, data) => {
             if (err) { return next(err); }
