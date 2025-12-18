@@ -84,7 +84,7 @@ export class InformeRupHeader extends HTMLComponent {
                                 <h6 class="bolder">
                                     Internación
                                 </h6>
-                                {{ubicacion}}
+                                {{{ubicacion}}}
                             </div>
                         </div>
                     {{/if}}
@@ -145,10 +145,9 @@ export class InformeRupHeader extends HTMLComponent {
             {{/unless}}
     `;
 
-    constructor(public prestacion, public paciente, public organizacion, public cama) {
+    constructor(public prestacion, public paciente, public organizacion, public cama, public movimientos = []) {
         super();
 
-        // [TODO] helpers date formats en Handlerbars
 
         const fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
         const fechaPrestacion = moment(prestacion.ejecucion.fecha);
@@ -213,8 +212,33 @@ export class InformeRupHeader extends HTMLComponent {
     }
 
     ubicacionName() {
+        if (this.movimientos?.length > 0) {
+            // Ordenamos por fecha ascendente para mostrar Ingreso -> Movimientos -> Egreso
+            const sortedMovs = [...this.movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+            return sortedMovs.map(mov => {
+                const fecha = moment(mov.fecha).format('DD/MM/YYYY HH:mm');
+                let label = '';
+                if (mov.extras?.ingreso) {
+                    label = 'INGRESO: ';
+                } else if (mov.extras?.egreso) {
+                    label = 'EGRESO: ';
+                } else {
+                    label = 'MOVIMIENTO: ';
+                }
+                const bedName = mov.nombre || '';
+                const sector = mov.sectorName ? ` (${mov.sectorName})` : '';
+                return `${label}${bedName}${sector} - ${fecha}`;
+            }).join('<br>');
+        }
+
         if (this.cama) {
-            return `${this.cama.nombre}, ${this.cama.sectorName}`;
+            const fecha = moment(this.prestacion.ejecucion.fecha).format('DD/MM/YYYY HH:mm');
+            let name = `${this.cama.nombre}, ${this.cama.sectorName}<br>${fecha}`;
+            if (this.cama.unidadOrganizativa) {
+                const unit = typeof this.cama.unidadOrganizativa === 'object' ? (this.cama.unidadOrganizativa.term || this.cama.unidadOrganizativa.nombre) : this.cama.unidadOrganizativa;
+                name += `<br>(${unit})`;
+            }
+            return name;
         }
         return null;
     }

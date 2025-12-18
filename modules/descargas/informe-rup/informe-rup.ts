@@ -10,6 +10,7 @@ import { findByPaciente } from '../../rup/internacion/camas.controller';
 import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 import * as moment from 'moment';
 import { InformeEstadistica } from '../../rup/internacion/informe-estadistica.schema';
+import { obtenerHistorialInternacion } from '../../rup/internacion/internacion.controller';
 
 export class InformeRUP extends InformePDF {
 
@@ -56,8 +57,45 @@ export class InformeRUP extends InformePDF {
 
         }
 
-        this.header = new InformeRupHeader(prestacionFinal, paciente, organizacion, cama);
+        const idInternacion = prestacionFinal._id || prestacionFinal.id;
+        const fechaDesde = prestacionFinal.ejecucion?.fecha || prestacionFinal.informeIngreso?.fechaIngreso;
+        const fechaHasta = prestacionFinal.informeEgreso?.fechaEgreso || new Date();
+
+        let movimientos = [];
+        if (idInternacion && organizacion) {
+            const orgId = organizacion.id || organizacion._id || organizacion;
+            // Intentamos obtener movimientos de capa médica
+            movimientos = await obtenerHistorialInternacion(
+                orgId,
+                'medica',
+                idInternacion,
+                fechaDesde,
+                fechaHasta
+            );
+
+            if (!movimientos?.length) {
+                // Si no hay en médica, probamos en estadística
+                movimientos = await obtenerHistorialInternacion(
+                    orgId,
+                    'estadistica',
+                    idInternacion,
+                    fechaDesde,
+                    fechaHasta
+                );
+            }
+
+            movimientos = movimientos.map(mov => {
+                if (mov.sectores) {
+                    mov.sectorName = [...mov.sectores].reverse().map(s => s.nombre).join(', ');
+                }
+                return mov;
+            }).sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+        }
+
+        this.header = new InformeRupHeader(prestacionFinal, paciente, organizacion, cama, movimientos);
         this.body = new InformeRupBody(prestacionFinal, paciente, organizacion, this.registroId);
+        (this.body as any).movimientos = movimientos;
+
         this.footer = new InformeRupFooter(prestacionFinal, paciente, organizacion, this.usuario);
 
         await super.process();
@@ -66,44 +104,32 @@ export class InformeRUP extends InformePDF {
 
 
     async getCamaInternacion(data: any) {
+        const org = data.solicitud?.organizacion || data.organizacion;
+        const fecha = data.ejecucion?.fecha || data.informeIngreso?.fechaIngreso;
 
-        if (data?.solicitud?.ambitoOrigen === 'internacion') {
+        if (!org || !fecha) {
+            return null;
+        }
 
-            const org = data.solicitud.organizacion;
-            const fecha = data.ejecucion?.fecha;
+        const orgId = org.id || org._id || org;
 
-            if (!org || !fecha) {
-                return null;
-            }
+        // Intentamos en capa médica primero
+        let cama: any = await findByPaciente(
+            { organizacion: orgId, capa: 'medica', ambito: 'internacion' },
+            data.paciente.id,
+            fecha
+        );
 
-            const cama: any = await findByPaciente(
-                { organizacion: org, capa: 'medica', ambito: 'internacion' },
+        if (!cama) {
+            // Si no hay en médica, probamos en estadística
+            cama = await findByPaciente(
+                { organizacion: orgId, capa: 'estadistica', ambito: 'internacion' },
                 data.paciente.id,
                 fecha
             );
-
-            return this.mapCama(cama);
         }
 
-        if (data?.informeIngreso?.fechaIngreso) {
-
-            const org = data.organizacion;
-            const fecha = data.informeIngreso.fechaIngreso;
-
-            if (!org || !fecha) {
-                return null;
-            }
-
-            const cama: any = await findByPaciente(
-                { organizacion: org, capa: 'medica', ambito: 'internacion' },
-                data.paciente.id,
-                fecha
-            );
-
-            return this.mapCama(cama);
-        }
-
-        return null;
+        return this.mapCama(cama);
     }
 
     private mapCama(cama: any) {
@@ -116,6 +142,10 @@ export class InformeRUP extends InformePDF {
             .reverse()
             .map(s => s.nombre)
             .join(', ');
+
+        if (cama.unidadOrganizativa && typeof cama.unidadOrganizativa === 'object') {
+            cama.unidadOrganizativa = cama.unidadOrganizativa.term || cama.unidadOrganizativa.nombre;
+        }
 
         return cama;
     }
@@ -134,6 +164,8 @@ export class InformeRUP extends InformePDF {
         }
 
         return {
+            _id: informe._id,
+            id: informe.id,
             ejecucion: {
                 fecha: informe.informeIngreso.fechaIngreso,
                 organizacion: informe.organizacion,
@@ -151,7 +183,27 @@ export class InformeRUP extends InformePDF {
             estados,
             estadoActual: informe.estadoActual,
             paciente: informe.paciente,
-            // Mock methods needed by InformeRupBody
+            informeEstadistico: {
+                ingreso: {
+                    fecha: informe.informeIngreso.fechaIngreso,
+                    origen: informe.informeIngreso.origen?.tipo,
+                    motivo: informe.informeIngreso.motivo,
+                    ocupacion: informe.informeIngreso.ocupacionHabitual?.nombre,
+                    situacionLaboral: informe.informeIngreso.situacionLaboral?.nombre,
+                    nivelInstruccion: informe.informeIngreso.nivelInstruccion?.nombre,
+                    obraSocial: informe.informeIngreso.cobertura?.obraSocial?.financiador
+                },
+                egreso: informe.informeEgreso ? {
+                    fecha: informe.informeEgreso.fechaEgreso,
+                    diasEstada: informe.informeEgreso.diasDeEstada,
+                    tipoEgreso: informe.informeEgreso.tipoEgreso?.nombre,
+                    causaExterna: informe.informeEgreso.causaExterna ? {
+                        comoSeProdujo: informe.informeEgreso.causaExterna.comoSeProdujo?.nombre || informe.informeEgreso.causaExterna.comoSeProdujo,
+                        producidaPor: informe.informeEgreso.causaExterna.producidaPor?.nombre || informe.informeEgreso.causaExterna.producidaPor,
+                        lugar: informe.informeEgreso.causaExterna.lugar?.nombre || informe.informeEgreso.causaExterna.lugar
+                    } : null
+                } : null
+            },
             findRegistroById: () => null
         };
     }

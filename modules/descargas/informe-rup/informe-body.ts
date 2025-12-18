@@ -51,6 +51,140 @@ export class InformeRupBody extends HTMLComponent {
                         {{{this}}}
                     {{/each}}
                 </div>
+
+                {{#if informeEstadistico}}
+                    <div class="registros">
+                        <h4 class="bolder">DATOS DE INGRESO</h4>
+                        <div class="contenedor-secundario">
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">Fecha Ingreso</h6>
+                                <h6>{{ informeEstadistico.ingreso.fecha }}</h6>
+                            </div>
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">Origen hospitalización</h6>
+                                <h6>{{ informeEstadistico.ingreso.origen }}</h6>
+                            </div>
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">Motivo de ingreso</h6>
+                                <h6>{{ informeEstadistico.ingreso.motivo }}</h6>
+                            </div>
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">Ocupación habitual</h6>
+                                <h6>{{ informeEstadistico.ingreso.ocupacion }}</h6>
+                            </div>
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">Situación laboral</h6>
+                                <h6>{{ informeEstadistico.ingreso.situacionLaboral }}</h6>
+                            </div>
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">Nivel instrucción</h6>
+                                <h6>{{ informeEstadistico.ingreso.nivelInstruccion }}</h6>
+                            </div>
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">Obra social</h6>
+                                <h6>{{ informeEstadistico.ingreso.obraSocial }}</h6>
+                            </div>
+                        </div>
+
+                        {{#if informeEstadistico.egreso}}
+                            <h4 class="bolder mt-2">ALTA DEL PACIENTE</h4>
+                            <div class="contenedor-secundario">
+                                <div class="contenedor-bloque-texto">
+                                    <h6 class="bolder">Fecha de egreso</h6>
+                                    <h6>{{ informeEstadistico.egreso.fecha }}</h6>
+                                </div>
+                                <div class="contenedor-bloque-texto">
+                                    <h6 class="bolder">Días de estada</h6>
+                                    <h6>{{ informeEstadistico.egreso.diasEstada }}</h6>
+                                </div>
+                                <div class="contenedor-bloque-texto">
+                                    <h6 class="bolder">Tipo de egreso</h6>
+                                    <h6>{{ informeEstadistico.egreso.tipoEgreso }}</h6>
+                                </div>
+                            </div>
+
+                            {{#if informeEstadistico.egreso.causaExterna}}
+                                <h4 class="bolder mt-2">CAUSA EXTERNA</h4>
+                                <div class="contenedor-secundario">
+                                    {{#if informeEstadistico.egreso.causaExterna.comoSeProdujo}}
+                                        <div class="contenedor-bloque-texto">
+                                            <h6 class="bolder">Cómo se produjo</h6>
+                                            <h6>{{ informeEstadistico.egreso.causaExterna.comoSeProdujo }}</h6>
+                                        </div>
+                                    {{/if}}
+                                    {{#if informeEstadistico.egreso.causaExterna.producidaPor}}
+                                        <div class="contenedor-bloque-texto">
+                                            <h6 class="bolder">Producido por</h6>
+                                            <h6>{{ informeEstadistico.egreso.causaExterna.producidaPor }}</h6>
+                                        </div>
+                                    {{/if}}
+                                    {{#if informeEstadistico.egreso.causaExterna.lugar}}
+                                        <div class="contenedor-bloque-texto">
+                                            <h6 class="bolder">Lugar donde ocurrió</h6>
+                                            <h6>{{ informeEstadistico.egreso.causaExterna.lugar }}</h6>
+                                        </div>
+                                    {{/if}}
+                                </div>
+                            {{/if}}
+                        {{/if}}
+                    </div>
+                {{/if}}
+
+                {{#if movimientos}}
+                    <div class="registros">
+                        <h4 class="bolder">MOVIMIENTOS DE INTERNACIÓN</h4>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <small class="font-weight-bold">
+                                            FECHA
+                                        </small>
+                                    </th>
+                                    <th>
+                                        <small class="font-weight-bold">
+                                            CAMA
+                                        </small>
+                                    </th>
+                                    <th>
+                                        <small class="font-weight-bold">
+                                            UNIDAD ORGANIZATIVA
+                                        </small>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#each movimientos}}
+                                    <tr>
+                                        <td>
+                                            <small>
+                                                {{ fecha }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                {{#if extras.ingreso}}
+                                                    INGRESO <br>
+                                                {{/if}}
+                                                {{#if extras.egreso}}
+                                                    EGRESO <br>
+                                                {{/if}}
+                                                {{#unless idSalaComun}}
+                                                    {{ nombre }} <br> ({{ sectorName }})
+                                                {{/unless}}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                {{ unidadOrganizativa }}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                {{/if}}
                 {{#if firmaHTML}}
                     {{{ firmaHTML }}}
                 {{/if}}
@@ -87,6 +221,26 @@ export class InformeRupBody extends HTMLComponent {
         const registros = await Promise.all(ps);
         const firmaHTML = await this.getFirmaHTML();
 
+        const movimientos = (this as any).movimientos?.map(mov => {
+            return {
+                ...mov,
+                fecha: moment(mov.fecha).format('DD/MM/YYYY HH:mm'),
+                unidadOrganizativa: mov.unidadOrganizativa?.term || mov.unidadOrganizativas?.[0]?.term || ''
+            };
+        });
+
+        const informeEstadistico = this.prestacion.informeEstadistico ? {
+            ingreso: {
+                ...this.prestacion.informeEstadistico.ingreso,
+                fecha: this.prestacion.informeEstadistico.ingreso.fecha && moment(this.prestacion.informeEstadistico.ingreso.fecha).format('DD/MM/YYYY HH:mm'),
+                obraSocial: this.prestacion.informeEstadistico.ingreso.obraSocial || 'sin obra social'
+            },
+            egreso: this.prestacion.informeEstadistico.egreso ? {
+                ...this.prestacion.informeEstadistico.egreso,
+                fecha: this.prestacion.informeEstadistico.egreso.fecha && moment(this.prestacion.informeEstadistico.egreso.fecha).format('DD/MM/YYYY HH:mm')
+            } : null
+        } : null;
+
         this.data = {
 
             fechaEjecucion: fechaEjecucion && moment(fechaEjecucion).format('DD/MM/YYYY HH:mm'),
@@ -94,6 +248,8 @@ export class InformeRupBody extends HTMLComponent {
             fechaPrestacion: fechaPrestacion && moment(fechaPrestacion).format('DD/MM/YYYY HH:mm'),
             titulo: this.prestacion.solicitud.tipoPrestacion.term,
             registros,
+            movimientos,
+            informeEstadistico,
             esValidada,
             firmaHTML
         };
