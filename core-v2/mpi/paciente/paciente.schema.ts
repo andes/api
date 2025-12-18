@@ -71,7 +71,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String,
             apellido: String,
-            documento: Number },
+            documento: Number
+        },
         registradoEn: Date
     },
     estadoCivil: ESTADOCIVIL,
@@ -302,16 +303,17 @@ PacienteSubSchema.virtual('edadReal').get(function () {
 });
 
 PacienteSchema.methods.basicos = function () {
+    const doc = this as IPacienteDoc;
     return {
-        id: this._id,
-        nombre: this.nombre,
-        alias: this.alias,
-        apellido: this.apellido,
-        documento: this.documento,
-        numeroIdentificacion: this.numeroIdentificacion,
-        fechaNacimiento: this.fechaNacimiento,
-        sexo: this.sexo,
-        genero: this.genero
+        id: doc._id,
+        nombre: doc.nombre,
+        alias: doc.alias,
+        apellido: doc.apellido,
+        documento: doc.documento,
+        numeroIdentificacion: doc.numeroIdentificacion,
+        fechaNacimiento: doc.fechaNacimiento,
+        sexo: doc.sexo,
+        genero: doc.genero
     };
 };
 

@@ -1,3 +1,5 @@
+import { Mixed } from 'mongoose';
+
 export interface IProfesional {
     nombre: string;
     apellido: string;
@@ -5,4 +7,6 @@ export interface IProfesional {
     fechaNacimiento: Date;
     sexo: string;
     genero: string;
+    formacionGrado?: any[];
+    formacionPosgrado?: any[];
 }

@@ -94,7 +94,7 @@ async function registrarAppNotificadas(req, recetas, sistema) {
  */
 export async function buscarRecetas(req) {
     const options: any = {};
-    const params = req.params.id ? req.params : req.query;
+    const params = (req.params as any).id ? req.params : req.query;
     const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
     const pacienteId = params.pacienteId || null;
     const documento = params.documento || null;
@@ -203,7 +203,7 @@ export async function obtenerRecetasPorGrupo(recetaIds) {
         const grupos = {};
         recetas.forEach(receta => {
             if (receta) {
-                const idRegistro = receta.idRegistro;
+                const idRegistro = (receta as any).idRegistro;
                 if (!grupos[idRegistro]) {
                     grupos[idRegistro] = [];
                 }
@@ -674,7 +674,7 @@ export async function crearReceta(dataReceta, req) {
 }
 export async function buscarRecetasPorProfesional(req) {
     try {
-        const profesionalId = req.params.id;
+        const profesionalId = (req.params as any).id;
         const { estadoReceta, desde, hasta, origenExternoApp, excluirEstado } = req.query;
         if (!profesionalId || !Types.ObjectId.isValid(profesionalId)) {
             throw new ParamsIncorrect();

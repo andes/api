@@ -1,13 +1,12 @@
 module.exports = {
-    roots: ['./'],
+    testEnvironment: 'node',
     transform: {
-        '^.+\\.tsx?$': 'ts-jest',
-        "^.+\\.jsx?$": "babel-jest",
+        '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
     },
     testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-    testEnvironment: 'node',
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'json', 'node'],
     moduleNameMapper: {
-        '@andes/unit-test': '<rootDir>/packages/unit-testing/index.ts'
+        '@andes/unit-test': '<rootDir>/packages/unit-testing/index.ts',
+        '^mongoose-gridfs$': '<rootDir>/__mocks__/mongoose-gridfs.js'
     }
-}
+};

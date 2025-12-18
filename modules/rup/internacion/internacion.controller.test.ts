@@ -18,7 +18,7 @@ import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 const REQMock = getFakeRequest();
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
+jest.setTimeout(600000);
 
 const ambito = 'internacion';
 const capa = 'estadistica';

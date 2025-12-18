@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get('/entidadesFormadoras/:id*?', (req, res, next) => {
 
-    if (req.params.id) {
-        entidadFormadora.findById(req.params.id, (err, data) => {
+    if ((req.params as any).id) {
+        entidadFormadora.findById((req.params as any).id, (err, data) => {
             if (err) {
                 return next(err);
             }

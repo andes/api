@@ -13,8 +13,8 @@ const router = express.Router();
 router.get('/listaEspera/:id*?', (req, res, next) => {
     let opciones = {};
 
-    if (req.params.id) {
-        listaEspera.findById(req.params.id, (err, data) => {
+    if ((req.params as any).id) {
+        listaEspera.findById((req.params as any).id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -29,19 +29,19 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             opciones['estado'] = req.query.estado;
         }
 
-        if (req.query.fechaDesde) {
-            const fechaDesde = moment(new Date(req.query.fechaDesde)).startOf('day').toDate();
+        if (req.query.fechaDesde as any) {
+            const fechaDesde = moment(new Date(req.query.fechaDesde as any)).startOf('day').toDate();
 
-            if (req.query.fechaHasta) {
-                const fechaHasta = moment(new Date(req.query.fechaHasta)).endOf('day').toDate();
+            if (req.query.fechaHasta as any) {
+                const fechaHasta = moment(new Date(req.query.fechaHasta as any)).endOf('day').toDate();
                 opciones['demandas.fecha'] = { $gte: fechaDesde, $lte: fechaHasta };
             } else {
                 opciones['demandas.fecha'] = { $gte: fechaDesde };
             }
         }
 
-        if (req.query.prestacion) {
-            const terminos = req.query.prestacion?.split(',').map(term => term.trim());
+        if (req.query.prestacion as any) {
+            const terminos = (req.query.prestacion as any)?.split(',').map(term => term.trim());
 
             opciones['$or'] = terminos.map(term => ({
                 'tipoPrestacion.term': RegExp('^.*' + term + '.*$', 'i')
@@ -52,11 +52,11 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             ? { motivo: RegExp('^.*' + req.query.motivo + '.*$', 'i') }
             : {};
 
-        const organizacionFiltro = req.query.organizacion
-            ? { 'organizacion.id': { $in: req.query.organizacion.split(',').map((id) => mongoose.Types.ObjectId(id)) } }
+        const organizacionFiltro = req.query.organizacion as any
+            ? { 'organizacion.id': { $in: (req.query.organizacion as any).split(',').map((id) => mongoose.Types.ObjectId(id)) } }
             : {};
 
-        if (req.query.motivo || req.query.organizacion) {
+        if (req.query.motivo as any || req.query.organizacion as any) {
             opciones = {
                 ...opciones,
                 demandas: {
@@ -68,8 +68,8 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
             };
         }
 
-        const skip: number = parseInt(req.query.skip || 0, 10);
-        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
+        const skip: number = parseInt(req.query.skip as any || 0, 10);
+        const limit: number = Math.min(parseInt(req.query.limit as any || defaultLimit, 10), maxLimit);
 
         const pacienteAggregate = [
             {
@@ -85,13 +85,13 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
                                 $expr: { $eq: ['$_id', '$$pacienteId.id'] }
                             }
                         },
-                        ...(req.query.paciente ? [
+                        ...(req.query.paciente as any ? [
                             {
                                 $match: {
                                     $or: [
-                                        { nombre: { $regex: req.query.paciente, $options: 'i' } },
-                                        { apellido: { $regex: req.query.paciente, $options: 'i' } },
-                                        { documento: { $regex: req.query.paciente, $options: 'i' } }
+                                        { nombre: { $regex: req.query.paciente as any, $options: 'i' } },
+                                        { apellido: { $regex: req.query.paciente as any, $options: 'i' } },
+                                        { documento: { $regex: req.query.paciente as any, $options: 'i' } }
                                     ]
                                 }
                             }

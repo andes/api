@@ -23,9 +23,9 @@ const router = express.Router();
 // devuelve los 10 ultimos turnos del paciente
 router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
 
-    if (req.params.idPaciente) {
+    if (req.params.idPaciente as any) {
         Agenda
-            .find({ 'bloques.turnos.paciente.id': req.params.idPaciente })
+            .find({ 'bloques.turnos.paciente.id': req.params.idPaciente as any })
             .limit(10)
             .sort({ horaInicio: -1 })
             .exec((err, data) => {
@@ -40,7 +40,7 @@ router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
 
 // devuelve las agendas candidatas para la operacion clonar agenda
 router.get('/agenda/candidatas', async (req, res, next) => {
-    Agenda.findById(req.query.idAgenda, async (err, data) => {
+    Agenda.findById(req.query.idAgenda as any, async (err, data) => {
         if (err) {
             return next(err);
         }
@@ -49,8 +49,8 @@ router.get('/agenda/candidatas', async (req, res, next) => {
         const horaAgendaOrig = new Date();
         horaAgendaOrig.setHours(0, 0, 0, 0);
 
-        const indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
-        const indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
+        const indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque as any, String(y._id)));
+        const indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno as any, String(y._id)));
         const bloque = resultado.bloques[indiceBloque];
 
         // turno a reasignar
@@ -68,10 +68,10 @@ router.get('/agenda/candidatas', async (req, res, next) => {
             // '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
             $or: estado,
             'tipoPrestaciones.conceptId': turno.tipoPrestacion ? turno.tipoPrestacion.conceptId : '', // Que tengan incluída la prestación del turno
-            _id: { $ne: mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
+            _id: { $ne: mongoose.Types.ObjectId(req.query.idAgenda as any) }, // Que no sea la agenda original
         };
 
-        if (req.query.duracion) {
+        if (req.query.duracion as any) {
             match['bloques.duracionTurno'] = bloque.duracionTurno;
         }
         try {
@@ -86,11 +86,11 @@ router.get('/agenda/candidatas', async (req, res, next) => {
                         if (
                             b.tipoPrestaciones.findIndex(x => String(x.conceptId) === String(turno.tipoPrestacion.conceptId)) >= 0
                             && // mismo tipo de prestacion
-                            (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno))
+                            (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno as any))
                             && // turno disponible o al que se reasigno
-                            (typeof req.query.horario !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
+                            (typeof req.query.horario as any !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
                             && // si filtro por horario verifico que sea el mismo
-                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true) // si filtro por duracion verifico que sea la mismo
+                            (req.query.duracion as any ? b.duracionTurno === bloque.duracionTurno : true) // si filtro por duracion verifico que sea la mismo
                         ) {
                             if (out.indexOf(a) < 0) {
                                 out.push(a);
@@ -115,7 +115,7 @@ router.get('/agenda/candidatas', async (req, res, next) => {
 router.get('/agenda/cantidadConsultaXPrestacion', async (req, res, next) => {
     const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     const params = req.query;
-    params['organizacion'] = organizacion;
+    params['organizacion'] = String(organizacion);
     agendaCtrl.getCantidadConsultaXPrestacion(params).then((resultado) => {
         res.json(resultado);
     });
@@ -157,9 +157,9 @@ router.get('/agenda/diagnosticos', async (req, res, next) => {
 
 router.get('/agenda/:id?', (req, res, next) => {
 
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (mongoose.Types.ObjectId.isValid((req.params as any).id)) {
 
-        Agenda.findById(req.params.id, (err, data) => {
+        Agenda.findById((req.params as any).id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -170,92 +170,92 @@ router.get('/agenda/:id?', (req, res, next) => {
 
         query.where('estado').ne('borrada'); // No devuelve agendas borradas
 
-        if (req.query.fechaDesde) {
-            query.where('horaInicio').gte(req.query.fechaDesde);
+        if (req.query.fechaDesde as any) {
+            query.where('horaInicio').gte(req.query.fechaDesde as any);
         }
 
-        if (req.query.fechaHasta) {
-            query.where('horaFin').lte(req.query.fechaHasta);
+        if (req.query.fechaHasta as any) {
+            query.where('horaFin').lte(req.query.fechaHasta as any);
         }
 
-        if (req.query.idProfesional) {
-            query.where('profesionales._id').equals(req.query.idProfesional);
+        if (req.query.idProfesional as any) {
+            query.where('profesionales._id').equals(req.query.idProfesional as any);
         }
 
-        if (req.query.idTipoPrestacion) {
-            query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion);
+        if (req.query.idTipoPrestacion as any) {
+            query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion as any);
         }
 
-        if (Array.isArray(req.query.tipoPrestacion)) {
-            query.where('tipoPrestaciones.conceptId').in(req.query.tipoPrestacion);
-        } else if (req.query.tipoPrestacion) {
-            query.where('tipoPrestaciones.conceptId').equals(req.query.tipoPrestacion);
+        if (Array.isArray(req.query.tipoPrestacion as any)) {
+            query.where('tipoPrestaciones.conceptId').in(req.query.tipoPrestacion as any);
+        } else if (req.query.tipoPrestacion as any) {
+            query.where('tipoPrestaciones.conceptId').equals(req.query.tipoPrestacion as any);
         }
 
-        if (req.query.espacioFisico) {
-            query.where('espacioFisico._id').equals(req.query.espacioFisico);
+        if (req.query.espacioFisico as any) {
+            query.where('espacioFisico._id').equals(req.query.espacioFisico as any);
         }
 
-        if (req.query.otroEspacioFisico) {
-            query.where('otroEspacioFisico._id').equals(req.query.otroEspacioFisico);
+        if (req.query.otroEspacioFisico as any) {
+            query.where('otroEspacioFisico._id').equals(req.query.otroEspacioFisico as any);
         }
 
-        if (req.query.estado) {
-            query.where('estado').equals(req.query.estado);
+        if (req.query.estado as any) {
+            query.where('estado').equals(req.query.estado as any);
         }
 
-        if (req.query.estados) {
-            query.where('estado').in(req.query.estados);
+        if (req.query.estados as any) {
+            query.where('estado').in(req.query.estados as any);
         }
 
-        if (req.query.organizacion) {
-            query.where('organizacion._id').equals(req.query.organizacion);
+        if (req.query.organizacion as any) {
+            query.where('organizacion._id').equals(req.query.organizacion as any);
         }
 
-        if (req.query.disponiblesProfesional) {
+        if (req.query.disponiblesProfesional as any) {
             query.where('bloques.restantesProfesional').gt(0);
         }
 
-        if (req.query.disponiblesGestion) {
+        if (req.query.disponiblesGestion as any) {
             query.where('bloques.restantesGestion').gt(0);
         }
 
-        if (req.query.disponiblesDelDia) {
+        if (req.query.disponiblesDelDia as any) {
             query.where('bloques.restantesDelDia').gt(0);
         }
 
-        if (req.query.disponiblesProgramados) {
+        if (req.query.disponiblesProgramados as any) {
             query.where('bloques.restantesProgramados').gt(0);
         }
 
         // Trae las Agendas NO nominalizadas
-        if (req.query.nominalizada && req.query.nominalizada === false) {
+        if (req.query.nominalizada as any && req.query.nominalizada as any === false) {
             query.where('nominalizada').equals(false);
         }
 
         // Filtra por el array de tipoPrestacion enviado como parametro
-        if (req.query.tipoPrestaciones) {
-            query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones);
+        if (req.query.tipoPrestaciones as any) {
+            query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones as any);
         }
 
-        if (req.query.profesionales) {
-            query.where('profesionales._id').in(req.query.profesionales);
+        if (req.query.profesionales as any) {
+            query.where('profesionales._id').in(req.query.profesionales as any);
         }
 
-        if (req.query.tieneTurnosAsignados) {
+        if (req.query.tieneTurnosAsignados as any) {
             query.where('bloques.turnos.estado').equals('asignado');
         }
 
-        if (req.query.turno) {
-            query.where('bloques.turnos._id').equals(req.query.turno);
+        if (req.query.turno as any) {
+            query.where('bloques.turnos._id').equals(req.query.turno as any);
         }
 
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
-        if (req.query.rango) {
+        if (req.query.rango as any) {
             const variable: any[] = [];
-            variable.push({ horaInicio: { $lte: req.query.desde }, horaFin: { $gt: req.query.desde } });
-            variable.push({ horaInicio: { $lt: req.query.hasta }, horaFin: { $gte: req.query.hasta } });
-            variable.push({ horaInicio: { $gt: req.query.desde, $lt: req.query.hasta } });
+            variable.push({ horaInicio: { $lte: req.query.desde as any }, horaFin: { $gt: req.query.desde as any } });
+            variable.push({ horaInicio: { $lt: req.query.hasta as any }, horaFin: { $gte: req.query.hasta as any } });
+            variable.push({ horaInicio: { $gt: req.query.desde as any, $lt: req.query.hasta as any } });
             query.or(variable);
         }
 
@@ -266,12 +266,12 @@ router.get('/agenda/:id?', (req, res, next) => {
 
         query.sort({ horaInicio: 1 });
 
-        if (req.query.skip) {
-            query.skip(parseInt(req.query.skip || 0, 10));
+        if (req.query.skip as any) {
+            query.skip(parseInt(req.query.skip as any || 0, 10));
         }
 
-        if (req.query.limit) {
-            query.limit(parseInt(req.query.limit || 0, 10));
+        if (req.query.limit as any) {
+            query.limit(parseInt(req.query.limit as any || 0, 10));
         }
 
         query.exec((err, data) => {
@@ -331,11 +331,11 @@ router.post('/agenda/clonar/:idAgenda', async (req, res, next) => {
         accion: 'Crear Agenda',
         ruta: req.url,
         method: req.method,
-        idAgendaOriginal: req.params.idAgenda,
+        idAgendaOriginal: req.params.idAgenda as any,
         clones: req.body.clones
     };
     try {
-        const idagenda = req.params.idAgenda;
+        const idagenda = req.params.idAgenda as any;
         const clones = req.body.clones;
         const agenda = await Agenda.findById(idagenda);
 
@@ -389,7 +389,7 @@ router.put('/agenda/:id', async (req: any, res, next) => {
         method: req.method,
         data: req.body
     };
-    objetoLog.data.id = req.params.id;
+    objetoLog.data.id = (req.params as any).id;
 
     try {
         const organizacionId = req.user.organizacion.id;
@@ -405,7 +405,7 @@ router.put('/agenda/:id', async (req: any, res, next) => {
             agendaLog.info('update', mensajesSolapamiento, req);
             return res.json(mensajesSolapamiento);
         }
-        const data = await Agenda.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const data = await Agenda.findByIdAndUpdate((req.params as any).id, req.body, { new: true });
 
         agendaLog.info('update', objetoLog, req);
         res.json(data);
@@ -426,9 +426,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
         method: req.method,
         data: req.body
     };
-    objetoLog.data.id = req.params?.id || undefined;
+    objetoLog.data.id = (req.params as any)?.id || undefined;
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (!mongoose.Types.ObjectId.isValid((req.params as any).id)) {
         // En caso de que el patch se haga desde RUP no viene el id de la agenda
         const t = req.body.turnos;
         if (t.length > 0) {
@@ -477,7 +477,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
             });
         }
     } else {
-        Agenda.findById(req.params.id, async (err, data: any) => {
+        Agenda.findById((req.params as any).id, async (err, data: any) => {
             if (err) {
                 return next(err);
             }
@@ -749,7 +749,7 @@ router.post('/dashboard/localidades', async (req, res, next) => {
 
 router.get('/agenda/turno/:idTurno', async (req, res, next) => {
     try {
-        const datosTurno = await agendaCtrl.getDatosTurnos(req.params.idTurno);
+        const datosTurno = await agendaCtrl.getDatosTurnos(req.params.idTurno as any);
         res.json(datosTurno);
     } catch (err) {
         return next(err);
@@ -764,12 +764,12 @@ router.get('/agenda/turno/:idTurno', async (req, res, next) => {
  */
 
 router.get('/totem/disponibles', async (req: any, res, next) => {
-    if (!req.query.prestacion) {
+    if (!req.query.prestacion as any) {
         return res.json();
     }
     try {
         const organization = new mongoose.Types.ObjectId(Auth.getOrganization(req));
-        const turnos = await agendaCtrl.turnosDisponibles(req.query.prestacion, organization);
+        const turnos = await agendaCtrl.turnosDisponibles(req.query.prestacion as any, organization);
         res.json(turnos);
     } catch (err) {
         return next(err);

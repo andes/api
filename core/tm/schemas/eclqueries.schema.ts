@@ -17,7 +17,7 @@ export const ECLQueriesSchema = new mongoose.Schema({
     descripcion: String
 });
 
-export const ECLQueries: Model<ECLQueriesDocument> = mongoose.model(
+export const ECLQueries = mongoose.model<ECLQueriesDocument>(
     'ECLQueries',
     ECLQueriesSchema,
     'eclqueries'

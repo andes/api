@@ -126,7 +126,8 @@ export async function matriculaCero() {
 
 
 export async function formacionCero() {
-    const profesionales: any = await Profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; });
+    const filter = { $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' } as any;
+    const profesionales = await Profesional.find(filter).exec();
     return profesionales;
 }
 
