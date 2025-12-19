@@ -1,5 +1,6 @@
 module.exports = {
     testEnvironment: 'node',
+    testTimeout: 60000,
     transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
     },

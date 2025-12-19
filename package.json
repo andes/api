@@ -188,12 +188,13 @@
         "tslint-eslint-rules": "^4.1.1"
     },
     "engines": {
-        "node": ">=16 <19"
+        "node": ">=18 <19"
     },
     "overrides": {
         "@types/babel__core": "7.20.1",
         "@types/babel__traverse": "7.20.1",
-        "mime": "3.0.0",
-        "flat": "5.0.2"
+        "mime": "1.6.0",
+        "flat": "5.0.2",
+        "mongodb": "3.7.4"
     }
 }

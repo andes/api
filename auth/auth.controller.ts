@@ -6,7 +6,7 @@ import { APP_DOMAIN, userScheduler } from './../config.private';
 import { Profesional } from './../core/tm/schemas/profesional';
 import { MailOptions, renderHTML, sendMail } from './../utils/roboSender/sendEmail';
 import { Auth } from './auth.class';
-import { AuthUsers } from './schemas/authUsers';
+import { AuthUsers, IAuthUsers } from './schemas/authUsers';
 import * as crypto from 'crypto';
 const sha1Hash = require('sha1');
 
@@ -393,14 +393,14 @@ export async function createUser(data) {
     const organizacion = await Organizacion.findOne({ matriculacion: true });
     const permisos = getPermisosByType(data.tipoPermisos);
     const organizaciones = [{
-        _id: organizacion._id,
-        nombre: organizacion.nombre,
+        _id: organizacion?._id,
+        nombre: organizacion?.nombre,
         activo: true,
         permisos,
         perfiles: [],
         lastLogin: new Date()
     }];
-    user.organizaciones = organizaciones;
+    (user.organizaciones as any) = organizaciones;
 
     user.audit(userScheduler);
     return await user.save();
@@ -409,7 +409,7 @@ export async function createUser(data) {
 export async function getTemporyTokenGenerarUsuario(username) {
     const organizacion = await Organizacion.findOne({ matriculacion: true });
     const permisos = getPermisosByType('generarUsuario');
-    return Auth.generateUserTokenTemporaly(username, permisos, organizacion._id);
+    return Auth.generateUserTokenTemporaly(username, permisos, organizacion?._id);
 }
 
 function getPermisosByType(tipoPermisos) {
