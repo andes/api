@@ -171,12 +171,13 @@ export function initAPI(app: Express) {
             // IMPORTANTE: Express app.get('env') returns 'development' if NODE_ENV is not defined.
             // O sea, la API está corriendo siempre en modo development
 
+            if (res.headersSent) { return next(err); }
             // Send response
-            res.status(err.status);
-            res.send({
+            return res.status(err.status).json({
                 message: err.message,
                 error: (app.get('env') === 'development') ? err : null
             });
+
         }
     });
 
