@@ -162,8 +162,8 @@ export class InformeRUP extends InformePDF {
                 createdBy: informe.estadoActual.createdBy
             });
         }
-
         return {
+
             _id: informe._id,
             id: informe.id,
             ejecucion: {
@@ -189,9 +189,10 @@ export class InformeRUP extends InformePDF {
                     origen: informe.informeIngreso.origen?.tipo,
                     motivo: informe.informeIngreso.motivo,
                     ocupacion: informe.informeIngreso.ocupacionHabitual?.nombre,
-                    situacionLaboral: informe.informeIngreso.situacionLaboral?.nombre,
-                    nivelInstruccion: informe.informeIngreso.nivelInstruccion?.nombre,
-                    obraSocial: informe.informeIngreso.cobertura?.obraSocial?.financiador
+                    situacionLaboral: informe.informeIngreso.situacionLaboral,
+                    nivelInstruccion: informe.informeIngreso.nivelInstruccion,
+                    asociado: informe.informeIngreso.cobertura?.tipo,
+                    obraSocial: informe.informeIngreso.cobertura?.obraSocial
                 },
                 egreso: informe.informeEgreso ? {
                     fecha: informe.informeEgreso.fechaEgreso,

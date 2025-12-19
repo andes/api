@@ -104,6 +104,11 @@ export class InformePDF extends HTMLComponent {
             },
             footer: {
                 height: '1cm'
+            },
+            childProcessOptions: {
+                env: {
+                    OPENSSL_CONF: '/dev/null',
+                }
             }
         };
         return defaultOptions;

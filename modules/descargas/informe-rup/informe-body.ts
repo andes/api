@@ -74,15 +74,19 @@ export class InformeRupBody extends HTMLComponent {
                             </div>
                             <div class="contenedor-bloque-texto">
                                 <h6 class="bolder">Situación laboral</h6>
-                                <h6>{{ informeEstadistico.ingreso.situacionLaboral }}</h6>
+                                <h6>{{ informeEstadistico.ingreso.situacionLaboral.nombre }}</h6>
                             </div>
                             <div class="contenedor-bloque-texto">
                                 <h6 class="bolder">Nivel instrucción</h6>
-                                <h6>{{ informeEstadistico.ingreso.nivelInstruccion }}</h6>
+                                <h6>{{ informeEstadistico.ingreso.nivelInstruccion.nombre }}</h6>
                             </div>
                             <div class="contenedor-bloque-texto">
                                 <h6 class="bolder">Obra social</h6>
-                                <h6>{{ informeEstadistico.ingreso.obraSocial }}</h6>
+                                <h6>{{ informeEstadistico.ingreso.obraSocial.nombre }}</h6>
+                            </div>
+                            <div class="contenedor-bloque-texto">
+                                <h6 class="bolder">Asociado</h6>
+                                <h6>{{ informeEstadistico.ingreso.asociado }}</h6>
                             </div>
                         </div>
 
@@ -240,6 +244,7 @@ export class InformeRupBody extends HTMLComponent {
                 fecha: this.prestacion.informeEstadistico.egreso.fecha && moment(this.prestacion.informeEstadistico.egreso.fecha).format('DD/MM/YYYY HH:mm')
             } : null
         } : null;
+
 
         this.data = {
 
