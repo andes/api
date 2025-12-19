@@ -387,7 +387,7 @@ export async function obtenerRecetasPorGrupo(recetaIds) {
     }
 }
 
-export async function suspender(recetas, req) {
+export async function suspender(recetaId, req) {
     const motivo = req.body.motivo;
     const observacion = req.body.observacion;
     const profesional = req.body.profesional;
