@@ -16,7 +16,7 @@ const REQMock: any = {
     user: {}
 };
 
-jest.setTimeout(600000);
+jest.setTimeout(60000);
 
 let mongoServer: any;
 const ambito = 'internacion';

@@ -18,7 +18,7 @@ import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 const REQMock = getFakeRequest();
 
-jest.setTimeout(600000);
+jest.setTimeout(60000);
 
 const ambito = 'internacion';
 const capa = 'estadistica';
