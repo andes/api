@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as express from 'express';
 import * as CensosController from './censo.controller';
 import { asyncHandler } from '@andes/api-tool';
@@ -7,19 +8,35 @@ const router = express.Router();
 const csv = require('fast-csv');
 
 router.get('/censo-diario', Auth.authenticate(), asyncHandler(async (req: any, res) => {
-    const organizacion = Auth.getOrganization(req);
-    const unidadOrganizativa = req.query.unidadOrganizativa;
-    const fecha = req.query.fecha;
+    try {
+        const organizacion = Auth.getOrganization(req);
+        const unidadOrganizativa = req.query.unidadOrganizativa;
+        const fecha = req.query.fecha;
+        const organizacionId = typeof organizacion === 'string' ? organizacion : (organizacion && (organizacion as any).id);
 
-    const result = await CensosController.censoDiario({
-        organizacion,
-        timestamp: fecha,
-        unidadOrganizativa
-    });
+        console.log('📥 [Backend] GET /censo-diario:', { organizacion: organizacionId, unidadOrganizativa, fecha });
 
-    await CensosController.storeCenso(organizacion, unidadOrganizativa, result.censo, fecha);
+        const result = await CensosController.censoDiario({
+            organizacion,
+            timestamp: fecha,
+            unidadOrganizativa
+        });
 
-    res.json(result);
+        // console.log('📊 [Backend] Resultado de CensosController.censoDiario:', JSON.stringify(result, null, 2));
+
+        if (!result) {
+            console.error('❌ [Backend] CensosController.censoDiario retornó null o undefined');
+            return res.json({ error: 'No se pudo generar el censo' });
+        }
+
+        await CensosController.storeCenso(organizacion, unidadOrganizativa, result.censo, fecha);
+
+        console.log('✅ [Backend] Enviando respuesta:', result);
+        res.json(result);
+    } catch (error) {
+        console.error('❌ [Backend] Error en /censo-diario:', error);
+        res.status(500).json({ error: error.message });
+    }
 }));
 
 router.get('/censo-mensual', Auth.authenticate(), asyncHandler(async (req: any, res) => {

@@ -13,6 +13,7 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { userScheduler } from '../../../config.private';
 const dataLog: any = new Object(userScheduler);
+import { InformeEstadistica } from './informe-estadistica.schema';
 dataLog.body = { _id: null };
 
 const router = express.Router();
@@ -53,6 +54,7 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
 }));
 
 router.get('/camas/historial', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
+
     const organizacion = Auth.getOrganization(req);
     const ambito = req.query.ambito;
     const capa = req.query.capa;
@@ -79,6 +81,7 @@ router.get('/lista-espera', Auth.authenticate(), asyncHandler(async (req: Reques
 
 
 router.get('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
+
     const organizacion = {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
@@ -140,6 +143,7 @@ router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(asy
 /** Edita los estados de una cama */
 router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     let result;
+
     try {
         if (req.body.extras?.ingreso) {
             // Si se editan los datos de cobertura, se actualiza la obra social del paciente
@@ -158,7 +162,37 @@ router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncH
                 { arrayFilters: [{ 'elemento.valor.informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate() }] }
             );
         }
+        if (req.body.extras?.ingreso) {
+            const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id);
+            const obraSocialUpdated = await updateObraSocial(pacienteMPI);
+            const financiador = updateFinanciador(obraSocialUpdated, req.body.paciente.obraSocial);
+            pacienteMPI.financiador = financiador;
+            await PacienteCtr.update(pacienteMPI.id, pacienteMPI, dataLog);
 
+            if (req.body.capa === 'estadistica') {
+                await InformeEstadistica.updateOne(
+                    {
+                        'paciente.id': req.body.paciente.id,
+                        'informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate()
+                    },
+                    {
+                        $set: {
+                            'informeIngreso.cobertura.obraSocial': req.body.paciente.obraSocial
+                        }
+                    }
+                );
+            } else {
+                await Prestacion.update(
+                    { _id: req.body.idInternacion },
+                    {
+                        $set: {
+                            'ejecucion.registros.$[elemento].valor.informeIngreso.obraSocial': req.body.paciente.obraSocial
+                        }
+                    },
+                    { arrayFilters: [{ 'elemento.valor.informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate() }] }
+                );
+            }
+        }
         const organizacion = {
             _id: Auth.getOrganization(req),
             nombre: Auth.getOrganization(req, 'nombre')
