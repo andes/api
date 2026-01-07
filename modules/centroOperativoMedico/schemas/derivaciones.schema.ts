@@ -95,7 +95,11 @@ export const DerivacionSchema = new mongoose.Schema({
         type: String,
         enum: ESTADOS_DERIVACION
     },
-    detalle: String,
+    motivoDerivacion: String,
+    diagnosticoActual: String,
+    estadoClinico: String,
+    diagnosticoBase: String,
+    comorbilidades: String,
     adjuntos: mongoose.Schema.Types.Mixed,
     historial: [DerivacionHistorialSchema],
     cancelada: {
