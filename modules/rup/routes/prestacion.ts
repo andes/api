@@ -592,16 +592,13 @@ router.post('/prestaciones', async (req, res, next) => {
  */
 function mergeRegistrosPreservandoAuditoria(registrosExistentes: any[], registrosNuevos: any[]): any[] {
     if (!registrosExistentes || registrosExistentes.length === 0) {
-        // Si no hay registros existentes, retornamos los nuevos tal cual
         return registrosNuevos;
     }
 
     if (!registrosNuevos || registrosNuevos.length === 0) {
-        // Si no hay registros nuevos, mantenemos los existentes
         return registrosExistentes;
     }
 
-    // Crear un mapa de registros existentes por _id para búsqueda rápida
     const registrosExistentesMap = new Map();
     registrosExistentes.forEach(reg => {
         if (reg._id) {
@@ -609,23 +606,18 @@ function mergeRegistrosPreservandoAuditoria(registrosExistentes: any[], registro
         }
     });
 
-    // Procesar los registros nuevos
     const registrosMergeados = registrosNuevos.map(regNuevo => {
         const idNuevo = regNuevo._id ? regNuevo._id.toString() : null;
 
-        // Si el registro nuevo tiene _id y existe en los registros actuales
         if (idNuevo && registrosExistentesMap.has(idNuevo)) {
             const regExistente = registrosExistentesMap.get(idNuevo);
 
-            // Preservar datos de auditoría del registro existente
             const registroMergeado = {
                 ...regNuevo,
                 createdAt: regExistente.createdAt,
                 createdBy: regExistente.createdBy,
-                // updatedAt y updatedBy serán actualizados por el AuditPlugin automáticamente
             };
 
-            // Si el registro tiene registros anidados (secciones), mergear recursivamente
             if (regNuevo.registros && regNuevo.registros.length > 0) {
                 registroMergeado.registros = mergeRegistrosPreservandoAuditoria(
                     regExistente.registros || [],
@@ -635,13 +627,8 @@ function mergeRegistrosPreservandoAuditoria(registrosExistentes: any[], registro
 
             return registroMergeado;
         } else {
-            // Es un registro completamente nuevo, no tiene datos de auditoría previos
-            // El AuditPlugin de Mongoose agregará createdAt/createdBy automáticamente
-
-            // Si tiene registros anidados y alguno podría ser existente, procesarlos también
             if (regNuevo.registros && regNuevo.registros.length > 0) {
                 const registrosAnidadosExistentes = [];
-                // Intentar encontrar registros anidados existentes en todos los registros existentes
                 registrosExistentes.forEach(regEx => {
                     if (regEx.registros && regEx.registros.length > 0) {
                         registrosAnidadosExistentes.push(...regEx.registros);
@@ -672,7 +659,6 @@ function actualizarProfesionalesQueRegistran(prestacion: any, profesional: any) 
         prestacion.profesionalesQueRegistran = [];
     }
 
-    // Verificar si el profesional ya está en la lista
     const yaExiste = prestacion.profesionalesQueRegistran.some(
         (prof: any) => prof.id && prof.id.toString() === profesional.id.toString()
     );
