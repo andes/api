@@ -153,9 +153,12 @@ export async function search(filter, fields) {
     return await Profesional.aggregate(aggregate);
 }
 
-export async function searchMatriculas(profesionalId) {
+export async function searchMatriculas(profesionalId, incluirVencidas = false) {
     const _profesional: any = await Profesional.findById(profesionalId);
     const filterFormaciones = (e) => {
+        if (incluirVencidas) {
+            return e.matriculacion && e.matriculacion.length;
+        }
         return e.matriculacion && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
     };
 
