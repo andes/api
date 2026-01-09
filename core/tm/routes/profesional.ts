@@ -236,7 +236,8 @@ router.get('/profesionales/matching', async (req, res, next) => {
             apellido: p.apellido,
             documento: p.documento,
             fechaNacimiento: p.fechaNacimiento,
-            profesionalMatriculado: p.profesionalMatriculado
+            profesionalMatriculado: p.profesionalMatriculado,
+            formacionGrado: p.formacionGrado
         };
     });
     res.json(profesionales);
