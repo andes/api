@@ -21,7 +21,7 @@ router.get('/obrasSociales', async (req, res, next) => {
     if (req.query.nombre) {
         query.where('nombre').equals(RegExp(`^.*${req.query.nombre}.*$`, 'i'));
     }
-    if (req.query.prepaga === true) {
+    if (req.query.prepaga as any === true) {
         query.where('prepaga').equals(true);
     }
     try {

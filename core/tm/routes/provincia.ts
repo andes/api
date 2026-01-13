@@ -71,8 +71,8 @@ const router = express.Router();
  */
 
 router.get('/provincias', (req, res, next) => {
-    if (req.query.id) {
-        provincia.findById(req.query.id, (err, data) => {
+    if (req.query.id as any) {
+        provincia.findById(req.query.id as any, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -82,11 +82,11 @@ router.get('/provincias', (req, res, next) => {
     } else {
         const consulta = provincia.find({}).sort({ nombre: 1 });
 
-        if (req.query.nombre) {
-            consulta.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+        if (req.query.nombre as any) {
+            consulta.where('nombre').equals(RegExp('^.*' + req.query.nombre as any + '.*$', 'i'));
         }
-        if (req.query.pais) {
-            consulta.where('pais._id').equals(mongoose.Types.ObjectId(req.query.pais));
+        if (req.query.pais as any) {
+            consulta.where('pais._id').equals(mongoose.Types.ObjectId(req.query.pais as any));
         }
 
         consulta.exec((err, data) => {

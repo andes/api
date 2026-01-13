@@ -95,10 +95,10 @@ async function validarToken(token) {
 
 InscripcionVacunasRouter.get('/inscripcion-vacunas/consultas', async (req: Request, res, next) => {
     try {
-        const doc = req.query.documento;
-        const sexo = req.query.sexo;
+        const doc = req.query.documento as any;
+        const sexo = req.query.sexo as any;
         if (captcha.enabled) {
-            const verificar = await validarToken(req.query.recaptcha);
+            const verificar = await validarToken(req.query.recaptcha as any);
             if (!verificar) {
                 return next('Error recaptcha');
             }
@@ -119,7 +119,7 @@ InscripcionVacunasRouter.get('/inscripcion-vacunas', Auth.authenticate(), async 
         const conditions = { ...req.query };
         Object.keys(options).map(opt => delete conditions[opt]);
         if (conditions.paciente) {
-            const tokensQuery = InscripcionVacuna.search(conditions.paciente);
+            const tokensQuery = InscripcionVacuna.search(String(conditions.paciente));
             delete conditions.paciente;
             conditions.tokens = tokensQuery;
         }

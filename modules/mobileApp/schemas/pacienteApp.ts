@@ -154,8 +154,9 @@ PacienteAppSchema.pre('save', function (next) {
 });
 
 PacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
+    const doc = this as IPacienteAppDoc;
 
-    bcrypt.compare(passwordAttempt, this.password, (err, isMatch) => {
+    bcrypt.compare(passwordAttempt, doc.password, (err, isMatch) => {
 
         if (err) {
             return cb(err);

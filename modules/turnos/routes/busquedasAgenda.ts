@@ -4,8 +4,8 @@ import * as busquedasAgenda from '../schemas/busquedasAgenda';
 const router = express.Router();
 
 router.get('/busquedasAgenda/:_id*?', (req, res, next) => {
-    if (req.params._id) {
-        busquedasAgenda.findById(req.params._id, (err, data) => {
+    if ((req.params as any)._id) {
+        busquedasAgenda.findById((req.params as any)._id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -44,7 +44,7 @@ router.put('/busquedasAgenda/:id', (req, res, next) => {
 });
 
 router.delete('/busquedasAgenda/:_id', (req, res, next) => {
-    busquedasAgenda.findByIdAndRemove(req.params._id, (err, data) => {
+    busquedasAgenda.findByIdAndRemove(req.params._id as any).exec((err, data) => {
         if (err) { return next(err); }
         res.json(data);
     });

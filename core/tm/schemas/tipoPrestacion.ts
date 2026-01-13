@@ -56,5 +56,5 @@ tipoPrestacionSchema.virtual('nombre').get(function () {
     return this.term;
 });
 
-export const tipoPrestacion: Model<ITipoPrestacion> = model('tipoPrestacion', tipoPrestacionSchema, 'conceptoTurneable');
+export const tipoPrestacion = model<ITipoPrestacion>('tipoPrestacion', tipoPrestacionSchema, 'conceptoTurneable');
 

@@ -8,9 +8,9 @@ const router = express.Router();
 
 router.get('/paciente', (req, res, next) => {
     let query;
-    if (req.params.id) {
-        if (Types.ObjectId.isValid(req.params.id)) {
-            query = logPaciente.findById(req.params.id, (err, data) => {
+    if ((req.params as any).id) {
+        if (Types.ObjectId.isValid((req.params as any).id)) {
+            query = logPaciente.findById((req.params as any).id, (err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -19,8 +19,8 @@ router.get('/paciente', (req, res, next) => {
         }
     } else {
         query = logPaciente.find({}); // Trae todos
-        if (req.query.idPaciente) {
-            query.where('paciente').equals(Types.ObjectId(req.query.idPaciente));
+        if (req.query.idPaciente as any) {
+            query.where('paciente').equals(Types.ObjectId(req.query.idPaciente as any));
         }
         if (req.query.operacion) {
             query.where('operacion').equals(req.query.operacion);
