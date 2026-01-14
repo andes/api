@@ -545,7 +545,7 @@ export async function create(req) {
 
     };
     try {
-        dataReceta.fechaRegistro = dataReceta.fechaRegistro ? moment(dataReceta.fechaRegistro.toISOString()).toDate() : moment().toDate();
+        dataReceta.fechaRegistro = dataReceta.fechaRegistro ? moment(dataReceta.fechaRegistro).toDate() : moment().toDate();
         dataReceta.fechaPrestacion = dataReceta.fechaPrestacion ? dataReceta.fechaPrestacion : dataReceta.fechaRegistro;
         const medicamentoIncompleto = !req.body.medicamento || !req.body.medicamento.concepto?.conceptId || !req.body.medicamento.cantidad || !req.body.medicamento.cantEnvases;
         dataReceta.origenExterno = {
