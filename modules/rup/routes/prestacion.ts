@@ -583,6 +583,97 @@ router.post('/prestaciones', async (req, res, next) => {
     }
 });
 
+/**
+ * Mergea registros nuevos con existentes, preservando datos de auditoría
+ *
+ * @param registrosExistentes - Registros actuales en la base de datos
+ * @param registrosNuevos - Registros que vienen en el request
+ * @returns Registros mergeados con auditoría preservada
+ */
+function mergeRegistrosPreservandoAuditoria(registrosExistentes: any[], registrosNuevos: any[]): any[] {
+    if (!registrosExistentes || registrosExistentes.length === 0) {
+        return registrosNuevos;
+    }
+
+    if (!registrosNuevos || registrosNuevos.length === 0) {
+        return registrosExistentes;
+    }
+
+    const registrosExistentesMap = new Map();
+    registrosExistentes.forEach(reg => {
+        if (reg._id) {
+            registrosExistentesMap.set(reg._id.toString(), reg);
+        }
+    });
+
+    const registrosMergeados = registrosNuevos.map(regNuevo => {
+        const idNuevo = regNuevo._id ? regNuevo._id.toString() : null;
+
+        if (idNuevo && registrosExistentesMap.has(idNuevo)) {
+            const regExistente = registrosExistentesMap.get(idNuevo);
+
+            const registroMergeado = {
+                ...regNuevo,
+                createdAt: regExistente.createdAt,
+                createdBy: regExistente.createdBy,
+            };
+
+            if (regNuevo.registros && regNuevo.registros.length > 0) {
+                registroMergeado.registros = mergeRegistrosPreservandoAuditoria(
+                    regExistente.registros || [],
+                    regNuevo.registros
+                );
+            }
+
+            return registroMergeado;
+        } else {
+            if (regNuevo.registros && regNuevo.registros.length > 0) {
+                const registrosAnidadosExistentes = [];
+                registrosExistentes.forEach(regEx => {
+                    if (regEx.registros && regEx.registros.length > 0) {
+                        registrosAnidadosExistentes.push(...regEx.registros);
+                    }
+                });
+
+                regNuevo.registros = mergeRegistrosPreservandoAuditoria(
+                    registrosAnidadosExistentes,
+                    regNuevo.registros
+                );
+            }
+
+            return regNuevo;
+        }
+    });
+
+    return registrosMergeados;
+}
+
+/**
+ * Actualiza la lista de profesionales que han registrado en esta prestación
+ *
+ * @param prestacion - Prestación a actualizar
+ * @param profesional - Profesional actual que está registrando
+ */
+function actualizarProfesionalesQueRegistran(prestacion: any, profesional: any) {
+    if (!prestacion.profesionalesQueRegistran) {
+        prestacion.profesionalesQueRegistran = [];
+    }
+
+    const yaExiste = prestacion.profesionalesQueRegistran.some(
+        (prof: any) => prof.id && prof.id.toString() === profesional.id.toString()
+    );
+
+    if (!yaExiste) {
+        prestacion.profesionalesQueRegistran.push({
+            id: profesional.id,
+            nombreCompleto: profesional.nombreCompleto,
+            nombre: profesional.nombre,
+            apellido: profesional.apellido,
+            documento: profesional.documento
+        });
+    }
+}
+
 router.patch('/prestaciones/:id', (req: Request, res, next) => {
     Prestacion.findById(req.params.id, async (err, data: any) => {
         if (err) {
@@ -638,7 +729,17 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     }
                 }
                 if (req.body.registros) {
-                    data.ejecucion.registros = req.body.registros;
+                    // Usar merge para preservar datos de auditoría de registros existentes
+                    data.ejecucion.registros = mergeRegistrosPreservandoAuditoria(
+                        data.ejecucion.registros,
+                        req.body.registros
+                    );
+
+                    // Actualizar lista de profesionales que registran
+                    const profesionalQueRegistra = Auth.getProfesional(req);
+                    if (profesionalQueRegistra) {
+                        actualizarProfesionalesQueRegistran(data, profesionalQueRegistra);
+                    }
                 }
                 if (req.body.ejecucion?.fecha) {
                     data.ejecucion.fecha = req.body.ejecucion.fecha;
@@ -677,7 +778,17 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 break;
             case 'registros':
                 if (req.body.registros && data.estadoActual.tipo !== 'validada') {
-                    data.ejecucion.registros = req.body.registros;
+                    // Usar merge para preservar datos de auditoría de registros existentes
+                    data.ejecucion.registros = mergeRegistrosPreservandoAuditoria(
+                        data.ejecucion.registros,
+                        req.body.registros
+                    );
+
+                    // Actualizar lista de profesionales que registran
+                    const profesionalQueRegistra = Auth.getProfesional(req);
+                    if (profesionalQueRegistra) {
+                        actualizarProfesionalesQueRegistran(data, profesionalQueRegistra);
+                    }
 
                     if (req.body.solicitud) {
                         data.solicitud = req.body.solicitud;
@@ -754,7 +865,17 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 break;
             case 'periodosCensables':
                 data.periodosCensables = req.body.periodosCensables;
-                data.ejecucion.registros = req.body.registros;
+                // Usar merge para preservar datos de auditoría de registros existentes
+                data.ejecucion.registros = mergeRegistrosPreservandoAuditoria(
+                    data.ejecucion.registros,
+                    req.body.registros
+                );
+
+                // Actualizar lista de profesionales que registran
+                const profesionalActual = Auth.getProfesional(req);
+                if (profesionalActual) {
+                    actualizarProfesionalesQueRegistran(data, profesionalActual);
+                }
                 break;
             default:
                 return next(500);
