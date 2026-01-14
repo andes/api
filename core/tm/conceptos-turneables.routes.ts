@@ -24,7 +24,8 @@ class ConceptoTurneableResource extends ResourceBase {
                 return { $in: value };
             }
         },
-        ids: MongoQuery.inArray.withField('_id')
+        ids: MongoQuery.inArray.withField('_id'),
+        teleConsulta: MongoQuery.equalMatch
     };
     middlewares = [Auth.authenticate()];
     routesAuthorization = {

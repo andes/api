@@ -6,6 +6,7 @@ import { getDistanceBetweenPoints } from '../../../utils/utilCoordenadas';
 import { verificarCondicionPaciente } from '../../../modules/turnos/condicionPaciente/condicionPaciente.controller';
 import { CondicionPaciente } from '../../../modules/turnos/condicionPaciente/condicionPaciente.schema';
 import { Constantes, Constante } from '../../../modules/constantes/constantes.schema';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 const router = express.Router();
 
@@ -27,9 +28,19 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
             }
         }
     }
-
     if (req.query.conceptId) {
         matchAgendas['tipoPrestaciones.conceptId'] = req.query.conceptId;
+    } else {
+        if (!req.query.teleConsulta) {
+            const conceptosTurneables: any = await tipoPrestacion.find({ teleConsulta: true });
+            const conceptId = [];
+            if (conceptosTurneables.length > 0) {
+                for (const ct of conceptosTurneables) {
+                    conceptId.push(ct.conceptId);
+                }
+                matchAgendas['tipoPrestaciones.conceptId'] = { $nin: conceptId };
+            }
+        }
     }
     matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['bloques.restantesProgramados'] = { $gt: 0 };
@@ -68,7 +79,6 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     pipelineAgendas.push({
         $sort: { 'agendas.horaInicio': 1 }
     });
-
     try {
         let agendasResultado = await Agenda.aggregate(pipelineAgendas);
         if (req.query.userLocation) {
