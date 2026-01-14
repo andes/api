@@ -30,16 +30,19 @@ const capaMiddleware = (req: Request, res: Response, next: express.NextFunction)
 };
 
 router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response) => {
-    const organizacion = {
+
+    const { capa, fecha, organizacion } = req.query;
+
+
+    const unaOrganizacion = organizacion ? { _id: organizacion } : {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
-    const { capa, fecha } = req.query;
 
     let salas = [];
     if (capa !== 'estadistica' && !req.query.idInternacion) {
         salas = await SalaComunController.listarSalaComun({
-            organizacion: organizacion._id,
+            organizacion: unaOrganizacion._id,
             fecha: moment(fecha).toDate(),
             ambito: req.query.ambito,
             id: req.query.cama
@@ -47,8 +50,7 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
         salas = populateSalaComun(salas);
     }
 
-    const camas = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
-
+    const camas = await CamasController.search({ organizacion: unaOrganizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
     const result = [...camas, ...salas];
 
     res.json(result);
