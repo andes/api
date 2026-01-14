@@ -447,8 +447,9 @@ export async function getProfesionActualizada(idProfesional) {
     let profesionGrado = '';
     let matriculaGrado = 0;
     let especialidades = '';
+    const incluirVencidas = true;
 
-    const infoMatriculas = await searchMatriculas(idProfesional);
+    const infoMatriculas = await searchMatriculas(idProfesional, incluirVencidas);
 
     if (infoMatriculas) {
         // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
