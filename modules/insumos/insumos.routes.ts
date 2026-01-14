@@ -8,7 +8,7 @@ class InsumosResource extends ResourceBase {
     resourceName = 'insumos';
     middlewares = [Auth.authenticate()];
     searchFileds = {
-        insumo: MongoQuery.partialString,
+        nombre: MongoQuery.partialString,
         tipo: MongoQuery.equalMatch,
         requiereEspecificacion: MongoQuery.equalMatch,
     };
