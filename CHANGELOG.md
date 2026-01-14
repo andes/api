@@ -1,3 +1,12 @@
+## [5.139.2](https://github.com/andes/api/compare/v5.139.1...v5.139.2) (2026-01-14)
+
+
+### Bug Fixes
+
+* **mobile:** se elimina restricción de turnos suspendidos ([#2172](https://github.com/andes/api/issues/2172)) ([dfd4ef9](https://github.com/andes/api/commit/dfd4ef9ac0308a96816a2280490cb90caf9e34e2))
+* **REC-166:** Fecha en receta enviada a Andes no coincide con el formulario de Recetar ([#2151](https://github.com/andes/api/issues/2151)) ([ceb3118](https://github.com/andes/api/commit/ceb3118a04b8f2964e84444368139a01164d0fab))
+* **turnoSolicitado:** cambia ruta get id en vez dni  y agrega controles al post ([#2169](https://github.com/andes/api/issues/2169)) ([d6a6db3](https://github.com/andes/api/commit/d6a6db338956943921cd30375b035c6f9196ff35))
+
 ## [5.139.1](https://github.com/andes/api/compare/v5.139.0...v5.139.1) (2025-12-10)
 
 
