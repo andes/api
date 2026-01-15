@@ -152,6 +152,9 @@ export async function liberarTurno(req, data, turno) {
                 } else {
                     if (data.bloques[position.indexBloque].restantesProgramados < (data.bloques[position.indexBloque].accesoDirectoProgramado - turnosAsignados.programados)) {
                         data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                        if (data.bloques[position.indexBloque].restantesMobile < (data.bloques[position.indexBloque].cupoMobile - turnosAsignados.programados)) {
+                            data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
+                        }
                     } else {
                         data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
                     }

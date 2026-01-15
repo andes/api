@@ -54,6 +54,15 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
         matchAgendas['bloques.restantesMobile'] = { $gt: 0 };
     }
     pipelineAgendas.push({ $match: matchAgendas });
+    pipelineAgendas.push({ $unwind: '$bloques' });
+    pipelineAgendas.push({
+        $match:
+        {
+            'bloques.turnosMobile': true,
+            'bloques.restantesProgramados': { $gt: 0 }
+        }
+    });
+    pipelineAgendas.push({ $addFields: { bloques: ['$bloques'] } });
     if (fieldRegla) {
         pipelineAgendas.push({ $addFields: fieldRegla });
     }
