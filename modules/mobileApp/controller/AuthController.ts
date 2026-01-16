@@ -258,63 +258,68 @@ export function createUserFromPaciente(pacienteData, contacto) {
  * @param data {object} password, email, telefono
  */
 
-export function updateAccount(account: IPacienteAppDoc, data) {
-    return new Promise((resolve, reject) => {
-
-        let promise: any = Promise.resolve();
-        let promise_password: any = Promise.resolve();
-
+export async function updateAccount(account: IPacienteAppDoc, data) {
+    try {
+        // Validar password si se proporciona
         if (data.password) {
-            promise_password = new Promise((resolvePassword, rejectPassword) => {
-                account.comparePassword(data.old_password, (err, isMatch) => {
-                    if (err) {
-                        return rejectPassword({ password: 'wrong_password' });
-                    }
-                    if (isMatch) {
-                        account.password = data.password;
-                        return resolvePassword(true);
+            const isMatch = await new Promise<boolean>((resolve, reject) => {
+                account.comparePassword(data.old_password, (err, match) => {
+                    if (err || !match) {
+                        reject({ password: 'wrong_password' });
                     } else {
-                        return rejectPassword({ password: 'wrong_password' });
+                        resolve(true);
                     }
                 });
             });
+
+            if (isMatch) {
+                account.password = data.password;
+            }
         }
 
-        if (data.telefono) {
-            account.telefono = data.telefono;
-        }
 
+        // Validar email si se proporciona
         if (data.email) {
+            const existingAccount = await PacienteApp.findOne({ email: data.email });
+            if (existingAccount) {
+                throw { email: 'account_exists' };
+            }
             account.email = data.email;
-            promise = new Promise((resolveEmail, rejectEmail) => {
-                PacienteApp.findOne({ email: data.email }, (err, acts) => {
-                    if (!acts) {
-                        resolveEmail(true);
-                    } else {
-                        rejectEmail({ email: 'account_exists' });
+        }
+
+        // Actualizar campos simples
+        if (data.nombre) { account.nombre = data.nombre; }
+        if (data.apellido) { account.apellido = data.apellido; }
+        if (data.documento) { account.documento = data.documento; }
+        if (data.nacionalidad) { account.nacionalidad = data.nacionalidad.nombre; }
+        if (data.fechaNacimiento) { account.fechaNacimiento = data.fechaNacimiento; }
+        if (data.sexo) { account.sexo = data.sexo; }
+        if (data.lastLogin) { account.lastLogin = data.lastLogin; }
+
+        // Actualizar teléfono/contactos
+        if (data.telefono || data.contactos) {
+            if (data.contactos) {
+                data.contactos.forEach((contacto) => {
+                    if (contacto.tipo === 'fijo' || contacto.tipo === 'celular') {
+                        account.telefono = contacto.valor;
+                    }
+                    if (contacto.tipo === 'email') {
+                        account.email = contacto.valor;
                     }
                 });
-            });
+            } else {
+                account.telefono = data.telefono;
+            }
         }
 
-        if (data.lastLogin) {
-            account.lastLogin = data.lastLogin;
-        }
+        // Guardar cuenta
+        const savedAccount = await account.save();
+        return savedAccount;
 
-        Promise.all([promise, promise_password]).then(() => {
-
-            account.save((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(account);
-            });
-
-        }).catch(reject);
-
-    });
+    } catch (error) {
+        throw error;
+    }
 }
-
 /**
  * Realiza un matching de los datos del paciente con el scan
  * @param {pacienteAppSchema} userAccount

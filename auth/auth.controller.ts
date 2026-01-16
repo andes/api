@@ -7,6 +7,7 @@ import { Profesional } from './../core/tm/schemas/profesional';
 import { MailOptions, renderHTML, sendMail } from './../utils/roboSender/sendEmail';
 import { Auth } from './auth.class';
 import { AuthUsers } from './schemas/authUsers';
+import * as authMobile from '../modules/mobileApp/controller/AuthController';
 import * as crypto from 'crypto';
 const sha1Hash = require('sha1');
 
@@ -152,26 +153,20 @@ export async function updateOrganizacion(usuario, idOrg) {
 }
 
 // Función interna que chequea si la cuenta mobile existe
-export const checkMobile = (profesionalId) => {
-    return new Promise((resolve, reject) => {
-        const authMobile = require('../modules/mobileApp/controller/AuthController');
-        authMobile.getAccountByProfesional(profesionalId).then((account) => {
-            if (!account) {
-                Profesional.findById(profesionalId).then(prof => {
-                    if (!prof) {
-                        return reject();
-                    }
-                    authMobile.createUserFromProfesional(prof).then((account2) => {
-                        resolve(account2);
-                    }).catch(reject);
-                });
-                return;
+export const checkMobile = async (profesionalId) => {
+    try {
+        let account = await authMobile.getAccountByProfesional(profesionalId);
+        if (!account) {
+            const prof = await Profesional.findById(profesionalId);
+            if (!prof) {
+                throw new Error('Profesional not found');
             }
-            resolve(account);
-        }).catch(() => {
-            reject();
-        });
-    });
+            account = await authMobile.createUserFromProfesional(prof);
+        }
+        return account;
+    } catch (error) {
+        throw error;
+    }
 };
 
 

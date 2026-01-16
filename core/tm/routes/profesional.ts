@@ -5,6 +5,7 @@ import * as base64 from 'base64-stream';
 import * as express from 'express';
 import * as fs from 'fs';
 import { Types } from 'mongoose';
+import * as mongoose from 'mongoose';
 import * as stream from 'stream';
 import { Auth } from '../../../auth/auth.class';
 import { sendSms } from '../../../utils/roboSender/sendSms';
@@ -20,9 +21,8 @@ import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { userScheduler } from './../../../config.private';
 import { getTemporyTokenGenerarUsuario } from '../../../auth/auth.controller';
-import { services } from '../../../services';
-import { Matching } from '@andes/match';
-import { mpi, algoritmo } from './../../../config';
+import { PacienteApp } from '../../../../api/modules/mobileApp/schemas/pacienteApp';
+import * as authController from '../../../../api/modules/mobileApp/controller/AuthController';
 
 import moment = require('moment');
 
@@ -836,7 +836,6 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
                     prof['celular'] = '';
                     prof['email'] = '';
                     prof['fijo'] = '';
-
                 }
 
                 prof['rematriculado'] = data[i].rematriculado === 1 ? 'Si' : 'No';
@@ -956,13 +955,16 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
     try {
         if (req.body.id) {
             const resultado: any = await Profesional.findById(req.body.id);
+            const pacienteApp: any = await PacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(req.body.id) });
+            if (pacienteApp) {
+                await authController.updateAccount(pacienteApp, req.body);
+            }
             const profesionalOriginal = resultado.toObject();
             for (const key in req.body) {
                 resultado[key] = req.body[key];
             }
             Auth.audit(resultado, req);
             await resultado.save();
-
 
             EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
             log(req, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
