@@ -115,7 +115,7 @@ export async function getChildren(sctid, { all = false, completed = true, leaf =
     return null;
 }
 
-export async function getConcepts(conceptsIds: string[]) {
+export async function getConcepts(conceptsIds: string[], form = 'stated') {
     const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts`, {
         limit: 1000,
         conceptIds: conceptsIds
@@ -123,7 +123,7 @@ export async function getConcepts(conceptsIds: string[]) {
     if (response) {
         const items = response.items;
         const ps = items.map(async (concept) => {
-            const parents = await httpGetSnowstorm(`browser/${snomed.snowstormBranch}/concepts/${concept.conceptId}/parents`, { limit: 1000, form: 'stated' });
+            const parents = await httpGetSnowstorm(`browser/${snomed.snowstormBranch}/concepts/${concept.conceptId}/parents`, { limit: 1000, form });
             if (parents) {
                 concept.relationships = parents;
                 concept.relationships = filterRelationships(concept, { parent: true });

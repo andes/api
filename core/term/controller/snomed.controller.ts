@@ -24,7 +24,7 @@ export interface ISnomedController {
      * Busca un array de conceptos SNOMED.
      */
 
-    getConcepts(conceptsIds: String[]);
+    getConcepts(conceptsIds: String[], form?: String);
 
     /**
      * Busca conceptos por un texto.
