@@ -112,6 +112,10 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     if (fields) {
         queryFind.select(fields);
     }
+    queryFind.populate({
+        path: 'relaciones.referencia',
+        select: 'nombre apellido documento numeroIdentificacion fechaNacimiento fechaFallecimiento fotoId sexo genero activo'
+    });
     const paciente = await queryFind;
     EventCore.emitAsync('mpi:pacientes:findById', paciente);
     return paciente;
@@ -218,7 +222,13 @@ export async function multimatch(searchText: string, filter: any, options?: any)
     };
     const skip = parseInt(options.skip || 0, 10);
     const limit = parseInt(options.limit || 30, 10);
-    const pacientes = await Paciente.find(query).skip(skip).limit(limit);
+    const pacientes = await Paciente.find(query)
+        .skip(skip)
+        .limit(limit)
+        .populate({
+            path: 'relaciones.referencia',
+            select: 'nombre apellido documento numeroIdentificacion fechaNacimiento fechaFallecimiento fotoId sexo genero activo'
+        });
     return pacientes;
 }
 
