@@ -285,7 +285,7 @@ router.get('/agenda/:id?', async (req, res, next) => {
             query.limit(parseInt(req.query.limit || 0, 10));
         }
 
-        await query.exec((err, data) => {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -689,9 +689,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
 router.post('/dashboard', async (req, res, next) => {
     const permisos: any = {};
-    const tipo_Prestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
-    if (tipo_Prestacion.length > 0 && tipo_Prestacion[0] !== '*') {
-        permisos.tipoPrestacion = tipo_Prestacion;
+    const permisosTP = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
+    if (permisosTP.length > 0 && permisosTP[0] !== '*') {
+        permisos.tipoPrestacion = permisosTP;
     }
 
     try {
@@ -745,9 +745,9 @@ router.post('/dashboard/descargarCsv', async (req, res, next) => {
 
 router.post('/dashboard/localidades', async (req, res, next) => {
     const permisos: any = {};
-    const tipo_Prestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
-    if (tipo_Prestacion.length > 0 && tipo_Prestacion[0] !== '*') {
-        permisos.tipoPrestacion = tipo_Prestacion;
+    const permisosTP = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
+    if (permisosTP.length > 0 && permisosTP[0] !== '*') {
+        permisos.tipoPrestacion = permisosTP;
     }
 
     try {

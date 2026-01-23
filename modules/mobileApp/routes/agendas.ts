@@ -33,13 +33,8 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     } else {
         if (!req.query.teleConsulta) {
             const conceptosTurneables: any = await tipoPrestacion.find({ teleConsulta: true });
-            const conceptId = [];
-            if (conceptosTurneables.length > 0) {
-                for (const ct of conceptosTurneables) {
-                    conceptId.push(ct.conceptId);
-                }
-                matchAgendas['tipoPrestaciones.conceptId'] = { $nin: conceptId };
-            }
+            const conceptIdArray = conceptosTurneables?.map(ct => ct.conceptId);
+            matchAgendas['tipoPrestaciones.conceptId'] = { $nin: conceptIdArray };
         }
     }
     matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
