@@ -4,6 +4,21 @@ import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
+const conexionVideoSchema = new mongoose.Schema({
+    plataforma: String,
+    params: {
+        host: [{
+            cipher: String,
+            short: String,
+        }],
+        guest: [{
+            cipher: String,
+            short: String,
+        }],
+        baseUrl: String
+    }
+});
+
 const turnoSchema = new mongoose.Schema({
     horaInicio: Date,
     horaAsistencia: Date,
@@ -89,7 +104,9 @@ const turnoSchema = new mongoose.Schema({
     fechaHoraDacion: Date,
     usuarioDacion: mongoose.Schema.Types.Mixed,
     profesional: mongoose.Schema.Types.ObjectId,
-    notificar: Boolean
+    notificar: Boolean,
+    admiteVideo: Boolean,
+    conexionVideo: conexionVideoSchema
 });
 
 export = turnoSchema;
