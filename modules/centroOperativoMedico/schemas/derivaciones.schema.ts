@@ -100,6 +100,8 @@ export const DerivacionSchema = new mongoose.Schema({
     estadoClinico: String,
     diagnosticoBase: String,
     comorbilidades: String,
+    condicion: String,
+    necesidad: String,
     adjuntos: mongoose.Schema.Types.Mixed,
     historial: [DerivacionHistorialSchema],
     cancelada: {
