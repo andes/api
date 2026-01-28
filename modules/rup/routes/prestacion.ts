@@ -614,7 +614,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     }
                     if (req.body.estado.tipo === 'anulada') {
                         EventCore.emitAsync('rup:prestacion:anular', data);
-                        if (data.inicio === 'top') {
+                        if (data.inicio === 'top' && !req.body.estado.observaciones) {
                             req.body.estado.tipo = 'auditoria';
                             data.ejecucion = { registros: [], organizacion: {}, fecha: null };
                             data.solicitud.profesional = null;
