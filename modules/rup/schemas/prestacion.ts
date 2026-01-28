@@ -168,7 +168,7 @@ export const PrestacionSchema = new Schema({
 
     },
 
-    profesionalesQueRegistran: [
+    profesionalesRegistrantes: [
         {
             _id: false,
             id: Schema.Types.ObjectId,

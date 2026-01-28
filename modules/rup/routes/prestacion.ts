@@ -627,62 +627,63 @@ router.post('/prestaciones', async (req, res, next) => {
  * @param registrosNuevos - Registros que vienen en el request
  * @returns Registros mergeados con auditoría preservada
  */
-function mergeRegistrosPreservandoAuditoria(registrosExistentes: any[], registrosNuevos: any[]): any[] {
-    if (!registrosExistentes || registrosExistentes.length === 0) {
+
+function mergeRegistrosPreservandoAuditoria(
+    registrosExistentes: any[],
+    registrosNuevos: any[]
+): any[] {
+    if (!registrosExistentes?.length) {
         return registrosNuevos;
     }
-
-    if (!registrosNuevos || registrosNuevos.length === 0) {
+    if (!registrosNuevos?.length) {
         return registrosExistentes;
     }
 
-    const registrosExistentesMap = new Map();
-    registrosExistentes.forEach(reg => {
-        if (reg._id) {
-            registrosExistentesMap.set(reg._id.toString(), reg);
-        }
-    });
+    const existentesMap = new Map<string, any>(
+        registrosExistentes
+            .filter(r => r._id)
+            .map(r => [r._id.toString(), r])
+    );
 
-    const registrosMergeados = registrosNuevos.map(regNuevo => {
-        const idNuevo = regNuevo._id ? regNuevo._id.toString() : null;
+    return registrosNuevos.map(regNuevo => {
+        const idNuevo = regNuevo._id?.toString() || regNuevo.id?.toString();
+        const regExistente = idNuevo ? existentesMap.get(idNuevo) : null;
 
-        if (idNuevo && registrosExistentesMap.has(idNuevo)) {
-            const regExistente = registrosExistentesMap.get(idNuevo);
-
-            const registroMergeado = {
-                ...regNuevo,
-                createdAt: regExistente.createdAt,
-                createdBy: regExistente.createdBy,
-            };
-
-            if (regNuevo.registros && regNuevo.registros.length > 0) {
-                registroMergeado.registros = mergeRegistrosPreservandoAuditoria(
-                    regExistente.registros || [],
-                    regNuevo.registros
-                );
-            }
-
-            return registroMergeado;
-        } else {
-            if (regNuevo.registros && regNuevo.registros.length > 0) {
-                const registrosAnidadosExistentes = [];
-                registrosExistentes.forEach(regEx => {
-                    if (regEx.registros && regEx.registros.length > 0) {
-                        registrosAnidadosExistentes.push(...regEx.registros);
-                    }
-                });
-
-                regNuevo.registros = mergeRegistrosPreservandoAuditoria(
-                    registrosAnidadosExistentes,
-                    regNuevo.registros
-                );
-            }
-
+        // 🔹 Registro completamente nuevo
+        if (!regExistente) {
             return regNuevo;
         }
-    });
 
-    return registrosMergeados;
+        // 🔹 Comparación profunda para detectar si hubo cambios reales
+        const valorIgual =
+            JSON.stringify(regExistente.valor) === JSON.stringify(regNuevo.valor);
+
+        const subRegistrosIguales =
+            JSON.stringify(regExistente.registros || []) ===
+            JSON.stringify(regNuevo.registros || []);
+
+        // 🔹 No hubo cambios → devolver registro original (preserva auditoría)
+        if (valorIgual && subRegistrosIguales) {
+            return regExistente;
+        }
+
+        // 🔹 Hubo cambios → merge preservando auditoría original
+        const registroMergeado: any = {
+            ...regNuevo,
+            createdAt: regExistente.createdAt,
+            createdBy: regExistente.createdBy
+        };
+
+        // 🔹 Merge recursivo de subregistros
+        if (regNuevo.registros?.length && regExistente.registros?.length) {
+            registroMergeado.registros = mergeRegistrosPreservandoAuditoria(
+                regExistente.registros,
+                regNuevo.registros
+            );
+        }
+
+        return registroMergeado;
+    });
 }
 
 /**
@@ -691,17 +692,17 @@ function mergeRegistrosPreservandoAuditoria(registrosExistentes: any[], registro
  * @param prestacion - Prestación a actualizar
  * @param profesional - Profesional actual que está registrando
  */
-function actualizarProfesionalesQueRegistran(prestacion: any, profesional: any) {
-    if (!prestacion.profesionalesQueRegistran) {
-        prestacion.profesionalesQueRegistran = [];
+function actualizarProfesionalesRegistrantes(prestacion: any, profesional: any) {
+    if (!prestacion.profesionalesRegistrantes) {
+        prestacion.profesionalesRegistrantes = [];
     }
 
-    const yaExiste = prestacion.profesionalesQueRegistran.some(
+    const yaExiste = prestacion.profesionalesRegistrantes.some(
         (prof: any) => prof.id && prof.id.toString() === profesional.id.toString()
     );
 
     if (!yaExiste) {
-        prestacion.profesionalesQueRegistran.push({
+        prestacion.profesionalesRegistrantes.push({
             id: profesional.id,
             nombreCompleto: profesional.nombreCompleto,
             nombre: profesional.nombre,
@@ -775,7 +776,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     // Actualizar lista de profesionales que registran
                     const profesionalQueRegistra = Auth.getProfesional(req);
                     if (profesionalQueRegistra) {
-                        actualizarProfesionalesQueRegistran(data, profesionalQueRegistra);
+                        actualizarProfesionalesRegistrantes(data, profesionalQueRegistra);
                     }
                 }
                 if (req.body.ejecucion?.fecha) {
@@ -824,7 +825,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     // Actualizar lista de profesionales que registran
                     const profesionalQueRegistra = Auth.getProfesional(req);
                     if (profesionalQueRegistra) {
-                        actualizarProfesionalesQueRegistran(data, profesionalQueRegistra);
+                        actualizarProfesionalesRegistrantes(data, profesionalQueRegistra);
                     }
 
                     if (req.body.solicitud) {
@@ -911,7 +912,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 // Actualizar lista de profesionales que registran
                 const profesionalActual = Auth.getProfesional(req);
                 if (profesionalActual) {
-                    actualizarProfesionalesQueRegistran(data, profesionalActual);
+                    actualizarProfesionalesRegistrantes(data, profesionalActual);
                 }
                 break;
             default:
