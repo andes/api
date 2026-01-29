@@ -75,8 +75,11 @@ export const patch = async (req, res) => {
 
 export const post = async (req, res) => {
     const resp = await create(req);
-    const status = resp?.status || resp?.errors || 200;
-    res.status(status).json(resp);
+    if (resp instanceof Error) {
+        const status = (resp as any).status || 500;
+        return res.status(status).json({ message: resp.message });
+    }
+    res.status(200).json(resp);
 };
 
 export const RecetasCtr = new RecetasResource({});
