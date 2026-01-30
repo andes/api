@@ -225,6 +225,15 @@ export class Auth {
                     pacienteRestringido: payload.pacienteRestringido
 
                 };
+
+                if (payload.organizacion.fechaVencimiento) {
+                    const now = new Date();
+                    const fechaVencimiento = new Date(payload.organizacion.fechaVencimiento);
+                    if (fechaVencimiento < now) {
+                        return next(403);
+                    }
+                }
+
                 return next();
             } else {
                 return next();
