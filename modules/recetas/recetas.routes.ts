@@ -46,13 +46,13 @@ export const patch = async (req, res) => {
     let result, status;
     const { recetaId, recetas, dataDispensa } = req.body;
     const app = req.user.app?.nombre ? req.user.app.nombre.toLowerCase() : '';
-    if (!recetaId && !recetas) {
+    if ((!recetaId && !recetas)) {
         const error = new ParamsIncorrect();
         res.status(error.status).json(error);
     } else {
         switch (operacion) {
             case 'suspender':
-                result = await suspender(recetas, req);
+                result = await suspender(recetaId, req);
                 break;
             case 'dispensar':
             case 'dispensa-parcial':
