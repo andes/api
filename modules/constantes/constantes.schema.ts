@@ -14,11 +14,16 @@ export const ConstantesSchema = new mongoose.Schema({
     key: String,
     nombre: String,
     source: String,
+    valor: {
+        type: Number,
+        default: 0
+    },
     type: {
         type: String,
         enum: ['text', 'number']
     }
 });
+
 
 export const Constantes: Model<ConstanteDocument> = mongoose.model(
     'constantes',
