@@ -3,6 +3,7 @@ import { getProfesionActualizada, crearReceta } from '../../recetas/recetasContr
 import * as moment from 'moment';
 import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
+import { generarCUIL } from '../../../core-v2/mpi/validacion/validacion.controller';
 
 EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
@@ -25,6 +26,8 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             nombre: prestacion.ejecucion.organizacion.nombre
         };
 
+        const pacienteCUIL = prestacion.paciente.cuil || generarCUIL(prestacion.paciente.documento, prestacion.paciente.sexo);
+
         const dataReceta = {
             idPrestacion: prestacion.id,
             idRegistro,
@@ -36,6 +39,9 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             medicamento: null,
             diagnostico: null,
         };
+
+        dataReceta.paciente.cuil = pacienteCUIL;
+
         for (const medicamento of registro.valor.medicamentos) {
             const receta: any = await Receta.findOne({
                 'medicamento.concepto.conceptId': medicamento.generico.conceptId,
