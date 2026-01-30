@@ -3,8 +3,8 @@ import * as express from 'express';
 import * as utils from '../../../utils/utils';
 import * as cie10 from '../schemas/cie10';
 import { SnomedCIE10Mapping } from './../controller/mapping';
-
 import { SnomedCtr } from '../controller/snomed.controller';
+import { ECLQueriesCtr } from './../../../core/tm/eclqueries.routes';
 
 const router = express.Router();
 
@@ -37,6 +37,34 @@ router.get('/snomed', async (req, res, next) => {
     }
 });
 
+/** * Busca medicamentos genéricos y comerciales por termino */
+router.get('/snomed/medicamentos', async (req, res, next) => {
+    const term = req.query.term as string;
+    if (!term) {
+        return res.json([]);
+    }
+    try {
+        const ecl = await ECLQueriesCtr.findOne({ key: 'receta:buscarTerminos' });
+        const expression = ecl.valor;
+        const results = await SnomedCtr.searchTerms(term, { expression, languageCode: 'es', semanticTags: ['fármaco de uso clínico', 'fármaco de uso clínico comercial'] });
+        const ids = results.slice(0, 20).map(r => r.conceptId);
+        if (ids.length > 0) {
+            const concepts = await SnomedCtr.getConcepts(ids, 'inferred');
+            concepts.forEach(concept => {
+                if (concept.relationships) {
+                    const generic = concept.relationships.find(r => r.term.includes('(fármaco de uso clínico)'));
+                    if (generic) {
+                        concept.generic = { ...generic, fsn: generic.fsn.term };
+                    }
+                }
+            });
+            return res.json(concepts);
+        }
+        return res.json([]);
+    } catch (e) {
+        return next(e);
+    }
+});
 /**
  * Mapea un concepto de snomed
  *
