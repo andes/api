@@ -250,14 +250,6 @@ router.get('/agenda/:id?', async (req, res, next) => {
             query.where('bloques.turnos._id').equals(req.query.turno);
         }
 
-        if (!req.query.teleConsulta) {
-            const conceptosTurneables: any = await tipoPrestacion.find({ teleConsulta: true });
-            const conceptIdArray = conceptosTurneables?.map(ct => ct.conceptId);
-            if (conceptIdArray?.length > 0) {
-                query.where('tipoPrestaciones.conceptId').nin(conceptIdArray);
-            }
-        }
-
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             const variable: any[] = [];
