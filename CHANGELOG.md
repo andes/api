@@ -1,3 +1,10 @@
+## [5.139.3](https://github.com/andes/api/compare/v5.139.2...v5.139.3) (2026-02-04)
+
+
+### Bug Fixes
+
+* **CITAS:** Quitamos filtro de teleconsulta ([#2181](https://github.com/andes/api/issues/2181)) ([f5c8da1](https://github.com/andes/api/commit/f5c8da18e4fb228939c838be797207b51fbf1b43))
+
 ## [5.139.2](https://github.com/andes/api/compare/v5.139.1...v5.139.2) (2026-01-14)
 
 
