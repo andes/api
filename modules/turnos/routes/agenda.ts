@@ -274,6 +274,14 @@ router.get('/agenda/:id?', async (req, res, next) => {
             query.limit(parseInt(req.query.limit || 0, 10));
         }
 
+        if (!req.query.tipoPrestacion && !req.query.teleConsulta) {
+            const conceptosTurneables: any = await tipoPrestacion.find({ teleConsulta: true });
+            const conceptIdArray = conceptosTurneables?.map(ct => ct.conceptId);
+            if (conceptIdArray?.length > 0) {
+                query.where('tipoPrestaciones.conceptId').nin(conceptIdArray);
+            }
+        }
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);
