@@ -358,14 +358,38 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         const sort = {};
         sort['esPrioritario'] = 1;
 
-        if (req.query.ordenFecha || req.query.ordenFechaAsc) {
-            sort['solicitud.fecha'] = -1;
-        } else if (req.query.solicitudDesde && req.query.solicitudHasta) {
-            sort['solicitud.fecha'] = 1;
-        } else if (req.query.ordenFechaEjecucion) {
-            sort['ejecucion.fecha'] = -1;
-        } else if (req.query.solicitudDesdeActualizacion && req.query.solicitudHastaActualizacion) {
-            sort['updatedAt'] = 1;
+        if (req.query.sortBy) {
+            const sortMap = {
+                fechaSolicitud: 'solicitud.fecha',
+                fechaRegistro: 'createdAt',
+                actualizacion: 'updatedAt'
+            };
+
+            let sortBy = req.query.sortBy;
+            let sortOrder = -1;
+
+            if (sortBy.endsWith('Asc')) {
+                sortBy = sortBy.replace('Asc', '');
+                sortOrder = 1;
+            } else if (sortBy.endsWith('Desc')) {
+                sortBy = sortBy.replace('Desc', '');
+                sortOrder = -1;
+            }
+
+            const field = sortMap[sortBy];
+            if (field) {
+                sort[field] = sortOrder;
+            }
+        } else {
+            if (req.query.ordenFecha || req.query.ordenFechaAsc) {
+                sort['solicitud.fecha'] = -1;
+            } else if (req.query.solicitudDesde && req.query.solicitudHasta) {
+                sort['solicitud.fecha'] = 1;
+            } else if (req.query.ordenFechaEjecucion) {
+                sort['ejecucion.fecha'] = -1;
+            } else if (req.query.solicitudDesdeActualizacion && req.query.solicitudHastaActualizacion) {
+                sort['updatedAt'] = 1;
+            }
         }
 
         pipeline.push({ $sort: sort });
