@@ -22,9 +22,9 @@ export async function createFile(idExportHuds) {
             // recuperamos las posibles vinculaciones del paciente para traer también todas las prestaciones asociadas a esas vinculaciones
             const paciente = await Paciente.findById(peticionExport.pacienteId);
             const vinculacionesPaciente = paciente.identificadores
-                .filter(item => item.entidad === 'ANDES' && item.valor?.length)
-                .map(item => item.valor);
-            const idsPaciente = [...vinculacionesPaciente, peticionExport.pacienteId];
+                ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
+                ?.map(item => item.valor);
+            const idsPaciente = vinculacionesPaciente?.length ? [...vinculacionesPaciente, peticionExport.pacienteId] : [peticionExport.pacienteId];
             const query = {
                 'paciente.id': { $in: idsPaciente },
                 'estadoActual.tipo': 'validada'
