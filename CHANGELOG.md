@@ -1,3 +1,10 @@
+## [5.139.4](https://github.com/andes/api/compare/v5.139.3...v5.139.4) (2026-02-11)
+
+
+### Bug Fixes
+
+* **CITAS:** Agrega filtro por tipo de prestación en get de agendas ([#2182](https://github.com/andes/api/issues/2182)) ([2e56356](https://github.com/andes/api/commit/2e5635658700b92704968c94a6f2968bbbb08616))
+
 ## [5.139.3](https://github.com/andes/api/compare/v5.139.2...v5.139.3) (2026-02-04)
 
 
