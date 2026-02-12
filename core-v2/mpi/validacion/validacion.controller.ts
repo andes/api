@@ -37,7 +37,7 @@ function generarCUIL(dni, sexo) {
         prefijo = '20';
     } else {
         // casis no binario / X / desconocido
-        prefijo = '23';
+        return '';
     }
 
     const dniStr = dni.toString().padStart(8, '0');
