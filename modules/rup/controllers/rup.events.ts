@@ -3,12 +3,14 @@ import { getProfesionActualizada, crearReceta } from '../../recetas/recetasContr
 import * as moment from 'moment';
 import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
+import { Profesional } from '../../../core/tm/schemas/profesional';
 
 EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
         const idRegistro = registro._id;
-        const profPrestacion = prestacion.solicitud.profesional;
-        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion.id);
+        const documentoProfesional = prestacion.estadoActual.createdBy?.documento ? prestacion.estadoActual.createdBy?.documento : prestacion.solicitud.profesional.documento;
+        const profPrestacion = await Profesional.findOne({ documento: documentoProfesional });
+        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
 
         const profesional = {
             id: profPrestacion.id,
