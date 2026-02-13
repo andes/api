@@ -204,6 +204,7 @@ async function searchByExpression({ text, languageCode, expression, semanticTags
         ecl: expression
     };
     const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts`, qs, languageCode);
+
     if (response) {
         let { items } = response;
         items = items.map(cpt => {
@@ -222,8 +223,54 @@ async function searchByExpression({ text, languageCode, expression, semanticTags
     return [];
 }
 
+export async function searchTermWithRelationship({ text, languageCode, expression, semanticTags }) {
+    const qs: any = {
+        term: text,
+        activeFilter: true,
+        termActive: true,
+        language: languageCode,
+        limit: 20,
+        ecl: expression
+    };
+    const response = await httpGetSnowstorm(`${snomed.snowstormBranch}/concepts`, qs, languageCode);
+
+    if (response) {
+        let items = [];
+        if (response.items) {
+            const conceptIds = response.items.map(c => c.conceptId);
+            if (conceptIds.length > 0) {
+                const qsConcepts = { conceptIds };
+                const concepts = await httpGetSnowstorm(`browser/${snomed.snowstormBranch}/concepts`, qsConcepts, languageCode);
+                items = concepts.items.map(cpt => {
+                    const relationships = cpt.relationships ? cpt.relationships.filter(rel => rel.active && rel.typeId === IsASct && rel.target).map(rel => {
+                        return {
+                            conceptId: rel.target.conceptId,
+                            term: rel.target.pt?.term || rel.target.fsn?.term,
+                            fsn: rel.target.fsn?.term,
+                            type: rel.characteristicType === 'INFERRED_RELATIONSHIP' ? 'inferred' : 'stated'
+                        };
+                    }) : [];
+
+                    return {
+                        conceptId: cpt.conceptId,
+                        term: cpt.pt?.term || cpt.fsn?.term,
+                        fsn: cpt.fsn?.term,
+                        semanticTag: cpt.fsn?.term ? getSemanticTagFromFsn(cpt.fsn.term) : '',
+                        relationships
+                    };
+                });
+            }
+        }
+        if (semanticTags) {
+            items = items.filter(concept => semanticTags.includes(concept.semanticTag));
+        }
+        return items;
+    }
+    return [];
+}
+
 export async function getValuesByRelationships(expression: string, type: string) {
-    const response = await searchTerms(null, { semanticTags:null, languageCode: 'es',expression });
+    const response = await searchTerms(null, { semanticTags: null, languageCode: 'es', expression });
     if (response) {
         const ps = response.map(async (concept) => {
             const concreteValues = await httpGetSnowstorm(`${snomed.snowstormBranch}/relationships?active=true&source=${concept.conceptId}&type=${type}`, { limit: 1000 });
