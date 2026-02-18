@@ -1,3 +1,10 @@
+## [5.139.5](https://github.com/andes/api/compare/v5.139.4...v5.139.5) (2026-02-18)
+
+
+### Bug Fixes
+
+* **REC:** Corrige la carga de profesional en la receta para andes y recetar ([#2147](https://github.com/andes/api/issues/2147)) ([44ea4ac](https://github.com/andes/api/commit/44ea4ac140e0fb14ef010983a9eda3bcd9b0fe72))
+
 ## [5.139.4](https://github.com/andes/api/compare/v5.139.3...v5.139.4) (2026-02-11)
 
 
