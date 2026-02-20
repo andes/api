@@ -155,10 +155,12 @@ export async function buscarRecetas(req) {
                 optOtros['estadoActual.tipo'] = { $in: includeOtros };
             }
             options['$or'] = [optPendientes, optVigentes, optOtros].filter(o => o.hasOwnProperty('estadoActual.tipo'));
-        } else if (user.type === 'app-token') {
-            options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
+        } else {
+            options['estadoActual.tipo'] = { $nin: ['eliminada'] };
+            if (user.type === 'app-token') {
+                options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
+            }
         }
-
         let recetas: any = await Receta.find(options);
         if (!recetas.length) {
             return [];
@@ -188,90 +190,52 @@ export async function buscarRecetas(req) {
     }
 }
 
-/**
- * Groups recetas by idRegistro and selects the one with the smallest ordenTratamiento from each group
- * @param recetaIds Array of receta IDs
- * @returns Array of selected recetas (one per group)
- */
-export async function obtenerRecetasPorGrupo(recetaIds) {
-    try {
-        const recetasPromises = recetaIds.map(async (recetaId) => {
-            const receta: any = await Receta.findById(recetaId);
-            return receta;
-        });
-        const recetas = await Promise.all(recetasPromises);
-        const grupos = {};
-        recetas.forEach(receta => {
-            if (receta) {
-                const idRegistro = receta.idRegistro;
-                if (!grupos[idRegistro]) {
-                    grupos[idRegistro] = [];
-                }
-                grupos[idRegistro].push(receta);
-            }
-        });
-
-        const recetasASuspender = [];
-        Object.values(grupos).forEach((grupo: any[]) => {
-            if (grupo.length > 0) {
-                const recetaMenorOrden = grupo.reduce((min, receta) =>
-                    receta.medicamento.ordenTratamiento < min.medicamento.ordenTratamiento ? receta : min
-                );
-                recetasASuspender.push(recetaMenorOrden);
-            }
-        });
-
-        return recetasASuspender;
-    } catch (error) {
-        await updateLog.error('obtenerRecetasPorGrupo', { recetaIds }, error);
-        throw error;
-    }
-}
-
 export async function suspender(recetaId, req) {
     const motivo = req.body.motivo;
     const observacion = req.body.observacion;
     const profesional = req.body.profesional;
     try {
         const recetaR: any = await Receta.findById(recetaId);
-        const recetasASuspender = await Receta.find( {
+        const recetasASuspender = await Receta.find({
             'medicamento.concepto.conceptId': recetaR.medicamento.concepto.conceptId,
-            idRegistro: recetaR.idRegistro
-        });
-        const promises = recetasASuspender.map(async (receta: any) => {
-            if ((receta.estadoActual.tipo === 'vigente') || (receta.estadoDispensaActual.tipo === 'dispensa-parcial' && receta.estadoActual.tipo === 'pendiente')) {
-                receta.estados.push({
-                    tipo: 'suspendida',
-                    motivo,
-                    observacion,
-                    profesional,
-                    fecha: new Date()
-                });
-                Auth.audit(receta, req);
-                await receta.save();
-            } else {
-                if (receta.estadoDispensaActual.tipo === 'sin-dispensa' && receta.estadoActual.tipo === 'pendiente') {
-                    receta.estados.push({
-                        tipo: 'eliminada',
-                        motivo,
-                        observacion,
-                        profesional,
-                        fecha: new Date()
-                    });
-                    Auth.audit(receta, req);
-                    await receta.save();
-                }
-            }
-        });
-        await Promise.all(promises);
+            idRegistro: recetaR.idRegistro,
+            'estadoActual.tipo': { $nin: ['vencida', 'finalizada'] }
+        }).sort({ fechaRegistro: -1 });
 
-        return { success: true };
+
+        if (recetasASuspender.length) {
+            const recetasSuspender = recetasASuspender.filter((r: any) => (r.estadoActual.tipo === 'vigente') || (r.estadoDispensaActual.tipo === 'dispensa-parcial' && r.estadoActual.tipo === 'pendiente'));
+            const recetasEliminar = recetasASuspender.filter((r: any) => (r.estadoDispensaActual.tipo === 'sin-dispensa' && r.estadoActual.tipo === 'pendiente'));
+            if (recetasSuspender.length === 0 && recetasEliminar.length !== 0) {
+                // en el tratamiento prolongado, al menos una receta debe quedar en estado suspendido
+                const recetaSusp = recetasEliminar.pop();
+                recetasSuspender.push(recetaSusp);
+            }
+            const recSusp = await Promise.all(await recetasUpdate(recetasSuspender, 'suspendida', motivo, observacion, profesional, req));
+
+            const rec = recSusp.concat(await Promise.all(await recetasUpdate(recetasEliminar, 'eliminada', motivo, observacion, profesional, req)));
+
+            return rec;
+        }
+        return recetasASuspender;
     } catch (error) {
         await updateLog.error('suspender', { motivo, observacion, profesional, recetaId }, error);
         return error;
     }
 }
 
+async function recetasUpdate(recetas, estado, motivo, observacion, profesional, req) {
+    return recetas.map(async (receta: any) => {
+        receta.estados.push({
+            tipo: estado,
+            motivo,
+            observacion,
+            profesional,
+        });
+        Auth.audit(receta, req);
+        return await receta.save();
+    });
+};
 
 export async function getMotivosReceta(res) {
     try {
@@ -683,7 +647,7 @@ export async function buscarRecetasPorProfesional(req) {
             filter['origenExterno.app'] = origenExternoApp;
         }
         if (excluirEstado) {
-            filter['estadoActual.tipo'] = { $ne: excluirEstado };
+            filter['estadoActual.tipo'] = { $nin: excluirEstado };
         }
         const recetas = await Receta.find(filter);
         return recetas;
@@ -723,8 +687,7 @@ export async function actualizarEstadosRecetas(done) {
         for (const receta of recetasPendientes) {
             try {
                 receta.estados.push({
-                    tipo: 'vigente',
-                    fecha: moment().toDate(),
+                    tipo: 'vigente'
                 });
                 totalRecetasAVigentes++;
                 Auth.audit(receta, userScheduler as any);
@@ -746,8 +709,7 @@ export async function actualizarEstadosRecetas(done) {
         for (const receta of recetasVigentes) {
             try {
                 receta.estados.push({
-                    tipo: 'vencida',
-                    fecha: moment().toDate()
+                    tipo: 'vencida'
                 });
                 Auth.audit(receta, userScheduler as any);
                 await receta.save();
