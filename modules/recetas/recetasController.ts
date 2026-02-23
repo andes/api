@@ -726,3 +726,30 @@ export async function actualizarEstadosRecetas(done) {
     done();
 }
 
+/**
+ * Elimina recetas con estado "eliminada" y con fecha de cambio de estado mayor a 6 meses.
+ * @param done
+ */
+export async function eliminarRecetas(done) {
+    let totalRecetasAEliminar = 0;
+    let totalRecetasEliminadas = 0;
+    let query = {};
+    try {
+        const fechaEliminacion: any = await RecetasParametros.findOne({ key: 'fechaEliminacion' });
+        const days = (fechaEliminacion && fechaEliminacion.value) ? Number(fechaEliminacion.value) : 180;
+        const fechaLimite = moment().subtract(days, 'days').toDate();
+        query = {
+            'estadoActual.tipo': 'eliminada',
+            'estadoActual.createdAt': { $lte: fechaLimite }
+        };
+        totalRecetasAEliminar = await Receta.countDocuments(query);
+        const result = await Receta.deleteMany(query);
+        totalRecetasEliminadas = result.deletedCount || 0;
+        await jobsLog.info('eliminarRecetas', { totalRecetasAEliminar, totalRecetasEliminadas, query });
+    } catch (err) {
+        await jobsLog.error('eliminarRecetas', { totalRecetasEliminadas, totalRecetasAEliminar, query }, err);
+        return (done(err));
+    }
+    done();
+}
+
