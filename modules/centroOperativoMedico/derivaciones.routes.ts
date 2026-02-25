@@ -3,13 +3,14 @@ import { Auth } from '../../auth/auth.class';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { sendMailComprobanteDerivacion } from './controllers/com.controller';
 import { Derivaciones } from './schemas/derivaciones.schema';
+import moment = require('moment');
 
 class DerivacionesResource extends ResourceBase {
     Model = Derivaciones;
     resourceName = 'derivaciones';
     middlewares = [Auth.authenticate()];
     searchFileds = {
-        fecha: MongoQuery.equalMatch,
+        fecha: MongoQuery.matchDate.withField('fecha'),
         estado: MongoQuery.equalMatch,
         organizacionOrigen: {
             field: 'organizacionOrigen.id',
