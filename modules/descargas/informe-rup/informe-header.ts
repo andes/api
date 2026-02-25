@@ -53,6 +53,14 @@ export class InformeRupHeader extends HTMLComponent {
                                 sin obra social
                                 {{/if}}
                             </h6>
+                            <h6>
+                                <b>Nro. Afiliado: </b>
+                                {{#if paciente.numeroAfiliado}}
+                                    {{ paciente.numeroAfiliado }}
+                                {{else}}
+                                    Sin datos
+                                {{/if}}
+                            </h6>
                     </div>
                     </div>
                     <div class="contenedor-secundario">
@@ -173,7 +181,8 @@ export class InformeRupHeader extends HTMLComponent {
                 numeroIdentificacion: paciente.numeroIdentificacion || undefined,
                 edad,
                 numeroCarpeta: numeroCarpeta?.nroCarpeta,
-                obraSocial: prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial.financiador : false
+                obraSocial: prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial.financiador : false,
+                numeroAfiliado: prestacion.paciente.obraSocial?.numeroAfiliado || undefined
             },
             organizacion: {
                 nombre: organizacion ? organizacion.nombre.replace('-', '</br>') : '',
