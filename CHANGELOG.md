@@ -1,3 +1,15 @@
+# [5.140.0](https://github.com/andes/api/compare/v5.139.5...v5.140.0) (2026-02-25)
+
+
+### Bug Fixes
+
+* **MPI:** Corrige generacion de cuil ([#2185](https://github.com/andes/api/issues/2185)) ([78a9a40](https://github.com/andes/api/commit/78a9a400d53ebc904aa07ac81fdbdb09b1eeffaf))
+
+
+### Features
+
+* **REC:** agrega numero de afiliado a detalle de prestacion en PDF ([#2137](https://github.com/andes/api/issues/2137)) ([e6060eb](https://github.com/andes/api/commit/e6060eba6d6f8e8e5473fa62e6bbc07aa60df77f))
+
 ## [5.139.5](https://github.com/andes/api/compare/v5.139.4...v5.139.5) (2026-02-18)
 
 
