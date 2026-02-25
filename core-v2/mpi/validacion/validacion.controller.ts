@@ -24,29 +24,44 @@ function identidadSinAcentos(ciudadano) {
  */
 
 function generarCUIL(dni, sexo) {
-    const sexoNorm = (sexo || '').toString().trim().toLowerCase();
-    let sexoFinal = 'M';
+    const sexoNorm = (sexo || '')
+        .toString()
+        .trim()
+        .toLowerCase();
+
+    let prefijo;
+
     if (sexoNorm.startsWith('f')) {
-        sexoFinal = 'F';
+        prefijo = '27';
+    } else if (sexoNorm.startsWith('m')) {
+        prefijo = '20';
+    } else {
+        // casis no binario / X / desconocido
+        return '';
     }
+
     const dniStr = dni.toString().padStart(8, '0');
-    let prefijo = (sexoFinal === 'F') ? '27' : '20';
+
     function calcularDigito(p, d) {
         const base = (p + d).split('').map(Number);
         const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
         const suma = base.reduce((acc, num, i) => acc + num * pesos[i], 0);
+
         const resto = suma % 11;
         let verificador = 11 - resto;
+
         if (verificador === 11) { verificador = 0; }
         if (verificador === 10) { return null; }
 
         return verificador;
     }
+
     let digito = calcularDigito(prefijo, dniStr);
-    if (!digito) {
+    if (digito === null) {
         prefijo = '23';
         digito = calcularDigito(prefijo, dniStr);
     }
+
     return `${prefijo}${dniStr}${digito}`;
 }
 
