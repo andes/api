@@ -3,7 +3,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 
 export const insumoSchema = new mongoose.Schema({
-    insumo: String,
+    nombre: String,
     tipo: {
         type: String,
         enum: ['dispositivo', 'nutricion', 'magistral']
@@ -14,4 +14,4 @@ export const insumoSchema = new mongoose.Schema({
 
 insumoSchema.plugin(AuditPlugin);
 
-export const Insumo = mongoose.model('insumo', insumoSchema, 'insumo');
+export const Insumo = mongoose.model('insumos', insumoSchema, 'insumos');
