@@ -9,7 +9,9 @@ class InsumosResource extends ResourceBase {
     middlewares = [Auth.authenticate()];
     searchFileds = {
         insumo: MongoQuery.partialString,
+        codigo: MongoQuery.partialString,
         tipo: MongoQuery.equalMatch,
+        estado: MongoQuery.equalMatch,
         requiereEspecificacion: MongoQuery.equalMatch,
     };
 }
