@@ -228,9 +228,9 @@ router.get('/agenda/:id?', async (req, res, next) => {
             query.where('bloques.restantesProgramados').gt(0);
         }
 
-        // Trae las Agendas NO nominalizadas
-        if (req.query.nominalizada && req.query.nominalizada === false) {
-            query.where('nominalizada').equals(false);
+        // Trae las Agendas Nominalizadas / NO nominalizadas
+        if (req.query.nominalizada !== undefined) {
+            query.where('nominalizada').equals(req.query.nominalizada);
         }
 
         // Filtra por el array de tipoPrestacion enviado como parametro
