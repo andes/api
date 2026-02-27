@@ -1,3 +1,4 @@
+import { Prestacion } from '../../rup/schemas/prestacion';
 import { Agenda } from '../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 
@@ -40,7 +41,7 @@ export async function procesar(parametros: any) {
         match['tipoPrestaciones.conceptId'] = parametros.prestacion;
         matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }, { $eq: ['$_bloques.turnos.tipoPrestacion.conceptId', parametros.prestacion] }] };
     } else {
-        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }] };
+        matchTurno['$expr'] = parametros.noNominalizada ? { $and: [{ $eq: ['$_bloques.turnos.estado', 'disponible'] }] } : { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }] };
     }
 
     if (parametros.profesional) {
@@ -215,7 +216,22 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
+    try {
+        const turnosAsignados = await Agenda.aggregate(pipelineBuscador);
+        for (const turno of turnosAsignados) {
+            const prestacion: any = await Prestacion.findById(turno.idPrestacion);
+            if (prestacion) {
+                const registro = prestacion.ejecucion?.registros?.find(x => x.valor?.informe !== null);
+                turno.actividad = registro.valor?.informe?.tipoActividad?.term;
+                turno.tematica = registro.valor?.informe?.tematica;
+                turno.profesionales = turno.profesionales;
+                turno.estadoActual = prestacion.estadoActual;
+            }
+        }
+        return turnosAsignados;
+    } catch (error) {
+        return (error);
+    }
 
-    const turnosAsignados = await Agenda.aggregate(pipelineBuscador);
-    return turnosAsignados;
+
 }
