@@ -98,6 +98,11 @@ export const PacienteAppSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    // borrado logico de la cuenta
+    baja: {
+        type: Boolean,
+        required: false
+    },
     permisos: [String],
     restablecerPassword: {
         codigo: String,
