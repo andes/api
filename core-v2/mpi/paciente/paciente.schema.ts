@@ -147,6 +147,7 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     nombre: String,
     apellido: String,
     documento: String,
+    cuil: String,
     fechaNacimiento: Date,
     sexo: SEXO,
     genero: String,
@@ -165,8 +166,7 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     localidad: NombreSchemaV2,
     zona: NombreSchemaV2,
     areaPrograma: NombreSchemaV2,
-    addAt: Date
-
+    addAt: Date,
 
 }, { _id: false });
 
