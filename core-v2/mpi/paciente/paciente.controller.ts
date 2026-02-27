@@ -699,5 +699,11 @@ export async function getHistorialPaciente(req) {
     } else {
         return ('Datos insuficientes');
     }
+}
 
+export async function agregarFinanciador(paciente) {
+    const financiador = await getObraSocial(paciente);
+    paciente.financiador = financiador;
+
+    return paciente;
 }
