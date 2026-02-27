@@ -27,6 +27,7 @@ export interface IAuthUsers {
     lastLogin: Date;
     tipo?: String;
     validationToken?: String;
+    validationTokenExpiration?: Date;
     email?: String;
     configuracion?: { [key: string]: any };
     disclaimers?: {
