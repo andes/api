@@ -559,6 +559,37 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             if (errorPrestaciones) {
                                 return next(errorPrestaciones);
                             }
+                            // verifico que no exista una agenda con el mismo espacio fisico en la misma fecha
+                            if (req.body.espacioFisico) {
+                                const agendaXespacio: any = await Agenda.findOne({
+                                    'espacioFisico._id': req.body.espacioFisico.id,
+                                    $or: [
+                                        {
+                                            horaInicio: { $lt: moment(data.horaFin).toDate() },
+                                            horaFin: { $gt: moment(data.horaInicio).toDate() }
+                                        }
+                                    ]
+                                });
+                                if (agendaXespacio && agendaXespacio.espacioFisico._id === req.body.espacioFisico._id) {
+                                    return next(new Error('Agenda solapada para el espacio físico: ' + req.body.espacioFisico.nombre.toUpperCase()));
+                                }
+                            }
+
+                            // Verifico que no exista una agenda con el mismo profesional en la misma fecha
+                            for (const prof of req.body.profesional) {
+                                const agendaSolapada = await Agenda.findOne({
+                                    'profesionales._id': mongoose.Types.ObjectId(prof.id),
+                                    $or: [
+                                        {
+                                            horaInicio: { $lt: moment(data.horaFin).toDate() },
+                                            horaFin: { $gt: moment(data.horaInicio).toDate() }
+                                        }
+                                    ]
+                                });
+                                if (agendaSolapada && agendaSolapada._id.toString() !== data._id.toString()) {
+                                    return next(new Error('Agenda solapada para el/la profesional: ' + prof.nombre + ' ' + prof.apellido));
+                                }
+                            }
                             agendaCtrl.editarAgenda(req, data);
                             event = { object: 'agenda', accion: 'update', data };
                         } else {
