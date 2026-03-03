@@ -23,9 +23,39 @@ import { EventCore } from '@andes/event-bus/index';
 /**
  * Crea un objeto paciente
  */
+function getReferenciaId(ref: any) {
+    if (!ref) { return null; }
+    return typeof ref === 'object' ? (ref._id || ref.id) : ref;
+}
+
+/**
+ * Normaliza el array de relaciones para que siempre tenga solo { relacion, referencia }.
+ * Limpia campos legacy de pacientes guardados con esquemas viejos.
+ */
+function normalizeRelaciones(paciente: IPacienteDoc): IPacienteDoc {
+    if (paciente && paciente.relaciones?.length) {
+        (paciente as any).relaciones = paciente.relaciones
+            .filter(rel => rel.referencia) // descartar relaciones sin referencia
+            .map(rel => ({
+                relacion: rel.relacion,
+                referencia: rel.referencia
+            }));
+    }
+    return paciente;
+}
 
 export function make(body: IPaciente) {
     const paciente = new Paciente();
+
+    if (body.relaciones?.length) {
+        body.relaciones = body.relaciones
+            .filter(rel => rel.referencia)
+            .map(rel => ({
+                relacion: rel.relacion,
+                referencia: getReferenciaId(rel.referencia)
+            }));
+    }
+
     paciente.set(body);
     return paciente;
 }
@@ -42,12 +72,13 @@ export function set(paciente: IPacienteDoc, body: any) {
         delete body['estado'];
     }
 
-    if (body.relaciones?.length) {
-        body.relaciones.forEach(rel => {
-            if (rel.referencia && typeof rel.referencia === 'object') {
-                rel.referencia = rel.referencia.id || rel.referencia._id;
-            }
-        });
+    if (body.relaciones) {
+        body.relaciones = body.relaciones
+            .filter(rel => rel.referencia) // evita guardar relaciones con referencia null/undefined
+            .map(rel => ({
+                relacion: rel.relacion,
+                referencia: rel.referencia?._id || rel.referencia?.id || rel.referencia
+            }));
     }
 
     paciente.set(body);
@@ -126,6 +157,7 @@ export async function findById(id: string | String | Types.ObjectId, options = n
         select: 'nombre apellido documento numeroIdentificacion fechaNacimiento fechaFallecimiento fotoId sexo genero activo'
     });
     const paciente = await queryFind;
+    if (paciente) { normalizeRelaciones(paciente); }
     EventCore.emitAsync('mpi:pacientes:findById', paciente);
     return paciente;
 }
@@ -238,6 +270,7 @@ export async function multimatch(searchText: string, filter: any, options?: any)
             path: 'relaciones.referencia',
             select: 'nombre apellido documento numeroIdentificacion fechaNacimiento fechaFallecimiento fotoId sexo genero activo'
         });
+    pacientes.forEach(p => normalizeRelaciones(p));
     return pacientes;
 }
 
@@ -441,8 +474,7 @@ export async function agregarHijo(progenitor, hijo, req) {
         const parentescoProgenitor = await ParentescoCtr.findOne({ nombre: '^progenitor' }, {}, req);
         const progenitorRelacion = {
             relacion: parentescoProgenitor,
-            referencia: progenitor._id,
-            activo: true
+            referencia: progenitor
         };
 
         hijo.relaciones = hijo.relaciones || [];
@@ -453,8 +485,7 @@ export async function agregarHijo(progenitor, hijo, req) {
         const parentescoHijo = await ParentescoCtr.findOne({ nombre: '^hijo' }, {}, req);
         const familiarRelacion = {
             relacion: parentescoHijo,
-            referencia: hijo._id,
-            activo: true
+            referencia: hijo
         };
 
         progenitor.relaciones.push(familiarRelacion);
