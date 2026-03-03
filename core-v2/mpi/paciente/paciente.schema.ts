@@ -98,9 +98,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
         referencia: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'paciente_2',
-            required: true
-        },
-        activo: Boolean
+            required: false
+        }
     }],
     financiador: [FinanciadorSchema],
     claveBlocking: { type: [String], es_indexed: true },

@@ -85,19 +85,33 @@ EventCore.on('mpi:pacientes:update', async (paciente: any, changeFields: string[
             }
         }
     }
+    function getReferenciaId(ref: any) {
+        if (!ref) { return null; }
+        return typeof ref === 'object' ? (ref._id || ref.id) : ref;
+    }
+
     if (changeFields.includes('activo') && paciente.relaciones) {
         // Obtenemos todos los pacientes relacionados del paciente desactivado/activado en un array de promesas.
-        let relacionados = paciente.relaciones.map(r => Paciente.findById(r.referencia));
+        let relacionados = paciente.relaciones.map(r =>
+            Paciente.findById(getReferenciaId(r.referencia))
+        );
         relacionados = await Promise.all(relacionados);
         // Por cada uno de esos pacientes relacionados buscamos en que posición del array de relaciones del paciente desactivado/activado
         // se encuentra y luego cambiamos el atributo activo a true/false segun corresponde.
-        relacionados.map(async pac => {
-            const index = pac.relaciones.findIndex(rel => rel.referencia.toString() === paciente._id.toString());
-            if (index > -1) {
-                pac.relaciones[index].activo = paciente.activo;
-            }
-            await Paciente.findByIdAndUpdate(pac._id, { relaciones: pac.relaciones });
-        });
+        await Promise.all(
+            relacionados.map(async pac => {
+                const index = pac.relaciones.findIndex(rel => {
+                    const refId = getReferenciaId(rel.referencia);
+                    return refId.toString() === paciente._id.toString();
+                });
+
+                if (index > -1) {
+                    pac.relaciones[index].activo = paciente.activo;
+                }
+
+                await Paciente.findByIdAndUpdate(pac._id, { relaciones: pac.relaciones });
+            })
+        );
     }
     // Verifica si el paciente esta actualmente internado para replicar los cambios
     if (['nombre', 'apellido', 'sexo', 'alias', 'genero'].map(field => changeFields.includes(field))) {
