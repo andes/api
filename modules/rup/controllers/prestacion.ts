@@ -8,7 +8,7 @@ import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { Prestacion, PrestacionHistorial } from '../../rup/schemas/prestacion';
 import { buscarEnHuds } from '../controllers/rup';
 import moment = require('moment');
-import { ITipoPrestacion } from 'core/tm/schemas/tipoPrestacion';
+import { ITipoPrestacion, tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { IPrestacion, IPrestacionDoc } from '../prestaciones.interface';
 import { Estados } from '../internacion/estados.schema';
 
@@ -200,24 +200,53 @@ export async function saveEnHistorial(prestacion, estado, req) {
 
 export async function vencimientoPrestacion(done) {
     try {
-        const fechaLimite = moment().subtract(1, 'years').toDate();
-        let fechaInicio = moment().subtract(3, 'years').toDate();
-        fechaInicio = moment(fechaInicio).subtract(2, 'months').toDate();
-        const query = {
-            createdAt: { $gte: fechaInicio, $lte: fechaLimite }
-            ,
+        const tiposPrestacion = await tipoPrestacion.find({ tiempoVigencia: { $exists: true } });
+        const conceptIdsConfigurados = [];
+
+        for (const tp of tiposPrestacion) {
+            conceptIdsConfigurados.push(tp.conceptId);
+
+            const vigenciaDias = tp.tiempoVigencia || 365;
+            const fechaLimite = moment().subtract(vigenciaDias, 'days').toDate();
+            const fechaInicio = moment(fechaLimite).subtract(3, 'years').toDate();
+
+            const queryConfigurada = {
+                createdAt: { $gte: fechaInicio, $lte: fechaLimite },
+                'solicitud.tipoPrestacion.conceptId': tp.conceptId,
+                $or: [
+                    { 'estadoActual.tipo': 'pendiente', 'solicitud.turno': { $eq: null } },
+                    { 'estadoActual.tipo': 'auditoria' }
+                ]
+            };
+
+            const prestacionesConfiguradas: any = await Prestacion.find(queryConfigurada);
+            const promisesConfig = prestacionesConfiguradas.map((p) => {
+                p.estados.push({ tipo: 'vencida' });
+                Auth.audit(p, userScheduler as any);
+                return p.save();
+            });
+            await Promise.all(promisesConfig);
+        }
+        const fechaLimiteDefecto = moment().subtract(365, 'days').toDate();
+        const fechaInicioDefecto = moment(fechaLimiteDefecto).subtract(3, 'years').toDate();
+
+        const queryDefecto = {
+            createdAt: { $gte: fechaInicioDefecto, $lte: fechaLimiteDefecto },
+            'solicitud.tipoPrestacion.conceptId': { $nin: conceptIdsConfigurados },
             $or: [
                 { 'estadoActual.tipo': 'pendiente', 'solicitud.turno': { $eq: null } },
                 { 'estadoActual.tipo': 'auditoria' }
             ]
         };
-        const prestaciones: any = await Prestacion.find(query);
-        const promises = prestaciones.map((p) => {
+
+        const prestacionesDefecto: any = await Prestacion.find(queryDefecto);
+        const promisesDefecto = prestacionesDefecto.map((p) => {
             p.estados.push({ tipo: 'vencida' });
             Auth.audit(p, userScheduler as any);
-            p.save();
+            return p.save();
         });
-        await Promise.all(promises);
+        await Promise.all(promisesDefecto);
+
     } catch (error) {
         return error;
     }
