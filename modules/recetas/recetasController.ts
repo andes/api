@@ -585,7 +585,8 @@ export async function create(req) {
                 documento: profAndes.documento,
                 profesion: profesionGrado,
                 especialidad: especialidades,
-                matricula: matriculaGrado
+                matricula: matriculaGrado,
+                efector: profRecetar.efector || null
             };
         }
         return await crearReceta(dataReceta, req);

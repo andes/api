@@ -23,7 +23,7 @@ function identidadSinAcentos(ciudadano) {
  * Busca en fuentes auntenticas los datos de un ciudadano.
  */
 
-function generarCUIL(dni, sexo) {
+export function generarCUIL(dni, sexo) {
     const sexoNorm = (sexo || '')
         .toString()
         .trim()

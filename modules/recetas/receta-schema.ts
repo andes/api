@@ -19,7 +19,7 @@ export const motivosRecetaSchema = new mongoose.Schema({
 const estadosSchema = new mongoose.Schema({
     tipo: {
         type: String,
-        enum: ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada','eliminada'],
+        enum: ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada', 'eliminada'],
         required: true,
         default: 'vigente'
     },
@@ -134,7 +134,8 @@ export const recetaSchema = new mongoose.Schema({
     },
     organizacion: {
         id: mongoose.SchemaTypes.ObjectId,
-        nombre: String
+        nombre: String,
+        direccion: { type: String, required: false },
     },
     profesional: {
         type: profesionalSubschema,
