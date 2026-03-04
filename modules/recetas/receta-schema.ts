@@ -145,6 +145,7 @@ export const recetaSchema = new mongoose.Schema({
     idPrestacion: { type: String, required: true },
     idRegistro: { type: String, required: true },
     diagnostico: mongoose.SchemaTypes.Mixed,
+    diagnosticoConfidencial: Boolean,
     medicamento: {
         type: medicamentoSubschema,
         required: true
