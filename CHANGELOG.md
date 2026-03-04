@@ -1,3 +1,10 @@
+# [5.141.0](https://github.com/andes/api/compare/v5.140.0...v5.141.0) (2026-03-04)
+
+
+### Features
+
+* **HUDS:** implementa job para actualizar estados de dispensa ([#2056](https://github.com/andes/api/issues/2056)) ([790e5a3](https://github.com/andes/api/commit/790e5a3365f34feb251c3dbec98eeb117a798b93))
+
 # [5.140.0](https://github.com/andes/api/compare/v5.139.5...v5.140.0) (2026-02-25)
 
 
