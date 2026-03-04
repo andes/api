@@ -4,7 +4,8 @@ import { sisa as sisaConfig } from '../../../config.private';
 import { matchUbicacion } from '../../../core/tm/controller/localidad';
 import { IDireccion } from '../../../shared/interfaces';
 import { Types } from 'mongoose';
-
+import { updateValidadosLog } from '../mpi.log';
+import { userScheduler } from '../../../config.private';
 const sharp = require('sharp');
 
 function caracteresInvalidos(texto) {
@@ -71,41 +72,60 @@ function formatearCUIL(cuil: string) {
 
 
 export async function validar(documento: string, sexo: string) {
+    // ---------- RENAPER ----------
+
+    let ciudadanoRenaper = null;
     try {
-        const ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
+        ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
+
         if (ciudadanoRenaper) {
-            // Valida el tamaño de la foto
-            ciudadanoRenaper.foto = ciudadanoRenaper.foto?.includes('image/jpg') ? await validarTamañoFoto(ciudadanoRenaper.foto) : null;
+            ciudadanoRenaper.foto = ciudadanoRenaper.foto?.includes('image/jpg')
+                ? await validarTamañoFoto(ciudadanoRenaper.foto)
+                : null;
+
             ciudadanoRenaper.fotoId = ciudadanoRenaper.foto?.length > 0 ? new Types.ObjectId() : null;
             ciudadanoRenaper.estado = 'validado';
+
             ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
             ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
             if (!ciudadanoRenaper.cuil || ciudadanoRenaper.cuil === '0') {
                 ciudadanoRenaper.cuil = generarCUIL(documento, sexo);
             }
             ciudadanoRenaper.validateAt = new Date();
+
             if (identidadSinAcentos(ciudadanoRenaper)) {
                 return ciudadanoRenaper;
             }
         }
+    } catch (error) {
+        updateValidadosLog.error('consultaRenaper', { documento, sexo }, error, userScheduler);
+
+    }
+
+
+    // ---------- SISA ----------
+    try {
         const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
         if (ciudadanoSisa) {
             ciudadanoSisa.direccion[0] = await matchDireccion(ciudadanoSisa);
             ciudadanoSisa.direccion[1] = ciudadanoSisa.direccion[0];
             ciudadanoSisa.validateAt = new Date();
+
             if (ciudadanoRenaper) {
                 ciudadanoSisa.foto = ciudadanoRenaper.foto;
                 ciudadanoSisa.direccion = ciudadanoRenaper.direccion;
                 ciudadanoSisa.idTramite = ciudadanoRenaper.idTramite;
             }
+
             return ciudadanoSisa;
-        } else {
-            return ciudadanoRenaper;
         }
     } catch (error) {
-        return null;
+        updateValidadosLog.error('consultaSisa', { documento, sexo }, error, userScheduler);
+
+        throw new Error(`Error al consultar SISA: ${error.message}`);
     }
 
+    return ciudadanoRenaper;
 }
 
 
@@ -158,3 +178,5 @@ async function matchDireccion(persona) {
     }
     return direccion;
 }
+
+
