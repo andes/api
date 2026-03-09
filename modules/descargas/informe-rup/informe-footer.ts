@@ -40,11 +40,11 @@ export class InformeRupFooter extends HTMLComponent {
                     </h6>
                 {{/if}}
             </article>
-        </span>
-        <hr>
-        <span class="numeracion">
-            {{{ numeracionHTML }}}
-        </span>
+            </span>
+            <hr>
+            <span class="numeracion">
+                {{{ numeracionHTML }}}
+            </span>
     `;
 
     constructor(public prestacion, public paciente, public organizacion, public user) {

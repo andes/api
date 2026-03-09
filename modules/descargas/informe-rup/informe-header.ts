@@ -148,14 +148,12 @@ export class InformeRupHeader extends HTMLComponent {
                 </span>
                 
             </section>
-            
+
             {{#unless consultaValidada }}
                 <h1 class="marca-de-agua">
                     Prestación no validada por profesional
                 </h1>
             {{/unless}}
-            
-            <hr>
     `;
 
     constructor(public prestacion, public paciente, public organizacion, public cama) {

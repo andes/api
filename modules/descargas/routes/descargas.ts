@@ -206,7 +206,6 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
 
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-
             return res.send(pdfBuffer);
 
         } catch (err) {

@@ -6,6 +6,7 @@ import { InformeRupFirma } from './informe-firma';
 export class InformeRupBody extends HTMLComponent {
     template = `
         <main>
+            <hr>
             <section class="contenedor-informe">
                 <span class="cabezal-conceptos horizontal">
                     <div class="contenedor-bloque-texto w-50">
