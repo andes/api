@@ -6,7 +6,7 @@ export class CensoBody extends HTMLComponent {
             <!-- Body -->
             <main>
                 <section class="contenedor-informe">
-                    <table class="table table-bordered">
+                    <table class="resumen table table-bordered">
                         <thead>
                             <tr>
                                 <th>Paciente</th>
@@ -81,45 +81,45 @@ export class CensoBody extends HTMLComponent {
                         <thead>
                             <tr>
                                 <th rowspan="2">
-                                    <h6>Existencia a las 0 hs</h6>
+                                    Existencia a las 0 hs
                                 </th>
                                 <th rowspan="2">
-                                    <h6>Ingresos</h6>
+                                    Ingresos
                                 </th>
                                 <th rowspan="2">
-                                    <h6>Pases de</h6>
+                                    Pases de
                                 </th>
                                 <th colspan="2">
-                                    <h6>Egreso</h6>
+                                    Egreso
                                 </th>
                                 <th rowspan="2">
-                                    <h6>Pases A</h6>
+                                    Pases A
                                 </th>
                                 <th rowspan="2">
-                                    <h6>Existencia a las 24 hs</h6>
+                                    Existencia a las 24 hs
                                 </th>
                                 <th rowspan="2">
-                                    <h6>Ingresos y egresos del día</h6>
+                                    Ingresos y egresos del día
                                 </th>
                                 <th rowspan="2">
-                                    <h6>Pacientes día</h6>
+                                    Pacientes día
                                 </th>
                                 <!-- <th rowspan="2">
-                                    <h6>Camas disponibles a las 0hs</h6>
+                                    Camas disponibles a las 0hs
                                 </th> -->
                                 <th rowspan="2">
-                                    <h6>Días estada</h6>
+                                    Días estada
                                 </th>
                                 <th rowspan="2">
-                                    <h6>Camas disponibles a las 24hs</h6>
+                                    Camas disponibles a las 24hs
                                 </th>
                             </tr>
                             <tr>
                                 <th>
-                                    <h6>Altas</h6>
+                                    Altas
                                 </th>
                                 <th>
-                                    <h6>Defunciones</h6>
+                                    Defunciones
                                 </th>
                             </tr>
                         </thead>

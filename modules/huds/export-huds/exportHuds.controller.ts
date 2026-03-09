@@ -8,7 +8,15 @@ import { exportHudsLog } from './exportHuds.log';
 import { ExportHudsModel } from './exportHuds.schema';
 import { getHUDSExportarModel } from './hudsFiles';
 import { Paciente } from '../../../core-v2/mpi';
+const pLimit = require('p-limit');
 import moment = require('moment');
+
+const safe = (s: string) =>
+    (s || '')
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-') // al parecer inválidos windows/zip
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 150);
 
 export async function createFile(idExportHuds) {
     const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
@@ -95,12 +103,16 @@ async function buildExportFile(peticionExport: any) {
         zlib: { level: 9 }
     });
 
+    archive.on('warning', (warning) => {
+        exportHudsLog.error('warning creando archivo .zip', {}, warning);
+    });
+
     const metadata = {
         user: peticionExport.user
     };
 
     const options = {
-        filename: `HUDS-${peticionExport.pacienteNombre || ''}-${fecha}`,
+        filename: `HUDS-${safe(peticionExport.pacienteNombre || '')}-${fecha}`,
         contentType: 'application/zip',
         metadata
     };
@@ -145,9 +157,11 @@ async function buildExportFile(peticionExport: any) {
 
     exportHudsLog.info('exportaHuds', objectLog);
 
+    const limit = pLimit(2);
+
     const getData = () => {
         return Promise.all(
-            prestaciones.map(async (prestacion: any) => {
+            prestaciones.map((prestacion: any) => limit(async () => {
                 try {
                     const informe = new InformeRUP(
                         prestacion.id,
@@ -155,7 +169,7 @@ async function buildExportFile(peticionExport: any) {
                         peticionExport.user
                     );
 
-                    const archivo = await informe.informe();
+                    const pdfBuffer: Buffer = await informe.informe();
 
                     const nombreArchivo = peticionExport.prestaciones.length
                         ? prestacion.paciente.documento
@@ -163,10 +177,10 @@ async function buildExportFile(peticionExport: any) {
 
                     const fechaArchivo = moment(
                         prestacion.solicitud.fecha
-                    ).format('YYYY-MM-DD-hhmmss');
+                    ).format('YYYY-MM-DD-HHmmss');
 
-                    archive.file(`${archivo}`, {
-                        name: `${fechaArchivo} - ${nombreArchivo}.pdf`
+                    archive.append(pdfBuffer, {
+                        name: `${fechaArchivo} - ${safe(nombreArchivo)}.pdf`
                     });
 
                 } catch (error) {
@@ -176,13 +190,13 @@ async function buildExportFile(peticionExport: any) {
                         error
                     );
                 }
-            })
+            }))
         );
     };
 
     const getCdas = (excluye: string[]) => {
         return Promise.all(
-            cdas.map(async (cda: any) => {
+            cdas.map((cda: any) => limit(async () => {
                 const conceptId = cda.metadata?.prestacion?.snomed?.conceptId;
 
                 if (excluye.includes(conceptId)) {
@@ -205,8 +219,8 @@ async function buildExportFile(peticionExport: any) {
                         archive.append(fileCda.stream, {
                             name:
                                 `${moment(cda.metadata.fecha)
-                                    .format('YYYY-MM-DD-hhmmss')} - ` +
-                                `${cda.metadata.prestacion.snomed.term}.pdf`
+                                    .format('YYYY-MM-DD-HHmmss')} - ` +
+                                `${safe(cda.metadata.prestacion?.snomed?.term || 'CDA')}.pdf`
                         });
                     } catch (error) {
                         exportHudsLog.error(
@@ -241,19 +255,19 @@ async function buildExportFile(peticionExport: any) {
                             peticionExport.user?.usuario
                         );
 
-                        const archivo: any = await informe.informe();
+                        const pdfBuffer: Buffer = await informe.informe();
 
                         const fechaArchivo = moment(
                             cda.metadata.fecha
-                        ).format('YYYY-MM-DD-hhmmss');
+                        ).format('YYYY-MM-DD-HHmmss');
 
                         const nombreArchivo =
                             cda.metadata.prestacion.snomed.term;
 
-                        archive.file(`${archivo}`, {
+                        archive.append(pdfBuffer, {
                             name:
                                 `${fechaArchivo} - ` +
-                                `${nombreArchivo}.pdf`
+                                `${safe(nombreArchivo)}.pdf`
                         });
 
                     } catch (error) {
@@ -264,7 +278,7 @@ async function buildExportFile(peticionExport: any) {
                         );
                     }
                 }
-            })
+            }))
         );
     };
 
