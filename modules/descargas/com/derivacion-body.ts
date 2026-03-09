@@ -54,12 +54,6 @@ export class DerivacionBody extends HTMLComponent {
             <br>
             <div class="row">
                 <div class="col">
-                    <span>ID:
-                        {{ idDerivacion }}</span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
                     <span>ORIGEN:
                         {{ organizacionOrigen }}</span>
                 </div>
@@ -82,11 +76,54 @@ export class DerivacionBody extends HTMLComponent {
                     <span>FECHA Y HORA DE DERIVACIÓN: {{ fecha }} hs</span>
                 </div>
             </div>
+            {{#if motivo}}
+                <div class="row" >
+                    <div class="col">
+                        <span>Motivo:
+                            {{ motivo }}</span>
+                    </div>
+                </div>
+            {{/if}}
+            {{#if diagnosticoActual}}
+                <div class="row" >
+                    <div class="col">
+                        <span>Diagnóstico Actual:
+                            {{ diagnosticoActual }}</span>
+                    </div>
+                </div>
+            {{/if}}
+            {{#if estadoClinico}}
+                <div class="row" >
+                    <div class="col">
+                        <span>Estado Clínico:
+                            {{ estadoClinico }}</span>
+                    </div>
+                </div>
+            {{/if}}
+            {{#if condicion}}
+                <div class="row" >
+                    <div class="col">
+                        <span>Condición:
+                            {{ condicion }}</span>
+                    </div>
+                </div>
+            {{/if}}
+            {{#if necesidad}}
+                <div class="row" >
+                    <div class="col">
+                        <span>Necesidad:
+                            {{ necesidad }}</span>
+                    </div>
+                </div>
+            {{/if}}
             {{#if tipoTraslado}}
                 <div class="row" >
                     <div class="col">
                         <span>TIPO TRASLADO:
                             {{ tipoTraslado.nombre }}</span>
+                        <br>
+                        <span>FECHA y HORA DE TRASLADO:
+                            {{ fechaTraslado }}</span>
                     </div>
                 </div>
             {{/if}}
@@ -137,11 +174,13 @@ export class DerivacionBody extends HTMLComponent {
                         {{ datosSolicitud.usuario }}</span>
                 </div>
             </div>
-            <div class="row">
-                <div class="col">
-                    <span>DETALLE: {{ datosSolicitud.detalle }}</span>
+            {{#if datosSolicitud.detalle}}
+                <div class="row">
+                    <div class="col">
+                        <span>DETALLE: {{ datosSolicitud.detalle }}</span>
+                    </div>
                 </div>
-            </div>
+            {{/if}}
             {{/if}}
             {{#if dispositivoOxigeno}}
             <br><br>
@@ -152,62 +191,14 @@ export class DerivacionBody extends HTMLComponent {
             </div>
             <div class="row" >
                <div class="col">
+                  <span>FECHA y HORA: {{ fechaDispositivo }}</span>
+                    </div>
+                </div>
+            <div class="row" >
+               <div class="col">
                   <span>{{ dispositivoOxigeno }}</span>
                     </div>
                 </div>
-            {{/if}}
-
-            {{#if historial }}
-            <br><br>
-            <div class="row">
-                <div class="col">
-                    <span><b>HISTORIAL DE DERIVACIÓN</b></span>
-                </div>
-            </div>
-            <style>
-                table, th, td {
-                    border: 1px solid grey;
-                }
-
-                table {
-                    border-collapse: collapse;
-                    page-break-before: always;
-                    float:left;
-                    font-size: 7px;
-                    line-height: normal;
-                }
-
-            </style>
-            <br/>
-            <font size="1" >
-            <table>
-                <thead style='display: table-header-group' >
-                    <th>Fecha</th>
-                    {{#if reporteCOM }}<th>Organización</th>{{/if}}
-                    <th>Evento</th>
-                    {{#if reporteCOM }}<th>Prioridad</th>{{/if}}
-                    <th>Observación</th>
-                    <th>Usuario</th>
-                    {{#if reporteCOM }}<th>Org. Destino</th>{{/if}}
-                </thead>
-
-                {{#each historial}}
-
-                <tr>
-                    <td>{{ fechaCreacion }}</td>
-                    {{#if reporteCOM }}<td>{{ createdBy.organizacion.nombre }}</td>{{/if}}
-                    <td>{{#if estado }}{{ estado }}{{/if}} {{#if esActualizacion }}actualización{{/if}}</td>
-                    {{#if reporteCOM }}<td>{{#if prioridad}}{{ prioridad }}{{/if}}</td>{{/if}}
-                    <td>{{#if observacion}}{{observacion}}{{/if}}</td>
-                    <td>{{ createdBy.nombreCompleto }}</td>
-                    {{#if reporteCOM }}<td>{{#if organizacionDestino}}{{ organizacionDestino.nombre }}{{/if}}</td>{{/if}}
-                </tr>
-
-                {{/each}}
-
-            </table>
-            </font>
-
             {{/if}}
 
             {{#if firmaHTML}}
@@ -241,7 +232,6 @@ export class DerivacionBody extends HTMLComponent {
         const organizacion = this._data.historial && this._data.organizacionId ? await Organizacion.findById(this._data.organizacionId) : null;
         const historial = this._data.historial ? await this.getHistorialDerivacion(organizacion, derivacion) : null;
         this.data = {
-            idDerivacion: derivacion._id,
             nombre: derivacion.paciente.nombre,
             apellido: derivacion.paciente.apellido,
             dni: derivacion.paciente.documento,
@@ -249,14 +239,22 @@ export class DerivacionBody extends HTMLComponent {
             sexo: derivacion.paciente.sexo,
             obraSocial: derivacion.paciente.obraSocial,
             organizacionOrigen: derivacion.organizacionOrigen.nombre,
+            fechaCreacion: derivacion.createdAt,
+            creadaPor: derivacion.createdBy.nombreCompleto,
             organizacionDestino: derivacion.organizacionDestino?.nombre,
-            unidadDestino: derivacion.unidadDestino?.term,
+            motivo: derivacion.motivoDerivacion,
+            diagnosticoActual: derivacion.diagnosticoActual,
+            estadoClinico: derivacion.estadoClinico,
+            condicion: derivacion.condicion,
+            necesidad: derivacion.necesidad,
             dispositivoOxigeno: derivacion.dispositivo ? `${derivacion.dispositivo.nombre}, ${derivacion.dispositivo.descripcion}` : null,
+            fechaDispositivo: derivacion.dispositivo ? moment(derivacion.dispositivo.createdAt).format('DD/MM/YYYY HH:mm') : null,
             fecha,
             finalizada,
             fechaFinalizacion: moment(fechaFinalizacion).format('DD/MM/YYYY HH:mm'),
             profesionalFinalizacion: profesional,
             tipoTraslado: derivacion.tipoTraslado,
+            fechaTraslado: derivacion.tipoTraslado ? moment(derivacion.fechaTraslado).format('DD/MM/YYYY HH:mm') : null,
             organizacionTraslado: derivacion.organizacionTraslado,
             datosSolicitud,
             firmaHTML,
