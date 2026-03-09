@@ -1,65 +1,80 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as scss from 'node-sass';
-import * as pdf from 'html-pdf';
 import { HTMLComponent } from './html-component.class';
-import { enviarMail } from '../../../config.private';
+import { htmlToPdfBuffer } from '../../../utils/pdf/puppeteer';
+
+export type InformePdfOptions = {
+    format?: 'A4' | 'Letter';
+    margin?: {
+        top?: string; // tamaño del header
+        right?: string;
+        bottom?: string; // tamaño del footer
+        left?: string;
+    };
+    landscape?: boolean;
+};
 
 export class InformePDF extends HTMLComponent {
-    template = `
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-            {{#if css }}
-                <style> {{{ css }}}  </style>
-            {{/if}}
-
-        </head>
-        <body>
-            {{#if header }}
-                <header id="pageHeader"> {{{ header }}}  </header>
-            {{/if}}
-
-            {{{ body }}}
-
-            {{#if footer }}
-                <footer id="pageFooter"> {{{ footer }}} </footer>
-            {{/if}}
-        </body>
-    </html>
-    `;
 
     header: HTMLComponent;
     body: HTMLComponent;
     footer: HTMLComponent;
-
+    firma?: HTMLComponent; // firma de profesional
     style: string;
     stylesUrl: string[];
 
 
-    async informe(options: pdf.CreateOptions = null) {
-        const opciones = {
-            ...this.getDefaultOptions(),
-            ...(options || {})
-        };
-        const html = await this.render();
-        return new Promise((resolve, reject) => {
-            if (!enviarMail.active) {
-                // Para que ande en Juenkins por ahora
-                return resolve('');
-            }
-            pdf.create(html, opciones).toFile((err, file) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(file.filename);
-            });
-        });
+    wrapTemplate(innerHtml: string, css: string) {
+        /*  Puppeteer requiere que header/footer sean “un solo nodo"
+            por eso se envuelve el html en un div y se incluye el css para que se aplique a header/footer
+        */
+        return `
+            <div style="width: 100%;">
+                ${css ? `<style>${css}</style>` : ''}
+                ${innerHtml || '<span></span>'}
+            </div>
+        `.trim();
     }
 
+    buildBodyHtml(css: string, body: string) {
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                ${css ? `<style>${css}</style>` : ''}
+            </head>
+            <body>
+                ${body || ''}
+                </body>
+                </html>
+                `.trim();
+    }
+
+    async informe(options: InformePdfOptions = null): Promise<Buffer> {
+        // asegura que this.data tenga header/footer/body/css
+        await this.process();
+
+        const opciones = { ...this.getDefaultOptions(), ...(options || {}) };
+        const css = this.data?.css || '';
+
+        const headerTemplate = this.wrapTemplate(this.data?.header, css);
+        const footerTemplate = this.wrapTemplate(this.data?.footer, css);
+        const bodyHtml = this.buildBodyHtml(css, this.data?.body);
+
+        return htmlToPdfBuffer(bodyHtml, {
+            format: (opciones?.format as any) || 'A4',
+            margin: opciones.margin,
+            landscape: opciones?.landscape || false,
+            headerTemplate,
+            footerTemplate,
+            printBackground: true,
+            preferCSSPageSize: true,
+            timeoutMs: 180000
+        });
+    }
 
     public async process() {
         const data: any = {};
@@ -68,6 +83,9 @@ export class InformePDF extends HTMLComponent {
         }
         if (this.footer) {
             data.footer = await this.footer.render();
+        }
+        if (this.firma) {
+            data.firma = await this.firma.render();
         }
         data.body = await this.body.render();
 
@@ -89,27 +107,21 @@ export class InformePDF extends HTMLComponent {
         return styles.join('\n');
     }
 
+
     private getDefaultOptions() {
-        const defaultOptions: pdf.CreateOptions = {
+        const defaultOptions: InformePdfOptions = {
             format: 'A4',
-            border: {
-                // default is 0, units: mm, cm, in, px
-                top: '.25cm',
+            margin: {
+                // por defecto 0, unidades: mm, cm, in, px
+                top: '7cm',
                 right: '0cm',
-                bottom: '3cm',
+                bottom: '3.5cm',
                 left: '0cm'
-            },
-            header: {
-                height: '7cm',
-            },
-            footer: {
-                height: '1cm'
             }
         };
+
         return defaultOptions;
     }
-
-
 }
 
 
