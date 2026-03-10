@@ -1,5 +1,5 @@
 import { ObjectId } from '@andes/core';
-import { Mongoose, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { AppCache } from '../../../connections';
@@ -8,9 +8,7 @@ import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { Prestacion, PrestacionHistorial } from '../../rup/schemas/prestacion';
 import { buscarEnHuds } from '../controllers/rup';
 import moment = require('moment');
-import { ITipoPrestacion, tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-import { IPrestacion, IPrestacionDoc } from '../prestaciones.interface';
-import { Estados } from '../internacion/estados.schema';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 
 /**
