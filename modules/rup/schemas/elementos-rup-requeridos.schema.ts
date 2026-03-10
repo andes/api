@@ -23,11 +23,15 @@ export const ElementoRUPRequeridosSchema = new mongoose.Schema({
         type: Boolean,
         required: true
     },
-
+    // Indica si este elementoRUP aplica a una solicitud
+    esSolicitud: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
     concepto: SnomedConcept,
     contexto: [mongoose.SchemaTypes.Mixed],
     rules: mongoose.SchemaTypes.Mixed,
-
     target: [{
         concepto: SnomedConcept,
         tipo: String
