@@ -2,7 +2,7 @@ import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
-import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa, create, buscarRecetasPorProfesional } from './recetasController';
+import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa, create, buscarRecetasPorProfesional, renovarRecetas } from './recetasController';
 import { ParamsIncorrect } from './recetas.error';
 
 class RecetasResource extends ResourceBase {
@@ -79,6 +79,12 @@ export const post = async (req, res) => {
     res.status(status).json(resp);
 };
 
+export const postRenovar = async (req, res) => {
+    const resp = await renovarRecetas(req);
+    const status = (resp instanceof Error || resp?.status) ? (resp.status || 400) : 200;
+    res.status(status).json(resp);
+};
+
 export const RecetasCtr = new RecetasResource({});
 export const RecetasRouter = RecetasCtr.makeRoutes();
 
@@ -98,3 +104,4 @@ RecetasRouter.get('/recetas/motivos', asyncHandler(getMotivos));
 RecetasRouter.get('/recetas/profesional/:id', authorizeByToken,asyncHandler(getByProfesional));
 RecetasRouter.patch('/recetas', authorizeByToken, asyncHandler(patch));
 RecetasRouter.post('/recetas', authorizeByToken, asyncHandler(post));
+RecetasRouter.post('/recetas/renovar', authorizeByToken, asyncHandler(postRenovar));
