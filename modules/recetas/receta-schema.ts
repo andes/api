@@ -177,6 +177,16 @@ export const recetaSchema = new mongoose.Schema({
     estadoDispensaActual: estadoDispensaSchema,
     paciente: { type: PacienteSubSchema, required: true },
     renovacion: String,
+    idRecetaOriginal: {
+        type: String,
+        required: false
+    },
+    numeroRenovacion: {
+        type: Number,
+        required: false,
+        min: 1,
+        max: 12
+    },
     appNotificada: [{ app: sistemaSchema, fecha: Date }],
     origenExterno: {
         id: String, // id receta creada por sistema que no es Andes
