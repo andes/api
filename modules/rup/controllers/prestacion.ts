@@ -1,5 +1,5 @@
 import { ObjectId } from '@andes/core';
-import { Mongoose, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { AppCache } from '../../../connections';
@@ -8,9 +8,7 @@ import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { Prestacion, PrestacionHistorial } from '../../rup/schemas/prestacion';
 import { buscarEnHuds } from '../controllers/rup';
 import moment = require('moment');
-import { ITipoPrestacion } from 'core/tm/schemas/tipoPrestacion';
-import { IPrestacion, IPrestacionDoc } from '../prestaciones.interface';
-import { Estados } from '../internacion/estados.schema';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 
 /**
@@ -200,24 +198,46 @@ export async function saveEnHistorial(prestacion, estado, req) {
 
 export async function vencimientoPrestacion(done) {
     try {
-        const fechaLimite = moment().subtract(1, 'years').toDate();
-        let fechaInicio = moment().subtract(3, 'years').toDate();
-        fechaInicio = moment(fechaInicio).subtract(2, 'months').toDate();
+
+        const tiposPrestacion = await tipoPrestacion.find({}, { conceptId: 1, tiempoVigencia: 1 });
+
+        const mapaVigencias = {};
+        tiposPrestacion.forEach(tp => {
+            mapaVigencias[tp.conceptId] = tp.tiempoVigencia || 365;
+        });
+
+        const fechaInicio = moment().subtract(3, 'years').toDate();
+
         const query = {
-            createdAt: { $gte: fechaInicio, $lte: fechaLimite }
-            ,
+            createdAt: { $gte: fechaInicio },
             $or: [
-                { 'estadoActual.tipo': 'pendiente', 'solicitud.turno': { $eq: null } },
+                { 'estadoActual.tipo': 'pendiente', 'solicitud.turno': null },
                 { 'estadoActual.tipo': 'auditoria' }
             ]
         };
+
         const prestaciones: any = await Prestacion.find(query);
+
+        const ahora = moment();
+
         const promises = prestaciones.map((p) => {
-            p.estados.push({ tipo: 'vencida' });
-            Auth.audit(p, userScheduler as any);
-            p.save();
-        });
+
+            const conceptId = p?.solicitud?.tipoPrestacion?.conceptId;
+            const vigenciaDias = mapaVigencias[conceptId] || 365;
+
+            const fechaVencimiento = moment(p.createdAt).add(vigenciaDias, 'days');
+
+            if (fechaVencimiento.isBefore(ahora)) {
+                p.estados.push({ tipo: 'vencida' });
+                Auth.audit(p, userScheduler as any);
+                return p.save();
+            }
+
+            return null;
+        }).filter(Boolean);
+
         await Promise.all(promises);
+
     } catch (error) {
         return error;
     }
