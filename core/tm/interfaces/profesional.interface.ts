@@ -7,6 +7,9 @@ export interface IProfesional {
     fechaNacimiento: Date;
     sexo: string;
     genero: string;
-    formacionGrado?: any[];
-    formacionPosgrado?: any[];
+    profesionExterna?: any;
+    matriculaExterna?: string;
+    formacionPosgrado?: any;
+    formacionGrado?: any;
+    profesionalMatriculado?: boolean;
 }
