@@ -829,3 +829,215 @@ export async function actualizarEstadosDispensa() {
         await informarLog.error('actualizarEstadosDispensa', {}, error);
     }
 }
+
+async function fetchRecetasExpandidas(recetasOriginales: any[]) {
+    const recetasExpandidas: any[] = [];
+    const procesadosIdRegistro = new Set();
+
+    for (const recetaOriginal of recetasOriginales) {
+        const esProlongado = recetaOriginal.medicamento?.tratamientoProlongado && recetaOriginal.idRegistro != null;
+        if (esProlongado) {
+            if (!procesadosIdRegistro.has(recetaOriginal.idRegistro)) {
+                procesadosIdRegistro.add(recetaOriginal.idRegistro);
+
+                const prolongadas = await Receta.find({
+                    idRegistro: recetaOriginal.idRegistro,
+                    'medicamento.concepto.conceptId': recetaOriginal.medicamento.concepto.conceptId
+                }).sort({ 'medicamento.ordenTratamiento': 1 });
+
+                for (const r of prolongadas) {
+                    if (!recetasExpandidas.find(e => e._id.toString() === r._id.toString())) {
+                        recetasExpandidas.push(r);
+                    }
+                }
+            }
+        } else {
+            if (!recetasExpandidas.find(e => e._id.toString() === recetaOriginal._id.toString())) {
+                recetasExpandidas.push(recetaOriginal);
+            }
+        }
+    }
+    return recetasExpandidas;
+}
+
+async function validarRenovacion(recetaOriginal: any) {
+    const estadoActual = recetaOriginal.estadoActual?.tipo;
+
+    // Solo se puede renovar si está finalizada o vencida
+    if (!['finalizada', 'vencida'].includes(estadoActual)) {
+        throw new RecetaNotEdit(
+            `La receta ${recetaOriginal._id} está en estado "${estadoActual}" y no puede renovarse. Solo se permiten estados: finalizada, vencida`
+        );
+    }
+
+    // No se puede renovar si fue suspendida en algún momento
+    const estuveSuspendida = recetaOriginal.estados?.some((e: any) => e.tipo === 'suspendida');
+    if (estuveSuspendida) {
+        throw new RecetaNotEdit(`La receta ${recetaOriginal._id} fue suspendida y no puede renovarse`);
+    }
+
+    // No se puede renovar si hay recetas pendientes del mismo tratamiento prolongado
+    if (recetaOriginal.idRegistro) {
+        const pendiente = await Receta.findOne({
+            idRegistro: recetaOriginal.idRegistro,
+            'estadoActual.tipo': 'pendiente'
+        });
+        if (pendiente) {
+            throw new RecetaNotEdit(
+                `La receta ${recetaOriginal._id} tiene recetas pendientes del tratamiento prolongado y no puede renovarse`
+            );
+        }
+    }
+
+    // Validar antigüedad ≤ 1 año
+    const fechaLimiteRenovacion = moment().subtract(1, 'year').toDate();
+    if (recetaOriginal.fechaRegistro < fechaLimiteRenovacion) {
+        throw new RecetaNotEdit(
+            `La receta ${recetaOriginal._id} tiene más de 1 año de antigüedad y no puede renovarse`
+        );
+    }
+}
+
+async function aplicarRenovacion(recetaOriginal: any, profesionalData: any, organizacion: any, ahora: Date, req: any) {
+    const medicamento = recetaOriginal.medicamento;
+    const esProlongado = medicamento?.tratamientoProlongado && medicamento?.tiempoTratamiento?.id != null;
+    const ordenTratamiento = medicamento?.ordenTratamiento || 0;
+
+    recetaOriginal.profesional = profesionalData as any;
+    recetaOriginal.organizacion = {
+        id: Types.ObjectId(organizacion.id),
+        nombre: organizacion.nombre
+    } as any;
+
+    // Reajusta las fechas considerando si es mes 0, mes 1, mes 2, etc, en base al orden para prolongados
+    recetaOriginal.fechaRegistro = moment(ahora).add(ordenTratamiento * 30, 'days').toDate();
+
+    // Limpia origenExterno por si la receta original venía de otro lado
+    recetaOriginal.origenExterno = undefined as any;
+
+    // Avanzar el estado a vigente (la inicial o simple) o pendiente (las subsiguientes)
+    const nuevoEstado = ordenTratamiento < 1 ? 'vigente' : 'pendiente';
+    recetaOriginal.estados.push({ tipo: nuevoEstado } as any);
+    recetaOriginal.estadosDispensa.push({ tipo: 'sin-dispensa', fecha: ahora } as any);
+
+    // Limpiar historial previo de dispensas y notificaciones para arrancar un ciclo limpio
+    recetaOriginal.dispensa = [];
+    recetaOriginal.appNotificada = [];
+
+    // Calcular número de renovación
+    const MAX_RENOVACIONES = 12;
+    let numRenovacion: number;
+
+    if (recetaOriginal.numeroRenovacion != null) {
+        // Es una renovación de una receta que ya fue renovada previamente
+        if (esProlongado) {
+            const cantMeses = parseInt(medicamento.tiempoTratamiento.id, 10);
+            numRenovacion = recetaOriginal.numeroRenovacion + cantMeses;
+        } else {
+            numRenovacion = recetaOriginal.numeroRenovacion + 1;
+        }
+    } else {
+        // Primera renovación
+        if (esProlongado) {
+            const cantMeses = parseInt(medicamento.tiempoTratamiento.id, 10);
+            numRenovacion = cantMeses + 1 + ordenTratamiento;
+        } else {
+            numRenovacion = 1;
+        }
+    }
+
+    if (numRenovacion > MAX_RENOVACIONES) {
+        throw new RecetaNotEdit(
+            `La receta ${recetaOriginal._id} ya alcanzó el máximo de ${MAX_RENOVACIONES} renovaciones`
+        );
+    }
+
+    // Mantenemos idRecetaOriginal si ya lo tenía, si no, se lo asignamos a sí mismo
+    if (!recetaOriginal.idRecetaOriginal) {
+        recetaOriginal.idRecetaOriginal = recetaOriginal._id.toString();
+    }
+    recetaOriginal.numeroRenovacion = numRenovacion;
+
+    Auth.audit(recetaOriginal as any, req);
+    await recetaOriginal.save();
+
+    return recetaOriginal;
+}
+
+/**
+ * Renueva un conjunto de recetas finalizadas o vencidas.
+ * Se clonan los datos originales sobreescribiendo autor y efector con los valores del body.
+ * Las nuevas recetas quedan en estado vigente/pendiente con dispensa sin-dispensa.
+ */
+export async function renovarRecetas(req) {
+    const { recetasIds, profesional: profBody, organizacion } = req.body;
+
+    try {
+        // Validar parámetros básicos
+        if (!recetasIds || !Array.isArray(recetasIds) || recetasIds.length === 0) {
+            throw new ParamsIncorrect('Se requiere al menos un ID de receta en recetasIds');
+        }
+        if (!profBody || !profBody.id) {
+            throw new ParamsIncorrect('Se requiere el objeto profesional con id');
+        }
+        if (!organizacion || !organizacion.id) {
+            throw new ParamsIncorrect('Se requiere el objeto organizacion con id');
+        }
+
+        // Validar que todos los IDs sean ObjectId válidos
+        const idsInvalidos = recetasIds.filter(id => !Types.ObjectId.isValid(id));
+        if (idsInvalidos.length > 0) {
+            throw new ParamsIncorrect(`IDs de receta inválidos: ${idsInvalidos.join(', ')}`);
+        }
+
+        // Buscar recetas originales inicialmente por IDs enviados
+        const recetasOriginales: any[] = await Receta.find({
+            _id: { $in: recetasIds.map(id => Types.ObjectId(id)) }
+        });
+
+        if (recetasOriginales.length !== recetasIds.length) {
+            const encontrados = recetasOriginales.map(r => r._id.toString());
+            const faltantes = recetasIds.filter(id => !encontrados.includes(id));
+            throw new RecetaNotFound(`Recetas no encontradas: ${faltantes.join(', ')}`);
+        }
+
+        // Expandir y agrupar automáticamente todas las recetas asociadas al mismo tratamiento prolongado
+        const recetasExpandidas: any[] = await fetchRecetasExpandidas(recetasOriginales);
+
+        // Obtener el profesional desde DB para tener matrícula y datos actualizados
+        const profAndes: any = await Profesional.findById(profBody.id);
+        if (!profAndes) {
+            throw new ParamsIncorrect('Profesional no encontrado en la base de datos');
+        }
+        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profAndes);
+        const profesionalData = {
+            _id: profAndes._id,
+            id: profAndes._id,
+            nombre: profAndes.nombre,
+            apellido: profAndes.apellido,
+            documento: profAndes.documento,
+            profesion: profesionGrado,
+            especialidad: especialidades,
+            matricula: matriculaGrado
+        };
+
+        // Validar primero todas las recetas antes de aplicar cambios
+        for (const recetaOriginal of recetasExpandidas) {
+            await validarRenovacion(recetaOriginal);
+        }
+
+        // Aplicar renovación y guardar
+        const nuevasRecetas = [];
+        const ahora = new Date();
+        for (const recetaOriginal of recetasExpandidas) {
+            const recetaRenovada = await aplicarRenovacion(recetaOriginal, profesionalData, organizacion, ahora, req);
+            nuevasRecetas.push(recetaRenovada);
+        }
+
+        return nuevasRecetas;
+
+    } catch (err) {
+        createLog.error('renovarRecetas', { recetasIds, profBody, organizacion }, err, req);
+        return err;
+    }
+}
