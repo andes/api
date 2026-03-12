@@ -434,6 +434,12 @@ export default [
                 key: 'anular',
                 title: 'Anular Solicitudes',
                 type: 'boolean'
+            },
+            {
+                key: 'verDetalles',
+                title: 'Ver detalles de Solicitudes',
+                type: 'boolean',
+                visibility: 'restricted'
             }
         ]
     },
