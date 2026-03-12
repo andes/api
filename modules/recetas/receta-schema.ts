@@ -110,6 +110,8 @@ const medicamentoSubschema = new mongoose.Schema({
         notaMedica: String
     },
     tratamientoProlongado: Boolean,
+    esMagistral: { type: Boolean, default: false },
+
     tiempoTratamiento: mongoose.SchemaTypes.Mixed,
     ordenTratamiento: Number,
     tipoReceta: {

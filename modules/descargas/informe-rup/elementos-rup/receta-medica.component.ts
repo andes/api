@@ -39,7 +39,12 @@ export class RecetaMedicaComponent extends HTMLComponent {
         <br>
             {{#each registro.valor.medicamentos}}
                 <tr>
-                    <td> {{generico.term}} </td>
+                    <td>
+                        {{generico.term}}
+                        {{#if esMagistral}}
+                        <br><b>(Preparación Magistral)</b>
+                        {{/if}}
+                    </td>
                     <td>
                     {{ unidades }} {{presentacion.term }}(s)
                     </td>
