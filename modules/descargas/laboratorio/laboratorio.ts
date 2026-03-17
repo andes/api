@@ -4,7 +4,7 @@ import { FarmaciaHeader } from './laboratorio-header';
 import { LaboratorioFooter } from './laboratorio-footer';
 
 export class Laboratorio extends InformePDF {
-    constructor(private encabezado, private detalle, private paciente, private usuario) {
+    constructor(private encabezado, private detalle, private paciente, private usuario, private tipoUsuario) {
         super();
     }
 
@@ -14,7 +14,7 @@ export class Laboratorio extends InformePDF {
 
     public async process() {
         this.header = new FarmaciaHeader(this.encabezado);
-        this.body = new FarmaciaBody(this.encabezado, this.paciente, this.detalle);
+        this.body = new FarmaciaBody(this.encabezado, this.paciente, this.detalle, this.tipoUsuario);
         this.footer = new LaboratorioFooter(this.usuario);
 
         await super.process();
