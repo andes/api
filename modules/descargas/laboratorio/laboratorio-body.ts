@@ -57,7 +57,7 @@ export class FarmaciaBody extends HTMLComponent {
         </main>
     `;
 
-    constructor(public encabezado, public paciente, public detalle) {
+    constructor(public encabezado, public paciente, public detalle, public tipoUsuario) {
         super();
     }
 
@@ -69,6 +69,22 @@ export class FarmaciaBody extends HTMLComponent {
             this.encabezado.data.estado = null;
         } else {
             this.encabezado.data.estado = 'En Proceso';
+        }
+
+        if (this.tipoUsuario === 'paciente-token') {
+            this.detalle.forEach(d => {
+                d.grupos.forEach(grupo => {
+
+                    grupo.items.forEach(subItem => {
+
+                        if (subItem.codificaHiv) {
+                            subItem.resultado = 'Este resultado debe ser entregado personalmente en el establecimiento de salud.';
+                            subItem.unidadMedida = '';
+                            subItem.valorReferencia = '';
+                        }
+                    });
+                });
+            });
         }
 
         if (this.paciente[0].alias) {
