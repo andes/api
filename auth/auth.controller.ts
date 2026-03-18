@@ -231,38 +231,42 @@ export async function sendOtpAndNotify(username): Promise<any> {
         const usuario = await AuthUsers.findOne({ usuario: username });
 
         // Se mantiene la validación para usuarios temporales con email
-        if (usuario && usuario.tipo === 'temporal' && usuario.email) {
-            // Genera un código OTP de 6 dígitos
-            const otpCode = crypto.randomInt(100000, 999999).toString();
+        if (usuario) {
+            if (usuario.tipo === 'temporal' && usuario.email) {
+                // Genera un código OTP de 6 dígitos
+                const otpCode = crypto.randomInt(100000, 999999).toString();
 
-            usuario.otp = {
-                code: otpCode,
-                expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 10 minutos en milisegundos
-            };
+                usuario.otp = {
+                    code: otpCode,
+                    expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 10 minutos en milisegundos
+                };
 
-            usuario.audit(userScheduler);
-            await usuario.save();
+                usuario.audit(userScheduler);
+                await usuario.save();
 
-            const extras: any = {
-                titulo: 'Código de Verificación',
-                usuario,
-                otpCode,
-            };
-            const htmlToSend = await renderHTML('emails/otp-code.html', extras);
+                const extras: any = {
+                    titulo: 'Código de Verificación',
+                    usuario,
+                    otpCode,
+                };
+                const htmlToSend = await renderHTML('emails/otp-code.html', extras);
 
-            const options: MailOptions = {
-                from: enviarMail.auth.user,
-                to: usuario.email.toString(),
-                subject: 'Tu código de verificación',
-                text: '',
-                html: htmlToSend,
-                attachments: null,
-            };
-            await sendMail(options);
+                const options: MailOptions = {
+                    from: enviarMail.auth.user,
+                    to: usuario.email.toString(),
+                    subject: 'Tu código de verificación',
+                    text: '',
+                    html: htmlToSend,
+                    attachments: null,
+                };
+                await sendMail(options);
+            } else {
+                return null;
+            }
             return usuario;
         } else {
             // El usuario no existe o no es un usuario temporal con email
-            return null;
+            throw { tipo: 'cuentaInexistenteAndes' };
         }
     } catch (error) {
         throw error;
