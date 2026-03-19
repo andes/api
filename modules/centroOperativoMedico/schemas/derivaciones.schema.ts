@@ -69,6 +69,12 @@ export const DerivacionSchema = new mongoose.Schema({
     },
     tipoTraslado: TipoTrasladoSchema,
     dispositivo: DispositivoSchema,
+    estrategiaAtencion: {
+        type: {
+            nombre: String,
+            id: { type: mongoose.Schema.Types.ObjectId, ref: 'estrategiaAtencion' }
+        },
+    },
     profesionalSolicitante: {
         nombre: String,
         apellido: String,
