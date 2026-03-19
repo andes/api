@@ -71,8 +71,9 @@ function formatearCUIL(cuil: string) {
 
 
 export async function validar(documento: string, sexo: string) {
+    let ciudadanoRenaper = null;
     try {
-        const ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
+        ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
         if (ciudadanoRenaper) {
             // Valida el tamaño de la foto
             ciudadanoRenaper.foto = ciudadanoRenaper.foto?.includes('image/jpg') ? await validarTamañoFoto(ciudadanoRenaper.foto) : null;
@@ -86,6 +87,9 @@ export async function validar(documento: string, sexo: string) {
             ciudadanoRenaper.validateAt = new Date();
             if (identidadSinAcentos(ciudadanoRenaper)) {
                 return ciudadanoRenaper;
+            } else {
+                // valida igual con atributo error a reportar
+                ciudadanoRenaper.errorData = true;
             }
         }
         const ciudadanoSisa = await sisa({ documento, sexo }, sisaConfig, sisaToAndes);
@@ -103,7 +107,11 @@ export async function validar(documento: string, sexo: string) {
             return ciudadanoRenaper;
         }
     } catch (error) {
-        return null;
+        if (ciudadanoRenaper) {
+            return ciudadanoRenaper;
+        } else {
+            return null;
+        }
     }
 
 }
