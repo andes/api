@@ -4,12 +4,17 @@ import * as moment from 'moment';
 import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
 import { Profesional } from '../../../core/tm/schemas/profesional';
+import { generarCUIL } from '../../../core-v2/mpi/validacion/validacion.controller';
 
 EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
         const idRegistro = registro._id;
         const documentoProfesional = prestacion.estadoActual.createdBy?.documento ? prestacion.estadoActual.createdBy?.documento : prestacion.solicitud.profesional.documento;
         const profPrestacion = await Profesional.findOne({ documento: documentoProfesional });
+        if (!profPrestacion) {
+            logger.error('prestacion:receta:create', prestacion, `No se encontró el profesional con documento ${documentoProfesional}`);
+            return;
+        }
         const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
 
         const profesional = {
@@ -27,6 +32,8 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             nombre: prestacion.ejecucion.organizacion.nombre
         };
 
+        const pacienteCUIL = prestacion.paciente.cuil || generarCUIL(prestacion.paciente.documento, prestacion.paciente.sexo);
+
         const dataReceta = {
             idPrestacion: prestacion.id,
             idRegistro,
@@ -38,6 +45,9 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             medicamento: null,
             diagnostico: null,
         };
+
+        dataReceta.paciente.cuil = pacienteCUIL;
+
         for (const medicamento of registro.valor.medicamentos) {
             const receta: any = await Receta.findOne({
                 'medicamento.concepto.conceptId': medicamento.generico.conceptId,
