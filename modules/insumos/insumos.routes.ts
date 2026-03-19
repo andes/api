@@ -7,8 +7,18 @@ class InsumosResource extends ResourceBase {
     resourceName = 'insumos';
     middlewares = [Auth.authenticate()];
     searchFileds = {
-        insumo: MongoQuery.partialString,
-        tipo: MongoQuery.inArray,
+        nombre: MongoQuery.partialString,
+        termino: (value) => {
+            return {
+                $or: [
+                    { nombre: { $regex: value, $options: 'i' } },
+                    { 'codigo.valor': { $regex: value, $options: 'i' } }
+                ]
+            };
+        },
+        'codigo.valor': MongoQuery.partialString,
+        tipo: MongoQuery.equalMatch,
+        estado: MongoQuery.equalMatch,
         requiereEspecificacion: MongoQuery.equalMatch,
     };
 }
