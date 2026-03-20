@@ -1,8 +1,8 @@
 import { SIP_PLUS, userScheduler } from '../config.private';
-import { perinatalFechaFinEmbarazoLog } from '../modules/perinatal/perinatal.log';
+import { perinatalLog } from '../modules/perinatal/perinatal.log';
 import { handleHttpRequest } from './requestHandler';
 
-const fechaFinEmbarazoLog = perinatalFechaFinEmbarazoLog.startTrace();
+const fechaFinEmbarazoLog = perinatalLog.startTrace();
 
 
 export async function getPaciente(paciente: any) {
