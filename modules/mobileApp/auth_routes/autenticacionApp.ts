@@ -7,7 +7,6 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { validar } from '../../../core-v2/mpi/validacion';
 import * as ScanParse from '../../../shared/scanParse';
 import * as authController from '../controller/AuthController';
-import { enviarCodigoVerificacion, generarCodigoVerificacion } from '../controller/AuthController';
 import { PacienteAppCtr } from '../pacienteApp.routes';
 import { registroMobileLog } from '../registroMobile.log';
 import { PacienteApp } from '../schemas/pacienteApp';
@@ -36,7 +35,7 @@ router.post('/login', (req, res, next) => {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    return PacienteApp.findOne({ email }, (err, user) => {
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, user) => {
 
         if (!user) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
@@ -89,7 +88,7 @@ router.post('/olvide-password', (req, res, next) => {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
     const email = req.body.email.toLowerCase();
-    return PacienteApp.findOne({ email }, (err, datosUsuario: any) => {
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
@@ -146,7 +145,7 @@ router.post('/reestablecer-password', (req, res, next) => {
         return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
     }
     const email = req.body.email.toLowerCase();
-    return PacienteApp.findOne({ email }, (err, datosUsuario: any) => {
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
@@ -200,15 +199,7 @@ router.post('/mailGenerico', async (req, res, next) => {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
     const body = req.body;
-    const usuario: any = (req as any).user;
-    // req.body['usuario'] = usuario.usuario.username ? usuario.usuario.username : '';
-    // req.body['organizacion'] = usuario.organizacion.nombre ? usuario.organizacion.nombre : '';
-    // renderizacion del email
     const html = await SendEmail.renderHTML('emails/emailGenerico.html', body);
-
-    const adjuntos = body.adjuntos.map(x => {
-        x.content = x.content.split('base64,')[1];
-    });
     const data = {
         to: body.emails,
         subject: body.asunto,
@@ -240,7 +231,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         if (cuentaPaciente.length > 0) {
             return res.status(404).send('Ya existe una cuenta activa asociada a su documento');
         }
-        const pacienteApp = await PacienteAppCtr.findOne({ email });
+        const pacienteApp = await PacienteAppCtr.findOne({ email, baja: { $exists: false } });
         if (pacienteApp) {
             if (pacienteApp.activacionApp) { // si existe y está activa es porque el mail esta vinculado a otro DNI
                 return res.status(404).send('Ya existe una cuenta activa con ese e-mail');
@@ -285,7 +276,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
 
         let registro = {};
         if (paciente && paciente.id) {
-            const passw = generarCodigoVerificacion();
+            const passw = authController.generarCodigoVerificacion();
             req.body.pacientes = [{
                 id: paciente.id,
                 relacion: 'principal',
@@ -295,7 +286,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
             registro = await PacienteAppCtr.create(req.body, req);
 
             // Push Notification
-            enviarCodigoVerificacion(registro, passw, fcmToken);
+            authController.enviarCodigoVerificacion(registro, passw, fcmToken);
         }
         return res.json(registro);
     } catch (err) {
