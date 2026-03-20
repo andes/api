@@ -7,6 +7,8 @@ import * as fs from 'fs';
 import { Types } from 'mongoose';
 import * as stream from 'stream';
 import { Auth } from '../../../auth/auth.class';
+import { findUser, updateEmailUser } from '../../../auth/auth.controller';
+import { PacienteAppCtr } from '../../../../api/modules/mobileApp/pacienteApp.routes';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
@@ -927,7 +929,42 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
         if (req.body.domicilios || req.body.domiciliosMobile) {
             const idProfesional = req.body.domicilios?.idProfesional ? req.body.domicilios.idProfesional : req.body.domiciliosMobile.idProfesional;
             const profesional: any = await Profesional.findById(idProfesional);
-            profesional.domicilios = req.body.domicilios ? req.body.domicilios : req.body.domiciliosMobile.domicilios;
+            if (req.body.domiciliosMobile.contactos) {
+                let emailUpdate;
+                let telefonoUpdate;
+                let fijoUpdate;
+                const indexEmail = req.body.domiciliosMobile.contactos.findIndex(item => item.tipo === 'email');
+                if (indexEmail >= 0) {
+                    emailUpdate = req.body.domiciliosMobile.contactos[indexEmail].valor;
+                    await updateEmailUser(profesional.documento, req.body.domiciliosMobile.contactos[indexEmail].valor);
+                }
+                const indexTelefono = req.body.domiciliosMobile.contactos.findIndex(item => item.tipo === 'celular');
+                if (indexTelefono >= 0) {
+                    telefonoUpdate = req.body.domiciliosMobile.contactos[indexTelefono].valor;
+                }
+                const indexFijo = req.body.domiciliosMobile.contactos.findIndex(item => item.tipo === 'fijo');
+                if (indexFijo >= 0) {
+                    fijoUpdate = req.body.domiciliosMobile.contactos[indexTelefono].valor;
+                }
+                const pacienteApp = await PacienteAppCtr.findOne({ documento: profesional.documento });
+                await PacienteAppCtr.update(
+                    pacienteApp._id,
+                    {
+                        email: emailUpdate ? emailUpdate : pacienteApp.email,
+                        telefono: telefonoUpdate ? telefonoUpdate : pacienteApp.telefono,
+                        fijo: fijoUpdate ? fijoUpdate : pacienteApp.fijo
+                    },
+                    req
+                );
+            }
+            profesional.contactos = req.body.domiciliosMobile?.contactos ? req.body.domiciliosMobile.contactos : profesional.contactos;
+            if (req.body.domiciliosMobile?.domicilios) {
+                profesional.domicilios = req.body.domiciliosMobile.domicilios;
+            }
+            if (req.body.domicilios) {
+                profesional.domicilios = req.body.domicilios;
+            }
+
             Auth.audit(profesional, (userScheduler as any));
             await profesional.save();
             res.json(profesional);
@@ -1166,7 +1203,8 @@ router.post('/profesionales/validar', async (req, res, next) => {
             const profesional = await Profesional.findOne(params);
             if (profesional?.id) {
                 const token = await getTemporyTokenGenerarUsuario(documento);
-                return res.json({ profesional, token });
+                const userResponse = await findUser(documento);
+                return res.json({ profesional, user: userResponse?.user, token });
             } else {
                 return next('El profesional no se encuentra registrado en Andes.');
             }
