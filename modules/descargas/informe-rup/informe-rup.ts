@@ -8,6 +8,7 @@ import { InformeRupFooter } from './informe-footer';
 import { elementosRUPAsSet, fulfillPrestacion } from '../../rup/controllers/elementos-rup.controller';
 import { findByPaciente } from '../../rup/internacion/camas.controller';
 import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
+import { InformeRupFirma } from './informe-firma';
 
 export class InformeRUP extends InformePDF {
 
@@ -31,6 +32,7 @@ export class InformeRUP extends InformePDF {
 
         this.header = new InformeRupHeader(prestacion, paciente, organizacion, cama);
         this.body = new InformeRupBody(prestacion, paciente, organizacion, this.registroId);
+        this.firma = new InformeRupFirma(prestacion.solicitud.profesional, organizacion);
         this.footer = new InformeRupFooter(prestacion, paciente, organizacion, this.usuario);
 
         // Obligatorio por ahora para llamar al proccess de la clase abstracta
