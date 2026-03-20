@@ -10,6 +10,7 @@ import { makeFsFirma } from '../schemas/firmaProf';
 import { Profesional } from '../schemas/profesional';
 import { Auth } from './../../../auth/auth.class';
 import { findUsersByUsername } from './../../../auth/auth.controller';
+import { IProfesional } from '../interfaces/profesional.interface';
 
 
 /**
@@ -152,9 +153,48 @@ export async function search(filter, fields) {
 
     return await Profesional.aggregate(aggregate);
 }
+export async function searchMatriculaVigente(profesionalId: string) {
+    const _profesional: IProfesional = await Profesional.findById(profesionalId);
+    if (!_profesional) {
+        return null;
+    }
+    const filterFormaciones = (e) => {
+        const ultimaMatriculacion = e.matriculacion?.[e.matriculacion.length - 1];
+        return e.matriculado &&
+            ultimaMatriculacion &&
+            !ultimaMatriculacion.baja?.fecha &&
+            moment(ultimaMatriculacion.fin).isAfter(moment());
+    };
+    const formacionGrado = _profesional.formacionGrado ?
+        _profesional.formacionGrado
+            .filter(filterFormaciones)
+            .map(e => {
+                const ultimaMatriculacion = e.matriculacion[e.matriculacion.length - 1];
+                return {
+                    numero: ultimaMatriculacion.matriculaNumero,
+                    fin: moment(ultimaMatriculacion.fin).valueOf()
+                };
+            })
+            .sort((a, b) => b.fin - a.fin) : [];
+    return formacionGrado.length ? formacionGrado[0].numero : searchUltimaMatricula(_profesional);
+}
+export function searchUltimaMatricula(profesional: IProfesional) {
+    let ultimaFechaFin: number | null = null;
+    let matriculaNumero: number | null = null;
 
+    profesional.formacionGrado?.forEach((fg) => {
+        fg.matriculacion?.forEach(m => {
+            const fechaFin = moment(m.fin).valueOf();
+            if (!ultimaFechaFin || fechaFin > ultimaFechaFin) {
+                ultimaFechaFin = fechaFin;
+                matriculaNumero = m.matriculaNumero;
+            }
+        });
+    });
+    return matriculaNumero;
+}
 export async function searchMatriculas(profesionalId) {
-    const _profesional: any = await Profesional.findById(profesionalId);
+    const _profesional: IProfesional = await Profesional.findById(profesionalId);
     const filterFormaciones = (e) => {
         return e.matriculacion && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
     };
