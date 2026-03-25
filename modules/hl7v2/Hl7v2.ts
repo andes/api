@@ -17,6 +17,10 @@ const SEXO_FEMENINO_HL7 = 'F';
 const SEXO_OTRO_HL7 = 'O';
 const USE_DNI_ID = true;
 
+function normalizeIdentifierEntity(entity: string = ''): string {
+    return entity.replace(/\s+/g, '');
+}
+
 interface PatientIdentifier {
     identificador: string;
     assigning_authority: string;
@@ -73,7 +77,9 @@ export async function adt04(turno: any): Promise<void> {
     });
 
     // Controlar que no lo tenga y agregarlo si es necesario
-    if (!paciente.identificadores?.some(id => id.entidad === IDENTIFIER_ENTITY_ANDESHL7V2 && id.valor === hl7id)) {
+    if (!paciente.identificadores?.some(id =>
+        normalizeIdentifierEntity(id.entidad) === IDENTIFIER_ENTITY_ANDESHL7V2 && id.valor === hl7id
+    )) {
         if (!paciente.identificadores) {
             paciente.identificadores = [];
         }
