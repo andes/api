@@ -1,3 +1,15 @@
+# [5.142.0](https://github.com/andes/api/compare/v5.141.0...v5.142.0) (2026-03-25)
+
+
+### Bug Fixes
+
+* **validacion:** corrige validacion con sisa cuando cae servicio ([#2206](https://github.com/andes/api/issues/2206)) ([e14267b](https://github.com/andes/api/commit/e14267b811fd1b656b486596109fd462b4c66ac6))
+
+
+### Features
+
+* **MONIT-92:** ABM Insumos ([#2192](https://github.com/andes/api/issues/2192)) ([83dd0d7](https://github.com/andes/api/commit/83dd0d78bb1e3f26162695eac9c9bf58f6f8ba73))
+
 # [5.141.0](https://github.com/andes/api/compare/v5.140.0...v5.141.0) (2026-03-04)
 
 
