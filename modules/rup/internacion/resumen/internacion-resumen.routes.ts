@@ -111,16 +111,27 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
             }
         },
         {
+            $addFields: {
+                idPrestacionObj: {
+                    $cond: {
+                        if: { $eq: [{ $type: '$idPrestacion' }, 'string'] },
+                        then: { $toObjectId: '$idPrestacion' },
+                        else: '$idPrestacion'
+                    }
+                }
+            }
+        },
+        {
             $lookup: {
                 from: 'prestaciones',
-                localField: 'idPrestacion',
+                localField: 'idPrestacionObj',
                 foreignField: '_id',
-                as: 'idPrestacion'
+                as: 'prestacionData'
             }
         },
         {
             $unwind: {
-                path: '$idPrestacion',
+                path: '$prestacionData',
                 preserveNullAndEmptyArrays: true
             }
         },
@@ -128,8 +139,8 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
             $addFields: {
                 idPrestacion: {
                     $mergeObjects: [
-                        '$idPrestacion',
-                        { id: '$idPrestacion._id' }
+                        '$prestacionData',
+                        { id: '$prestacionData._id' }
                     ]
                 },
                 diagnostico: {
@@ -139,8 +150,68 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
                     ]
                 }
             }
+        },
+        {
+            $addFields: {
+                unidadesIdsCama: {
+                    $reduce: {
+                        input: '$estadosCama',
+                        initialValue: [],
+                        in: {
+                            $concatArrays: [
+                                '$$value',
+                                {
+                                    $map: {
+                                        input: '$$this.estados',
+                                        as: 'e',
+                                        in: '$$e.unidadOrganizativa.conceptId'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            $addFields: {
+                idPrestacion: {
+                    $cond: {
+                        if: { $eq: ['$idPrestacion', {}] },
+                        then: {
+                            unidadOrganizativa: {
+                                $arrayElemAt: [
+                                    {
+                                        $map: {
+                                            input: { $arrayElemAt: ['$estadosCama.estados', 0] },
+                                            as: 'est',
+                                            in: '$$est.unidadOrganizativa'
+                                        }
+                                    },
+                                    0
+                                ]
+                            }
+                        },
+                        else: '$idPrestacion'
+                    }
+                }
+            }
         }
     ];
+
+    if (req.query.unidad) {
+        pipeline.push({
+            $match: {
+                $or: [
+                    { unidadesIdsCama: req.query.unidad },
+                    { unidadesIdsCama: Number(req.query.unidad) },
+                    { 'idPrestacion.unidadOrganizativa.conceptId': req.query.unidad },
+                    { 'idPrestacion.solicitud.unidadOrganizativa.conceptId': req.query.unidad }
+                ]
+            }
+        });
+    }
+
     const listado = await InternacionResumen.aggregate(pipeline);
     return res.json(listado);
 });
