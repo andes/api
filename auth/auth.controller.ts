@@ -65,6 +65,7 @@ export function createPayload(user, authOrg, prof) {
         },
         profesional: prof && String(prof._id),
         permisos: [...user.permisosGlobales, ...authOrg.permisos],
+        fechaVencimiento: authOrg.fechaVencimiento,
         feature: { ...(user.configuracion || {}) }
     };
 }
@@ -77,6 +78,7 @@ export async function findTokenData(username: number, organizacion: ObjectId) {
     const pProfesional = Profesional.findOne({ documento: String(username), habilitado: { $ne: false } }, { nombre: true, apellido: true });
     const [auth, prof]: [any, any] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
+        await checkAndInactivateExpired(auth);
         const authOrganizacion = auth.organizaciones.find(item => String(item._id) === String(organizacion));
         return {
             usuario: auth,
@@ -130,12 +132,32 @@ export async function findUser(username) {
     const pProfesional = Profesional.findOne({ documento: username, habilitado: { $ne: false } }, { matriculas: true, especialidad: true });
     const [auth, prof] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
+        await checkAndInactivateExpired(auth);
         return {
             user: auth,
             profesional: prof
         };
     }
     return null;
+}
+
+/**
+ * Chequea las organizaciones del usuario e inactiva las que tienen fecha de vencimiento cumplida.
+ * @param {any} user Instancia de AuthUsers
+ */
+export async function checkAndInactivateExpired(user) {
+    let changed = false;
+    const now = new Date();
+    user.organizaciones.forEach(org => {
+        if (org.activo && org.fechaVencimiento && org.fechaVencimiento < now) {
+            org.activo = false;
+            changed = true;
+        }
+    });
+    if (changed) {
+        user.audit(userScheduler);
+        await user.save();
+    }
 }
 
 export async function updateUser(documento, nombre, apellido, password) {
