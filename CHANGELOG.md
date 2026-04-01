@@ -1,3 +1,10 @@
+# [5.143.0](https://github.com/andes/api/compare/v5.142.0...v5.143.0) (2026-04-01)
+
+
+### Features
+
+* **TOP:** modifica filtros para listado de solicitudes ([#2186](https://github.com/andes/api/issues/2186)) ([324e3b3](https://github.com/andes/api/commit/324e3b31190459f02e80606a8d9a1de3b3df3dd9))
+
 # [5.142.0](https://github.com/andes/api/compare/v5.141.0...v5.142.0) (2026-03-25)
 
 
