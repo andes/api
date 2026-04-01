@@ -213,6 +213,16 @@ export async function buscarRecetas(req) {
         }
         recetas = recetasActualizadas;
 
+        // Redactar información de recetas con diagnóstico confidencial
+        const recetasRedactadas = [];
+        for (const receta of recetas) {
+            if (receta.diagnosticoConfidencial) {
+                receta.diagnostico = { descripcion: 'Confidencial por Ley 27.675' };
+            }
+            recetasRedactadas.push(receta);
+        }
+        recetas = recetasRedactadas;
+
         if (user.type === 'app-token') {
             // si es un usuario de app y no tiene nombre de sistema asignado, no se envia recetas
             const sistema = user.app.nombre.toLowerCase();
@@ -524,9 +534,7 @@ export async function create(req) {
         paciente: null,
         profesional: null,
         organizacion: req.body.organizacion,
-        diagnostoco: null,
         origenExterno: null
-
     };
     try {
         dataReceta.fechaRegistro = dataReceta.fechaRegistro ? moment(dataReceta.fechaRegistro).toDate() : moment().toDate();
@@ -607,8 +615,17 @@ export async function crearReceta(dataReceta, req) {
             receta = new Receta();
             receta.idPrestacion = dataReceta.idPrestacion;
             receta.idRegistro = dataReceta.idRegistro;
-            const diag = medicamento.diagnostico;
-            receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
+            let diag = medicamento.diagnostico;
+            if (typeof diag === 'string') {
+                const contieneConfidencial = /(VIH|HIV)/i.test(diag);
+                receta.diagnosticoConfidencial = contieneConfidencial;
+                diag = { descripcion: diag };
+            } else if (diag && typeof diag.term === 'string') {
+                if (/(VIH|HIV)/i.test(diag.term)) {
+                    receta.diagnosticoConfidencial = true;
+                }
+            }
+            receta.diagnostico = diag;
             receta.medicamento = {
                 concepto: medicamento.concepto || medicamento.generico,
                 presentacion: medicamento.presentacion?.term || medicamento.presentacion,
