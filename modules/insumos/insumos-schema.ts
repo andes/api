@@ -1,6 +1,4 @@
 import * as mongoose from 'mongoose';
-import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-
 
 export const insumoSchema = new mongoose.Schema({
     nombre: String,
@@ -19,8 +17,5 @@ export const insumoSchema = new mongoose.Schema({
     requiereEspecificacion: Boolean,
     observaciones: String
 });
-
-
-insumoSchema.plugin(AuditPlugin);
 
 export const Insumo = mongoose.model('insumos', insumoSchema, 'insumos');
