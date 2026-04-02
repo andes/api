@@ -98,8 +98,13 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
     if (datos.turnos) {
         registroHistorial.turno = datos.turnos[0];
     }
-    if (solicitud.profesional && solicitud.profesional.id) {
-        registroHistorial.profesional = solicitud.profesional;
+    let profesional = solicitud.profesional;
+    if (datos.op === 'estadoPush' && datos.estado?.tipo === 'asignada' && datos.profesional) {
+        profesional = datos.profesional;
+    }
+
+    if (profesional && profesional.id) {
+        registroHistorial.profesional = profesional;
     }
 
     solicitud.historial.push(registroHistorial);
