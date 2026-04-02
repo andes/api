@@ -89,6 +89,8 @@ router.post('/olvide-password', (req, res, next) => {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
     const email = req.body.email.toLowerCase();
+    const diaHoy = new Date();
+
     return PacienteApp.findOne({ email }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
@@ -98,8 +100,8 @@ router.post('/olvide-password', (req, res, next) => {
             return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
-        if (!datosUsuario.activacionApp) {
-            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
+        if (datosUsuario.restablecerPassword?.fechaExpiracion > diaHoy && datosUsuario.restablecerPassword?.codigo) {
+            return res.status(422).send({ error: 'Ya posee un código de verificación para cambiar su password' });
         }
 
         datosUsuario.restablecerPassword.codigo = authController.generarCodigoVerificacion();
