@@ -22,6 +22,10 @@ router.get('/paciente', (req, res, next) => {
         if (req.query.idPaciente) {
             query.where('paciente').equals(Types.ObjectId(req.query.idPaciente));
         }
+        if (req.query.ids) {
+            const ids = (req.query.ids as string).split(',').map(id => Types.ObjectId(id));
+            query.where('paciente').in(ids);
+        }
         if (req.query.operacion) {
             query.where('operacion').equals(req.query.operacion);
         }
@@ -32,6 +36,9 @@ router.get('/paciente', (req, res, next) => {
         });
 
         query.sort({ createdAt: -1 });
+
+        if (req.query.skip) { query.skip(parseInt(req.query.skip as string, 10)); }
+        if (req.query.limit) { query.limit(parseInt(req.query.limit as string, 10)); }
 
         query.exec((err, data) => {
             if (err) {
