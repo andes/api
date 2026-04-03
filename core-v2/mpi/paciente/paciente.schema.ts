@@ -71,7 +71,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String,
             apellido: String,
-            documento: Number },
+            documento: Number
+        },
         registradoEn: Date
     },
     estadoCivil: ESTADOCIVIL,
@@ -91,20 +92,14 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
         required: false
     },
     // --------------------
+
     relaciones: [{
         relacion: ParentescoSchema,
         referencia: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'paciente'
-        },
-        nombre: String,
-        apellido: String,
-        documento: String,
-        fechaNacimiento: Date,
-        fechaFallecimiento: Date,
-        numeroIdentificacion: String,
-        fotoId: mongoose.Schema.Types.ObjectId,
-        activo: Boolean
+            ref: 'paciente_2',
+            required: false
+        }
     }],
     financiador: [FinanciadorSchema],
     claveBlocking: { type: [String], es_indexed: true },
