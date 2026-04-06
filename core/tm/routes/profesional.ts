@@ -1,14 +1,12 @@
 import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import { log } from '@andes/log';
-import * as base64 from 'base64-stream';
 import * as express from 'express';
 import * as fs from 'fs';
 import { Types } from 'mongoose';
-import * as stream from 'stream';
 import { Auth } from '../../../auth/auth.class';
 import { findUser, updateEmailUser } from '../../../auth/auth.controller';
-import { PacienteAppCtr } from '../../../../api/modules/mobileApp/pacienteApp.routes';
+import { PacienteApp } from '../../../../api/modules/mobileApp/schemas/pacienteApp';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
@@ -24,12 +22,7 @@ import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { userScheduler } from './../../../config.private';
 import { getTemporyTokenGenerarUsuario } from '../../../auth/auth.controller';
-import { services } from '../../../services';
-import { Matching } from '@andes/match';
-import { mpi, algoritmo } from './../../../config';
-
 import moment = require('moment');
-
 
 const router = express.Router();
 
@@ -942,37 +935,34 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
         }
 
         if (req.body.domicilios || req.body.domiciliosMobile) {
-            const idProfesional = req.body.domicilios?.idProfesional ? req.body.domicilios.idProfesional : req.body.domiciliosMobile.idProfesional;
+            const idProfesional = req.body.domicilios?.idProfesional || req.body.domiciliosMobile.idProfesional;
             const profesional: any = await Profesional.findById(idProfesional);
-            if (req.body.domiciliosMobile.contactos) {
-                let emailUpdate;
-                let telefonoUpdate;
-                let fijoUpdate;
-                const indexEmail = req.body.domiciliosMobile.contactos.findIndex(item => item.tipo === 'email');
-                if (indexEmail >= 0) {
-                    emailUpdate = req.body.domiciliosMobile.contactos[indexEmail].valor;
-                    await updateEmailUser(profesional.documento, req.body.domiciliosMobile.contactos[indexEmail].valor);
-                }
-                const indexTelefono = req.body.domiciliosMobile.contactos.findIndex(item => item.tipo === 'celular');
-                if (indexTelefono >= 0) {
-                    telefonoUpdate = req.body.domiciliosMobile.contactos[indexTelefono].valor;
-                }
-                const indexFijo = req.body.domiciliosMobile.contactos.findIndex(item => item.tipo === 'fijo');
-                if (indexFijo >= 0) {
-                    fijoUpdate = req.body.domiciliosMobile.contactos[indexTelefono].valor;
-                }
-                const pacienteApp = await PacienteAppCtr.findOne({ documento: profesional.documento });
-                await PacienteAppCtr.update(
-                    pacienteApp._id,
+
+            if (req.body.domiciliosMobile?.contactos) {
+                const contactosMobile = req.body.domiciliosMobile.contactos;
+                const pacienteAppData: any = {};
+
+                contactosMobile.map(async (contacto) => {
+                    pacienteAppData[contacto.tipo] = contacto.valor;
+                    if (contacto.tipo === 'email') {
+                        // actualizamos email del usuario de andes correspondiente al profesional
+                        await updateEmailUser(profesional.documento, contacto.valor);
+                    }
+                });
+
+                const profesionalApp = await PacienteApp.findOne({ profesionalId: idProfesional });
+                // actualizamos los datos del usuario profesional de la app mobile
+                // el email no debe cambiar ya que por defecto es el documento del profesional
+                await PacienteApp.update(
+                    { _id: Types.ObjectId(profesionalApp._id) },
                     {
-                        email: emailUpdate ? emailUpdate : pacienteApp.email,
-                        telefono: telefonoUpdate ? telefonoUpdate : pacienteApp.telefono,
-                        fijo: fijoUpdate ? fijoUpdate : pacienteApp.fijo
+                        telefono: pacienteAppData.celular,
+                        fijo: pacienteAppData.fijo
                     },
                     req
                 );
             }
-            profesional.contactos = req.body.domiciliosMobile?.contactos ? req.body.domiciliosMobile.contactos : profesional.contactos;
+            profesional.contactos = req.body.domiciliosMobile?.contactos || profesional.contactos;
             if (req.body.domiciliosMobile?.domicilios) {
                 profesional.domicilios = req.body.domiciliosMobile.domicilios;
             }
