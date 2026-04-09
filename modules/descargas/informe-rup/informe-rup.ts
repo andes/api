@@ -11,7 +11,7 @@ import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 export class InformeRUP extends InformePDF {
 
-    constructor(private prestacionId: string | Types.ObjectId, private registroId: string | Types.ObjectId = null, private usuario: any) {
+    constructor(private prestacionId: string | Types.ObjectId, private registroId: string | Types.ObjectId = null, private usuario: any, private snapshots: any = null) {
         super();
     }
 
@@ -21,6 +21,16 @@ export class InformeRUP extends InformePDF {
 
     public async process() {
         const prestacion: any = await Prestacion.findById(this.prestacionId);
+
+        if (this.snapshots) {
+            prestacion.ejecucion.registros.forEach(r => {
+                if (this.snapshots[r.id]) {
+                    r.valor = r.valor || {};
+                    r.valor.snapshot = this.snapshots[r.id];
+                }
+            });
+        }
+
         const paciente = await findById(prestacion.paciente.id);
         const organizacion = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
         const elementosRUPSet = await elementosRUPAsSet();
