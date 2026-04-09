@@ -229,14 +229,28 @@ export const patch = async (req: Request, res: Response) => {
     const body = req.body;
     let paciente = await findById(id);
     if (paciente) {
-
         await extractFoto(body, req);
 
+        const borrarFallecimiento = body.hasOwnProperty('fallecimientoManual') && !body.fallecimientoManual;
+        if (borrarFallecimiento) {
+            delete body.fechaFallecimiento;
+        }
+
         paciente = set(paciente, body);
+
         if (paciente.direccion?.[0]?.situacionCalle) {
             paciente.direccion[0].geoReferencia = null;
         }
+
         const updated = await PacienteCtr.update(id, paciente, req);
+
+        if (borrarFallecimiento) {
+            await Paciente.updateOne(
+                { _id: id },
+                { $unset: { fallecimientoManual: '', fechaFallecimiento: '' } }
+            );
+        }
+
         return res.json(updated);
     }
     throw new PatientNotFound();
