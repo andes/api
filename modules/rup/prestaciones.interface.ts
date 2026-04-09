@@ -43,7 +43,7 @@ export interface IPrestacion {
 }
 
 export interface IPrestacionEstado {
-    tipo: 'anulada' | 'pendiente' | 'ejecucion' | 'auditoria' | 'aceptada' | 'rechazada' | 'validada' | 'desvinculada' | 'modificada' | 'asignada' | 'vencida';
+    tipo: 'anulada' | 'pendiente' | 'ejecucion' | 'auditoria' | 'aceptada' | 'rechazada' | 'validada' | 'desvinculada' | 'modificada' | 'asignada' | 'vencida' | 'resuelta';
     idOrigenModifica?: string;
     motivoRechazo?: string;
     observaciones?: string;

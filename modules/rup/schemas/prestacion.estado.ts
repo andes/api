@@ -5,7 +5,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 export const PrestacionEstadoSchema = new mongoose.Schema({
     tipo: {
         type: String,
-        enum: ['anulada', 'pendiente', 'ejecucion', 'auditoria', 'aceptada', 'rechazada', 'validada', 'desvinculada', 'modificada', 'asignada', 'vencida'],
+        enum: ['anulada', 'pendiente', 'ejecucion', 'auditoria', 'aceptada', 'rechazada', 'validada', 'desvinculada', 'modificada', 'asignada', 'vencida', 'resuelta'],
         required: true,
     },
     idOrigenModifica: {
