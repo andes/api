@@ -31,22 +31,6 @@ class DerivacionesResource extends ResourceBase {
                 return { $ne: null };
             }
         },
-        estrategia: {
-            field: 'estrategiaAtencion.id',
-            fn: (value) => {
-                if (!value || value === 'null') {
-                    return {
-                        $or: [
-                            { estrategiaAtencion: null },
-                            { estrategiaAtencion: { $exists: false } },
-                            { 'estrategiaAtencion.id': { $exists: false } },
-                            { 'estrategiaAtencion.id': null }
-                        ]
-                    };
-                }
-                return value;
-            }
-        },
         estrategiaAtencion: {
             field: 'estrategiaAtencion.id',
             fn: (value) => {

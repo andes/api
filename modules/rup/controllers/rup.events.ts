@@ -34,7 +34,7 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
 
         const pacienteCUIL = prestacion.paciente.cuil || generarCUIL(prestacion.paciente.documento, prestacion.paciente.sexo);
 
-        const dataReceta = {
+        const dataRecetaBase = {
             idPrestacion: prestacion.id,
             idRegistro,
             fechaRegistro: prestacion.ejecucion.fecha || moment().toDate(),
@@ -45,18 +45,33 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             medicamento: null,
             diagnostico: null,
         };
-
-        dataReceta.paciente.cuil = pacienteCUIL;
+        dataRecetaBase.paciente.cuil = pacienteCUIL;
 
         for (const medicamento of registro.valor.medicamentos) {
-            const receta: any = await Receta.findOne({
-                'medicamento.concepto.conceptId': medicamento.generico.conceptId,
-                idRegistro
-            });
-            if (!receta) {
-                dataReceta.medicamento = medicamento;
-                dataReceta.diagnostico = medicamento.diagnostico;
-                await crearReceta(dataReceta, prestacion.createdBy); // falta return
+            try {
+                const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
+
+                if (!conceptId) {
+                    logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar conceptId del medicamento');
+                    continue;
+                }
+
+                const receta: any = await Receta.findOne({
+                    'medicamento.concepto.conceptId': conceptId,
+                    idRegistro
+                });
+
+                if (!receta) {
+                    const dataReceta = {
+                        ...dataRecetaBase,
+                        medicamento,
+                        diagnostico: medicamento?.diagnostico || null,
+                    };
+
+                    await crearReceta(dataReceta, prestacion.createdBy);
+                }
+            } catch (errorMedicamento) {
+                logger.error('prestacion:receta:create', { idRegistro, medicamento }, errorMedicamento);
             }
 
         }
