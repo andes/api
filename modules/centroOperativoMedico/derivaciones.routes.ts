@@ -34,11 +34,13 @@ class DerivacionesResource extends ResourceBase {
         estrategia: {
             field: 'estrategiaAtencion.id',
             fn: (value) => {
-                if (value === 'null') {
+                if (!value || value === 'null') {
                     return {
                         $or: [
                             { estrategiaAtencion: null },
-                            { estrategiaAtencion: { $exists: false } }
+                            { estrategiaAtencion: { $exists: false } },
+                            { 'estrategiaAtencion.id': { $exists: false } },
+                            { 'estrategiaAtencion.id': null }
                         ]
                     };
                 }
