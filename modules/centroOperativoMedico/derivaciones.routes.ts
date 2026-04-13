@@ -1,3 +1,4 @@
+import * as mongoose from 'mongoose';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
@@ -30,6 +31,23 @@ class DerivacionesResource extends ResourceBase {
                 return { $ne: null };
             }
         },
+        estrategiaAtencion: {
+            field: 'estrategiaAtencion.id',
+            fn: (value) => {
+                if (!value || value === 'null') {
+                    return {
+                        $or: [
+                            { estrategiaAtencion: null },
+                            { estrategiaAtencion: { $exists: false } },
+                            { 'estrategiaAtencion.id': { $exists: false } },
+                            { 'estrategiaAtencion.id': null }
+                        ]
+                    };
+                }
+                return value;
+            }
+        },
+
         prioridad: MongoQuery.equalMatch,
         paciente: (value) => {
             return {
