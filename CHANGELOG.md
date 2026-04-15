@@ -1,3 +1,10 @@
+# [5.144.0](https://github.com/andes/api/compare/v5.143.0...v5.144.0) (2026-04-15)
+
+
+### Features
+
+* **TOP:** agrega nuevo estado "resuelta" a solicitudes ([#2193](https://github.com/andes/api/issues/2193)) ([4347d6b](https://github.com/andes/api/commit/4347d6b9e6ba9604afb59191bd805d55706d4f08))
+
 # [5.143.0](https://github.com/andes/api/compare/v5.142.0...v5.143.0) (2026-04-01)
 
 
