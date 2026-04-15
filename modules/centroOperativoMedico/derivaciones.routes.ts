@@ -72,6 +72,26 @@ class DerivacionesResource extends ResourceBase {
             };
         },
         cancelada: MongoQuery.equalMatch,
+        rangoEtario: (value) => {
+            const limiteDate = moment().subtract(14, 'years').toDate();
+            const limiteString = moment().subtract(14, 'years').toISOString();
+            if (value === 'pediatrico') {
+                return {
+                    $or: [
+                        { 'paciente.fechaNacimiento': { $gt: limiteDate } },
+                        { 'paciente.fechaNacimiento': { $gt: limiteString } }
+                    ]
+                };
+            } else if (value === 'adultos') {
+                return {
+                    $or: [
+                        { 'paciente.fechaNacimiento': { $lte: limiteDate } },
+                        { 'paciente.fechaNacimiento': { $lte: limiteString } }
+                    ]
+                };
+            }
+            return {};
+        }
     };
 }
 
