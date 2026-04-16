@@ -15,6 +15,7 @@ export interface IPacienteApp {
     genero: string;
     fechaNacimiento: Date;
     telefono: string;
+    fijo: string;
     password: string;
     lastLogin: Date;
     pacientes?: {
@@ -70,6 +71,9 @@ export const PacienteAppSchema = new mongoose.Schema({
         type: Date
     },
     telefono: {
+        type: String
+    },
+    fijo: {
         type: String
     },
     password: {

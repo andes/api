@@ -1,12 +1,13 @@
 import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import { log } from '@andes/log';
-import * as base64 from 'base64-stream';
 import * as express from 'express';
 import * as fs from 'fs';
 import { Types } from 'mongoose';
 import * as stream from 'stream';
 import { Auth } from '../../../auth/auth.class';
+import { findUser, updateEmailUser } from '../../../auth/auth.controller';
+import { PacienteApp } from '../../../modules/mobileApp/schemas/pacienteApp';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
@@ -20,12 +21,7 @@ import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { userScheduler } from './../../../config.private';
 import { getTemporyTokenGenerarUsuario } from '../../../auth/auth.controller';
-import { services } from '../../../services';
-import { Matching } from '@andes/match';
-import { mpi, algoritmo } from './../../../config';
-
 import moment = require('moment');
-
 
 const router = express.Router();
 
@@ -881,7 +877,7 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
 
         if (req.body.imagen) {
             const _base64 = req.body.imagen.img;
-            const decoder = base64.decode();
+            const decoder = _base64.decode();
             const input = new stream.PassThrough();
             const fotoProf = makeFs();
             // remove la foto vieja antes de insertar la nueva
@@ -925,9 +921,41 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
         }
 
         if (req.body.domicilios || req.body.domiciliosMobile) {
-            const idProfesional = req.body.domicilios?.idProfesional ? req.body.domicilios.idProfesional : req.body.domiciliosMobile.idProfesional;
+            const idProfesional = req.body.domicilios?.idProfesional || req.body.domiciliosMobile.idProfesional;
             const profesional: any = await Profesional.findById(idProfesional);
-            profesional.domicilios = req.body.domicilios ? req.body.domicilios : req.body.domiciliosMobile.domicilios;
+
+            if (req.body.domiciliosMobile?.contactos) {
+                const contactosMobile = req.body.domiciliosMobile.contactos;
+                const pacienteAppData: any = {};
+
+                contactosMobile.map(async (contacto) => {
+                    pacienteAppData[contacto.tipo] = contacto.valor;
+                    if (contacto.tipo === 'email') {
+                        // actualizamos email del usuario de andes correspondiente al profesional
+                        await updateEmailUser(profesional.documento, contacto.valor);
+                    }
+                });
+
+                const profesionalApp = await PacienteApp.findOne({ profesionalId: idProfesional });
+                // actualizamos los datos del usuario profesional de la app mobile
+                // el email no debe cambiar ya que por defecto es el documento del profesional
+                await PacienteApp.update(
+                    { _id: Types.ObjectId(profesionalApp._id) },
+                    {
+                        telefono: pacienteAppData.celular,
+                        fijo: pacienteAppData.fijo
+                    },
+                    req
+                );
+            }
+            profesional.contactos = req.body.domiciliosMobile?.contactos || profesional.contactos;
+            if (req.body.domiciliosMobile?.domicilios) {
+                profesional.domicilios = req.body.domiciliosMobile.domicilios;
+            }
+            if (req.body.domicilios) {
+                profesional.domicilios = req.body.domicilios;
+            }
+
             Auth.audit(profesional, (userScheduler as any));
             await profesional.save();
             res.json(profesional);
@@ -1166,7 +1194,8 @@ router.post('/profesionales/validar', async (req, res, next) => {
             const profesional = await Profesional.findOne(params);
             if (profesional?.id) {
                 const token = await getTemporyTokenGenerarUsuario(documento);
-                return res.json({ profesional, token });
+                const userResponse = await findUser(documento);
+                return res.json({ profesional, user: userResponse?.user, token });
             } else {
                 return next('El profesional no se encuentra registrado en Andes.');
             }
