@@ -276,7 +276,10 @@ router.post('/sendOTPCode', async (req, res, next) => {
         } else {
             return next(403);
         }
-    } catch (error) {
+    } catch (error: any) {
+        if (error.tipo === 'cuentaInexistenteAndes') {
+            return res.json({ status: 'cuentaInexistenteAndes' });
+        }
         return next(error);
     }
 });
