@@ -5,8 +5,12 @@ import * as stream from 'stream';
 import { userScheduler } from '../../../config.private';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
+import { makeFs } from '../schemas/imagenes';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
+import { makeFsFirmaOnline } from '../schemas/firmaRenovacionOnline';
+import { makeFsFirmaAdminOnline } from '../schemas/firmaAdminRenovacionOnline';
+import { makeFsImagenOnline } from '../schemas/imagenRenovacionOnline';
 import { Profesional } from '../schemas/profesional';
 import { Auth } from './../../../auth/auth.class';
 import { findUsersByUsername } from './../../../auth/auth.controller';
@@ -192,23 +196,49 @@ export async function saveFirma(data, admin = false) {
     const input = new stream.PassThrough();
     let firma;
     let metadataFind;
+    let metadataFindOnline;
     let metadataWrite;
 
-    if (admin) {
-        firma = makeFsFirmaAdmin();
-        metadataFind = { 'metadata.idSupervisor': data.idSupervisor };
-        metadataWrite = {
-            idSupervisor: data.idSupervisor,
-            administracion: data.nombreCompleto
-        };
+    if (data.option === 'renovacionOnline') {
+        if (admin) {
+            firma = makeFsFirmaAdminOnline();
+            metadataFind = {
+                'metadata.idProfesional': data.idProfesional,
+                'metadata.matricula': data.matricula
+            };
+            metadataWrite = {
+                idProfesional: data.idProfesional,
+                matricula: data.matricula
+            };
+        } else {
+            firma = makeFsFirmaOnline();
+
+            metadataFind = {
+                'metadata.idProfesional': data.idProfesional,
+                'metadata.matricula': data.matricula
+            };
+            metadataWrite = {
+                idProfesional: data.idProfesional,
+                matricula: data.matricula
+            };
+        }
     } else {
-        firma = makeFsFirma();
+
+        metadataFindOnline = {
+            'metadata.idProfesional': data.idProfesional,
+            'metadata.matricula': data.matricula
+        };
         metadataFind = { 'metadata.idProfesional': data.idProfesional };
         metadataWrite = { idProfesional: data.idProfesional };
+        if (admin) {
+            firma = makeFsFirmaAdmin();
+        } else {
+            firma = makeFsFirma();
+        }
     }
-
     // Remueve la firma anterior antes de insertar la nueva
     const fileFirma = await firma.findOne(metadataFind);
+
     if (fileFirma?._id) {
         await firma.unlink(fileFirma._id, (error) => { });
     }
@@ -218,6 +248,99 @@ export async function saveFirma(data, admin = false) {
             {
                 filename: admin ? 'firmaAdmin.png' : 'firma.png',
                 contentType: 'image/jpeg',
+                metadata: metadataWrite
+            }, input.pipe(decoder),
+            (error, createdFile) => {
+                if (error) {
+                    reject(error);
+                }
+                resolve(createdFile);
+            }
+        );
+        input.end(_base64);
+    });
+}
+
+export async function deleteFirmaFotoTemporal(idProfesional, matricula, next) {
+
+    const metadataFind = {
+        'metadata.idProfesional': idProfesional,
+        'metadata.matricula': matricula
+    };
+
+    try {
+        const firma = makeFsFirmaOnline();
+
+        // Remueve la firma anterior antes de insertar la nueva
+        const fileFirma = await firma.findOne(metadataFind);
+        if (fileFirma?._id) {
+            await new Promise<void>((resolve, reject) => {
+                firma.unlink(fileFirma._id, (error) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve();
+                });
+            });
+        }
+
+        const imagen = makeFsImagenOnline();
+        // Remueve la imagen anterior antes de insertar la nueva
+        const fileImagen = await imagen.findOne(metadataFind);
+        if (fileImagen?._id) {
+            await new Promise<void>((resolve, reject) => {
+                imagen.unlink(fileImagen._id, (error) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve();
+                });
+            });
+        }
+    } catch (error) {
+        return next(error);
+    }
+
+}
+
+export async function saveImage(data) {
+
+    const _base64 = data.img;
+    const decoder = base64.decode();
+    const input = new stream.PassThrough();
+    let fotoProf;
+    let metadataFind;
+    let metadataFindOnline;
+    let metadataWrite;
+
+    if (data.option === 'renovacionOnline') {
+        fotoProf = makeFsImagenOnline();
+
+        metadataFind = {
+            'metadata.idProfesional': data.idProfesional,
+            'metadata.matricula': data.matricula
+        };
+        metadataWrite = {
+            idProfesional: data.idProfesional,
+            matricula: data.matricula
+        };
+    } else {
+        metadataFind = { 'metadata.idProfesional': data.idProfesional };
+        metadataWrite = { idProfesional: data.idProfesional };
+        fotoProf = makeFs();
+    }
+
+    const file = await fotoProf.findOne(metadataFind);
+
+    if (file?._id) {
+        await fotoProf.unlink(file._id, (error) => { });
+    }
+    // Inserta en la bd en files y chunks
+    return new Promise((resolve, reject) => {
+        fotoProf.writeFile(
+            {
+                filename: 'foto.png',
+                contentType: 'image/png',
                 metadata: metadataWrite
             }, input.pipe(decoder),
             (error, createdFile) => {
