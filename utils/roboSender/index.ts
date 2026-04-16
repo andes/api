@@ -55,7 +55,7 @@ export function sendEmail(data: IEmail, options: any = {}) {
 
         createdAt: moment().toDate(),
         updatedAt: moment().toDate(),
-        expiredAt: moment().add(1, 'd').toDate(),
+        expiredAt: moment().add(3, 'd').toDate(),
         scheduledAt: options.scheduledAt ? options.scheduledAt : moment().toDate(),
         tries: 0,
     });
