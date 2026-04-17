@@ -100,10 +100,15 @@ export class InformePDF extends HTMLComponent {
                 left: '0cm'
             },
             header: {
-                height: '7cm',
+                height: '9cm',
             },
             footer: {
                 height: '1cm'
+            },
+            childProcessOptions: {
+                env: {
+                    OPENSSL_CONF: '/dev/null',
+                }
             }
         };
         return defaultOptions;
