@@ -14,7 +14,8 @@ function agrupar(elementos) {
         unidadMedida: e.UnidadMedida || e.unidadMedida,
         metodo: e.Metodo,
         valorReferencia: e.valorReferencia,
-        firma: e.esTitulo === 'True' ? '' : e.userValida
+        firma: e.esTitulo === 'True' ? '' : e.userValida,
+        codificaHiv: e.codificaHiv === 'True' ? true : false
     });
 
     areasStr.forEach(area => {
