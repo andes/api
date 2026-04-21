@@ -2,11 +2,11 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../../auth/auth.class';
 import { RecetaInsumo } from './receta-insumo.schema';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
-import { create } from './recetaInsumosController';
+import { create, buscarRecetasInsumos } from './recetaInsumosController';
 
 class RecetaInsumoResource extends ResourceBase {
     Model = RecetaInsumo;
-    resourceName = 'recetaInsumo';
+    resourceName = 'recetaInsumos';
     routesEnable = ['get, post'];
     middlewares = [Auth.authenticate()];
     searchFileds = {
@@ -26,6 +26,10 @@ export const post = async (req, res) => {
     const status = resp?.status || resp?.errors || 200;
     res.status(status).json(resp);
 };
+export const get = async (req, res) => {
+    const result = await buscarRecetasInsumos(req);
+    res.json(result);
+};
 export const RecetaInsumoCtr = new RecetaInsumoResource({});
 export const RecetaInsumoRouter = RecetaInsumoCtr.makeRoutes();
 
@@ -40,4 +44,5 @@ const authorizeByToken = async (req: Request, res: Response, next) =>
     ]);
 
 RecetaInsumoRouter.use(Auth.authenticate());
+RecetaInsumoRouter.get('/recetasInsumos', authorizeByToken, asyncHandler(get));
 RecetaInsumoRouter.post('/recetasInsumos', authorizeByToken, asyncHandler(post));

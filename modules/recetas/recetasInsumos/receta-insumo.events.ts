@@ -38,7 +38,7 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
     try {
         for (const insumo of registro.valor.insumos) {
             const receta: any = await RecetaInsumo.findOne({
-                'insumo.nombre': insumo.generico.nombre,
+                'insumo.id': insumo.generico.id,
                 idRegistro
             });
             if (!receta) {

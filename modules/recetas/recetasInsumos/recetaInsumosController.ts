@@ -142,45 +142,64 @@ export async function create(req) {
 }
 
 export async function crearRecetaInsumo(dataRecetaInsumo, req) {
-    try {
-        const recetaInsumo: any = new RecetaInsumo();
-        recetaInsumo.idPrestacion = dataRecetaInsumo.idPrestacion;
-        recetaInsumo.idRegistro = dataRecetaInsumo.idRegistro;
-        const diag = dataRecetaInsumo.insumo?.diagnostico;
-        recetaInsumo.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
-        if (dataRecetaInsumo.insumo.generico) {
-            recetaInsumo.insumo = {
-                ...dataRecetaInsumo.insumo.generico,
-                cantidad: dataRecetaInsumo.insumo.cantidad,
-                especificacion: dataRecetaInsumo.insumo.especificacion
-            };
-        } else {
-            recetaInsumo.insumo = dataRecetaInsumo.insumo;
+    const insumo = dataRecetaInsumo.insumo;
+    const tratamientoProlongado: Boolean = insumo.tratamientoProlongado && insumo.tiempoTratamiento && insumo.tiempoTratamiento.id !== null;
+    const cantRecetas = (tratamientoProlongado) ? parseInt(insumo.tiempoTratamiento.id, 10) : 1;
+    const recetas = [];
+    let recetaInsumo;
+    for (let i = 0; i < cantRecetas; i++) {
+        try {
+            recetaInsumo = new RecetaInsumo();
+            recetaInsumo.idPrestacion = dataRecetaInsumo.idPrestacion;
+            recetaInsumo.idRegistro = dataRecetaInsumo.idRegistro;
+            const diag = insumo?.diagnostico;
+            recetaInsumo.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
+            if (insumo.generico) {
+                recetaInsumo.insumo = {
+                    id: insumo.generico.id,
+                    nombre: insumo.generico.nombre,
+                    codigo: insumo.generico.codigo,
+                    tipo: insumo.generico.tipo,
+                    tratamientoProlongado,
+                    tiempoTratamiento: tratamientoProlongado ? insumo.tiempoTratamiento : null,
+                    ordenTratamiento: i,
+                    cantidad: insumo.cantidad,
+                    especificacion: insumo.especificacion
+                };
+            } else {
+                recetaInsumo.insumo = {
+                    ...insumo,
+                    tratamientoProlongado,
+                    tiempoTratamiento: tratamientoProlongado ? insumo.tiempoTratamiento : null,
+                    ordenTratamiento: i
+                };
+            }
+            recetaInsumo.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
+            recetaInsumo.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
+            recetaInsumo.paciente = dataRecetaInsumo.paciente;
+            recetaInsumo.paciente.obraSocial = dataRecetaInsumo.paciente.obraSocial;
+            recetaInsumo.paciente.id = dataRecetaInsumo.paciente.id || dataRecetaInsumo.paciente._id;
+            recetaInsumo.profesional = dataRecetaInsumo.profesional;
+            recetaInsumo.profesional._id = dataRecetaInsumo.profesional.id || dataRecetaInsumo.profesional._id;
+            recetaInsumo.organizacion = dataRecetaInsumo.organizacion;
+            recetaInsumo.fechaRegistro = moment(dataRecetaInsumo.fechaRegistro).add(i * 30, 'days').toDate();
+            recetaInsumo.fechaPrestacion = moment(dataRecetaInsumo.fechaPrestacion).toDate();
+            if (dataRecetaInsumo.origenExterno) {
+                recetaInsumo.origenExterno = dataRecetaInsumo.origenExterno;
+            }
+            if (req.user) {
+                Auth.audit(recetaInsumo, req as any);
+            } else {
+                recetaInsumo.audit(req);
+            }
+            await recetaInsumo.save();
+            recetas.push(recetaInsumo);
+        } catch (err) {
+            createLog.error('crearRecetaInsumo', { dataRecetaInsumo }, err, req);
+            return err;
         }
-        recetaInsumo.estados = [{ tipo: 'vigente' }];
-        recetaInsumo.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-        recetaInsumo.paciente = dataRecetaInsumo.paciente;
-        recetaInsumo.paciente.obraSocial = dataRecetaInsumo.paciente.obraSocial;
-        recetaInsumo.paciente.id = dataRecetaInsumo.paciente.id || dataRecetaInsumo.paciente._id;
-        recetaInsumo.profesional = dataRecetaInsumo.profesional;
-        recetaInsumo.profesional._id = dataRecetaInsumo.profesional.id || dataRecetaInsumo.profesional._id;
-        recetaInsumo.organizacion = dataRecetaInsumo.organizacion;
-        recetaInsumo.fechaRegistro = moment(dataRecetaInsumo.fechaRegistro).toDate();
-        recetaInsumo.fechaPrestacion = moment(dataRecetaInsumo.fechaPrestacion).toDate();
-        if (dataRecetaInsumo.origenExterno) {
-            recetaInsumo.origenExterno = dataRecetaInsumo.origenExterno;
-        }
-        if (req.user) {
-            Auth.audit(recetaInsumo, req as any);
-        } else {
-            recetaInsumo.audit(req);
-        }
-        await recetaInsumo.save();
-        return recetaInsumo;
-    } catch (err) {
-        createLog.error('crearRecetaInsumo', { dataRecetaInsumo }, err, req);
-        return err;
     }
+    return recetas;
 }
 
 export async function buscarRecetasInsumosPorProfesional(req) {
