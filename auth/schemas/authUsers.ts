@@ -71,6 +71,10 @@ export const AuthUsersSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    validationTokenExpiration: {
+        type: Date,
+        required: false
+    },
     otp: {
         code: String,
         expiresAt: Date

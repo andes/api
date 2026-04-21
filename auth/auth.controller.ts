@@ -209,11 +209,10 @@ export const checkMobile = (profesionalId) => {
  * AuthUser
  */
 export async function setValidationTokenAndNotify(username) {
-    const EMAIL_TIMEOUT_MS = 5000;
     try {
         const usuario = await AuthUsers.findOne({ usuario: username });
         if (usuario && usuario.tipo === 'temporal' && usuario.email) {
-            if (!usuario.validationToken || usuario.validationTokenExpiration < new Date()) {
+            if (!usuario.validationToken || !usuario.validationTokenExpiration || usuario.validationTokenExpiration < new Date()) {
                 // Si no tiene un token de validación o esta vencido, se genera uno nuevo
                 usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
                 usuario.validationTokenExpiration = new Date(Date.now() + 72 * 60 * 60 * 1000); // Expira en 72 horas
@@ -235,15 +234,8 @@ export async function setValidationTokenAndNotify(username) {
                 html: htmlToSend,
                 attachments: null
             };
-            try {
-                await timeoutPromise(
-                    sendMail(options),
-                    EMAIL_TIMEOUT_MS,
-                    'El servicio de correo superó el tiempo límite (timeout).'
-                );
-            } catch (mailError) {
-                return null;
-            }
+
+            await sendMail(options);
             return usuario;
         } else {
             // El usuario no existe o es de gobierno => debe operar por onelogin
