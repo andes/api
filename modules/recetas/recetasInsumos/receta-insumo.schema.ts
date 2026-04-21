@@ -3,13 +3,24 @@ import * as mongoose from 'mongoose';
 import { ProfesionalSubSchema } from '../../../core/tm/schemas/profesional';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 const insumoSubSchema = new mongoose.Schema({
-    insumo: String,
+    id: String,
+    nombre: String,
+    codigo: [
+        {
+            fuente: String,
+            valor: String
+        }
+    ],
+
     tipo: {
         type: String,
         enum: ['dispositivo', 'nutricion', 'magistral']
     },
-    requiereEspecificacion: Boolean,
     cantidad: Number,
+    unidades: String,
+    tratamientoProlongado: Boolean,
+    tiempoTratamiento: Number,
+    ordenTratamiento: Number,
     especificacion: String
 }, { _id: false });
 

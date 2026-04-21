@@ -6,7 +6,7 @@ import { create } from './recetaInsumosController';
 
 class RecetaInsumoResource extends ResourceBase {
     Model = RecetaInsumo;
-    resourceName = 'recetaInsumo';
+    resourceName = 'recetaInsumos';
     routesEnable = ['get, post'];
     middlewares = [Auth.authenticate()];
     searchFileds = {

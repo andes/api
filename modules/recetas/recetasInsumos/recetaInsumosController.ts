@@ -150,7 +150,13 @@ export async function crearRecetaInsumo(dataRecetaInsumo, req) {
         recetaInsumo.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
         if (dataRecetaInsumo.insumo.generico) {
             recetaInsumo.insumo = {
-                ...dataRecetaInsumo.insumo.generico,
+                id: dataRecetaInsumo.insumo.generico.id,
+                nombre: dataRecetaInsumo.insumo.generico.nombre,
+                codigo: dataRecetaInsumo.insumo.generico.codigo,
+                tipo: dataRecetaInsumo.insumo.generico.tipo,
+                tratamientoProlongado: dataRecetaInsumo.insumo.tratamientoProlongado || false,
+                tiempoTratamiento: dataRecetaInsumo.insumo.tiempoTratamiento || null,
+                ordenTratamiento: dataRecetaInsumo.insumo.ordenTratamiento || 0,
                 cantidad: dataRecetaInsumo.insumo.cantidad,
                 especificacion: dataRecetaInsumo.insumo.especificacion
             };
