@@ -152,6 +152,16 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     sexo: SEXO,
     genero: String,
     fechaFallecimiento: Date,
+    fallecimientoManual: {
+        fecha: Date,
+        registradoPor: {
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: Number
+        },
+        registradoEn: Date
+    },
     numeroIdentificacion: String,
     tipoIdentificacion: IDENTIFICACION,
     alias: String,
