@@ -89,7 +89,12 @@ const turnoSchema = new mongoose.Schema({
     fechaHoraDacion: Date,
     usuarioDacion: mongoose.Schema.Types.Mixed,
     profesional: mongoose.Schema.Types.ObjectId,
-    notificar: Boolean
+    notificar: Boolean,
+    videoConferencia: Boolean,
+    webexLinks: {
+        patientLink: String,
+        professionalLink: String
+    }
 });
 
 export = turnoSchema;
