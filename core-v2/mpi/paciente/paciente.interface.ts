@@ -9,6 +9,18 @@ export interface ICarpetaEfector {
     nroCarpeta: String;
 }
 
+export interface IFallecimientoManual {
+    fecha: Date | moment.Moment;
+    registradoPor: {
+        id: Schema.Types.ObjectId;
+        nombre: String;
+        apellido: String;
+        documento: Number;
+    };
+    registradoEn: Date | moment.Moment;
+}
+
+
 export interface INota {
     fecha: Date | moment.Moment;
     nota: String;
@@ -49,6 +61,7 @@ export interface IPaciente {
     activo?: Boolean;
     alias?: String;
     fechaFallecimiento?: Date | moment.Moment;
+    fallecimientoManual?: IFallecimientoManual | Boolean | null;
     estadoCivil?: String;
     foto?: String;
     fotoId?: Schema.Types.ObjectId;
