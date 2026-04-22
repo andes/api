@@ -1,3 +1,10 @@
+# [5.145.0](https://github.com/andes/api/compare/v5.144.0...v5.145.0) (2026-04-22)
+
+
+### Features
+
+* **COM-115:** Agregar filtro por rango etario ([#2195](https://github.com/andes/api/issues/2195)) ([47846ca](https://github.com/andes/api/commit/47846caab45b60aeaacedb4e84fbb4b4702f2092))
+
 # [5.144.0](https://github.com/andes/api/compare/v5.143.0...v5.144.0) (2026-04-15)
 
 
