@@ -513,7 +513,8 @@ router.get('/prestaciones', async (req: any, res, next) => {
     if (req.query.organizacion) {
         query.where('solicitud.organizacion.id').equals(req.query.organizacion);
     }
-    if (req.query.ambitoOrigen) {
+
+    if (req.query.inicio !== 'top' && req.query.ambitoOrigen) {
         query.where('solicitud.ambitoOrigen').equals(req.query.ambitoOrigen);
     }
 
