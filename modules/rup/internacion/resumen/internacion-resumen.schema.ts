@@ -26,6 +26,10 @@ export interface IInternacionResumen {
     fechaEgreso?: Date;
     fechaAtencion?: Date;
     tipo_egreso?: String;
+    organizacionDestino?: {
+        id: ObjectId;
+        nombre: String;
+    };
     deletedAt?: Date;
     idPrestacion: ObjectId;
     ingreso: {
@@ -59,6 +63,10 @@ export const InternacionResumenSchema = new Schema({
     fechaEgreso: Date,
     fechaAtencion: Date,
     tipo_egreso: { type: String, required: false },
+    organizacionDestino: {
+        type: NombreSchemaV2,
+        required: false
+    },
     deletedAt: { type: Date, required: false },
     deletedBy: { type: SchemaTypes.Mixed, required: false },
     idPrestacion: { type: SchemaTypes.ObjectId, ref: 'prestacion' },
