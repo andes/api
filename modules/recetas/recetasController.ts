@@ -706,7 +706,7 @@ export async function actualizarEstadosRecetas(done) {
     try {
         const parametro: any = await RecetasParametros.findOne({ key: 'fechaLimite' });
         const days = (parametro && parametro.value) ? Number(parametro.value) : 30;
-        const fechaFinVigentes = moment().startOf('day').subtract(days, 'days').toDate();
+        const fechaFinVigentes = moment().add(1, 'd').startOf('day').subtract(days, 'days').toDate();
         const fechaFinPendientes = moment().add(1, 'd').endOf('day').toDate();
         const fechaInicioPendientes = moment().subtract(3, 'month').endOf('day').toDate();
         // actualizar recetas pendientes a vigentes
