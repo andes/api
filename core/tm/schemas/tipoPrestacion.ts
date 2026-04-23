@@ -19,6 +19,7 @@ export interface ITipoPrestacion extends Document {
     agendaDinamica?: Boolean;
     teleConsulta?: Boolean;
     tiempoVigencia?: number;
+    videoConferencia?: Boolean;
 }
 
 export const tipoPrestacionSchema = new Schema({
@@ -50,7 +51,7 @@ export const tipoPrestacionSchema = new Schema({
         required: false
     },
     queries: [Types.ObjectId],
-    teleConsulta: {
+    videoConferencia: {
         type: Boolean,
         required: false,
         default: false
