@@ -20,6 +20,39 @@ function identidadSinAcentos(ciudadano) {
 }
 
 /**
+ * Convierte un texto de Latin1 a UTF-8 y lo pasa a mayúsculas. Esto es útil para normalizar nombres que puedan tener caracteres acentuados o especiales que no se muestren correctamente.
+ * @param texto
+ * @returns
+ */
+function convertirTextoLatin1AUtf8(texto: string) {
+    if (!texto || typeof texto !== 'string') {
+        return texto;
+    }
+    try {
+        return Buffer.from(texto, 'latin1').toString('utf8').toUpperCase();
+    } catch (error) {
+        return texto;
+    }
+}
+
+/**
+ * Normaliza el nombre y apellido de un ciudadano si contienen caracteres inválidos, convirtiéndolos de Latin1 a UTF-8 y pasándolos a mayúsculas. Esto ayuda a asegurar que los datos sean consistentes y legibles, especialmente si provienen de fuentes que podrían tener problemas de codificación.
+ * @param ciudadano
+ * @returns
+ */
+function normalizarIdentidadSiCorresponde(ciudadano: any) {
+    if (!ciudadano) {
+        return;
+    }
+    const nombreInvalido = ciudadano.nombre && caracteresInvalidos(ciudadano.nombre);
+    const apellidoInvalido = ciudadano.apellido && caracteresInvalidos(ciudadano.apellido);
+    if (nombreInvalido || apellidoInvalido) {
+        ciudadano.nombre = convertirTextoLatin1AUtf8(ciudadano.nombre);
+        ciudadano.apellido = convertirTextoLatin1AUtf8(ciudadano.apellido);
+    }
+}
+
+/**
  * Busca en fuentes auntenticas los datos de un ciudadano.
  */
 
@@ -75,6 +108,7 @@ export async function validar(documento: string, sexo: string) {
     try {
         ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
         if (ciudadanoRenaper) {
+            normalizarIdentidadSiCorresponde(ciudadanoRenaper);
             // Valida el tamaño de la foto
             ciudadanoRenaper.foto = ciudadanoRenaper.foto?.includes('image/jpg') ? await validarTamañoFoto(ciudadanoRenaper.foto) : null;
             ciudadanoRenaper.fotoId = ciudadanoRenaper.foto?.length > 0 ? new Types.ObjectId() : null;
