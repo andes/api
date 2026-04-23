@@ -558,6 +558,11 @@ export async function create(req) {
             if (!pacienteAndes) {
                 throw new ParamsIncorrect('Paciente no encontrado');
             } else {
+                const fechaNacimientoReceta = pacienteRecetar.fechaNacimiento ? new Date(pacienteRecetar.fechaNacimiento) : null;
+                if (!pacienteAndes.fechaNacimiento && fechaNacimientoReceta && !Number.isNaN(fechaNacimientoReceta.getTime())) {
+                    pacienteAndes.fechaNacimiento = fechaNacimientoReceta;
+                    await pacienteAndes.save();
+                }
                 pacienteAndes.obraSocial = (!pacienteRecetar.obraSocial) ? null :
                     {
                         origen: pacienteRecetar.obraSocial.otraOS ? 'RECETAR' : 'PUCO',
