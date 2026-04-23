@@ -258,7 +258,20 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.idPaciente) {
             indice = undefined;
-            match.$and.push({ 'paciente.id': Types.ObjectId(req.query.idPaciente) });
+            if (String(req.query.agregarVinculados) === 'true') {
+                const paciente = await PacienteCtr.findById(req.query.idPaciente);
+                const idsAndes = [Types.ObjectId(req.query.idPaciente)];
+                if (paciente && paciente.identificadores) {
+                    paciente.identificadores.forEach((identificador: any) => {
+                        if (identificador.entidad === 'ANDES' && Types.ObjectId.isValid(identificador.valor)) {
+                            idsAndes.push(Types.ObjectId(identificador.valor));
+                        }
+                    });
+                }
+                match.$and.push({ 'paciente.id': { $in: idsAndes } });
+            } else {
+                match.$and.push({ 'paciente.id': Types.ObjectId(req.query.idPaciente) });
+            }
         }
 
         if (req.query.idProfesional) {
