@@ -273,8 +273,9 @@ router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
     try {
         const idPrestacion = req.body.idPrestacion;
         const idRegistro = req.body.idRegistro;
+        const snapshots = req.body.snapshots;
 
-        const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+        const informe = new InformeRUP(idPrestacion, idRegistro, req.user, snapshots);
         const fileName = await informe.informe();
 
         return res.download(fileName);
