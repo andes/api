@@ -23,9 +23,39 @@ import { EventCore } from '@andes/event-bus/index';
 /**
  * Crea un objeto paciente
  */
+function getReferenciaId(ref: any) {
+    if (!ref) { return null; }
+    return typeof ref === 'object' ? (ref._id || ref.id) : ref;
+}
+
+/**
+ * Normaliza el array de relaciones para que siempre tenga solo { relacion, referencia }.
+ * Limpia campos legacy de pacientes guardados con esquemas viejos.
+ */
+function normalizeRelaciones(paciente: IPacienteDoc): IPacienteDoc {
+    if (paciente && paciente.relaciones?.length) {
+        (paciente as any).relaciones = paciente.relaciones
+            .filter(rel => rel.referencia) // descartar relaciones sin referencia
+            .map(rel => ({
+                relacion: rel.relacion,
+                referencia: rel.referencia
+            }));
+    }
+    return paciente;
+}
 
 export function make(body: IPaciente) {
     const paciente = new Paciente();
+
+    if (body.relaciones?.length) {
+        body.relaciones = body.relaciones
+            .filter(rel => rel.referencia)
+            .map(rel => ({
+                relacion: rel.relacion,
+                referencia: getReferenciaId(rel.referencia)
+            }));
+    }
+
     paciente.set(body);
     return paciente;
 }
@@ -41,6 +71,16 @@ export function set(paciente: IPacienteDoc, body: any) {
         delete body['documento'];
         delete body['estado'];
     }
+
+    if (body.relaciones) {
+        body.relaciones = body.relaciones
+            .filter(rel => rel.referencia) // evita guardar relaciones con referencia null/undefined
+            .map(rel => ({
+                relacion: rel.relacion,
+                referencia: rel.referencia?._id || rel.referencia?.id || rel.referencia
+            }));
+    }
+
     paciente.set(body);
     if (paciente.foto && !paciente.fotoId) {
         (paciente as any).fotoId = new Types.ObjectId();
@@ -112,7 +152,12 @@ export async function findById(id: string | String | Types.ObjectId, options = n
     if (fields) {
         queryFind.select(fields);
     }
+    queryFind.populate({
+        path: 'relaciones.referencia',
+        select: 'nombre apellido documento numeroIdentificacion fechaNacimiento fechaFallecimiento fotoId sexo genero activo'
+    });
     const paciente = await queryFind;
+    if (paciente) { normalizeRelaciones(paciente); }
     EventCore.emitAsync('mpi:pacientes:findById', paciente);
     return paciente;
 }
@@ -218,7 +263,14 @@ export async function multimatch(searchText: string, filter: any, options?: any)
     };
     const skip = parseInt(options.skip || 0, 10);
     const limit = parseInt(options.limit || 30, 10);
-    const pacientes = await Paciente.find(query).skip(skip).limit(limit);
+    const pacientes = await Paciente.find(query)
+        .skip(skip)
+        .limit(limit)
+        .populate({
+            path: 'relaciones.referencia',
+            select: 'nombre apellido documento numeroIdentificacion fechaNacimiento fechaFallecimiento fotoId sexo genero activo'
+        });
+    pacientes.forEach(p => normalizeRelaciones(p));
     return pacientes;
 }
 
@@ -413,7 +465,8 @@ export async function agregarHijo(progenitor, hijo, req) {
     // Familiar ya existe?
     progenitor.relaciones = progenitor.relaciones || [];
     const poseeFamiliar = progenitor.relaciones.find(rel => {
-        return rel.referencia.toString() === hijo._id.toString();
+        const refId = rel.referencia?.toString() || rel.referencia?.id?.toString() || rel.referencia?._id?.toString();
+        return refId === hijo._id.toString();
     });
 
     if (!poseeFamiliar) {
@@ -421,13 +474,7 @@ export async function agregarHijo(progenitor, hijo, req) {
         const parentescoProgenitor = await ParentescoCtr.findOne({ nombre: '^progenitor' }, {}, req);
         const progenitorRelacion = {
             relacion: parentescoProgenitor,
-            referencia: progenitor._id,
-            nombre: progenitor.nombre,
-            apellido: progenitor.apellido,
-            documento: progenitor.documento ? progenitor.documento : null,
-            numeroIdentificacion: progenitor.numeroIdentificacion ? progenitor.numeroIdentificacion : null,
-            fotoId: progenitor.fotoId ? progenitor.fotoId : null,
-            fechaFallecimiento: progenitor.fechaFallecimiento ? progenitor.fechaFallecimiento : null
+            referencia: progenitor
         };
 
         hijo.relaciones = hijo.relaciones || [];
@@ -438,13 +485,7 @@ export async function agregarHijo(progenitor, hijo, req) {
         const parentescoHijo = await ParentescoCtr.findOne({ nombre: '^hijo' }, {}, req);
         const familiarRelacion = {
             relacion: parentescoHijo,
-            referencia: hijo._id,
-            nombre: hijo.nombre,
-            apellido: hijo.apellido,
-            documento: hijo.documento,
-            numeroIdentificacion: hijo.numeroIdentificacion ? hijo.numeroIdentificacion : null,
-            fotoId: hijo.fotoId ? hijo.fotoId : null,
-            fechaFallecimiento: hijo.fechaFallecimiento ? hijo.fechaFallecimiento : null
+            referencia: hijo
         };
 
         progenitor.relaciones.push(familiarRelacion);
