@@ -6,6 +6,7 @@ export interface IDicomPatientData {
     pacienteIDtrimmed: string;
     dicomName: string;
     documento?: string;
+    otherPatientId?: string;
     fechaNacimiento?: string;
     sexo?: string;
 }
@@ -31,7 +32,7 @@ export interface IDicomInformeData {
     pacienteID: string;
     patientName: string;
     profesionalName: string;
-    orderCode: string;
+    accessionNumber: string;
     studyDate: string;
     studyTime: string;
     instanceCreationDate: string;
