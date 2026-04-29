@@ -314,4 +314,20 @@ router.get('/documento/:documento', async (req: any, res, next) => {
     }
 });
 
+router.get('/restablecerPassword', Auth.authenticate(), async (req: any, res, next) => {
+    try {
+        if (!Auth.check(req, 'restablecer-password:read')) {
+            return next(403);
+        }
+        const email = req.query.email;
+        if (!email) {
+            return res.status(400).send('El parámetro "email" es requerido');
+        }
+        const resp = await PacienteApp.find({ email });
+        return res.json({ restablecerPassword: resp[0]?.restablecerPassword?.codigo ? true : false });
+    } catch (err) {
+        return res.send(err);
+    }
+});
+
 export = router;
