@@ -49,11 +49,11 @@ export async function obtenerPrestaciones(organizacion, filtros) {
     }
 
     return Prestacion.find({
-        'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
         'solicitud.ambitoOrigen': 'internacion',
         'solicitud.tipoPrestacion.conceptId': '32485007',
         ...matchIngreso,
         ...matchEgreso,
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
         ...$match,
         'estadoActual.tipo': { $in: ['ejecucion', 'validada'] }
 
