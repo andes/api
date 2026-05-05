@@ -189,12 +189,24 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
             if (!response.length || !paciente) {
                 throw new Error('Error al generar laboratorio.');
             }
-            const docLaboratorio = new Laboratorio(req.body.protocolo, response, paciente, req.body.usuario);
-            const opciones = { margin: { top: '2cm' } };
+            const docLaboratorio = new Laboratorio(
+                req.body.protocolo,
+                response,
+                paciente,
+                req.body.usuario,
+                req.user.type
+            );
+
+            const opciones = {
+                margin: { top: '2cm' },
+                header: { height: '2cm' }
+            };
+
             const pdfBuffer = await docLaboratorio.informe(opciones);
 
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
+
             return res.send(pdfBuffer);
 
         } catch (err) {
