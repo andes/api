@@ -7,19 +7,16 @@ function agrupar(elementos) {
     const setAreas = new Set(elementos.map(d => d.area));
     const areasStr = Array.from(setAreas);
     const areas = [];
-    const toItem = (e) => {
-        const resultado = e.Resultado || e.resultado;
-        return {
-            nombre: e.item,
-            esTitulo: e.esTitulo === 'True' && !resultado ? true : false,
-            resultado,
-            unidadMedida: e.UnidadMedida || e.unidadMedida,
-            metodo: e.Metodo,
-            valorReferencia: e.valorReferencia,
-            firma: e.esTitulo === 'True' ? '' : e.userValida,
-        };
-    };
-
+    const toItem = (e) => ({
+        nombre: e.item,
+        esTitulo: e.esTitulo === 'True' ? true : false,
+        resultado: e.Resultado || e.resultado,
+        unidadMedida: e.UnidadMedida || e.unidadMedida,
+        metodo: e.Metodo,
+        valorReferencia: e.valorReferencia,
+        firma: e.esTitulo === 'True' ? '' : e.userValida,
+        codificaHiv: e.codificaHiv === 'True' ? true : false
+    });
 
     areasStr.forEach(area => {
         const detallesArea = elementos.filter(d => d.area === area);
