@@ -1,51 +1,137 @@
+
+* {
+    box-sizing: border-box;
+}
+
+header, main, section, article, footer {
+    display: block;
+}
+
+body {
+    margin: 0;
+    padding: 0 0.5cm;
+    font-family: sans-serif;
+    font-size: .2cm;
+}
+
+/* ========================= */
+/* GENERALES */
+/* ========================= */
+
 .contenedor-secundario {
     display: block;
     text-align: center;
     font-size: .25cm;
 }
 
-.tabla-header {
-    border-color: black;
-    border-collapse: collapse;
-    font-size: .25cm;
+h4,
+h5 {
+    margin: 0.1cm 0;
 }
 
-td {
-    text-align: left;
+h4 {
+    font-size: .275cm;
 }
 
-.tabla-header {
-    border-color: black;
-    border-collapse: collapse;
+h5 {
     font-size: .20cm;
+    font-weight: lighter;
 }
 
-.tituloGeneral {
-    text-align: left;
-    margin-top: 20px;
-    font-size: .25cm;
+p {
+    font-size: 0.25cm;
 }
 
-.tituloSecundario {
-    text-align: left;
-    margin-top: 8px;
-    font-size: .25cm;
+hr {
+    margin: 5px 0;
+    width: 100%;
 }
 
-.tituloTabla {
-    text-align: left;
-    margin-top: 8px;
-    margin-left: 20px;
-    font-size: .25cm;
+
+.rTable {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
 }
 
-body {
-    padding-left: 0.5cm;
-    padding-right: 0.5cm;
-    font-family: Arial, sans-serif;
+.rTableRow {
+    display: table-row;
 }
 
-.foot {
-    font-family: Arial, sans-serif;
-    font-size: 10px;
+.rTableCell1,
+.rTableCell2 {
+    display: table-cell;
+    padding: 3px 5px;
+    vertical-align: top;
+    line-height: 1.2;
+}
+
+.rTableCell1 {
+    width: 50%;
+}
+
+.rTableCell2 {
+    width: 25%;
+}
+
+.rTableCell2:nth-child(2) {
+    text-align: center;
+}
+
+.rTableCell2:nth-child(3) {
+    text-align: right;
+}
+
+.small {
+    font-size: .15cm;
+    font-style: italic;
+}
+
+/* ========================= */
+/* HEADER */
+/* ========================= */
+
+.header-table {
+    border: 1px solid #000;
+    margin-top: 4px;
+    margin-bottom: 10px;
+}
+
+.header-table .rTableRow:not(:last-child) {
+    border-bottom: 1px solid #000;
+}
+
+.header-table .rTableCell1,
+.header-table .rTableCell2 {
+    padding: 5px 6px;
+    font-size: .20cm;
+    text-align: left !important;
+}
+
+.header-table {
+    page-break-inside: avoid;
+}
+
+/* ========================= */
+/* BODY / INFORME */
+/* ========================= */
+
+.contenedor-informe {
+    margin-top: 10px;
+}
+
+.rTableRow {
+    page-break-inside: avoid;
+}
+
+/* ========================= */
+/* FOOTER */
+/* ========================= */
+
+footer {
+    margin-top: 15px;
+    font-size: 0.20cm;
+    font-style: italic;
+    color: #333;
 }
