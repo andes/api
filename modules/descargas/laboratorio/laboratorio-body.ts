@@ -3,58 +3,127 @@ import * as moment from 'moment';
 
 export class FarmaciaBody extends HTMLComponent {
     template = `
-      <main>
-        <table border="1" width="100%" class="tabla-header">
-          <tr>
-          <td width="30%"><b>Paciente: </b>{{encabezado.data.apellido }}   {{encabezado.data.nombre}}</td>
-          <td width="20%"><b>Fecha de Nacimiento: </b>{{encabezado.data.fechanacimiento}}</td>
-          <td width="15%"><b>Género: </b>{{encabezado.data.sexo}}</td>
-          <td width="15%"><b>DNI: </b>{{encabezado.data.documento}}</td>
-        </tr>
-        <tr>
-          <td width="30%"><b>Solicitante: </b>{{encabezado.data.medicoSolicitante}}</td>
-          <td width="20%"><b>Orden Nro: </b> {{encabezado.data.numero}}</td>
-          <td width="15%"><b>Fecha: </b>{{encabezado.data.fecha}}</td>
-          <td width="15%"><b>Origen: </b>{{encabezado.data.origen}}</td>
-        </tr>
-        <tr>
-          <td width="30%"><b>Efector solicitante: </b>{{encabezado.data.efectorSolicitante}}</td>
-          <td width="20%"><b>Laboratorio: </b>{{encabezado.data.Laboratorio}}</td>
-          {{#if encabezado}}
-                  {{#if encabezado.data}}
-                        {{#if encabezado.data.estado}}
-                                <td width="15%"><b>Estado: </b>{{encabezado.data.estado}}</td>
-                        {{/if}}
-                  {{/if}}
-          {{/if}}
-          <td width="15%"><b>Tipo de muestra: </b>{{encabezado.data.tipoMuestra}}</td>
-        </tr>
-         <td width="50%"><b>Prácticas solicitadas: </b>{{encabezado.data.practicasSolicitadas}}</td>
-      </table>
-
-      {{#each areas}}
-        <div class="tituloGeneral"><u>{{area}}</u> </div>
-        {{#each grupos}}
-          {{#if visible}}
-            <div class="tituloSecundario"><b> {{grupo}} </b></div>
-          {{/if}}
-          {{#each items}}
-            {{#if esTitulo}}
-              <div class="tituloTabla"><u>{{nombre}}</u></div>
-            {{else}}
-              <table class="tituloTabla">
-                <tr>
-                  <td width="25%">{{nombre}}</td>
-                  <td width="25%"><i>{{resultado }} {{ unidadMedida}}</i></td>
-                  <td width="25%">{{valorReferencia }} {{metodo}}</td>
-                  <td width="25%"><i>{{userValida}}</i></td>
-                </tr>
-              </table>
-            {{/if}}
-          {{/each}}
-        {{/each}}
-      {{/each}}
-        </main>
+        <div>
+            <div class="rTable header-table">
+              <div class="rTableRow">
+                <div class="rTableCell1">
+                  &nbsp;Paciente: <strong>{{ encabezado.data.apellido }} {{ encabezado.data.nombre }}</strong>
+                  <br/>&nbsp;DNI: <strong>{{ encabezado.data.documento }}</strong>
+                </div>
+                <div class="rTableCell2">
+                  Fecha Nac.: <strong>{{ encabezado.data.fechanacimiento }}</strong>
+                </div>
+                <div class="rTableCell2">
+                  Género: <strong>{{ encabezado.data.sexo }}</strong>
+                </div>
+              </div>
+              <div class="rTableRow">
+                <div class="rTableCell1">
+                  &nbsp;Laboratorio: <strong>{{ encabezado.data.laboratorio }}</strong>
+                  <br/>&nbsp;Efector solicitante: <strong>{{ encabezado.data.efectorSolicitante }}</strong>
+                </div>
+                <div class="rTableCell2">
+                  Orden Nro: <strong>{{ encabezado.data.numero }}</strong>
+                  <br/>Origen: <strong>{{ encabezado.data.origen }}</strong>
+                </div>
+                <div class="rTableCell2">
+                  Fecha: <strong>{{ encabezado.data.fecha }}</strong>
+                  <br/>Prioridad: <strong>{{ encabezado.data.prioridad }}</strong>
+                </div>
+              </div>
+              <div class="rTableRow">
+                <div class="rTableCell1">
+                  &nbsp;Solicitante: <strong>{{ encabezado.data.solicitante }}</strong>
+                </div>
+                <div class="rTableCell2">
+                  Tipo de Servicio: <strong>{{ encabezado.data.tipoServicio }}</strong>
+                </div>
+                <div class="rTableCell2">
+                  Muestra: <strong>{{ encabezado.data.tipoMuestra }}</strong>
+                </div>
+              </div>
+              <div class="rTableRow">
+                <div class="rTableCell1">
+                  &nbsp;Prácticas: <strong>{{ encabezado.data.practicas }}</strong>
+                </div>
+                <div class="rTableCell2"></div>
+                <div class="rTableCell2"></div>
+              </div>
+            </div>
+            <br/>
+            <section class="contenedor-informe">
+                <article class="cabezal-conceptos horizontal">
+                    <div class="rTable">
+                        {{#each areas}}
+                        <div class="rTableRow">
+                            <div class="rTableCell1" style="text-decoration:underline;padding: 4px 0 2px 0; "><strong>{{area}}</strong></div>
+                            <div class="rTableCell2"></div>
+                            <div class="rTableCell2"></div>
+                            <div class="rTableCell2"></div>
+                        </div>
+                            {{#each grupos}}
+                                {{#if item}}
+                                    <div class="rTableRow">
+                                        <div class="rTableCell1">
+                                            {{#if esTitulo}}<span style="text-decoration:underline;"><strong>{{/if}}
+                                            {{item.nombre}} 
+                                            {{#if esTitulo}}</strong></span>{{/if}}
+                                        </div>
+                                        <div class="rTableCell2">{{item.resultado}} {{item.unidadMedida}}</div>
+                                        <div class="rTableCell2 small" style="font-size:.125cm;font-style:italic;">
+                                            {{#if item.valorReferencia}}
+                                                {{ item.valorReferencia }}
+                                            {{/if}}
+                                            {{item.metodo}}
+                                        </div>
+                                    </div>
+                                {{/if}}
+                                {{#if grupo}}
+                                    <div class="rTableRow">
+                                        <div class="rTableCell1"><strong>{{grupo}}</strong></div>
+                                        <div class="rTableCell2"></div>
+                                        <div class="rTableCell2 small"></div>
+                                        <div class="rTableCell2 small"></div>
+                                    </div>
+                                {{/if}}
+                                {{#each items}}
+                                    <div class="rTableRow">
+                                        <div class="rTableCell1">
+                                            &emsp;&emsp;
+                                            {{#if esTitulo}}<span style="text-decoration:underline;"><strong>{{/if}}
+                                        {{nombre}}</div>
+                                        {{#if esTitulo}}</strong></span>{{/if}}
+                                        <div class="rTableCell2">{{resultado}} {{unidadMedida}}</div>
+                                        <div class="rTableCell2 small">
+                                            {{#if valorReferencia}}
+                                                {{ valorReferencia }}
+                                            {{/if}}
+                                            {{metodo}}
+                                        </div>
+                                    </div>
+                                {{/each}}
+                            {{/each}}
+                            
+                            <!-- FIRMAS AREA -->
+                            {{#if firmasArea}}
+                            <div class="rTableRow">
+                                <div class="rTableCell1">
+                                <hr/>
+                                Firmado electrónicamente por:
+                                {{#each firmasArea}}
+                                    <div>{{this}}</div>
+                                {{/each}}
+                                </div>
+                                <div class="rTableCell2"></div>
+                                <div class="rTableCell2"></div>
+                                <div class="rTableCell2"></div>
+                            </div>
+                            {{/if}}
+                        {{/each}}
+                    </div>
+                </article>
+            </section>
+        </div>
     `;
 
     constructor(public encabezado, public paciente, public detalle, public tipoUsuario) {
@@ -63,7 +132,7 @@ export class FarmaciaBody extends HTMLComponent {
 
     public async process() {
         this.encabezado.data.fecha = moment(this.encabezado.data.fecha).format('DD-MM-YYYY');
-        this.encabezado.data.fechanacimiento = moment(this.encabezado.data.fechanacimiento).format('DD-MM-YYYY');
+        this.encabezado.data.fechanacimiento = moment(this.encabezado.data.fechanacimiento || this.encabezado.data.fechaNacimiento).format('DD-MM-YYYY');
         this.encabezado.data.sexo = this.paciente[0].genero;
         if (this.encabezado.data.estado !== 'EnProceso') {
             this.encabezado.data.estado = null;
@@ -90,6 +159,40 @@ export class FarmaciaBody extends HTMLComponent {
         if (this.paciente[0].alias) {
             this.encabezado.data.nombre = this.paciente[0].alias;
         }
+
+        if (Array.isArray(this.detalle)) {
+            for (const area of this.detalle) {
+                const firmasArea = new Set<string>();
+                if (area.grupos) {
+                    for (const grupo of area.grupos) {
+                        if (grupo.items) {
+                            for (const item of grupo.items) {
+                                if (item.firma) {
+                                    firmasArea.add(item.firma);
+                                }
+                            }
+                        }
+                    }
+                }
+                area.firmasArea = firmasArea.size > 0 ? Array.from(firmasArea) : null;
+            }
+        }
+
+        this.encabezado.data.documento = this.encabezado.data.numeroDocumento || this.encabezado.data.documento;
+        this.encabezado.data.origen = this.encabezado.data.origen || 'AMBULATORIO';
+        this.encabezado.data.solicitante = this.encabezado.data.solicitante || this.encabezado.data.medicoSolicitante || this.encabezado.data.profesionalSolicitante || this.encabezado.data.profesional || 'NO INFORMADO';
+        this.encabezado.data.prioridad = this.encabezado.data.prioridad || 'RUTINA';
+        this.encabezado.data.efectorSolicitante = this.encabezado.data.efectorSolicitante || this.encabezado.data.EfectorSolicitante || this.encabezado.data.efector || '';
+        this.encabezado.data.tipoMuestra = this.encabezado.data.tipoMuestra || this.encabezado.data.TipoMuestra || '';
+        this.encabezado.data.practicas = this.encabezado.data.practicas || this.encabezado.data.practicasSolicitadas || this.encabezado.data.Practicas || '';
+        this.encabezado.data.laboratorio = this.encabezado.data.Laboratorio || this.encabezado.data.laboratorio || '';
+        this.encabezado.data.tipoServicio = this.encabezado.data.TipoServicio || this.encabezado.data.tipoServicio || '';
+
+        let sexoMap = this.encabezado.data.sexo || this.encabezado.data.sexobiologico;
+        if (sexoMap === 'M') { sexoMap = 'Masculino'; }
+        if (sexoMap === 'F') { sexoMap = 'Femenino'; }
+        this.encabezado.data.sexo = sexoMap;
+
         this.data = {
             areas: this.detalle,
             encabezado: this.encabezado

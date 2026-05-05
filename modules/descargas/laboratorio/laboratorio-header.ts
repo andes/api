@@ -1,14 +1,16 @@
 import { HTMLComponent } from '../model/html-component.class';
 
 export class FarmaciaHeader extends HTMLComponent {
+
     template = `
-    <div class="contenedor-secundario">
-        Resultados de Laboratorio
-        <h3>{{encabezado.data.Laboratorio}}"</h3>
-    </div>
-    <div class="contenedor-secundario">
-    <hr/>
-   `;
+<div class="contenedor-principal-data">
+  <div class="contenedor-secundario">
+    <h5>Resultados de Laboratorio</h5>
+    <h4>{{ organizacion }}</h4>
+  </div>
+</div>
+<hr/>
+`;
 
     constructor(public encabezado) {
         super();
@@ -16,7 +18,7 @@ export class FarmaciaHeader extends HTMLComponent {
 
     public async process() {
         this.data = {
-            encabezado: this.encabezado
+            organizacion: this.encabezado.data.Efector || this.encabezado.data.Laboratorio,
         };
     }
 }
