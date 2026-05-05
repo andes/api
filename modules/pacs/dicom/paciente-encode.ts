@@ -34,7 +34,7 @@ export function DICOMPacienteObject(paciente: IDicomPatientData) {
         }
     };
 
-    if (paciente.documento) {
+    if (paciente.otherPatientId) {
         json['00101002'] = {
             vr: 'SQ',
             Value: [
@@ -42,7 +42,7 @@ export function DICOMPacienteObject(paciente: IDicomPatientData) {
                     '00100020': {
                         vr: 'LO',
                         Value: [
-                            paciente.pacienteIDtrimmed
+                            paciente.otherPatientId
                         ]
                     }
                 }
