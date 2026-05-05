@@ -52,7 +52,7 @@ export function DICOMInformePDFObject(data: IDicomInformeData) {
         '00080050': {
             vr: 'SH',
             Value: [
-                data.orderCode
+                data.accessionNumber
             ],
         },
         '00080060': {
