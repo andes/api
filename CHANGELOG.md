@@ -1,3 +1,12 @@
+# [5.146.0](https://github.com/andes/api/compare/v5.145.0...v5.146.0) (2026-05-06)
+
+
+### Bug Fixes
+
+* **IN:** Cambia query de listado de internacion ([#2235](https://github.com/andes/api/issues/2235)) ([0bfb2c9](https://github.com/andes/api/commit/0bfb2c91f8aae8005ed0656fd7f5d209868711c3))
+* **INT:** Se cambia el orden de los campos de consulta en listado internacion ([#2232](https://github.com/andes/api/issues/2232)) ([d0c59f7](https://github.com/andes/api/commit/d0c59f7b7741a418d42edec8ced2448e9a8280da))
+* **PACS:** modifica Dicom Accession Number ([#2227](https://github.com/andes/api/issues/2227)) ([22acddc](https://github.com/andes/api/commit/22acddc8391b7a90b3cf9a1bde3a680eb7040c57))
+
 # [5.145.0](https://github.com/andes/api/compare/v5.144.0...v5.145.0) (2026-04-22)
 
 
