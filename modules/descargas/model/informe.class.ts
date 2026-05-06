@@ -14,7 +14,6 @@ export type InformePdfOptions = {
     };
     landscape?: boolean;
 };
-
 export class InformePDF extends HTMLComponent {
 
     header: HTMLComponent;
@@ -41,16 +40,16 @@ export class InformePDF extends HTMLComponent {
         return `
             <!DOCTYPE html>
             <html>
-            <head>
-                <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                ${css ? `<style>${css}</style>` : ''}
-            </head>
-            <body>
-                ${body || ''}
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    ${css ? `<style>${css}</style>` : ''}
+                </head>
+                <body>
+                    ${body || ''}
                 </body>
                 </html>
-                `.trim();
+            `.trim();
     }
 
     async informe(options: InformePdfOptions = null): Promise<Buffer> {
@@ -107,7 +106,6 @@ export class InformePDF extends HTMLComponent {
         return styles.join('\n');
     }
 
-
     private getDefaultOptions() {
         const defaultOptions: InformePdfOptions = {
             format: 'A4',
@@ -123,7 +121,6 @@ export class InformePDF extends HTMLComponent {
         return defaultOptions;
     }
 }
-
 
 export function getAssetsURL(filename) {
     return path.join(process.cwd(), filename);
