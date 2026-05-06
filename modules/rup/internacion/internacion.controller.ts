@@ -14,15 +14,24 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 export async function obtenerPrestaciones(organizacion, filtros) {
     const matchIngreso = {};
+
     if (filtros.fechaIngresoDesde || filtros.fechaIngresoHasta) {
+
         const fechaIngresoFilter = {};
+
         if (filtros.fechaIngresoDesde) {
             fechaIngresoFilter['$gte'] = moment(filtros.fechaIngresoDesde).startOf('day').toDate();
         }
+
         if (filtros.fechaIngresoHasta) {
             fechaIngresoFilter['$lte'] = moment(filtros.fechaIngresoHasta).endOf('day').toDate();
         }
-        matchIngreso['ejecucion.registros.valor.informeIngreso.fechaIngreso'] = fechaIngresoFilter;
+
+        matchIngreso['ejecucion.registros'] = {
+            $elemMatch: {
+                'valor.informeIngreso.fechaIngreso': fechaIngresoFilter
+            }
+        };
     }
 
     const matchEgreso = {};
@@ -35,6 +44,12 @@ export async function obtenerPrestaciones(organizacion, filtros) {
             fechaEgresoFilter['$lte'] = moment(filtros.fechaEgresoHasta).endOf('day').toDate();
         }
         matchEgreso['ejecucion.registros.valor.InformeEgreso.fechaEgreso'] = fechaEgresoFilter;
+
+        matchEgreso['ejecucion.registros'] = {
+            $elemMatch: {
+                'valor.InformeEgreso.fechaEgreso': fechaEgresoFilter
+            }
+        };
     }
 
     const $match = {};
@@ -48,16 +63,18 @@ export async function obtenerPrestaciones(organizacion, filtros) {
         $match['paciente.id'] = { $in: paciente.vinculos };
     }
 
-    return Prestacion.find({
+    const consutlaCompleta = {
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
         'solicitud.ambitoOrigen': 'internacion',
         'solicitud.tipoPrestacion.conceptId': '32485007',
+        'estadoActual.tipo': { $in: ['ejecucion', 'validada'] },
         ...matchIngreso,
         ...matchEgreso,
-        'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
-        ...$match,
-        'estadoActual.tipo': { $in: ['ejecucion', 'validada'] }
+        ...$match
 
-    });
+    };
+
+    return Prestacion.find(consutlaCompleta);
 }
 
 export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: string, idInternacion: ObjectId, desde: Date, hasta: Date) {
