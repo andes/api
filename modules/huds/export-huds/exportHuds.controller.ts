@@ -8,8 +8,21 @@ import { exportHudsLog } from './exportHuds.log';
 import { ExportHudsModel } from './exportHuds.schema';
 import { getHUDSExportarModel } from './hudsFiles';
 import { Paciente } from '../../../core-v2/mpi';
-const pLimit = require('p-limit');
+import { ObjectId } from 'mongodb';
+import { Readable } from 'stream';
 import moment = require('moment');
+const pLimit = require('p-limit');
+
+// convierte un stream a Buffer
+const streamToBuffer = (stream): Promise<Buffer> => {
+    return new Promise((resolve, reject) => {
+        const chunks: Buffer[] = [];
+
+        stream.on('data', chunk => chunks.push(Buffer.from(chunk)));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+};
 
 const safe = (s: string) =>
     (s || '')
@@ -53,7 +66,7 @@ async function buildExportFile(peticionExport: any) {
     } else {
         const paciente = await Paciente.findById(peticionExport.pacienteId);
 
-        const vinculacionesPaciente = paciente.identificadores
+        const vinculacionesPaciente = paciente?.identificadores
             ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
             ?.map(item => item.valor);
 
@@ -68,8 +81,8 @@ async function buildExportFile(peticionExport: any) {
 
         if (peticionExport.fechaDesde && peticionExport.fechaHasta) {
             fechaCondicion = {
-                $gte: moment(peticionExport.fechaDesde),
-                $lte: moment(peticionExport.fechaHasta)
+                $gte: moment(peticionExport.fechaDesde).toDate(),
+                $lte: moment(peticionExport.fechaHasta).toDate()
             };
 
             query['ejecucion.fecha'] = fechaCondicion;
@@ -82,8 +95,14 @@ async function buildExportFile(peticionExport: any) {
 
         prestaciones = await Prestacion.find(query);
 
+        // Usamos el mismo driver que CDAFiles y convertimos los ids antes de consultar GridFS.
+        const idsPacienteObjectId = idsPaciente
+            .map(id => id?.toString())
+            .filter(id => ObjectId.isValid(id))
+            .map(id => new ObjectId(id));
+
         const queryCda: any = {
-            'metadata.paciente': { $in: idsPaciente },
+            'metadata.paciente': { $in: idsPacienteObjectId },
             'metadata.prestacion.snomed.conceptId': {
                 $ne: '2881000013106'
             }
@@ -100,7 +119,7 @@ async function buildExportFile(peticionExport: any) {
     const fecha = moment(peticionExport.createdAt).format('YYYY-MM-DD');
 
     const archive = archiver('zip', {
-        zlib: { level: 9 }
+        zlib: { level: 3 } // nivel de compresión (0-9)
     });
 
     archive.on('warning', (warning) => {
@@ -157,10 +176,10 @@ async function buildExportFile(peticionExport: any) {
 
     exportHudsLog.info('exportaHuds', objectLog);
 
-    const limit = pLimit(2);
+    const limit = pLimit(4);
 
-    const getData = () => {
-        return Promise.all(
+    const getData = async () => {
+        const files = await Promise.all(
             prestaciones.map((prestacion: any) => limit(async () => {
                 try {
                     const informe = new InformeRUP(
@@ -179,9 +198,10 @@ async function buildExportFile(peticionExport: any) {
                         prestacion.solicitud.fecha
                     ).format('YYYY-MM-DD-HHmmss');
 
-                    archive.append(pdfBuffer, {
+                    return {
+                        buffer: Buffer.from(pdfBuffer),
                         name: `${fechaArchivo} - ${safe(nombreArchivo)}.pdf`
-                    });
+                    };
 
                 } catch (error) {
                     exportHudsLog.error(
@@ -189,18 +209,25 @@ async function buildExportFile(peticionExport: any) {
                         objectLog,
                         error
                     );
+                    return null;
                 }
             }))
         );
+
+        for (const file of files.filter(Boolean)) {
+            archive.append(Readable.from(file.buffer), {
+                name: file.name
+            });
+        }
     };
 
-    const getCdas = (excluye: string[]) => {
-        return Promise.all(
+    const getCdas = async (excluye: string[]) => {
+        const files = await Promise.all(
             cdas.map((cda: any) => limit(async () => {
                 const conceptId = cda.metadata?.prestacion?.snomed?.conceptId;
 
                 if (excluye.includes(conceptId)) {
-                    return;
+                    return null;
                 }
 
                 if (cda.metadata.adjuntos?.length > 0) {
@@ -213,15 +240,21 @@ async function buildExportFile(peticionExport: any) {
                         );
 
                         if (!fileCda?.stream) {
-                            return;
+                            return null;
                         }
 
-                        archive.append(fileCda.stream, {
+                        const cdaBuffer = await streamToBuffer(fileCda.stream);
+                        if (!cdaBuffer?.length) {
+                            throw new Error(`CDA adjunto vacío ${cda._id}`);
+                        }
+
+                        return {
+                            buffer: Buffer.from(cdaBuffer),
                             name:
                                 `${moment(cda.metadata.fecha)
                                     .format('YYYY-MM-DD-HHmmss')} - ` +
                                 `${safe(cda.metadata.prestacion?.snomed?.term || 'CDA')}.pdf`
-                        });
+                        };
                     } catch (error) {
                         exportHudsLog.error(
                             'Crear cda',
@@ -229,7 +262,7 @@ async function buildExportFile(peticionExport: any) {
                             error
                         );
                     }
-                    return;
+                    return null;
                 }
 
                 if (conceptId && conceptId !== '33879002') {
@@ -245,7 +278,7 @@ async function buildExportFile(peticionExport: any) {
                                 objectLog,
                                 new Error('CDA sin codificación')
                             );
-                            return;
+                            return null;
                         }
 
                         cda.metadata.codificacion = codificacion;
@@ -256,6 +289,9 @@ async function buildExportFile(peticionExport: any) {
                         );
 
                         const pdfBuffer: Buffer = await informe.informe();
+                        if (!pdfBuffer?.length) {
+                            throw new Error(`PDF vacío para CDA ${cda._id}`);
+                        }
 
                         const fechaArchivo = moment(
                             cda.metadata.fecha
@@ -264,11 +300,12 @@ async function buildExportFile(peticionExport: any) {
                         const nombreArchivo =
                             cda.metadata.prestacion.snomed.term;
 
-                        archive.append(pdfBuffer, {
+                        return {
+                            buffer: Buffer.from(pdfBuffer),
                             name:
                                 `${fechaArchivo} - ` +
                                 `${safe(nombreArchivo)}.pdf`
-                        });
+                        };
 
                     } catch (error) {
                         exportHudsLog.error(
@@ -278,8 +315,15 @@ async function buildExportFile(peticionExport: any) {
                         );
                     }
                 }
+                return null;
             }))
         );
+
+        for (const file of files.filter(Boolean)) {
+            archive.append(Readable.from(file.buffer), {
+                name: file.name
+            });
+        }
     };
 
     try {
