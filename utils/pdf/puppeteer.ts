@@ -2,8 +2,8 @@ import puppeteer, { Browser, Page, PDFOptions } from 'puppeteer';
 import * as sharp from 'sharp';
 
 type ImgOpts = {
-    maxWidth?: 1600;
-    quality?: 75; // JPEG/WebP 60-85
+    maxWidth?: Number; // px
+    quality?: Number; // JPEG/WebP 60-85
     format?: 'jpeg' | 'webp';
 };
 
@@ -14,12 +14,12 @@ export async function streamToJpegDataUri(
     stream: NodeJS.ReadableStream,
     opts: ImgOpts = {}
 ): Promise<string> {
-    const maxWidth = opts.maxWidth ?? 1600;
-    const quality = opts.quality ?? 75;
+    const maxWidth = opts.maxWidth ?? 1200;
+    const quality = opts.quality ?? 60;
 
     const transformer = sharp()
         .rotate()
-        .resize({ width: maxWidth, withoutEnlargement: true })
+        .resize({ width: maxWidth, fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality, mozjpeg: true });
 
     const buf: Buffer = await new Promise((resolve, reject) => {
