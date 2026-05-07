@@ -2,8 +2,8 @@ import puppeteer, { Browser, Page, PDFOptions } from 'puppeteer';
 import * as sharp from 'sharp';
 
 type ImgOpts = {
-    maxWidth?: Number; // px
-    quality?: Number; // JPEG/WebP 60-85
+    maxWidth?: number; // px
+    quality?: number; // JPEG/WebP 60-85
     format?: 'jpeg' | 'webp';
 };
 
