@@ -17,7 +17,6 @@ body {
     display: inline-block;
     height: 1cm;
     width: 90%;
-    // border-bottom: $borderBottom;
     margin-left: 0.8cm;
 
     .contenedor-logo-efector {
@@ -45,13 +44,13 @@ body {
         .logo-adicional {
             filter: grayscale(100%);
             -webkit-filter: grayscale(1);
-            height: .55cm;
+            height: .45cm;
             width: auto;
         }
 
         .logo-andes {
             float: right;
-            height: .55cm;
+            height: .45cm;
             width: auto;
         }
     }
@@ -65,8 +64,8 @@ body {
 
     .contenedor-principal-data {
         display: inline-block;
-        margin-top: 0.25cm;
-        margin-bottom: 0.25cm;
+        margin-top: 0.15cm;
+        margin-bottom: 0.1cm;
         width: 50%;
 
         &:nth-of-type(2) {
@@ -88,7 +87,7 @@ body {
 
     &.horizontal {
         float: right;
-        margin-bottom: .25cm;
+        margin-bottom: .1cm;
 
         hr {
             margin: 0 0;
@@ -96,7 +95,7 @@ body {
     }
 
     &.vertical {
-        margin-bottom: .25cm;
+        margin-bottom: .1cm;
     }
 
     font-size: .25cm;
@@ -104,6 +103,7 @@ body {
 
 .contenedor-bloque-texto {
     display: inline-block;
+    position: relative;
     margin-right: 1rem;
     line-height: 0.35cm;
 
@@ -112,6 +112,7 @@ body {
     }
 
 }
+
 
 .w-50 {
     width: 50%;
@@ -159,7 +160,6 @@ p {
 }
 
 hr {
-    margin: 5px 0 5px 0;
     width: 100%;
 
     &.sm {
@@ -187,7 +187,6 @@ hr {
 
 // Cuerpo
 main {
-
 
     .contenedor-concepto {
         display: inline-block;
@@ -269,11 +268,6 @@ main {
             margin-left: 0em;
         }
 
-        .subregistro {
-            margin-left: 0em;
-        }
-
-
         .nivel-2:not(:first-child) {
             margin-left: 1em;
             width: 100%;
@@ -303,10 +297,33 @@ main {
             }
         }
 
+        .adjuntos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .4cm;
+            width: 100%;
+        }
+
+        .subregistro {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
         .archivo-adjunto {
             text-align: center;
-            max-width: 6cm;
-            max-height: 6cm;
+
+            max-width: 6.5cm;
+            max-height: 6.5cm;
+
+            width: auto;
+            height: auto;
+
+            object-fit: contain;
+
             margin: 0 .35cm;
         }
     }
@@ -351,6 +368,7 @@ main {
 
         &.logo-pdp {
             height: 1cm;
+            margin-top: 0.5cm;
             width: auto;
             filter: grayscale(100%);
             -webkit-filter: grayscale(1);
