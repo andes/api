@@ -158,6 +158,7 @@ export function getTurno(req) {
                     turno.bloque_id = elem.bloque_id;
                     turno.organizacion = elem.organizacion;
                     turno.profesionales = elem.profesionales;
+                    turno.webexLinks = elem.webexLinks;
                     turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
                     turnos.push(turno);
                 });
