@@ -93,6 +93,10 @@ async function buildExportFile(peticionExport: any) {
                 peticionExport.tipoPrestacion;
         }
 
+        if (peticionExport.organizacion) {
+            query['solicitud.organizacion.id'] = peticionExport.organizacion;
+        }
+
         prestaciones = await Prestacion.find(query);
 
         // Usamos el mismo driver que CDAFiles y convertimos los ids antes de consultar GridFS.
@@ -110,6 +114,9 @@ async function buildExportFile(peticionExport: any) {
 
         if (fechaCondicion) {
             queryCda['metadata.fecha'] = fechaCondicion;
+        }
+        if (peticionExport.organizacion) {
+            queryCda['metadata.organizacion._id'] = new ObjectId(peticionExport.organizacion.toString());
         }
 
         const cdaFiles = makeFs();
@@ -335,4 +342,64 @@ async function buildExportFile(peticionExport: any) {
         (uploadStream as any).abort?.();
         throw error;
     }
+}
+
+// Verifica si hay historial antes de generar el zip
+export async function checkHistory(params) {
+    const { pacienteId, fechaDesde, fechaHasta, tipoPrestacion, organizacion } = params;
+
+    const paciente = await Paciente.findById(pacienteId);
+    const vinculacionesPaciente = paciente?.identificadores
+        ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
+        ?.map(item => item.valor);
+    const idsPaciente = vinculacionesPaciente?.length ? [...vinculacionesPaciente, pacienteId] : [pacienteId];
+
+    const query: any = {
+        'paciente.id': { $in: idsPaciente },
+        'estadoActual.tipo': 'validada'
+    };
+
+    if (fechaDesde && fechaHasta) {
+        query['ejecucion.fecha'] = {
+            $gte: moment(fechaDesde).toDate(),
+            $lte: moment(fechaHasta).toDate()
+        };
+    }
+    if (tipoPrestacion) {
+        query['solicitud.tipoPrestacion.conceptId'] = tipoPrestacion;
+    }
+    if (organizacion) {
+        query['solicitud.organizacion.id'] = organizacion;
+    }
+
+    const countPrestaciones = await Prestacion.countDocuments(query);
+    if (countPrestaciones > 0) {
+        return true;
+    }
+
+    // Verifica CDA
+    const idsPacienteObjectId = idsPaciente
+        .map(id => id?.toString())
+        .filter(id => ObjectId.isValid(id))
+        .map(id => new ObjectId(id));
+
+    const queryCda: any = {
+        'metadata.paciente': { $in: idsPacienteObjectId },
+        'metadata.prestacion.snomed.conceptId': { $ne: '2881000013106' }, // prestamo de carpeta
+    };
+
+    if (fechaDesde && fechaHasta) {
+        queryCda['metadata.fecha'] = {
+            $gte: moment(fechaDesde).toDate(),
+            $lte: moment(fechaHasta).toDate()
+        };
+    }
+    if (organizacion) {
+        queryCda['metadata.organizacion._id'] = new ObjectId(organizacion.toString());
+    }
+
+    const cdaFiles = makeFs();
+    const countCdas = await cdaFiles.find(queryCda).count();
+
+    return countCdas > 0;
 }
