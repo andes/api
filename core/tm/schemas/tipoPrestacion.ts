@@ -50,6 +50,11 @@ export const tipoPrestacionSchema = new Schema({
         required: false
     },
     queries: [Types.ObjectId],
+    teleConsulta: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
     videoConferencia: {
         type: Boolean,
         required: false,
