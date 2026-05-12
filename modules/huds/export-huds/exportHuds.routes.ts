@@ -4,6 +4,7 @@ import { exportHuds } from '../../../utils/roboSender';
 import { ExportHudsModel } from './exportHuds.schema';
 import { getHUDSExportarModel, readFile } from './hudsFiles';
 import { Types } from 'mongoose';
+import moment = require('moment');
 
 export const ExportHudsRouter = express.Router();
 ExportHudsRouter.use(Auth.authenticate());
@@ -34,6 +35,17 @@ ExportHudsRouter.post('/export', async (req: any, res, next) => {
     }
     return next(400);
 
+});
+
+// ruta para verificar si existe historial antes de generar el zip
+ExportHudsRouter.post('/export/check-history', async (req: any, res, next) => {
+    const { checkHistory } = require('./exportHuds.controller');
+    try {
+        const hasHistory = await checkHistory(req.body);
+        return res.json({ hasHistory });
+    } catch (error) {
+        return next(error);
+    }
 });
 
 ExportHudsRouter.post('/export/:id', async (req, res, next) => {

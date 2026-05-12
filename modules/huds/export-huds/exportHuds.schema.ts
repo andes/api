@@ -20,7 +20,8 @@ export const ExportHudsSchema = new mongoose.Schema({
         required: true,
         default: 'pending'
     },
-    excluye: [String]
+    excluye: [String],
+    organizacion: mongoose.Schema.Types.ObjectId
 });
 
 export const ExportHudsModel = mongoose.model('exportHuds', ExportHudsSchema, 'exportHuds');
