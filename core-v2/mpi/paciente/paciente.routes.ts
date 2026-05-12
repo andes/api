@@ -77,6 +77,10 @@ class PacienteResource extends ResourceBase<IPacienteDoc> {
             field: 'fechaNacimiento',
             fn: (value) => (MongoQuery.matchDate(value))
         },
+        obraSocial: {
+            field: 'financiador.nombre',
+            fn: MongoQuery.partialString
+        },
         search: ['documento', 'nombre', 'apellido', 'sexo', 'certificadoRenaper']
     };
     eventBus = EventCore;
@@ -119,7 +123,8 @@ export const get = async (req: Request, res: Response) => {
         const conditions = { ...req.query };
         delete conditions.search;
         Object.keys(options).map(opt => delete conditions[opt]);
-        const pacientes = await multimatch(req.query.search, conditions, options);
+        const filter = MongoQuery.buildQuery(conditions, PacienteCtr.searchFileds);
+        const pacientes = await multimatch(req.query.search, filter, options);
         return res.json(pacientes);
     } else {
         if (Object.keys(req.query).length) {
