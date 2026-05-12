@@ -10,6 +10,7 @@ import { getHUDSExportarModel } from './hudsFiles';
 import { Paciente } from '../../../core-v2/mpi';
 import { Readable } from 'stream';
 import moment = require('moment');
+import * as mongoose from 'mongoose';
 const pLimit = require('p-limit');
 
 // convierte un stream a Buffer
@@ -69,6 +70,9 @@ export async function createFile(idExportHuds) {
             if (peticionExport.tipoPrestacion) {
                 query['solicitud.tipoPrestacion.conceptId'] = peticionExport.tipoPrestacion;
             }
+            if (peticionExport.organizacion) {
+                query['solicitud.organizacion.id'] = peticionExport.organizacion;
+            }
             prestaciones = await Prestacion.find(query);
 
             // IMPORTANTE:
@@ -89,6 +93,9 @@ export async function createFile(idExportHuds) {
             };
             if (fechaCondicion) {
                 queryCda['metadata.fecha'] = fechaCondicion;
+            }
+            if (peticionExport.organizacion) {
+                queryCda['metadata.organizacion._id'] = new ObjectID(peticionExport.organizacion.toString());
             }
             const cdaFiles = makeFs();
             cdas = await cdaFiles.find(queryCda).toArray();
@@ -216,4 +223,65 @@ export async function createFile(idExportHuds) {
             reject(e);
         }
     });
+}
+
+// Verifica si hay historial antes de generar el zip
+export async function checkHistory(params) {
+    const { pacienteId, fechaDesde, fechaHasta, tipoPrestacion, organizacion } = params;
+
+    const paciente = await Paciente.findById(pacienteId);
+    const vinculacionesPaciente = paciente?.identificadores
+        ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
+        ?.map(item => item.valor);
+    const idsPaciente = vinculacionesPaciente?.length ? [...vinculacionesPaciente, pacienteId] : [pacienteId];
+
+    const query: any = {
+        'paciente.id': { $in: idsPaciente },
+        'estadoActual.tipo': 'validada'
+    };
+
+    if (fechaDesde && fechaHasta) {
+        query['ejecucion.fecha'] = {
+            $gte: moment(fechaDesde).toDate(),
+            $lte: moment(fechaHasta).toDate()
+        };
+    }
+    if (tipoPrestacion) {
+        query['solicitud.tipoPrestacion.conceptId'] = tipoPrestacion;
+    }
+    if (organizacion) {
+        query['solicitud.organizacion.id'] = organizacion;
+    }
+
+    const countPrestaciones = await Prestacion.countDocuments(query);
+    if (countPrestaciones > 0) {
+        return true;
+    }
+
+    // Verifica CDA
+    const ObjectID = mongoose.Types.ObjectId as any;
+    const idsPacienteObjectId = idsPaciente
+        .map(id => id?.toString())
+        .filter(id => ObjectID.isValid(id))
+        .map(id => new ObjectID(id));
+
+    const queryCda: any = {
+        'metadata.paciente': { $in: idsPacienteObjectId },
+        'metadata.prestacion.snomed.conceptId': { $ne: '2881000013106' }, // prestamo de carpeta
+    };
+
+    if (fechaDesde && fechaHasta) {
+        queryCda['metadata.fecha'] = {
+            $gte: moment(fechaDesde).toDate(),
+            $lte: moment(fechaHasta).toDate()
+        };
+    }
+    if (organizacion) {
+        queryCda['metadata.organizacion._id'] = new ObjectID(organizacion.toString());
+    }
+
+    const cdaFiles = makeFs();
+    const countCdas = await cdaFiles.find(queryCda).count();
+
+    return countCdas > 0;
 }
