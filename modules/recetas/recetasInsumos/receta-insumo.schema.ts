@@ -11,7 +11,6 @@ const insumoSubSchema = new mongoose.Schema({
             valor: String
         }
     ],
-
     tipo: {
         type: String,
         enum: ['dispositivo', 'nutricion', 'magistral']
