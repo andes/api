@@ -134,13 +134,6 @@ export function createInternacionInforme(organizacion, unidadOrganizativa, fecha
             }
         } : null,
 
-        periodosCensables: [
-            {
-                desde: moment(fechaIngreso).startOf('day').toDate(),
-                hasta: moment(fechaIngreso).endOf('day').toDate()
-            }
-        ],
-
         estados: [
             { tipo: 'ejecucion' }
         ],

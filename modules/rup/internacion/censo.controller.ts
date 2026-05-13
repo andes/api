@@ -58,7 +58,7 @@ function incluyePeriodo(estadistico, date) {
 
 
     if (!estadistico || !estadistico.periodosCensables) {
-        return false;
+        return true;
     }
 
 
@@ -182,7 +182,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     );
             }
             if (!incluyePeriodo(estadistico, timestampStart)) {
-                // estadistico = null;
+                estadistico = null;
             }
         }
 

@@ -186,6 +186,7 @@ test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
     const timestampStart = moment().startOf('day');
     const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa: 'medica' }, {});
     const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+
     expect(resultado.censo).toEqual({
         existenciaALas0: 1,
         ingresos: 0,
@@ -200,7 +201,6 @@ test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
         disponibles: 1
     });
 });
-
 test('Censo diario - Paciente desde 0hs tiene alta ', async () => {
     const informe: any = new InformeEstadistica(
         createInternacionInforme(cama.organizacion, cama.unidadOrganizativa)
@@ -908,15 +908,15 @@ test('Censo diario - Prestación con periodos censables excluyentes', async () =
     const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
-        existenciaALas0: 1,
+        existenciaALas0: 0,
         ingresos: 0,
         pasesDe: 0,
         altas: 0,
         defunciones: 0,
         pasesA: 0,
-        existenciaALas24: 1,
+        existenciaALas24: 0,
         ingresosYEgresos: 0,
-        pacientesDia: 1,
+        pacientesDia: 0,
         diasEstada: 0,
         disponibles: 1
     });
