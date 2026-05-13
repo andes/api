@@ -14,7 +14,6 @@ router.get('/censo-diario', Auth.authenticate(), asyncHandler(async (req: any, r
         const fecha = req.query.fecha;
         const organizacionId = typeof organizacion === 'string' ? organizacion : (organizacion && (organizacion as any).id);
 
-        console.log('📥 [Backend] GET /censo-diario:', { organizacion: organizacionId, unidadOrganizativa, fecha });
 
         const result = await CensosController.censoDiario({
             organizacion,
@@ -22,7 +21,6 @@ router.get('/censo-diario', Auth.authenticate(), asyncHandler(async (req: any, r
             unidadOrganizativa
         });
 
-        // console.log('📊 [Backend] Resultado de CensosController.censoDiario:', JSON.stringify(result, null, 2));
 
         if (!result) {
             console.error('❌ [Backend] CensosController.censoDiario retornó null o undefined');
@@ -31,7 +29,6 @@ router.get('/censo-diario', Auth.authenticate(), asyncHandler(async (req: any, r
 
         await CensosController.storeCenso(organizacion, unidadOrganizativa, result.censo, fecha);
 
-        console.log('✅ [Backend] Enviando respuesta:', result);
         res.json(result);
     } catch (error) {
         console.error('❌ [Backend] Error en /censo-diario:', error);

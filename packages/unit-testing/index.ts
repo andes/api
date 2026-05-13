@@ -30,10 +30,8 @@ export function setupUpMongo() {
     let mongoServer: any;
     beforeAll(async () => {
         try {
-            console.log('[unit-testing] setupUpMongo: creando mongo in-memory');
             mongoServer = await MongoMemoryServer.create();
             const mongoUri = mongoServer.getUri ? mongoServer.getUri() : (mongoServer.getConnectionString ? mongoServer.getConnectionString() : undefined);
-            console.log('[unit-testing] setupUpMongo: mongo uri=', mongoUri);
             await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
             console.log('[unit-testing] setupUpMongo: mongoose conectado');
         } catch (error) {
