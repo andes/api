@@ -6,12 +6,12 @@ export interface FormTypes {
     description: string;
     snomedCode: string;
     config?: {
-        idEvento: string;
-        idGrupoEvento: string;
         configField: {
             key: string;
             value: string;
             event: string;
+            idEvento: string;
+            idGrupoEvento: string;
         }[];
         interoperaLab: boolean;
     };
@@ -79,8 +79,6 @@ export const SectionSchema = new mongoose.Schema({
 });
 
 export const FormConfigSchema = new mongoose.Schema({
-    idEvento: String,
-    idGrupoEvento: String,
     configField: Array,
     interoperaLab: Boolean
 });
