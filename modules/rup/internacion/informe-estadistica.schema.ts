@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, SchemaTypes, model } from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 import * as OrganizacionSchema from '../../../core/tm/schemas/nombre';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
@@ -8,6 +8,12 @@ import { PacienteSubSchema } from '../../../core-v2/mpi';
 import { schema as procQuirurgicosSchema } from '../../../core/tm/schemas/procedimientoQuirurgico';
 import { schema as Cie10 } from '../../../core/term/schemas/cie10';
 import { schema as OcupacionSchema } from '../../../core/tm/schemas/ocupacion';
+
+const CambioCamaSchema = new Schema({
+    fecha: Date,
+    idCama: SchemaTypes.ObjectId,
+    unidadOrganizativa: SnomedConcept
+}, { _id: false });
 
 const InformeIngresoSchema = new Schema({
     fechaIngreso: {
@@ -108,6 +114,7 @@ export const InformeEstadisticaSchema = new Schema({
         required: false
     },
     periodosCensables: [{ desde: Date, hasta: Date }],
+    cambiosCamas: [CambioCamaSchema],
     estados: [InternacionEstadoSchema],
     estadoActual: InternacionEstadoSchema,
 

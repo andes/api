@@ -450,10 +450,31 @@ export async function checkSectorDelete(idOrganizacion: string, idSector: string
     return true;
 }
 
+EventCore.on('mapa-camas:paciente:ingreso', async (estado) => {
+    if (estado?.idInternacion && estado.capa === 'estadistica') {
+        const informe: any = await InformeEstadistica.findById(estado.idInternacion);
+        if (informe) {
+            informe.cambiosCamas.push({
+                fecha: estado.fecha || new Date(),
+                idCama: estado.id || estado._id,
+                unidadOrganizativa: estado.unidadOrganizativa
+            });
+            const user = Auth.getUserFromResource(informe);
+            Auth.audit(informe, user as any);
+            await informe.save();
+        }
+    }
+});
+
 EventCore.on('mapa-camas:paciente:pase', async (estado) => {
     if (estado?.idInternacion && estado.capa === 'estadistica') {
         const informe: any = await InformeEstadistica.findById(estado.idInternacion);
         if (informe) {
+            informe.cambiosCamas.push({
+                fecha: estado.fecha || new Date(),
+                idCama: estado.id || estado._id,
+                unidadOrganizativa: estado.unidadOrganizativa
+            });
             informe.unidadOrganizativa = estado.unidadOrganizativa;
             const user = Auth.getUserFromResource(informe);
             Auth.audit(informe, user as any);
