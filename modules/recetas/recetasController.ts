@@ -928,3 +928,48 @@ export async function actualizarEstadosDispensa() {
         await informarLog.error('actualizarEstadosDispensa', {}, error);
     }
 }
+
+/**
+ * Verifica si existe una receta vigente o pendiente para un paciente y un medicamento (por conceptId SNOMED)
+ * al momento en que se realiza la consulta.
+ *
+ * @param documento   - DNI del paciente (identificador común entre sistemas)
+ * @param sexo        - Sexo del paciente ('masculino' | 'femenino' | 'otro')
+ * @param conceptId   - conceptId SNOMED del medicamento
+ * @returns { existe: boolean, receta?: any }
+ */
+export async function verificarRecetaExistente(documento: string, sexo: string, conceptId: string) {
+    if (!documento) {
+        throw new ParamsIncorrect('Se requiere el documento (DNI) del paciente');
+    }
+    if (!sexo) {
+        throw new ParamsIncorrect('Se requiere el sexo del paciente');
+    }
+    if (!conceptId) {
+        throw new ParamsIncorrect('Se requiere el conceptId del medicamento');
+    }
+
+    const ahora = moment().toDate();
+    const parametro: any = await RecetasParametros.findOne({ key: 'fechaLimite' });
+    const days = (parametro && parametro.value) ? Number(parametro.value) : 30;
+    const fechaLimiteVigentes = moment().subtract(days, 'days').startOf('day').toDate();
+
+    const receta = await Receta.findOne({
+        'paciente.documento': documento,
+        'paciente.sexo': sexo,
+        'medicamento.concepto.conceptId': conceptId,
+        'estadoActual.tipo': { $in: ['vigente', 'pendiente'] },
+        'estadoDispensaActual.tipo': { $nin: ['dispensada'] },
+        $or: [
+            // Vigentes: que no hayan superado el límite de días desde su registro
+            { 'estadoActual.tipo': 'vigente', fechaRegistro: { $gte: fechaLimiteVigentes, $lte: ahora } },
+            // Pendientes: fechaRegistro futura (aún no activa pero pertenece al tratamiento)
+            { 'estadoActual.tipo': 'pendiente', fechaRegistro: { $lte: moment().add(10, 'days').endOf('day').toDate() } }
+        ]
+    }).sort({ fechaRegistro: -1 });
+
+    return {
+        existe: !!receta,
+        receta: receta || null
+    };
+}
