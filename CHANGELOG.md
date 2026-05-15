@@ -1,3 +1,10 @@
+## [5.146.1](https://github.com/andes/api/compare/v5.146.0...v5.146.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* **IN:** Quita momentaneamete la deficinion de los indices para el listado de internacion ([#2236](https://github.com/andes/api/issues/2236)) ([b1abc2d](https://github.com/andes/api/commit/b1abc2d8fb095c1d06d57eb77c304da8cd9c0853))
+
 # [5.146.0](https://github.com/andes/api/compare/v5.145.0...v5.146.0) (2026-05-06)
 
 
