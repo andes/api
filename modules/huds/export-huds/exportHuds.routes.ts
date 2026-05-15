@@ -3,9 +3,8 @@ import { Auth } from '../../../auth/auth.class';
 import { exportHuds } from '../../../utils/roboSender';
 import { ExportHudsModel } from './exportHuds.schema';
 import { getHUDSExportarModel, readFile } from './hudsFiles';
+import { checkHistory } from './exportHuds.controller';
 import { Types } from 'mongoose';
-import moment = require('moment');
-
 export const ExportHudsRouter = express.Router();
 ExportHudsRouter.use(Auth.authenticate());
 
@@ -39,7 +38,6 @@ ExportHudsRouter.post('/export', async (req: any, res, next) => {
 
 // ruta para verificar si existe historial antes de generar el zip
 ExportHudsRouter.post('/export/check-history', async (req: any, res, next) => {
-    const { checkHistory } = require('./exportHuds.controller');
     try {
         const hasHistory = await checkHistory(req.body);
         return res.json({ hasHistory });

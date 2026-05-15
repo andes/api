@@ -10,8 +10,8 @@ import { getHUDSExportarModel } from './hudsFiles';
 import { Paciente } from '../../../core-v2/mpi';
 import { ObjectId } from 'mongodb';
 import { Readable } from 'stream';
-import moment = require('moment');
-const pLimit = require('p-limit');
+import * as moment from 'moment';
+import * as pLimit from 'p-limit';
 
 // convierte un stream a Buffer
 const streamToBuffer = (stream): Promise<Buffer> => {
@@ -30,6 +30,80 @@ const safe = (s: string) =>
         .replace(/\s+/g, ' ')
         .trim()
         .slice(0, 150);
+
+interface HistoryParams {
+    pacienteId: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+    tipoPrestacion?: string;
+    organizacion?: any;
+}
+
+async function getPacienteIds(pacienteId: string) {
+    const paciente = await Paciente.findById(pacienteId);
+    const vinculacionesPaciente = paciente?.identificadores
+        ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
+        ?.map(item => String(item.valor));
+    return vinculacionesPaciente?.length ? [...vinculacionesPaciente, pacienteId] : [pacienteId];
+}
+
+const buildPrestacionesQuery = (params: Partial<HistoryParams>, idsPaciente: string[]) => {
+    const query: any = {
+        'paciente.id': { $in: idsPaciente },
+        'estadoActual.tipo': 'validada'
+    };
+
+    if (params.fechaDesde && params.fechaHasta) {
+        query['ejecucion.fecha'] = {
+            $gte: moment(params.fechaDesde).toDate(),
+            $lte: moment(params.fechaHasta).toDate()
+        };
+    }
+    if (params.tipoPrestacion) {
+        query['solicitud.tipoPrestacion.conceptId'] = params.tipoPrestacion;
+    }
+    if (params.organizacion) {
+        query['solicitud.organizacion.id'] = params.organizacion;
+    }
+
+    return query;
+};
+
+const buildCdaQuery = (params: Partial<HistoryParams>, idsPacienteObjectId: ObjectId[]) => {
+    const queryCda: any = {
+        'metadata.paciente': { $in: idsPacienteObjectId },
+        'metadata.prestacion.snomed.conceptId': { $ne: '2881000013106' } // prestamo de carpeta
+    };
+
+    if (params.fechaDesde && params.fechaHasta) {
+        queryCda['metadata.fecha'] = {
+            $gte: moment(params.fechaDesde).toDate(),
+            $lte: moment(params.fechaHasta).toDate()
+        };
+    }
+    if (params.organizacion) {
+        queryCda['metadata.organizacion._id'] = new ObjectId(params.organizacion.toString());
+    }
+
+    return queryCda;
+};
+
+async function getHudsSearchCriteria(params: any) {
+    const idsPaciente = await getPacienteIds(params.pacienteId);
+    const query = buildPrestacionesQuery(params, idsPaciente);
+
+    const cdaFiles = makeFs();
+
+    // Usamos el mismo driver que CDAFiles para construir los ObjectId.
+    const idsPacienteObjectId = idsPaciente
+        .map(id => String(id))
+        .filter(id => ObjectId.isValid(id))
+        .map(id => new ObjectId(id));
+
+    const queryCda = buildCdaQuery(params, idsPacienteObjectId);
+
+    return { idsPaciente, query, idsPacienteObjectId, queryCda, cdaFiles };
+}
 
 export async function createFile(idExportHuds) {
     const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
@@ -55,7 +129,6 @@ export async function createFile(idExportHuds) {
 }
 
 async function buildExportFile(peticionExport: any) {
-    let fechaCondicion = null;
     let prestaciones: any[] = [];
     let cdas = [];
 
@@ -64,63 +137,9 @@ async function buildExportFile(peticionExport: any) {
             _id: { $in: peticionExport.prestaciones }
         });
     } else {
-        const paciente = await Paciente.findById(peticionExport.pacienteId);
-
-        const vinculacionesPaciente = paciente?.identificadores
-            ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
-            ?.map(item => item.valor);
-
-        const idsPaciente = vinculacionesPaciente?.length
-            ? [...vinculacionesPaciente, peticionExport.pacienteId]
-            : [peticionExport.pacienteId];
-
-        const query: any = {
-            'paciente.id': { $in: idsPaciente },
-            'estadoActual.tipo': 'validada'
-        };
-
-        if (peticionExport.fechaDesde && peticionExport.fechaHasta) {
-            fechaCondicion = {
-                $gte: moment(peticionExport.fechaDesde).toDate(),
-                $lte: moment(peticionExport.fechaHasta).toDate()
-            };
-
-            query['ejecucion.fecha'] = fechaCondicion;
-        }
-
-        if (peticionExport.tipoPrestacion) {
-            query['solicitud.tipoPrestacion.conceptId'] =
-                peticionExport.tipoPrestacion;
-        }
-
-        if (peticionExport.organizacion) {
-            query['solicitud.organizacion.id'] = peticionExport.organizacion;
-        }
-
-        prestaciones = await Prestacion.find(query);
-
-        // Usamos el mismo driver que CDAFiles y convertimos los ids antes de consultar GridFS.
-        const idsPacienteObjectId = idsPaciente
-            .map(id => id?.toString())
-            .filter(id => ObjectId.isValid(id))
-            .map(id => new ObjectId(id));
-
-        const queryCda: any = {
-            'metadata.paciente': { $in: idsPacienteObjectId },
-            'metadata.prestacion.snomed.conceptId': {
-                $ne: '2881000013106'
-            }
-        };
-
-        if (fechaCondicion) {
-            queryCda['metadata.fecha'] = fechaCondicion;
-        }
-        if (peticionExport.organizacion) {
-            queryCda['metadata.organizacion._id'] = new ObjectId(peticionExport.organizacion.toString());
-        }
-
-        const cdaFiles = makeFs();
-        cdas = await cdaFiles.find(queryCda).toArray();
+        const criteria = await getHudsSearchCriteria(peticionExport);
+        prestaciones = await Prestacion.find(criteria.query);
+        cdas = await criteria.cdaFiles.find(criteria.queryCda).toArray();
     }
 
     const fecha = moment(peticionExport.createdAt).format('YYYY-MM-DD');
@@ -346,60 +365,13 @@ async function buildExportFile(peticionExport: any) {
 
 // Verifica si hay historial antes de generar el zip
 export async function checkHistory(params) {
-    const { pacienteId, fechaDesde, fechaHasta, tipoPrestacion, organizacion } = params;
+    const { query, queryCda, cdaFiles } = await getHudsSearchCriteria(params);
 
-    const paciente = await Paciente.findById(pacienteId);
-    const vinculacionesPaciente = paciente?.identificadores
-        ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
-        ?.map(item => item.valor);
-    const idsPaciente = vinculacionesPaciente?.length ? [...vinculacionesPaciente, pacienteId] : [pacienteId];
-
-    const query: any = {
-        'paciente.id': { $in: idsPaciente },
-        'estadoActual.tipo': 'validada'
-    };
-
-    if (fechaDesde && fechaHasta) {
-        query['ejecucion.fecha'] = {
-            $gte: moment(fechaDesde).toDate(),
-            $lte: moment(fechaHasta).toDate()
-        };
-    }
-    if (tipoPrestacion) {
-        query['solicitud.tipoPrestacion.conceptId'] = tipoPrestacion;
-    }
-    if (organizacion) {
-        query['solicitud.organizacion.id'] = organizacion;
-    }
-
-    const countPrestaciones = await Prestacion.countDocuments(query);
-    if (countPrestaciones > 0) {
+    const prestacionExists = await Prestacion.findOne(query).select({ _id: 1 }).lean();
+    if (prestacionExists) {
         return true;
     }
 
-    // Verifica CDA
-    const idsPacienteObjectId = idsPaciente
-        .map(id => id?.toString())
-        .filter(id => ObjectId.isValid(id))
-        .map(id => new ObjectId(id));
-
-    const queryCda: any = {
-        'metadata.paciente': { $in: idsPacienteObjectId },
-        'metadata.prestacion.snomed.conceptId': { $ne: '2881000013106' }, // prestamo de carpeta
-    };
-
-    if (fechaDesde && fechaHasta) {
-        queryCda['metadata.fecha'] = {
-            $gte: moment(fechaDesde).toDate(),
-            $lte: moment(fechaHasta).toDate()
-        };
-    }
-    if (organizacion) {
-        queryCda['metadata.organizacion._id'] = new ObjectId(organizacion.toString());
-    }
-
-    const cdaFiles = makeFs();
-    const countCdas = await cdaFiles.find(queryCda).count();
-
-    return countCdas > 0;
+    const cdaMatch = await cdaFiles.find(queryCda).limit(1).toArray();
+    return cdaMatch.length > 0;
 }
