@@ -95,7 +95,7 @@ router.post('/olvide-password', (req, res, next) => {
             return next(err);
         }
 
-        if (!datosUsuario) {
+        if (!datosUsuario || !datosUsuario.activacionApp) {
             return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
