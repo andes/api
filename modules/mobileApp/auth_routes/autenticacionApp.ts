@@ -7,7 +7,7 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { validar } from '../../../core-v2/mpi/validacion';
 import * as ScanParse from '../../../shared/scanParse';
 import * as authController from '../controller/AuthController';
-import { generateError } from '../controller/AuthController';
+import { generarCodigoVerificacion, enviarCodigoVerificacion, generateError } from '../controller/AuthController';
 import { PacienteAppCtr } from '../pacienteApp.routes';
 import { registroMobileLog } from '../registroMobile.log';
 import { PacienteApp } from '../schemas/pacienteApp';
@@ -96,7 +96,7 @@ router.post('/olvide-password', (req, res, next) => {
             return next(err);
         }
 
-        if (!datosUsuario) {
+        if (!datosUsuario || !datosUsuario.activacionApp) {
             return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
@@ -267,7 +267,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
 
         let registro = {};
         if (paciente && paciente.id) {
-            const passw = authController.generarCodigoVerificacion();
+            const passw = generarCodigoVerificacion();
             req.body.pacientes = [{
                 id: paciente.id,
                 relacion: 'principal',
@@ -277,7 +277,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
             registro = await PacienteAppCtr.create(req.body, req);
 
             // Push Notification
-            authController.enviarCodigoVerificacion(registro, passw, fcmToken);
+            enviarCodigoVerificacion(registro, passw, fcmToken);
         }
         return res.json(registro);
     } catch (err) {
