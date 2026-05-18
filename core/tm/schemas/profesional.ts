@@ -20,6 +20,27 @@ const matriculacionSchema = new mongoose.Schema({
     revalidacionNumero: Number
 });
 
+const NuevaMatriculacionSchema = new mongoose.Schema({
+    fechaAlta: { type: Date, required: true },
+    matriculaNumero: { type: Number, required: false },
+    /* Sacar 'inicio', 'fin' y 'notificacionVencimiento' de este esquema una vez actualizada la colección. */
+    inicio: Date,
+    fin: Date,
+    notificacionVencimiento: { type: Boolean, required: false },
+    /* */
+    baja: {
+        motivo: { type: String, required: false },
+        fecha: { type: String, required: false }
+    },
+    periodos: [{
+        notificacionVencimiento: { type: Boolean, required: false },
+        inicio: Date,
+        fin: Date,
+        revalidacionNumero: Number,
+        revalida: { type: Boolean, default: false }
+    }]
+});
+
 export const ProfesionalBaseSchema = new mongoose.Schema({
     documento: { type: String, required: true },
     sexo: { type: String, required: false },
@@ -88,19 +109,7 @@ ProfesionalSchema.add({
             modalidad: { type: ObjSIISASchema, required: false },
             establecimiento: { type: ObjSIISASchema, required: false },
         },
-        matriculacion: [{
-            matriculaNumero: { type: Number, required: false },
-            libro: { type: String, required: false },
-            folio: { type: String, required: false },
-            inicio: Date,
-            baja: {
-                motivo: { type: String, required: false },
-                fecha: { type: String, required: false }
-            },
-            notificacionVencimiento: { type: Boolean, required: false },
-            fin: Date,
-            revalidacionNumero: Number
-        }],
+        matriculacion: [NuevaMatriculacionSchema],
         fechasDeAltas: [{ fecha: { type: Date, required: false } }],
         matriculado: { type: Boolean, default: false },
         revalida: { type: Boolean, default: false },
