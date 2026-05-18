@@ -71,7 +71,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String,
             apellido: String,
-            documento: Number },
+            documento: Number
+        },
         registradoEn: Date
     },
     estadoCivil: ESTADOCIVIL,
@@ -116,6 +117,11 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     carpetaEfectores: [{
         organizacion: NombreSchema,
         nroCarpeta: String
+    }],
+    posibleDuplicado: [{
+        id: mongoose.Schema.Types.ObjectId,
+        score: Number,
+        fecha: Date
     }],
     notas: [{
         fecha: Date,
@@ -171,6 +177,11 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     carpetaEfectores: [{
         organizacion: nombreSchema,
         nroCarpeta: String
+    }],
+    posibleDuplicado: [{
+        id: mongoose.Schema.Types.ObjectId,
+        score: Number,
+        fecha: Date
     }],
     obraSocial: { type: obraSocialSchema },
     localidad: NombreSchemaV2,
