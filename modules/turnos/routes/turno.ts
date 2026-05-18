@@ -13,6 +13,7 @@ import { NotificationService } from '../../mobileApp/controller/NotificationServ
 import * as prepagasController from '../../obraSocial/controller/prepagas';
 import { updateRegistroHistorialSolicitud } from '../../rup/controllers/prestacion';
 import { turnosLog } from '../citasLog';
+import * as webexController from '../../webex/webex.controller';
 import { getHistorial } from '../controller/historialCitasController/historialCitasController';
 import * as turnosController from '../controller/turnosController';
 import { Agenda } from '../schemas/agenda';
@@ -72,7 +73,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         usuario.organizacion = (req as any).user.organizacion;
         const tipoTurno = (esHoy ? 'delDia' : 'programado');
         const fecha = new Date();
-        const turno = {
+        const turno: any = {
             horaInicio: (agendaRes as any).horaInicio,
             estado: 'asignado',
             tipoTurno,
@@ -84,8 +85,11 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             updatedAt: fecha,
             updatedBy: usuario,
             fechaHoraDacion: fecha,
-            usuarioDacion: usuario
+            usuarioDacion: usuario,
+            videoConferencia: req.body.videoConferencia || false
         };
+
+
         const turnos = ((agendaRes as any).bloques[0].turnos);
         turnos.push(turno);
         let update;
@@ -309,6 +313,21 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
         update[estadoFacturacion] = req.body.estadoFacturacion;
 
+        const etiquetaVideoConferencia = bloqueTurno + '.videoConferencia';
+        const etiquetaWebexLinks = bloqueTurno + '.webexLinks';
+        update[etiquetaVideoConferencia] = req.body.videoConferencia || false;
+
+        if (update[etiquetaVideoConferencia]) {
+            const profesional = agendaRes.profesionales?.[0] || usuario.documento;
+            const turnoObj = {
+                _id: req.body.idTurno,
+                horaInicio: agendaRes.bloques[posBloque].turnos[posTurno].horaInicio,
+                paciente: req.body.paciente
+            };
+            update[etiquetaWebexLinks] = await webexController.generateWebexLinks(turnoObj, agendaRes, profesional);
+        }
+
+
         if (req.body.reasignado) {
             update[etiquetaReasignado] = req.body.reasignado;
         }
@@ -510,6 +529,21 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
         }
 
         update[etiquetaTurno] = req.body.turno;
+
+        if (req.body.turno.videoConferencia) {
+
+            const profesional = agendaRes.profesionales?.[0] || usuario.documento;
+            const turnoObj = {
+                horaInicio: agendaRes.bloques[posBloque].turnos[posTurno].horaInicio,
+                paciente: req.body.turno.paciente
+            };
+
+            const link = await webexController.generateWebexLinks(turnoObj, agendaRes, profesional);
+
+
+            req.body.turno.webexLinks = link;
+        }
+
 
         // Actualiza los audit de update de la agenda
         update.updatedAt = new Date();

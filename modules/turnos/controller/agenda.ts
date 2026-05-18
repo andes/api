@@ -125,6 +125,7 @@ export async function liberarTurno(req, data, turno) {
             turno.nota = null;
             turno.confirmedAt = null;
             turno.reasignado = undefined; // Esto es necesario cuando se libera un turno reasignado
+            turno.webexLinks = null;
             turno.updatedAt = new Date();
             turno.updatedBy = req.user.usuario || req.user;
             let cant = 1;
@@ -186,6 +187,7 @@ export function suspenderTurno(req, data, turno) {
     const efector = data.organizacion;
     delete turno.paciente;
     delete turno.tipoPrestacion;
+    turno.webexLinks = null;
     turno.motivoSuspension = req.body.motivoSuspension;
     turno.avisoSuspension = req.body.avisoSuspension;
     turno.updatedAt = new Date();
