@@ -619,7 +619,8 @@ export async function crearReceta(dataReceta, req) {
                     dosis: medicamento.dosisDiaria.dosis,
                     intervalo: medicamento.dosisDiaria.intervalo,
                     dias: medicamento.dosisDiaria.dias,
-                    notaMedica: medicamento.dosisDiaria.notaMedica
+                    notaMedica: medicamento.dosisDiaria.notaMedica,
+                    notaFarmacia: medicamento.dosisDiaria.notaFarmacia
                 },
                 tratamientoProlongado,
                 tiempoTratamiento: tratamientoProlongado ? medicamento.tiempoTratamiento : null,
