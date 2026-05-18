@@ -622,6 +622,7 @@ export async function crearReceta(dataReceta, req) {
                     notaMedica: medicamento.dosisDiaria.notaMedica
                 },
                 tratamientoProlongado,
+                esMagistral: medicamento.esMagistral,
                 tiempoTratamiento: tratamientoProlongado ? medicamento.tiempoTratamiento : null,
                 ordenTratamiento: i,
                 tipoReceta: medicamento.tipoReceta?.id || medicamento.tipoReceta || 'simple',
