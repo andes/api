@@ -66,8 +66,18 @@ router.get('/agenda/candidatas', async (req, res, next) => {
             'organizacion._id': { $eq: mongoose.Types.ObjectId(Auth.getOrganization(req)) }, // Que sean agendas de la misma organizacion
             horaInicio: { $gte: horaAgendaOrig },
             nominalizada: true,
-            // '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
             $or: estado,
+            $expr: {
+                $or: [
+                    { $ne: ['$bloques.cantidadTurnos', '$bloques.accesoDirectoDelDia'] },
+                    {
+                        $and: [
+                            { $eq: ['$bloques.cantidadTurnos', '$bloques.accesoDirectoDelDia'] },
+                            { $eq: [{ $dateToString: { format: '%Y-%m-%d', date: '$horaInicio' } }, new Date().toISOString().substring(0, 10)] }
+                        ]
+                    }
+                ]
+            },
             'tipoPrestaciones.conceptId': turno.tipoPrestacion ? turno.tipoPrestacion.conceptId : '', // Que tengan incluída la prestación del turno
             _id: { $ne: mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
         };
