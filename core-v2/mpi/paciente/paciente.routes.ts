@@ -120,7 +120,7 @@ export const get = async (req: Request, res: Response) => {
         const conditions = { ...req.query };
         delete conditions.search;
         Object.keys(options).map(opt => delete conditions[opt]);
-        const pacientes = await multimatch(req.query.search, conditions, options);
+        const pacientes = await multimatch(req.query.search as any, conditions, options);
         return res.json(pacientes);
     } else {
         if (Object.keys(req.query).length) {

@@ -2,7 +2,6 @@ import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { userScheduler } from '../../config.private';
-import { searchMatriculas } from '../../core/tm/controller/profesional';
 import { RecetasParametros } from './parametros.schema';
 import { MotivosReceta, Receta } from './receta-schema';
 import { createLog, informarLog, updateLog, jobsLog } from './recetaLogs';
@@ -129,7 +128,7 @@ async function registrarAppNotificadas(req, recetas, sistema) {
  */
 export async function buscarRecetas(req) {
     const options: any = {};
-    const params = req.params.id ? req.params : req.query;
+    const params = (req.params as any).id ? req.params : req.query;
     const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
     const pacienteId = params.pacienteId || null;
     const documento = params.documento || null;
@@ -222,6 +221,46 @@ export async function buscarRecetas(req) {
     } catch (err) {
         await informarLog.error('buscarRecetas', { params, options }, err, req);
         return err;
+    }
+}
+
+/**
+ * Groups recetas by idRegistro and selects the one with the smallest ordenTratamiento from each group
+ * @param recetaIds Array of receta IDs
+ * @returns Array of selected recetas (one per group)
+ */
+export async function obtenerRecetasPorGrupo(recetaIds) {
+    try {
+        const recetasPromises = recetaIds.map(async (recetaId) => {
+            const receta: any = await Receta.findById(recetaId);
+            return receta;
+        });
+        const recetas = await Promise.all(recetasPromises);
+        const grupos = {};
+        recetas.forEach(receta => {
+            if (receta) {
+                const idRegistro = (receta as any).idRegistro;
+                if (!grupos[idRegistro]) {
+                    grupos[idRegistro] = [];
+                }
+                grupos[idRegistro].push(receta);
+            }
+        });
+
+        const recetasASuspender = [];
+        Object.values(grupos).forEach((grupo: any[]) => {
+            if (grupo.length > 0) {
+                const recetaMenorOrden = grupo.reduce((min, receta) =>
+                    receta.medicamento.ordenTratamiento < min.medicamento.ordenTratamiento ? receta : min
+                );
+                recetasASuspender.push(recetaMenorOrden);
+            }
+        });
+
+        return recetasASuspender;
+    } catch (error) {
+        await updateLog.error('obtenerRecetasPorGrupo', { recetaIds }, error);
+        throw error;
     }
 }
 
@@ -658,7 +697,7 @@ export async function crearReceta(dataReceta, req) {
 }
 export async function buscarRecetasPorProfesional(req) {
     try {
-        const profesionalId = req.params.id;
+        const profesionalId = (req.params as any).id;
         const { estadoReceta, desde, hasta, origenExternoApp, excluirEstado } = req.query;
         if (!profesionalId || !Types.ObjectId.isValid(profesionalId)) {
             throw new ParamsIncorrect();

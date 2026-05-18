@@ -1,4 +1,4 @@
-import { Document, model, Model, Schema, SchemaTypes, Types } from 'mongoose';
+import { Document, model, Schema, SchemaTypes, Types } from 'mongoose';
 
 export interface IPantalla extends Document {
     nombre: String;
@@ -31,4 +31,4 @@ export const TurneroPantallaSchema = new Schema({
     bloqueada: Boolean
 });
 
-export const TurneroPantalla: Model<IPantalla> = model('turneroPantallas', TurneroPantallaSchema, 'turneroPantallas');
+export const TurneroPantalla = model<IPantalla>('turneroPantallas', TurneroPantallaSchema, 'turneroPantallas');

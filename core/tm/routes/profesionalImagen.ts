@@ -24,7 +24,7 @@ router.post('/profesionales/file', async (req: any, res, next) => {
     input.end(_base64);
 });
 router.get('/file/:id', async (req: any, res, next) => {
-    const _base64 = req.params.id;
+    const _base64 = (req.params as any).id;
     const CDAFiles = makeFs();
     const contexto = await CDAFiles.findOne({ _id: _base64 });
     CDAFiles.readFile({ _id: _base64 }, (err, buffer) => {

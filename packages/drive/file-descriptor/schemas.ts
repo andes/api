@@ -1,4 +1,4 @@
-import { Types, Model, model, Document, Schema } from 'mongoose';
+import { model, Document, Schema } from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export interface IFileDescriptor {
@@ -24,4 +24,4 @@ export const FileDescriptorSchema: Schema = new Schema({
 });
 
 FileDescriptorSchema.plugin(AuditPlugin);
-export const FileDescriptorModel: Model<FileDescriptorDocument> = model('AndesDriveMetadata', FileDescriptorSchema, 'AndesDriveMetadata');
+export const FileDescriptorModel = model<FileDescriptorDocument>('AndesDriveMetadata', FileDescriptorSchema, 'AndesDriveMetadata');

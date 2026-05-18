@@ -34,8 +34,8 @@ router.get('/turno/:id*?', async (req, res, next) => {
 router.get('/historial', async (req, res, next) => {
     try {
         let turno = await getHistorial(req);
-        if (req.query.skip && req.query.limit) {
-            turno = turno.splice(req.query.skip, req.query.limit);
+        if (req.query.skip as any && req.query.limit as any) {
+            turno = turno.splice(req.query.skip as any, req.query.limit as any);
         }
         res.json(turno);
     } catch (err) {
@@ -447,7 +447,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     }
 
     const query = {
-        _id: req.params.idAgenda,
+        _id: req.params.idAgenda as any,
     };
     dbgTurno('query --->', query);
 
@@ -455,7 +455,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     update.updatedAt = new Date();
     update.updatedBy = Auth.getAuditUser(req);
 
-    Agenda.update(query, { $set: update }, (error, data) => {
+    Agenda.updateOne(query, { $set: update }).exec((error, data) => {
         if (error) {
             return next(error);
         }

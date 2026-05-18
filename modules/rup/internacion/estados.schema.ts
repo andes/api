@@ -4,7 +4,6 @@ import { SnomedConcept } from '../schemas/snomed-concept';
 
 const EstadoKey = String;
 type IEstadoKey = String;
-
 export interface IEstados {
     organizacion: Types.ObjectId;
     ambito: String;
@@ -81,8 +80,10 @@ EstadoSchema.methods.check = function (origen, destino, idInternacionOrigen, idI
         // true en caso de cambio de UO o cama (no)censable. De lo contrario debería tratarse de estados (y camas) distintos.
         return (!idInternacionOrigen && !idInternacionDestino) || idInternacionOrigen && idInternacionDestino && idInternacionOrigen.toString() === idInternacionDestino.toString();
     }
+    const doc = this as any;
+    const relaciones = Array.isArray(doc.relaciones) ? doc.relaciones : [];
 
-    for (const relacion of this.relaciones) {
+    for (const relacion of relaciones) {
         if (relacion.origen === origen && relacion.destino === destino) {
             return true;
         }
@@ -92,5 +93,5 @@ EstadoSchema.methods.check = function (origen, destino, idInternacionOrigen, idI
 
 EstadoSchema.plugin(AuditPlugin);
 
-export const Estados: Model<IEstadosDocument> = model('internacionEstados', EstadoSchema, 'internacionEstados');
+export const Estados = model<IEstadosDocument>('internacionEstados', EstadoSchema, 'internacionEstados');
 

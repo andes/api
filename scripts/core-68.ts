@@ -5,16 +5,16 @@ async function run(done) {
     const profesionales = Profesional.find({}).cursor({ batchSize: 100 });
     for await (const profesional of profesionales) {
         try {
-            profesional._createTokens();
+            (profesional as any)._createTokens();
             if (i % 100 === 0) {
                 // eslint-disable-next-line no-console
                 console.log(i++);
             }
-            await Profesional.update(
+            await Profesional.updateOne(
                 { _id: profesional.id },
                 {
                     $set: {
-                        tokens: profesional.tokens
+                        tokens: (profesional as any).tokens
                     }
                 }
             );

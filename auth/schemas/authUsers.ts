@@ -24,6 +24,10 @@ export interface IAuthUsers {
         }[];
         lastLogin: Date;
         fechaVencimiento?: Date;
+        createdAt: Date;
+        createdBy: any;
+        updatedAt?: Date;
+        updatedBy?: any;
     }[];
     lastLogin: Date;
     tipo?: String;

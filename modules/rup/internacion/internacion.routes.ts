@@ -9,7 +9,7 @@ const capaMiddleware = (req: Request, res: Response, next: express.NextFunction)
     if (req.query?.capa && req.query.capa !== 'estadistica') {
         req.query.capa = 'medica';
     }
-    if (req.params?.capa && req.params.capa !== 'estadistica') {
+    if (req.params?.capa && req.params.capa as any !== 'estadistica') {
         req.params.capa = 'medica';
     }
     if (req.body?.capa && req.body.capa !== 'estadistica') {
@@ -26,11 +26,11 @@ router.get('/prestaciones', async (req, res, next) => {
 });
 
 router.get('/:capa/:idInternacion/historial', capaMiddleware, async (req: Request, res: Response, next) => {
-    const organizacionId = (req.query.organizacionID) ? req.query.organizacionID : Auth.getOrganization(req);
-    const capa = req.params.capa;
-    const idInternacion = req.params.idInternacion;
-    const desde = req.query.desde;
-    const hasta = req.query.hasta;
+    const organizacionId = (req.query.organizacionID as any) ? req.query.organizacionID as any : Auth.getOrganization(req);
+    const capa = req.params.capa as any;
+    const idInternacion = req.params.idInternacion as any;
+    const desde = req.query.desde as any;
+    const hasta = req.query.hasta as any;
     const historialInternacion = await InternacionController.obtenerHistorialInternacion(organizacionId, capa, idInternacion, desde, hasta);
     return res.json(historialInternacion);
 });

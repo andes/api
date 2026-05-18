@@ -47,7 +47,7 @@ ElementoRUPRouter.post('/elementos-rup/requeridos', Auth.authenticate(), async (
     for (const _regla of reglas) {
         const regla = _regla.toObject();
         const contexto = await loadDinamicContext(
-            regla.contexto,
+            regla.contexto as any,
             { prestacion: prestacion.toObject() }
         );
 
