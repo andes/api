@@ -607,6 +607,98 @@ router.post('/prestaciones', async (req, res, next) => {
     }
 });
 
+/**
+ * Mergea registros nuevos con existentes, preservando datos de auditoría
+ *
+ * @param registrosExistentes - Registros actuales en la base de datos
+ * @param registrosNuevos - Registros que vienen en el request
+ * @returns Registros mergeados con auditoría preservada
+ */
+
+function mergeRegistrosPreservandoAuditoria(
+    registrosExistentes: any[],
+    registrosNuevos: any[]
+): any[] {
+    if (!registrosExistentes?.length) {
+        return registrosNuevos;
+    }
+    if (!registrosNuevos?.length) {
+        return registrosExistentes;
+    }
+
+    const existentesMap = new Map<string, any>(
+        registrosExistentes
+            .filter(r => r._id)
+            .map(r => [r._id.toString(), r])
+    );
+
+    return registrosNuevos.map(regNuevo => {
+        const idNuevo = regNuevo._id?.toString() || regNuevo.id?.toString();
+        const regExistente = idNuevo ? existentesMap.get(idNuevo) : null;
+
+        // 🔹 Registro completamente nuevo
+        if (!regExistente) {
+            return regNuevo;
+        }
+
+        // 🔹 Comparación profunda para detectar si hubo cambios reales
+        const valorIgual =
+            JSON.stringify(regExistente.valor) === JSON.stringify(regNuevo.valor);
+
+        const subRegistrosIguales =
+            JSON.stringify(regExistente.registros || []) ===
+            JSON.stringify(regNuevo.registros || []);
+
+        // 🔹 No hubo cambios → devolver registro original (preserva auditoría)
+        if (valorIgual && subRegistrosIguales) {
+            return regExistente;
+        }
+
+        // 🔹 Hubo cambios → merge preservando auditoría original
+        const registroMergeado: any = {
+            ...regNuevo,
+            createdAt: regExistente.createdAt,
+            createdBy: regExistente.createdBy
+        };
+
+        // 🔹 Merge recursivo de subregistros
+        if (regNuevo.registros?.length && regExistente.registros?.length) {
+            registroMergeado.registros = mergeRegistrosPreservandoAuditoria(
+                regExistente.registros,
+                regNuevo.registros
+            );
+        }
+
+        return registroMergeado;
+    });
+}
+
+/**
+ * Actualiza la lista de profesionales que han registrado en esta prestación
+ *
+ * @param prestacion - Prestación a actualizar
+ * @param profesional - Profesional actual que está registrando
+ */
+function actualizarProfesionalesRegistrantes(prestacion: any, profesional: any) {
+    if (!prestacion.profesionalesRegistrantes) {
+        prestacion.profesionalesRegistrantes = [];
+    }
+
+    const yaExiste = prestacion.profesionalesRegistrantes.some(
+        (prof: any) => prof.id && prof.id.toString() === profesional.id.toString()
+    );
+
+    if (!yaExiste) {
+        prestacion.profesionalesRegistrantes.push({
+            id: profesional.id,
+            nombreCompleto: profesional.nombreCompleto,
+            nombre: profesional.nombre,
+            apellido: profesional.apellido,
+            documento: profesional.documento
+        });
+    }
+}
+
 router.patch('/prestaciones/:id', (req: Request, res, next) => {
     Prestacion.findById(req.params.id, async (err, data: any) => {
         if (err) {
@@ -662,7 +754,17 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     }
                 }
                 if (req.body.registros) {
-                    data.ejecucion.registros = req.body.registros;
+                    // Usar merge para preservar datos de auditoría de registros existentes
+                    data.ejecucion.registros = mergeRegistrosPreservandoAuditoria(
+                        data.ejecucion.registros,
+                        req.body.registros
+                    );
+
+                    // Actualizar lista de profesionales que registran
+                    const profesionalQueRegistra = Auth.getProfesional(req);
+                    if (profesionalQueRegistra) {
+                        actualizarProfesionalesRegistrantes(data, profesionalQueRegistra);
+                    }
                 }
                 if (req.body.ejecucion?.fecha) {
                     data.ejecucion.fecha = req.body.ejecucion.fecha;
@@ -701,7 +803,17 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 break;
             case 'registros':
                 if (req.body.registros && data.estadoActual.tipo !== 'validada') {
-                    data.ejecucion.registros = req.body.registros;
+                    // Usar merge para preservar datos de auditoría de registros existentes
+                    data.ejecucion.registros = mergeRegistrosPreservandoAuditoria(
+                        data.ejecucion.registros,
+                        req.body.registros
+                    );
+
+                    // Actualizar lista de profesionales que registran
+                    const profesionalQueRegistra = Auth.getProfesional(req);
+                    if (profesionalQueRegistra) {
+                        actualizarProfesionalesRegistrantes(data, profesionalQueRegistra);
+                    }
 
                     if (req.body.solicitud) {
                         data.solicitud = req.body.solicitud;
@@ -778,7 +890,17 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 break;
             case 'periodosCensables':
                 data.periodosCensables = req.body.periodosCensables;
-                data.ejecucion.registros = req.body.registros;
+                // Usar merge para preservar datos de auditoría de registros existentes
+                data.ejecucion.registros = mergeRegistrosPreservandoAuditoria(
+                    data.ejecucion.registros,
+                    req.body.registros
+                );
+
+                // Actualizar lista de profesionales que registran
+                const profesionalActual = Auth.getProfesional(req);
+                if (profesionalActual) {
+                    actualizarProfesionalesRegistrantes(data, profesionalActual);
+                }
                 break;
             default:
                 return next(500);

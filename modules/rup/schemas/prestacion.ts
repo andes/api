@@ -167,6 +167,17 @@ export const PrestacionSchema = new Schema({
         elementoRUP: SchemaTypes.ObjectId
 
     },
+
+    profesionalesRegistrantes: [
+        {
+            _id: false,
+            id: Schema.Types.ObjectId,
+            nombreCompleto: String,
+            nombre: String,
+            apellido: String,
+            documento: Number
+        }
+    ],
     tags: Schema.Types.Mixed,
     // Historia de estado de la prestación
     estados: [PrestacionEstadoSchema],
