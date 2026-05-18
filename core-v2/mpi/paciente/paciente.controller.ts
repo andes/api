@@ -19,6 +19,7 @@ import { PacienteCtr } from './paciente.routes';
 import { Paciente, replaceChars } from './paciente.schema';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { EventCore } from '@andes/event-bus/index';
+import { Console } from 'console';
 
 /**
  * Crea un objeto paciente
