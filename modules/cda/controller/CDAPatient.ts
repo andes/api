@@ -429,7 +429,6 @@ export function findByMetadata(conds) {
 export async function CDAExists(id, fecha, orgId) {
     const existe = await findByMetadata({
         'metadata.extras.id': id,
-        'metadata.fecha': fecha,
         'metadata.extras.organizacion': Types.ObjectId(orgId),
     });
     return existe;
