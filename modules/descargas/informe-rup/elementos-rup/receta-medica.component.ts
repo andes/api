@@ -2,6 +2,7 @@ import { HTMLComponent } from '../../model/html-component.class';
 import { generateBarcodeBase64 } from '../../model/barcode';
 import { Receta } from '../../../recetas/receta-schema';
 
+
 export class RecetaMedicaComponent extends HTMLComponent {
     template = `
     <div class="nivel-1">
@@ -22,6 +23,20 @@ export class RecetaMedicaComponent extends HTMLComponent {
                 </div>
             </td>
         </tr>
+        {{#if estadoReceta}}
+        <tr>
+            <td colspan="2" style="border:0px none; padding: 0;">
+                <div class="contenedor-bloque-texto">
+                    <h6 class="bolder">
+                        Estado Receta
+                    </h6>
+                    <h6>
+                        {{ estadoReceta }}
+                    </h6>
+                </div>
+            </td>
+        </tr>
+        {{/if}}
      </tbody>
      </table>
     </div>
@@ -78,6 +93,30 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
     async process() {
         // Buscar receta asociada al registro para obtener idReceta
         let idReceta = this.registro.idReceta;
+        let estadoReceta = null;
+
+        const tieneReceta = this.prestacion.ejecucion.registros.some(registro =>
+            registro.concepto?.conceptId === '182836005' || // Prescripción de medicamento
+            registro.valor?.medicamentos?.length > 0
+        );
+
+        if (tieneReceta) {
+            try {
+                const recetaPorPrestacion: any = await Receta.findOne({
+                    idPrestacion: this.prestacion._id.toString()
+                }).sort({ createdAt: -1 });
+
+                if (recetaPorPrestacion?.estadoActual?.tipo) {
+                    estadoReceta = recetaPorPrestacion.estadoActual.tipo
+                        .split('-')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+                }
+            } catch (error) {
+                estadoReceta = null;
+            }
+        }
+
         if (!idReceta && this.registro.id) {
             try {
                 const receta: any = await Receta.findOne({ idRegistro: this.registro.id });
@@ -95,6 +134,7 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
             registro: this.registro,
             esReceta: this.depth ? 1 : 0, // Si es 0 no muestra el código de barras
             idReceta: finalIdReceta,
+            estadoReceta,
             barcodeBase64: await generateBarcodeBase64(finalIdReceta, 'code128')
         };
     }
