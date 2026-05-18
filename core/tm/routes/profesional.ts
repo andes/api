@@ -22,9 +22,174 @@ import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { userScheduler } from './../../../config.private';
 import { getTemporyTokenGenerarUsuario } from '../../../auth/auth.controller';
+import { existenNumerosPosterioresEnGrado, getNumeracionPorCodigoProfesion } from '../../../modules/matriculaciones/controller/matriculaciones';
 import moment = require('moment');
 
 const router = express.Router();
+
+const MENSAJES_NEGOCIO = {
+    datosInconsistentes: 'datos inconsistentes',
+    profesionInmutable: 'profesión de grado no editable con matrícula generada',
+    sinPermisoSupervisor: 'requiere permiso de supervisor',
+    sinMatricula: 'la formación de grado no tiene número de matrícula asignado',
+    conPosteriores: 'existen números posteriores asignados para esta profesión',
+    conRevalidaciones: 'la formación de grado ya posee revalidaciones'
+};
+
+function toIdString(value: any) {
+    if (!value) {
+        return null;
+    }
+    return String(value);
+}
+
+function toProfesionCodigo(value: any) {
+    if (value === null || value === undefined) {
+        return null;
+    }
+    return String(value);
+}
+
+function matriculaNumero(formacion: any) {
+    if (!formacion?.matriculacion?.length) {
+        return null;
+    }
+    const ultima = formacion.matriculacion[formacion.matriculacion.length - 1];
+    const numero = Number(ultima?.matriculaNumero);
+    return Number.isFinite(numero) && numero > 0 ? numero : null;
+}
+
+function tieneMatriculacionConContenido(formacion: any) {
+    if (!Array.isArray(formacion?.matriculacion) || formacion.matriculacion.length === 0) {
+        return false;
+    }
+    return formacion.matriculacion.some((m: any) => {
+        if (!m) {
+            return false;
+        }
+        return Boolean(
+            m.matriculaNumero !== null && m.matriculaNumero !== undefined && m.matriculaNumero !== '' ||
+            m.libro ||
+            m.folio ||
+            m.inicio ||
+            m.fin ||
+            m.revalidacionNumero ||
+            (m.baja && (m.baja.fecha || m.baja.motivo))
+        );
+    });
+}
+
+function tieneRevalidaciones(formacion: any) {
+    const matriculaciones = Array.isArray(formacion?.matriculacion) ? formacion.matriculacion.filter(Boolean) : [];
+    return matriculaciones.length > 1 || matriculaciones.some((m: any) => Number(m?.revalidacionNumero) > 1);
+}
+
+function normalizarMatriculacionVacia(formacion: any) {
+    if (formacion && Array.isArray(formacion.matriculacion) && formacion.matriculacion.length === 0) {
+        formacion.matriculacion = null;
+    }
+    return formacion;
+}
+
+function normalizarFormacionesGrado(formaciones: any[]) {
+    if (!Array.isArray(formaciones)) {
+        return formaciones;
+    }
+    return formaciones.map((formacion) => normalizarMatriculacionVacia(formacion));
+}
+
+function buscarFormacionPorIdOIndice(formaciones: any[], formacionId: string, index: number) {
+    if (!Array.isArray(formaciones)) {
+        return null;
+    }
+    if (formacionId) {
+        const encontrada = formaciones.find((f: any) => toIdString(f?._id) === formacionId);
+        if (encontrada) {
+            return encontrada;
+        }
+    }
+    return formaciones[index] || null;
+}
+
+function validarActualizacionFormacionGrado(formacionPersistida: any[], formacionNueva: any[]) {
+    const formacionesPersistidas = normalizarFormacionesGrado(formacionPersistida || []);
+    const formacionesNuevas = normalizarFormacionesGrado(formacionNueva);
+    if (!Array.isArray(formacionesNuevas)) {
+        return null;
+    }
+
+    for (let index = 0; index < formacionesPersistidas.length; index++) {
+        const persistida = formacionesPersistidas[index];
+        const formacionId = toIdString(persistida?._id);
+        const nueva = buscarFormacionPorIdOIndice(formacionesNuevas, formacionId, index);
+
+        if (!nueva) {
+            if (tieneMatriculacionConContenido(persistida)) {
+                return MENSAJES_NEGOCIO.datosInconsistentes;
+            }
+            continue;
+        }
+
+        if (tieneMatriculacionConContenido(persistida) && !tieneMatriculacionConContenido(nueva)) {
+            return MENSAJES_NEGOCIO.datosInconsistentes;
+        }
+
+        const numeroPersistido = matriculaNumero(persistida);
+        if (numeroPersistido) {
+            const profesionOriginal = toProfesionCodigo(persistida?.profesion?.codigo);
+            const profesionNueva = toProfesionCodigo(nueva?.profesion?.codigo);
+            if (profesionOriginal !== profesionNueva) {
+                return MENSAJES_NEGOCIO.profesionInmutable;
+            }
+        }
+    }
+
+    return null;
+}
+
+async function obtenerEstadoDeshacerMatricula(resultado: any, formacionId: string) {
+    const formacion = (resultado.formacionGrado || []).find((fg: any) => toIdString(fg?._id) === formacionId);
+    if (!formacion) {
+        return { status: 404, payload: { message: 'formacion de grado no encontrada' } };
+    }
+
+    const numero = matriculaNumero(formacion);
+    if (!numero) {
+        return {
+            status: 400,
+            payload: {
+                canUndo: false,
+                reason: MENSAJES_NEGOCIO.sinMatricula,
+                message: MENSAJES_NEGOCIO.sinMatricula
+            }
+        };
+    }
+
+    if (tieneRevalidaciones(formacion)) {
+        return {
+            status: 400,
+            payload: {
+                canUndo: false,
+                reason: MENSAJES_NEGOCIO.conRevalidaciones,
+                message: MENSAJES_NEGOCIO.conRevalidaciones
+            }
+        };
+    }
+
+    const codigoProfesion = formacion?.profesion?.codigo;
+    const existenPosteriores = await existenNumerosPosterioresEnGrado(codigoProfesion, numero, resultado.id, formacionId);
+
+    return {
+        status: 200,
+        payload: {
+            canUndo: !existenPosteriores,
+            reason: existenPosteriores ? MENSAJES_NEGOCIO.conPosteriores : null,
+            message: existenPosteriores ? MENSAJES_NEGOCIO.conPosteriores : null,
+            matriculaNumero: numero,
+            profesionCodigo: codigoProfesion
+        }
+    };
+}
 
 router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
     const query = [
@@ -998,8 +1163,13 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
     }
     try {
         if (req.body.id) {
+            req.body.formacionGrado = normalizarFormacionesGrado(req.body.formacionGrado);
             const resultado: any = await Profesional.findById(req.body.id);
             const profesionalOriginal = resultado.toObject();
+            const errorValidacion = validarActualizacionFormacionGrado(profesionalOriginal.formacionGrado, req.body.formacionGrado);
+            if (errorValidacion) {
+                return res.status(400).json({ message: errorValidacion });
+            }
             for (const key in req.body) {
                 resultado[key] = req.body[key];
             }
@@ -1019,6 +1189,81 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
         next(err);
     }
 
+});
+
+router.get('/profesionales/:id/formacionGrado/:formacionId/deshacer-matricula', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'matriculaciones:supervisor:aprobar')) {
+        return res.status(403).json({ message: MENSAJES_NEGOCIO.sinPermisoSupervisor });
+    }
+
+    try {
+        const resultado: any = await Profesional.findById(req.params.id);
+        if (!resultado) {
+            return res.status(404).json({ message: 'profesional no encontrado' });
+        }
+
+        const estado = await obtenerEstadoDeshacerMatricula(resultado, req.params.formacionId);
+        return res.status(estado.status).json(estado.payload);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/profesionales/:id/formacionGrado/:formacionId/deshacer-matricula', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'matriculaciones:supervisor:aprobar')) {
+        return res.status(403).json({ message: MENSAJES_NEGOCIO.sinPermisoSupervisor });
+    }
+
+    try {
+        const resultado: any = await Profesional.findById(req.params.id);
+        if (!resultado) {
+            return res.status(404).json({ message: 'profesional no encontrado' });
+        }
+
+        const estado = await obtenerEstadoDeshacerMatricula(resultado, req.params.formacionId);
+        if (estado.status !== 200 || !estado.payload.canUndo) {
+            return res.status(400).json({ message: estado.payload.message || MENSAJES_NEGOCIO.datosInconsistentes });
+        }
+
+        const formacionIndex = (resultado.formacionGrado || []).findIndex((fg: any) => toIdString(fg?._id) === req.params.formacionId);
+        if (formacionIndex < 0) {
+            return res.status(404).json({ message: 'formacion de grado no encontrada' });
+        }
+
+        const formacion = resultado.formacionGrado[formacionIndex];
+        const numeracion: any = await getNumeracionPorCodigoProfesion(formacion?.profesion?.codigo);
+        if (!numeracion) {
+            return res.status(400).json({ message: MENSAJES_NEGOCIO.datosInconsistentes });
+        }
+
+        if (numeracion.proximoNumero > estado.payload.matriculaNumero + 1) {
+            return res.status(400).json({ message: MENSAJES_NEGOCIO.conPosteriores });
+        }
+
+        if (Array.isArray(formacion.matriculacion) && formacion.matriculacion.length > 0) {
+            formacion.matriculacion = formacion.matriculacion.slice(0, formacion.matriculacion.length - 1);
+        }
+        normalizarMatriculacionVacia(formacion);
+        formacion.matriculado = false;
+        formacion.papelesVerificados = false;
+        formacion.fechaDeInscripcion = null;
+
+        if (numeracion.proximoNumero > 0) {
+            numeracion.proximoNumero = numeracion.proximoNumero - 1;
+        }
+
+        Auth.audit(resultado, req);
+        await numeracion.save();
+        await resultado.save();
+
+        return res.json({
+            success: true,
+            message: 'numero de matricula deshecho correctamente',
+            formacionId: req.params.formacionId
+        });
+    } catch (error) {
+        return next(error);
+    }
 });
 
 router.delete('/profesionales/:id/documentos/:fileId', async (req: any, res, next) => {
@@ -1074,6 +1319,7 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
     try {
         const resultado: any = await Profesional.findById(req.params.id);
         const profesionalOriginal = resultado.toObject();
+        let errorValidacion = null;
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
@@ -1095,6 +1341,11 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                     resultado.OtrosDatos = req.body.data;
                     break;
                 case 'updateEstadoGrado':
+                    req.body.data = normalizarFormacionesGrado(req.body.data);
+                    errorValidacion = validarActualizacionFormacionGrado(profesionalOriginal.formacionGrado, req.body.data);
+                    if (errorValidacion) {
+                        return res.status(400).json({ message: errorValidacion });
+                    }
                     resultado.formacionGrado = req.body.data;
                     break;
                 case 'updateEstadoPosGrado':
@@ -1137,6 +1388,13 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                 }
                 await deleteFirmaFotoTemporal(req.params.id, req.body.matricula, next);
 
+            }
+        }
+        if (req.body.formacionGrado) {
+            req.body.formacionGrado = normalizarFormacionesGrado(req.body.formacionGrado);
+            errorValidacion = validarActualizacionFormacionGrado(profesionalOriginal.formacionGrado, req.body.formacionGrado);
+            if (errorValidacion) {
+                return res.status(400).json({ message: errorValidacion });
             }
         }
         for (const key in req.body) {
