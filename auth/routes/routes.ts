@@ -162,29 +162,22 @@ router.post('/login', async (req, res, next) => {
     if (!req.body.usuario || !req.body.password) {
         return next(403);
     }
-
     try {
         const userResponse = await findUser(req.body.usuario);
-        if (userResponse) {
-            const { user, profesional }: any = userResponse;
-            switch (user.authMethod || 'ldap') {
-                case 'ldap':
-                    const ldapUser = await checkPassword(user, req.body.password);
-                    if (ldapUser) {
-                        user.nombre = ldapUser.nombre;
-                        user.apellido = ldapUser.apellido;
-                        user.password = sha1Hash(req.body.password);
-                        return login(user, profesional);
-                    } else {
-                        return next(403);
-                    }
-                case 'password':
-                    const passwordSha1 = sha1Hash(req.body.password);
-                    if (passwordSha1 === user.password) {
-                        return login(user, profesional);
-                    }
-                    break;
-            }
+        if (!userResponse) {
+            return next(403);
+        }
+        const { user, profesional }: any = userResponse;
+        const ldapUser = await checkPassword(user, req.body.password);
+        if (ldapUser) {
+            user.nombre = ldapUser.nombre;
+            user.apellido = ldapUser.apellido;
+            user.password = sha1Hash(req.body.password);
+            return login(user, profesional);
+        }
+        const passwordSha1 = sha1Hash(req.body.password);
+        if (passwordSha1 === user.password) {
+            return login(user, profesional);
         }
         return next(403);
     } catch (error) {
