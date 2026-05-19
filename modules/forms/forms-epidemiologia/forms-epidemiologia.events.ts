@@ -3,10 +3,10 @@ import { userScheduler } from '../../../config.private';
 import { SECCION_CLASIFICACION } from './constantes';
 import { FormEpidemiologiaCtr } from './forms-epidemiologia.routes';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-import { sisa } from '../../../config.private';
-import { handleHttpRequest } from '../../../utils/requestHandler';
-import { InformacionExportada } from '../../../core/log/schemas/logExportaInformacion';
-import * as moment from 'moment';
+import { sisaLog } from '../../sisa/logger/sisaLog';
+import { altaEventoV2 } from '../../sisa/controller/sisa.controller';
+import { FormsEpidemiologia } from '../../forms/forms-epidemiologia/forms-epidemiologia-schema';
+
 
 const dataLog: any = new Object(userScheduler);
 
@@ -47,81 +47,98 @@ EventCore.on('notification:fichaEpidemiologica:laboratory', async (info) => {
 
 EventCore.on('alta:fichaEpidemiologica:snvs', async (info) => {
     const organizacion = await Organizacion.findById(info.createdBy.organizacion.id);
+    const idEstablecimientoCarga = organizacion?.codigo?.sisa;
     const clasificacionCaso = getClasificacionManual(info);
-    const eventoNominal = {
-        ciudadano: {
-            apellido: info.paciente.apellido,
-            nombre: info.paciente.nombre,
-            tipoDocumento: '1',
-            numeroDocumento: info.paciente.documento,
-            sexo: info.paciente.sexo === 'femenino' ? 'F' : (info.paciente.sexo === 'masculino') ? 'M' : '',
-            fechaNacimiento: moment(info.paciente.fechaNacimiento).format('DD-MM-YYYY')
-        },
-        eventoCasoNominal: {
-            idGrupoEvento: info.config.idGrupoEvento,
-            idEvento: info.config.idEvento,
-            idEstablecimientoCarga: organizacion.codigo.sisa,
-            fechaPapel: moment(info.createdAt).format('DD-MM-YYYY'),
-            idClasificacionManualCaso: clasificacionCaso ? clasificacionCaso : '',
+    if (!idEstablecimientoCarga || !clasificacionCaso) {
+        const eventoNominal = {
+            ciudadano: {
+                apellido: info.paciente.apellido,
+                nombre: info.paciente.nombre,
+                tipoDocumento: '1',
+                numeroDocumento: info.paciente.documento,
+                sexo: info.paciente.sexo === 'femenino' ? 'F' : (info.paciente.sexo === 'masculino') ? 'M' : 'X',
+                fechaNacimiento: info.paciente.fechaNacimiento,
+                seDeclaraPuebloIndigena: 'No',
+                paisEmisionTipoDocumento: null,
+                telefono: info.paciente.telefono !== '' ? info.paciente.telefono : null,
+                mail: null,
+                personaACargo: {
+                    tipoDocumento: null,
+                    numeroDocumento: null,
+                    vinculo: null
+                }
+            },
+            eventoCasoNominal: {
+                idGrupoEvento: parseInt(clasificacionCaso.idGrupoEvento, 10),
+                idEvento: parseInt(clasificacionCaso.idEvento, 10),
+                idEstablecimientoCarga,
+                fechaPapel: clasificacionCaso.Fecha_Ficha,
+                idClasificacionManualCaso: parseInt(clasificacionCaso.event, 10),
+            }
+        };
+
+        if (eventoNominal.eventoCasoNominal.idClasificacionManualCaso) {
+            postSisa(eventoNominal, info);
         }
-    };
-    if (eventoNominal.eventoCasoNominal.idClasificacionManualCaso) {
-        postSisa(eventoNominal, info);
+    } else {
+        const log = {
+            fecha: new Date(),
+            sistema: 'Sisa',
+            key: info.Tipo,
+            idPaciente: info.paciente.id,
+            info_enviada: {},
+            resultado: {
+                resultado: 'ERROR_DE_ENVIO',
+                id_caso: '',
+                description: !idEstablecimientoCarga ? 'No se encontró el código SISA del establecimiento' : 'No se encontró una clasificación manual en la ficha'
+            }
+        };
+        await sisaLog.error('sisa:export:SNVS:evento', { error: log }, 'error al dar de alta evento', userScheduler);
     }
 });
 
 const getClasificacionManual = (ficha) => {
-    let clasificacion = null;
-    const configFields = ficha.config.configField;
-    configFields.forEach(field => {
-        ficha.secciones.forEach((seccion) => {
-            const found = seccion.fields.find(elem => (Object.keys(elem))[0] === field.key.id);
-            if (found) {
-                if (field.value) {
-                    const val: any = Object.values(found)[0];
-                    if (val.id === field.value.id) {
-                        clasificacion = field.event;
-                    }
-                } else {
-                    clasificacion = field.event;
-                }
-            }
-        });
-    });
-    return clasificacion;
+    const configFields = ficha?.config?.configField ?? [];
+    // Buscar el primer GC cuya key/value exista en alguna sección/campo
+    const gcEncontrado = configFields.find((GC) =>
+        (ficha.secciones ?? []).some((unaSeccion) =>
+            (unaSeccion.fields ?? []).some((f) =>
+                f[GC.key] === GC.value || f[GC.key]?.id === GC.value
+            )
+        )
+    );
+    return gcEncontrado ?? null;
 };
 
-const postSisa = async (dto, ficha) => {
+const postSisa = async (eventoNominal, unaFicha) => {
     const log = {
         fecha: new Date(),
         sistema: 'Sisa',
-        key: dto.eventoCasoNominal.idClasificacionManualCaso,
-        idPaciente: ficha.paciente.id,
-        info_enviada: dto.eventoCasoNominal,
+        key: unaFicha.Tipo,
+        idPaciente: unaFicha.paciente.id,
+        info_enviada: {},
         resultado: {}
     };
     try {
-        const options = {
-            uri: sisa.url,
-            method: 'POST',
-            body: dto,
-            headers: {
-                APP_ID: sisa.APP_ID_ALTA,
-                APP_KEY: sisa.APP_KEY_ALTA,
-                'Content-Type': 'application/json'
-            },
-            json: true,
-        };
-        const [status, resJson] = await handleHttpRequest(options);
-        if (status >= 200 && status <= 299) {
-            const id_caso = resJson.id_caso ? resJson.id_caso : '';
+
+        const response = await altaEventoV2(eventoNominal);
+        if (response) {
+            const id_caso = response.id_caso ? response.id_caso : '';
             log.resultado = {
-                resultado: resJson.resultado ? resJson.resultado : '',
+                resultado: response.resultado ? response.resultado : '',
                 id_caso,
-                description: resJson.description ? resJson.description : ''
+                description: response.description ? response.description : ''
             };
-            ficha.snvs = true; // marca la ficha como que ya se envio sisa
-            FormEpidemiologiaCtr.update(ficha.id, ficha, dataLog);
+            try {
+                await FormsEpidemiologia.updateOne({ _id: unaFicha._id }, { $set: { idCasoSnvs: id_caso } });
+            } catch (error) {
+                log.resultado = {
+                    resultado: 'ERROR_DE_GUARDADO_ID_CASO',
+                    id_caso,
+                    description: error.toString()
+                };
+                await sisaLog.error('sisa:export:SNVS:evento', { error: log }, 'error al guardar el idCasoSisa', userScheduler);
+            }
         } else {
             log.resultado = {
                 resultado: 'ERROR_DE_ENVIO',
@@ -129,8 +146,7 @@ const postSisa = async (dto, ficha) => {
                 description: 'No se recibió ningún resultado'
             };
         }
-        const info = new InformacionExportada(log);
-        await info.save();
+        await sisaLog.info('sisa:export:SNVS:evento', { params: log }, userScheduler);
 
     } catch (error) {
         log.resultado = {
@@ -138,7 +154,7 @@ const postSisa = async (dto, ficha) => {
             id_caso: '',
             description: error.toString()
         };
-        const info = new InformacionExportada(log);
-        await info.save();
+        await sisaLog.error('sisa:export:SNVS:evento', { error: log }, 'error al dar de alta evento', userScheduler);
+
     }
 };
