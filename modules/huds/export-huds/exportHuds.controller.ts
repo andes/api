@@ -93,9 +93,9 @@ async function getHudsSearchCriteria(params: any) {
     const query = buildPrestacionesQuery(params, idsPaciente);
 
     const cdaFiles = makeFs();
-    const ObjectID = cdaFiles?.constructor?.db?.base?.mongo?.ObjectID;
+    const ObjectID: any = mongoose.Types.ObjectId;
     if (!ObjectID || typeof ObjectID.isValid !== 'function') {
-        throw new Error('No se pudo obtener constructor ObjectID desde CDAFiles');
+        throw new Error('No se pudo obtener constructor ObjectID desde mongoose');
     }
 
     const idsPacienteObjectId = idsPaciente
