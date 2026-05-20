@@ -63,7 +63,7 @@ const generarIdUnico = function (): string {
     const chars = 'abcdefghijklmnopqrstuvwxyz';
     const charsLength = chars.length;
     let characters = '';
-    for ( let i = 0 ; i < 4 ; i++ ) {
+    for (let i = 0; i < 4; i++) {
         characters += chars.charAt(Math.floor(Math.random() * charsLength));
     }
     return `${characters}-${numero}`;
@@ -117,7 +117,7 @@ FormsEpidemiologiaSchema.post('save', (ficha: any) => {
     const { FormsHistory } = require('./forms-history.schema');
     const history = new FormsHistory(ficha.toJSON());
     history._id = new mongoose.Types.ObjectId();
-    if (ficha.config?.idEvento && !ficha.snvs) {
+    if (ficha.config.configField?.length && !ficha.snvs) {
         EventCore.emitAsync('alta:fichaEpidemiologica:snvs', ficha);
     }
     history.save();

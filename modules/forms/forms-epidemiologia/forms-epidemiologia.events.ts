@@ -6,6 +6,7 @@ import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { sisaLog } from '../../sisa/logger/sisaLog';
 import { altaEventoV2 } from '../../sisa/controller/sisa.controller';
 import { FormsEpidemiologia } from '../../forms/forms-epidemiologia/forms-epidemiologia-schema';
+import moment = require('moment');
 
 
 const dataLog: any = new Object(userScheduler);
@@ -49,7 +50,7 @@ EventCore.on('alta:fichaEpidemiologica:snvs', async (info) => {
     const organizacion = await Organizacion.findById(info.createdBy.organizacion.id);
     const idEstablecimientoCarga = organizacion?.codigo?.sisa;
     const clasificacionCaso = getClasificacionManual(info);
-    if (!idEstablecimientoCarga || !clasificacionCaso) {
+    if (idEstablecimientoCarga && clasificacionCaso) {
         const eventoNominal = {
             ciudadano: {
                 apellido: info.paciente.apellido,
@@ -57,7 +58,7 @@ EventCore.on('alta:fichaEpidemiologica:snvs', async (info) => {
                 tipoDocumento: '1',
                 numeroDocumento: info.paciente.documento,
                 sexo: info.paciente.sexo === 'femenino' ? 'F' : (info.paciente.sexo === 'masculino') ? 'M' : 'X',
-                fechaNacimiento: info.paciente.fechaNacimiento,
+                fechaNacimiento: moment(info.paciente.fechaNacimiento).format('DD-MM-YYYY'),
                 seDeclaraPuebloIndigena: 'No',
                 paisEmisionTipoDocumento: null,
                 telefono: info.paciente.telefono !== '' ? info.paciente.telefono : null,
@@ -99,7 +100,6 @@ EventCore.on('alta:fichaEpidemiologica:snvs', async (info) => {
 
 const getClasificacionManual = (ficha) => {
     const configFields = ficha?.config?.configField ?? [];
-    // Buscar el primer GC cuya key/value exista en alguna sección/campo
     const gcEncontrado = configFields.find((GC) =>
         (ficha.secciones ?? []).some((unaSeccion) =>
             (unaSeccion.fields ?? []).some((f) =>
