@@ -214,6 +214,7 @@ export async function getLiberadosPaciente(req) {
                 turno.createdAt = elem.createdAt;
                 turno.createdBy = elem.createdBy;
                 turno.estado = 'liberado';
+                turno.observaciones = elem.observaciones;
                 turnos.push(turno);
             });
             return turnos;
