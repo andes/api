@@ -71,7 +71,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String,
             apellido: String,
-            documento: Number },
+            documento: Number
+        },
         registradoEn: Date
     },
     estadoCivil: ESTADOCIVIL,
@@ -113,6 +114,7 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     reportarError: Boolean,
     nombreCorrectoReportado: String,
     apellidoCorrectoReportado: String,
+    fechaNacimientoCorrectoReportado: Date,
     carpetaEfectores: [{
         organizacion: NombreSchema,
         nroCarpeta: String
