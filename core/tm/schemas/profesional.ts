@@ -121,7 +121,11 @@ ProfesionalSchema.add({
         fecha: { type: Date, required: false },
         vencimiento: { type: Date, required: false }
     }],
-    notas: [{ type: String, required: false }],
+    notas: [{
+        usuario: { type: String, required: false },
+        fecha: { type: Date, required: false },
+        descripcion: { type: String, required: false },
+    }],
     rematriculado: { type: Number, default: false },
     agenteMatriculador: { type: String, required: false },
     supervisor: {
