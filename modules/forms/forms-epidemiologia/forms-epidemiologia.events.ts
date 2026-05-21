@@ -73,7 +73,7 @@ EventCore.on('alta:fichaEpidemiologica:snvs', async (info) => {
                 idGrupoEvento: parseInt(clasificacionCaso.idGrupoEvento, 10),
                 idEvento: parseInt(clasificacionCaso.idEvento, 10),
                 idEstablecimientoCarga,
-                fechaPapel: clasificacionCaso.Fecha_Ficha,
+                fechaPapel: moment(info.createdAt).format('DD-MM-YYYY'),
                 idClasificacionManualCaso: parseInt(clasificacionCaso.event, 10),
             }
         };
@@ -85,7 +85,7 @@ EventCore.on('alta:fichaEpidemiologica:snvs', async (info) => {
         const log = {
             fecha: new Date(),
             sistema: 'Sisa',
-            key: info.Tipo,
+            key: info.type.name,
             idPaciente: info.paciente.id,
             info_enviada: {},
             resultado: {
@@ -114,13 +114,12 @@ const postSisa = async (eventoNominal, unaFicha) => {
     const log = {
         fecha: new Date(),
         sistema: 'Sisa',
-        key: unaFicha.Tipo,
+        key: unaFicha.type.name,
         idPaciente: unaFicha.paciente.id,
-        info_enviada: {},
+        info_enviada: eventoNominal,
         resultado: {}
     };
     try {
-
         const response = await altaEventoV2(eventoNominal);
         if (response) {
             const id_caso = response.id_caso ? response.id_caso : '';
