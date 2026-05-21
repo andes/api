@@ -1094,7 +1094,7 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                             usuario: req.body.agente,
                             fecha: new Date()
                         };
-                        resultado.notas.push(nota);
+                        resultado.notas.unshift(nota);
                     }
                     break;
                 case 'updateSancion':
