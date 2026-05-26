@@ -1335,12 +1335,8 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                     } else if (req.body.accion === 'eliminar') {
                         resultado.notas.splice(req.body.indice, 1);
                     } else { // si no es editar ni eliminar, es agregar.
-                        // Verificamos si dentro del array hay un string vacio.
-                        const ultimoElemento = resultado.notas[resultado.notas.length - 1];
-                        if (typeof ultimoElemento === 'string') {
-                            if (ultimoElemento.length === 0) {
-                                resultado.notas = [];
-                            }
+                        if (!resultado.notas) {
+                            resultado.notas = [];
                         }
                         const nota = {
                             descripcion: req.body.data,
