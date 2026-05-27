@@ -1,3 +1,10 @@
+## [5.146.2](https://github.com/andes/api/compare/v5.146.1...v5.146.2) (2026-05-27)
+
+
+### Bug Fixes
+
+* **EP:** Modifica la fecha del evento ([#2246](https://github.com/andes/api/issues/2246)) ([eb1d973](https://github.com/andes/api/commit/eb1d9732560051b3ec132c0bc48bcf5f4fe550f4))
+
 ## [5.146.1](https://github.com/andes/api/compare/v5.146.0...v5.146.1) (2026-05-13)
 
 
