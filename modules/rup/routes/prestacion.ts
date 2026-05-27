@@ -355,7 +355,7 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             } else {
                 const conditions = {};
                 conditions['$and'] = [];
-                const words = req.query.paciente.toUpperCase().split(' ');
+                const words = (req.query.paciente as any).toUpperCase().split(' ');
                 words.forEach((word) => {
                     word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08').replace('ñ', 'n');
                     const expWord = removeDiacritics(word) + '.*';

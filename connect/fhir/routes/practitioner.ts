@@ -20,11 +20,11 @@ router.get('/practitioner/([\$])match', async (req, res, next) => {
 
     if (req.query.family) {
         opciones['apellido'] =
-            RegExp('^.*' + req.query.family + '.*$', 'i');
+            RegExp('^.*' + req.query.family as any + '.*$', 'i');
     }
 
-    if (req.query.identifier) {
-        opciones['documento'] = utils.makePattern(req.query.identifier);
+    if (req.query.identifier as any) {
+        opciones['documento'] = utils.makePattern(req.query.identifier as any);
     }
 
     const profesionalesFHIR = [];

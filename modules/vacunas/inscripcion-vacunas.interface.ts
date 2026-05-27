@@ -10,4 +10,6 @@ export interface IVacunasInscripcion {
     validado: Boolean;
     validaciones: [String];
     relacion: String;
+    fechaVacunacion: Date;
+    idPrestacionVacuna: String;
 }

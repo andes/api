@@ -11,9 +11,9 @@ router.get('/frecuentesProfesional', async (req, res, next) => {
         return next(404);
     }
 
-    const idProfesional = req.query.idProfesional;
-    const idOrganizacion = req.query.idOrganizacion;
-    const tipoPrestacion = req.query.tipoPrestacion;
+    const idProfesional = req.query.idProfesional as any;
+    const idOrganizacion = req.query.idOrganizacion as any;
+    const tipoPrestacion = req.query.tipoPrestacion as any;
 
     const key = `frecuentes-${(idProfesional || '')}-${(idOrganizacion || '')}-${(tipoPrestacion || '')}`;
     const frecuentesCache = await AppCache.get(key);

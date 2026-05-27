@@ -67,8 +67,8 @@ const router = express.Router();
  */
 router.get('/barrios/:id*?', (req, res, next) => {
 
-    if (req.params.id) {
-        barrio.findById(req.params.id, (err, data) => {
+    if ((req.params as any).id) {
+        barrio.findById((req.params as any).id, (err, data) => {
             if (err) {
                 return next(err);
             }
