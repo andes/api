@@ -23,7 +23,8 @@ export async function buscarRecetasInsumos(req) {
             pacienteId: 'paciente.id',
             documento: 'paciente.documento',
             sexo: 'paciente.sexo',
-            estado: 'estadoActual.tipo'
+            estado: 'estadoActual.tipo',
+            tipo: 'insumo.tipo'
         };
         Object.keys(paramMap).forEach(key => {
             if (params[key]) {
