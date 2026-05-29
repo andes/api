@@ -13,6 +13,52 @@ const matriculacionSchema = new mongoose.Schema({
     revalidacionNumero: Number
 });
 
+const sancionSchema = new mongoose.Schema({
+    numero: { type: Number, required: false },
+    sancion: {
+        id: Number,
+        nombre: String,
+    },
+    motivo: { type: String, required: false },
+    normaLegal: { type: String, required: false },
+    fecha: { type: Date, required: false },
+    vencimiento: { type: Date, required: false }
+}, { _id: false });
+
+function normalizeSanciones(value) {
+    if (value === undefined || value === null) {
+        return null;
+    }
+    if (!Array.isArray(value)) {
+        return value;
+    }
+    const sanciones = value.filter(sancion => !isEmptySancion(sancion));
+    return sanciones.length > 0 ? sanciones : null;
+}
+
+function isEmptySancion(sancion) {
+    if (!sancion) {
+        return true;
+    }
+    return isEmptyValue(sancion.numero)
+        && isEmptyValue(sancion.motivo)
+        && isEmptyValue(sancion.normaLegal)
+        && isEmptyValue(sancion.fecha)
+        && isEmptyValue(sancion.vencimiento)
+        && isEmptyNestedSancion(sancion.sancion);
+}
+
+function isEmptyNestedSancion(sancion) {
+    if (!sancion) {
+        return true;
+    }
+    return isEmptyValue(sancion.id) && isEmptyValue(sancion.nombre);
+}
+
+function isEmptyValue(value) {
+    return value === undefined || value === null || value === '';
+}
+
 const nombreSchema = new mongoose.Schema({
     nombre: {
         type: String,
@@ -97,17 +143,11 @@ export const turnoSolicitadoSchema = new mongoose.Schema({
         },
         matriculacion: [matriculacionSchema]
     }],
-    sanciones: [{
-        numero: { type: Number, required: false },
-        sancion: {
-            id: Number,
-            nombre: String,
-        },
-        motivo: { type: String, required: false },
-        normaLegal: { type: String, required: false },
-        fecha: { type: Date, required: false },
-        vencimiento: { type: Date, required: false }
-    }],
+    sanciones: {
+        type: [sancionSchema],
+        default: undefined,
+        set: normalizeSanciones
+    },
     notas: [{ type: String, required: false }],
     rematriculado: { type: Boolean, default: false },
     agenteMatriculador: { type: String, required: false },
@@ -131,6 +171,11 @@ turnoSolicitadoSchema.virtual('nombreCompleto').get(function () {
 
 turnoSolicitadoSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
+});
+
+turnoSolicitadoSchema.pre('save', function (this: any, next) {
+    this.sanciones = normalizeSanciones(this.sanciones);
+    next();
 });
 
 turnoSolicitadoSchema.plugin(AuditPlugin);
