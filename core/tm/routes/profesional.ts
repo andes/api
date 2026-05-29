@@ -1176,13 +1176,9 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
     }
     try {
         if (req.body.id) {
-            req.body.formacionGrado = normalizarFormacionesGrado(req.body.formacionGrado);
             const resultado: any = await Profesional.findById(req.body.id);
             const profesionalOriginal = resultado.toObject();
-            const errorValidacion = validarActualizacionFormacionGrado(profesionalOriginal.formacionGrado, req.body.formacionGrado);
-            if (errorValidacion) {
-                return res.status(400).json({ message: errorValidacion });
-            }
+
             for (const key in req.body) {
                 resultado[key] = req.body[key];
             }
@@ -1326,7 +1322,7 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
     try {
         const resultado: any = await Profesional.findById(req.params.id);
         const profesionalOriginal = resultado.toObject();
-        let errorValidacion = null;
+        const errorValidacion = null;
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
@@ -1362,11 +1358,6 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                     resultado.OtrosDatos = req.body.data;
                     break;
                 case 'updateEstadoGrado':
-                    req.body.data = normalizarFormacionesGrado(req.body.data);
-                    errorValidacion = validarActualizacionFormacionGrado(profesionalOriginal.formacionGrado, req.body.data);
-                    if (errorValidacion) {
-                        return res.status(400).json({ message: errorValidacion });
-                    }
                     resultado.formacionGrado = req.body.data;
                     break;
                 case 'updateEstadoPosGrado':
@@ -1407,17 +1398,11 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                 if (req.body.img) {
                     await saveImage(req.body);
                 }
-                await deleteFirmaFotoTemporal(req.params.id, req.body.matricula, next);
+                // await deleteFirmaFotoTemporal(req.params.id, req.body.matricula, next);
 
             }
         }
-        if (req.body.formacionGrado) {
-            req.body.formacionGrado = normalizarFormacionesGrado(req.body.formacionGrado);
-            errorValidacion = validarActualizacionFormacionGrado(profesionalOriginal.formacionGrado, req.body.formacionGrado);
-            if (errorValidacion) {
-                return res.status(400).json({ message: errorValidacion });
-            }
-        }
+
         for (const key in req.body) {
             resultado[key] = req.body[key];
         }
