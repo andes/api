@@ -39,6 +39,10 @@ interface HistoryParams {
     organizacion?: any;
 }
 
+/**
+ * @param pacienteId ID del paciente
+ * @returns IDs del paciente y sus vinculaciones ANDES
+ */
 async function getPacienteIds(pacienteId: string) {
     const paciente = await Paciente.findById(pacienteId);
     const vinculacionesPaciente = paciente?.identificadores
@@ -47,6 +51,11 @@ async function getPacienteIds(pacienteId: string) {
     return vinculacionesPaciente?.length ? [...vinculacionesPaciente, pacienteId] : [pacienteId];
 }
 
+/**
+ * @param params filtros de fecha, tipoPrestacion y organizacion
+ * @param idsPaciente IDs del paciente y sus vinculaciones ANDES
+ * @returns consulta para buscar prestaciones validadas
+ */
 const buildPrestacionesQuery = (params: Partial<HistoryParams>, idsPaciente: string[]) => {
     const query: any = {
         'paciente.id': { $in: idsPaciente },
@@ -69,6 +78,11 @@ const buildPrestacionesQuery = (params: Partial<HistoryParams>, idsPaciente: str
     return query;
 };
 
+/**
+ * @param params filtros de fecha y organizacion
+ * @param idsPacienteObjectId IDs del paciente y sus vinculaciones como ObjectId
+ * @returns consulta para buscar CDAs, excluyendo préstamos de carpeta
+ */
 const buildCdaQuery = (params: Partial<HistoryParams>, idsPacienteObjectId: ObjectId[]) => {
     const queryCda: any = {
         'metadata.paciente': { $in: idsPacienteObjectId },
@@ -88,6 +102,10 @@ const buildCdaQuery = (params: Partial<HistoryParams>, idsPacienteObjectId: Obje
     return queryCda;
 };
 
+/**
+ * @param params filtros de paciente, fechas, tipoPrestacion y organizacion
+ * @returns IDs y consultas de prestaciones y CDAs, junto con el bucket de CDAFiles
+ */
 async function getHudsSearchCriteria(params: any) {
     const idsPaciente = await getPacienteIds(params.pacienteId);
     const query = buildPrestacionesQuery(params, idsPaciente);
@@ -105,6 +123,10 @@ async function getHudsSearchCriteria(params: any) {
     return { idsPaciente, query, idsPacienteObjectId, queryCda, cdaFiles };
 }
 
+/**
+ * @param idExportHuds ID de la solicitud en la colección exportHuds
+ * @returns promesa que finaliza al procesar la solicitud de exportación
+ */
 export async function createFile(idExportHuds) {
     const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
 
@@ -363,7 +385,10 @@ async function buildExportFile(peticionExport: any) {
     }
 }
 
-// Verifica si hay historial antes de generar el zip
+/**
+ * @param params filtros para buscar prestaciones y CDAs
+ * @returns true si existe al menos una prestación o un CDA para esos filtros
+ */
 export async function checkHistory(params) {
     const { query, queryCda, cdaFiles } = await getHudsSearchCriteria(params);
 
