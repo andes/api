@@ -39,6 +39,11 @@ interface HistoryParams {
     organizacion?: any;
 }
 
+/**
+ *
+ * @param pacienteId
+ * @returns [string] array de ids del paciente incluyendo vinculaciones ANDES
+ */
 async function getPacienteIds(pacienteId: string) {
     const paciente = await Paciente.findById(pacienteId);
     const vinculacionesPaciente = paciente?.identificadores
@@ -47,6 +52,12 @@ async function getPacienteIds(pacienteId: string) {
     return vinculacionesPaciente?.length ? [...vinculacionesPaciente, pacienteId] : [pacienteId];
 }
 
+/**
+ *
+ * @param params filtros de fecha, tipoPrestacion, organizacion
+ * @param idsPaciente
+ * @returns query completa para la búsqueda de prestaciones
+ */
 const buildPrestacionesQuery = (params: Partial<HistoryParams>, idsPaciente: string[]) => {
     const query: any = {
         'paciente.id': { $in: idsPaciente },
@@ -69,6 +80,13 @@ const buildPrestacionesQuery = (params: Partial<HistoryParams>, idsPaciente: str
     return query;
 };
 
+/**
+ *
+ * @param params filtros de fecha, tipoPrestacion, organizacion
+ * @param idsPacienteObjectId array de ids (propio y vinculados) del paciente en formato ObjectId para búsqueda en CDAFiles
+ * @param ObjectID constructor de ObjectId de mongoose para convertir los ids a ObjectId
+ * @returns query completa para la búsqueda de CDAs en CDAFiles, filtrando por paciente, fecha, organización y excluyendo préstamos de carpeta
+ */
 const buildCdaQuery = (params: Partial<HistoryParams>, idsPacienteObjectId: any[], ObjectID: any) => {
     const queryCda: any = {
         'metadata.paciente': { $in: idsPacienteObjectId },
@@ -88,12 +106,25 @@ const buildCdaQuery = (params: Partial<HistoryParams>, idsPacienteObjectId: any[
     return queryCda;
 };
 
+/**
+ *
+ * @param params filtros desde el frontend: id de paciente, fechaDesde, fechaHasta, tipoPrestacion, organizacion
+ * @returns toda la información necesaria para realizar la búsqueda de prestaciones y CDAs en createFile y checkHistory
+ *  {
+ *      idsPaciente: [string] array de ids del paciente incluyendo vinculaciones ANDES,
+ *      query: any objeto con la query para buscar prestaciones según los filtros y los idsPaciente,
+ *      idsPacienteObjectId: [ObjectId] array de ids del paciente en formato ObjectId para búsqueda en CDAFiles,
+ *      queryCda: any objeto con la query para buscar CDAs según los filtros y los idsPacienteObjectId,
+ *      ObjectID: Function constructor de ObjectId de mongoose,
+ *      cdaFiles: any objeto para interactuar con el sistema de archivos para los CDAs
+ *  }
+ */
 async function getHudsSearchCriteria(params: any) {
     const idsPaciente = await getPacienteIds(params.pacienteId);
     const query = buildPrestacionesQuery(params, idsPaciente);
-
     const cdaFiles = makeFs();
-    const ObjectID: any = mongoose.Types.ObjectId;
+    const ObjectID = mongoose.Types.ObjectId;
+
     if (!ObjectID || typeof ObjectID.isValid !== 'function') {
         throw new Error('No se pudo obtener constructor ObjectID desde mongoose');
     }
@@ -108,6 +139,11 @@ async function getHudsSearchCriteria(params: any) {
     return { idsPaciente, query, idsPacienteObjectId, queryCda, ObjectID, cdaFiles };
 }
 
+/**
+ *
+ * @param idExportHuds id del documento correspondiente en la colección sendMessageCache
+ * @returns crea un archivo zip con los informes de las prestaciones y CDAs correspondientes
+ */
 export async function createFile(idExportHuds) {
     return new Promise(async (resolve, reject) => {
         const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
@@ -254,7 +290,11 @@ export async function createFile(idExportHuds) {
     });
 }
 
-// Verifica si hay historial antes de generar el zip
+/**
+ *
+ * @param params parámetros para la consulta de getHudsSearchCriteria
+ * @returns true/false segun exista al menos un registro de prestaciones o cdas para los filtros de búsqueda
+ */
 export async function checkHistory(params) {
     const { query, queryCda, cdaFiles } = await getHudsSearchCriteria(params);
 

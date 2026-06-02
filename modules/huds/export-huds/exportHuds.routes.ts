@@ -36,7 +36,7 @@ ExportHudsRouter.post('/export', async (req: any, res, next) => {
 
 });
 
-// ruta para verificar si existe historial antes de generar el zip
+// ruta para verificar si existe historial de huds, segun filtros, antes de generar el zip
 ExportHudsRouter.post('/export/check-history', async (req: any, res, next) => {
     try {
         const hasHistory = await checkHistory(req.body);
