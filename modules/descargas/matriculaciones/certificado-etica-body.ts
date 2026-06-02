@@ -140,7 +140,7 @@ export class CertificadoEticaBody extends HTMLComponent {
             return s;
         });
 
-        if (_data.sanciones.length && !_data.sanciones[0].sancion.id) {
+        if (_data.sanciones?.length && !_data.sanciones[0].sancion.id) {
             _data.sanciones.shift();
         }
 

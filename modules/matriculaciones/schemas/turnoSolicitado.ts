@@ -3,6 +3,8 @@ import { ESTADOCIVIL } from '../../../shared/constantes';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import { EspecialidadSIISASchema, ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { normalizeSanciones } from '../../../core/tm/utils/sanciones.utils';
+import { sancionSchema } from '../../../core/tm/schemas/profesional';
 
 const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -12,52 +14,6 @@ const matriculacionSchema = new mongoose.Schema({
     fin: Date,
     revalidacionNumero: Number
 });
-
-const sancionSchema = new mongoose.Schema({
-    numero: { type: Number, required: false },
-    sancion: {
-        id: Number,
-        nombre: String,
-    },
-    motivo: { type: String, required: false },
-    normaLegal: { type: String, required: false },
-    fecha: { type: Date, required: false },
-    vencimiento: { type: Date, required: false }
-}, { _id: false });
-
-function normalizeSanciones(value) {
-    if (value === undefined || value === null) {
-        return null;
-    }
-    if (!Array.isArray(value)) {
-        return value;
-    }
-    const sanciones = value.filter(sancion => !isEmptySancion(sancion));
-    return sanciones.length > 0 ? sanciones : null;
-}
-
-function isEmptySancion(sancion) {
-    if (!sancion) {
-        return true;
-    }
-    return isEmptyValue(sancion.numero)
-        && isEmptyValue(sancion.motivo)
-        && isEmptyValue(sancion.normaLegal)
-        && isEmptyValue(sancion.fecha)
-        && isEmptyValue(sancion.vencimiento)
-        && isEmptyNestedSancion(sancion.sancion);
-}
-
-function isEmptyNestedSancion(sancion) {
-    if (!sancion) {
-        return true;
-    }
-    return isEmptyValue(sancion.id) && isEmptyValue(sancion.nombre);
-}
-
-function isEmptyValue(value) {
-    return value === undefined || value === null || value === '';
-}
 
 const nombreSchema = new mongoose.Schema({
     nombre: {

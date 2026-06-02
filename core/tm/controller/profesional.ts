@@ -388,3 +388,5 @@ export async function validarProfesionalPrestaciones(profesionales, tipoPrestaci
 
     return null;
 }
+
+export { normalizeSanciones } from '../utils/sanciones.utils';

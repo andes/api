@@ -20,7 +20,7 @@ const matriculacionSchema = new mongoose.Schema({
     revalidacionNumero: Number
 });
 
-const sancionSchema = new mongoose.Schema({
+export const sancionSchema = new mongoose.Schema({
     numero: { type: Number, required: false },
     sancion: {
         id: Number,
@@ -31,40 +31,6 @@ const sancionSchema = new mongoose.Schema({
     fecha: { type: Date, required: false },
     vencimiento: { type: Date, required: false }
 }, { _id: false });
-
-function normalizeSanciones(value) {
-    if (value === undefined || value === null) {
-        return null;
-    }
-    if (!Array.isArray(value)) {
-        return value;
-    }
-    const sanciones = value.filter(sancion => !isEmptySancion(sancion));
-    return sanciones.length > 0 ? sanciones : null;
-}
-
-function isEmptySancion(sancion) {
-    if (!sancion) {
-        return true;
-    }
-    return isEmptyValue(sancion.numero)
-        && isEmptyValue(sancion.motivo)
-        && isEmptyValue(sancion.normaLegal)
-        && isEmptyValue(sancion.fecha)
-        && isEmptyValue(sancion.vencimiento)
-        && isEmptyNestedSancion(sancion.sancion);
-}
-
-function isEmptyNestedSancion(sancion) {
-    if (!sancion) {
-        return true;
-    }
-    return isEmptyValue(sancion.id) && isEmptyValue(sancion.nombre);
-}
-
-function isEmptyValue(value) {
-    return value === undefined || value === null || value === '';
-}
 
 export const ProfesionalBaseSchema = new mongoose.Schema({
     documento: { type: String, required: true },
@@ -156,12 +122,22 @@ ProfesionalSchema.add({
         tieneVencimiento: Boolean,
         notas: [{ type: String, required: false }]
     }],
-    sanciones: {
-        type: [sancionSchema],
-        default: undefined,
-        set: normalizeSanciones
-    },
-    notas: [{ type: String, required: false }],
+    sanciones: [{
+        numero: { type: Number, required: false },
+        sancion: {
+            id: Number,
+            nombre: String,
+        },
+        motivo: { type: String, required: false },
+        normaLegal: { type: String, required: false },
+        fecha: { type: Date, required: false },
+        vencimiento: { type: Date, required: false }
+    }],
+    notas: [{
+        usuario: { type: String, required: false },
+        fecha: { type: Date, required: false },
+        descripcion: { type: String, required: false },
+    }],
     rematriculado: { type: Number, default: false },
     agenteMatriculador: { type: String, required: false },
     supervisor: {
@@ -200,11 +176,6 @@ ProfesionalSchema.virtual('nombreCompleto').get(function () {
 
 ProfesionalSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
-});
-
-ProfesionalSchema.pre('save', function (this: any, next) {
-    this.sanciones = normalizeSanciones(this.sanciones);
-    next();
 });
 
 ProfesionalSchema.plugin(AuditPlugin);
