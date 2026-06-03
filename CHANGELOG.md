@@ -1,3 +1,10 @@
+## [5.146.3](https://github.com/andes/api/compare/v5.146.2...v5.146.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* **MAT:** eliminacion de atributo formacionGrado ([#2250](https://github.com/andes/api/issues/2250)) ([afd4182](https://github.com/andes/api/commit/afd41827f21204093b768a814bd4ccea10915d02))
+
 ## [5.146.2](https://github.com/andes/api/compare/v5.146.1...v5.146.2) (2026-05-27)
 
 
