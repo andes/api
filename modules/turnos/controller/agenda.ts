@@ -143,17 +143,23 @@ export async function liberarTurno(req, data, turno) {
                 autocitados: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'profesional').length || 0,
                 gestion: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'gestion').length || 0
             };
+            const bloque = data.bloques[position.indexBloque];
+            const cuposMaximos = {
+                gestion: getBloqueCupoMaximo(bloque, 'reservadoGestion'),
+                profesional: getBloqueCupoMaximo(bloque, 'reservadoProfesional'),
+                programado: getBloqueCupoMaximo(bloque, 'accesoDirectoProgramado')
+            };
 
-            if (data.bloques[position.indexBloque].restantesGestion < (data.bloques[position.indexBloque].reservadoGestion - turnosAsignados.gestion)) {
-                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+            if (bloque.restantesGestion < (cuposMaximos.gestion - turnosAsignados.gestion)) {
+                bloque.restantesGestion = bloque.restantesGestion + cant;
             } else {
-                if (data.bloques[position.indexBloque].restantesProfesional < (data.bloques[position.indexBloque].reservadoProfesional - turnosAsignados.autocitados)) {
-                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                if (bloque.restantesProfesional < (cuposMaximos.profesional - turnosAsignados.autocitados)) {
+                    bloque.restantesProfesional = bloque.restantesProfesional + cant;
                 } else {
-                    if (data.bloques[position.indexBloque].restantesProgramados < (data.bloques[position.indexBloque].accesoDirectoProgramado - turnosAsignados.programados)) {
-                        data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                    if (bloque.restantesProgramados < (cuposMaximos.programado - turnosAsignados.programados)) {
+                        bloque.restantesProgramados = bloque.restantesProgramados + cant;
                     } else {
-                        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                        bloque.restantesDelDia = bloque.restantesDelDia + cant;
                     }
                 }
             }
@@ -174,6 +180,11 @@ export async function liberarTurno(req, data, turno) {
         }
     }
     return true;
+}
+
+function getBloqueCupoMaximo(bloque, campo) {
+    const multiplicador = bloque.pacienteSimultaneos ? (bloque.cantidadSimultaneos || 1) : 1;
+    return (bloque[campo] || 0) * multiplicador;
 }
 
 
