@@ -10,45 +10,45 @@ export class CensoMensualBody extends HTMLComponent {
                 <thead>
                     <tr>
                         <th rowspan="2">
-                            <h6>Fecha</h6>
+                            Fecha
                         </th>
                         <th rowspan="2">
-                            <h6>Existencia 0 hs</h6>
+                            Existencia 0 hs
                         </th>
                         <th rowspan="2">
-                            <h6>Ingresos</h6>
+                            Ingresos
                         </th>
                         <th rowspan="2">
-                            <h6>Pases de</h6>
+                            Pases de
                         </th>
                         <th colspan="2">
-                            <h6>Egreso</h6>
+                            Egreso
                         </th>
                         <th rowspan="2">
-                            <h6>Pases A</h6>
+                            Pases A
                         </th>
                         <th rowspan="2">
-                            <h6>Existencia 24 hs</h6>
+                            Existencia 24 hs
                         </th>
                         <th rowspan="2">
-                            <h6>Ingresos- Egresos día</h6>
+                            Ingresos- Egresos día
                         </th>
                         <th rowspan="2">
-                            <h6>Pacientes día</h6>
+                            Pacientes día
                         </th>
                         <th rowspan="2">
-                            <h6>Camas disponibles 24hs</h6>
+                            Camas disponibles 24hs
                         </th>
                         <th rowspan="2">
-                            <h6>Días de estada</h6>
+                            Días de estada
                         </th>
                     </tr>
                     <tr>
                         <th>
-                            <h6>Altas</h6>
+                            Altas
                         </th>
                         <th>
-                            <h6>Defunciones</h6>
+                            Defunciones
                         </th>
                     </tr>
                 </thead>
@@ -90,26 +90,26 @@ export class CensoMensualBody extends HTMLComponent {
             <table class="resumen table">
                 <thead>
                     <tr>
-                        <th>
-                            <h6>Días de funcionamiento del servicio</h6>
+                        <th rowspan="2">
+                            Días de funcionamiento del servicio
                         </th>
-                        <th>
-                            <h6>Promedio diario de camas disponibles</h6>
+                        <th rowspan="2">
+                            Promedio diario de camas disponibles
                         </th>
-                        <th>
-                            <h6>Promedio diario de paciente día</h6>
+                        <th rowspan="2">
+                            Promedio diario de paciente día
                         </th>
-                        <th>
-                            <h6>Tasa de mortalidad hospitalaria</h6>
+                        <th rowspan="2">
+                            Tasa de mortalidad hospitalaria
                         </th>
-                        <th>
-                            <h6>Promedio de permanencia</h6>
+                        <th rowspan="2">
+                            Promedio de permanencia
                         </th>
-                        <th>
-                            <h6>Giro Cama</h6>
+                        <th rowspan="2">
+                            Giro Cama
                         </th>
-                        <th>
-                            <h6>Promedio días de estada</h6>
+                        <th rowspan="2">
+                            Promedio días de estada
                         </th>
                     </tr>
                 </thead>
