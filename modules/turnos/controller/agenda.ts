@@ -125,6 +125,12 @@ export async function liberarTurno(req, data, turno) {
             turno.nota = null;
             turno.confirmedAt = null;
             turno.reasignado = undefined; // Esto es necesario cuando se libera un turno reasignado
+            turno.emitidoPor = undefined;
+            turno.fechaHoraDacion = undefined;
+            turno.usuarioDacion = undefined;
+            turno.tipoTurno = undefined;
+            turno.link = undefined;
+            turno.motivoConsulta = undefined;
             turno.updatedAt = new Date();
             turno.updatedBy = req.user.usuario || req.user;
             let cant = 1;
@@ -1520,12 +1526,17 @@ export async function verificarSolapamiento(data) {
 }
 
 // Verifica si un turno fue dado por la appMobile o el totem
-export function esVirtual(turnoEmitido) {
-    if (turnoEmitido === 'appMobile' || turnoEmitido === 'totem') {
-        return true;
-    } else {
-        return false;
+export async function esVirtual(turnoEmitido) {
+    try {
+        const constante: any = await Constantes.findOne({ key: 'accesos-virtuales' });
+        if (constante && constante.nombre) {
+            const accesos = constante.nombre.split(',').map(s => s.trim().toLowerCase());
+            return accesos.includes(String(turnoEmitido).toLowerCase());
+        }
+    } catch (err) {
+        log.error('acceso-constantes', { turnoEmitido }, { error: err.message }, userScheduler);
     }
+    return ['appmobile', 'totem', 'misalud'].includes(String(turnoEmitido).toLowerCase());
 }
 
 export function agendaNueva(data, clon, req) {

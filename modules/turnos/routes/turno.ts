@@ -16,7 +16,9 @@ import { turnosLog } from '../citasLog';
 import { getHistorial } from '../controller/historialCitasController/historialCitasController';
 import * as turnosController from '../controller/turnosController';
 import { Agenda } from '../schemas/agenda';
+import { Constantes } from '../../constantes/constantes.schema';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
+import { userScheduler } from '../../../config.private';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -165,11 +167,24 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
     };
  */
 
+async function getAccesosVirtuales(): Promise<string[]> {
+    try {
+        const constante: any = await Constantes.findOne({ key: 'accesos-virtuales' });
+        if (constante && constante.nombre) {
+            return constante.nombre.split(',').map(s => s.trim().toLowerCase());
+        }
+    } catch (err) {
+        log.error('acceso-constantes', { error: err.message }, userScheduler);
+    }
+    return ['appmobile', 'totem', 'misalud'];
+}
+
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: any, res, next) => {
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
 
     if (continues.valid) {
+        const accesosVirtuales = await getAccesosVirtuales();
         const agendaRes: any = await getAgenda(req.body.idAgenda);
         const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id) as any;
 
@@ -250,7 +265,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                 return next('No quedan turnos del tipo ' + tipoTurno);
             }
         }
-        if (req.body.emitidoPor && (req.body.emitidoPor === 'appMobile') && countBloques['mobile'] === 0) {
+        if (req.body.emitidoPor && accesosVirtuales.includes(String(req.body.emitidoPor).toLowerCase()) && countBloques['mobile'] === 0) {
             return next('Lo sentimos, ya no quedan más turnos para consumir desde la aplicación');
         }
         // Verifica si el turno se encuentra todavia disponible
@@ -268,7 +283,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                 if (countBloques.mobile > update['bloques.' + posBloque + '.restantesProgramados']) {
                     update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
                 }
-                if (req.body.emitidoPor && (req.body.emitidoPor === 'appMobile' || req.body.emitidoPor === 'totem')) {
+                if (req.body.emitidoPor && accesosVirtuales.includes(String(req.body.emitidoPor).toLowerCase())) {
                     update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
                 }
                 break;
