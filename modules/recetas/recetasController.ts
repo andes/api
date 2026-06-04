@@ -2,7 +2,6 @@ import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { userScheduler } from '../../config.private';
-import { searchMatriculas } from '../../core/tm/controller/profesional';
 import { RecetasParametros } from './parametros.schema';
 import { MotivosReceta, Receta } from './receta-schema';
 import { createLog, informarLog, updateLog, jobsLog } from './recetaLogs';
@@ -130,49 +129,29 @@ async function registrarAppNotificadas(req, recetas, sistema) {
 export async function buscarRecetas(req) {
     const options: any = {};
     const params = req.params.id ? req.params : req.query;
-    let identificadores = [];
-    if (params.documento) {
-        const pacienteAndes: any = await Paciente.find({ documento: params.documento });
-        identificadores = pacienteAndes[0].identificadores.filter(ident => ident.entidad === 'ANDES');
-        identificadores = identificadores.map(item => Types.ObjectId(item.valor));
-        identificadores.push(Types.ObjectId(pacienteAndes[0]._id));
-    } else {
-        const pacienteAndes: any = await Paciente.findById(params.pacienteId);
-        if (pacienteAndes.identificadores) {
-            identificadores = pacienteAndes.identificadores?.filter(ident => ident.entidad === 'ANDES');
-            identificadores = identificadores?.map(item => Types.ObjectId(item.valor));
-            identificadores.push(Types.ObjectId(params.pacienteId));
-        }
-    }
     const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
     const pacienteId = params.pacienteId || null;
     const documento = params.documento || null;
     const sexo = params.sexo || null;
     const user = req.user;
     try {
-        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
+        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId)) || (params.id && !Types.ObjectId.isValid(params.id))) {
             throw new ParamsIncorrect();
         }
-        const paramMap = {
-            id: '_id',
-            pacienteId: 'paciente.id',
-            documento: 'paciente.documento',
-            sexo: 'paciente.sexo',
-            estado: 'estadoActual.tipo'
-        };
-        Object.keys(paramMap).forEach(key => {
-            if (params[key]) {
-                options[paramMap[key]] = key === 'id' ? Types.ObjectId(params[key]) : params[key];
-            }
-        });
+        // se verifica paciente y sus vinculados si tuviera
+        const pacienteAndes: any = pacienteId ? await Paciente.findById(pacienteId) :
+            (documento && sexo) ? await Paciente.findOne({ documento, sexo, activo: true }) : null;
+        if (!pacienteAndes) {
+            throw new ParamsIncorrect();
+        }
+        options['paciente.id'] = { $in: pacienteAndes.vinculos };
+        if (params.id) {
+            options['_id'] = Types.ObjectId(params.id);
+        }
+
         if (Object.keys(options).length === 0) {
             throw new ParamsIncorrect();
         }
-
-        if (identificadores.length > 0) {
-            options['paciente.id'] = { $in: identificadores };
-        }
-
         if (params.estadoDispensa) {
             const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
             options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
@@ -221,7 +200,7 @@ export async function buscarRecetas(req) {
         }
 
         // Generar idAndes para recetas que no lo tengan
-        const recetasActualizadas = [];
+        const recetasActualizadas: any = [];
         for (const receta of recetas) {
             if (!receta.idReceta) {
                 receta.idReceta = generarIdDesdeFecha(receta.createdAt || new Date());
