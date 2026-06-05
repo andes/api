@@ -4,10 +4,8 @@ import * as moment from 'moment';
 export class FichaEpidemiologicaFooter extends HTMLComponent {
     template = `
     <hr>
-    <span class="foot"> 
-        <p><b>Fecha y hora de impresión: </b>{{fecha}}</p>
-        <p><b>Impreso por: </b>{{usuario}}</p>
-    </span>
+    <div class="foot"> <b>Fecha y hora de impresión: </b>{{fecha}} </div>
+    <div class="foot"> <b>Impreso por: </b>{{usuario}} </div>
     `;
 
     constructor(public usuario) {

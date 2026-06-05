@@ -26,11 +26,8 @@ router.post('/createInformeCDA', Auth.authenticate(), async (req: any, res, next
     }
     try {
         const informe = new InformeCDA(req.body, req.user.usuario);
-        const pdfBuffer = await informe.informe();
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-        return res.send(pdfBuffer);
+        const fileName = await informe.informe();
+        return res.download(fileName);
     } catch (err) {
         return next(err);
     }

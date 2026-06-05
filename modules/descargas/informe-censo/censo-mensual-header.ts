@@ -18,12 +18,11 @@ export class CensoMensualHeader extends HTMLComponent {
                 {{/if}}
             </span>
             <span class="contenedor-logos-secundarios">
-                <img class="logo-adicional" src="data:image/png;base64,{{ logos.adicional }}">
-                <img class="logo-andes" src="data:image/png;base64,{{ logos.andes }}">
+                <img class="logo-adicional" src="data:image/png;base64,{{ logos.logoAdicional }}">
+                <img class="logo-andes" src="data:image/png;base64,{{ logos.logoAndes }}">
             </span>
         </section>
         <section class="contenedor-data-origen">
-            <hr>
             <span class="contenedor-principal-data">
                 <div class="contenedor-secundario">
                     <h3>
@@ -40,7 +39,6 @@ export class CensoMensualHeader extends HTMLComponent {
                     </h5>
                 </div>
             </span>
-            <hr>
         </section>
     </header>
     <!-- END Header -->
