@@ -20,6 +20,18 @@ const matriculacionSchema = new mongoose.Schema({
     revalidacionNumero: Number
 });
 
+export const sancionSchema = new mongoose.Schema({
+    numero: { type: Number, required: false },
+    sancion: {
+        id: Number,
+        nombre: String,
+    },
+    motivo: { type: String, required: false },
+    normaLegal: { type: String, required: false },
+    fecha: { type: Date, required: false },
+    vencimiento: { type: Date, required: false }
+}, { _id: false });
+
 export const ProfesionalBaseSchema = new mongoose.Schema({
     documento: { type: String, required: true },
     sexo: { type: String, required: false },

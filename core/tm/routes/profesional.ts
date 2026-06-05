@@ -1342,9 +1342,6 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                         resultado.notas.unshift(nota);
                     }
                     break;
-                case 'updateSancion':
-                    resultado.sansiones.push(req.body.data);
-                    break;
                 case 'updatePosGrado':
                     if (!resultado.formacionPosgrado) {
                         resultado.formacionPosgrado = [];
