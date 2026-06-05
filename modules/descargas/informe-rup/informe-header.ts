@@ -12,7 +12,6 @@ export class InformeRupHeader extends HTMLComponent {
                         <img class="logo-efector" src="data:image/png;base64,{{ logos.organizacion }}">
                     {{else}}
                         <b class="no-logo-efector">
-                            <br>
                             {{{ organizacion.nombre }}}
                         </b>
                     {{/if}}
@@ -22,7 +21,6 @@ export class InformeRupHeader extends HTMLComponent {
                     <img class="logo-andes" src="data:image/png;base64,{{ logos.andes  }}">
                 </span>
             </section>
-            <hr>
             <section class="contenedor-data-origen">
                 <!-- Datos paciente -->
                 <span class="contenedor-principal-data">
@@ -45,14 +43,14 @@ export class InformeRupHeader extends HTMLComponent {
                         </h4>
                     </div>
                     <div class="contenedor-secundario">
-                        <div class="contenedor-bloque-texto" >
-                            <h6>
+                    <div class="contenedor-bloque-texto" >
+                                <h6>
                                 <b>Obra Social: </b>
 
                                 {{#if paciente.obraSocial}}
-                                    {{paciente.obraSocial}}
+                                {{paciente.obraSocial}}
                                 {{else}}
-                                    sin obra social
+                                sin obra social
                                 {{/if}}
                             </h6>
                             <h6>
@@ -63,7 +61,7 @@ export class InformeRupHeader extends HTMLComponent {
                                     Sin datos
                                 {{/if}}
                             </h6>
-                        </div>
+                    </div>
                     </div>
                     <div class="contenedor-secundario">
                         <div class="contenedor-bloque-texto">
@@ -74,7 +72,7 @@ export class InformeRupHeader extends HTMLComponent {
                                 {{ paciente.fechaNacimiento }}
                             </h6>
                         </div>
-                        <div class="contenedor-bloque-texto" style="margin-left: 1cm;">
+                        <div class="contenedor-bloque-texto">
                             <h6 class="bolder">
                                 Nro. de carpeta
                             </h6>
@@ -86,6 +84,7 @@ export class InformeRupHeader extends HTMLComponent {
                                 {{/if}}
                             </h6>
                         </div>
+
                     </div>
                     {{#if ubicacion}}
                         <div class="contenedor-secundario">
@@ -101,61 +100,57 @@ export class InformeRupHeader extends HTMLComponent {
 
                 <!-- Datos origen solicitud -->
                 <span class="contenedor-principal-data">
-                    {{#if origenTop}}
-                        <div class="contenedor-secundario">
-                            <h6 class="volanta">DATOS DE ORIGEN DE SOLICITUD</h6>
-                                <h4>
-                                    {{{ origen.efectorOrigen }}}
-                                </h4>
-                        </div>
-
-                        <div class="contenedor-secundario">
-                            <div class="contenedor-bloque-texto">
-                                    <h6 class="bolder">Profesional</h6>
-                                    <h6>
-                                        {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
-                                    </h6>
-                            </div>
-                        </div>
-                        <div class="contenedor-bloque-texto">
-                            <h6 class="bolder">
-                                Fecha Solicitud
-                            </h6>
-                            <h6>
-                                {{ origen.fechaSolicitud }}hs
-                            </h6>
-                        </div>
-                    {{else}}
-                        <div class="contenedor-secundario">
-                            <h6 class="volanta">Datos de la prestación</h6>
+                {{#if origenTop}}
+                    <div class="contenedor-secundario">
+                        <h6 class="volanta">DATOS DE ORIGEN DE SOLICITUD</h6>
                             <h4>
-                                {{{ organizacion.nombre }}}
+                                {{{ origen.efectorOrigen }}}
                             </h4>
-                            <h5>
-                                {{ organizacion.direccion }}
-                            </h5>
-                        </div>
+                    </div>
 
-                        <div class="contenedor-secundario">
-                            <div class="contenedor-bloque-texto">
+                    <div class="contenedor-secundario">
+                        <div class="contenedor-bloque-texto">
                                 <h6 class="bolder">Profesional</h6>
                                 <h6>
-                                    {{ profesional.apellido }}, {{ profesional.nombre }}
+                                    {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
                                 </h6>
-                            </div>
                         </div>
-                    {{/if}}
+                    </div>
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
+                            Fecha Solicitud
+                        </h6>
+                        <h6>
+                            {{ origen.fechaSolicitud }}hs
+                        </h6>
+                    </div>
+                {{else}}
+                    <div class="contenedor-secundario">
+                        <h6 class="volanta">Datos de la prestación</h6>
+                        <h4>
+                            {{{ organizacion.nombre }}}
+                        </h4>
+                        <h5>
+                            {{ organizacion.direccion }}
+                        </h5>
+                    </div>
+
+                    <div class="contenedor-secundario">
+                        <div class="contenedor-bloque-texto">
+                            <h6 class="bolder">Profesional</h6>
+                            <h6>
+                                {{ profesional.apellido }}, {{ profesional.nombre }}
+                            </h6>
+                        </div>
+                    </div>
+            {{/if}}
                 </span>
-                
             </section>
-            
             {{#unless consultaValidada }}
                 <h1 class="marca-de-agua">
                     Prestación no validada por profesional
                 </h1>
             {{/unless}}
-            
-            <hr>
     `;
 
     constructor(public prestacion, public paciente, public organizacion, public cama) {
