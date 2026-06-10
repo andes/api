@@ -1,3 +1,15 @@
+## [5.146.4](https://github.com/andes/api/compare/v5.146.3...v5.146.4) (2026-06-10)
+
+
+### Bug Fixes
+
+* **CIT-420:** Error al contar turnos virtuales ([#2254](https://github.com/andes/api/issues/2254)) ([7e2ad6a](https://github.com/andes/api/commit/7e2ad6a575f2adaba42b8ad75eb420376e257bd0))
+
+
+### Reverts
+
+* Revert "HUDS (Fix) - Error creando/enviando archivo +15mb (#2198)" (#2256) ([521c8de](https://github.com/andes/api/commit/521c8de3d89b1a0b7006e4e1658eb498338b435c)), closes [#2198](https://github.com/andes/api/issues/2198) [#2256](https://github.com/andes/api/issues/2256)
+
 ## [5.146.3](https://github.com/andes/api/compare/v5.146.2...v5.146.3) (2026-06-03)
 
 
