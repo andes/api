@@ -151,6 +151,47 @@ export async function suggest(query: any) {
     }
 }
 
+function formatearFecha(fecha: Date | string | moment.Moment): string | null {
+    if (!fecha) {
+        return null;
+    }
+
+    // Caso Moment
+    if (moment.isMoment(fecha)) {
+        return fecha.format('YYYY-MM-DD');
+    }
+
+    // Caso Date
+    if (fecha instanceof Date) {
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    }
+
+    // Caso String
+    const valor = fecha.trim().replace(/\//g, '-');
+    const partes = valor.split('-');
+
+    if (partes.length !== 3) {
+        return null;
+    }
+
+    // YYYY-MM-DD
+    if (partes[0].length === 4) {
+        const [year, month, day] = partes;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
+    // DD-MM-YYYY
+    if (partes[2].length === 4) {
+        const [day, month, year] = partes;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
+    return null;
+}
 
 /**
  * Realiza un matching entre dos pacientes.
@@ -163,27 +204,27 @@ export async function suggest(query: any) {
  */
 
 export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPaciente, weightsDefault?: any) {
+
     const personaA = {
         documento: pacienteA.documento ? pacienteA.documento.toString() : '',
-        nombre: pacienteA.nombre ? pacienteA.nombre : '',
-        apellido: pacienteA.apellido ? pacienteA.apellido : '',
-        fechaNacimiento: pacienteA.fechaNacimiento ? moment(pacienteA.fechaNacimiento).format('YYYY-MM-DD') : '',
-        sexo: pacienteA.sexo ? pacienteA.sexo : ''
+        nombre: pacienteA.nombre ? pacienteA.nombre.toLocaleLowerCase() : '',
+        apellido: pacienteA.apellido ? pacienteA.apellido.toLocaleLowerCase() : '',
+        fechaNacimiento: pacienteA.fechaNacimiento ? formatearFecha(pacienteA.fechaNacimiento) : '',
+        sexo: pacienteA.sexo ? pacienteA.sexo.toLocaleLowerCase() : ''
     };
 
     const personaB = {
         documento: pacienteB.documento ? pacienteB.documento.toString() : '',
-        nombre: pacienteB.nombre ? pacienteB.nombre : '',
-        apellido: pacienteB.apellido ? pacienteB.apellido : '',
-        fechaNacimiento: pacienteB.fechaNacimiento ? moment(pacienteB.fechaNacimiento).format('YYYY-MM-DD') : '',
-        sexo: pacienteB.sexo ? pacienteB.sexo : ''
+        nombre: pacienteB.nombre ? pacienteB.nombre.toLocaleLowerCase() : '',
+        apellido: pacienteB.apellido ? pacienteB.apellido.toLocaleLowerCase() : '',
+        fechaNacimiento: pacienteB.fechaNacimiento ? formatearFecha(pacienteB.fechaNacimiento) : '',
+        sexo: pacienteB.sexo ? pacienteB.sexo.toLocaleLowerCase() : ''
     };
 
     const match = new Matching();
 
     const valorMatching = match.matchPersonas(personaA, personaB, weightsDefault ? weightsDefault : config.mpi.weightsDefault, config.algoritmo);
     return valorMatching;
-
 }
 
 /**
