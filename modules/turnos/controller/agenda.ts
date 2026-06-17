@@ -131,6 +131,7 @@ export async function liberarTurno(req, data, turno) {
             turno.tipoTurno = undefined;
             turno.link = undefined;
             turno.motivoConsulta = undefined;
+            turno.webexLinks = null;
             turno.updatedAt = new Date();
             turno.updatedBy = req.user.usuario || req.user;
             let cant = 1;
@@ -203,6 +204,7 @@ export function suspenderTurno(req, data, turno) {
     const efector = data.organizacion;
     delete turno.paciente;
     delete turno.tipoPrestacion;
+    turno.webexLinks = null;
     turno.motivoSuspension = req.body.motivoSuspension;
     turno.avisoSuspension = req.body.avisoSuspension;
     turno.updatedAt = new Date();
