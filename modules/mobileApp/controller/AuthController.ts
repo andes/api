@@ -6,6 +6,7 @@ import * as debug from 'debug';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { sendEmail, IEmail, ISms, sendSms } from '../../../utils/roboSender';
 import { IPushNotification, sendPushNotification } from './PushClientFCM';
+import { PacienteAppCtr } from '../pacienteApp.routes';
 
 const log = debug('AuthController');
 
@@ -252,6 +253,50 @@ export function createUserFromPaciente(pacienteData, contacto) {
     });
 }
 
+export async function verificarCuentaExistente(documento, sexo, email) {
+
+    const cuentasActivas = await PacienteAppCtr.search({ documento, sexo, activacionApp: true });
+
+    // Filtramos por cuenta de paciente
+    const cuentaPaciente = cuentasActivas?.filter(c => !c.profesionalId) || [];
+    if (cuentaPaciente.length) {
+        return { error: 'existe-cuenta-paciente-activa' };
+    }
+    const pacienteApp = await PacienteAppCtr.findOne({ email });
+    if (pacienteApp) {
+        if (pacienteApp.activacionApp) { // si existe en una cuenta activa es porque el mail esta vinculado a otro DNI
+            return { error: 'existe-email-vinculado' };
+        } else { // existe una cuenta con ese mail pero sin activar.
+            // Se elimina la cuenta y continua el proceso de registro con el nuevo DNI escaneado
+            await PacienteAppCtr.remove(pacienteApp.id);
+        }
+    }
+    return null;
+}
+
+export function generateError(code) {
+    let message = '';
+    switch (code) {
+        case 'existe-cuenta-paciente-activa':
+            message = 'Ya existe una cuenta activa asociada al documento escaneado. Por favor inicie sesión con esa cuenta o restablezca la contraseña.';
+            break;
+        case 'existe-email-vinculado':
+            message = 'El e-mail ingresado ya se encuentra vinculado a otra cuenta. Por favor ingrese un e-mail diferente.';
+            break;
+        case 'tramite-invalido':
+            message = 'El número de trámite ingresado no es válido.';
+            break;
+        case 'validacion-fallida':
+            message = 'No es posible verificar la identidad del paciente. Si el error persiste, por favor intente nuevamente mas tarde.';
+            break;
+        default:
+            message = 'Error en la verificación de la cuenta. Por favor intente nuevamente.';
+    }
+    return {
+        code,
+        message
+    };
+}
 
 /**
  * Actualiza los datos de la cuenta mobile
