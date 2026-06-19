@@ -173,22 +173,27 @@ export class Auth {
             if (req.user.type !== 'paciente-token') {
                 return next();
             }
-
             // Permitir explícitamente algunas rutas aún para pacientes
             const allowedForPaciente = [
                 '/protocolosLab',
                 '/historial',
                 '/prestaciones/huds',
                 '/prestaciones',
-                '/recetas'
+                '/recetas',
+                '/paciente/'
             ];
             const requestPath = (req.path || req.url || '').toString();
             // Si la ruta es una de las permitidas, continuar
+            const idPacientePath = requestPath ? requestPath.split('/').pop() : null;
             if (allowedForPaciente.some(p => requestPath.includes(p))) {
-                const idPacienteQuery = req.query?.pacienteId || req.query?.idPaciente || null;
+                const idPacienteQuery = req.query?.pacienteId || req.query?.idPaciente || idPacientePath || null;
                 const idPacienteToken = req.user.pacientes.find(p => String(p.id) === String(idPacienteQuery));
 
                 if (idPacienteToken) {
+                    return next();
+                }
+            } else {
+                if (requestPath.endsWith('.pdf')) {
                     return next();
                 }
             }
