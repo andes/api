@@ -180,13 +180,14 @@ export class Auth {
                 '/prestaciones/huds',
                 '/prestaciones',
                 '/recetas',
-                '/paciente/'
+                '/paciente/',
+                '/agenda/'
             ];
             const requestPath = (req.path || req.url || '').toString();
             // Si la ruta es una de las permitidas, continuar
             const idPacientePath = requestPath ? requestPath.split('/').pop() : null;
             if (allowedForPaciente.some(p => requestPath.includes(p))) {
-                const idPacienteQuery = req.query?.pacienteId || req.query?.idPaciente || idPacientePath || null;
+                const idPacienteQuery = req.query?.pacienteId || req.query?.idPaciente || req.body?.paciente?.id || idPacientePath || null;
                 const idPacienteToken = req.user.pacientes.find(p => String(p.id) === String(idPacienteQuery));
 
                 if (idPacienteToken) {
