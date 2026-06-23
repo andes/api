@@ -22,6 +22,7 @@ export const HudsAccesoSchema = new Schema({
         matricula: String,
         motivoAcceso: String,
         detalleMotivo: String,
+        labelPaciente: String,
         turno: SchemaTypes.ObjectId,
         prestacion: SchemaTypes.ObjectId,
         organizacion: SchemaTypes.Mixed,

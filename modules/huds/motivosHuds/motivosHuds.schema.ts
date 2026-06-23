@@ -17,6 +17,10 @@ export const MotivosHudsSchema = new Schema({
     descripcion: {
         type: String,
         required: false
+    },
+    labelPaciente: {
+        type: String,
+        required: false
     }
 
 });
