@@ -1,12 +1,17 @@
 import * as mongoose from 'mongoose';
+import { CustomError } from '@andes/core';
 import * as direccionSchema from './direccion';
 import { IFarmacia } from '../interfaces/IFarmacia';
 import { AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 
+
 const FarmaciaSchema = new mongoose.Schema({
     denominacion: String,
     razonSocial: String,
-    cuit: String,
+    cuit: {
+        type: String,
+        maxlength: 11
+    },
     DTResponsable: String,
     matriculaDTResponsable: String,
     disposicionAltaDT: String,
@@ -37,6 +42,18 @@ const FarmaciaSchema = new mongoose.Schema({
         descripcion: String
     }]
 });
+
+FarmaciaSchema.pre('save', function (this: any, next) {
+    if (this.cuit) {
+        const cuit = this.cuit.replace(/\D/g, '');
+        if (!cuit || cuit.length >= 11) {
+            return next(new CustomError('CUIT inválido. Debe tener 11 dígitos numéricos con dígito verificador correcto.', 400));
+        }
+        this.cuit = cuit;
+    }
+    next();
+});
+
 
 export type IFarmaciaDoc = AndesDocWithAudit<IFarmacia>;
 export const Farmacia = mongoose.model<IFarmaciaDoc>('farmacias', FarmaciaSchema, 'farmacias');

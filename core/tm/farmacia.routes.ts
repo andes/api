@@ -3,6 +3,7 @@ import { Farmacia, IFarmaciaDoc } from './schemas/farmacia';
 import { EventCore } from '@andes/event-bus/';
 import { Auth } from '../../auth/auth.class';
 
+
 class FarmaciasResourse extends ResourceBase<IFarmaciaDoc> {
     Model = Farmacia;
     resourceName = 'farmacias';
