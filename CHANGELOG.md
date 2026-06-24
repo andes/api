@@ -1,3 +1,10 @@
+## [5.146.5](https://github.com/andes/api/compare/v5.146.4...v5.146.5) (2026-06-24)
+
+
+### Bug Fixes
+
+* **AUTH:** Agregar ruta de agendas al middleware ([#2261](https://github.com/andes/api/issues/2261)) ([dc5b071](https://github.com/andes/api/commit/dc5b0711317909963167507f32afa7efcf1705f6))
+
 ## [5.146.4](https://github.com/andes/api/compare/v5.146.3...v5.146.4) (2026-06-10)
 
 
