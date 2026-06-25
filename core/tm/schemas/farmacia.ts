@@ -46,7 +46,7 @@ const FarmaciaSchema = new mongoose.Schema({
 FarmaciaSchema.pre('save', function (this: any, next) {
     if (this.cuit) {
         const cuit = this.cuit.replace(/\D/g, '');
-        if (!cuit || cuit.length >= 11) {
+        if (!cuit || cuit.length > 11) {
             return next(new CustomError('CUIT inválido. Debe tener 11 dígitos numéricos con dígito verificador correcto.', 400));
         }
         this.cuit = cuit;
