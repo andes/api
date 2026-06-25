@@ -2,7 +2,7 @@ import { asyncHandler, Request, Response } from '@andes/api-tool';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
-import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa, create, buscarRecetasPorProfesional } from './recetasController';
+import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa, create, buscarRecetasPorProfesional, buscarRecetasConFiltros, verificarRecetaExistente } from './recetasController';
 import { ParamsIncorrect } from './recetas.error';
 
 class RecetasResource extends ResourceBase {
@@ -39,6 +39,26 @@ export const getMotivos = async (req, res) => {
 export const getByProfesional = async (req, res) => {
     const result = await buscarRecetasPorProfesional(req);
     res.json(result);
+};
+
+export const getConFiltros = async (req, res) => {
+    const result = await buscarRecetasConFiltros(req);
+    res.json(result);
+};
+
+export const getVerificarReceta = async (req, res) => {
+    try {
+        const { documento, sexo, conceptId } = req.query;
+        if (!documento || !sexo) {
+            const error = new ParamsIncorrect('Se requieren los parámetros documento y sexo');
+            return res.status(error.status).json(error);
+        }
+        const result = await verificarRecetaExistente(documento as string, sexo as string, conceptId as string);
+        res.json(result);
+    } catch (err) {
+        const status = (err as any).status || 400;
+        res.status(status).json(err);
+    }
 };
 
 export const patch = async (req, res) => {
@@ -95,6 +115,8 @@ const authorizeByToken = async (req: Request, res: Response, next) =>
 RecetasRouter.use(Auth.authenticate());
 RecetasRouter.get('/recetas', authorizeByToken, asyncHandler(get));
 RecetasRouter.get('/recetas/motivos', asyncHandler(getMotivos));
-RecetasRouter.get('/recetas/profesional/:id', authorizeByToken,asyncHandler(getByProfesional));
+RecetasRouter.get('/recetas/filtros', authorizeByToken, asyncHandler(getConFiltros));
+RecetasRouter.get('/recetas/profesional/:id', authorizeByToken, asyncHandler(getByProfesional));
+RecetasRouter.get('/recetas/verificar', authorizeByToken, asyncHandler(getVerificarReceta));
 RecetasRouter.patch('/recetas', authorizeByToken, asyncHandler(patch));
 RecetasRouter.post('/recetas', authorizeByToken, asyncHandler(post));
