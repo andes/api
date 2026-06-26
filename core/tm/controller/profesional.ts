@@ -2,6 +2,7 @@ import * as base64 from 'base64-stream';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as stream from 'stream';
+import { GridFSBucket } from 'mongodb';
 import { userScheduler } from '../../../config.private';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
@@ -14,7 +15,7 @@ import { makeFsImagenOnline } from '../schemas/imagenRenovacionOnline';
 import { Profesional } from '../schemas/profesional';
 import { Auth } from './../../../auth/auth.class';
 import { findUsersByUsername } from './../../../auth/auth.controller';
-import { findOneGridFS } from './file-storage';
+import { deleteGridFS, findOneGridFS, readGridFS } from './file-storage';
 
 
 /**
@@ -387,6 +388,122 @@ export async function saveImage(data) {
 
         input.end(_base64);
     });
+}
+
+/**
+ * Detecta si hubo cambios en formacionGrado que indiquen aprobación
+ * (papelesVerificados o matriculado pasaron a true)
+ */
+export function detectaCambiosFormacionGrado(formacionPersistida: any[], formacionNueva: any[]): boolean {
+    if (!Array.isArray(formacionPersistida) || !Array.isArray(formacionNueva)) {
+        return false;
+    }
+
+    for (const nueva of formacionNueva) {
+        // Comparar por _id para ser robusto ante múltiples formaciones de grado
+        const persistida = formacionPersistida.find(
+            (f: any) => f && nueva && String(f._id) === String(nueva._id)
+        );
+
+        if (!persistida) {
+            continue;
+        }
+
+        // Detectar cambio en papelesVerificados
+        if (persistida.papelesVerificados === false && nueva.papelesVerificados === true) {
+            return true;
+        }
+
+        // Detectar cambio en matriculado
+        if (persistida.matriculado === false && nueva.matriculado === true) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Copia un archivo de un bucket GridFS a otro, reemplazando el existente en el destino
+ */
+async function copiarArchivoGridFS(
+    bucketOrigen: GridFSBucket,
+    bucketDestino: GridFSBucket,
+    queryOrigen: any,
+    queryDestino: any,
+    filename: string,
+    metadataDestino: any
+): Promise<void> {
+    const archivoOrigen = await findOneGridFS(bucketOrigen, queryOrigen);
+
+    if (!archivoOrigen?._id) {
+        return;
+    }
+
+    // Eliminar archivo permanente anterior si existe
+    const archivoDestino = await findOneGridFS(bucketDestino, queryDestino);
+    if (archivoDestino?._id) {
+        await deleteGridFS(bucketDestino, archivoDestino._id);
+    }
+
+    // Copiar el archivo temporal al bucket permanente
+    const readStream = readGridFS(bucketOrigen, archivoOrigen._id);
+    const uploadStream = bucketDestino.openUploadStream(filename, {
+        contentType: archivoOrigen.contentType || 'image/jpeg',
+        metadata: metadataDestino
+    });
+
+    await new Promise<void>((resolve, reject) => {
+        readStream.on('error', reject);
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => resolve());
+        readStream.pipe(uploadStream);
+    });
+}
+
+/**
+ * Promueve imágenes temporales (renovacionOnline) a permanentes
+ * Copia firma y foto de makeFsFirmaOnline/makeFsImagenOnline a makeFsFirma/makeFs
+ */
+export async function promoverImagenesTempAPermanentes(idProfesional: string, matricula: number) {
+    try {
+        const metadataOnline = {
+            'metadata.idProfesional': idProfesional,
+            'metadata.matricula': matricula
+        };
+        const metadataPermanente = { 'metadata.idProfesional': idProfesional };
+        const metadataWrite = { idProfesional };
+
+        // Copiar firma de temporal a permanente
+        await copiarArchivoGridFS(
+            makeFsFirmaOnline(),
+            makeFsFirma(),
+            metadataOnline,
+            metadataPermanente,
+            'firma.png',
+            metadataWrite
+        );
+
+        // Copiar foto de temporal a permanente
+        await copiarArchivoGridFS(
+            makeFsImagenOnline(),
+            makeFs(),
+            metadataOnline,
+            metadataPermanente,
+            'foto.png',
+            metadataWrite
+        );
+
+        // Limpiar temporales (se pasa un noop como next para evitar TypeError si falla)
+        // eslint-disable-next-line no-console
+        const noopNext = (err: any) => { if (err) { console.error('Error eliminando imágenes temporales:', err); } };
+        await deleteFirmaFotoTemporal(idProfesional, matricula, noopNext);
+
+    } catch (error) {
+        // Log error pero no fallo la operación completa
+        // eslint-disable-next-line no-console
+        console.error('Error promoting temporary images to permanent:', error);
+    }
 }
 
 export async function filtrarProfesionalesPorPrestacion(profesionales, prestaciones, organizacionId) {
