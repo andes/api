@@ -146,6 +146,7 @@ export async function coberturaSalud(documento, sexo) {
                     url,
                     method: 'GET',
                     json: true,
+                    timeout: 15000,
                     headers: {
                         'Content-Type': 'application/json',
                         token,
@@ -197,20 +198,25 @@ function checkConnection() {
  */
 
 async function loginFederador() {
-    const url = `${busInteroperabilidad.host}/usuarios/aplicacion/login`;
-    const options = {
-        url,
-        method: 'POST',
-        json: true,
-        body: {
-            nombre: busInteroperabilidad.usuario,
-            clave: busInteroperabilidad.clave,
-            codDominio: busInteroperabilidad.dominio
-        },
-    };
-    const [status, body] = await handleHttpRequest(options);
-    if (status === 200) {
-        return body.token;
+    try {
+        const url = `${busInteroperabilidad.host}/usuarios/aplicacion/login`;
+        const options = {
+            url,
+            method: 'POST',
+            json: true,
+            timeout: 15000,
+            body: {
+                nombre: busInteroperabilidad.usuario,
+                clave: busInteroperabilidad.clave,
+                codDominio: busInteroperabilidad.dominio
+            },
+        };
+        const [status, body] = await handleHttpRequest(options);
+        if (status === 200) {
+            return body.token;
+        }
+        return null;
+    } catch (error) {
+        return null;
     }
-    return null;
 }
