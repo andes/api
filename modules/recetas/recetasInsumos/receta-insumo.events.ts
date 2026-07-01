@@ -3,6 +3,7 @@ import { crearRecetaInsumo } from '../../recetas/recetasInsumos/recetaInsumosCon
 import { getProfesionActualizada } from '../../recetas/recetasController';
 import * as moment from 'moment';
 import { RecetaInsumo } from './receta-insumo.schema';
+import { RecetaControl } from '../../recetas/receta-control-schema';
 import { createLog } from './../recetaLogs';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 
@@ -44,14 +45,58 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
         };
 
         for (const insumo of registro.valor.insumos) {
-            const receta: any = await RecetaInsumo.findOne({
+            const insumoId = insumo.generico?.id || insumo.id;
+            if (!insumoId) {
+                continue;
+            }
+
+            const recetasExistentes = await RecetaInsumo.find({
                 'insumo.id': insumo.generico.id,
                 'insumo.nombre': insumo.generico.nombre,
                 idRegistro
             });
-            if (!receta) {
+
+            if (recetasExistentes && recetasExistentes.length > 0) {
+                for (const r of recetasExistentes) {
+                    await RecetaControl.updateOne(
+                        {
+                            idPrestacion: prestacion.id,
+                            idRegistro,
+                            insumoId,
+                            ordenTratamiento: (r as any).insumo.ordenTratamiento
+                        },
+                        {
+                            $set: {
+                                creada: true,
+                                idReceta: r._id.toString()
+                            }
+                        }
+                    );
+                }
+            } else {
                 dataReceta.insumo = insumo;
-                await crearRecetaInsumo(dataReceta, prestacion.createdBy);
+                const recetasCreadas = await crearRecetaInsumo(dataReceta, prestacion.createdBy);
+                if (Array.isArray(recetasCreadas)) {
+                    for (const r of recetasCreadas) {
+                        const rDb = await RecetaInsumo.findById(r._id);
+                        if (rDb) {
+                            await RecetaControl.updateOne(
+                                {
+                                    idPrestacion: prestacion.id,
+                                    idRegistro,
+                                    insumoId,
+                                    ordenTratamiento: (rDb as any).insumo.ordenTratamiento
+                                },
+                                {
+                                    $set: {
+                                        creada: true,
+                                        idReceta: rDb._id.toString()
+                                    }
+                                }
+                            );
+                        }
+                    }
+                }
             }
 
         }
@@ -60,3 +105,4 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
         return err;
     }
 });
+
