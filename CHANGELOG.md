@@ -1,3 +1,16 @@
+# [5.147.0](https://github.com/andes/api/compare/v5.146.5...v5.147.0) (2026-07-01)
+
+
+### Bug Fixes
+
+* **farmacia:** Corrige condicion de pre-save ([#2265](https://github.com/andes/api/issues/2265)) ([517fdaa](https://github.com/andes/api/commit/517fdaa90ae4ed278b8431cd8385351728b36100))
+
+
+### Features
+
+* **HUDS:** implementa rutas para pedido de resumen ([#1969](https://github.com/andes/api/issues/1969)) ([bea014e](https://github.com/andes/api/commit/bea014e9952004097eac9346c59cb426f98e27f4))
+* **MPI:** agrega financiador al crear paciente ([#1948](https://github.com/andes/api/issues/1948)) ([0a9412d](https://github.com/andes/api/commit/0a9412d638e63c082de16badd37520048ee09dd2))
+
 ## [5.146.5](https://github.com/andes/api/compare/v5.146.4...v5.146.5) (2026-06-24)
 
 
