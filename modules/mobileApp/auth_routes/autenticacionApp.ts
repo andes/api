@@ -7,7 +7,7 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { validar } from '../../../core-v2/mpi/validacion';
 import * as ScanParse from '../../../shared/scanParse';
 import * as authController from '../controller/AuthController';
-import { enviarCodigoVerificacion, generarCodigoVerificacion, generateError } from '../controller/AuthController';
+import { generarCodigoVerificacion, enviarCodigoVerificacion, generateError } from '../controller/AuthController';
 import { PacienteAppCtr } from '../pacienteApp.routes';
 import { registroMobileLog } from '../registroMobile.log';
 import { PacienteApp } from '../schemas/pacienteApp';
@@ -36,7 +36,7 @@ router.post('/login', (req, res, next) => {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    return PacienteApp.findOne({ email }, (err, user) => {
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, user) => {
 
         if (!user) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
@@ -91,12 +91,12 @@ router.post('/olvide-password', (req, res, next) => {
     const email = req.body.email.toLowerCase();
     const diaHoy = new Date();
 
-    return PacienteApp.findOne({ email }, (err, datosUsuario: any) => {
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
 
-        if (!datosUsuario) {
+        if (!datosUsuario || !datosUsuario.activacionApp) {
             return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
@@ -148,7 +148,7 @@ router.post('/reestablecer-password', (req, res, next) => {
         return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
     }
     const email = req.body.email.toLowerCase();
-    return PacienteApp.findOne({ email }, (err, datosUsuario: any) => {
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
@@ -202,15 +202,7 @@ router.post('/mailGenerico', async (req, res, next) => {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
     const body = req.body;
-    const usuario: any = (req as any).user;
-    // req.body['usuario'] = usuario.usuario.username ? usuario.usuario.username : '';
-    // req.body['organizacion'] = usuario.organizacion.nombre ? usuario.organizacion.nombre : '';
-    // renderizacion del email
     const html = await SendEmail.renderHTML('emails/emailGenerico.html', body);
-
-    const adjuntos = body.adjuntos.map(x => {
-        x.content = x.content.split('base64,')[1];
-    });
     const data = {
         to: body.emails,
         subject: body.asunto,
