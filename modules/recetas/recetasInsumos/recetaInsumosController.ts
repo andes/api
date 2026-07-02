@@ -3,19 +3,22 @@ import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { RecetaInsumo } from './receta-insumo.schema';
 import { createLog, informarLog, updateLog } from '../recetaLogs';
-import { ParamsIncorrect, RecetaNotFound } from '../recetas.error';
+import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from '../recetas.error';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { getProfesionActualizada } from '../recetasController';
+import { getReceta } from '../services/receta';
 
 export async function buscarRecetasInsumos(req) {
     const options: any = {};
     const params = req.params.id ? req.params : req.query;
+    const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
     const pacienteId = params.pacienteId || null;
     const documento = params.documento || null;
     const sexo = params.sexo || null;
+    const user = req.user || {};
     try {
-        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
+        if (!params.id && !params.idRegistro && ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId)))) {
             throw new ParamsIncorrect();
         }
         const paramMap = {
@@ -23,8 +26,8 @@ export async function buscarRecetasInsumos(req) {
             pacienteId: 'paciente.id',
             documento: 'paciente.documento',
             sexo: 'paciente.sexo',
-            estado: 'estadoActual.tipo',
-            tipo: 'insumo.tipo'
+            tipo: 'insumo.tipo',
+            idRegistro: 'idRegistro'
         };
         Object.keys(paramMap).forEach(key => {
             if (params[key]) {
@@ -33,21 +36,58 @@ export async function buscarRecetasInsumos(req) {
         });
 
         if (params.estadoDispensa) {
-            const estadoDispensaArray = params.estadoDispensa.split(',');
+            const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
             options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
-        } else {
-            options['estadoDispensaActual.tipo'] = 'sin-dispensa';
         }
 
-        if (params.fechaInicio || params.fechaFin) {
-            const fechaInicio = params.fechaInicio ? moment(params.fechaInicio).startOf('day').toDate() : moment().subtract(1, 'years').startOf('day').toDate();
-            const fechaFin = params.fechaFin ? moment(params.fechaFin).endOf('day').toDate() : moment().endOf('day').toDate();
-            options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
+        const estadoArray = params.estado ? params.estado.replace(/ /g, '').split(',') : [];
+        const fechaFin = params.fechaFin ? moment(params.fechaFin).endOf('day').toDate() : moment().endOf('day').toDate();
+        const fechaInicio = params.fechaInicio ? moment(params.fechaInicio).startOf('day').toDate() : moment(fechaFin).subtract(1, 'years').startOf('day').toDate();
+
+        if (estadoArray.length) {
+            const optPendientes = {};
+            const optVigentes = {};
+            const optOtros = {};
+            // Para recetas pendientes sin filtro de fechas, limitar a próximos 10 días
+            const includePendiente = estadoArray.includes('pendiente');
+            if (includePendiente) {
+                optPendientes['fechaRegistro'] = {
+                    $gte: fechaInicio,
+                    $lte: params.fechaFin ? fechaFin : moment().add(10, 'days').endOf('day').toDate()
+                };
+                optPendientes['estadoActual.tipo'] = 'pendiente';
+            }
+            // Para recetas vigentes sin filtro de fechas, limitar a 30 días atrás
+            const includeVigente = estadoArray.includes('vigente');
+            if (includeVigente) {
+                const fInicio = params.fechaInicio ? fechaInicio : fechaVencimiento;
+                optVigentes['fechaRegistro'] = params.fechaFin ? { $gte: fInicio, $lte: fechaFin } : { $gte: fInicio };
+                optVigentes['estadoActual.tipo'] = 'vigente';
+            }
+            const includeOtros = estadoArray.filter(e => e !== 'pendiente' && e !== 'vigente');
+            if (includeOtros.length) {
+                optOtros['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
+                optOtros['estadoActual.tipo'] = { $in: includeOtros };
+            }
+            options['$or'] = [optPendientes, optVigentes, optOtros].filter(o => o.hasOwnProperty('estadoActual.tipo'));
+        } else {
+            options['estadoActual.tipo'] = { $nin: ['eliminada'] };
+            if (user.type === 'app-token') {
+                options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
+            }
         }
+
         if (Object.keys(options).length === 0) {
             throw new ParamsIncorrect();
         }
-        const recetasInsumos: any = await RecetaInsumo.find(options);
+
+        let recetasInsumos: any = await RecetaInsumo.find(options);
+
+        if (user.type === 'app-token') {
+            const sistema = user.app.nombre.toLowerCase();
+            recetasInsumos = sistema ? await registrarAppNotificadas(req, recetasInsumos, sistema) : [];
+        }
+
         return recetasInsumos;
     } catch (err) {
         await informarLog.error('buscarRecetasInsumos', { params, options }, err, req);
@@ -271,4 +311,250 @@ export async function suspender(recetaInsumoId, req) {
         await updateLog.error('suspender', { motivo, observacion, profesional, recetaInsumoId }, error);
         return error;
     }
+}
+
+export async function setEstadoDispensa(req, operacion, app) {
+    const { recetaId } = req.body;
+    const sistema = app || '';
+    const dataDispensa = req.body.dispensa;
+    try {
+        if (!recetaId && sistema) {
+            throw new ParamsIncorrect();
+        }
+
+        let recetaInsumo: any = await RecetaInsumo.findById(recetaId);
+        if (!recetaInsumo) {
+            throw new RecetaNotFound();
+        }
+
+        recetaInsumo = await dispensar(recetaInsumo, operacion, dataDispensa, sistema);
+
+        Auth.audit(recetaInsumo, req);
+        return await recetaInsumo.save();
+    } catch (error) {
+        await updateLog.error('setEstadoDispensaInsumo', { operacion, sistema, recetaId, dataDispensa }, error);
+        return error;
+    }
+}
+
+export async function dispensar(recetaInsumo, operacion, dataDispensa, sistema) {
+    const operacionMap = {
+        dispensar: 'dispensada',
+        'dispensa-parcial': 'dispensa-parcial'
+    };
+
+    const tipoDispensa = operacionMap[operacion] || null;
+    const idDispensaApp = dataDispensa.id;
+    if (!tipoDispensa || !dataDispensa || !idDispensaApp) {
+        throw new ParamsIncorrect();
+    }
+    // controlar que la dispensa no exista ya cargada en la receta
+    const dispensaExistente = recetaInsumo.dispensa.find(d => d.idDispensaApp === idDispensaApp);
+    if (!dispensaExistente) {
+        const dispensa: any = { idDispensaApp };
+        const tipo = (operacion === 'dispensar') ? 'finalizada' : recetaInsumo.estadoActual.tipo;
+        const estadoReceta = { tipo };
+        dispensa.fecha = dataDispensa.fecha ? moment(dataDispensa.fecha).toDate() : moment().toDate();
+        let insumos = [];
+        if (dataDispensa?.insumos?.length) {
+            insumos = dataDispensa.insumos.map(ins => {
+                const insumo: any = {};
+                if (ins.insumo) {
+                    insumo.insumo = ins.insumo || {};
+                    insumo.descripcion = (ins.insumo.nombre || '') + (ins.cantidadEnvases || '');
+                }
+                insumo.unidades = ins.unidades || null;
+                insumo.cantidad = ins.cantidad || null;
+                insumo.cantidadEnvases = ins.cantidadEnvases || null;
+                return insumo;
+            });
+            dispensa.insumos = insumos;
+        }
+        dispensa.organizacion = dataDispensa.organizacion || null;
+        recetaInsumo.dispensa.push(dispensa);
+        recetaInsumo.estados.push(estadoReceta);
+
+        recetaInsumo.estadosDispensa.push({
+            tipo: tipoDispensa,
+            idDispensaApp,
+            fecha: dispensa.fecha,
+            sistema
+        });
+    }
+    return recetaInsumo;
+}
+
+export async function actualizarAppNotificada(idReceta, sistema, req) {
+    try {
+        if (idReceta && Types.ObjectId.isValid(idReceta)) {
+            const recetaInsumo: any = await RecetaInsumo.findById(idReceta);
+            if (!recetaInsumo) {
+                throw new RecetaNotFound();
+            }
+            const estadoActual = recetaInsumo.estadoActual.tipo;
+            const estadoDispensa = recetaInsumo.estadoDispensaActual.tipo;
+            if (estadoActual === 'vigente' && estadoDispensa === 'sin-dispensa') {
+                const app = recetaInsumo.appNotificada.find(a => a.app === sistema);
+                if (app) {
+                    recetaInsumo.appNotificada = recetaInsumo.appNotificada.filter(a => a.app !== sistema);
+                    Auth.audit(recetaInsumo, req);
+                    await recetaInsumo.save();
+                    await updateLog.info('sin-dispensar', { sistema, idReceta, recetaInsumo });
+                    return recetaInsumo;
+                } else {
+                    throw new RecetaNotEdit(`${sistema.toUpperCase()} no puede marcar sin-dispensa una receta no consultada`);
+                }
+            } else {
+                const motivo = {
+                    'sin-dispensa': '',
+                    'dispensa-parcial': ' con dispensa parcial',
+                    dispensada: ' dispensada',
+                };
+                throw new RecetaNotEdit(`No se puede marcar sin-dispensar una receta ${estadoActual + motivo[estadoDispensa]}`);
+            }
+        }
+    } catch (error) {
+        await updateLog.error('actualizarAppNotificada', { sistema, idReceta }, error);
+        return error;
+    }
+}
+
+export async function cancelarDispensa(idReceta, dataDispensa, sistema, req) {
+    try {
+        const idDispensa = dataDispensa.idDispensa;
+        const motivo = dataDispensa.motivo;
+        const organizacion = dataDispensa.organizacion;
+        const idValido = idReceta && Types.ObjectId.isValid(idReceta);
+        if (idValido && idDispensa) {
+            const recetaInsumo: any = await RecetaInsumo.findById(idReceta);
+            if (!recetaInsumo) {
+                throw new RecetaNotFound();
+            }
+            const estadoActual = recetaInsumo.estadoActual.tipo;
+            const estadoDispensa = recetaInsumo.estadoDispensaActual.tipo;
+            if (estadoDispensa !== 'sin-dispensa') {
+                const tipo = (recetaInsumo.estadoActual.tipo === 'finalizada') ? await calcularEstadoReceta(recetaInsumo) : recetaInsumo.estadoActual.tipo;
+                const estadoReceta = { tipo };
+                recetaInsumo.estados.push(estadoReceta);
+
+                recetaInsumo.dispensa = recetaInsumo.dispensa.filter(disp => disp.idDispensaApp !== idDispensa);
+                const tipoDispensa = (recetaInsumo.dispensa.length) ? 'dispensa-parcial' : 'sin-dispensa';
+                recetaInsumo.estadosDispensa.push({
+                    tipo: tipoDispensa,
+                    fecha: new Date(),
+                    sistema,
+                    cancelada: {
+                        idDispensaApp: idDispensa,
+                        motivo,
+                        organizacion
+                    }
+                });
+
+                recetaInsumo.appNotificada = recetaInsumo.appNotificada.filter(a => a.app !== sistema);
+                Auth.audit(recetaInsumo, req);
+                await recetaInsumo.save();
+                await updateLog.info('cancelarDispensa', { sistema, idReceta, dataDispensa });
+                return recetaInsumo;
+            } else {
+                throw new RecetaNotEdit(`No se puede cancelar dispensa de una receta ${estadoActual} no dispensada`);
+            }
+        } else {
+            throw new ParamsIncorrect();
+        }
+    } catch (error) {
+        await updateLog.error('cancelarDispensa', { sistema, idReceta, dataDispensa }, error);
+        return error;
+    }
+}
+
+export async function calcularEstadoReceta(recetaInsumo) {
+    const today = moment();
+    const fechaVencimiento = moment(recetaInsumo.fechaRegistro).add(30, 'days');
+    if (today.isBefore(fechaVencimiento)) {
+        return 'vigente';
+    } else {
+        return 'vencida';
+    }
+}
+
+export async function consultarEstadoInsumo(recetaInsumo, sistema) {
+    try {
+        const pacienteId = recetaInsumo.paciente.id.toString();
+        const recetaDisp = await getReceta(Types.ObjectId(recetaInsumo.id), Types.ObjectId(pacienteId), sistema);
+
+        if (!recetaDisp) {
+            return {
+                success: false,
+                recetaDisp: null
+            };
+        }
+
+        const tipo = recetaDisp.tipoDispensaActual;
+        const dispensada = ['dispensada', 'dispensa-parcial'].includes(tipo);
+
+        return {
+            success: true,
+            recetaDisp,
+            tipo,
+            dispensada
+        };
+    } catch (error) {
+        await informarLog.error('consultarEstadoInsumo', { recetaId: recetaInsumo.id, sistema }, error);
+        return {
+            success: false,
+            error
+        };
+    }
+}
+
+async function registrarAppNotificadas(req, recetas, sistema) {
+    let recetasPaciente = [];
+    recetasPaciente = recetas.map(async receta => {
+        let incluirReceta = true;
+        const appN = { app: sistema, fecha: moment().toDate() };
+        const arrayApps = receta.appNotificada || [];
+        if (arrayApps.length) {
+            let indiceApp = arrayApps.findIndex(a => a.app === sistema);
+            if (indiceApp !== -1) {
+                arrayApps[indiceApp].fecha = moment().toDate();
+            } else {
+                indiceApp = arrayApps.findIndex(a => a.app !== sistema);
+                const sistema2 = arrayApps[indiceApp].app;
+                const resultado = await consultarEstadoInsumo(receta, sistema2);
+
+                if (resultado.success) {
+                    const { recetaDisp, tipo, dispensada } = resultado;
+
+                    if (dispensada) {
+                        recetaDisp.dispensas.forEach(async d => {
+                            const dispensaInsumo = {
+                                ...d.dispensa,
+                                insumos: d.dispensa.insumos || d.dispensa.medicamentos
+                            };
+                            receta = d.estado ? await dispensar(receta, d.estado, dispensaInsumo, sistema2) : receta;
+                        });
+                        incluirReceta = false;
+                    } else {
+                        if (tipo === 'sin-dispensa') {
+                            receta.appNotificada = arrayApps.filter(a => a.app !== sistema2);
+                            receta.appNotificada.push(appN);
+                        } else {
+                            receta.appNotificada[indiceApp].fecha = moment().toDate();
+                            incluirReceta = false;
+                        }
+                    }
+                } else {
+                    incluirReceta = false;
+                }
+            }
+        } else {
+            receta.appNotificada.push(appN);
+            incluirReceta = true;
+        }
+        Auth.audit(receta, req);
+        await receta.save();
+        return incluirReceta ? receta : null;
+    });
+    const recetasUpdated = await Promise.all(recetasPaciente);
+    return recetasUpdated.filter(r => r !== null);
 }
