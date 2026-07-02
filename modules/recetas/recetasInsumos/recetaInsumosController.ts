@@ -86,7 +86,7 @@ export async function create(req) {
                 idRegistro: dataRecetaInsumo.idRegistro
             };
             if (dataRecetaInsumo.insumo.generico) {
-                query['insumo.insumo'] = dataRecetaInsumo.insumo.generico.insumo;
+                query['insumo.nombre'] = dataRecetaInsumo.insumo.generico.nombre;
             } else {
                 query['insumo.concepto.conceptId'] = dataRecetaInsumo.insumo.concepto.conceptId;
             }
