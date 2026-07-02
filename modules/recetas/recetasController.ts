@@ -136,14 +136,15 @@ export async function buscarRecetas(req) {
     const sexo = params.sexo || null;
     const user = req.user;
     try {
-        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
+        if (!params.id && !params.idRegistro && ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId)))) {
             throw new ParamsIncorrect();
         }
         const paramMap = {
             id: '_id',
             pacienteId: 'paciente.id',
             documento: 'paciente.documento',
-            sexo: 'paciente.sexo'
+            sexo: 'paciente.sexo',
+            idRegistro: 'idRegistro'
         };
         Object.keys(paramMap).forEach(key => {
             if (params[key]) {
@@ -157,8 +158,6 @@ export async function buscarRecetas(req) {
         if (params.estadoDispensa) {
             const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
             options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
-        } else {
-            options['estadoActual.tipo'] = null;
         }
         const estadoArray = params.estado ? params.estado.replace(/ /g, '').split(',') : [];
         const fechaFin = params.fechaFin ? moment(params.fechaFin).endOf('day').toDate() : moment().endOf('day').toDate();
