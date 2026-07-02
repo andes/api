@@ -2,6 +2,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { ProfesionalSubSchema } from '../../../core/tm/schemas/profesional';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { generarIdDesdeFecha } from '../recetasController';
 const insumoSubSchema = new mongoose.Schema({
     id: String,
     nombre: String,
@@ -62,7 +63,7 @@ const estadoDispensaSchema = new mongoose.Schema({
 const estadosSchema = new mongoose.Schema({
     tipo: {
         type: String,
-        enum: ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada'],
+        enum: ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada', 'eliminada'],
         required: true,
         default: 'vigente'
     },
@@ -90,8 +91,14 @@ const estadosSchema = new mongoose.Schema({
     }
 });
 
+estadosSchema.plugin(AuditPlugin);
+
 
 export const recetaInsumoSchema = new mongoose.Schema({
+    idReceta: {
+        type: String,
+        required: false
+    },
     organizacion: {
         id: mongoose.SchemaTypes.ObjectId,
         nombre: String
@@ -156,6 +163,13 @@ recetaInsumoSchema.pre('save', function (next) {
     }
 
     next();
+});
+
+recetaInsumoSchema.post('save', async (prescription: any) => {
+    if (!prescription.idReceta) {
+        const id = generarIdDesdeFecha(prescription.createdAt);
+        await mongoose.model('recetasInsumo').updateOne({ _id: prescription._id }, { $set: { idReceta: id } });
+    }
 });
 
 recetaInsumoSchema.plugin(AuditPlugin);
