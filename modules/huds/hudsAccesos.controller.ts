@@ -16,11 +16,13 @@ export async function search(filtros) {
     if (filtros.fechaDesde) {
         fechas.push({ 'accesos.fecha': { $gte: new Date(filtros.fechaDesde) } });
         filtros['$and'] = fechas;
+        match['accesos.fecha'] = { $gte: new Date(filtros.fechaDesde) };
     }
 
     if (filtros.fechaHasta) {
         fechas.push({ 'accesos.fecha': { $lte: new Date(filtros.fechaHasta) } });
         filtros['$and'] = fechas;
+        match['accesos.fecha'] = { $lte: new Date(filtros.fechaHasta) };
     }
 
     if (filtros.paciente) {
@@ -60,6 +62,15 @@ export async function search(filtros) {
             $unwind: '$accesos',
         },
         {
+            $lookup: {
+                from: 'motivosHuds',
+                localField: 'accesos.motivoAcceso',
+                foreignField: 'key',
+                as: 'motivoHudsData'
+            }
+        },
+
+        {
             $sort: { 'accesos.fecha': -1 }
         },
         {
@@ -76,12 +87,12 @@ export async function search(filtros) {
                 motivoAcceso: '$accesos.motivoAcceso',
                 organizacion: '$accesos.organizacion',
                 detalleMotivo: '$accesos.detalleMotivo',
+                labelPaciente: { $arrayElemAt: ['$motivoHudsData.labelPaciente', 0] }
             }
         }
     ];
 
     return await HudsAcceso.aggregate(aggregate);
-
 }
 
 export const HudsAccesosCtr = {
