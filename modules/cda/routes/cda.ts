@@ -115,11 +115,10 @@ router.post('/', async (req: any, res, next) => {
                 const prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
 
                 if (yaExiste) {
-                    const esLaboratorio = prestacion?.snomed?.semanticTag === 'procedimiento';
                     const fechaCda = moment(yaExiste.metadata.fecha);
-                    const haceUnMes = moment().subtract(1, 'month');
+                    const haceUnAnio = moment().subtract(1, 'year');
 
-                    if (esLaboratorio && fechaCda.isAfter(haceUnMes)) {
+                    if (fechaCda.isAfter(haceUnAnio)) {
                         await cdaCtr.deleteCda(yaExiste._id, null);
                     } else {
                         return next({ error: 'prestacion_existente' });
@@ -356,11 +355,10 @@ async function createCDA(req, res, next) {
     const prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
 
     if (yaExiste) {
-        const esLaboratorio = prestacion?.snomed?.semanticTag === 'procedimiento';
         const fechaCda = moment(yaExiste.metadata.fecha);
-        const haceUnMes = moment().subtract(1, 'month');
+        const haceUnAnio = moment().subtract(1, 'year');
 
-        if (esLaboratorio && fechaCda.isAfter(haceUnMes)) {
+        if (fechaCda.isAfter(haceUnAnio)) {
             await cdaCtr.deleteCda(yaExiste._id, null);
         } else {
             return res.json({ cda: yaExiste._id, paciente: yaExiste.paciente?._id });
