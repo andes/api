@@ -1,3 +1,10 @@
+## [5.147.1](https://github.com/andes/api/compare/v5.147.0...v5.147.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **MPI:** Agrega time out en las consultas a puco nación ([#2268](https://github.com/andes/api/issues/2268)) ([9cb8bcd](https://github.com/andes/api/commit/9cb8bcd1b8a7bfbdf9a2fd8baa1156a66cce23d4))
+
 # [5.147.0](https://github.com/andes/api/compare/v5.146.5...v5.147.0) (2026-07-01)
 
 
