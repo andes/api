@@ -26,8 +26,11 @@ const MatriculacionPosgradoSchema = new mongoose.Schema({
 
     baja: {
         motivo: { type: String, required: false },
-        fecha: { type: String, required: false }
+        fecha: { type: String, required: false },
+        usuario: { type: String, required: false }
     },
+    folio: { type: String, required: false },
+    libro: { type: String, required: false },
     periodos: [{
         notificacionVencimiento: { type: Boolean, required: false },
         inicio: Date,
