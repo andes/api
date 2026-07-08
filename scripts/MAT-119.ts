@@ -18,7 +18,10 @@ async function run(done) {
         baja: {
             motivo: String;
             fecha: Date;
+            usuario?: String;
         };
+        folio: String;
+        libro: String;
         periodos: Iperiodos[];
     };
 
@@ -52,21 +55,21 @@ async function run(done) {
     }
 
     const actualizar = true;
-    const diasAño = 365.25;
-    const añosRevalida = 5;
 
-    const profesionalMatriculado = Profesional.find(
-        { 'formacionPosgrado.matriculacion': { $ne: null } }
-    ).cursor({ batchSize: 100 });
+    const profesionales = Profesional.find({
+        formacionPosgrado: {
+            $exists: true,
+            $ne: null,
+            $not: { $size: 0 }
+        },
+        'formacionPosgrado.matriculacion': { $ne: null }
 
-    let cantProf = 0;
-    let cantProfaAct = 0;
-    let cantProfUp = 0;
+    }).lean().cursor({ batchSize: 100 });
+
     let upProf: boolean;
+    for await (const profesional of profesionales) {
 
-    for await (const profesional of profesionalMatriculado) {
-
-        const profesionalId = profesional.id;
+        const profesionalId = profesional._id;
         const formacionPosgrado = profesional.formacionPosgrado;
 
         upProf = false;
@@ -76,7 +79,7 @@ async function run(done) {
             const profMatriculacion = formacionPosgrado[i].matriculacion;
             const fechasDeAltas = formacionPosgrado[i].fechasDeAltas;
             const fechasAlta: Date[] = [];
-            const periodos = [[]];
+            const periodos: Iperiodos[][] = [];
 
             if (fechasDeAltas) {
                 for (const fechasdealtas of fechasDeAltas) {
@@ -91,52 +94,42 @@ async function run(done) {
             const inicio: Date[] = [];
             const fin: Date[] = [];
             const matriculaNumero: number[] = [];
+            const folio: String[] = [];
+            const libro: String[] = [];
             const bajaFecha: Date[] = [];
             const bajaMotivo: String[] = [];
             const notificacionVencimiento: boolean[] = [];
 
             for (const matriculacion of profMatriculacion) {
 
-                if (matriculacion.periodos.length) {
-
+                if (!matriculacion.periodos?.length) {
                     matriculaNumero.push(matriculacion.matriculaNumero);
-
                     if (matriculacion.inicio) {
                         inicio.push(matriculacion.inicio);
                     } else {
                         inicio.push(fechasAlta[cantMatriculas]);
                     }
-
-                    fin.push(matriculacion.fin ? moment(matriculacion.fin).toDate() : null);
-                    bajaFecha.push(matriculacion.baja.fecha ? moment(matriculacion.baja.fecha).toDate() : null);
-                    bajaMotivo.push(matriculacion.baja.motivo);
-                    notificacionVencimiento.push(matriculacion.notificacionVencimiento ? matriculacion.notificacionVencimiento : false);
-
-                    let años = 0;
-                    let revalida = false;
-
-                    if (cantMatriculas > 0) {
-                        if (fechasAlta.length > 1) {
-                            años = moment(fechasAlta[cantMatriculas]).diff(fechasAlta[cantMatriculas - 1], 'days') / diasAño;
-                        } else {
-                            años = moment(inicio[cantMatriculas]).diff(fechasAlta[cantMatriculas - 1], 'days') / diasAño;
-                        }
-                        if (años <= añosRevalida) {
-                            revalida = true;
-                        }
+                    if (matriculacion.folio) {
+                        folio.push(matriculacion.folio);
+                    }
+                    if (matriculacion.libro) {
+                        libro.push(matriculacion.libro);
                     }
 
-                    if (años <= añosRevalida) {
-                        if (cantMatriculas === 0) {
-                            periodos.push([]);
-                        } else {
-                            contMatriculas++;
-                        }
-                    } else {
-                        matriculaNumero.push(matriculacion.matriculaNumero);
-                        periodos.push([]);
-                        contMatriculas = 0;
+                    fin.push(matriculacion.fin ? moment(matriculacion.fin).toDate() : null);
+                    bajaFecha.push(matriculacion.baja?.fecha ? moment(matriculacion.baja.fecha).toDate() : null);
+                    bajaMotivo.push(matriculacion.baja?.motivo ? matriculacion.baja.motivo : null);
+                    notificacionVencimiento.push(matriculacion.notificacionVencimiento ? matriculacion.notificacionVencimiento : false);
+
+                    const revalida = false;
+
+                    if (cantMatriculas !== 0) {
+                        contMatriculas++;
                         nuevaCantMatriculas++;
+                    }
+
+                    if (!periodos[nuevaCantMatriculas]) {
+                        periodos[nuevaCantMatriculas] = [];
                     }
 
                     periodos[nuevaCantMatriculas].push(
@@ -165,6 +158,8 @@ async function run(done) {
                                 fecha: bajaFecha[mat],
                                 motivo: bajaMotivo[mat]
                             },
+                            folio: folio[mat],
+                            libro: libro[mat],
                             periodos: periodos[mat]
                         }
                     );
@@ -179,9 +174,9 @@ async function run(done) {
                     tituloFileId: formacionPosgrado[i].tituloFileId,
                     observacion: formacionPosgrado[i].observacion,
                     certificacion: {
-                        fecha: formacionPosgrado[i].certificacion.fecha,
-                        modalidad: formacionPosgrado[i].certificacion.modalidad,
-                        establecimiento: formacionPosgrado[i].certificacion.establecimiento,
+                        fecha: formacionPosgrado[i].certificacion?.fecha,
+                        modalidad: formacionPosgrado[i].certificacion?.modalidad,
+                        establecimiento: formacionPosgrado[i].certificacion?.establecimiento,
                     },
                     matriculacion: nuevaMatriculacion,
                     matriculado: formacionPosgrado[i].matriculado,
@@ -200,13 +195,10 @@ async function run(done) {
         }
 
         if (upProf) {
-            cantProfaAct++;
             if (actualizar) {
                 await Profesional.findByIdAndUpdate(profesionalId, { $set: { formacionPosgrado } });
-                cantProfUp++;
             }
         }
-        cantProf++;
     }
     done();
 }
