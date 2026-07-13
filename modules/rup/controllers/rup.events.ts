@@ -46,9 +46,15 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             diagnostico: null,
         };
         dataRecetaBase.paciente.cuil = pacienteCUIL;
+        if (dataRecetaBase.paciente?.obraSocial?.nombre === 'Sin obra social') {
+            dataRecetaBase.paciente.obraSocial = null;
+        }
 
         for (const medicamento of registro.valor.medicamentos) {
             try {
+                if (medicamento.obraSocial?.nombre === 'Sin obra social') {
+                    medicamento.obraSocial = null;
+                }
                 const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
 
                 if (!conceptId) {
