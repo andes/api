@@ -727,11 +727,14 @@ export async function crearReceta(dataReceta, req) {
                 tipoReceta: medicamento.tipoReceta?.id || medicamento.tipoReceta || 'simple',
                 serie: medicamento.serie,
                 numero: medicamento.numero,
+                obraSocial: medicamento.obraSocial || dataReceta.paciente?.obraSocial || null
             };
             receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            receta.paciente = dataReceta.paciente;
-            receta.paciente.obraSocial = dataReceta.paciente.obraSocial;
+
+            const pacienteClone = dataReceta.paciente.toObject ? dataReceta.paciente.toObject() : JSON.parse(JSON.stringify(dataReceta.paciente));
+            receta.paciente = pacienteClone;
+            receta.paciente.obraSocial = null;
             receta.paciente.id = dataReceta.paciente.id || dataReceta.paciente._id;
             receta.profesional = dataReceta.profesional;
             receta.profesional._id = dataReceta.profesional.id || dataReceta.profesional._id; // revisar como se generan ids en ambos casos
