@@ -110,6 +110,16 @@ async function registrarAppNotificadas(req, recetas, sistema) {
     return recetasUpdated.filter(r => r !== null);
 }
 
+function formatearRecetasParaAppExterna(recetas: any[]) {
+    return recetas.map(receta => {
+        const rec = receta.toObject ? receta.toObject() : JSON.parse(JSON.stringify(receta));
+        if (rec.paciente && rec.medicamento?.obraSocial !== undefined) {
+            rec.paciente.obraSocial = rec.medicamento.obraSocial;
+        }
+        return rec;
+    });
+}
+
 /**
  * Se ontienen las recetas de un paciente segun filtros:
  * @param pacienteId (optativo con documento y sexo)
@@ -221,6 +231,7 @@ export async function buscarRecetas(req) {
             // si es un usuario de app y no tiene nombre de sistema asignado, no se envia recetas
             const sistema = user.app.nombre.toLowerCase();
             recetas = sistema ? await registrarAppNotificadas(req, recetas, sistema) : [];
+            recetas = formatearRecetasParaAppExterna(recetas);
         }
         return recetas;
     } catch (err) {
@@ -338,6 +349,7 @@ export async function buscarRecetasConFiltros(req) {
             // si es un usuario de app y no tiene nombre de sistema asignado, no se envia recetas
             const sistema = user.app?.nombre ? user.app.nombre.toLowerCase() : '';
             recetas = sistema ? await registrarAppNotificadas(req, recetas, sistema) : [];
+            recetas = formatearRecetasParaAppExterna(recetas);
         }
 
         return recetas;
@@ -697,7 +709,7 @@ export async function create(req) {
                     pacienteAndes.fechaNacimiento = fechaNacimientoReceta;
                     await pacienteAndes.save();
                 }
-                pacienteAndes.obraSocial = (!pacienteRecetar.obraSocial) ? null :
+                pacienteAndes.obraSocial = (!pacienteRecetar.obraSocial || pacienteRecetar.obraSocial.nombre === 'Sin obra social') ? null :
                     {
                         origen: pacienteRecetar.obraSocial.otraOS ? 'RECETAR' : 'PUCO',
                         nombre: pacienteRecetar.obraSocial.nombre,
@@ -727,7 +739,11 @@ export async function create(req) {
                 matricula: matriculaGrado
             };
         }
-        return await crearReceta(dataReceta, req);
+        const recetas: any = await crearReceta(dataReceta, req);
+        if (Array.isArray(recetas) && req.user?.type === 'app-token') {
+            return formatearRecetasParaAppExterna(recetas);
+        }
+        return recetas;
     } catch (err) {
         createLog.error('create', { dataReceta, pacienteRecetar, profRecetar }, err, req);
         return err;
@@ -749,6 +765,8 @@ export async function crearReceta(dataReceta, req) {
             const diag = medicamento.diagnostico;
             receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
             const esMagistral = !!medicamento.esMagistral;
+            const obraSocialAux = (medicamento.obraSocial !== undefined) ? medicamento.obraSocial : (dataReceta.paciente?.obraSocial || null);
+            const obraSocialFinal = (obraSocialAux && obraSocialAux.nombre !== 'Sin obra social') ? obraSocialAux : null;
             receta.medicamento = {
                 concepto: esMagistral ? null : (medicamento.concepto || medicamento.generico),
                 presentacion: medicamento.presentacion?.term || medicamento.presentacion,
@@ -770,11 +788,14 @@ export async function crearReceta(dataReceta, req) {
                 tipoReceta: medicamento.tipoReceta?.id || medicamento.tipoReceta || 'simple',
                 serie: medicamento.serie,
                 numero: medicamento.numero,
+                obraSocial: obraSocialFinal
             };
             receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            receta.paciente = dataReceta.paciente;
-            receta.paciente.obraSocial = dataReceta.paciente.obraSocial;
+
+            const pacienteClone = dataReceta.paciente.toObject ? dataReceta.paciente.toObject() : JSON.parse(JSON.stringify(dataReceta.paciente));
+            receta.paciente = pacienteClone;
+            receta.paciente.obraSocial = null;
             receta.paciente.id = dataReceta.paciente.id || dataReceta.paciente._id;
             receta.profesional = dataReceta.profesional;
             receta.profesional._id = dataReceta.profesional.id || dataReceta.profesional._id; // revisar como se generan ids en ambos casos
@@ -831,7 +852,10 @@ export async function buscarRecetasPorProfesional(req) {
             filter['estadoActual.tipo'] = { $nin: estados };
         }
 
-        const recetas = await Receta.find(filter);
+        let recetas: any = await Receta.find(filter);
+        if (req.user?.type === 'app-token') {
+            recetas = formatearRecetasParaAppExterna(recetas);
+        }
         return recetas;
     } catch (err) {
         await informarLog.error('buscarRecetasPorProfesional', { params: req.params, query: req.query }, err);
