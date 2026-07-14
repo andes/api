@@ -5,8 +5,7 @@ import { CarnetPerinatal } from '../perinatal/schemas/carnet-perinatal.schema';
 import { buscarEnHuds } from '../rup/controllers/rup';
 import * as moment from 'moment';
 
-// SNOMED ECL para antecedentes familiares
-const ECL_ANTECEDENTES_FAMILIARES = '<< 57177007';
+import { ECLQueries } from '../../core/tm/schemas/eclqueries.schema';
 
 function registrosPorSemanticTag(registros, semanticTag) {
     const result = [];
@@ -87,28 +86,28 @@ export async function antecedentesPersonales(pacienteID) {
         return null;
     }
 
+    const eclQuery = await ECLQueries.findOne({ key: 'antecedentes_personales' });
+    const expression = eclQuery ? eclQuery.valor : '<< 312850006';
+    const conceptos = await SnomedCtr.getConceptByExpression(expression);
+
+    if (!conceptos || conceptos.length === 0) {
+        return [];
+    }
+
     const prestaciones: any[] = await Prestacion.find({
         'paciente.id': { $in: paciente.vinculos },
         'estadoActual.tipo': 'validada'
     });
 
-    const result: any[] = [];
-
-    for (const prestacion of prestaciones) {
-        const registros = registrosPorSemanticTag(prestacion.ejecucion.registros || [], 'trastorno');
-        for (const registro of registros) {
-            result.push({
-                concepto: registro.concepto,
-                fecha: prestacion.ejecucion.fecha,
-                profesional: prestacion.solicitud.profesional,
-                organizacion: prestacion.ejecucion.organizacion,
-                idPrestacion: prestacion._id,
-                tipoPrestacion: prestacion.solicitud.tipoPrestacion
-            });
-        }
-    }
-
-    return result;
+    const results = buscarEnHuds(prestaciones, conceptos);
+    return results.map(item => ({
+        concepto: item.registro.concepto,
+        fecha: item.fecha,
+        profesional: item.profesional,
+        organizacion: item.organizacion,
+        idPrestacion: item.idPrestacion,
+        tipoPrestacion: item.tipoPrestacion
+    }));
 }
 
 export async function antecedentesFamiliares(pacienteID) {
@@ -117,7 +116,8 @@ export async function antecedentesFamiliares(pacienteID) {
         return null;
     }
 
-    const expression = '<< 57177007';
+    const eclQuery = await ECLQueries.findOne({ key: 'antecedentes_familiares' });
+    const expression = eclQuery ? eclQuery.valor : '<< 57177007';
     const conceptos = await SnomedCtr.getConceptByExpression(expression);
 
     if (!conceptos || conceptos.length === 0) {
