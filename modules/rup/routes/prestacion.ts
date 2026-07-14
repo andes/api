@@ -178,9 +178,6 @@ router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
 
 router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     try {
-        if (req.query.solicitudTurno) {
-            return res.json(await Prestacion.find({ 'solicitud.turno': Types.ObjectId(req.query.solicitudTurno) }));
-        }
         let indice = 'TOP-ENTRADA';
         if (req.query.solicitudDesdeActualizacion) {
             indice = 'TOP-ENTRADA-UPDATED';
