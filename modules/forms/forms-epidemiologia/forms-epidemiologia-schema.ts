@@ -117,7 +117,7 @@ FormsEpidemiologiaSchema.post('save', (ficha: any) => {
     const { FormsHistory } = require('./forms-history.schema');
     const history = new FormsHistory(ficha.toJSON());
     history._id = new mongoose.Types.ObjectId();
-    if (ficha.config.configField?.length && !ficha.snvs) {
+    if (ficha.config?.configField?.length && !ficha.snvs) {
         EventCore.emitAsync('alta:fichaEpidemiologica:snvs', ficha);
     }
     history.save();
