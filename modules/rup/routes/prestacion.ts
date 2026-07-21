@@ -575,7 +575,7 @@ router.get('/prestaciones', async (req: any, res, next) => {
                                     j--;
                                     break;
                                 case 'termOnly':
-                                    registros[j].valor = 'REGISTRO PRIVADO';
+                                    registros[j].valor = 'El contenido de este registro sólo puede ser visualizado por el profesional que lo registró.';
                                     registros[j].registros = [];
                                     break;
                             }
