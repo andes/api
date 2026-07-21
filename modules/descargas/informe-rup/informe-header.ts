@@ -159,8 +159,7 @@ export class InformeRupHeader extends HTMLComponent {
         // [TODO] helpers date formats en Handlerbars
 
         const fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
-        const fechaPrestacion = moment(prestacion.ejecucion.fecha);
-        const edad = paciente.fechaNacimiento && fechaPrestacion.diff(moment(paciente.fechaNacimiento), 'years');
+        const edad = paciente.fechaNacimiento && moment().diff(moment(paciente.fechaNacimiento), 'years');
         const organizacionId = String(prestacion.ejecucion.organizacion.id);
         const origenTop = (prestacion.inicio === 'top');
         const solicitudOrigen = prestacion.solicitud;
