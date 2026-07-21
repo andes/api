@@ -2,7 +2,6 @@ import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../auth/auth.class';
 import { userScheduler } from '../../config.private';
-import { searchMatriculas } from '../../core/tm/controller/profesional';
 import { RecetasParametros } from './parametros.schema';
 import { MotivosReceta, Receta } from './receta-schema';
 import { createLog, informarLog, updateLog, jobsLog } from './recetaLogs';
@@ -136,24 +135,23 @@ export async function buscarRecetas(req) {
     const sexo = params.sexo || null;
     const user = req.user;
     try {
-        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
+        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId)) || (params.id && !Types.ObjectId.isValid(params.id))) {
             throw new ParamsIncorrect();
         }
-        const paramMap = {
-            id: '_id',
-            pacienteId: 'paciente.id',
-            documento: 'paciente.documento',
-            sexo: 'paciente.sexo'
-        };
-        Object.keys(paramMap).forEach(key => {
-            if (params[key]) {
-                options[paramMap[key]] = key === 'id' ? Types.ObjectId(params[key]) : params[key];
-            }
-        });
+        // se verifica paciente y sus vinculados si tuviera
+        const pacienteAndes: any = pacienteId ? await Paciente.findById(pacienteId) :
+            (documento && sexo) ? await Paciente.findOne({ documento, sexo, activo: true }) : null;
+        if (!pacienteAndes) {
+            throw new ParamsIncorrect();
+        }
+        options['paciente.id'] = { $in: pacienteAndes.vinculos };
+        if (params.id) {
+            options['_id'] = Types.ObjectId(params.id);
+        }
+
         if (Object.keys(options).length === 0) {
             throw new ParamsIncorrect();
         }
-
         if (params.estadoDispensa) {
             const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
             options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
@@ -203,7 +201,7 @@ export async function buscarRecetas(req) {
         }
 
         // Generar idAndes para recetas que no lo tengan
-        const recetasActualizadas = [];
+        const recetasActualizadas: any = [];
         for (const receta of recetas) {
             if (!receta.idReceta) {
                 receta.idReceta = generarIdDesdeFecha(receta.createdAt || new Date());
