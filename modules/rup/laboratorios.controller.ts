@@ -12,10 +12,11 @@ function agrupar(elementos) {
         esTitulo: e.esTitulo === 'True' ? true : false,
         resultado: e.Resultado || e.resultado,
         unidadMedida: e.UnidadMedida || e.unidadMedida,
-        metodo: e.Metodo,
+        metodo: (e.Metodo || e.metodo || '').replace(/^m[ée]todo:\s*/i, '').trim(),
         valorReferencia: e.valorReferencia,
         firma: e.esTitulo === 'True' ? '' : e.userValida,
-        codificaHiv: e.codificaHiv === 'True' ? true : false
+        codificaHiv: e.codificaHiv === 'True' ? true : false,
+        fechaHoraValida: e.fechaHoraValida ? moment(e.fechaHoraValida).format('DD/MM/YYYY HH:mm') : ''
     });
 
     areasStr.forEach(area => {

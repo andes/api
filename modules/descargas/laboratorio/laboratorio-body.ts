@@ -64,42 +64,62 @@ export class FarmaciaBody extends HTMLComponent {
                             {{#each grupos}}
                                 {{#if item}}
                                     <div class="rTableRow">
-                                        <div class="rTableCell1">
-                                            {{#if esTitulo}}<span style="text-decoration:underline;"><strong>{{/if}}
-                                            {{item.nombre}} 
-                                            {{#if esTitulo}}</strong></span>{{/if}}
-                                        </div>
-                                        <div class="rTableCell2">{{item.resultado}} {{item.unidadMedida}}</div>
-                                        <div class="rTableCell2 small" style="font-size:.125cm;font-style:italic;">
-                                            {{#if item.valorReferencia}}
-                                                {{ item.valorReferencia }}
-                                            {{/if}}
-                                            {{item.metodo}}
-                                        </div>
+                                        {{#if item.esTitulo}}
+                                            <div class="rTableCell1">
+                                                <span style="text-decoration:underline;"><strong>{{item.nombre}}</strong></span>
+                                            </div>
+                                            <div class="rTableCell1"></div>
+                                            <div class="rTableCell1"></div>
+                                            <div class="rTableCell1 small"></div>
+                                        {{else}}
+                                            <div class="rTableCell1">
+                                                {{item.nombre}}
+                                            </div>
+                                            <div class="rTableCell1">{{item.resultado}} {{item.unidadMedida}}</div>
+                                            <div class="rTableCell1">{{ item.valorReferencia}}</div>
+                                            <div class="rTableCell1 small">
+                                                {{#if item.metodo}}
+                                                    {{ item.metodo }}
+                                                {{/if}}
+                                                {{#if item.fechaHoraValida}}
+                                                    {{#if item.metodo}} | {{/if}}{{item.fechaHoraValida}}
+                                                {{/if}}
+                                            </div>
+                                        {{/if}}
                                     </div>
                                 {{/if}}
                                 {{#if grupo}}
                                     <div class="rTableRow">
                                         <div class="rTableCell1"><strong>{{grupo}}</strong></div>
-                                        <div class="rTableCell2"></div>
-                                        <div class="rTableCell2 small"></div>
-                                        <div class="rTableCell2 small"></div>
+                                        <div class="rTableCell1"></div>
+                                        <div class="rTableCell1 small"></div>
+                                        <div class="rTableCell1 small"></div>
                                     </div>
                                 {{/if}}
                                 {{#each items}}
                                     <div class="rTableRow">
-                                        <div class="rTableCell1">
-                                            &emsp;&emsp;
-                                            {{#if esTitulo}}<span style="text-decoration:underline;"><strong>{{/if}}
-                                        {{nombre}}</div>
-                                        {{#if esTitulo}}</strong></span>{{/if}}
-                                        <div class="rTableCell2">{{resultado}} {{unidadMedida}}</div>
-                                        <div class="rTableCell2 small">
-                                            {{#if valorReferencia}}
-                                                {{ valorReferencia }}
-                                            {{/if}}
-                                            {{metodo}}
-                                        </div>
+                                        {{#if esTitulo}}
+                                            <div class="rTableCell1">
+                                                &emsp;&emsp;<span style="text-decoration:underline;"><strong>{{nombre}}</strong></span>
+                                            </div>
+                                            <div class="rTableCell1"></div>
+                                            <div class="rTableCell1"></div>
+                                            <div class="rTableCell1 small"></div>
+                                        {{else}}
+                                            <div class="rTableCell1">
+                                                &emsp;&emsp;{{nombre}}
+                                            </div>
+                                            <div class="rTableCell1">{{resultado}} {{unidadMedida}}</div>
+                                            <div class="rTableCell1">{{valorReferencia}}</div>
+                                            <div class="rTableCell1 small">
+                                                {{#if metodo}}
+                                                    {{ metodo }}
+                                                {{/if}}
+                                                {{#if fechaHoraValida}}
+                                                    {{#if metodo}} | {{/if}}{{fechaHoraValida}}
+                                                {{/if}}
+                                            </div>
+                                        {{/if}}
                                     </div>
                                 {{/each}}
                             {{/each}}
