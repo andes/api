@@ -21,7 +21,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     const reglas = [];
     let fieldRegla;
 
-    if (req.user.type == 'paciente-token') {
+    if (req.user.type === 'paciente-token') {
         const idPacienteQuery = req.query?.idPaciente;
         const idPacienteToken = req.user.pacientes.find(p => String(p.id) === String(idPacienteQuery));
 

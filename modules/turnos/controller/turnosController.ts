@@ -389,3 +389,15 @@ async function telefonoUnico() {
         return '';
     }
 }
+
+export async function getAccesosVirtuales(): Promise<string[]> {
+    try {
+        const constante: any = await Constantes.findOne({ key: 'accesos-virtuales' });
+        if (constante && constante.nombre) {
+            return constante.nombre.split(',').map(s => s.trim().toLowerCase());
+        }
+    } catch (err) {
+        log.error('acceso-constantes', { error: err.message }, userScheduler);
+    }
+    return ['appmobile', 'totem', 'misalud'];
+}
