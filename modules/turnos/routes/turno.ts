@@ -171,24 +171,12 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
     };
  */
 
-async function getAccesosVirtuales(): Promise<string[]> {
-    try {
-        const constante: any = await Constantes.findOne({ key: 'accesos-virtuales' });
-        if (constante && constante.nombre) {
-            return constante.nombre.split(',').map(s => s.trim().toLowerCase());
-        }
-    } catch (err) {
-        log.error('acceso-constantes', { error: err.message }, userScheduler);
-    }
-    return ['appmobile', 'totem', 'misalud'];
-}
-
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: any, res, next) => {
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
 
     if (continues.valid) {
-        const accesosVirtuales = await getAccesosVirtuales();
+        const accesosVirtuales = await turnosController.getAccesosVirtuales();
         const agendaRes: any = await getAgenda(req.body.idAgenda);
         const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id) as any;
 
@@ -238,7 +226,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
             programado: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesProgramados,
             gestion: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesGestion,
             profesional: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesProfesional,
-            mobile: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesMobile,
+            mobile: (agendaRes as any).bloques[posBloque].restantesMobile,
         };
         posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(item => item._id.toString() === req.body.idTurno.toString());
 
@@ -287,9 +275,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                 if (countBloques.mobile > update['bloques.' + posBloque + '.restantesProgramados']) {
                     update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
                 }
-                if (req.body.emitidoPor && accesosVirtuales.includes(String(req.body.emitidoPor).toLowerCase())) {
-                    update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
-                }
                 break;
             case ('profesional'):
                 update['bloques.' + posBloque + '.restantesProfesional'] = countBloques.profesional - 1;
@@ -297,6 +282,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
             case ('gestion'):
                 update['bloques.' + posBloque + '.restantesGestion'] = countBloques.gestion - 1;
                 break;
+        }
+
+        if (req.body.emitidoPor && accesosVirtuales.includes(String(req.body.emitidoPor).toLowerCase())) {
+            update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
         }
         const usuario = Auth.getAuditUser(req);
         const bloqueTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
