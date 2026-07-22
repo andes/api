@@ -87,7 +87,18 @@ export async function search(filtros) {
                 motivoAcceso: '$accesos.motivoAcceso',
                 organizacion: '$accesos.organizacion',
                 detalleMotivo: '$accesos.detalleMotivo',
-                labelPaciente: { $arrayElemAt: ['$motivoHudsData.labelPaciente', 0] }
+                labelPaciente: {
+                    $ifNull: [
+                        '$accesos.labelPaciente',
+                        {
+                            $ifNull: [
+                                { $arrayElemAt: ['$motivoHudsData.labelPaciente', 0] },
+                                { $arrayElemAt: ['$motivoHudsData.label', 0] }
+                            ]
+                        }
+                    ]
+                }
+
             }
         }
     ];
