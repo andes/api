@@ -136,14 +136,15 @@ export async function buscarRecetas(req) {
     const sexo = params.sexo || null;
     const user = req.user;
     try {
-        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
+        if (!params.id && !params.idRegistro && ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId)))) {
             throw new ParamsIncorrect();
         }
         const paramMap = {
             id: '_id',
             pacienteId: 'paciente.id',
             documento: 'paciente.documento',
-            sexo: 'paciente.sexo'
+            sexo: 'paciente.sexo',
+            idRegistro: 'idRegistro'
         };
         Object.keys(paramMap).forEach(key => {
             if (params[key]) {
@@ -157,8 +158,6 @@ export async function buscarRecetas(req) {
         if (params.estadoDispensa) {
             const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
             options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
-        } else {
-            options['estadoActual.tipo'] = null;
         }
         const estadoArray = params.estado ? params.estado.replace(/ /g, '').split(',') : [];
         const fechaFin = params.fechaFin ? moment(params.fechaFin).endOf('day').toDate() : moment().endOf('day').toDate();
@@ -312,7 +311,31 @@ export async function buscarRecetasConFiltros(req) {
             filter['paciente.sexo'] = sexo;
         }
 
-        const recetas = await Receta.find(filter);
+        let recetas: any = await Receta.find(filter);
+
+        if (!recetas.length) {
+            return [];
+        }
+
+        // Generar idAndes para recetas que no lo tengan
+        const recetasActualizadas = [];
+        for (const receta of recetas) {
+            if (!receta.idReceta) {
+                receta.idReceta = generarIdDesdeFecha(receta.createdAt || new Date());
+                Auth.audit(receta, req);
+                await receta.save();
+            }
+            recetasActualizadas.push(receta);
+        }
+        recetas = recetasActualizadas;
+
+        const user = req.user;
+        if (user?.type === 'app-token') {
+            // si es un usuario de app y no tiene nombre de sistema asignado, no se envia recetas
+            const sistema = user.app?.nombre ? user.app.nombre.toLowerCase() : '';
+            recetas = sistema ? await registrarAppNotificadas(req, recetas, sistema) : [];
+        }
+
         return recetas;
     } catch (err) {
         await informarLog.error('buscarRecetasConFiltros', { query: req.query }, err, req);
@@ -334,8 +357,8 @@ export async function suspender(recetaId, req) {
 
 
         if (recetasASuspender.length) {
-            const recetasSuspender = recetasASuspender.filter((r: any) => (r.estadoActual.tipo === 'vigente') || (r.estadoDispensaActual.tipo === 'dispensa-parcial' && r.estadoActual.tipo === 'pendiente'));
-            const recetasEliminar = recetasASuspender.filter((r: any) => (r.estadoDispensaActual.tipo === 'sin-dispensa' && r.estadoActual.tipo === 'pendiente'));
+            const recetasSuspender = recetasASuspender.filter((r: any) => (r.estadoActual.tipo === 'vigente') || (r.estadoDispensaActual?.tipo === 'dispensa-parcial' && r.estadoActual.tipo === 'pendiente'));
+            const recetasEliminar = recetasASuspender.filter((r: any) => (!r.estadoDispensaActual || r.estadoDispensaActual?.tipo === 'sin-dispensa') && r.estadoActual.tipo === 'pendiente');
             if (recetasSuspender.length === 0 && recetasEliminar.length !== 0) {
                 // en el tratamiento prolongado, al menos una receta debe quedar en estado suspendido
                 const recetaSusp = recetasEliminar.pop();
