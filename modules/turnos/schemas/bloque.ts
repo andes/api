@@ -54,6 +54,14 @@ const bloqueSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    citasVirtuales: {
+        type: Boolean,
+        default: false
+    },
+    appMobile: {
+        type: Boolean,
+        default: false
+    },
     restantesMobile: {
         type: Number,
         default: 0
