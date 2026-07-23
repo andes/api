@@ -16,7 +16,8 @@ export const insumoSchema = new mongoose.Schema({
         enum: ['activo', 'inactivo']
     },
     requiereEspecificacion: Boolean,
-    observaciones: String
+    observaciones: String,
+    unidadMedida: String
 });
 
 
