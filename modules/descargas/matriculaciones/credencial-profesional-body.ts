@@ -62,7 +62,7 @@ export class CredencialProfesionalBody extends HTMLComponent {
                 fechaNacimiento = moment(fechaRaw).format('DD/MM/YYYY');
 
             } else {
-                fechaNacimiento = moment.utc(fechaRaw).local().format('DD/MM/YYYY');
+                fechaNacimiento = moment.utc(fechaRaw).format('DD/MM/YYYY');
             }
         }
         const entidadFormadora = formacionGrado.entidadFormadora.nombre;
