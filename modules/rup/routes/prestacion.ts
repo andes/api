@@ -526,6 +526,7 @@ router.get('/prestaciones', async (req: any, res, next) => {
     if (req.query.organizacion) {
         query.where('solicitud.organizacion.id').equals(req.query.organizacion);
     }
+
     if (req.query.ambitoOrigen) {
         query.where('solicitud.ambitoOrigen').equals(req.query.ambitoOrigen);
     }
@@ -599,7 +600,7 @@ router.post('/prestaciones', async (req, res, next) => {
         const estado = dto.estados[dto.estados.length - 1].tipo;
 
         if (dto.solicitud.turno && estado !== 'modificada' && !dto.groupId) {
-            const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno, 'estadoActual.tipo': { $ne: 'modificada' } });
+            const prestacionIniciada = await Prestacion.count({ 'solicitud.turno': dto.solicitud.turno, 'estadoActual.tipo': { $eq: 'ejecucion' } });
             if (prestacionIniciada > 0) {
                 return next('ya_iniciada');
             }
