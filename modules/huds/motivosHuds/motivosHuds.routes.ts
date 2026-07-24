@@ -8,8 +8,10 @@ class MotivosHudsResource extends ResourceBase {
         label: MongoQuery.partialString,
         key: MongoQuery.partialString,
         descripcion: MongoQuery.partialString,
-        moduloDefault: MongoQuery.partialString
+        moduloDefault: MongoQuery.partialString,
+        labelPaciente: MongoQuery.partialString
     };
 }
+
 export const MotivosHudsCtr = new MotivosHudsResource({});
 export const MotivosHudsRouter = MotivosHudsCtr.makeRoutes();
