@@ -19,19 +19,13 @@ async function validarPaciente(pacienteId: any, documento: any, sexo: any) {
             paciente = await Paciente.findOne({ documento, sexo, activo: true });
         }
         if (paciente) {
+            if (paciente.fechaFallecimiento && paciente.fechaFallecimiento !== null) {
+                return { status: 200, message: { validado: false, mensaje: 'Paciente fallecido', Fecha: paciente.fechaFallecimiento } };
+            }
             const edadPaciente = calcularEdad(paciente.fechaNacimiento, paciente.fechaFallecimiento);
             if (edadPaciente && edadPaciente >= 65) {
-                let financiador = paciente.financiador;
-                let sinFinanciador = verificarFinanciador(financiador);
-                if (sinFinanciador) {
-                    try {
-                        financiador = await getObraSocial(paciente);
-                        sinFinanciador = verificarFinanciador(financiador);
-                    } catch (e) {
-                        // En caso de fallo en el servicio de obra social, se mantiene sin financiador
-                    }
-                }
-                if (sinFinanciador) {
+                const financiador = verificarFinanciador(paciente.financiador) ? paciente.financiador : await getObraSocial(paciente);
+                if (!financiador) {
                     const matriculaNum = Number(paciente.documento);
                     if (!isNaN(matriculaNum)) {
                         const generoPadron = paciente.sexo === 'masculino' ? 'M' : paciente.sexo === 'femenino' ? 'F' : 'X';
@@ -51,7 +45,7 @@ async function validarPaciente(pacienteId: any, documento: any, sexo: any) {
 }
 
 function verificarFinanciador(financiador: any) {
-    return !financiador || financiador.length === 0;
+    return !financiador || financiador.length === 0 || (financiador.length === 1 && financiador[0].nombre === 'SUMAR');
 }
 
 async function guardarConsentimiento(programa: string, version: number, pacienteId: any, aceptacion: boolean) {
@@ -102,4 +96,3 @@ function borrarLogConsentimientos(data: any) {
 }
 
 export { validarPaciente, guardarConsentimiento, borrarLogConsentimientos };
-
