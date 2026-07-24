@@ -20,6 +20,16 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     const condiciones: any = await CondicionPaciente.find({ activo: true });
     const reglas = [];
     let fieldRegla;
+
+    if (req.user.type === 'paciente-token') {
+        const idPacienteQuery = req.query?.idPaciente;
+        const idPacienteToken = req.user.pacientes.find(p => String(p.id) === String(idPacienteQuery));
+
+        if (!idPacienteToken) {
+            return next(401);
+        }
+    }
+
     if (req.query.idPaciente) {
         for (const condicion of condiciones) {
             const verificar = await verificarCondicionPaciente(condicion, req.query.idPaciente);
@@ -38,11 +48,18 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
         }
     }
     matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
-    matchAgendas['bloques.restantesProgramados'] = { $gt: 0 };
+    matchAgendas['$or'] = [
+        {
+            'bloques.restantesProgramados': { $gt: 0 },
+        },
+        {
+            'bloques.restantesDelDia': { $gt: 0 }
+        }
+    ];
     matchAgendas['estado'] = 'publicada';
     matchAgendas['dinamica'] = false;
 
-    if (reglas) {
+    if (reglas?.length > 0) {
         matchAgendas['$or'] = [
             {
                 'bloques.restantesMobile': { $gt: 0 },

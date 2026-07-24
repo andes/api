@@ -14,6 +14,7 @@ import { Prestacion } from '../../rup/schemas/prestacion';
 import { Agenda, HistorialAgenda } from '../../turnos/schemas/agenda';
 import { agendaLog, agendaJob } from '../citasLog';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
+import { getAccesosVirtuales } from '../../turnos/controller/turnosController';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import { ECLQueriesCtr } from './../../../core/tm/eclqueries.routes';
 import { handleHttpRequest } from '../../../utils/requestHandler';
@@ -107,7 +108,10 @@ export function quitarTurnoDoble(req, data, tid = null) {
 // Turno y sobreturno
 export async function liberarTurno(req, data, turno) {
     const position = getPosition(req, data, turno._id);
+    const accesosVirtuales = await getAccesosVirtuales();
+    const esMobile = accesosVirtuales.includes(String(turno.emitidoPor).toLowerCase());
     const enEjecucion = await prestacionController.enEjecucion(turno);
+    const esHoy = moment(turno.horaInicio).isSame(moment(), 'day');
     if (enEjecucion) {
         return false;
     }
@@ -148,13 +152,15 @@ export async function liberarTurno(req, data, turno) {
                 programados: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'programado').length || 0,
                 delDia: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'delDia').length || 0,
                 autocitados: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'profesional').length || 0,
-                gestion: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'gestion').length || 0
+                gestion: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'gestion').length || 0,
+                mobile: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.emitidoPor === 'appMobile').length || 0
             };
             const bloque = data.bloques[position.indexBloque];
             const cuposMaximos = {
                 gestion: getBloqueCupoMaximo(bloque, 'reservadoGestion'),
                 profesional: getBloqueCupoMaximo(bloque, 'reservadoProfesional'),
-                programado: getBloqueCupoMaximo(bloque, 'accesoDirectoProgramado')
+                programado: getBloqueCupoMaximo(bloque, 'accesoDirectoProgramado'),
+                mobile: getBloqueCupoMaximo(bloque, 'cupoMobile')
             };
 
             if (bloque.restantesGestion < (cuposMaximos.gestion - turnosAsignados.gestion)) {
@@ -163,10 +169,13 @@ export async function liberarTurno(req, data, turno) {
                 if (bloque.restantesProfesional < (cuposMaximos.profesional - turnosAsignados.autocitados)) {
                     bloque.restantesProfesional = bloque.restantesProfesional + cant;
                 } else {
-                    if (bloque.restantesProgramados < (cuposMaximos.programado - turnosAsignados.programados)) {
+                    if (!esHoy && bloque.restantesProgramados < (cuposMaximos.programado - turnosAsignados.programados)) {
                         bloque.restantesProgramados = bloque.restantesProgramados + cant;
                     } else {
                         bloque.restantesDelDia = bloque.restantesDelDia + cant;
+                    }
+                    if (esMobile && bloque.restantesMobile <= cuposMaximos.mobile) {
+                        bloque.restantesMobile = bloque.restantesMobile + cant;
                     }
                 }
             }
