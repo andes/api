@@ -3,7 +3,7 @@ import { crearRecetaInsumo } from '../../recetas/recetasInsumos/recetaInsumosCon
 import { getProfesionActualizada } from '../../recetas/recetasController';
 import * as moment from 'moment';
 import { RecetaInsumo } from './receta-insumo.schema';
-import { createLog } from './../recetaLogs';
+import { createLog } from './recetaInsumoLogs';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 
 EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) => {
@@ -12,17 +12,18 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
     try {
         const idRegistro = registro._id;
         const documentoProfesional = prestacion.estadoActual.createdBy?.documento ? prestacion.estadoActual.createdBy?.documento : prestacion.solicitud.profesional.documento;
-        const profPrestacion = await Profesional.findOne({ documento: documentoProfesional });
-        if (!profPrestacion) {
-            createLog.error('create', { dataReceta, prestacion, profesional: null }, null, { prestacion, registro });
+        const profPrestacion: any = await Profesional.findOne({ documento: documentoProfesional });
+        const prof = Array.isArray(profPrestacion) ? profPrestacion[0] : profPrestacion;
+        if (!prof || !prof._id) {
+            createLog.error('create', { dataReceta, prestacion, profesional: null }, `No se encontró el profesional con documento ${documentoProfesional}`, { prestacion, registro });
             return;
         }
-        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion.id);
+        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(prof, true);
         profesional = {
-            id: profPrestacion.id,
-            nombre: profPrestacion.nombre,
-            apellido: profPrestacion.apellido,
-            documento: profPrestacion.documento,
+            id: prof.id || prof._id,
+            nombre: prof.nombre,
+            apellido: prof.apellido,
+            documento: prof.documento,
             profesion: profesionGrado,
             especialidad: especialidades,
             matricula: matriculaGrado
