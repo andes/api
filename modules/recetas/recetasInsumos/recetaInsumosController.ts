@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { RecetaInsumo } from './receta-insumo.schema';
-import { createLog, informarLog, updateLog } from '../recetaLogs';
+import { createLog, informarLog, updateLog } from './recetaInsumoLogs';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from '../recetas.error';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { Profesional } from '../../../core/tm/schemas/profesional';
@@ -163,7 +163,7 @@ export async function create(req) {
             if (!profAndes) {
                 throw new ParamsIncorrect('Profesional no encontrado');
             }
-            const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profRecetar.id);
+            const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profAndes, true);
             dataRecetaInsumo.profesional = {
                 _id: profAndes._id,
                 id: profAndes._id,
