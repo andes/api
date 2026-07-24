@@ -33,6 +33,10 @@ const FarmaciaSchema = new mongoose.Schema({
     expedientePapel: String,
     expedienteGDE: String,
     nroCaja: String,
+    tipoEstablecimiento: {
+        type: String,
+        enum: ['Farmacia', 'Droguería', 'Botiquín', 'Depósito', 'Distribuidora', 'Vacunatorio', 'Esterilización']
+    },
     disposiciones: [{
         numero: String,
         descripcion: String
