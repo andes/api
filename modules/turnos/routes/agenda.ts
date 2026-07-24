@@ -636,16 +636,14 @@ router.patch('/agenda/:id*?', (req, res, next) => {
             }
 
             Auth.audit(data, req);
-            data.save(async (error) => {
+            try {
+                await data.save();
                 EventCore.emitAsync('citas:agenda:update', data);
                 if (event.data) {
                     EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
                 }
-                objetoLog.err = error || undefined;
+                objetoLog.err = undefined;
                 agendaLog.info('update', objetoLog, req);
-                if (error) {
-                    return next(error);
-                }
 
                 if (req.body.op === 'suspendida') {
                     const liberar = [];
@@ -675,9 +673,12 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         await liberarRefTurno(event.data, req);
                     }
                 }
-            });
-
-            res.json(data);
+                return res.json(data);
+            } catch (error) {
+                objetoLog.err = error || undefined;
+                agendaLog.info('update', objetoLog, req);
+                return next(error);
+            }
 
             return;
         });

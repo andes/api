@@ -44,7 +44,16 @@ const turnoSchema = new mongoose.Schema({
     link: String,
     motivoSuspension: {
         type: String,
-        enum: ['edilicia', 'profesional', 'organizacion', 'agendaSuspendida']
+        enum: [
+            'agendaSuspendida',
+            'gestion-pacientes',
+            'reoganizacion-asistencial',
+            'reorganizacion-asistencial',
+            'medida-fuerza',
+            'ausencia-profesional',
+            'edilicio-infraest-conect',
+            'disponibilidad-espacio'
+        ]
     },
     avisoSuspension: {
         type: String,
