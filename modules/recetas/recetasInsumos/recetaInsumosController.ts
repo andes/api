@@ -177,7 +177,7 @@ export async function create(req) {
             if (!profAndes) {
                 throw new ParamsIncorrect('Profesional no encontrado');
             }
-            const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profAndes);
+            const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profAndes, true);
             dataRecetaInsumo.profesional = {
                 _id: profAndes._id,
                 id: profAndes._id,
