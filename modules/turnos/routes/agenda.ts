@@ -245,11 +245,9 @@ router.get('/agenda/:id?', async (req, res, next) => {
         if (req.query.tieneTurnosAsignados) {
             query.where('bloques.turnos.estado').equals('asignado');
         }
-
-        if (String(req.query.citasVirtuales) === 'true') {
-            query.where('bloques.citasVirtuales').equals(true);
-        } else if (String(req.query.citasVirtuales) === 'false') {
-            query.where('bloques.citasVirtuales').equals(false);
+        const citasVirtuales = String(req.query.citasVirtuales);
+        if (citasVirtuales === 'true' || citasVirtuales === 'false') {
+            query.where('bloques.citasVirtuales').equals(citasVirtuales === 'true');
         }
         if (req.query.turno) {
             query.where('bloques.turnos._id').equals(req.query.turno);
