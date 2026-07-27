@@ -24,7 +24,7 @@ async function validarPaciente(pacienteId: any, documento: any, sexo: any) {
             }
             const edadPaciente = calcularEdad(paciente.fechaNacimiento, paciente.fechaFallecimiento);
             if (edadPaciente && edadPaciente >= 65) {
-                const financiador = verificarFinanciador(paciente.financiador) ? paciente.financiador : await getObraSocial(paciente);
+                const financiador = tieneFinanciador(paciente.financiador || await getObraSocial(paciente));
                 if (!financiador) {
                     const matriculaNum = Number(paciente.documento);
                     if (!isNaN(matriculaNum)) {
@@ -44,8 +44,8 @@ async function validarPaciente(pacienteId: any, documento: any, sexo: any) {
     }
 }
 
-function verificarFinanciador(financiador: any) {
-    return !financiador || financiador.length === 0 || (financiador.length === 1 && financiador[0].nombre === 'SUMAR');
+function tieneFinanciador(financiador: any) {
+    return financiador && financiador.length > 0 && (financiador.some(f => f.nombre !== 'SUMAR'));
 }
 
 async function guardarConsentimiento(programa: string, version: number, pacienteId: any, aceptacion: boolean) {
