@@ -101,8 +101,8 @@ export async function search(filtros) {
                             ]
                         }
                     ]
-                }
-
+                },
+                modulo: '$accesos.modulo',
             }
         }
     ];
