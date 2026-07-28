@@ -68,15 +68,19 @@ export class FarmaciaBody extends HTMLComponent {
                                             <div class="rTableCell1">
                                                 <span style="text-decoration:underline;"><strong>{{item.nombre}}</strong></span>
                                             </div>
-                                            <div class="rTableCell1"></div>
-                                            <div class="rTableCell1"></div>
-                                            <div class="rTableCell1 small"></div>
+                                            <div class="rTableCell1" style="text-decoration:underline;">Resultado</div>
+                                            <div class="rTableCell1" style="text-decoration:underline;">VR</div>
+                                            <div class="rTableCell1 small" style="text-decoration:underline;">Método | Fecha</div>
                                         {{else}}
                                             <div class="rTableCell1">
                                                 {{item.nombre}}
                                             </div>
-                                            <div class="rTableCell1">{{item.resultado}} {{item.unidadMedida}}</div>
-                                            <div class="rTableCell1">{{ item.valorReferencia}}</div>
+                                            <div class="rTableCell1">{{item.resultado}}&nbsp;&nbsp;&nbsp;
+                                                {{#if unidadMedida}}
+                                                    {{unidadMedida}}
+                                                {{/if}}
+                                            </div>
+                                            <div class="rTableCell1 small">{{ item.valorReferencia}}</div>
                                             <div class="rTableCell1 small">
                                                 {{#if item.metodo}}
                                                     {{ item.metodo }}
@@ -102,15 +106,19 @@ export class FarmaciaBody extends HTMLComponent {
                                             <div class="rTableCell1">
                                                 &emsp;&emsp;<span style="text-decoration:underline;"><strong>{{nombre}}</strong></span>
                                             </div>
-                                            <div class="rTableCell1"></div>
-                                            <div class="rTableCell1"></div>
-                                            <div class="rTableCell1 small"></div>
+                                            <div class="rTableCell1" style="text-decoration:underline;">Resultado</div>
+                                            <div class="rTableCell1" style="text-decoration:underline;">VR</div>
+                                            <div class="rTableCell1 small" style="text-decoration:underline;">Método | Fecha</div>
                                         {{else}}
                                             <div class="rTableCell1">
                                                 &emsp;&emsp;{{nombre}}
                                             </div>
-                                            <div class="rTableCell1">{{resultado}} {{unidadMedida}}</div>
-                                            <div class="rTableCell1">{{valorReferencia}}</div>
+                                            <div class="rTableCell1">{{resultado}}&nbsp;&nbsp;&nbsp;
+                                                {{#if unidadMedida}}
+                                                    {{unidadMedida}}
+                                                {{/if}}
+                                            </div>
+                                            <div class="rTableCell1 small">{{valorReferencia}}</div>
                                             <div class="rTableCell1 small">
                                                 {{#if metodo}}
                                                     {{ metodo }}
