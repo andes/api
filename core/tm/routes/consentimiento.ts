@@ -14,8 +14,7 @@ class ConsentimientoVersionResource extends ResourceBase {
         programa: MongoQuery.matchString,
         version: MongoQuery.equalMatch,
         titulo: MongoQuery.partialString,
-        activo: MongoQuery.equalMatch,
-        pacienteId: MongoQuery.equalMatch
+        activo: MongoQuery.equalMatch
     };
 }
 
