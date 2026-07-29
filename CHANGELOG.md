@@ -1,3 +1,10 @@
+## [5.147.2](https://github.com/andes/api/compare/v5.147.1...v5.147.2) (2026-07-29)
+
+
+### Bug Fixes
+
+* **REC-262:** se agrega idReceta, audit en estados y ruta con filtros ([#2271](https://github.com/andes/api/issues/2271)) ([56e4965](https://github.com/andes/api/commit/56e4965db1c5bfedb5f1be6d72336fd9adae26f5))
+
 ## [5.147.1](https://github.com/andes/api/compare/v5.147.0...v5.147.1) (2026-07-08)
 
 
