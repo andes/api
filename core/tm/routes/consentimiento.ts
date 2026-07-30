@@ -51,7 +51,7 @@ router.get('/consentimiento', Auth.authenticate(), async (req: express.Request, 
     if (consentimientos && consentimientos.length > 0) {
         res.status(200).json(borrarLogConsentimientos(consentimientos));
     } else {
-        res.status(404).json({ message: 'Consentimiento no encontrado' });
+        res.status(200).json({ encontrado: false });
     }
 });
 

@@ -260,6 +260,7 @@ export default [
         child: [
             { key: 'visualizacionHuds', title: 'Ver HUDS completa', type: 'boolean' },
             { key: 'soloEfectorActual', title: 'Visualizar HUDS solo de prestaciones realizadas en el efector actual', type: 'boolean' },
+            { key: 'programaMas65', title: 'Programa +65', type: 'boolean', visibility: 'restricted' },
             { key: 'impresion', title: 'Imprimir cualquier prestación', type: 'boolean', visibility: 'restricted' },
             { key: 'exportarHuds', title: 'Exportar HUDS de un paciente', type: 'boolean', visibility: 'restricted' },
             {
