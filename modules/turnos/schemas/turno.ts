@@ -51,7 +51,10 @@ const turnoSchema = new mongoose.Schema({
             'medidaFuerza',
             'ausenciaProfesional',
             'edilicioInfraestructuraConectividad',
-            'disponibilidadEspacio'
+            'disponibilidadEspacio',
+            'edilicia',
+            'profesional',
+            'organizacion',
         ]
     },
     avisoSuspension: {
