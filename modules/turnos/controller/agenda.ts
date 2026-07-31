@@ -119,6 +119,7 @@ export async function liberarTurno(req, data, turno) {
         data.sobreturnos.splice(index, 1);
     } else { // Liberación de turno
         if (!data.dinamica) {
+            const emitidoPor = turno.emitidoPor;
             turno.estado = 'disponible';
             turno.paciente = null;
             turno.tipoPrestacion = null;
@@ -169,6 +170,10 @@ export async function liberarTurno(req, data, turno) {
                         bloque.restantesDelDia = bloque.restantesDelDia + cant;
                     }
                 }
+            }
+
+            if (emitidoPor && await esVirtual(emitidoPor)) {
+                bloque.restantesMobile = (bloque.restantesMobile || 0) + cant;
             }
 
             const fechaActualizar = moment().startOf('day').add(2, 'days');
