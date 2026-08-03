@@ -17,7 +17,7 @@ export class SelectOrganizacionComponent extends HTMLComponent {
 
     async process() {
         this.data = {
-            titulo: this.params.titulo || this.registro.concepto.term,
+            titulo: this.params.titulo || this.params.title || this.registro.concepto.term,
             registro: this.registro,
             valor: this.getValor()
         };
