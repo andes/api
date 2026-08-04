@@ -5,7 +5,7 @@ export class ValorFechaComponent extends HTMLComponent {
     template = `
             <div class="nivel-1">
                 <p>
-                    {{ registro.concepto.term }}
+                    {{ titulo }}
                     {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}:
                     <small>
                         {{{ fecha }}}
@@ -20,6 +20,7 @@ export class ValorFechaComponent extends HTMLComponent {
 
     async process() {
         this.data = {
+            titulo: this.params.titulo || this.params.title || this.registro.concepto.term,
             registro: this.registro,
             fecha: this.format()
         };

@@ -17,7 +17,7 @@ export class SelectSnomedComponent extends HTMLComponent {
 
     async process() {
         this.data = {
-            titulo: this.params.titulo || this.registro.concepto.term,
+            titulo: this.params.titulo || this.params.title || this.registro.concepto.term,
             registro: this.registro,
             valor: this.getValor()
         };
@@ -29,9 +29,9 @@ export class SelectSnomedComponent extends HTMLComponent {
         }
         const valor = this.registro.valor;
         if (Array.isArray(valor)) {
-            return valor.map(v => `${v.term}`).join(', ');
+            return valor.map(v => v.label || v.term || v.nombre || '').filter(Boolean).join(', ');
         } else {
-            return `${valor.term || valor.nombre}`;
+            return valor.label || valor.term || valor.nombre || '';
         }
     }
 
