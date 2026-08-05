@@ -1,3 +1,10 @@
+## [5.147.3](https://github.com/andes/api/compare/v5.147.2...v5.147.3) (2026-08-05)
+
+
+### Bug Fixes
+
+* **turnos:** se agregan en el esquema motivos de suspensión antiguos ([#2289](https://github.com/andes/api/issues/2289)) ([07961f1](https://github.com/andes/api/commit/07961f13d22701dfc72c1d22e3cec201e6521d11))
+
 ## [5.147.2](https://github.com/andes/api/compare/v5.147.1...v5.147.2) (2026-07-29)
 
 
