@@ -21,6 +21,23 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 const router = express.Router();
 
+// Rechaza bloques de teleconsulta con todo el cupo asignado a turnos mobile pero sin ningún canal de atención seleccionado
+function validarBloquesInvisibles(bloques): string | null {
+    if (!bloques) {
+        return null;
+    }
+    for (const bloque of bloques) {
+        const cupoMobile = Number(bloque.cupoMobile) || 0;
+        const cantidadTurnos = Number(bloque.cantidadTurnos) || 0;
+        const tienePrestacionTeleconsulta = (bloque.tipoPrestaciones || []).some(tp => tp.teleConsulta);
+        if (cupoMobile > 0 && cupoMobile === cantidadTurnos && tienePrestacionTeleconsulta && !bloque.appMobile && !bloque.citasVirtuales) {
+            const horaInicio = bloque.horaInicio ? moment(bloque.horaInicio).format('DD/MM/YYYY HH:mm') : 'sin horario';
+            return `No se puede guardar la agenda: el bloque de las ${horaInicio} es de teleconsulta, tiene todo el cupo asignado a turnos mobile y no se seleccionó ningún canal de atención (appMobile ni citasVirtuales)`;
+        }
+    }
+    return null;
+}
+
 // devuelve los 10 ultimos turnos del paciente
 router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
 
@@ -245,10 +262,6 @@ router.get('/agenda/:id?', async (req, res, next) => {
         if (req.query.tieneTurnosAsignados) {
             query.where('bloques.turnos.estado').equals('asignado');
         }
-        const citasVirtuales = String(req.query.citasVirtuales);
-        if (citasVirtuales === 'true' || citasVirtuales === 'false') {
-            query.where('bloques.citasVirtuales').equals(citasVirtuales === 'true');
-        }
         if (req.query.turno) {
             query.where('bloques.turnos._id').equals(req.query.turno);
         }
@@ -314,6 +327,11 @@ router.post('/agenda', async (req: any, res, next) => {
         const errorPrestaciones = await validarProfesionalPrestaciones(profesionales, tipoPrestaciones.map(p => p._id), organizacionId);
         if (errorPrestaciones) {
             return next(errorPrestaciones);
+        }
+
+        const errorBloques = validarBloquesInvisibles(req.body.bloques);
+        if (errorBloques) {
+            return next(errorBloques);
         }
 
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(data);
@@ -408,6 +426,11 @@ router.put('/agenda/:id', async (req: any, res, next) => {
         const errorPrestaciones = await validarProfesionalPrestaciones(profesionales, tipoPrestaciones.map(p => p.id), organizacionId);
         if (errorPrestaciones) {
             return next(errorPrestaciones);
+        }
+
+        const errorBloques = validarBloquesInvisibles(req.body.bloques);
+        if (errorBloques) {
+            return next(errorBloques);
         }
 
         const mensajesSolapamiento = await agendaCtrl.verificarSolapamiento(req.body);
