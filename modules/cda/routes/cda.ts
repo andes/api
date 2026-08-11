@@ -13,6 +13,7 @@ import { findById } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { vacunas } from '../../vacunas/schemas/vacunas';
 import { checkFichaAbierta } from '../../forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 import { InformeCDA } from '../../../modules/descargas/informe-cda/informe-cda';
+import { findOneGridFS } from '../../../core/tm/controller/file-storage';
 
 const ObjectId = Types.ObjectId;
 
@@ -182,22 +183,35 @@ router.get('/style/cda.xsl', (req, res, next) => {
  */
 
 router.get('/files/:name', async (req: any, res, next) => {
-    if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
-        return next(403);
-    }
+    try {
+        if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
+            return next(403);
+        }
 
-    const name = req.params.name;
-    const CDAFiles = makeFs();
+        const CDAFiles = makeFs();
+        const file = await findOneGridFS(
+            CDAFiles,
+            { filename: req.params.name }
+        );
 
-    CDAFiles.findOne({ filename: name }).then(async file => {
+        if (!file) {
+            return next(404);
+        }
+
         if (req.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(req.user.pacientes[0].id)) {
             return next(403);
         }
 
-        const stream1 = await CDAFiles.readFile({ _id: file._id });
         res.contentType(file.contentType);
-        stream1.pipe(res);
-    }).catch(next);
+
+        const stream = CDAFiles.openDownloadStream(file._id);
+
+        stream.on('error', next);
+        stream.pipe(res);
+
+    } catch (error) {
+        next(error);
+    }
 });
 
 /**
@@ -233,17 +247,26 @@ router.get('/paciente/', async (req: any, res, next) => {
  * Devuelve el XML de un CDA según un ID
  */
 router.get('/:id', async (req: any, res, next) => {
-    const _base64 = Types.ObjectId(req.params.id);
-    const CDAFiles = makeFs();
-    const contexto = await CDAFiles.findOne({ _id: _base64 });
-    CDAFiles.readFile({ _id: _base64 }, (err, buffer) => {
+    try {
+        const id = Types.ObjectId(req.params.id);
+        const CDAFiles = makeFs();
+        const contexto = await findOneGridFS(CDAFiles, { _id: id });
 
-        if (err || !buffer) {
-            res.status(200).json({});
+        if (!contexto) {
+            return res.status(200).json({});
         }
+
         res.contentType(contexto.contentType);
-        res.end(buffer);
-    });
+
+        const downloadStream = CDAFiles.openDownloadStream(id);
+
+        downloadStream.on('error', next);
+        downloadStream.pipe(res);
+
+        return res;
+    } catch (error) {
+        return next(error);
+    }
 });
 
 

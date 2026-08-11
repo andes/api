@@ -7,7 +7,6 @@ module.exports = {
     testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
     moduleFileExtensions: ['ts', 'tsx', 'js', 'json', 'node'],
     moduleNameMapper: {
-        '@andes/unit-test': '<rootDir>/packages/unit-testing/index.ts',
-        '^mongoose-gridfs$': '<rootDir>/__mocks__/mongoose-gridfs.js'
+        '@andes/unit-test': '<rootDir>/packages/unit-testing/index.ts'
     }
 };

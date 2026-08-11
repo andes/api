@@ -1,6 +1,7 @@
 /**
- * Mock manual de mongoose-gridfs
- * Necesario para evitar carga ESM (@lykmapipo/*) en Jest (Node >=16)
+ * Declaraciones de tipos para @andes/fhir.
+ * Evita que TypeScript compile directamente los fuentes TS
+ * publicados dentro del paquete.
  */
 declare module '@andes/fhir' {
     export const Organization: any;

@@ -1,12 +1,5 @@
-
-import * as mongoose from 'mongoose';
-const { createBucket } = require('mongoose-gridfs');
+import { createGridFSBucket } from '../../../shared/gridfs';
 
 export function makeFsImagenOnline() {
-    const ProfesionalesImagenRenovacionOnlineSchema = createBucket({
-        bucketName: 'ProfesionalesImagenRenovacionOnline',
-        collectionName: 'ProfesionalesImagenRenovacionOnline',
-        mongooseConnection: mongoose.connection
-    });
-    return ProfesionalesImagenRenovacionOnlineSchema;
+    return createGridFSBucket('ProfesionalesImagenRenovacionOnline');
 }

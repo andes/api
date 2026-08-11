@@ -1,18 +1,25 @@
 import * as base64_stream from 'base64-stream';
 import * as mongoose from 'mongoose';
 import * as stream from 'stream';
+import { GridFSBucket, ObjectId } from 'mongodb';
 
-const { createBucket } = require('mongoose-gridfs');
 const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
-export function makeFs(name) {
-    const FilesSchema = createBucket({
-        collectionName: name,
-        bucketName: name,
-        mongooseConnection: mongoose.connection
+export interface GridFSFileInfo {
+    _id: any;
+    filename: string;
+    contentType?: string;
+    length?: number;
+    metadata?: any;
+    uploadDate?: Date;
+    paciente?: any;
+    [key: string]: any;
+}
+
+export function makeFs(name: string) {
+    return new GridFSBucket(mongoose.connection.db, {
+        bucketName: name
     });
-    // obtain a model
-    return FilesSchema;
 }
 
 export function storeFile(base64, metadata, name) {
@@ -24,41 +31,56 @@ export function storeFile(base64, metadata, name) {
         const uniqueId = new mongoose.Types.ObjectId();
         const input = new stream.PassThrough();
         const decoder64 = base64_stream.decode();
-        const File = makeFs(name);
-
-        File.writeFile(
+        const bucket = makeFs(name);
+        const filename = uniqueId + '.' + mime.split('/')[1];
+        const uploadStream = bucket.openUploadStreamWithId(
+            uniqueId,
+            filename,
             {
-                _id: uniqueId,
-                filename: uniqueId + '.' + mime.split('/')[1],
                 contentType: mime,
                 metadata
-            },
-            input.pipe(decoder64),
-            (error, createdFile) => {
-                resolve(createdFile);
             }
         );
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => {
+            resolve({
+                _id: uniqueId,
+                filename,
+                contentType: mime,
+                metadata
+            });
+        });
+
+        input
+            .pipe(decoder64)
+            .pipe(uploadStream);
+
         input.end(data);
     });
 }
 
-export function readFile(id, collectionName): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const Files = makeFs(collectionName);
-            const idFile = mongoose.Types.ObjectId(id);
-            const _file = await Files.findOne({ _id: idFile });
-            const _stream = Files.readFile({ _id: idFile });
-            resolve({
-                file: _file,
-                stream: _stream
-            });
+export async function readFile(id, collectionName): Promise<any> {
+    const bucket = makeFs(collectionName);
+    const idFile = mongoose.Types.ObjectId(id);
+    const files = await bucket
+        .find({ _id: idFile })
+        .toArray();
 
-        } catch (e) {
-            return reject(e);
-        }
-    });
+    const file = files[0];
+
+    if (!file) {
+        throw new Error('File not found');
+    }
+
+    const fileStream = bucket.openDownloadStream(idFile);
+
+    return {
+        file,
+        stream: fileStream
+    };
 }
+
+// --------- HELPERS ----------------------------------------
 
 export function streamToBase64(streamData) {
     return new Promise((resolve, reject) => {
@@ -72,6 +94,39 @@ export function streamToBase64(streamData) {
         });
         streamData.on('error', (err) => {
             return reject(err);
+        });
+    });
+}
+
+export async function findOneGridFS(bucket: GridFSBucket, query: any): Promise<GridFSFileInfo | null> {
+    const files = await bucket
+        .find(query)
+        .limit(1)
+        .toArray();
+
+    return files.length ? files[0] as GridFSFileInfo : null;
+}
+
+export function readGridFS(bucket: GridFSBucket, id: ObjectId) {
+    return bucket.openDownloadStream(id);
+}
+
+export async function deleteGridFS(bucket: GridFSBucket, id: ObjectId) {
+    await bucket.delete(id);
+}
+
+export function streamToBuffer(readStream): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        const chunks: Buffer[] = [];
+
+        readStream.on('data', (chunk) => {
+            chunks.push(Buffer.from(chunk));
+        });
+
+        readStream.on('error', reject);
+
+        readStream.on('end', () => {
+            resolve(Buffer.concat(chunks));
         });
     });
 }

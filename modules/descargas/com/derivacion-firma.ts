@@ -1,6 +1,6 @@
 import { HTMLComponent } from '../model/html-component.class';
 import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
-import { streamToBase64 } from '../../../core/tm/controller/file-storage';
+import { findOneGridFS, streamToBase64 } from '../../../core/tm/controller/file-storage';
 import { searchMatriculas } from '../../../core/tm/controller/profesional';
 import * as mongoose from 'mongoose';
 import { Profesional } from '../../../core/tm/schemas/profesional';
@@ -46,9 +46,11 @@ export class DerivacionFirma extends HTMLComponent {
     private async getFirma(profesional) {
         const FirmaSchema = makeFsFirma();
         const idProfesional = String(profesional.id);
-        const file = await FirmaSchema.findOne({ 'metadata.idProfesional': idProfesional });
-        if (file && file._id) {
-            const stream = await FirmaSchema.readFile({ _id: file._id });
+
+        const file = await findOneGridFS(FirmaSchema, { 'metadata.idProfesional': idProfesional });
+
+        if (file?._id) {
+            const stream = FirmaSchema.openDownloadStream(file._id);
             const base64 = await streamToBase64(stream);
             return base64;
         }
