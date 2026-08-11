@@ -1,13 +1,8 @@
-
 import * as mongoose from 'mongoose';
-const { createBucket } = require('mongoose-gridfs');
+import { GridFSBucket } from 'mongodb';
 
 export function makeFs() {
-    const ProfesionalesFilesSchema = createBucket({
-        collectionName: 'ProfesionalesImagenes',
-        bucketName: 'ProfesionalesImagenes',
-        mongooseConnection: mongoose.connection
+    return new GridFSBucket(mongoose.connection.db, {
+        bucketName: 'ProfesionalesImagenes'
     });
-    // obtain a model
-    return ProfesionalesFilesSchema;
 }

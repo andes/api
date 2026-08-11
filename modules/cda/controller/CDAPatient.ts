@@ -8,7 +8,7 @@ import { Auth } from '../../../auth/auth.class';
 import { CDA as CDAConfig } from '../../../config.private';
 import { isMatchingAlto, suggest } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
-import { readFile as readFileBase } from '../../../core/tm/controller/file-storage';
+import { findOneGridFS, readFile as readFileBase, streamToBuffer } from '../../../core/tm/controller/file-storage';
 import { makeFs } from '../schemas/CDAFiles';
 import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
 import { CDABuilder } from './builder/CdaBuilder';
@@ -217,27 +217,27 @@ export function storeFile({
     return new Promise((resolve, reject) => {
         const CDAFiles = makeFs();
         const uniqueId = new Types.ObjectId();
-
-        CDAFiles.writeFile(
+        const finalFilename = filename ? filename : String(uniqueId) + '.' + extension;
+        const uploadStream = CDAFiles.openUploadStreamWithId(
+            uniqueId,
+            finalFilename,
             {
-                _id: uniqueId,
-                filename: filename ? filename : String(uniqueId) + '.' + extension,
                 contentType: mimeType,
                 metadata
-            },
-            stream,
-            (error, createdFile) => {
-                if (error) {
-                    return reject(error);
-                }
-                return resolve({
-                    id: createdFile._id,
-                    data: createdFile.filename,
-                    mime: mimeType,
-                    is64: false
-                });
             }
         );
+
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => {
+            resolve({
+                id: uniqueId,
+                data: finalFilename,
+                mime: mimeType,
+                is64: false
+            });
+        });
+
+        stream.pipe(uploadStream);
     });
 }
 
@@ -251,21 +251,27 @@ export function storePdfFile(pdf) {
         const input = new Stream.PassThrough();
         const mime = 'application/pdf';
         const CDAFiles = makeFs();
-        CDAFiles.writeFile(
+        const filename = String(uniqueId) + '.pdf';
+        const uploadStream = CDAFiles.openUploadStreamWithId(
+            uniqueId,
+            filename,
             {
-                _id: uniqueId,
-                filename: String(uniqueId) + '.pdf',
                 contentType: mime
-            },
-            input.pipe(pdf),
-            (error, createdFile) => {
-                resolve({
-                    id: createdFile._id,
-                    data: 'files/' + createdFile.filename,
-                    mime
-                });
             }
         );
+
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => {
+            resolve({
+                id: uniqueId,
+                data: 'files/' + filename,
+                mime
+            });
+        });
+
+        input
+            .pipe(pdf)
+            .pipe(uploadStream);
     });
 }
 
@@ -277,24 +283,28 @@ export function storePdfFile(pdf) {
  */
 export function storeCDA(objectID, cdaXml, metadata) {
     return new Promise((resolve, reject) => {
-
-        const input = new Stream.PassThrough();
         const CDAFiles = makeFs();
-
-        CDAFiles.writeFile(
+        const id = Types.ObjectId(objectID);
+        const filename = String(objectID) + '.xml';
+        const uploadStream = CDAFiles.openUploadStreamWithId(
+            id,
+            filename,
             {
-                _id: Types.ObjectId(objectID),
-                filename: String(objectID) + '.xml',
                 contentType: 'application/xml',
                 metadata
-            },
-            input,
-            (error, createdFile) => {
-                resolve(createdFile);
             }
         );
 
-        input.end(cdaXml);
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => {
+            resolve({
+                _id: id,
+                filename,
+                contentType: 'application/xml',
+                metadata
+            });
+        });
+        uploadStream.end(cdaXml);
     });
 }
 
@@ -417,7 +427,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
  */
 export function findByMetadata(conds) {
     const CDAFiles = makeFs();
-    return CDAFiles.findOne(conds);
+    return findOneGridFS(CDAFiles, conds);
 }
 
 /**
@@ -506,10 +516,16 @@ export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
         try {
             const CDAFiles = makeFs();
-            CDAFiles.readFile({ filename: String(cdaID) + '.xml' }, (err, buffer) => {
-                const xml = buffer.toString('utf8');
-                return resolve(xml);
-            });
+            const files = await CDAFiles.find({ filename: String(cdaID) + '.xml' })
+                .limit(1)
+                .toArray();
+            const file = files[0];
+
+            if (!file) {
+                return null;
+            }
+
+            const buffer = await streamToBuffer(CDAFiles.openDownloadStream(file._id));
         } catch (e) {
             return resolve(null);
         }
@@ -787,10 +803,7 @@ export function checkAndExtract(xmlDom) {
 
 export async function getCDAById(id: ObjectId) {
     const CDAFiles = makeFs();
-    const cda = await CDAFiles.findOne({
-        _id: new Types.ObjectId(id)
-    });
-    return cda;
+    return findOneGridFS(CDAFiles, { _id: new Types.ObjectId(id) });
 }
 
 export async function getCdaAdjunto(cda, fileID: string) {
@@ -798,35 +811,45 @@ export async function getCdaAdjunto(cda, fileID: string) {
     const adj = cda.metadata.adjuntos.find(_adj => {
         return String(_adj.id) === String(fileID);
     });
-    if (adj) {
-        if (adj.adapter === 'drive') {
-            const fileDrive = await AndesDrive.find(new Types.ObjectId(fileID));
-            if (fileDrive) {
-                const stream1 = await AndesDrive.read(fileDrive);
-                const archivo = {
-                    file: fileDrive,
-                    stream: stream1
-                };
-                return archivo;
-            }
-        } else {
-            const query = {
-                _id: new Types.ObjectId(fileID),
-                'metadata.cdaId': cda._id
-            };
-            const file = await CDAFiles.findOne(query);
-            const stream1 = await readFileBase(file._id, 'CDAFiles');
-            return stream1;
-        }
+
+    if (!adj) {
+        return null;
     }
+
+    if (adj.adapter === 'drive') {
+        const fileDrive = await AndesDrive.find(new Types.ObjectId(fileID));
+
+        if (!fileDrive) {
+            return null;
+        }
+
+        const stream1 = await AndesDrive.read(fileDrive);
+
+        return {
+            file: fileDrive,
+            stream: stream1
+        };
+    }
+
+    const query = { _id: new Types.ObjectId(fileID), 'metadata.cdaId': cda._id };
+    const file = await findOneGridFS(CDAFiles, query);
+
+    if (!file) {
+        return null;
+    }
+
+    return readFileBase(file._id, 'CDAFiles');
 }
 
 
-function deleteCDA(id) {
+async function deleteCDA(id) {
     const cdaFiles = makeFs();
-    return new Promise((resolve, reject) => {
-        cdaFiles.unlink(id, () => { return resolve(null); });
-    });
+    if (typeof (id) === 'string') {
+        await cdaFiles.delete(Types.ObjectId(id));
+    } else {
+        await cdaFiles.delete(id);
+    }
+    return null;
 }
 
 export async function deleteCda(idCda, idPaciente) {

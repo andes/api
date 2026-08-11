@@ -9,7 +9,7 @@ import { findUser, updateEmailUser } from '../../../auth/auth.controller';
 import { PacienteApp } from '../../../modules/mobileApp/schemas/pacienteApp';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
-import { streamToBase64 } from '../controller/file-storage';
+import { findOneGridFS, streamToBase64 } from '../controller/file-storage';
 import { formacionCero, matriculaCero, migrarTurnos, saveFirma, filtrarProfesionalesPorPrestacion, saveImage, deleteFirmaFotoTemporal } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
@@ -445,9 +445,9 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, re
                 };
             }
 
-            const file = await fotoProf.findOne(metadataFind);
+            const file = await findOneGridFS(fotoProf, metadataFind);
             if (file) {
-                const readStream = await fotoProf.readFile({ _id: file._id });
+                const readStream = fotoProf.openDownloadStream(file._id);
                 const _img = await streamToBase64(readStream);
                 return res.json(_img);
             }
@@ -467,6 +467,7 @@ router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, ne
 
             if (req.query.matricula) {
                 const matricula = parseInt(req.query.matricula, 10);
+
                 fotoProf = makeFsFirmaOnline();
                 metadataFind = {
                     'metadata.idProfesional': id,
@@ -478,40 +479,40 @@ router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, ne
                     'metadata.idProfesional': id
                 };
             }
-            const file = await fotoProf.findOne(metadataFind);
+
+            const file = await findOneGridFS(fotoProf, metadataFind);
+
             if (file) {
-                const readStream = await fotoProf.readFile({ _id: file._id });
+                const readStream = fotoProf.openDownloadStream(file._id);
                 const firma = await streamToBase64(readStream);
+
                 if (firma) {
                     return res.json(firma);
                 }
             }
             return res.json({});
-
         }
+
         if (req.query.firmaAdmin) {
             const idAdmin = req.query.firmaAdmin;
             const fotoAdmin = makeFsFirmaAdmin();
-            const file = await fotoAdmin.findOne({ 'metadata.idSupervisor': idAdmin });
+
+            const file = await findOneGridFS(fotoAdmin, { 'metadata.idSupervisor': idAdmin });
             if (file) {
-                const idFile = file._id;
-                const readStream = await fotoAdmin.readFile({ _id: idFile });
+                const readStream = fotoAdmin.openDownloadStream(file._id);
                 const _img = await streamToBase64(readStream);
+
                 if (_img) {
-                    const firmaAdmin = {
-                        firma: _img,
-                        administracion: file.metadata.administracion
-                    };
+                    const firmaAdmin = { firma: _img, administracion: file.metadata.administracion };
                     return res.json(firmaAdmin);
                 }
             }
             return res.json({});
-
         }
+        return res.json({});
     } catch (ex) {
         return next(ex);
     }
-
 });
 
 router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {

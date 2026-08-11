@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import * as base64_stream from 'base64-stream';
 import * as stream from 'stream';
 import { makeFs } from '../schemas/comStore.schema';
+import { findOneGridFS } from 'core/tm/controller/file-storage';
 
 const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
@@ -15,54 +16,54 @@ export function storeFile(base64, metadata) {
         const input = new stream.PassThrough();
         const decoder64 = base64_stream.decode();
         const COMFiles = makeFs();
-
-        COMFiles.writeFile({
-            _id: uniqueId,
-            filename: uniqueId + '.' + mime.split('/')[1],
-            contentType: mime,
-            metadata
-        },
-        input.pipe(decoder64),
-        (error, createdFile) => {
-            resolve(createdFile);
-        }
+        const filename = uniqueId + '.' + mime.split('/')[1];
+        const uploadStream = COMFiles.openUploadStreamWithId(
+            uniqueId,
+            filename,
+            {
+                contentType: mime,
+                metadata
+            }
         );
+
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => {
+            resolve({
+                _id: uniqueId,
+                filename,
+                contentType: mime,
+                metadata
+            });
+        });
+
+        input
+            .pipe(decoder64)
+            .pipe(uploadStream);
+
         input.end(data);
     });
 }
 
-export function readFile(id): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const COMFiles = makeFs();
-            const idFile = Types.ObjectId(id);
-            const contexto = await COMFiles.findOne({ _id: idFile });
-            const stream2 = COMFiles.readFile({ _id: idFile });
-            resolve({
-                file: contexto,
-                stream: stream2
-            });
-        } catch (e) {
-            return reject(e);
-        }
-    });
+export async function readFile(id): Promise<any> {
+    const COMFiles = makeFs();
+    const idFile = Types.ObjectId(id);
+    const contexto = await findOneGridFS(
+        COMFiles,
+        { _id: idFile }
+    );
+
+    if (!contexto) {
+        return null;
+    }
+
+    return {
+        file: contexto,
+        stream: COMFiles.openDownloadStream(idFile)
+    };
 }
 
-export function readAsBase64(id) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const COMFiles = makeFs();
-            const idFile = Types.ObjectId(id);
-            const contexto = await COMFiles.findOne({ _id: idFile });
-            const stream2 = COMFiles.readFile({ _id: idFile });
-            resolve({
-                file: contexto,
-                stream: stream2
-            });
-        } catch (e) {
-            return reject(e);
-        }
-    });
+export async function readAsBase64(id) {
+    return readFile(id);
 }
 
 export function streamToBase64(streamData) {
