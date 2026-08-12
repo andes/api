@@ -1,3 +1,10 @@
+## [5.147.4](https://github.com/andes/api/compare/v5.147.3...v5.147.4) (2026-08-12)
+
+
+### Bug Fixes
+
+* **EP:** Se cambia control para interoperar, se quita carga de LAMP en desuso ([#2291](https://github.com/andes/api/issues/2291)) ([27175c6](https://github.com/andes/api/commit/27175c6dcd614c11a1bf2a76c857365f6e7df053))
+
 ## [5.147.3](https://github.com/andes/api/compare/v5.147.2...v5.147.3) (2026-08-05)
 
 
