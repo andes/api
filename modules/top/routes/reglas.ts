@@ -66,8 +66,8 @@ router.get('/reglas', async (req: Request, res, next) => {
     const raw = req.query.raw || false;
     const esServicioIntermedio = req.query.esServicioIntermedio;
 
-    if (req.query.organizacionOrigen) {
-        query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
+    if (req.query.organizacionOrigen as any) {
+        query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen as any));
     }
 
     if (esServicioIntermedio !== undefined) {
@@ -78,25 +78,25 @@ router.get('/reglas', async (req: Request, res, next) => {
         }
     }
 
-    if (req.query.prestacionOrigen) {
+    if (req.query.prestacionOrigen as any) {
         query.or([
-            { 'origen.prestaciones.prestacion.conceptId': req.query.prestacionOrigen },
+            { 'origen.prestaciones.prestacion.conceptId': req.query.prestacionOrigen as any },
             { 'origen.prestaciones': null },
         ]);
-        // query.where('origen.prestaciones.prestacion.conceptId').equals(req.query.prestacionOrigen);
-    } else if (req.query.prestacionesOrigen) {
-        prestacionesPermisos = await ConceptosTurneablesCtr.getByPermisos(req, req.query.prestacionesOrigen);
+        // query.where('origen.prestaciones.prestacion.conceptId').equals(req.query.prestacionOrigen as any);
+    } else if (req.query.prestacionesOrigen as any) {
+        prestacionesPermisos = await ConceptosTurneablesCtr.getByPermisos(req, req.query.prestacionesOrigen as any);
         if (prestacionesPermisos) {
             query.where('origen.prestaciones.prestacion.conceptId').in(prestacionesPermisos.map(e => e.conceptId));
         }
     }
 
-    if (req.query.organizacionDestino) {
-        query.where('destino.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionDestino));
+    if (req.query.organizacionDestino as any) {
+        query.where('destino.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionDestino as any));
 
     }
-    if (req.query.search) {
-        const searchRegex = new RegExp(req.query.search, 'i');
+    if (req.query.search as any) {
+        const searchRegex = new RegExp(req.query.search as any, 'i');
         query.where({
             $or: [
                 { 'destino.organizacion.nombre': searchRegex },
@@ -104,16 +104,16 @@ router.get('/reglas', async (req: Request, res, next) => {
             ]
         });
     }
-    if (req.query.prestacionDestino) {
-        query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
+    if (req.query.prestacionDestino as any) {
+        query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino as any);
     }
 
-    if (req.query.skip) {
-        query.skip(parseInt(req.query.skip || 0, 10));
+    if (req.query.skip as any) {
+        query.skip(parseInt(req.query.skip as any || 0, 10));
     }
 
-    if (req.query.limit) {
-        query.limit(parseInt(req.query.limit || 0, 10));
+    if (req.query.limit as any) {
+        query.limit(parseInt(req.query.limit as any || 0, 10));
     }
 
     const reglas = await query.sort({ 'destino.prestacion.term': 1 }).exec();
@@ -123,10 +123,10 @@ router.get('/reglas', async (req: Request, res, next) => {
         });
     }
 
-    if (req.query.prestacionDestino && !raw) {
+    if (req.query.prestacionDestino as any && !raw) {
         reglas.forEach(regla => {
             if (Array.isArray(regla.destino.prestacion)) {
-                regla.destino.prestacion = regla.destino.prestacion.find(p => (p.conceptId === req.query.prestacionDestino));
+                regla.destino.prestacion = regla.destino.prestacion.find(p => (p.conceptId === req.query.prestacionDestino as any));
             }
         });
     }
@@ -137,8 +137,8 @@ router.get('/reglas', async (req: Request, res, next) => {
 router.delete('/reglas', async (req, res, next) => {
     try {
         const data = await ReglasTOP.deleteMany({
-            'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.organizacionDestino),
-            'destino.prestacion.conceptId': req.query.prestacionDestino
+            'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.organizacionDestino as any),
+            'destino.prestacion.conceptId': req.query.prestacionDestino as any
         });
         return res.json(data);
     } catch (err) {

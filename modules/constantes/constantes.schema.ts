@@ -20,7 +20,7 @@ export const ConstantesSchema = new mongoose.Schema({
     }
 });
 
-export const Constantes: Model<ConstanteDocument> = mongoose.model(
+export const Constantes = mongoose.model<ConstanteDocument>(
     'constantes',
     ConstantesSchema,
     'constantes'

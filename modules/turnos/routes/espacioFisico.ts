@@ -7,8 +7,8 @@ import { defaultLimit, maxLimit } from './../../../config';
 const router = express.Router();
 
 router.get('/espacioFisico/:_id*?', (req, res, next) => {
-    if (req.params._id) {
-        EspacioFisico.findById(req.params._id, (err, data) => {
+    if ((req.params as any)._id) {
+        EspacioFisico.findById((req.params as any)._id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -17,8 +17,8 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
     } else {
         // Trae todos
         const radix = 10;
-        const skip: number = parseInt(req.query.skip || 0, radix);
-        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        const skip: number = parseInt(req.query.skip as any || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit as any || defaultLimit, radix), maxLimit);
         const query = EspacioFisico.find({});
         // .skip(skip).limit(limit);
         const nombres = [];
@@ -27,7 +27,7 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
 
             let termino: String = '';
             // separamos todas las palabras y eliminamos caracteres extraños
-            const words = String(req.query.nombre).split(' ');
+            const words = String(req.query.nombre as any).split(' ');
             words.forEach((word) => {
                 // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
                 word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
@@ -61,7 +61,7 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
         }
 
         if (req.query.organizacion) {
-            query.where('organizacion._id').equals(mongoose.Types.ObjectId(req.query.organizacion));
+            query.where('organizacion._id').equals(mongoose.Types.ObjectId(req.query.organizacion as any));
         }
 
         if (req.query.sinOrganizacion) {
@@ -100,7 +100,7 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
 
 router.get('/espacioFisico/:idOrganizacion', (req, res, next) => {
 
-    EspacioFisico.find(req.params.idOrganizacion, (err, data) => {
+    EspacioFisico.find((req.params as any).idOrganizacion, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -120,7 +120,7 @@ router.post('/espacioFisico', (req, res, next) => {
 });
 
 router.put('/espacioFisico/:id', (req, res, next) => {
-    EspacioFisico.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
+    EspacioFisico.findByIdAndUpdate((req.params as any).id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -129,7 +129,7 @@ router.put('/espacioFisico/:id', (req, res, next) => {
 });
 
 router.delete('/espacioFisico/:id', (req, res, next) => {
-    EspacioFisico.findByIdAndRemove(req.params.id, (err, data) => {
+    EspacioFisico.findByIdAndRemove((req.params as any).id).exec((err, data) => {
         if (err) {
             return next(err);
         }
