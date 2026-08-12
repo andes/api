@@ -732,11 +732,17 @@ export async function crearReceta(dataReceta, req) {
             receta.idRegistro = dataReceta.idRegistro;
             const diag = medicamento.diagnostico;
             receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
+
+            let cantidadSanitizada = Number(medicamento.cantidad);
+            if (isNaN(cantidadSanitizada)) {
+                cantidadSanitizada = null;
+            }
+
             receta.medicamento = {
                 concepto: medicamento.concepto || medicamento.generico,
                 presentacion: medicamento.presentacion?.term || medicamento.presentacion,
                 unidades: medicamento.unidades,
-                cantidad: medicamento.cantidad,
+                cantidad: cantidadSanitizada,
                 cantEnvases: medicamento.cantEnvases,
                 dosisDiaria: {
                     dosis: medicamento.dosisDiaria.dosis,
@@ -769,7 +775,28 @@ export async function crearReceta(dataReceta, req) {
             } else {
                 receta.audit(req);
             }
-            await receta.save();
+
+            let lastErr;
+            let saved = false;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    await receta.save();
+                    saved = true;
+                    break;
+                } catch (saveErr: any) {
+                    lastErr = saveErr;
+                    // No reintentar si es un error de validación del esquema de Mongoose
+                    if (saveErr.name === 'ValidationError') {
+                        break;
+                    }
+                    // Esperar antes del próximo intento (backoff exponencial: 500ms, 1000ms)
+                    await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+                }
+            }
+            if (!saved) {
+                throw lastErr;
+            }
+
             recetas.push(receta);
         } catch (err) {
             createLog.error('crearReceta', { dataReceta, receta }, err, req);
