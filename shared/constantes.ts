@@ -34,5 +34,5 @@ export const IDENTIFICACION = {
 
 export const CONTACTO = {
     type: String,
-    enum: ['fijo', 'celular', 'email']
+    enum: ['fijo', 'celular', 'email', 'extranjero']
 };
