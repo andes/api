@@ -76,6 +76,7 @@ export async function search(filtros) {
                 motivoAcceso: '$accesos.motivoAcceso',
                 organizacion: '$accesos.organizacion',
                 detalleMotivo: '$accesos.detalleMotivo',
+                modulo: '$accesos.modulo',
             }
         }
     ];
