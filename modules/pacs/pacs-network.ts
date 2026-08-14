@@ -1,6 +1,7 @@
 import { services } from '../../services';
 import { handleHttpRequest } from '../../utils/requestHandler';
 import { IPacsConfig } from './pacs-config.schema';
+import { hasDicomResults } from './pacs-reconciliation';
 
 
 export async function loginPacs(pacsConfig: IPacsConfig) {
@@ -36,6 +37,53 @@ export async function createWorkList(pacsConfig: IPacsConfig, data: any, token: 
     });
 
     return response;
+}
+
+export async function studyExists(pacsConfig: IPacsConfig, studyUID: string, token: string): Promise<boolean> {
+    const url = `${pacsConfig.host}/dcm4chee-arc/aets/${pacsConfig.aet}/rs/studies/${encodeURIComponent(studyUID)}/series`;
+    const [status, body] = await handleHttpRequest({
+        method: 'GET',
+        url,
+        qs: { limit: 1 },
+        headers: {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/dicom+json'
+        }
+    });
+
+    if (status === 404) {
+        return false;
+    }
+    if (status >= 200 && status < 300) {
+        return hasDicomResults(body);
+    }
+    throw new Error(`PACS study lookup failed with status ${status}`);
+}
+
+export async function searchStudies(
+    pacsConfig: IPacsConfig,
+    patientID: string,
+    studyDate: string,
+    token: string
+): Promise<any> {
+    const url = `${pacsConfig.host}/dcm4chee-arc/aets/${pacsConfig.aet}/rs/studies`;
+    const [status, body] = await handleHttpRequest({
+        method: 'GET',
+        url,
+        qs: {
+            '00100020': patientID,
+            '00080020': studyDate
+        },
+        headers: {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/dicom+json'
+        }
+    });
+
+    if (status >= 200 && status < 300) {
+        return body;
+    }
+    throw new Error(`PACS study search failed with status ${status}`);
 }
 
 
