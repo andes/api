@@ -75,6 +75,7 @@ describe('PACS reconciliation', () => {
             dicomStudy('cr', ['CR']),
             dicomStudy('dx', ['DX']),
             dicomStudy('ct-sr', ['CT', 'SR']),
+            dicomStudy('ct-us', ['CT', 'US']),
             dicomStudy('sr', ['SR'])
         ];
 

@@ -11,6 +11,8 @@ export interface IPacsReconciliationStatus {
 
 type Metadata = { key: string; valor: any }[];
 
+const SUPPLEMENTAL_MODALITIES = ['SR'];
+
 export function configuredMatchingModalities(
     enabled: boolean,
     configuredModalities: string[] | undefined,
@@ -48,8 +50,13 @@ export function matchingStudies(body: any, allowedModalities: string[]): IPacsSt
         const modalities = dicomValues(study, '00080061')
             .reduce((all, value) => all.concat(value.split('\\')), [])
             .map(modality => modality.toUpperCase());
+        const primaryModalities = modalities.filter(modality => !SUPPLEMENTAL_MODALITIES.includes(modality));
 
-        if (uid && modalities.some(modality => allowed.includes(modality))) {
+        if (
+            uid &&
+            primaryModalities.length > 0 &&
+            primaryModalities.every(modality => allowed.includes(modality))
+        ) {
             candidates.set(uid, { uid, modalities });
         }
     });
