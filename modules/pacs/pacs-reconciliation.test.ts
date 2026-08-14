@@ -1,4 +1,4 @@
-import { handleHttpRequest } from '../../utils/requestHandler';
+import { services } from '../../services';
 import { IPacsConfig } from './pacs-config.schema';
 import { searchStudies, studyExists } from './pacs-network';
 import {
@@ -11,12 +11,10 @@ import {
     resolvedReconciliationMetadata
 } from './pacs-reconciliation';
 
-jest.mock('../../utils/requestHandler', () => ({
-    handleHttpRequest: jest.fn()
-}));
-
 jest.mock('../../services', () => ({
-    services: { get: jest.fn() }
+    services: {
+        get: jest.fn()
+    }
 }));
 
 const config = {
@@ -30,9 +28,14 @@ const dicomStudy = (uid: string, modalities: string[]) => ({
 });
 
 describe('PACS reconciliation', () => {
-    const requestMock = handleHttpRequest as jest.Mock;
+    const getServiceMock = services.get as jest.Mock;
+    const execMock = jest.fn();
 
-    beforeEach(() => requestMock.mockReset());
+    beforeEach(() => {
+        execMock.mockReset();
+        getServiceMock.mockReset();
+        getServiceMock.mockReturnValue({ exec: execMock });
+    });
 
     test('defaults matching to the configured PACS modality', () => {
         expect(configuredMatchingModalities(undefined, 'CT')).toEqual(['CT']);
@@ -41,29 +44,34 @@ describe('PACS reconciliation', () => {
     });
 
     test('checks study existence with a bounded series lookup', async () => {
-        requestMock.mockResolvedValueOnce([200, '[]']);
+        execMock.mockResolvedValueOnce([]);
         await expect(studyExists(config, '1.2.3', 'token')).resolves.toBe(false);
 
-        requestMock.mockResolvedValueOnce([200, JSON.stringify([{ '0020000E': { Value: ['4.5.6'] } }])]);
+        execMock.mockResolvedValueOnce([{ '0020000E': { Value: ['4.5.6'] } }]);
         await expect(studyExists(config, '1.2.3', 'token')).resolves.toBe(true);
 
-        expect(requestMock).toHaveBeenLastCalledWith(expect.objectContaining({
-            method: 'GET',
-            url: 'https://pacs.example.org/dcm4chee-arc/aets/PACS/rs/studies/1.2.3/series',
-            qs: { limit: 1 }
-        }));
+        expect(getServiceMock).toHaveBeenLastCalledWith('dcm4chee-buscar-series-estudio');
+        expect(execMock).toHaveBeenLastCalledWith({
+            host: 'https://pacs.example.org',
+            aet: 'PACS',
+            token: 'token',
+            studyUID: '1.2.3',
+            limit: 1
+        });
     });
 
     test('searches potential matches only by patient and date', async () => {
-        requestMock.mockResolvedValueOnce([200, '[]']);
+        execMock.mockResolvedValueOnce([]);
 
-        await expect(searchStudies(config, 'patient-1', '20260814', 'token')).resolves.toBe('[]');
-        expect(requestMock).toHaveBeenCalledWith(expect.objectContaining({
-            qs: {
-                '00100020': 'patient-1',
-                '00080020': '20260814'
-            }
-        }));
+        await expect(searchStudies(config, 'patient-1', '20260814', 'token')).resolves.toEqual([]);
+        expect(getServiceMock).toHaveBeenCalledWith('dcm4chee-buscar-estudios');
+        expect(execMock).toHaveBeenCalledWith({
+            host: 'https://pacs.example.org',
+            aet: 'PACS',
+            token: 'token',
+            patientID: 'patient-1',
+            studyDate: '20260814'
+        });
     });
 
     test('requires actual DICOM results even on a successful response', () => {

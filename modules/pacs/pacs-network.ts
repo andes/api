@@ -40,24 +40,14 @@ export async function createWorkList(pacsConfig: IPacsConfig, data: any, token: 
 }
 
 export async function studyExists(pacsConfig: IPacsConfig, studyUID: string, token: string): Promise<boolean> {
-    const url = `${pacsConfig.host}/dcm4chee-arc/aets/${pacsConfig.aet}/rs/studies/${encodeURIComponent(studyUID)}/series`;
-    const [status, body] = await handleHttpRequest({
-        method: 'GET',
-        url,
-        qs: { limit: 1 },
-        headers: {
-            Authorization: 'Bearer ' + token,
-            Accept: 'application/dicom+json'
-        }
+    const response = await services.get('dcm4chee-buscar-series-estudio').exec({
+        host: pacsConfig.host,
+        aet: pacsConfig.aet,
+        token,
+        studyUID,
+        limit: 1
     });
-
-    if (status === 404) {
-        return false;
-    }
-    if (status >= 200 && status < 300) {
-        return hasDicomResults(body);
-    }
-    throw new Error(`PACS study lookup failed with status ${status}`);
+    return hasDicomResults(response);
 }
 
 export async function searchStudies(
@@ -66,24 +56,13 @@ export async function searchStudies(
     studyDate: string,
     token: string
 ): Promise<any> {
-    const url = `${pacsConfig.host}/dcm4chee-arc/aets/${pacsConfig.aet}/rs/studies`;
-    const [status, body] = await handleHttpRequest({
-        method: 'GET',
-        url,
-        qs: {
-            '00100020': patientID,
-            '00080020': studyDate
-        },
-        headers: {
-            Authorization: 'Bearer ' + token,
-            Accept: 'application/dicom+json'
-        }
+    return services.get('dcm4chee-buscar-estudios').exec({
+        host: pacsConfig.host,
+        aet: pacsConfig.aet,
+        token,
+        patientID,
+        studyDate
     });
-
-    if (status >= 200 && status < 300) {
-        return body;
-    }
-    throw new Error(`PACS study search failed with status ${status}`);
 }
 
 
