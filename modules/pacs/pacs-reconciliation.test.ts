@@ -101,30 +101,30 @@ describe('PACS reconciliation', () => {
         const next = reconciledMetadata(metadata, 'mwl', 'acquired');
 
         expect(next.find(item => item.key === 'pacs-uid')?.valor).toBe('acquired');
-        expect(next.find(item => item.key === 'old-pacs-uid')?.valor).toBe('mwl');
+        expect(next.find(item => item.key === 'pacs-canonical-uid')?.valor).toBe('mwl');
         expect(next.some(item => item.key === 'pacs-reconciliation')).toBe(false);
     });
 
     test('preserves the MWL UID through later reconciliations', () => {
         const metadata = [
             { key: 'pacs-uid', valor: 'acquired-1' },
-            { key: 'old-pacs-uid', valor: 'mwl' }
+            { key: 'pacs-canonical-uid', valor: 'mwl' }
         ];
         const next = reconciledMetadata(metadata, 'acquired-1', 'acquired-2');
 
         expect(next.find(item => item.key === 'pacs-uid')?.valor).toBe('acquired-2');
-        expect(next.find(item => item.key === 'old-pacs-uid')?.valor).toBe('mwl');
+        expect(next.find(item => item.key === 'pacs-canonical-uid')?.valor).toBe('mwl');
     });
 
-    test('cleans the old UID after the real PACS merge', () => {
+    test('cleans the canonical UID marker after the real PACS merge', () => {
         const metadata = [
             { key: 'pacs-uid', valor: 'acquired' },
-            { key: 'old-pacs-uid', valor: 'mwl' }
+            { key: 'pacs-canonical-uid', valor: 'mwl' }
         ];
         const next = reconciledMetadata(metadata, 'acquired', 'mwl');
 
         expect(next.find(item => item.key === 'pacs-uid')?.valor).toBe('mwl');
-        expect(next.some(item => item.key === 'old-pacs-uid')).toBe(false);
+        expect(next.some(item => item.key === 'pacs-canonical-uid')).toBe(false);
     });
 
     test('replaces the reconciliation failure marker', () => {

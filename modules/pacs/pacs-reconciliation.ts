@@ -65,15 +65,15 @@ export function matchingStudies(body: any, allowedModalities: string[]): IPacsSt
 }
 
 export function reconciledMetadata(metadata: Metadata, currentUID: string, matchedUID: string): Metadata {
-    const originalUID = metadata.find(item => item.key === 'old-pacs-uid')?.valor;
+    const canonicalUID = metadata.find(item => item.key === 'pacs-canonical-uid')?.valor;
     let next = removeMetadata(metadata, 'pacs-reconciliation');
 
     next = setMetadata(next, 'pacs-uid', matchedUID);
-    if (originalUID && originalUID === matchedUID) {
-        return removeMetadata(next, 'old-pacs-uid');
+    if (canonicalUID && canonicalUID === matchedUID) {
+        return removeMetadata(next, 'pacs-canonical-uid');
     }
-    if (!originalUID && currentUID !== matchedUID) {
-        next = setMetadata(next, 'old-pacs-uid', currentUID);
+    if (!canonicalUID && currentUID !== matchedUID) {
+        next = setMetadata(next, 'pacs-canonical-uid', currentUID);
     }
     return next;
 }
