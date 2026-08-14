@@ -34,11 +34,10 @@ describe('PACS reconciliation', () => {
 
     beforeEach(() => requestMock.mockReset());
 
-    test('enables reconciliation by flag and defaults to the configured modality', () => {
-        expect(configuredMatchingModalities(false, ['CR', 'DX'], 'CR')).toEqual([]);
-        expect(configuredMatchingModalities(true, undefined, 'CT')).toEqual(['CT']);
-        expect(configuredMatchingModalities(true, [], 'MR')).toEqual(['MR']);
-        expect(configuredMatchingModalities(true, ['CR', 'DX'], 'CR')).toEqual(['CR', 'DX']);
+    test('defaults matching to the configured PACS modality', () => {
+        expect(configuredMatchingModalities(undefined, 'CT')).toEqual(['CT']);
+        expect(configuredMatchingModalities([], 'MR')).toEqual(['MR']);
+        expect(configuredMatchingModalities(['CR', 'DX'], 'CR')).toEqual(['CR', 'DX']);
     });
 
     test('checks study existence with a bounded series lookup', async () => {

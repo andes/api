@@ -98,79 +98,71 @@ export async function syncWorkList(prestacion: IPrestacion) {
 
 export async function getVisualizadorURL(prestacion: IPrestacion) {
     try {
-        const metadata = prestacion.metadata || [];
-        const uid = metadata.find(item => item.key === 'pacs-uid')?.valor;
-        const configId = metadata.find(item => item.key === 'pacs-config')?.valor;
-        if (!uid || !configId) {
+        const metadata = prestacion.metadata;
+        const { valor: uid } = metadata.find(item => item.key === 'pacs-uid');
+        const { valor: configId } = metadata.find(item => item.key === 'pacs-config');
+        const config = await PacsConfigController.findById(configId);
+        if (!config) {
             return null;
         }
 
-        const config = await PacsConfigController.findById(configId);
-        if (config) {
-            const token = await loginPacs(config);
-            const matchingModalities = configuredMatchingModalities(
-                config.featureFlags?.reconciliarEstudios,
-                config.reconcileMatchingModalities,
-                config.modalidad
-            );
+        const token = await loginPacs(config);
+        if (!config.featureFlags?.reconciliarEstudios || isReconciliationResolved(metadata)) {
+            return getViewerURL(config, uid, token);
+        }
 
-            if (!matchingModalities.length) {
-                return getViewerURL(config, uid, token);
-            }
-
-            if (isReconciliationResolved(metadata)) {
-                return getViewerURL(config, uid, token);
-            }
-
-            if (await studyExists(config, uid, token)) {
-                pacsLogs.info('getVisualizadorURL.uid-exists', { prestacion: prestacion.id, uid }, userScheduler);
-                try {
-                    await updatePacsMetadata(
-                        prestacion,
-                        uid,
-                        resolvedReconciliationMetadata(metadata, 'uid-exists')
-                    );
-                } catch (err) {
-                    pacsLogs.error('getVisualizadorURL.save-status', { prestacion: prestacion.id, uid }, err, userScheduler);
-                }
-                return getViewerURL(config, uid, token);
-            }
-
-            const patientID = metadata.find(item => item.key === 'pacs-pacienteIdDicom')?.valor;
-            const studyDate = formatDicomDate(prestacion.ejecucion?.fecha);
-            if (!patientID || !studyDate) {
-                throw new Error('Missing patient ID or study date for PACS reconciliation');
-            }
-
-            const response = await searchStudies(config, String(patientID), studyDate, token);
-            const candidates = matchingStudies(response, matchingModalities);
-
-            if (candidates.length === 1) {
-                const matchedUID = candidates[0].uid;
-                const reconciled = reconciledMetadata(metadata, uid, matchedUID);
-                const nextMetadata = resolvedReconciliationMetadata(reconciled, 'reconciled');
-                await updatePacsMetadata(prestacion, uid, nextMetadata);
-                pacsLogs.info(
-                    'getVisualizadorURL.single-match',
-                    { prestacion: prestacion.id, uid, matchedUID },
-                    userScheduler
+        if (await studyExists(config, uid, token)) {
+            pacsLogs.info('getVisualizadorURL.uid-exists', { prestacion: prestacion.id, uid }, userScheduler);
+            try {
+                await updatePacsMetadata(
+                    prestacion,
+                    uid,
+                    resolvedReconciliationMetadata(metadata, 'uid-exists')
                 );
-                return getViewerURL(config, matchedUID, token);
+            } catch (err) {
+                pacsLogs.error('getVisualizadorURL.save-status', { prestacion: prestacion.id, uid }, err, userScheduler);
             }
+            return getViewerURL(config, uid, token);
+        }
 
-            const status = candidates.length === 0 ? 'zero-match' : 'multiple-match';
-            const failureMetadata = reconciliationFailureMetadata(metadata, {
-                status,
-                checkedAt: new Date(),
-                candidateUIDs: candidates.length ? candidates.map(candidate => candidate.uid) : undefined
-            });
-            await updatePacsMetadata(prestacion, uid, failureMetadata);
+        const patientID = metadata.find(item => item.key === 'pacs-pacienteIdDicom')?.valor;
+        const studyDate = formatDicomDate(prestacion.ejecucion.fecha);
+        if (!patientID || !studyDate) {
+            throw new Error('Missing patient ID or study date for PACS reconciliation');
+        }
+
+        const matchingModalities = configuredMatchingModalities(
+            config.reconcileMatchingModalities,
+            config.modalidad
+        );
+        const response = await searchStudies(config, String(patientID), studyDate, token);
+        const candidates = matchingStudies(response, matchingModalities);
+
+        if (candidates.length === 1) {
+            const matchedUID = candidates[0].uid;
+            const reconciled = reconciledMetadata(metadata, uid, matchedUID);
+            const nextMetadata = resolvedReconciliationMetadata(reconciled, 'reconciled');
+            await updatePacsMetadata(prestacion, uid, nextMetadata);
             pacsLogs.info(
-                `getVisualizadorURL.${status}`,
-                { prestacion: prestacion.id, uid, candidateUIDs: candidates.map(candidate => candidate.uid) },
+                'getVisualizadorURL.single-match',
+                { prestacion: prestacion.id, uid, matchedUID },
                 userScheduler
             );
+            return getViewerURL(config, matchedUID, token);
         }
+
+        const status = candidates.length === 0 ? 'zero-match' : 'multiple-match';
+        const failureMetadata = reconciliationFailureMetadata(metadata, {
+            status,
+            checkedAt: new Date(),
+            candidateUIDs: candidates.length ? candidates.map(candidate => candidate.uid) : undefined
+        });
+        await updatePacsMetadata(prestacion, uid, failureMetadata);
+        pacsLogs.info(
+            `getVisualizadorURL.${status}`,
+            { prestacion: prestacion.id, uid, candidateUIDs: candidates.map(candidate => candidate.uid) },
+            userScheduler
+        );
         return null;
     } catch (err) {
         pacsLogs.error('getVisualizadorURL', { prestacion: prestacion.id }, err, userScheduler);

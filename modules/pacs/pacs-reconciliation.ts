@@ -14,14 +14,9 @@ type Metadata = { key: string; valor: any }[];
 const SUPPLEMENTAL_MODALITIES = ['SR'];
 
 export function configuredMatchingModalities(
-    enabled: boolean,
     configuredModalities: string[] | undefined,
     defaultModality: string
 ): string[] {
-    if (!enabled) {
-        return [];
-    }
-
     const modalities = (configuredModalities || [])
         .map(modality => modality.trim())
         .filter(Boolean);
