@@ -22,11 +22,12 @@ import { userScheduler } from '../../config.private';
 import { IPacsConfig } from './pacs-config.schema';
 import { pacsLogs } from './pacs.logs';
 import {
-    clearReconciliationStatus,
     configuredMatchingModalities,
+    isReconciliationResolved,
     matchingStudies,
     reconciledMetadata,
-    reconciliationFailureMetadata
+    reconciliationFailureMetadata,
+    resolvedReconciliationMetadata
 } from './pacs-reconciliation';
 
 export async function syncWorkList(prestacion: IPrestacion) {
@@ -117,14 +118,20 @@ export async function getVisualizadorURL(prestacion: IPrestacion) {
                 return getViewerURL(config, uid, token);
             }
 
+            if (isReconciliationResolved(metadata)) {
+                return getViewerURL(config, uid, token);
+            }
+
             if (await studyExists(config, uid, token)) {
                 pacsLogs.info('getVisualizadorURL.uid-exists', { prestacion: prestacion.id, uid }, userScheduler);
-                if (metadata.some(item => item.key === 'pacs-reconciliation')) {
-                    try {
-                        await updatePacsMetadata(prestacion, uid, clearReconciliationStatus(metadata));
-                    } catch (err) {
-                        pacsLogs.error('getVisualizadorURL.clear-status', { prestacion: prestacion.id, uid }, err, userScheduler);
-                    }
+                try {
+                    await updatePacsMetadata(
+                        prestacion,
+                        uid,
+                        resolvedReconciliationMetadata(metadata, 'uid-exists')
+                    );
+                } catch (err) {
+                    pacsLogs.error('getVisualizadorURL.save-status', { prestacion: prestacion.id, uid }, err, userScheduler);
                 }
                 return getViewerURL(config, uid, token);
             }
@@ -140,7 +147,8 @@ export async function getVisualizadorURL(prestacion: IPrestacion) {
 
             if (candidates.length === 1) {
                 const matchedUID = candidates[0].uid;
-                const nextMetadata = reconciledMetadata(metadata, uid, matchedUID);
+                const reconciled = reconciledMetadata(metadata, uid, matchedUID);
+                const nextMetadata = resolvedReconciliationMetadata(reconciled, 'reconciled');
                 await updatePacsMetadata(prestacion, uid, nextMetadata);
                 pacsLogs.info(
                     'getVisualizadorURL.single-match',

@@ -4,7 +4,7 @@ export interface IPacsStudyCandidate {
 }
 
 export interface IPacsReconciliationStatus {
-    status: 'zero-match' | 'multiple-match';
+    status: 'uid-exists' | 'reconciled' | 'zero-match' | 'multiple-match';
     checkedAt: Date;
     candidateUIDs?: string[];
 }
@@ -85,8 +85,19 @@ export function reconciliationFailureMetadata(
     return setMetadata(metadata, 'pacs-reconciliation', status);
 }
 
-export function clearReconciliationStatus(metadata: Metadata): Metadata {
-    return removeMetadata(metadata, 'pacs-reconciliation');
+export function resolvedReconciliationMetadata(
+    metadata: Metadata,
+    status: 'uid-exists' | 'reconciled'
+): Metadata {
+    return setMetadata(metadata, 'pacs-reconciliation', {
+        status,
+        checkedAt: new Date()
+    });
+}
+
+export function isReconciliationResolved(metadata: Metadata): boolean {
+    const status = metadata.find(item => item.key === 'pacs-reconciliation')?.valor?.status;
+    return status === 'uid-exists' || status === 'reconciled';
 }
 
 function dicomValues(study: any, tag: string): string[] {

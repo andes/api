@@ -4,9 +4,11 @@ import { searchStudies, studyExists } from './pacs-network';
 import {
     configuredMatchingModalities,
     hasDicomResults,
+    isReconciliationResolved,
     matchingStudies,
     reconciledMetadata,
-    reconciliationFailureMetadata
+    reconciliationFailureMetadata,
+    resolvedReconciliationMetadata
 } from './pacs-reconciliation';
 
 jest.mock('../../utils/requestHandler', () => ({
@@ -148,5 +150,19 @@ describe('PACS reconciliation', () => {
             checkedAt,
             candidateUIDs: ['one', 'two']
         });
+    });
+
+    test('marks resolved studies so future accesses can skip PACS lookups', () => {
+        const metadata = [{ key: 'pacs-uid', valor: 'study' }];
+        const existing = resolvedReconciliationMetadata(metadata, 'uid-exists');
+        const reconciled = resolvedReconciliationMetadata(metadata, 'reconciled');
+        const unresolved = reconciliationFailureMetadata(metadata, {
+            status: 'zero-match',
+            checkedAt: new Date()
+        });
+
+        expect(isReconciliationResolved(existing)).toBe(true);
+        expect(isReconciliationResolved(reconciled)).toBe(true);
+        expect(isReconciliationResolved(unresolved)).toBe(false);
     });
 });
