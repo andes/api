@@ -6,7 +6,9 @@ const dbgWebex = debug('dbgWebex');
 export async function generateWebexLinks(turno: any, agenda: any, usuario: string) {
     try {
         const params = {
-            idTurno: String(turno._id || turno.horaInicio),
+            idTurno: String(turno._id),
+            fechaHoraDesde: Math.floor(turno.horaInicio.getTime() / 1000.0),
+            fechaHoraHasta: Math.floor((agenda.horaFin.getTime() + 60 * 60 * 1000) / 1000)
         };
 
         const servicio = services.get('teleconsulta');
