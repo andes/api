@@ -30,8 +30,8 @@ class PadronElectoralResource extends ResourceBase {
 }
 
 router.get('/validarPaciente', Auth.authenticate(), async (req: express.Request, res: express.Response) => {
-    const { pacienteId, documento, sexo } = req.query;
-    const resultado = await validarPaciente(pacienteId, documento, sexo);
+    const { pacienteId, documento, sexo, programa = 'Cuidar65', version = 1 } = req.query;
+    const resultado = await validarPaciente(pacienteId, documento, sexo, programa, version);
     res.status(resultado.status).json(resultado.message);
 });
 

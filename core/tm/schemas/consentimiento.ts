@@ -7,6 +7,14 @@ export const consentimientoVersionSchema = new Schema({
     texto: { type: String, required: true },
     activo: { type: Boolean, required: true },
     formato: { type: String, required: true, enum: ['html', 'markdown', 'text'] },
+    condiciones: {
+        incluirFinanciador: [
+            {
+                codigoPuco: { type: Number, required: false },
+                nombre: { type: String, required: true },
+            }
+        ]
+    },
     createdAt: { type: Date, default: Date.now },
     createdBy: { type: Schema.Types.Mixed }
 });

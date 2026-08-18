@@ -1,10 +1,9 @@
 import { Types } from 'mongoose';
 import { Paciente } from '../../../core-v2/mpi/paciente';
-import { calcularEdad } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
-import { Consentimiento, PadronElectoral } from '../schemas/consentimiento';
+import { Consentimiento, ConsentimientoVersion, PadronElectoral } from '../schemas/consentimiento';
 
-async function validarPaciente(pacienteId: any, documento: any, sexo: any) {
+async function validarPaciente(pacienteId: any, documento: any, sexo: any, programa: String, version: Number) {
     try {
         if (!pacienteId && (!documento || !sexo)) {
             return { status: 400, message: { mensaje: 'pacienteId o documento y sexo son requeridos' } };
@@ -22,9 +21,8 @@ async function validarPaciente(pacienteId: any, documento: any, sexo: any) {
             if (paciente.fechaFallecimiento && paciente.fechaFallecimiento !== null) {
                 return { status: 200, message: { validado: false, mensaje: 'Paciente fallecido', Fecha: paciente.fechaFallecimiento } };
             }
-            const edadPaciente = calcularEdad(paciente.fechaNacimiento, paciente.fechaFallecimiento);
-            if (edadPaciente && edadPaciente >= 65) {
-                const financiador = tieneFinanciador(paciente.financiador || await getObraSocial(paciente));
+            if (paciente.edad && paciente.edad >= 65) {
+                const financiador = await tieneFinanciador(paciente.financiador && paciente.financiador.length ? paciente.financiador : await getObraSocial(paciente), programa, version);
                 if (!financiador) {
                     const matriculaNum = Number(paciente.documento);
                     if (!isNaN(matriculaNum)) {
@@ -44,8 +42,20 @@ async function validarPaciente(pacienteId: any, documento: any, sexo: any) {
     }
 }
 
-function tieneFinanciador(financiador: any) {
-    return financiador && financiador.length > 0 && (financiador.some(f => f.nombre !== 'SUMAR'));
+async function tieneFinanciador(financiador: any, programa: String, version: Number) {
+    const consentimientoVersion: any = await ConsentimientoVersion.findOne({ programa, version });
+    const incluirFinanciador = consentimientoVersion.condiciones?.incluirFinanciador || ['SUMAR'];
+    const nombres: string[] = [];
+    const codigoPuco: number[] = [];
+    for (const financ of incluirFinanciador) {
+        if (financ.nombre) {
+            nombres.push(financ.nombre);
+        }
+        if (financ.codigoPuco) {
+            codigoPuco.push(financ.codigoPuco);
+        }
+    }
+    return financiador && financiador.length > 0 && (financiador.some(f => !nombres.includes(f.nombre) && !codigoPuco.includes(f.codigoPuco)));
 }
 
 async function guardarConsentimiento(programa: string, version: number, pacienteId: any, aceptacion: boolean) {
