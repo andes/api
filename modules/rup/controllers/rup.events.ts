@@ -5,6 +5,7 @@ import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { generarCUIL } from '../../../core-v2/mpi/validacion/validacion.controller';
+import { Organizacion } from 'core/tm/schemas/organizacion';
 
 EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
@@ -27,6 +28,15 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             matricula: matriculaGrado
         };
 
+        if (prestacion.ejecucion.organizacion?.id && prestacion.ejecucion.organizacion?.nombre === '') {
+            // Si la organización no tiene nombre, se busca en la base de datos para obtenerlo
+            const organizacionDB = await Organizacion.findOne({ _id: prestacion.ejecucion.organizacion.id });
+            if (organizacionDB) {
+                prestacion.ejecucion.organizacion.nombre = organizacionDB.nombre;
+            } else {
+                logger.error('prestacion:receta:create', prestacion, `No se encontró la organización con id ${prestacion.ejecucion.organizacion.id}`);
+            }
+        }
         const organizacion = {
             id: prestacion.ejecucion.organizacion.id,
             nombre: prestacion.ejecucion.organizacion.nombre
