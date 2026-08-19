@@ -130,6 +130,7 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
         lowercase: true
     }],
     validateAt: Date,
+    fechaUltimaValidacion: Date,
     documentos: [{
         fecha: Date,
         archivos: [{
