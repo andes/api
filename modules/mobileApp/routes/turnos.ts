@@ -124,9 +124,11 @@ router.get('/turnos', async (req: any, res, next) => {
         turno.duracionTurno = elem.duracionTurno;
         turno.bloque_id = elem.bloque_id;
         turno.agenda_estado = elem.agenda_estado;
+        turno.webexLinks = elem.bloques.turnos.webexLinks;
 
         delete turno.updatedBy;
         delete turno.updatedAt;
+
 
         /* Busco el turno anterior cuando fue reasignado */
         const reasignado = turno.reasignado && turno.reasignado.siguiente;
