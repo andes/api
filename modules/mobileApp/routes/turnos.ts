@@ -64,23 +64,37 @@ router.get('/turnos', async (req: any, res, next) => {
     if (req.query.codificado) {
         matchTurno['bloques.turnos.diagnosticos.0'] = { $exists: true };
     }
+    const matchTurnoPost = { ...matchTurno };
 
     if (req.query.horaInicio) {
-        matchTurno['bloques.turnos.horaInicio'] = { $gte: new Date(req.query.horaInicio) };
+        matchTurno['horaFin'] = { $gte: new Date(req.query.horaInicio) };
+        matchTurnoPost['$expr'] = {
+            $gte: [
+                {
+                    $add: [
+                        '$bloques.turnos.horaInicio',
+                        { $multiply: ['$bloques.duracionTurno', 60, 1000] }
+                    ]
+                },
+                new Date(req.query.horaInicio)
+            ]
+        };
     }
 
     if (req.query.horaFinal) {
-        matchTurno['bloques.turnos.horaInicio'] = { $lt: new Date(req.query.horaFinal) };
+        matchTurno['horaInicio'] = { $lt: new Date(req.query.horaFinal) };
+        matchTurnoPost['bloques.turnos.horaInicio'] = { $lt: new Date(req.query.horaFinal) };
     }
 
     if (req.query.tiposTurno) {
         matchTurno['bloques.turnos.tipoTurno'] = { $in: req.query.tiposTurno };
+        matchTurnoPost['bloques.turnos.tipoTurno'] = { $in: req.query.tiposTurno };
     }
 
     pipelineTurno.push({ $match: matchTurno });
     pipelineTurno.push({ $unwind: '$bloques' });
     pipelineTurno.push({ $unwind: '$bloques.turnos' });
-    pipelineTurno.push({ $match: matchTurno });
+    pipelineTurno.push({ $match: matchTurnoPost });
     pipelineTurno.push({
         $group: {
             _id: { id: '$_id', bloqueId: '$bloques._id' },
