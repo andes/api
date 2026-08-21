@@ -21,8 +21,11 @@ export const MotivosHudsSchema = new Schema({
     labelPaciente: {
         type: String,
         required: false
+    },
+    activo: {
+        type: Boolean,
+        required: false
     }
-
 });
 
 export const MotivosHuds = model('motivosHuds', MotivosHudsSchema, 'motivosHuds');

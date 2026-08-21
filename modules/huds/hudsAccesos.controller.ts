@@ -69,7 +69,11 @@ export async function search(filtros) {
                 as: 'motivoHudsData'
             }
         },
-
+        {
+            $match: {
+                'motivoHudsData.activo': { $ne: false }
+            }
+        },
         {
             $sort: { 'accesos.fecha': -1 }
         },
