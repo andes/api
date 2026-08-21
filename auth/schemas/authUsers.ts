@@ -1,7 +1,20 @@
 import * as mongoose from 'mongoose';
-import { AndesDocWithAudit, AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { AndesDocWithAudit, AuditPlugin, CreatedBy } from '@andes/mongoose-plugin-audit';
 import { ObjectId } from '@andes/core';
 import { PermisosOrganizacionesSchema } from './permisos-organizaciones';
+
+export interface IPacienteRestringido {
+    idPaciente: string;
+    observaciones: string;
+    archivos: Array<{
+        id: string;
+        ext: string;
+    }>;
+    createdBy: CreatedBy;
+    createdAt: Date;
+    updatedBy?: CreatedBy;
+    updatedAt?: Date;
+}
 
 export interface IAuthUsers {
     usuario: number;
@@ -35,11 +48,7 @@ export interface IAuthUsers {
         _id: ObjectId;
         createdAt: Date;
     }[];
-    pacienteRestringido: Object;
-    otp?: {
-        code: String;
-        expiresAt: Date;
-    };
+    pacienteRestringido: IPacienteRestringido[];
 }
 
 export type IAuthUsersDoc = AndesDocWithAudit<IAuthUsers>;
@@ -84,10 +93,29 @@ export const AuthUsersSchema = new mongoose.Schema({
         default: {}
     },
     disclaimers: [{ createdAt: Date, _id: { type: mongoose.Schema.Types.ObjectId, ref: 'dislaimer' } }],
-    pacienteRestringido: {
-        type: Object,
-        default: null
-    }
+    pacienteRestringido: [{
+        idPaciente: String,
+        observaciones: String,
+        archivos: [{ id: String, ext: String }],
+        createdBy: {
+            organizacion: { id: String, nombre: String },
+            documento: String,
+            username: String,
+            apellido: String,
+            nombre: String,
+            nombreCompleto: String
+        },
+        updatedBy: {
+            organizacion: { id: String, nombre: String },
+            documento: String,
+            username: String,
+            apellido: String,
+            nombre: String,
+            nombreCompleto: String
+        },
+        createdAt: Date,
+        updatedAt: Date
+    }]
 });
 
 AuthUsersSchema.pre('save', function (next) {
