@@ -210,11 +210,11 @@ export class FarmaciaBody extends HTMLComponent {
                 if (area.grupos) {
                     for (const grupo of area.grupos) {
                         if (grupo.item) {
-                            grupo.item.hasHtml = this.hasHtml(grupo.item.valorReferencia);
+                            this.limpiarSiEsDerivacionRecibidoEn(grupo.item);
                         }
                         if (grupo.items) {
                             for (const item of grupo.items) {
-                                item.hasHtml = this.hasHtml(item.valorReferencia);
+                                this.limpiarSiEsDerivacionRecibidoEn(item);
                                 if (item.firma) {
                                     firmasArea.add(item.firma);
                                 }
@@ -246,4 +246,18 @@ export class FarmaciaBody extends HTMLComponent {
             encabezado: this.encabezado
         };
     }
+
+    private limpiarSiEsDerivacionRecibidoEn(item: any): void {
+        const PATRON_DERIVACION = /^\s*(derivado|recibido en)/i;
+        const resultado = item?.resultado || '';
+
+        if (PATRON_DERIVACION.test(resultado)) {
+            item.unidadMedida = '';
+            item.valorReferencia = '';
+            item.metodo = '';
+            item.fechaHoraValida = '';
+            item.firma = '';
+        }
+    }
+
 }
