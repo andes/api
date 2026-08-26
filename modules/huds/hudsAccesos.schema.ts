@@ -23,6 +23,7 @@ export const HudsAccesoSchema = new Schema({
         motivoAcceso: String,
         detalleMotivo: String,
         labelPaciente: String,
+        modulo: String,
         turno: SchemaTypes.ObjectId,
         prestacion: SchemaTypes.ObjectId,
         organizacion: SchemaTypes.Mixed,
@@ -56,6 +57,7 @@ export interface IHudsAccesos extends Document {
         matricula: string;
         motivoAcceso: string;
         detalleMotivo: string;
+        modulo: string;
         turno: Types.ObjectId;
         prestacion: Types.ObjectId;
         organizacion: any;
