@@ -163,8 +163,11 @@ export async function liberarTurno(req, data, turno) {
                 if (bloque.restantesProfesional < (cuposMaximos.profesional - turnosAsignados.autocitados)) {
                     bloque.restantesProfesional = bloque.restantesProfesional + cant;
                 } else {
-                    if (bloque.restantesProgramados < (cuposMaximos.programado - turnosAsignados.programados)) {
-                        bloque.restantesProgramados = bloque.restantesProgramados + cant;
+                    if (data.bloques[position.indexBloque].restantesProgramados < (data.bloques[position.indexBloque].accesoDirectoProgramado - turnosAsignados.programados)) {
+                        data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                        if (data.bloques[position.indexBloque].restantesMobile < (data.bloques[position.indexBloque].cupoMobile - turnosAsignados.programados)) {
+                            data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
+                        }
                     } else {
                         bloque.restantesDelDia = bloque.restantesDelDia + cant;
                     }
