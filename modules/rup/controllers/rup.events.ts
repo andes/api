@@ -59,17 +59,26 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
 
         for (const medicamento of registro.valor.medicamentos) {
             try {
+                const esMagistral = !!medicamento?.esMagistral;
                 const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
 
-                if (!conceptId) {
+                if (!conceptId && !esMagistral) {
                     logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar conceptId del medicamento');
                     continue;
                 }
+                if (esMagistral && !medicamento?.magistral?.nombre) {
+                    logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar nombre del medicamento magistral');
+                    continue;
+                }
 
-                const receta: any = await Receta.findOne({
-                    'medicamento.concepto.conceptId': conceptId,
-                    idRegistro
-                });
+                const queryReceta: any = { idRegistro };
+                if (esMagistral) {
+                    queryReceta['medicamento.magistral.nombre'] = medicamento.magistral.nombre;
+                } else {
+                    queryReceta['medicamento.concepto.conceptId'] = conceptId;
+                }
+
+                const receta: any = await Receta.findOne(queryReceta);
 
                 if (!receta) {
                     const dataReceta = {

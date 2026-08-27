@@ -349,11 +349,16 @@ export async function suspender(recetaId, req) {
     const profesional = req.body.profesional;
     try {
         const recetaR: any = await Receta.findById(recetaId);
-        const recetasASuspender = await Receta.find({
-            'medicamento.concepto.conceptId': recetaR.medicamento.concepto.conceptId,
+        const queryASuspender: any = {
             idRegistro: recetaR.idRegistro,
             'estadoActual.tipo': { $nin: ['vencida', 'finalizada'] }
-        }).sort({ fechaRegistro: -1 });
+        };
+        if (recetaR?.medicamento?.esMagistral) {
+            queryASuspender['medicamento.magistral.nombre'] = recetaR.medicamento.magistral?.nombre;
+        } else if (recetaR?.medicamento?.concepto?.conceptId) {
+            queryASuspender['medicamento.concepto.conceptId'] = recetaR.medicamento.concepto.conceptId;
+        }
+        const recetasASuspender = await Receta.find(queryASuspender).sort({ fechaRegistro: -1 });
 
 
         if (recetasASuspender.length) {
@@ -649,19 +654,26 @@ export async function create(req) {
     try {
         dataReceta.fechaRegistro = dataReceta.fechaRegistro ? moment(dataReceta.fechaRegistro).toDate() : moment().toDate();
         dataReceta.fechaPrestacion = dataReceta.fechaPrestacion ? dataReceta.fechaPrestacion : dataReceta.fechaRegistro;
-        const medicamentoIncompleto = !req.body.medicamento || !req.body.medicamento.concepto?.conceptId || !req.body.medicamento.cantidad || !req.body.medicamento.cantEnvases;
+        const isMagistral = !!req.body.medicamento?.esMagistral;
+        const medicamentoIncompleto = !req.body.medicamento ||
+            (!isMagistral && !req.body.medicamento.concepto?.conceptId) ||
+            (isMagistral && !req.body.medicamento.magistral?.nombre) ||
+            !req.body.medicamento.cantEnvases;
         dataReceta.origenExterno = {
-            id: req.body.origenExterno.id || '',
+            id: req.body.origenExterno?.id || '',
             app: req.user.app?.nombre.toLowerCase() || '',
-            fecha: req.body.origenExterno.fecha ? new Date(req.body.origenExterno.fecha) : dataReceta.fechaRegistro,
+            fecha: req.body.origenExterno?.fecha ? new Date(req.body.origenExterno.fecha) : dataReceta.fechaRegistro,
         };
         if (medicamentoIncompleto) {
             throw new ParamsIncorrect('Faltan datos del medicamento');
         } else {
-            const receta = await Receta.findOne({
-                'medicamento.concepto.conceptId': dataReceta.medicamento.concepto.conceptId,
-                idRegistro: dataReceta.idRegistro
-            });
+            const queryExistente: any = { idRegistro: dataReceta.idRegistro };
+            if (isMagistral) {
+                queryExistente['medicamento.magistral.nombre'] = dataReceta.medicamento.magistral?.nombre;
+            } else {
+                queryExistente['medicamento.concepto.conceptId'] = dataReceta.medicamento.concepto.conceptId;
+            }
+            const receta = await Receta.findOne(queryExistente);
             if (receta) {
                 throw new ParamsIncorrect('Receta ya registrada');
             }
@@ -732,20 +744,22 @@ export async function crearReceta(dataReceta, req) {
             receta.idRegistro = dataReceta.idRegistro;
             const diag = medicamento.diagnostico;
             receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
+            const esMagistral = !!medicamento.esMagistral;
             receta.medicamento = {
-                concepto: medicamento.concepto || medicamento.generico,
+                concepto: esMagistral ? null : (medicamento.concepto || medicamento.generico),
                 presentacion: medicamento.presentacion?.term || medicamento.presentacion,
                 unidades: medicamento.unidades,
                 cantidad: medicamento.cantidad,
                 cantEnvases: medicamento.cantEnvases,
                 dosisDiaria: {
-                    dosis: medicamento.dosisDiaria.dosis,
-                    intervalo: medicamento.dosisDiaria.intervalo,
-                    dias: medicamento.dosisDiaria.dias,
-                    notaMedica: medicamento.dosisDiaria.notaMedica
+                    dosis: medicamento.dosisDiaria?.dosis,
+                    intervalo: medicamento.dosisDiaria?.intervalo,
+                    dias: medicamento.dosisDiaria?.dias,
+                    notaMedica: medicamento.dosisDiaria?.notaMedica
                 },
                 tratamientoProlongado,
-                esMagistral: medicamento.esMagistral,
+                esMagistral,
+                magistral: esMagistral ? medicamento.magistral : null,
                 tiempoTratamiento: tratamientoProlongado ? medicamento.tiempoTratamiento : null,
                 ordenTratamiento: i,
                 tipoReceta: medicamento.tipoReceta?.id || medicamento.tipoReceta || 'simple',
