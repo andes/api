@@ -88,11 +88,12 @@ router.get('/snomed/concepts/:sctid/childs', async (req, res, next) => {
 
 router.get('/snomed/expression', async (req, res, next) => {
     const form = req.query.type || 'stated';
+    const preferredIn = req.query.preferredIn || '450828004';
     const words = req.query.words;
     const expression = req.query.expression;
     const languageCode = req.query.languageCode ? req.query.languageCode : 'es';
 
-    const concepts = await SnomedCtr.getConceptByExpression(expression, words, form, languageCode);
+    const concepts = await SnomedCtr.getConceptByExpression(expression, words, form, languageCode, preferredIn);
     return res.json(concepts);
 });
 

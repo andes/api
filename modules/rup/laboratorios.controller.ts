@@ -84,6 +84,7 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
             let estado;
             let documento = paciente.documento;
             const documentosExtranjeros = IDENTIFICACION.enum.filter(item => item !== null);
+            let fechaNac = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).utc().format('YYYYMMDD') : null;
 
             if (documento) { // dni argentino
                 estado = 'validado';
@@ -95,19 +96,23 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
                     estado = 'RN';
                     const tutorProgenitor = paciente.relaciones.find(rel => rel.relacion.nombre === 'progenitor/a') || paciente.relaciones.find(rel => rel.relacion.nombre === 'tutor');
                     documento = tutorProgenitor?.documento || tutorProgenitor?.numeroIdentificacion || null;
+                    const fecha = paciente.fechaNacimiento.toLocaleDateString('es-AR');;
+                    fechaNac = moment(fecha, 'DD/MM/YYYY').format('YYYYMMDD');
                 }
             }
             if (!estado || !documento) {
                 return [];
             }
+
             dataSearch = {
                 estado,
                 dni: documento,
-                fechaNac: moment(paciente.fechaNacimiento).utc().format('YYYYMMDD'),
+                fechaNac: fechaNac,
                 apellido: paciente.apellido,
                 fechaDesde,
                 fechaHasta
             };
+
             return await this.search(dataSearch);
         }
     } catch (err) {

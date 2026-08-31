@@ -18,7 +18,7 @@ export interface ISnomedController {
      * Procesa una expression ECL de Snomed y busca en la base de datos.
      */
 
-    getConceptByExpression(expression: String, termSearch?: String | null, form?: String, languageCode?: String);
+    getConceptByExpression(expression: String, termSearch?: String | null, form?: String, languageCode?: String, preferredIn?: String);
 
     /**
      * Busca un array de conceptos SNOMED.
