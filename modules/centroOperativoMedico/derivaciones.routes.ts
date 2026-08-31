@@ -104,6 +104,20 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
         if (derivacion) {
             const nuevoEstado = req.body.estado;
 
+            const rawOS: any = (nuevoEstado as any).obraSocial || (nuevoEstado as any).ObraSocial || (nuevoEstado as any).financiador;
+            if (rawOS) {
+                const obraSocialUpdate = typeof rawOS === 'string' ? { nombre: rawOS, financiador: rawOS } : rawOS;
+                (nuevoEstado as any).obraSocial = obraSocialUpdate;
+                (nuevoEstado as any).ObraSocial = obraSocialUpdate;
+                (nuevoEstado as any).financiador = obraSocialUpdate;
+                derivacion.paciente.ObraSocial = obraSocialUpdate;
+                (derivacion.paciente as any).obraSocial = obraSocialUpdate;
+                (derivacion.paciente as any).financiador = obraSocialUpdate;
+                derivacion.markModified('paciente');
+                derivacion.markModified('paciente.ObraSocial');
+            }
+
+
             if (nuevoEstado.estado === 'habilitada') {
                 const orgCOM = (await Organizacion.find({ esCOM: true }))[0];
                 const { id, nombre, direccion } = orgCOM;
