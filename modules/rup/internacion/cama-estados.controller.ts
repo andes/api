@@ -353,8 +353,7 @@ export async function contadorCamasEstados({ fecha, organizacion, ambito, capa }
             },
             {
                 $match: {
-                    'estadoCama.estado': { $ne: 'inactiva' },
-                    'estadoCama.esCensable': true
+                    'estadoCama.estado': { $ne: 'inactiva' }
                 }
             },
             {
