@@ -23,6 +23,7 @@ import { Prestacion } from '../schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
 import { Agenda } from '../../turnos/schemas/agenda';
+import { RecetaControl } from '../../recetas/receta-control-schema';
 
 const router = express.Router();
 
@@ -804,6 +805,97 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 AppCache.clear(`huds-${data.paciente.id}`);
             }
             if (req.body.estado?.tipo === 'validada') {
+                // Cargar las recetas pendientes en la colección auxiliar antes de crearlas
+                const registrosReceta = prestacion.getRegistros();
+                for (const registro of registrosReceta) {
+                    if (registro.valor?.medicamentos?.length) {
+                        const idRegistro = registro._id || registro.id;
+                        for (const medicamento of registro.valor.medicamentos) {
+                            try {
+                                const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
+                                if (!conceptId) {
+                                    continue;
+                                }
+
+                                const cantRecetas = (medicamento.tratamientoProlongado && medicamento.tiempoTratamiento && medicamento.tiempoTratamiento.id) ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
+                                for (let i = 0; i < cantRecetas; i++) {
+                                    const controlExistente = await RecetaControl.findOne({
+                                        idPrestacion: prestacion.id,
+                                        idRegistro,
+                                        conceptId,
+                                        ordenTratamiento: i
+                                    });
+
+                                    if (!controlExistente) {
+                                        const nuevoControl = new RecetaControl({
+                                            idPrestacion: prestacion.id,
+                                            idRegistro,
+                                            idPaciente: prestacion.paciente.id || prestacion.paciente._id,
+                                            tipoPrescripcion: 'medicamento',
+                                            creada: false,
+                                            conceptId,
+                                            ordenTratamiento: i
+                                        });
+
+                                        if (prestacion.createdBy) {
+                                            (nuevoControl as any).audit(prestacion.createdBy);
+                                        }
+                                        await nuevoControl.save();
+                                    }
+                                }
+                            } catch (errControl) {
+                                // eslint-disable-next-line no-console
+                                console.error('prestacion:receta:create:control', { idRegistro, medicamento }, errControl);
+                            }
+                        }
+                    }
+
+                    if (registro.valor?.insumos?.length) {
+                        const idRegistro = registro._id || registro.id;
+                        for (const insumo of registro.valor.insumos) {
+                            try {
+                                const insumoId = insumo.generico?.id || insumo.id;
+                                if (!insumoId) {
+                                    continue;
+                                }
+
+                                const tipoInsumo = insumo.generico?.tipo || insumo.tipo;
+                                const tipoPrescripcion = (tipoInsumo === 'magistral') ? 'magistrales' : 'insumos';
+
+                                const cantRecetas = (insumo.tratamientoProlongado && insumo.tiempoTratamiento && insumo.tiempoTratamiento.id) ? parseInt(insumo.tiempoTratamiento.id, 10) : 1;
+                                for (let i = 0; i < cantRecetas; i++) {
+                                    const controlExistente = await RecetaControl.findOne({
+                                        idPrestacion: prestacion.id,
+                                        idRegistro,
+                                        insumoId,
+                                        ordenTratamiento: i
+                                    });
+
+                                    if (!controlExistente) {
+                                        const nuevoControl = new RecetaControl({
+                                            idPrestacion: prestacion.id,
+                                            idRegistro,
+                                            idPaciente: prestacion.paciente.id || prestacion.paciente._id,
+                                            tipoPrescripcion,
+                                            creada: false,
+                                            insumoId,
+                                            ordenTratamiento: i
+                                        });
+
+                                        if (prestacion.createdBy) {
+                                            (nuevoControl as any).audit(prestacion.createdBy);
+                                        }
+                                        await nuevoControl.save();
+                                    }
+                                }
+                            } catch (errControl) {
+                                // eslint-disable-next-line no-console
+                                console.error('prestacion:recetaInsumo:create:control', { idRegistro, insumo }, errControl);
+                            }
+                        }
+                    }
+                }
+
                 EventCore.emitAsync('rup:prestacion:validate', data);
 
                 // buscarYCrearSolicitudes y saveTurnoProfesional se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
