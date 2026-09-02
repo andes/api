@@ -14,6 +14,7 @@ import { makeFsImagenOnline } from '../schemas/imagenRenovacionOnline';
 import { Profesional } from '../schemas/profesional';
 import { Auth } from './../../../auth/auth.class';
 import { findUsersByUsername } from './../../../auth/auth.controller';
+import { findOneGridFS } from './file-storage';
 
 
 /**
@@ -130,7 +131,8 @@ export async function matriculaCero() {
 
 
 export async function formacionCero() {
-    const profesionales: any = await Profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; });
+    const filter = { $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' } as any;
+    const profesionales = await Profesional.find(filter).exec();
     return profesionales;
 }
 
@@ -237,26 +239,30 @@ export async function saveFirma(data, admin = false) {
         }
     }
     // Remueve la firma anterior antes de insertar la nueva
-    const fileFirma = await firma.findOne(metadataFind);
+    const fileFirma = await findOneGridFS(firma, metadataFind);
 
     if (fileFirma?._id) {
-        await firma.unlink(fileFirma._id, (error) => { });
+        await firma.delete(fileFirma._id);
     }
-    // Inserta en la bd en files y chunks
+
     return new Promise((resolve, reject) => {
-        firma.writeFile(
-            {
-                filename: admin ? 'firmaAdmin.png' : 'firma.png',
+        const filename = admin ? 'firmaAdmin.png' : 'firma.png';
+        const uploadStream = firma.openUploadStream(filename, { contentType: 'image/jpeg', metadata: metadataWrite });
+
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => {
+            resolve({
+                _id: uploadStream.id,
+                filename,
                 contentType: 'image/jpeg',
                 metadata: metadataWrite
-            }, input.pipe(decoder),
-            (error, createdFile) => {
-                if (error) {
-                    reject(error);
-                }
-                resolve(createdFile);
-            }
-        );
+            });
+        });
+
+        input
+            .pipe(decoder)
+            .pipe(uploadStream);
+
         input.end(_base64);
     });
 }
@@ -270,32 +276,18 @@ export async function deleteFirmaFotoTemporal(idProfesional, matricula, next) {
 
     try {
         const firma = makeFsFirmaOnline();
+        const fileFirma = await findOneGridFS(firma, metadataFind);
 
         // Remueve la firma anterior antes de insertar la nueva
-        const fileFirma = await firma.findOne(metadataFind);
         if (fileFirma?._id) {
-            await new Promise<void>((resolve, reject) => {
-                firma.unlink(fileFirma._id, (error) => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    resolve();
-                });
-            });
+            await firma.delete(fileFirma._id);
         }
 
         const imagen = makeFsImagenOnline();
-        // Remueve la imagen anterior antes de insertar la nueva
-        const fileImagen = await imagen.findOne(metadataFind);
+        const fileImagen = await findOneGridFS(imagen, metadataFind);
+
         if (fileImagen?._id) {
-            await new Promise<void>((resolve, reject) => {
-                imagen.unlink(fileImagen._id, (error) => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    resolve();
-                });
-            });
+            await imagen.delete(fileImagen._id);
         }
     } catch (error) {
         return next(error);
@@ -304,13 +296,12 @@ export async function deleteFirmaFotoTemporal(idProfesional, matricula, next) {
 }
 
 export async function saveImage(data) {
-
     const _base64 = data.img;
     const decoder = base64.decode();
     const input = new stream.PassThrough();
+
     let fotoProf;
     let metadataFind;
-    let metadataFindOnline;
     let metadataWrite;
 
     if (data.option === 'renovacionOnline') {
@@ -320,36 +311,57 @@ export async function saveImage(data) {
             'metadata.idProfesional': data.idProfesional,
             'metadata.matricula': data.matricula
         };
+
         metadataWrite = {
             idProfesional: data.idProfesional,
             matricula: data.matricula
         };
     } else {
-        metadataFind = { 'metadata.idProfesional': data.idProfesional };
-        metadataWrite = { idProfesional: data.idProfesional };
+        metadataFind = {
+            'metadata.idProfesional': data.idProfesional
+        };
+
+        metadataWrite = {
+            idProfesional: data.idProfesional
+        };
+
         fotoProf = makeFs();
     }
 
-    const file = await fotoProf.findOne(metadataFind);
+    const files = await fotoProf
+        .find(metadataFind)
+        .limit(1)
+        .toArray();
+
+    const file = files[0];
 
     if (file?._id) {
-        await fotoProf.unlink(file._id, (error) => { });
+        await fotoProf.delete(file._id);
     }
-    // Inserta en la bd en files y chunks
+
     return new Promise((resolve, reject) => {
-        fotoProf.writeFile(
+        const uploadStream = fotoProf.openUploadStream(
+            'foto.png',
             {
+                contentType: 'image/png',
+                metadata: metadataWrite
+            }
+        );
+
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => {
+            resolve({
+                _id: uploadStream.id,
                 filename: 'foto.png',
                 contentType: 'image/png',
                 metadata: metadataWrite
-            }, input.pipe(decoder),
-            (error, createdFile) => {
-                if (error) {
-                    reject(error);
-                }
-                resolve(createdFile);
-            }
-        );
+            });
+        });
+
+        input
+            .pipe(decoder)
+            .pipe(uploadStream);
+
         input.end(_base64);
     });
 }

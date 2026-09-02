@@ -254,7 +254,7 @@ function deepSearch(registros: any[], id: string | Types.ObjectId) {
 }
 
 PrestacionSchema.methods.findRegistroById = function (id: string | Types.ObjectId) {
-    const regs = this.ejecucion.registros || [];
+    const regs = (this as any).ejecucion.registros || [];
     return deepSearch(regs, id);
 };
 
@@ -276,7 +276,7 @@ function getAll(registros: any[]) {
  * @param all devuelve solo los registros base o todos los registros internos.
  */
 PrestacionSchema.methods.getRegistros = function (all = false) {
-    const registros = this.ejecucion.registros;
+    const registros = (this as any).ejecucion.registros;
     if (all) {
         return getAll(registros);
     } else {

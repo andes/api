@@ -26,19 +26,21 @@ export const DireccionSchema = new mongoose.Schema({
 });
 
 DireccionSchema.methods.isCompleted = function () {
-    return !!this.valor && this.valor.length > 0 && !!this.ubicacion.localidad && !!this.ubicacion.provincia;
+    const doc = this as IDireccionDoc;
+    return !!doc.valor && doc.valor.length > 0 && !!doc.ubicacion.localidad && !!doc.ubicacion.provincia;
 };
 
 DireccionSchema.methods.format = function () {
     let address = '';
-    if (this.valor && this.valor.length > 0) {
-        address += this.valor;
+    const doc = this as IDireccionDoc;
+    if (doc.valor && doc.valor.length > 0) {
+        address += doc.valor;
     }
-    if (this.ubicacion.localidad) {
-        address += `, ${this.ubicacion.localidad.nombre}`;
+    if (doc.ubicacion.localidad) {
+        address += `, ${doc.ubicacion.localidad.nombre}`;
     }
-    if (this.ubicacion.provincia) {
-        address += `, ${this.ubicacion.provincia.nombre}`;
+    if (doc.ubicacion.provincia) {
+        address += `, ${doc.ubicacion.provincia.nombre}`;
     }
     return address;
 };

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as scss from 'node-sass';
+import * as scss from 'sass';
 import * as pdf from 'html-pdf';
 import { HTMLComponent } from './html-component.class';
 import { enviarMail } from '../../../config.private';
@@ -81,9 +81,7 @@ export class InformePDF extends HTMLComponent {
 
     private renderSCSS() {
         const styles = this.stylesUrl.map((file) => {
-            return scss.renderSync({
-                file
-            }).css;
+            return scss.compile(file).css;
         });
 
         return styles.join('\n');
@@ -104,6 +102,11 @@ export class InformePDF extends HTMLComponent {
             },
             footer: {
                 height: '1cm'
+            },
+            childProcessOptions: {
+                env: {
+                    OPENSSL_CONF: '/dev/null',
+                }
             }
         };
         return defaultOptions;

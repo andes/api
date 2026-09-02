@@ -27,8 +27,8 @@ export const SalaComunRouter = SalaComunCtr.makeRoutes();
 
 
 SalaComunRouter.get('/sala-comun/:id/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
-    const idsala = req.params.id;
-    const fecha: Date = req.query.fecha;
+    const idsala = (req.params as any).id;
+    const fecha: Date = req.query.fecha as any;
 
     const ocupaciones = await listarSalaComun({
         fecha,
@@ -39,7 +39,7 @@ SalaComunRouter.get('/sala-comun/:id/patients', Auth.authenticate(), asyncHandle
 
 SalaComunRouter.get('/sala-comun/patients', Auth.authenticate(), asyncHandler(async (req: Request, res) => {
     const organizacion = Auth.getOrganization(req);
-    const fecha: Date = req.query.fecha;
+    const fecha: Date = req.query.fecha as any;
 
     const ocupaciones = await listarSalaComun({
         fecha,

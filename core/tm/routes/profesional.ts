@@ -9,7 +9,7 @@ import { findUser, updateEmailUser } from '../../../auth/auth.controller';
 import { PacienteApp } from '../../../modules/mobileApp/schemas/pacienteApp';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
-import { streamToBase64 } from '../controller/file-storage';
+import { findOneGridFS, streamToBase64 } from '../controller/file-storage';
 import { formacionCero, matriculaCero, migrarTurnos, saveFirma, filtrarProfesionalesPorPrestacion, saveImage, deleteFirmaFotoTemporal } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
@@ -356,11 +356,11 @@ router.get('/profesionales/guia', async (req, res, next) => {
     if (req.query.numeroMatricula) {
         opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
     }
-    if (req.query.apellido) {
-        opciones['apellido'] = makePattern(req.query.apellido);
+    if (req.query.apellido as any) {
+        opciones['apellido'] = makePattern(req.query.apellido as any);
     }
-    if (req.query.nombre) {
-        opciones['nombre'] = makePattern(req.query.nombre);
+    if (req.query.nombre as any) {
+        opciones['nombre'] = makePattern(req.query.nombre as any);
     }
     if (req.query.email) {
         opciones['contactos.valor'] = req.query.email;
@@ -400,8 +400,8 @@ router.get('/profesionales/matching', async (req, res, next) => {
         return next('Error en operación de matching. Faltan parámetros.');
     }
     let profesionales: any = await Profesional.find({
-        documento: req.query.documento,
-        sexo: req.query.sexo
+        documento: req.query.documento as any,
+        sexo: req.query.sexo as any
     });
     profesionales = profesionales.map(p => {
         return {
@@ -419,7 +419,7 @@ router.get('/profesionales/matching', async (req, res, next) => {
 });
 
 router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, res, next) => {
-    const id = req.query.id;
+    const id = req.query.id as any;
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFoto') && String(req.user.profesional) !== id) {
         return next(403);
     }
@@ -445,9 +445,9 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, re
                 };
             }
 
-            const file = await fotoProf.findOne(metadataFind);
+            const file = await findOneGridFS(fotoProf, metadataFind);
             if (file) {
-                const readStream = await fotoProf.readFile({ _id: file._id });
+                const readStream = fotoProf.openDownloadStream(file._id);
                 const _img = await streamToBase64(readStream);
                 return res.json(_img);
             }
@@ -467,6 +467,7 @@ router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, ne
 
             if (req.query.matricula) {
                 const matricula = parseInt(req.query.matricula, 10);
+
                 fotoProf = makeFsFirmaOnline();
                 metadataFind = {
                     'metadata.idProfesional': id,
@@ -478,40 +479,40 @@ router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, ne
                     'metadata.idProfesional': id
                 };
             }
-            const file = await fotoProf.findOne(metadataFind);
+
+            const file = await findOneGridFS(fotoProf, metadataFind);
+
             if (file) {
-                const readStream = await fotoProf.readFile({ _id: file._id });
+                const readStream = fotoProf.openDownloadStream(file._id);
                 const firma = await streamToBase64(readStream);
+
                 if (firma) {
                     return res.json(firma);
                 }
             }
             return res.json({});
-
         }
+
         if (req.query.firmaAdmin) {
             const idAdmin = req.query.firmaAdmin;
             const fotoAdmin = makeFsFirmaAdmin();
-            const file = await fotoAdmin.findOne({ 'metadata.idSupervisor': idAdmin });
+
+            const file = await findOneGridFS(fotoAdmin, { 'metadata.idSupervisor': idAdmin });
             if (file) {
-                const idFile = file._id;
-                const readStream = await fotoAdmin.readFile({ _id: idFile });
+                const readStream = fotoAdmin.openDownloadStream(file._id);
                 const _img = await streamToBase64(readStream);
+
                 if (_img) {
-                    const firmaAdmin = {
-                        firma: _img,
-                        administracion: file.metadata.administracion
-                    };
+                    const firmaAdmin = { firma: _img, administracion: file.metadata.administracion };
                     return res.json(firmaAdmin);
                 }
             }
             return res.json({});
-
         }
+        return res.json({});
     } catch (ex) {
         return next(ex);
     }
-
 });
 
 router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
@@ -526,7 +527,7 @@ router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
         }
         const pathFirmaSupervisor = './modules/matriculaciones/uploads/firmas/firma-supervisor.jpg';
         const pathFirmaProfesional = './modules/matriculaciones/uploads/firmas/' + prof.ultimaFirma.imgArchivo;
-        const pathFoto = './modules/matriculaciones/uploads/fotos/prof-' + req.params.profId + '.jpg';
+        const pathFoto = './modules/matriculaciones/uploads/fotos/prof-' + (req.params as any).profId + '.jpg';
 
         fs.readFile(pathFoto, (errReadFoto, fotoB64) => {
             if (errReadFoto) {
@@ -1306,16 +1307,16 @@ router.delete('/profesionales/:id/documentos/:fileId', async (req: any, res, nex
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
+router.delete('/profesionales/:id', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:deleteProfesional')) {
         return next(403);
     }
-    Profesional.findByIdAndRemove(req.params.id, (err, data) => {
-        if (err) {
-            return next(err);
-        }
+    try {
+        const data = await Profesional.findByIdAndDelete(req.params.id);
         res.json(data);
-    });
+    } catch (err) {
+        return next(err);
+    }
 });
 
 router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) => {
@@ -1416,12 +1417,12 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
 router.get('/resumen', (req, res, next) => {
     const opciones = {};
     let query;
-    if (req.query.nombre) {
-        opciones['nombre'] = makePattern(req.query.nombre);
+    if (req.query.nombre as any) {
+        opciones['nombre'] = makePattern(req.query.nombre as any);
     }
 
-    if (req.query.apellido) {
-        opciones['apellido'] = makePattern(req.query.apellido);
+    if (req.query.apellido as any) {
+        opciones['apellido'] = makePattern(req.query.apellido as any);
 
     }
     if (req.query.documento !== '') {

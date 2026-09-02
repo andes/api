@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.get('/especialidadFT/:id?', (req, res, next) => {
 
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (mongoose.Types.ObjectId.isValid((req.params as any).id)) {
 
-        especialidad.findById(req.params.id, (err, data) => {
+        especialidad.findById((req.params as any).id, (err, data) => {
             if (err) {
                 return next(err);
             }

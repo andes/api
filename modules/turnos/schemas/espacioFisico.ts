@@ -1,4 +1,4 @@
-import { Document, Model, model, Schema } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 import * as edificioSchema from '../../../core/tm/schemas/edificio';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { ISnomedConcept, SnomedConcept } from './../../rup/schemas/snomed-concept';
@@ -40,4 +40,4 @@ EspacioFisicoSchema.index({
     nombre: 1
 });
 
-export const EspacioFisico: Model<IEspacioFisico> = model('espacioFisico', EspacioFisicoSchema, 'espacioFisico');
+export const EspacioFisico = model<IEspacioFisico>('espacioFisico', EspacioFisicoSchema, 'espacioFisico');

@@ -110,7 +110,7 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
 */
 router.get('/organizaciones/sisa/:id', async (req, res, next) => {
     try {
-        const [requestSisa, requestOfertaPrestacional] = await Promise.all([validarOrganizacionSisa(req.params.id), obtenerOfertaPrestacional(req.params.id)]);
+        const [requestSisa, requestOfertaPrestacional] = await Promise.all([validarOrganizacionSisa((req.params as any).id), obtenerOfertaPrestacional((req.params as any).id)]);
 
         const statusSisa = requestSisa[0];
         const bodySisa = requestSisa[1];
