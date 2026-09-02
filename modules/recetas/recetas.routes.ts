@@ -105,8 +105,6 @@ export const RecetasRouter = RecetasCtr.makeRoutes();
 const authorizeByToken = async (req: Request, res: Response, next) =>
     Auth.authorizeByToken(req, res, next, [
         'huds:visualizacionHuds',
-        'huds:visualizacionParcialHuds:laboratorio',
-        'huds:visualizacionParcialHuds:vacuna',
         'huds:visualizacionParcialHuds:receta',
         'huds:visualizacionParcialHuds:*',
         'recetas:read'
