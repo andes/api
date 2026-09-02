@@ -48,12 +48,19 @@ export const getConFiltros = async (req, res) => {
 
 export const getVerificarReceta = async (req, res) => {
     try {
-        const { documento, sexo, conceptId } = req.query;
+        const { documento, sexo, esMagistral, codigoFuente, codigoValor, conceptId } = req.query;
         if (!documento || !sexo) {
             const error = new ParamsIncorrect('Se requieren los parámetros documento y sexo');
             return res.status(error.status).json(error);
         }
-        const result = await verificarRecetaExistente(documento as string, sexo as string, conceptId as string);
+        const medicamento: any = {
+            esMagistral,
+            codigoFuente,
+            codigoValor,
+            conceptId
+
+        };
+        const result = await verificarRecetaExistente(documento as string, sexo as string, medicamento);
         res.json(result);
     } catch (err) {
         const status = (err as any).status || 400;

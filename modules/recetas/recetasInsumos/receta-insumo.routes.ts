@@ -2,7 +2,7 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../../auth/auth.class';
 import { RecetaInsumo } from './receta-insumo.schema';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
-import { create, buscarRecetasInsumos, buscarRecetasInsumosConFiltros, setEstadoDispensa, actualizarAppNotificada, cancelarDispensa, suspender } from './recetaInsumosController';
+import { create, buscarRecetasInsumos, buscarRecetasInsumosConFiltros, buscarRecetasInsumosPorProfesional, setEstadoDispensa, actualizarAppNotificada, cancelarDispensa, suspender } from './recetaInsumosController';
 import { ParamsIncorrect } from '../recetas.error';
 
 class RecetaInsumoResource extends ResourceBase {
@@ -36,6 +36,12 @@ export const get = async (req, res) => {
 export const getConFiltros = async (req, res) => {
     const result = await buscarRecetasInsumosConFiltros(req);
     res.json(result);
+};
+
+export const getByProfesional = async (req, res) => {
+    const result = await buscarRecetasInsumosPorProfesional(req);
+    res.json(result);
+
 };
 
 export const patch = async (req, res) => {
@@ -88,6 +94,7 @@ const authorizeByToken = async (req: Request, res: Response, next) =>
 RecetaInsumoRouter.use(Auth.authenticate());
 RecetaInsumoRouter.get('/recetasInsumos', authorizeByToken, asyncHandler(get));
 RecetaInsumoRouter.get('/recetasInsumos/filtros', authorizeByToken, asyncHandler(getConFiltros));
+RecetaInsumoRouter.get('/recetasInsumos/profesional/:id', authorizeByToken, asyncHandler(getByProfesional));
 RecetaInsumoRouter.post('/recetasInsumos', authorizeByToken, asyncHandler(post));
 RecetaInsumoRouter.patch('/recetasInsumos', authorizeByToken, asyncHandler(patch));
 

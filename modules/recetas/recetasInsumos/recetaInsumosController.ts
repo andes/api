@@ -126,7 +126,7 @@ export async function create(req) {
                 idRegistro: dataRecetaInsumo.idRegistro
             };
             if (dataRecetaInsumo.insumo.generico) {
-                query['insumo.insumo'] = dataRecetaInsumo.insumo.generico.insumo;
+                query['insumo.nombre'] = dataRecetaInsumo.insumo.generico.nombre;
             } else {
                 query['insumo.concepto.conceptId'] = dataRecetaInsumo.insumo.concepto.conceptId;
             }
@@ -251,7 +251,12 @@ export async function buscarRecetasInsumosPorProfesional(req) {
             throw new ParamsIncorrect();
         }
         const filter: any = {
-            'profesional.id': Types.ObjectId(profesionalId)
+            $or: [
+                { 'profesional.id': Types.ObjectId(profesionalId) },
+                { 'profesional._id': Types.ObjectId(profesionalId) },
+                { 'profesional.id': profesionalId },
+                { 'profesional._id': profesionalId }
+            ]
         };
         if (estadoReceta) {
             filter['estadoActual.tipo'] = estadoReceta;
@@ -269,9 +274,23 @@ export async function buscarRecetasInsumosPorProfesional(req) {
             filter['origenExterno.app'] = origenExternoApp;
         }
         if (excluirEstado) {
-            filter['estadoActual.tipo'] = { $ne: excluirEstado };
+            const estados = typeof excluirEstado === 'string'
+                ? (excluirEstado as string).split(',').map((e: string) => e.trim())
+                : Array.isArray(excluirEstado) ? excluirEstado : [excluirEstado];
+            filter['estadoActual.tipo'] = { $nin: estados };
         }
-        const recetasInsumos = await RecetaInsumo.find(filter);
+        const recetasInsumos: any[] = await RecetaInsumo.find(filter);
+
+        for (let i = 0; i < recetasInsumos.length; i++) {
+            const rec = recetasInsumos[i];
+            if ((!rec.paciente || !rec.paciente.documento) && rec.paciente?.id) {
+                const p = await Paciente.findById(rec.paciente.id);
+                if (p) {
+                    rec.paciente = p;
+                }
+            }
+        }
+
         return recetasInsumos;
     } catch (err) {
         await informarLog.error('buscarRecetasInsumosPorProfesional', { params: req.params, query: req.query }, err);

@@ -98,7 +98,12 @@ const profesionalSubschema = new mongoose.Schema({
 });
 
 const medicamentoSubschema = new mongoose.Schema({
-    concepto: { type: SnomedConcept, required: true },
+    concepto: {
+        type: SnomedConcept,
+        required(this: any) {
+            return !this.esMagistral;
+        }
+    },
     presentacion: String,
     unidades: String, // (mg, cc, etc.)
     cantidad: Number,
@@ -110,6 +115,23 @@ const medicamentoSubschema = new mongoose.Schema({
         notaMedica: String
     },
     tratamientoProlongado: Boolean,
+    esMagistral: { type: Boolean, default: false },
+    magistral: {
+        type: {
+            codigo: [
+                {
+                    fuente: String,
+                    valor: String
+                }
+            ],
+            nombre: { type: String, required: true },
+            unidadMedida: String,
+            id: mongoose.SchemaTypes.ObjectId
+        },
+        required(this: any) {
+            return !!this.esMagistral;
+        }
+    },
     tiempoTratamiento: mongoose.SchemaTypes.Mixed,
     ordenTratamiento: Number,
     tipoReceta: {
@@ -125,6 +147,13 @@ const medicamentoSubschema = new mongoose.Schema({
         type: Number,
         required: false
     }
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+medicamentoSubschema.virtual('nombre').get(function (this: any) {
+    return this.esMagistral ? (this.magistral?.nombre || '') : (this.concepto?.term || '');
 });
 
 export const recetaSchema = new mongoose.Schema({
@@ -184,6 +213,13 @@ export const recetaSchema = new mongoose.Schema({
         app: sistemaSchema,
         fecha: Date
     }
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+recetaSchema.virtual('nombre').get(function (this: any) {
+    return this.medicamento?.nombre || (this.medicamento?.esMagistral ? (this.medicamento?.magistral?.nombre || '') : (this.medicamento?.concepto?.term || ''));
 });
 
 recetaSchema.pre('save', function (next) {
