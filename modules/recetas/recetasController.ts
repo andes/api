@@ -981,15 +981,19 @@ export async function actualizarEstadosDispensa() {
  * @param conceptId   - conceptId SNOMED del medicamento
  * @returns { existe: boolean, receta?: any }
  */
-export async function verificarRecetaExistente(documento: string, sexo: string, conceptId: string) {
+export async function verificarRecetaExistente(documento: string, sexo: string, medicamento: any) {
+    const { esMagistral, codigoFuente, codigoValor, conceptId } = medicamento;
     if (!documento) {
         throw new ParamsIncorrect('Se requiere el documento (DNI) del paciente');
     }
     if (!sexo) {
         throw new ParamsIncorrect('Se requiere el sexo del paciente');
     }
-    if (!conceptId) {
+    if (!esMagistral && !conceptId) {
         throw new ParamsIncorrect('Se requiere el conceptId del medicamento');
+    }
+    if (esMagistral && !codigoFuente && !codigoValor) {
+        throw new ParamsIncorrect('Se requieren los códigos de fuente y valor para el medicamento magistral');
     }
 
     const ahora = moment().toDate();
@@ -1000,7 +1004,18 @@ export async function verificarRecetaExistente(documento: string, sexo: string, 
     const receta = await Receta.findOne({
         'paciente.documento': documento,
         'paciente.sexo': sexo,
-        'medicamento.concepto.conceptId': conceptId,
+        $and: [
+            {
+                $or: [
+                    { 'medicamento.concepto.conceptId': conceptId },
+                    {
+                        'medicamento.magistral.codigo.valor': codigoValor,
+                        'medicamento.magistral.codigo.fuente': codigoFuente
+                    }
+                ]
+            }
+        ],
+
         'estadoActual.tipo': { $in: ['vigente', 'pendiente'] },
         'estadoDispensaActual.tipo': { $nin: ['dispensada'] },
         $or: [
