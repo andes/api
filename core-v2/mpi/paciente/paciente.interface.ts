@@ -71,6 +71,7 @@ export interface IPaciente {
     numeroIdentificacion?: String;
     claveBlocking?: String[];
     entidadesValidadoras?: String[];
+    fechaUltimaValidacion?: Date | moment.Moment;
     reportarError?: Boolean;
     notaError?: String;
     carpetaEfectores?: ICarpetaEfector[];
