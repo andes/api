@@ -58,6 +58,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     ];
     matchAgendas['estado'] = 'publicada';
     matchAgendas['dinamica'] = false;
+    matchAgendas['bloques.appMobile'] = true;
 
     if (reglas?.length > 0) {
         matchAgendas['$or'] = [
