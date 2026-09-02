@@ -681,7 +681,7 @@ export async function create(req) {
                     pacienteAndes.fechaNacimiento = fechaNacimientoReceta;
                     await pacienteAndes.save();
                 }
-                pacienteAndes.obraSocial = (!pacienteRecetar.obraSocial) ? null :
+                pacienteAndes.obraSocial = (!pacienteRecetar.obraSocial || pacienteRecetar.obraSocial.nombre === 'Sin obra social') ? null :
                     {
                         origen: pacienteRecetar.obraSocial.otraOS ? 'RECETAR' : 'PUCO',
                         nombre: pacienteRecetar.obraSocial.nombre,
@@ -732,6 +732,8 @@ export async function crearReceta(dataReceta, req) {
             receta.idRegistro = dataReceta.idRegistro;
             const diag = medicamento.diagnostico;
             receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
+            const obraSocialAux = (medicamento.obraSocial !== undefined) ? medicamento.obraSocial : (dataReceta.paciente?.obraSocial || null);
+            const obraSocialFinal = (obraSocialAux && obraSocialAux.nombre !== 'Sin obra social') ? obraSocialAux : null;
             receta.medicamento = {
                 concepto: medicamento.concepto || medicamento.generico,
                 presentacion: medicamento.presentacion?.term || medicamento.presentacion,
@@ -750,11 +752,14 @@ export async function crearReceta(dataReceta, req) {
                 tipoReceta: medicamento.tipoReceta?.id || medicamento.tipoReceta || 'simple',
                 serie: medicamento.serie,
                 numero: medicamento.numero,
+                obraSocial: obraSocialFinal
             };
             receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            receta.paciente = dataReceta.paciente;
-            receta.paciente.obraSocial = dataReceta.paciente.obraSocial;
+
+            const pacienteClone = dataReceta.paciente.toObject ? dataReceta.paciente.toObject() : JSON.parse(JSON.stringify(dataReceta.paciente));
+            receta.paciente = pacienteClone;
+            receta.paciente.obraSocial = null;
             receta.paciente.id = dataReceta.paciente.id || dataReceta.paciente._id;
             receta.profesional = dataReceta.profesional;
             receta.profesional._id = dataReceta.profesional.id || dataReceta.profesional._id; // revisar como se generan ids en ambos casos

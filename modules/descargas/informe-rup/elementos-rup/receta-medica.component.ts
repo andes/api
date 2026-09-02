@@ -44,10 +44,10 @@ export class RecetaMedicaComponent extends HTMLComponent {
         <thead>
             <tr>
                 <th>Medicamento</th>
-                <th>Presentación</th>
                 <th>Cantidad</th>
                 <th>Dosis diaria</th>
                 <th>Diagnóstico</th>
+                <th>Obra Social</th>
             </tr>
         </thead>
         <tbody>
@@ -55,9 +55,6 @@ export class RecetaMedicaComponent extends HTMLComponent {
             {{#each registro.valor.medicamentos}}
                 <tr>
                     <td> {{generico.term}} </td>
-                    <td>
-                    {{ unidades }} {{presentacion.term }}(s)
-                    </td>
                     <td>
                     {{ cantEnvases}} envase(s) de {{ cantidad }} {{presentacion.term }}(s)  
                     </td>
@@ -73,10 +70,20 @@ export class RecetaMedicaComponent extends HTMLComponent {
                     <td>
                     {{ diagnostico.term }}
                     </td>
+                    <td>
+                    {{#if obraSocial}}
+                        {{obraSocial.nombre}}
+                        {{#if obraSocial.numeroAfiliado}}
+                            <br><small>Af. {{obraSocial.numeroAfiliado}}</small>
+                        {{/if}}
+                    {{else}}
+                        Sin obra social
+                    {{/if}}
+                    </td>
                 </tr>
             {{/each}}
              <tr>
-                <td colspan="6" style="font-weight: bold;font-style: italic;">
+                <td colspan="5" style="font-weight: bold;font-style: italic;">
                     {{#if esReceta}}
                 Esta receta fue creada por emisor inscripto y valido en el Registro de Recetarios Electrónicos
 del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
@@ -135,8 +142,49 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
 
         const finalIdReceta = idReceta || this.registro.id;
 
+        let obraSocial = this.prestacion.paciente?.obraSocial || null;
+        if (Array.isArray(obraSocial)) {
+            obraSocial = obraSocial[0];
+        }
+        let obraSocialObj = null;
+        if (obraSocial) {
+            const nombreOS = typeof obraSocial === 'string' ? obraSocial : (obraSocial.nombre || obraSocial.financiador || '');
+            if (nombreOS && nombreOS !== 'Sin obra social') {
+                obraSocialObj = {
+                    nombre: nombreOS,
+                    numeroAfiliado: typeof obraSocial === 'object' ? (obraSocial.numeroAfiliado || '') : ''
+                };
+            }
+        }
+
+        const registroClone = this.registro.toObject ? this.registro.toObject() : JSON.parse(JSON.stringify(this.registro));
+        if (registroClone.valor?.medicamentos) {
+            registroClone.valor.medicamentos = registroClone.valor.medicamentos.map(med => {
+                let medOS = null;
+                if (med.obraSocial && typeof med.obraSocial === 'object') {
+                    const nombreMedOS = med.obraSocial.nombre || med.obraSocial.financiador || '';
+                    if (nombreMedOS && nombreMedOS !== 'Sin obra social') {
+                        medOS = {
+                            nombre: nombreMedOS,
+                            numeroAfiliado: med.obraSocial.numeroAfiliado || ''
+                        };
+                    }
+                } else if (med.obraSocial === undefined && obraSocialObj) {
+                    medOS = {
+                        nombre: obraSocialObj.nombre,
+                        numeroAfiliado: obraSocialObj.numeroAfiliado
+                    };
+                }
+
+                return {
+                    ...med,
+                    obraSocial: medOS
+                };
+            });
+        }
+
         this.data = {
-            registro: this.registro,
+            registro: registroClone,
             esReceta: this.depth ? 1 : 0, // Si es 0 no muestra el código de barras
             idReceta: finalIdReceta,
             estadoReceta,
