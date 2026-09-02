@@ -44,9 +44,8 @@ export class RecetaMedicaComponent extends HTMLComponent {
         <thead>
             <tr>
                 <th>Medicamento</th>
-                <th>Presentación</th>
                 <th>Cantidad</th>
-                <th>Dosis diaria</th>
+                <th>Indicaciones</th>
                 <th>Diagnóstico</th>
             </tr>
         </thead>
@@ -55,9 +54,7 @@ export class RecetaMedicaComponent extends HTMLComponent {
             {{#each registro.valor.medicamentos}}
                 <tr>
                     <td> {{generico.term}} </td>
-                    <td>
-                    {{ unidades }} {{presentacion.term }}(s)
-                    </td>
+
                     <td>
                     {{ cantEnvases}} envase(s) de {{ cantidad }} {{presentacion.term }}(s)  
                     </td>
@@ -69,7 +66,17 @@ export class RecetaMedicaComponent extends HTMLComponent {
                      {{#if dosisDiaria.dias}}
                      durante {{ dosisDiaria.dias }} día(s)
                      {{/if}}
-                    </td>
+                      {{#if dosisDiaria.notaMedica}}
+                      {{#if dosisDiaria.dosis}}
+                      <br>
+                      {{else}}
+                      {{#if dosisDiaria.dias}}
+                      <br>
+                      {{/if}}
+                      {{/if}}
+                      <b>Nota médica:</b> {{ dosisDiaria.notaMedica }}
+                      {{/if}}
+                     </td>
                     <td>
                     {{ diagnostico.term }}
                     </td>
