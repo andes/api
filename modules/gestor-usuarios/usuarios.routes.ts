@@ -156,6 +156,50 @@ UsuariosRouter.delete('/usuarios/:usuario/organizaciones/:organizacion', Auth.au
     }
 });
 
+UsuariosRouter.patch('/usuarios/:usuario/pacienteRestringido', Auth.authenticate(), async (req: any, res, next) => {
+    if (!Auth.check(req, 'usuarios:write')) {
+        return next(403);
+    }
+    try {
+        const user: any = await AuthUsers.findOne({ usuario: req.params.usuario });
+        if (!user) {
+            return next(404);
+        }
+        const audit = {
+            organizacion: req.user.organizacion,
+            documento: req.user.usuario.documento,
+            username: req.user.usuario.username,
+            apellido: req.user.usuario.apellido,
+            nombre: req.user.usuario.nombre,
+            nombreCompleto: req.user.usuario.nombreCompleto
+        };
+        const actuales = user.pacienteRestringido || [];
+        const nuevos = req.body.pacienteRestringido || [];
+        user.pacienteRestringido = nuevos.map(nuevo => {
+            const existente = actuales.find(a => String(a.idPaciente) === String(nuevo.idPaciente));
+            if (existente) {
+                return {
+                    ...nuevo,
+                    createdBy: existente.createdBy,
+                    createdAt: existente.createdAt,
+                    updatedBy: audit,
+                    updatedAt: new Date()
+                };
+            }
+            return {
+                ...nuevo,
+                createdBy: audit,
+                createdAt: new Date()
+            };
+        });
+        Auth.audit(user, req);
+        await user.save();
+        return res.json(user.pacienteRestringido);
+    } catch (err) {
+        return next(err);
+    }
+});
+
 UsuariosRouter.put('/usuarios/:usuario/organizaciones/permisos', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'usuarios:write')) {
         return next(403);
