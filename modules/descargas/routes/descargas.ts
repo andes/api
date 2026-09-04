@@ -22,6 +22,7 @@ import { laboratorioLog } from './../../rup/laboratorio.log';
 import { Paciente } from './../../../core-v2/mpi';
 import { FichaEpidemiologica } from '../ficha-epidemiologica/ficha';
 import { Forms } from '../../forms/forms.schema';
+import { InformeRecetas } from '../recetas/recetas';
 
 const router = express.Router();
 
@@ -263,6 +264,41 @@ router.post('/listadoTurnos', Auth.authenticate(), async (req: any, res, next) =
     const fileName: any = await docTurnos.informe(opciones);
     return res.download(fileName);
 
+});
+
+/**
+ * Descarga de recetas por prestación/registro o por ids de recetas.
+ * Genera una hoja por cada medicamento/insumo con barcode propio,
+ * obra social, nota médica, fórmula magistral y fechas emisión/vencimiento.
+ */
+router.get('/recetas/:idPrestacion/(:idRegistro)?', Auth.authenticate(), async (req: any, res, next) => {
+    try {
+        const idPrestacion = req.params.idPrestacion;
+        const idRegistro = req.params.idRegistro;
+        const recetasIds = req.query.recetasIds ? String(req.query.recetasIds).split(',').filter(Boolean) : null;
+        const informe = new InformeRecetas(idPrestacion, idRegistro, req.user, null, recetasIds);
+        const fileName = await informe.informe();
+        return res.download(fileName);
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.post('/recetas', Auth.authenticate(), async (req: any, res, next) => {
+    try {
+        const idPrestacion = req.body.idPrestacion;
+        const idRegistro = req.body.idRegistro;
+        const recetasIds = req.body.recetasIds || req.body.recetas || null;
+        const snapshots = req.body.snapshots || null;
+        if (!idPrestacion && (!recetasIds || !recetasIds.length)) {
+            return next(new Error('Se requiere idPrestacion o recetasIds'));
+        }
+        const informe = new InformeRecetas(idPrestacion, idRegistro, req.user, snapshots, recetasIds);
+        const fileName = await informe.informe();
+        return res.download(fileName);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 /**
