@@ -203,7 +203,7 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
 
         this.data = {
             registro: registroClone,
-            esReceta: this.depth ? 1 : 0, // Si es 0 no muestra el código de barras
+            esReceta: 0, // Si es 0 no muestra el código de barras
             idReceta: finalIdReceta,
             estadoReceta,
             barcodeSVG: generateBarcodeSVG(finalIdReceta, 'code128')
