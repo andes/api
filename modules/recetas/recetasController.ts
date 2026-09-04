@@ -9,21 +9,16 @@ import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error'
 import { getReceta } from './services/receta';
 import { Paciente } from '../../core-v2/mpi/paciente/paciente.schema';
 import { Profesional } from '../../core/tm/schemas/profesional';
+import { Counter } from './counter.model';
 
-// Función para generar ID único basado en fecha
-export function generarIdDesdeFecha(fecha = new Date()) {
-    // genera id unico de acuerdo a una fecha
-    const pad = (num: number, size: number) => num.toString().padStart(size, '0');
-    return String(
-        fecha.getFullYear().toString() +
-        pad(fecha.getMonth() + 1, 2) +
-        pad(fecha.getDate(), 2) +
-        pad(fecha.getHours(), 2) +
-        pad(fecha.getMinutes(), 2) +
-        pad(fecha.getSeconds(), 2) +
-        pad(fecha.getMilliseconds(), 3) +
-        pad(Math.floor(Math.random() * 999), 3)
-    );
+const pad = (num: number, size: number) => num.toString().padStart(size, '0');
+
+export async function generarIdSecuencial(fecha: Date, plataforma: number): Promise<string> {
+    const yy = fecha.getFullYear().toString().slice(-2);
+    const mm = pad(fecha.getMonth() + 1, 2);
+    const name = `receta_${yy}_${mm}`;
+    const seq = await Counter.getNextSeq(name);
+    return `${yy}${mm}${pad(seq, 8)}${plataforma}`;
 }
 
 export async function consultarEstado(receta, sistema) {
@@ -205,7 +200,7 @@ export async function buscarRecetas(req) {
         const recetasActualizadas: any = [];
         for (const receta of recetas) {
             if (!receta.idReceta) {
-                receta.idReceta = generarIdDesdeFecha(receta.createdAt || new Date());
+                receta.idReceta = await generarIdSecuencial(receta.createdAt || new Date(), 0);
                 Auth.audit(receta, req);
                 await receta.save();
             }
@@ -321,7 +316,7 @@ export async function buscarRecetasConFiltros(req) {
         const recetasActualizadas = [];
         for (const receta of recetas) {
             if (!receta.idReceta) {
-                receta.idReceta = generarIdDesdeFecha(receta.createdAt || new Date());
+                receta.idReceta = await generarIdSecuencial(receta.createdAt || new Date(), 0);
                 Auth.audit(receta, req);
                 await receta.save();
             }

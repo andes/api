@@ -2,7 +2,7 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { ProfesionalSubSchema } from '../../../core/tm/schemas/profesional';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
-import { generarIdDesdeFecha } from '../recetasController';
+import { generarIdSecuencial } from '../recetasController';
 const insumoSubSchema = new mongoose.Schema({
     id: String,
     nombre: String,
@@ -167,7 +167,7 @@ recetaInsumoSchema.pre('save', function (next) {
 
 recetaInsumoSchema.post('save', async (prescription: any) => {
     if (!prescription.idReceta) {
-        const id = generarIdDesdeFecha(prescription.createdAt);
+        const id = await generarIdSecuencial(prescription.createdAt || new Date(), 0);
         await mongoose.model('recetasInsumo').updateOne({ _id: prescription._id }, { $set: { idReceta: id } });
     }
 });

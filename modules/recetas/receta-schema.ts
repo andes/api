@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { PacienteSubSchema } from '../../core-v2/mpi/paciente/paciente.schema';
 import { ProfesionalSubSchema } from '../../core/tm/schemas/profesional';
 import { SnomedConcept } from '../rup/schemas/snomed-concept';
-import { generarIdDesdeFecha } from './recetasController';
+import { generarIdSecuencial } from './recetasController';
 
 export const motivosRecetaSchema = new mongoose.Schema({
     label: {
@@ -237,7 +237,7 @@ recetaSchema.pre('save', function (next) {
 
 recetaSchema.post('save', async (prescription: any) => {
     if (!prescription.idReceta) {
-        const id = generarIdDesdeFecha(prescription.createdAt);
+        const id = await generarIdSecuencial(prescription.createdAt || new Date(), 0);
         await mongoose.model('receta').updateOne({ _id: prescription._id }, { $set: { idReceta: id } });
     }
 });
