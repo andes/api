@@ -1001,20 +1001,14 @@ export async function verificarRecetaExistente(documento: string, sexo: string, 
     const days = (parametro && parametro.value) ? Number(parametro.value) : 30;
     const fechaLimiteVigentes = moment().subtract(days, 'days').startOf('day').toDate();
 
+    const medFilter = esMagistral
+        ? { 'medicamento.magistral.codigo.valor': codigoValor, 'medicamento.magistral.codigo.fuente': codigoFuente }
+        : { 'medicamento.concepto.conceptId': conceptId };
+
     const receta = await Receta.findOne({
         'paciente.documento': documento,
         'paciente.sexo': sexo,
-        $and: [
-            {
-                $or: [
-                    { 'medicamento.concepto.conceptId': conceptId },
-                    {
-                        'medicamento.magistral.codigo.valor': codigoValor,
-                        'medicamento.magistral.codigo.fuente': codigoFuente
-                    }
-                ]
-            }
-        ],
+        $and: [medFilter],
 
         'estadoActual.tipo': { $in: ['vigente', 'pendiente'] },
         'estadoDispensaActual.tipo': { $nin: ['dispensada'] },
@@ -1025,7 +1019,6 @@ export async function verificarRecetaExistente(documento: string, sexo: string, 
             { 'estadoActual.tipo': 'pendiente', fechaRegistro: { $lte: moment().add(10, 'days').endOf('day').toDate() } }
         ]
     }).sort({ fechaRegistro: -1 });
-
     return {
         existe: !!receta,
         receta: receta || null
