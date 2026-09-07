@@ -1,5 +1,5 @@
 import { HTMLComponent } from '../../model/html-component.class';
-import { generateBarcodeBase64 } from '../../model/barcode';
+import { generateBarcodeSVG } from '../../model/barcode';
 import { Receta } from '../../../recetas/receta-schema';
 
 
@@ -18,7 +18,7 @@ export class RecetaMedicaComponent extends HTMLComponent {
             <td style="width:70%; vertical-align:top; padding:0;border:0px none;">
                 <div class="barcode">
                 {{#if esReceta}}
-                    <img src="data:image/png;base64,{{barcodeBase64}}" alt="{{idReceta}}" />
+                    {{{barcodeSVG}}}
                      {{/if}}
                 </div>
             </td>
@@ -145,7 +145,7 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
             esReceta: this.depth ? 1 : 0, // Si es 0 no muestra el código de barras
             idReceta: finalIdReceta,
             estadoReceta,
-            barcodeBase64: await generateBarcodeBase64(finalIdReceta, 'code128')
+            barcodeSVG: generateBarcodeSVG(finalIdReceta, 'code128')
         };
     }
 }
