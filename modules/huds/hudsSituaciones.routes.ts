@@ -30,7 +30,7 @@ router.get('/:idPaciente/antecedentesPersonales', asyncHandler(async (req: any, 
     res.json(result);
 }));
 
-router.get('/:idPaciente/AntecedentesFamiliares', asyncHandler(async (req: any, res) => {
+router.get('/:idPaciente/antecedentesFamiliares', asyncHandler(async (req: any, res) => {
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Paciente no encontrado');
     }
