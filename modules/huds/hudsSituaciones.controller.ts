@@ -36,15 +36,17 @@ export async function situacionesActivas(pacienteID) {
     for (const prestacion of prestaciones) {
         const registros = registrosPorSemanticTag(prestacion.ejecucion.registros || [], 'trastorno');
         for (const registro of registros) {
-            result.push({
-                tipo: 'trastorno',
-                concepto: registro.concepto,
-                fecha: prestacion.ejecucion.fecha,
-                profesional: prestacion.solicitud.profesional,
-                organizacion: prestacion.ejecucion.organizacion,
-                idPrestacion: prestacion._id,
-                tipoPrestacion: prestacion.solicitud.tipoPrestacion
-            });
+            if (registro.valor?.estado === 'activo') {
+                result.push({
+                    tipo: 'trastorno',
+                    concepto: registro.concepto,
+                    fecha: prestacion.ejecucion.fecha,
+                    profesional: prestacion.solicitud.profesional,
+                    organizacion: prestacion.ejecucion.organizacion,
+                    idPrestacion: prestacion._id,
+                    tipoPrestacion: prestacion.solicitud.tipoPrestacion
+                });
+            }
         }
     }
 
@@ -89,7 +91,6 @@ export async function antecedentesPersonales(pacienteID) {
     const eclQuery = await ECLQueries.findOne({ key: 'antecedentes_personales' });
     const expression = eclQuery ? eclQuery.valor : '<< 312850006';
     const conceptos = await SnomedCtr.getConceptByExpression(expression);
-
     if (!conceptos || conceptos.length === 0) {
         return [];
     }
@@ -99,15 +100,7 @@ export async function antecedentesPersonales(pacienteID) {
         'estadoActual.tipo': 'validada'
     });
 
-    const results = buscarEnHuds(prestaciones, conceptos);
-    return results.map(item => ({
-        concepto: item.registro.concepto,
-        fecha: item.fecha,
-        profesional: item.profesional,
-        organizacion: item.organizacion,
-        idPrestacion: item.idPrestacion,
-        tipoPrestacion: item.tipoPrestacion
-    }));
+    return buscarEnHuds(prestaciones, conceptos);
 }
 
 export async function antecedentesFamiliares(pacienteID) {
@@ -119,7 +112,6 @@ export async function antecedentesFamiliares(pacienteID) {
     const eclQuery = await ECLQueries.findOne({ key: 'antecedentes_familiares' });
     const expression = eclQuery ? eclQuery.valor : '<< 57177007';
     const conceptos = await SnomedCtr.getConceptByExpression(expression);
-
     if (!conceptos || conceptos.length === 0) {
         return [];
     }
