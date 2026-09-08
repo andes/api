@@ -1,15 +1,17 @@
+import * as mongoose from 'mongoose';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
 import { sendMailComprobanteDerivacion } from './controllers/com.controller';
 import { Derivaciones } from './schemas/derivaciones.schema';
+import moment = require('moment');
 
 class DerivacionesResource extends ResourceBase {
     Model = Derivaciones;
     resourceName = 'derivaciones';
     middlewares = [Auth.authenticate()];
     searchFileds = {
-        fecha: MongoQuery.equalMatch,
+        fecha: MongoQuery.matchDate.withField('fecha'),
         estado: MongoQuery.equalMatch,
         organizacionOrigen: {
             field: 'organizacionOrigen.id',
@@ -29,6 +31,23 @@ class DerivacionesResource extends ResourceBase {
                 return { $ne: null };
             }
         },
+        estrategiaAtencion: {
+            field: 'estrategiaAtencion.id',
+            fn: (value) => {
+                if (!value || value === 'null') {
+                    return {
+                        $or: [
+                            { estrategiaAtencion: null },
+                            { estrategiaAtencion: { $exists: false } },
+                            { 'estrategiaAtencion.id': { $exists: false } },
+                            { 'estrategiaAtencion.id': null }
+                        ]
+                    };
+                }
+                return value;
+            }
+        },
+
         prioridad: MongoQuery.equalMatch,
         paciente: (value) => {
             return {
@@ -53,6 +72,26 @@ class DerivacionesResource extends ResourceBase {
             };
         },
         cancelada: MongoQuery.equalMatch,
+        rangoEtario: (value) => {
+            const limiteDate = moment().subtract(14, 'years').toDate();
+            const limiteString = moment().subtract(14, 'years').toISOString();
+            if (value === 'pediatrico') {
+                return {
+                    $or: [
+                        { 'paciente.fechaNacimiento': { $gt: limiteDate } },
+                        { 'paciente.fechaNacimiento': { $gt: limiteString } }
+                    ]
+                };
+            } else if (value === 'adultos') {
+                return {
+                    $or: [
+                        { 'paciente.fechaNacimiento': { $lte: limiteDate } },
+                        { 'paciente.fechaNacimiento': { $lte: limiteString } }
+                    ]
+                };
+            }
+            return {};
+        }
     };
 }
 

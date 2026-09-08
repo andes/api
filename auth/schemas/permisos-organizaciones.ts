@@ -10,7 +10,9 @@ export const PermisosOrganizacionesSchema = new Schema({
     perfiles: [{
         _id: Types.ObjectId,
         nombre: String
-    }]
+    }],
+    lastLogin: Date,
+    fechaVencimiento: Date
 });
 PermisosOrganizacionesSchema.plugin(AuditPlugin);
 

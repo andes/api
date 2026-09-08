@@ -18,6 +18,7 @@ import { IPaciente, IPacienteDoc } from './paciente.interface';
 import { PacienteCtr } from './paciente.routes';
 import { Paciente, replaceChars } from './paciente.schema';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
+import { EventCore } from '@andes/event-bus/index';
 
 /**
  * Crea un objeto paciente
@@ -112,40 +113,8 @@ export async function findById(id: string | String | Types.ObjectId, options = n
         queryFind.select(fields);
     }
     const paciente = await queryFind;
-    if (paciente) {
-        // Si el paciente tiene dentro de financiador una obra social que no es de puco entonces no se elimina
-        // pero si tiene una de puco y la funcion updateObraSocial me trae otra OS de puco que no es la misma
-        // del paciente entonces lo elimina del mismo, en caso contrario actualiza su fechaDeActualizacion.
-        const financiador = await updateObraSocial(paciente);
-        if (!financiador.length) {
-            return paciente;
-        }
-        // Bloque de codigo temporal, hasta depurar OS con valor [null]  ---------------
-        if (paciente.financiador && paciente.financiador[0] === null) {
-            paciente.financiador = null;
-        }
-        // fin bloque temporal  --------------------------------------------------------
-        if (!paciente.financiador?.length) {
-            paciente.financiador = financiador;
-        } else {
-            const codigosFinanciadores = financiador.map(f => f.codigoPuco);
-            paciente.financiador = paciente.financiador.filter(f => (f.origen && f.origen !== 'PUCO') || codigosFinanciadores.includes(f.codigoPuco));
-
-            financiador.forEach(nuevoFinanciador => {
-                const index = paciente.financiador.findIndex(f => f.codigoPuco === nuevoFinanciador.codigoPuco);
-                if (index === -1) {
-                    paciente.financiador.push(nuevoFinanciador);
-                } else if (!('origen' in paciente.financiador[index])) {
-                    paciente.financiador[index] = nuevoFinanciador;
-                } else {
-                    paciente.financiador[index].fechaDeActualizacion = moment().toDate();
-                }
-            });
-        }
-        await PacienteCtr.update(paciente.id, paciente, configPrivate.userScheduler as any);
-        return paciente;
-    }
-    return null;
+    EventCore.emitAsync('mpi:pacientes:findById', paciente);
+    return paciente;
 }
 
 /**
@@ -182,6 +151,47 @@ export async function suggest(query: any) {
     }
 }
 
+function formatearFecha(fecha: Date | string | moment.Moment): string | null {
+    if (!fecha) {
+        return null;
+    }
+
+    // Caso Moment
+    if (moment.isMoment(fecha)) {
+        return fecha.format('YYYY-MM-DD');
+    }
+
+    // Caso Date
+    if (fecha instanceof Date) {
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    }
+
+    // Caso String
+    const valor = fecha.trim().replace(/\//g, '-');
+    const partes = valor.split('-');
+
+    if (partes.length !== 3) {
+        return null;
+    }
+
+    // YYYY-MM-DD
+    if (partes[0].length === 4) {
+        const [year, month, day] = partes;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
+    // DD-MM-YYYY
+    if (partes[2].length === 4) {
+        const [day, month, year] = partes;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
+    return null;
+}
 
 /**
  * Realiza un matching entre dos pacientes.
@@ -194,27 +204,27 @@ export async function suggest(query: any) {
  */
 
 export function matching(pacienteA: IPaciente | IPacienteDoc, pacienteB: IPaciente, weightsDefault?: any) {
+
     const personaA = {
         documento: pacienteA.documento ? pacienteA.documento.toString() : '',
-        nombre: pacienteA.nombre ? pacienteA.nombre : '',
-        apellido: pacienteA.apellido ? pacienteA.apellido : '',
-        fechaNacimiento: pacienteA.fechaNacimiento ? moment(pacienteA.fechaNacimiento).format('YYYY-MM-DD') : '',
-        sexo: pacienteA.sexo ? pacienteA.sexo : ''
+        nombre: pacienteA.nombre ? pacienteA.nombre.toLocaleLowerCase() : '',
+        apellido: pacienteA.apellido ? pacienteA.apellido.toLocaleLowerCase() : '',
+        fechaNacimiento: pacienteA.fechaNacimiento ? formatearFecha(pacienteA.fechaNacimiento) : '',
+        sexo: pacienteA.sexo ? pacienteA.sexo.toLocaleLowerCase() : ''
     };
 
     const personaB = {
         documento: pacienteB.documento ? pacienteB.documento.toString() : '',
-        nombre: pacienteB.nombre ? pacienteB.nombre : '',
-        apellido: pacienteB.apellido ? pacienteB.apellido : '',
-        fechaNacimiento: pacienteB.fechaNacimiento ? moment(pacienteB.fechaNacimiento).format('YYYY-MM-DD') : '',
-        sexo: pacienteB.sexo ? pacienteB.sexo : ''
+        nombre: pacienteB.nombre ? pacienteB.nombre.toLocaleLowerCase() : '',
+        apellido: pacienteB.apellido ? pacienteB.apellido.toLocaleLowerCase() : '',
+        fechaNacimiento: pacienteB.fechaNacimiento ? formatearFecha(pacienteB.fechaNacimiento) : '',
+        sexo: pacienteB.sexo ? pacienteB.sexo.toLocaleLowerCase() : ''
     };
 
     const match = new Matching();
 
     const valorMatching = match.matchPersonas(personaA, personaB, weightsDefault ? weightsDefault : config.mpi.weightsDefault, config.algoritmo);
     return valorMatching;
-
 }
 
 /**
@@ -512,13 +522,15 @@ export async function verificaInternacionActual(idPaciente) {
     })
         .sort({ 'ejecucion.registros.valor.informeIngreso.fechaIngreso': -1 })
         .limit(1);
+    if (ultimaPrestacion) {
 
-    const ultimoRegistro = ultimaPrestacion?.ejecucion?.registros[ultimaPrestacion?.ejecucion?.registros.length - 1] || null;
+        const ultimoRegistro = ultimaPrestacion.ejecucion?.registros[ultimaPrestacion?.ejecucion?.registros.length - 1] || null;
+        let estado;
 
-    if (ultimoRegistro) {
-        const estado = ultimoRegistro.valor?.InformeEgreso?.tipoEgreso?.id === 'Defunción' ? 'Paciente fallecido' : 'En Curso';
+        if (ultimoRegistro?.valor?.InformeIngreso) {
+            estado = 'En curso';
+        }
         const organizacion = ultimaPrestacion.solicitud?.organizacion?.nombre;
-
         return {
             organizacion,
             estado
@@ -728,5 +740,11 @@ export async function getHistorialPaciente(req) {
     } else {
         return ('Datos insuficientes');
     }
+}
 
+export async function agregarFinanciador(paciente) {
+    const financiador = await getObraSocial(paciente);
+    paciente.financiador = financiador;
+
+    return paciente;
 }

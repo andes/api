@@ -17,6 +17,7 @@ import * as AgendasEstadisticas from '../controller/estadisticas';
 import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
 import { Agenda } from '../schemas/agenda';
 import { Auth } from './../../../auth/auth.class';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 const router = express.Router();
 
@@ -155,11 +156,10 @@ router.get('/agenda/diagnosticos', async (req, res, next) => {
     } catch (err) { return next(err); }
 });
 
-router.get('/agenda/:id?', (req, res, next) => {
+router.get('/agenda/:id?', async (req, res, next) => {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-
-        Agenda.findById(req.params.id, (err, data) => {
+        await Agenda.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -272,6 +272,14 @@ router.get('/agenda/:id?', (req, res, next) => {
 
         if (req.query.limit) {
             query.limit(parseInt(req.query.limit || 0, 10));
+        }
+
+        if (!req.query.tipoPrestacion && !req.query.teleConsulta) {
+            const conceptosTurneables: any = await tipoPrestacion.find({ teleConsulta: true });
+            const conceptIdArray = conceptosTurneables?.map(ct => ct.conceptId);
+            if (conceptIdArray?.length > 0) {
+                query.where('tipoPrestaciones.conceptId').nin(conceptIdArray);
+            }
         }
 
         query.exec((err, data) => {
@@ -628,16 +636,14 @@ router.patch('/agenda/:id*?', (req, res, next) => {
             }
 
             Auth.audit(data, req);
-            data.save(async (error) => {
+            try {
+                await data.save();
                 EventCore.emitAsync('citas:agenda:update', data);
                 if (event.data) {
                     EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
                 }
-                objetoLog.err = error || undefined;
+                objetoLog.err = undefined;
                 agendaLog.info('update', objetoLog, req);
-                if (error) {
-                    return next(error);
-                }
 
                 if (req.body.op === 'suspendida') {
                     const liberar = [];
@@ -667,9 +673,12 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         await liberarRefTurno(event.data, req);
                     }
                 }
-            });
-
-            res.json(data);
+                return res.json(data);
+            } catch (error) {
+                objetoLog.err = error || undefined;
+                agendaLog.info('update', objetoLog, req);
+                return next(error);
+            }
 
             return;
         });
@@ -678,9 +687,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
 router.post('/dashboard', async (req, res, next) => {
     const permisos: any = {};
-    const tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
-    if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
-        permisos.tipoPrestacion = tipoPrestacion;
+    const permisosTP = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
+    if (permisosTP.length > 0 && permisosTP[0] !== '*') {
+        permisos.tipoPrestacion = permisosTP;
     }
 
     try {
@@ -734,9 +743,9 @@ router.post('/dashboard/descargarCsv', async (req, res, next) => {
 
 router.post('/dashboard/localidades', async (req, res, next) => {
     const permisos: any = {};
-    const tipoPrestacion = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
-    if (tipoPrestacion.length > 0 && tipoPrestacion[0] !== '*') {
-        permisos.tipoPrestacion = tipoPrestacion;
+    const permisosTP = Auth.getPermissions(req, 'visualizacionInformacion:dashboard:citas:tipoPrestacion:?');
+    if (permisosTP.length > 0 && permisosTP[0] !== '*') {
+        permisos.tipoPrestacion = permisosTP;
     }
 
     try {

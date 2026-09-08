@@ -1,3 +1,288 @@
+## [5.147.5](https://github.com/andes/api/compare/v5.147.4...v5.147.5) (2026-09-02)
+
+## [5.147.4](https://github.com/andes/api/compare/v5.147.3...v5.147.4) (2026-08-12)
+
+
+### Bug Fixes
+
+* **EP:** Se cambia control para interoperar, se quita carga de LAMP en desuso ([#2291](https://github.com/andes/api/issues/2291)) ([27175c6](https://github.com/andes/api/commit/27175c6dcd614c11a1bf2a76c857365f6e7df053))
+
+## [5.147.3](https://github.com/andes/api/compare/v5.147.2...v5.147.3) (2026-08-05)
+
+
+### Bug Fixes
+
+* **turnos:** se agregan en el esquema motivos de suspensión antiguos ([#2289](https://github.com/andes/api/issues/2289)) ([07961f1](https://github.com/andes/api/commit/07961f13d22701dfc72c1d22e3cec201e6521d11))
+
+## [5.147.2](https://github.com/andes/api/compare/v5.147.1...v5.147.2) (2026-07-29)
+
+
+### Bug Fixes
+
+* **REC-262:** se agrega idReceta, audit en estados y ruta con filtros ([#2271](https://github.com/andes/api/issues/2271)) ([56e4965](https://github.com/andes/api/commit/56e4965db1c5bfedb5f1be6d72336fd9adae26f5))
+
+## [5.147.1](https://github.com/andes/api/compare/v5.147.0...v5.147.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **MPI:** Agrega time out en las consultas a puco nación ([#2268](https://github.com/andes/api/issues/2268)) ([9cb8bcd](https://github.com/andes/api/commit/9cb8bcd1b8a7bfbdf9a2fd8baa1156a66cce23d4))
+
+# [5.147.0](https://github.com/andes/api/compare/v5.146.5...v5.147.0) (2026-07-01)
+
+
+### Bug Fixes
+
+* **farmacia:** Corrige condicion de pre-save ([#2265](https://github.com/andes/api/issues/2265)) ([517fdaa](https://github.com/andes/api/commit/517fdaa90ae4ed278b8431cd8385351728b36100))
+
+
+### Features
+
+* **HUDS:** implementa rutas para pedido de resumen ([#1969](https://github.com/andes/api/issues/1969)) ([bea014e](https://github.com/andes/api/commit/bea014e9952004097eac9346c59cb426f98e27f4))
+* **MPI:** agrega financiador al crear paciente ([#1948](https://github.com/andes/api/issues/1948)) ([0a9412d](https://github.com/andes/api/commit/0a9412d638e63c082de16badd37520048ee09dd2))
+
+## [5.146.5](https://github.com/andes/api/compare/v5.146.4...v5.146.5) (2026-06-24)
+
+
+### Bug Fixes
+
+* **AUTH:** Agregar ruta de agendas al middleware ([#2261](https://github.com/andes/api/issues/2261)) ([dc5b071](https://github.com/andes/api/commit/dc5b0711317909963167507f32afa7efcf1705f6))
+
+## [5.146.4](https://github.com/andes/api/compare/v5.146.3...v5.146.4) (2026-06-10)
+
+
+### Bug Fixes
+
+* **CIT-420:** Error al contar turnos virtuales ([#2254](https://github.com/andes/api/issues/2254)) ([7e2ad6a](https://github.com/andes/api/commit/7e2ad6a575f2adaba42b8ad75eb420376e257bd0))
+
+
+### Reverts
+
+* Revert "HUDS (Fix) - Error creando/enviando archivo +15mb (#2198)" (#2256) ([521c8de](https://github.com/andes/api/commit/521c8de3d89b1a0b7006e4e1658eb498338b435c)), closes [#2198](https://github.com/andes/api/issues/2198) [#2256](https://github.com/andes/api/issues/2256)
+
+## [5.146.3](https://github.com/andes/api/compare/v5.146.2...v5.146.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* **MAT:** eliminacion de atributo formacionGrado ([#2250](https://github.com/andes/api/issues/2250)) ([afd4182](https://github.com/andes/api/commit/afd41827f21204093b768a814bd4ccea10915d02))
+
+## [5.146.2](https://github.com/andes/api/compare/v5.146.1...v5.146.2) (2026-05-27)
+
+
+### Bug Fixes
+
+* **EP:** Modifica la fecha del evento ([#2246](https://github.com/andes/api/issues/2246)) ([eb1d973](https://github.com/andes/api/commit/eb1d9732560051b3ec132c0bc48bcf5f4fe550f4))
+
+## [5.146.1](https://github.com/andes/api/compare/v5.146.0...v5.146.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* **IN:** Quita momentaneamete la deficinion de los indices para el listado de internacion ([#2236](https://github.com/andes/api/issues/2236)) ([b1abc2d](https://github.com/andes/api/commit/b1abc2d8fb095c1d06d57eb77c304da8cd9c0853))
+
+# [5.146.0](https://github.com/andes/api/compare/v5.145.0...v5.146.0) (2026-05-06)
+
+
+### Bug Fixes
+
+* **IN:** Cambia query de listado de internacion ([#2235](https://github.com/andes/api/issues/2235)) ([0bfb2c9](https://github.com/andes/api/commit/0bfb2c91f8aae8005ed0656fd7f5d209868711c3))
+* **INT:** Se cambia el orden de los campos de consulta en listado internacion ([#2232](https://github.com/andes/api/issues/2232)) ([d0c59f7](https://github.com/andes/api/commit/d0c59f7b7741a418d42edec8ced2448e9a8280da))
+* **PACS:** modifica Dicom Accession Number ([#2227](https://github.com/andes/api/issues/2227)) ([22acddc](https://github.com/andes/api/commit/22acddc8391b7a90b3cf9a1bde3a680eb7040c57))
+
+# [5.145.0](https://github.com/andes/api/compare/v5.144.0...v5.145.0) (2026-04-22)
+
+
+### Features
+
+* **COM-115:** Agregar filtro por rango etario ([#2195](https://github.com/andes/api/issues/2195)) ([47846ca](https://github.com/andes/api/commit/47846caab45b60aeaacedb4e84fbb4b4702f2092))
+
+# [5.144.0](https://github.com/andes/api/compare/v5.143.0...v5.144.0) (2026-04-15)
+
+
+### Features
+
+* **TOP:** agrega nuevo estado "resuelta" a solicitudes ([#2193](https://github.com/andes/api/issues/2193)) ([4347d6b](https://github.com/andes/api/commit/4347d6b9e6ba9604afb59191bd805d55706d4f08))
+
+# [5.143.0](https://github.com/andes/api/compare/v5.142.0...v5.143.0) (2026-04-01)
+
+
+### Features
+
+* **TOP:** modifica filtros para listado de solicitudes ([#2186](https://github.com/andes/api/issues/2186)) ([324e3b3](https://github.com/andes/api/commit/324e3b31190459f02e80606a8d9a1de3b3df3dd9))
+
+# [5.142.0](https://github.com/andes/api/compare/v5.141.0...v5.142.0) (2026-03-25)
+
+
+### Bug Fixes
+
+* **validacion:** corrige validacion con sisa cuando cae servicio ([#2206](https://github.com/andes/api/issues/2206)) ([e14267b](https://github.com/andes/api/commit/e14267b811fd1b656b486596109fd462b4c66ac6))
+
+
+### Features
+
+* **MONIT-92:** ABM Insumos ([#2192](https://github.com/andes/api/issues/2192)) ([83dd0d7](https://github.com/andes/api/commit/83dd0d78bb1e3f26162695eac9c9bf58f6f8ba73))
+
+# [5.141.0](https://github.com/andes/api/compare/v5.140.0...v5.141.0) (2026-03-04)
+
+
+### Features
+
+* **HUDS:** implementa job para actualizar estados de dispensa ([#2056](https://github.com/andes/api/issues/2056)) ([790e5a3](https://github.com/andes/api/commit/790e5a3365f34feb251c3dbec98eeb117a798b93))
+
+# [5.140.0](https://github.com/andes/api/compare/v5.139.5...v5.140.0) (2026-02-25)
+
+
+### Bug Fixes
+
+* **MPI:** Corrige generacion de cuil ([#2185](https://github.com/andes/api/issues/2185)) ([78a9a40](https://github.com/andes/api/commit/78a9a400d53ebc904aa07ac81fdbdb09b1eeffaf))
+
+
+### Features
+
+* **REC:** agrega numero de afiliado a detalle de prestacion en PDF ([#2137](https://github.com/andes/api/issues/2137)) ([e6060eb](https://github.com/andes/api/commit/e6060eba6d6f8e8e5473fa62e6bbc07aa60df77f))
+
+## [5.139.5](https://github.com/andes/api/compare/v5.139.4...v5.139.5) (2026-02-18)
+
+
+### Bug Fixes
+
+* **REC:** Corrige la carga de profesional en la receta para andes y recetar ([#2147](https://github.com/andes/api/issues/2147)) ([44ea4ac](https://github.com/andes/api/commit/44ea4ac140e0fb14ef010983a9eda3bcd9b0fe72))
+
+## [5.139.4](https://github.com/andes/api/compare/v5.139.3...v5.139.4) (2026-02-11)
+
+
+### Bug Fixes
+
+* **CITAS:** Agrega filtro por tipo de prestación en get de agendas ([#2182](https://github.com/andes/api/issues/2182)) ([2e56356](https://github.com/andes/api/commit/2e5635658700b92704968c94a6f2968bbbb08616))
+
+## [5.139.3](https://github.com/andes/api/compare/v5.139.2...v5.139.3) (2026-02-04)
+
+
+### Bug Fixes
+
+* **CITAS:** Quitamos filtro de teleconsulta ([#2181](https://github.com/andes/api/issues/2181)) ([f5c8da1](https://github.com/andes/api/commit/f5c8da18e4fb228939c838be797207b51fbf1b43))
+
+## [5.139.2](https://github.com/andes/api/compare/v5.139.1...v5.139.2) (2026-01-14)
+
+
+### Bug Fixes
+
+* **mobile:** se elimina restricción de turnos suspendidos ([#2172](https://github.com/andes/api/issues/2172)) ([dfd4ef9](https://github.com/andes/api/commit/dfd4ef9ac0308a96816a2280490cb90caf9e34e2))
+* **REC-166:** Fecha en receta enviada a Andes no coincide con el formulario de Recetar ([#2151](https://github.com/andes/api/issues/2151)) ([ceb3118](https://github.com/andes/api/commit/ceb3118a04b8f2964e84444368139a01164d0fab))
+* **turnoSolicitado:** cambia ruta get id en vez dni  y agrega controles al post ([#2169](https://github.com/andes/api/issues/2169)) ([d6a6db3](https://github.com/andes/api/commit/d6a6db338956943921cd30375b035c6f9196ff35))
+
+## [5.139.1](https://github.com/andes/api/compare/v5.139.0...v5.139.1) (2025-12-10)
+
+
+### Bug Fixes
+
+* **CITAS:** Agegar datos de usuario en historial de turnos liberados ([#2159](https://github.com/andes/api/issues/2159)) ([b943741](https://github.com/andes/api/commit/b94374133e0abd7fdd76966585688065385ca0f7))
+* **PACS:** agregar id recortado para pacientes sin DNI ([#2155](https://github.com/andes/api/issues/2155)) ([ecf8dff](https://github.com/andes/api/commit/ecf8dffd9527731f3d3967d4773d3bfe7beff18c))
+
+# [5.139.0](https://github.com/andes/api/compare/v5.138.2...v5.139.0) (2025-12-03)
+
+
+### Features
+
+* **citas:** Mejoras job actualización de turnos restantes ([#2127](https://github.com/andes/api/issues/2127)) ([fb63d39](https://github.com/andes/api/commit/fb63d3948c7e0b49012c65721ab3256bd9323959))
+
+## [5.138.2](https://github.com/andes/api/compare/v5.138.1...v5.138.2) (2025-11-19)
+
+
+### Bug Fixes
+
+* actualizar expiración en el cuerpo del email de otp ([#2129](https://github.com/andes/api/issues/2129)) ([95303ba](https://github.com/andes/api/commit/95303ba659dac60f0a3c4b95870eb2e750d080d8))
+* **TOP:** Se cambia la fecha desde la cual se genera una solicitud ([#2117](https://github.com/andes/api/issues/2117)) ([527300d](https://github.com/andes/api/commit/527300d0364a86b800d271284fafacda53f0d07a))
+
+## [5.138.1](https://github.com/andes/api/compare/v5.138.0...v5.138.1) (2025-11-12)
+
+
+### Bug Fixes
+
+* cambia load xml ([#2143](https://github.com/andes/api/issues/2143)) ([aee2df4](https://github.com/andes/api/commit/aee2df4c9c86ada2b03f043cd83a0d97c8c3d4db))
+* control de cdas ([#2142](https://github.com/andes/api/issues/2142)) ([b983c24](https://github.com/andes/api/commit/b983c24f60ad44ad42eb1893c444c785d82793d3))
+* **HUDS:** Se agregar un control para filtrar labos en proceso ([#2141](https://github.com/andes/api/issues/2141)) ([9594960](https://github.com/andes/api/commit/95949607fa8d46e8a0e5135237fd2c6a31ab9f8c))
+
+# [5.138.0](https://github.com/andes/api/compare/v5.137.1...v5.138.0) (2025-11-05)
+
+
+### Bug Fixes
+
+* **HUDS:** Agrega control por secciones al generar pdf de fichas ([#2135](https://github.com/andes/api/issues/2135)) ([71c85d8](https://github.com/andes/api/commit/71c85d8e8eaa56f02822b6e9671bd7e4afe86684))
+
+
+### Features
+
+* **REC:** implementa ID unico de receta ([#2110](https://github.com/andes/api/issues/2110)) ([b1b7bde](https://github.com/andes/api/commit/b1b7bde4a97a677c4c88e5dc1e7ae0ddf6e2b954))
+
+## [5.137.1](https://github.com/andes/api/compare/v5.137.0...v5.137.1) (2025-10-29)
+
+
+### Bug Fixes
+
+* **COM:** Se cambia aggregate de mapa provincial ([#2132](https://github.com/andes/api/issues/2132)) ([6b606a4](https://github.com/andes/api/commit/6b606a4804cb3e299a1cc9e313b499c0a8d42232))
+* **IN-629:** Error en censos ([#2066](https://github.com/andes/api/issues/2066)) ([3a281e7](https://github.com/andes/api/commit/3a281e7e2418aade79514fa519a42306db622fe1))
+
+# [5.137.0](https://github.com/andes/api/compare/v5.136.0...v5.137.0) (2025-10-22)
+
+
+### Features
+
+* **CITAS:** Modifica api dias feriados ([#2125](https://github.com/andes/api/issues/2125)) ([a7dea8e](https://github.com/andes/api/commit/a7dea8e37dd24524831fdb8273067160c1d3f9bf))
+
+# [5.136.0](https://github.com/andes/api/compare/v5.135.2...v5.136.0) (2025-10-15)
+
+
+### Bug Fixes
+
+* **AUTH:** Agerga permiso para mapa provincial ([#2120](https://github.com/andes/api/issues/2120)) ([88bbb6f](https://github.com/andes/api/commit/88bbb6f5dc63df6ab2e230e9b9272e767486be53))
+* **Receta:** corrige dato de obra social en receta ([#2121](https://github.com/andes/api/issues/2121)) ([e593851](https://github.com/andes/api/commit/e5938510e78104010f319e76a600a86af0bce493))
+
+
+### Features
+
+* agregar reset al validateOtp y timeout al envio de mail ([#2119](https://github.com/andes/api/issues/2119)) ([396f1c0](https://github.com/andes/api/commit/396f1c0a1412264aa9b4bec466a18d7e39870e73))
+
+## [5.135.2](https://github.com/andes/api/compare/v5.135.1...v5.135.2) (2025-10-01)
+
+
+### Bug Fixes
+
+* **MPI:** Cambia la actualizacion de obra social de puco a un evento asincronico ([#2116](https://github.com/andes/api/issues/2116)) ([d41ff11](https://github.com/andes/api/commit/d41ff1164066e38b485fc934bd497a62900be0b5))
+
+## [5.135.1](https://github.com/andes/api/compare/v5.135.0...v5.135.1) (2025-09-24)
+
+
+### Bug Fixes
+
+* **HUDS:** Corrige formato de fecha de nacimiento al buscar laboratorios ([#2112](https://github.com/andes/api/issues/2112)) ([b7e5f4b](https://github.com/andes/api/commit/b7e5f4ba9481b5342e42007a707dc4eb2e586ce5))
+* **MPI:** Cambia metodo para actualizar OS en find paciente ([#2111](https://github.com/andes/api/issues/2111)) ([e24ae28](https://github.com/andes/api/commit/e24ae289d654e5490ab52703dd9242c3f201ee12))
+* **REC-119:** Suspención de receta con tratamiento prolongado ([#2103](https://github.com/andes/api/issues/2103)) ([d0efc10](https://github.com/andes/api/commit/d0efc10f1511111953af5204e2f04b123b452539))
+* **Receta:** carga de OS al crear una receta ([#2114](https://github.com/andes/api/issues/2114)) ([6bff9cc](https://github.com/andes/api/commit/6bff9cca77ad3e29a33c04cc17ed187837c73e4a))
+
+# [5.135.0](https://github.com/andes/api/compare/v5.134.2...v5.135.0) (2025-09-17)
+
+
+### Features
+
+* envio de código OTP para resetear contraseña ([#2092](https://github.com/andes/api/issues/2092)) ([88d906d](https://github.com/andes/api/commit/88d906d3e542f30aadd4655823a2d5bbde590d3c))
+
+## [5.134.2](https://github.com/andes/api/compare/v5.134.1...v5.134.2) (2025-09-10)
+
+
+### Bug Fixes
+
+* **PUCO:** Corrige filtro por codigo Puco ([#2095](https://github.com/andes/api/issues/2095)) ([78dd665](https://github.com/andes/api/commit/78dd66541f0d631f217fbeb613a4b658762be561))
+
+## [5.134.1](https://github.com/andes/api/compare/v5.134.0...v5.134.1) (2025-09-03)
+
+
+### Bug Fixes
+
+* Agrega control de documento en descarga de labo ([#2098](https://github.com/andes/api/issues/2098)) ([cca10ba](https://github.com/andes/api/commit/cca10ba9d60c74054dc5b5a824cd0692bee86321))
+* cambia el codigo de error al intentar devolver el pdf de labos ([#2099](https://github.com/andes/api/issues/2099)) ([ab9b90d](https://github.com/andes/api/commit/ab9b90d5679a91cef93eb8d140dd82a92221daa3))
+
 # [5.134.0](https://github.com/andes/api/compare/v5.133.0...v5.134.0) (2025-08-27)
 
 

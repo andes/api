@@ -23,10 +23,12 @@ export interface IAuthUsers {
             nombre: string;
         }[];
         lastLogin: Date;
+        fechaVencimiento?: Date;
     }[];
     lastLogin: Date;
     tipo?: String;
     validationToken?: String;
+    validationTokenExpiration?: Date;
     email?: String;
     configuracion?: { [key: string]: any };
     disclaimers?: {
@@ -34,6 +36,10 @@ export interface IAuthUsers {
         createdAt: Date;
     }[];
     pacienteRestringido: Object;
+    otp?: {
+        code: String;
+        expiresAt: Date;
+    };
 }
 
 export type IAuthUsersDoc = AndesDocWithAudit<IAuthUsers>;
@@ -46,6 +52,7 @@ export const AuthUsersSchema = new mongoose.Schema({
     documento: String,
     password: String,
     foto: String,
+    lastLogin: Date,
     authMethod: {
         type: String,
         required: false
@@ -63,6 +70,14 @@ export const AuthUsersSchema = new mongoose.Schema({
     validationToken: {
         type: String,
         required: false
+    },
+    validationTokenExpiration: {
+        type: Date,
+        required: false
+    },
+    otp: {
+        code: String,
+        expiresAt: Date
     },
     configuracion: {
         type: mongoose.SchemaTypes.Mixed,

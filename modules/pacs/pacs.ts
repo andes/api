@@ -2,12 +2,16 @@ import { EventCore } from '@andes/event-bus';
 import { InformeRUP } from '..//descargas/informe-rup/informe-rup';
 import { IPrestacion } from '../rup/prestaciones.interface';
 import { Prestacion } from '../rup/schemas/prestacion';
-import { DICOMInformePDF } from './dicom/informe-encode';
-import { DICOMPaciente } from './dicom/paciente-encode';
-import { DICOMPrestacion } from './dicom/prestacion-encode';
+import { DICOMInformePDFObject } from './dicom/informe-encode';
+import { DICOMPacienteObject } from './dicom/paciente-encode';
+import { DICOMPrestacionObject } from './dicom/prestacion-encode';
+import { DICOMPaciente, DICOMPrestacion, DICOMInforme } from './dicom/dicom.helpers';
+
+export { DICOMPaciente, DICOMPrestacion, DICOMInforme } from './dicom/dicom.helpers';
 import { PacsConfigController } from './pacs-config.controller';
 import { createPaciente, createWorkList, enviarInforme, loginPacs, anularPacs } from './pacs-network';
 import { userScheduler } from '../../config.private';
+import { IPacsConfig } from './pacs-config.schema';
 import { pacsLogs } from './pacs.logs';
 
 export async function syncWorkList(prestacion: IPrestacion) {
@@ -28,16 +32,16 @@ export async function syncWorkList(prestacion: IPrestacion) {
         if (config) {
             const token = await loginPacs(config);
 
-            const uniqueID = `${config.ui}.${Date.now()}`;
-            const pacienteDICOM = DICOMPaciente(prestacion.paciente);
-            const prestacionDICOM = DICOMPrestacion(
+            const dicomPaciente = DICOMPaciente(config, prestacion.paciente);
+            const pacienteDICOM = DICOMPacienteObject(dicomPaciente);
+
+            const dicomPrestacion = DICOMPrestacion(
                 prestacion,
-                {
-                    aet: config.aet,
-                    modality: config.modalidad,
-                    ui: uniqueID
-                }
+                dicomPaciente.id,
+                config
             );
+            const prestacionDICOM = DICOMPrestacionObject(dicomPrestacion);
+
 
             await createPaciente(config, pacienteDICOM, token);
             const response = await createWorkList(config, prestacionDICOM, token);
@@ -50,8 +54,11 @@ export async function syncWorkList(prestacion: IPrestacion) {
                 { _id: (prestacion as any)._id };
 
             const arrayMetadata = [
-                { key: 'pacs-uid', valor: uniqueID },
-                { key: 'pacs-config', valor: config.id }
+                { key: 'pacs-uid', valor: dicomPrestacion.uniqueID },
+                { key: 'pacs-config', valor: config.id },
+                { key: 'pacs-pacienteIdDicom', valor: dicomPaciente.id },
+                { key: 'pacs-pacienteOtherIdDicom', valor: dicomPaciente.pacienteIDtrimmed },
+                { key: 'pacs-accessionNumber', valor: dicomPrestacion.accessionNumber }
             ];
             if (dataResponse) {
                 arrayMetadata.push({ key: 'pacs-spsID', valor: spsID }); // id de la orden
@@ -112,11 +119,19 @@ export async function sendInformePDF(prestacion: IPrestacion) {
     try {
         const { valor: uid } = prestacion.metadata.find(item => item.key === 'pacs-uid');
         const { valor: configId } = prestacion.metadata.find(item => item.key === 'pacs-config');
+
+        const pacienteIdDicomMeta = prestacion.metadata.find(item => item.key === 'pacs-pacienteIdDicom');
+
         const config = await PacsConfigController.findById(configId);
         if (config) {
+            const dicomPaciente = DICOMPaciente(config, prestacion.paciente);
+            if (pacienteIdDicomMeta?.valor) {
+                dicomPaciente.id = pacienteIdDicomMeta.valor;
+            }
             const token = await loginPacs(config);
 
-            const metadata = DICOMInformePDF(prestacion);
+            const dicomInforme = DICOMInforme(prestacion, dicomPaciente);
+            const metadata = DICOMInformePDFObject(dicomInforme);
 
             const informe = new InformeRUP(prestacion.id, null, {});
             const fileName = await informe.informe();
@@ -132,11 +147,9 @@ export async function sendInformePDF(prestacion: IPrestacion) {
     }
 }
 
-
 EventCore.on('rup:prestacion:ejecucion', (prestacion) => {
     syncWorkList(prestacion);
 });
-
 
 EventCore.on('rup:prestacion:anular', (prestacion) => {
     if (prestacion?.metadata?.length) {
@@ -144,5 +157,3 @@ EventCore.on('rup:prestacion:anular', (prestacion) => {
         updateWork(prestacion.metadata, estado);
     };
 });
-
-

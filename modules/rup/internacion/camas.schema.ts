@@ -31,6 +31,7 @@ const CamaSchema = new Schema({
         type: SnomedConcept,
         required: true
     },
+    especialidades: [SnomedConcept]
 });
 
 CamaSchema.plugin(AuditPlugin);

@@ -62,7 +62,8 @@ export const mongooseDebugMode = false;
 // Swagger config
 export const enableSwagger = false;
 
-export const diasNoLaborables = 'https://nolaborables.com.ar/api/v2/feriados/';
+export const diasNoLaborables = '';
+export const diasNoLaborables2 = '';
 
 // Configuración de Google Geocoding
 export const geoKey = getEnv('GOOGLE_MAP_KEY', 'GOOGLE_MAP_KEY');
@@ -321,9 +322,6 @@ export const logDatabase = {
 };
 // un string con un valor de expiración
 export const mobileExpiredVersion = '100';
-
-// url de acceso a los datos para la app de gestion
-export const urlDatosGestion = '';
 
 export const FHIR = {
     domain: getEnv('FHIR_DOMAIN', 'http://app.andes.gob.ar'),

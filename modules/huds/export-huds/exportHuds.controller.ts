@@ -7,7 +7,7 @@ import { Prestacion } from '../../rup/schemas/prestacion';
 import { exportHudsLog } from './exportHuds.log';
 import { ExportHudsModel } from './exportHuds.schema';
 import { getHUDSExportarModel } from './hudsFiles';
-
+import { Paciente } from '../../../core-v2/mpi';
 import moment = require('moment');
 
 export async function createFile(idExportHuds) {
@@ -19,14 +19,21 @@ export async function createFile(idExportHuds) {
         if (peticionExport.prestaciones.length) {
             prestaciones = await Prestacion.find({ _id: { $in: peticionExport.prestaciones } });
         } else {
+            // recuperamos las posibles vinculaciones del paciente para traer también todas las prestaciones asociadas a esas vinculaciones
+            const paciente = await Paciente.findById(peticionExport.pacienteId);
+            const vinculacionesPaciente = paciente.identificadores
+                ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
+                ?.map(item => item.valor);
+            const idsPaciente = vinculacionesPaciente?.length ? [...vinculacionesPaciente, peticionExport.pacienteId] : [peticionExport.pacienteId];
             const query = {
-                'paciente.id': peticionExport.pacienteId,
+                'paciente.id': { $in: idsPaciente },
                 'estadoActual.tipo': 'validada'
             };
+
             if (peticionExport.fechaDesde && peticionExport.fechaHasta) {
                 fechaCondicion = {
-                    $gte: moment(peticionExport.fechaDesde).startOf('day').toDate(),
-                    $lte: moment(peticionExport.fechaHasta).endOf('day').toDate()
+                    $gte: moment(peticionExport.fechaDesde),
+                    $lte: moment(peticionExport.fechaHasta)
                 };
                 query['ejecucion.fecha'] = fechaCondicion;
             }
@@ -36,7 +43,7 @@ export async function createFile(idExportHuds) {
             prestaciones = await Prestacion.find(query);
 
             const queryCda = {
-                'metadata.paciente': peticionExport.pacienteId,
+                'metadata.paciente': { $in: idsPaciente },
                 'metadata.prestacion.snomed.conceptId': { $ne: '2881000013106' },
             };
             if (fechaCondicion) {

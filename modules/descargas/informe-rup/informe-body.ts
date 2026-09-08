@@ -130,5 +130,4 @@ export class InformeRupBody extends HTMLComponent {
     validada() {
         return (this.prestacion.estadoActual.tipo === 'validada');
     }
-
 }

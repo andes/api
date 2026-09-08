@@ -7,6 +7,7 @@ import { getConfiguracion } from '../../../../core/tm/controller/organizacion';
 import { Request } from '@andes/api-tool';
 import * as moment from 'moment';
 
+
 EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
     prestacion = new Prestacion(prestacion);
     const registros = prestacion.getRegistros();
@@ -15,6 +16,7 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
         const idRegistro = registro.id;
         return PlanIndicacionesCtr.findOne({ registro: idRegistro });
     });
+
     indicaciones = await Promise.all(indicaciones);
     const savePromises = indicaciones.map(async indicacion => {
         if (indicacion) {
@@ -23,9 +25,7 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
                 tipo: 'active',
                 fecha,
                 ...(!indicacion.requiereAceptacion && {
-                    verificacion: {
-                        estado: 'aceptada'
-                    }
+                    verificacion: { estado: 'aceptada' }
                 })
             });
             const user = Auth.getUserFromResource(prestacion);
@@ -36,49 +36,48 @@ EventCore.on('mapa-camas:plan-indicacion:create', async (prestacion) => {
     await Promise.all(savePromises);
 });
 
+
 EventCore.on('internacion:plan-indicaciones-eventos:create', async (evento) => {
-    if (evento.estado === 'realizado' && !evento.updatedAt) {
-        /*  Por cada nuevo evento NO PLANIFICADO en estado REALIZADO debe ajustarse el horario de los proximos.
-            Un evento es no planificado cuando es creado manualmente por el usuario en lugar de generarse automáticamente
-            al momento de guardar una nueva indicación.
-        */
+    try {
+        if (evento.estado !== 'realizado') { return; }
+
         const [indicacion, indicacionEventos] = await Promise.all([
             PlanIndicacionesCtr.findById(evento.idIndicacion),
             PlanIndicacionesEventosCtr.search({ indicacion: evento.idIndicacion })
         ]);
+
         const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
-        const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
+        const horaInicioEfector = configOrganizacion?.planIndicaciones?.horaInicio || 0;
 
-        if (indicacion.valor.unicaVez) {
-            return;
-        }
-        const eventos = indicacionEventos.sort((ev1, ev2) => moment(ev1.fecha).diff(moment(ev2.fecha)));
-        const index = eventos.findIndex(ev => ev.id === evento.id);
-        const eventosPosteriores = eventos.slice(index + 1, eventos.length);
+        const eventos = indicacionEventos.sort((a, b) => moment(a.fecha).diff(moment(b.fecha)));
+        const index = eventos.findIndex(ev => String(ev._id) === String(evento._id));
+        const eventosPosteriores = eventos.slice(index + 1);
 
-        // si existen eventos posteriores al nuevo y TODOS estan en estado 'on-hold'
-        if (eventosPosteriores && !eventosPosteriores.some(ev => ev.estado !== 'on-hold')) {
+        if (eventosPosteriores.length && !eventosPosteriores.some(ev => ev.estado !== 'on-hold')) {
             const proximoEvento = eventosPosteriores.shift();
             await PlanIndicacionesEventosCtr.deleteByIndicacion(indicacion.id, proximoEvento.fecha);
 
             if (eventosPosteriores.length) {
-                /* Calculamos la diferencia en horas entre el nuevo evento y el siguiente planificado, luego restamos esta
-                diferencia a los eventos proximos para ajustar la planificacion.
-                */
-                const diferenciaAlProximo = moment(proximoEvento.fecha).diff(moment(evento.fecha), 'hours');
-                const nuevosHorarios = eventosPosteriores.map(ev => moment(ev.fecha).subtract(diferenciaAlProximo, 'hours'));
+                const diferenciaHoras = moment(proximoEvento.fecha).diff(moment(evento.fecha), 'hours');
+                const nuevosHorarios = eventosPosteriores.map(ev => moment(ev.fecha).subtract(diferenciaHoras, 'hours'));
 
-                // Una indicacion puede tener mas de una frecuencia
-                const ultimaFrecuenciaIndicacion = indicacion.valor.frecuencias[indicacion.valor.frecuencias.length - 1].frecuencia.key; // ultima frecuencia
-                const ultimoHorario = nuevosHorarios[nuevosHorarios.length - 1];
+                const ultimaFrecuencia = indicacion.valor.frecuencias.at(-1);
+                const frecuenciaHoras = ultimaFrecuencia?.frecuencia?.key || ultimaFrecuencia?.frecuenciaValor || 0;
+                const ultimoHorario = nuevosHorarios.at(-1);
+                const limiteDia = moment(evento.fecha).startOf('day').add(horaInicioEfector + 24, 'hours');
 
-                // Si el adelanto de los horarios genera una franja horaria donde hay lugar para otra toma, se agrega.
-                if (moment(ultimoHorario).add(ultimaFrecuenciaIndicacion, 'hours').isBefore(moment().startOf('day').add(horaInicioEfector + 24, 'hours'))) {
-                    nuevosHorarios.push(moment(ultimoHorario).add(ultimaFrecuenciaIndicacion, 'hours'));
+                if (frecuenciaHoras && moment(ultimoHorario).add(frecuenciaHoras, 'hours').isBefore(limiteDia)) {
+                    nuevosHorarios.push(moment(ultimoHorario).add(frecuenciaHoras, 'hours'));
                 }
                 await crearEventos(nuevosHorarios, indicacion);
             }
+        } else {
+            await crearEventosSegunPrescripcionDesdeEnfermeria(indicacion, evento.fecha);
         }
+
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('❌ Error en plan-indicaciones-eventos:create:', error);
     }
 });
 
@@ -91,36 +90,37 @@ EventCore.on('internacion:plan-indicaciones:create', async (indicacion) => {
 EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
     switch (indicacion.estadoActual.tipo) {
         case 'active':
-            if (indicacion.estadoActual.verificacion) {
-                /* los nuevos eventos se crean solo cuando se valida o continúa (validacion del dia)
-                    una indicación, pero no cuando se verifica */
-                break;
-            }
+            if (indicacion.estadoActual.verificacion) { break; }
             const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
             const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
-            /* Se continua una prescripcion. Deben crearse los eventos correspondientes a la ultima
-                frecuencia desde el inicio del dia segun efector */
+
             let horarios;
             if (indicacion.valor.unicaVez) {
                 const unicoHorario = moment(indicacion.valor.frecuencias[0].horario);
                 horarios = [moment().hours(unicoHorario.hours()).minutes(unicoHorario.minutes())];
             } else {
                 const frecuencias = indicacion.valor.frecuencias
-                    .filter(frec => frec.frecuencia?.type === 'number')
-                    .sort((frec1, frec2) => moment(frec1.horario).diff(moment(frec2.horario)) > 0);
-                if (!frecuencias.length) {
-                    return;
-                }
+                    .filter(frec => (frec.frecuencia?.type === 'number') || (typeof frec.frecuenciaValor === 'number'))
+                    .sort((f1, f2) => moment(f1.horario).diff(moment(f2.horario)));
+                if (!frecuencias.length) { return; }
+
                 const ultimaFrecuencia = frecuencias.pop();
+                const frecuenciaKey = ultimaFrecuencia.frecuencia?.key || ultimaFrecuencia.frecuenciaValor;
                 const horaInicio = moment(ultimaFrecuencia.horario).hours();
                 const fechaDesde = moment().hours(horaInicio).minutes(0);
                 const fechaHasta = moment().startOf('day').add(horaInicioEfector + 24, 'hours');
-                horarios = calcularHorarios(fechaDesde, fechaHasta, ultimaFrecuencia.frecuencia.key);
+                horarios = calcularHorarios(fechaDesde, fechaHasta, frecuenciaKey);
             }
             await crearEventos(horarios, indicacion);
             break;
+
         case 'draft':
-            // Se editó una prescripción existente
+            await PlanIndicacionesEventosCtr.deleteByIndicacion(indicacion._id);
+            if (indicacion.requiereFrecuencia) {
+                await crearEventosSegunPrescripcion(indicacion);
+            }
+            break;
+        case 'bypass':
             await PlanIndicacionesEventosCtr.deleteByIndicacion(indicacion._id);
             if (indicacion.requiereFrecuencia) {
                 await crearEventosSegunPrescripcion(indicacion);
@@ -129,42 +129,62 @@ EventCore.on('internacion:plan-indicaciones:update', async (indicacion) => {
     }
 });
 
-
-// Dada una indicación, genera eventos para cada prescripcion con sus respectivas frecuencias
 async function crearEventosSegunPrescripcion(indicacion) {
     const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
     const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
+
     if (indicacion.valor.unicaVez) {
         if (indicacion.valor.frecuencias[0].horario) {
             const unicoHorario = moment(indicacion.valor.frecuencias[0].horario);
             await crearEventos([unicoHorario], indicacion);
         }
-    } else {
-        let horariosFrecuencia = [];
-        let horarios = [];
-        const frecuencias = indicacion.valor.frecuencias
-            .filter(frec => frec.frecuencia?.type === 'number')
-            .sort((frec1, frec2) => moment(frec1.horario).diff(moment(frec2.horario)) > 0);
+        return;
+    }
 
-        // En caso de existir varias frecuencias se calculan los horarios para todas exceptuando la ultima
-        for (let f = 0; f < frecuencias.length - 1; f++) {
-            horariosFrecuencia = calcularHorarios(frecuencias[f].horario, frecuencias[f + 1].horario, frecuencias[f].frecuencia.key);
-            horarios = horarios.concat(horariosFrecuencia);
-        }
-        // se calculan los horarios para la ultima frecuencia (puede ser la unica), hasta el fin del turno (horario segun efector)
-        const ultimaFrecuencia = frecuencias[frecuencias.length - 1];
-        if (ultimaFrecuencia) {
-            const horaFinEfector = moment(frecuencias[frecuencias.length - 1].horario).startOf('day').add(horaInicioEfector + 24, 'hours'); // a partir de la ultima indicacion de frecuencia
-            horariosFrecuencia = calcularHorarios(ultimaFrecuencia.horario, horaFinEfector, ultimaFrecuencia.frecuencia.key);
-            horarios = horarios.concat(horariosFrecuencia);
+    let horarios: any[] = [];
+    const frecuencias = indicacion.valor.frecuencias
+        .filter(frec => (frec.frecuencia?.type === 'number') || (typeof frec.frecuenciaValor === 'number'))
+        .sort((f1, f2) => moment(f1.horario).diff(moment(f2.horario)));
 
-            await crearEventos(horarios, indicacion);
-        }
+    for (let f = 0; f < frecuencias.length - 1; f++) {
+        const freqValue = frecuencias[f].frecuencia?.key || frecuencias[f].frecuenciaValor;
+        const horariosFrecuencia = calcularHorarios(frecuencias[f].horario, frecuencias[f + 1].horario, freqValue);
+        horarios = horarios.concat(horariosFrecuencia);
+    }
+
+    const ultimaFrecuencia = frecuencias.at(-1);
+    if (ultimaFrecuencia) {
+        const frecuenciaHoras = ultimaFrecuencia.frecuencia?.key || ultimaFrecuencia.frecuenciaValor;
+        const horaFinEfector = moment(ultimaFrecuencia.horario).startOf('day').add(horaInicioEfector + 24, 'hours');
+        const horariosFrecuencia = calcularHorarios(ultimaFrecuencia.horario, horaFinEfector, frecuenciaHoras);
+        horarios = horarios.concat(horariosFrecuencia);
+        await crearEventos(horarios, indicacion);
     }
 }
 
+async function crearEventosSegunPrescripcionDesdeEnfermeria(indicacion, fechaEvento) {
+    const configOrganizacion = await getConfiguracion(indicacion.organizacion.id);
+    const horaInicioEfector = configOrganizacion.planIndicaciones.horaInicio;
 
-// retorna un array de horarios entre dos fechas, separados por una frecuencia determinada
+    if (indicacion.valor.unicaVez) { return; }
+
+    const frecuencias = indicacion.valor.frecuencias
+        .filter(frec => (frec.frecuencia?.type === 'number') || (typeof frec.frecuenciaValor === 'number'))
+        .sort((f1, f2) => moment(f1.horario).diff(moment(f2.horario)));
+
+    const ultimaFrecuencia = frecuencias.at(-1);
+    const frecuenciaHoras = ultimaFrecuencia.frecuencia?.key || ultimaFrecuencia.frecuenciaValor;
+    const fechaDesde = moment(fechaEvento);
+    const fechaHasta = moment(fechaEvento).startOf('day').add(horaInicioEfector + 24, 'hours');
+
+    const nuevosHorarios = calcularHorarios(fechaDesde, fechaHasta, frecuenciaHoras)
+        .filter(h => moment(h).isAfter(moment(fechaEvento)));
+
+    if (nuevosHorarios.length) {
+        await crearEventos(nuevosHorarios, indicacion);
+    }
+}
+
 function calcularHorarios(fechaDesde, fechaHasta, frecuencia) {
     const diferenciaEnHoras = moment(fechaHasta).diff(moment(fechaDesde), 'hours');
     const cantTomas = diferenciaEnHoras / frecuencia;
@@ -176,10 +196,8 @@ function calcularHorarios(fechaDesde, fechaHasta, frecuencia) {
     return result;
 }
 
-
-// genera eventos nuevos segun un array de horarios para una determinada indicacion
-async function crearEventos(horarios: any[], indicacion) {
-    const eventosPromises = horarios.map(horario => {
+async function crearEventos(horarios, indicacion) {
+    const eventosPromises = horarios.map(async (horario) => {
         const data = {
             idInternacion: indicacion.idInternacion,
             idIndicacion: indicacion.id,
@@ -189,12 +207,17 @@ async function crearEventos(horarios: any[], indicacion) {
         const eventRequest = {
             user: indicacion.createdBy,
             ip: 'localhost',
-            connection: {
-                localAddress: ''
-            },
+            connection: { localAddress: '' },
             body: indicacion
         };
-        return PlanIndicacionesEventosCtr.create(data, (eventRequest as Request));
+
+        try {
+            await PlanIndicacionesEventosCtr.create(data, (eventRequest as Request));
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('❌ Error al crear evento on-hold:', error);
+        }
     });
+
     await Promise.all(eventosPromises);
 }

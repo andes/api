@@ -69,6 +69,12 @@ export const DerivacionSchema = new mongoose.Schema({
     },
     tipoTraslado: TipoTrasladoSchema,
     dispositivo: DispositivoSchema,
+    estrategiaAtencion: {
+        type: {
+            nombre: String,
+            id: { type: mongoose.Schema.Types.ObjectId, ref: 'estrategiaAtencion' }
+        },
+    },
     profesionalSolicitante: {
         nombre: String,
         apellido: String,
@@ -95,7 +101,13 @@ export const DerivacionSchema = new mongoose.Schema({
         type: String,
         enum: ESTADOS_DERIVACION
     },
-    detalle: String,
+    motivoDerivacion: String,
+    diagnosticoActual: String,
+    estadoClinico: String,
+    diagnosticoBase: String,
+    comorbilidades: String,
+    condicion: String,
+    necesidad: String,
     adjuntos: mongoose.Schema.Types.Mixed,
     historial: [DerivacionHistorialSchema],
     cancelada: {

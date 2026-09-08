@@ -258,7 +258,20 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.idPaciente) {
             indice = undefined;
-            match.$and.push({ 'paciente.id': Types.ObjectId(req.query.idPaciente) });
+            if (String(req.query.agregarVinculados) === 'true') {
+                const paciente = await PacienteCtr.findById(req.query.idPaciente);
+                const idsAndes = [Types.ObjectId(req.query.idPaciente)];
+                if (paciente && paciente.identificadores) {
+                    paciente.identificadores.forEach((identificador: any) => {
+                        if (identificador.entidad === 'ANDES' && Types.ObjectId.isValid(identificador.valor)) {
+                            idsAndes.push(Types.ObjectId(identificador.valor));
+                        }
+                    });
+                }
+                match.$and.push({ 'paciente.id': { $in: idsAndes } });
+            } else {
+                match.$and.push({ 'paciente.id': Types.ObjectId(req.query.idPaciente) });
+            }
         }
 
         if (req.query.idProfesional) {
@@ -358,14 +371,38 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         const sort = {};
         sort['esPrioritario'] = 1;
 
-        if (req.query.ordenFecha || req.query.ordenFechaAsc) {
-            sort['solicitud.fecha'] = -1;
-        } else if (req.query.solicitudDesde && req.query.solicitudHasta) {
-            sort['solicitud.fecha'] = 1;
-        } else if (req.query.ordenFechaEjecucion) {
-            sort['ejecucion.fecha'] = -1;
-        } else if (req.query.solicitudDesdeActualizacion && req.query.solicitudHastaActualizacion) {
-            sort['updatedAt'] = 1;
+        if (req.query.sortBy) {
+            const sortMap = {
+                fechaSolicitud: 'solicitud.fecha',
+                fechaRegistro: 'createdAt',
+                actualizacion: 'updatedAt'
+            };
+
+            let sortBy = req.query.sortBy;
+            let sortOrder = -1;
+
+            if (sortBy.endsWith('Asc')) {
+                sortBy = sortBy.replace('Asc', '');
+                sortOrder = 1;
+            } else if (sortBy.endsWith('Desc')) {
+                sortBy = sortBy.replace('Desc', '');
+                sortOrder = -1;
+            }
+
+            const field = sortMap[sortBy];
+            if (field) {
+                sort[field] = sortOrder;
+            }
+        } else {
+            if (req.query.ordenFecha || req.query.ordenFechaAsc) {
+                sort['solicitud.fecha'] = -1;
+            } else if (req.query.solicitudDesde && req.query.solicitudHasta) {
+                sort['solicitud.fecha'] = 1;
+            } else if (req.query.ordenFechaEjecucion) {
+                sort['ejecucion.fecha'] = -1;
+            } else if (req.query.solicitudDesdeActualizacion && req.query.solicitudHastaActualizacion) {
+                sort['updatedAt'] = 1;
+            }
         }
 
         pipeline.push({ $sort: sort });
@@ -538,7 +575,7 @@ router.get('/prestaciones', async (req: any, res, next) => {
                                     j--;
                                     break;
                                 case 'termOnly':
-                                    registros[j].valor = 'REGISTRO PRIVADO';
+                                    registros[j].valor = 'El contenido de este registro sólo puede ser visualizado por el profesional que lo registró.';
                                     registros[j].registros = [];
                                     break;
                             }
@@ -676,7 +713,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 });
                 break;
             case 'registros':
-                if (req.body.registros) {
+                if (req.body.registros && data.estadoActual.tipo !== 'validada') {
                     data.ejecucion.registros = req.body.registros;
 
                     if (req.body.solicitud) {
@@ -685,6 +722,8 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if (req.body.paciente) {
                         data.paciente = req.body.paciente;
                     }
+                } else {
+                    return next('Esta prestación ya ha sido validada.');
                 }
                 break;
             case 'informeIngreso':

@@ -4,7 +4,9 @@ import { HTMLComponent } from '../../model/html-component.class';
 export async function registroToHTML(prestacion, registro, depth: number) {
     const elementoRUP = registro.elementoRUPObject;
     registro.params = {
-        ...registro._original?.params || registro.params || elementoRUP.params || {},
+        ...(elementoRUP?.params || {}),
+        ...(registro.params || {}),
+        ...(registro._original?.params || {}),
     };
 
     if (!elementoRUP) {

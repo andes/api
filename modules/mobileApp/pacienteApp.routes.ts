@@ -15,6 +15,10 @@ class PacienteAppResource extends ResourceBase {
         activacionApp: MongoQuery.equalMatch,
         search: ['documento', 'email']
     };
+
+    async presearch() {
+        return { baja: { $exists: false } };
+    }
 }
 
 export const PacienteAppCtr = new PacienteAppResource({});

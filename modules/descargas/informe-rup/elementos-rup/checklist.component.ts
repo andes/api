@@ -18,7 +18,7 @@ export class ChecklistComponent extends HTMLComponent {
 
     async process() {
         this.data = {
-            titulo: this.params.titulo || this.registro.concepto.term,
+            titulo: this.params.titulo || this.params.title || this.registro.concepto.term,
             registro: this.registro,
             valor: this.getValores()
         };
@@ -30,14 +30,11 @@ export class ChecklistComponent extends HTMLComponent {
 
         if (valores) {
             if (Array.isArray(valores)) {
-                return valores.map(v => v.term).join('<br>');
+                return valores.map(v => v.label || v.term || v.nombre || '').filter(Boolean).join('<br>');
             } else {
-                return valores.label || valores.term;
+                return valores.label || valores.term || valores.nombre;
             }
-
         }
-
-
     }
 
 }

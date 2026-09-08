@@ -1,9 +1,8 @@
 import { Modulos } from '../../core/tm/schemas/modulos.schema';
-import { findIndex } from 'core-js/core/array';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { updateAccount } from '../../modules/mobileApp/controller/AuthController';
-import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser, updateOrganizacion } from '../auth.controller';
+import { checkMobile, findUser, generateTokenPayload, reset, setValidationTokenAndNotify, updateUser, updateOrganizacion, sendOtpAndNotify, validateOtpAndResetPassword } from '../auth.controller';
 import { checkPassword } from '../ldap.controller';
 import { AuthUsers } from '../schemas/authUsers';
 import { Organizacion } from './../../core/tm/schemas/organizacion';
@@ -163,29 +162,22 @@ router.post('/login', async (req, res, next) => {
     if (!req.body.usuario || !req.body.password) {
         return next(403);
     }
-
     try {
         const userResponse = await findUser(req.body.usuario);
-        if (userResponse) {
-            const { user, profesional }: any = userResponse;
-            switch (user.authMethod || 'ldap') {
-                case 'ldap':
-                    const ldapUser = await checkPassword(user, req.body.password);
-                    if (ldapUser) {
-                        user.nombre = ldapUser.nombre;
-                        user.apellido = ldapUser.apellido;
-                        user.password = sha1Hash(req.body.password);
-                        return login(user, profesional);
-                    } else {
-                        return next(403);
-                    }
-                case 'password':
-                    const passwordSha1 = sha1Hash(req.body.password);
-                    if (passwordSha1 === user.password) {
-                        return login(user, profesional);
-                    }
-                    break;
-            }
+        if (!userResponse) {
+            return next(403);
+        }
+        const { user, profesional }: any = userResponse;
+        const ldapUser = await checkPassword(user, req.body.password);
+        if (ldapUser) {
+            user.nombre = ldapUser.nombre;
+            user.apellido = ldapUser.apellido;
+            user.password = sha1Hash(req.body.password);
+            return login(user, profesional);
+        }
+        const passwordSha1 = sha1Hash(req.body.password);
+        if (passwordSha1 === user.password) {
+            return login(user, profesional);
         }
         return next(403);
     } catch (error) {
@@ -258,6 +250,51 @@ router.post('/resetPassword', async (req, res, next) => {
             }
         } else {
             return next(403);
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/sendOTPCode', async (req, res, next) => {
+    try {
+        const username = req.body.username;
+        if (username) {
+            const result = await sendOtpAndNotify(username);
+            if (result) {
+                return res.json({ status: 'ok' });
+            } else {
+                return res.json({ status: 'redirectOneLogin' });
+            }
+        } else {
+            return next(403);
+        }
+    } catch (error: any) {
+        if (error.tipo === 'cuentaInexistenteAndes') {
+            return res.json({ status: 'cuentaInexistenteAndes' });
+        }
+        return next(error);
+    }
+});
+
+router.post('/validateOTPCodeAndReset', async (req, res, next) => {
+    try {
+        const { username, otpCode, newPassword } = req.body;
+
+        if (!username || !otpCode || !newPassword) {
+            return next(400);
+        }
+
+        const isValid = await validateOtpAndResetPassword(
+            username,
+            otpCode,
+            newPassword
+        );
+
+        if (isValid) {
+            return res.json({ status: 'ok' });
+        } else {
+            return res.json({ status: 'invalidCode' });
         }
     } catch (error) {
         return next(error);

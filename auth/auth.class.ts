@@ -169,11 +169,37 @@ export class Auth {
      */
     static deniedPatients() {
         return (req, res, next) => {
+
             if (req.user.type !== 'paciente-token') {
-                next();
-            } else {
-                next(403);
+                return next();
             }
+            // Permitir explícitamente algunas rutas aún para pacientes
+            const allowedForPaciente = [
+                '/protocolosLab',
+                '/historial',
+                '/prestaciones/huds',
+                '/prestaciones',
+                '/recetas',
+                '/paciente/',
+                '/agenda/'
+            ];
+            const requestPath = (req.path || req.url || '').toString();
+            // Si la ruta es una de las permitidas, continuar
+            const idPacientePath = requestPath ? requestPath.split('/').pop() : null;
+            if (allowedForPaciente.some(p => requestPath.includes(p))) {
+                const idPacienteQuery = req.query?.pacienteId || req.query?.idPaciente || req.body?.paciente?.id || idPacientePath || null;
+                const idPacienteToken = req.user.pacientes.find(p => String(p.id) === String(idPacienteQuery));
+
+                if (idPacienteToken) {
+                    return next();
+                }
+            } else {
+                if (requestPath.endsWith('.pdf')) {
+                    return next();
+                }
+            }
+            // Por defecto denegar si no está en las excepciones ni coincide el paciente
+            return next(403);
         };
     }
 
@@ -225,6 +251,15 @@ export class Auth {
                     pacienteRestringido: payload.pacienteRestringido
 
                 };
+
+                if (payload.organizacion.fechaVencimiento) {
+                    const now = new Date();
+                    const fechaVencimiento = new Date(payload.organizacion.fechaVencimiento);
+                    if (fechaVencimiento < now) {
+                        return next(403);
+                    }
+                }
+
                 return next();
             } else {
                 return next();

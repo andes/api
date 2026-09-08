@@ -44,7 +44,18 @@ const turnoSchema = new mongoose.Schema({
     link: String,
     motivoSuspension: {
         type: String,
-        enum: ['edilicia', 'profesional', 'organizacion', 'agendaSuspendida']
+        enum: [
+            'agendaSuspendida',
+            'gestionPacientes',
+            'reorganizacionAsistencial',
+            'medidaFuerza',
+            'ausenciaProfesional',
+            'edilicioInfraestructuraConectividad',
+            'disponibilidadEspacio',
+            'edilicia',
+            'profesional',
+            'organizacion',
+        ]
     },
     avisoSuspension: {
         type: String,
@@ -89,7 +100,12 @@ const turnoSchema = new mongoose.Schema({
     fechaHoraDacion: Date,
     usuarioDacion: mongoose.Schema.Types.Mixed,
     profesional: mongoose.Schema.Types.ObjectId,
-    notificar: Boolean
+    notificar: Boolean,
+    videoConferencia: Boolean,
+    webexLinks: {
+        patientLink: String,
+        professionalLink: String
+    }
 });
 
 export = turnoSchema;

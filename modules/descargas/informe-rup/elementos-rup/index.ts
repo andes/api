@@ -43,6 +43,7 @@ export const ElementosRUPHTML = {
     SelectProfesionalComponent,
     SelectSnomedComponent,
     SelectStaticComponent,
+    SelectStaticoComponent: SelectStaticComponent,
     SeccionadoComponent,
     SeccionComponent,
 

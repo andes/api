@@ -1,18 +1,20 @@
 import { AndesDrive } from '@andes/drive';
 import { EventCore } from '@andes/event-bus';
 import { log } from '@andes/log';
-import * as base64 from 'base64-stream';
 import * as express from 'express';
 import * as fs from 'fs';
 import { Types } from 'mongoose';
-import * as stream from 'stream';
 import { Auth } from '../../../auth/auth.class';
+import { findUser, updateEmailUser } from '../../../auth/auth.controller';
+import { PacienteApp } from '../../../modules/mobileApp/schemas/pacienteApp';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
-import { formacionCero, matriculaCero, migrarTurnos, saveFirma, filtrarProfesionalesPorPrestacion } from '../controller/profesional';
+import { formacionCero, matriculaCero, migrarTurnos, saveFirma, filtrarProfesionalesPorPrestacion, saveImage, deleteFirmaFotoTemporal } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
+import { makeFsFirmaOnline } from '../schemas/firmaRenovacionOnline';
+import { makeFsImagenOnline } from '../schemas/imagenRenovacionOnline';
 import { makeFs } from '../schemas/imagenes';
 import { Organizacion } from '../schemas/organizacion';
 import { Profesional } from '../schemas/profesional';
@@ -20,14 +22,187 @@ import { profesion } from '../schemas/profesion_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { userScheduler } from './../../../config.private';
 import { getTemporyTokenGenerarUsuario } from '../../../auth/auth.controller';
-import { services } from '../../../services';
-import { Matching } from '@andes/match';
-import { mpi, algoritmo } from './../../../config';
-
+import { getNumeracionPorCodigoProfesion } from '../../../modules/matriculaciones/controller/matriculaciones';
 import moment = require('moment');
 
-
 const router = express.Router();
+
+const MENSAJES_NEGOCIO = {
+    datosInconsistentes: 'datos inconsistentes',
+    profesionInmutable: 'profesión de grado no editable con matrícula generada',
+    sinPermisoSupervisor: 'requiere permiso de supervisor',
+    sinMatricula: 'la formación de grado no tiene número de matrícula asignado',
+    conPosteriores: 'existen números posteriores asignados para esta profesión',
+    conRevalidaciones: 'la formación de grado ya posee revalidaciones'
+};
+
+function toIdString(value: any) {
+    if (!value) {
+        return null;
+    }
+    return String(value);
+}
+
+function toProfesionCodigo(value: any) {
+    if (value === null || value === undefined) {
+        return null;
+    }
+    return String(value);
+}
+
+function matriculaNumero(formacion: any) {
+    if (!formacion?.matriculacion?.length) {
+        return null;
+    }
+    const ultima = formacion.matriculacion[formacion.matriculacion.length - 1];
+    const numero = Number(ultima?.matriculaNumero);
+    return Number.isFinite(numero) && numero > 0 ? numero : null;
+}
+
+function tieneMatriculacionConContenido(formacion: any) {
+    if (!Array.isArray(formacion?.matriculacion) || formacion.matriculacion.length === 0) {
+        return false;
+    }
+    return formacion.matriculacion.some((m: any) => {
+        if (!m) {
+            return false;
+        }
+        return Boolean(
+            m.matriculaNumero !== null && m.matriculaNumero !== undefined && m.matriculaNumero !== '' ||
+            m.libro ||
+            m.folio ||
+            m.inicio ||
+            m.fin ||
+            m.revalidacionNumero ||
+            (m.baja && (m.baja.fecha || m.baja.motivo))
+        );
+    });
+}
+
+function tieneRevalidaciones(formacion: any) {
+    const matriculaciones = Array.isArray(formacion?.matriculacion) ? formacion.matriculacion.filter(Boolean) : [];
+    return matriculaciones.length > 1 || matriculaciones.some((m: any) => Number(m?.revalidacionNumero) > 1);
+}
+
+function normalizarMatriculacionVacia(formacion: any) {
+    if (formacion && Array.isArray(formacion.matriculacion) && formacion.matriculacion.length === 0) {
+        formacion.matriculacion = null;
+    }
+    return formacion;
+}
+
+function normalizarFormacionesGrado(formaciones: any[]) {
+    if (!Array.isArray(formaciones)) {
+        return formaciones;
+    }
+    return formaciones.map((formacion) => normalizarMatriculacionVacia(formacion));
+}
+
+function buscarFormacionPorIdOIndice(formaciones: any[], formacionId: string, index: number) {
+    if (!Array.isArray(formaciones)) {
+        return null;
+    }
+    if (formacionId) {
+        const encontrada = formaciones.find((f: any) => toIdString(f?._id) === formacionId);
+        if (encontrada) {
+            return encontrada;
+        }
+    }
+    return formaciones[index] || null;
+}
+
+function validarActualizacionFormacionGrado(formacionPersistida: any[], formacionNueva: any[]) {
+    const formacionesPersistidas = normalizarFormacionesGrado(formacionPersistida || []);
+    const formacionesNuevas = normalizarFormacionesGrado(formacionNueva);
+    if (!Array.isArray(formacionesNuevas)) {
+        return null;
+    }
+
+    for (let index = 0; index < formacionesPersistidas.length; index++) {
+        const persistida = formacionesPersistidas[index];
+        const formacionId = toIdString(persistida?._id);
+        const nueva = buscarFormacionPorIdOIndice(formacionesNuevas, formacionId, index);
+
+        if (!nueva) {
+            if (tieneMatriculacionConContenido(persistida)) {
+                return MENSAJES_NEGOCIO.datosInconsistentes;
+            }
+            continue;
+        }
+
+        if (tieneMatriculacionConContenido(persistida) && !tieneMatriculacionConContenido(nueva)) {
+            return MENSAJES_NEGOCIO.datosInconsistentes;
+        }
+
+        const numeroPersistido = matriculaNumero(persistida);
+        if (numeroPersistido) {
+            const profesionOriginal = toProfesionCodigo(persistida?.profesion?.codigo);
+            const profesionNueva = toProfesionCodigo(nueva?.profesion?.codigo);
+            if (profesionOriginal !== profesionNueva) {
+                return MENSAJES_NEGOCIO.profesionInmutable;
+            }
+        }
+    }
+
+    return null;
+}
+
+async function obtenerEstadoDeshacerMatricula(resultado: any, formacionId: string) {
+    const formacion = (resultado.formacionGrado || []).find((fg: any) => toIdString(fg?._id) === formacionId);
+    if (!formacion) {
+        return { status: 404, payload: { message: 'formacion de grado no encontrada' } };
+    }
+
+    const numero = matriculaNumero(formacion);
+    if (!numero) {
+        return {
+            status: 400,
+            payload: {
+                canUndo: false,
+                reason: MENSAJES_NEGOCIO.sinMatricula,
+                message: MENSAJES_NEGOCIO.sinMatricula
+            }
+        };
+    }
+
+    if (tieneRevalidaciones(formacion)) {
+        return {
+            status: 400,
+            payload: {
+                canUndo: false,
+                reason: MENSAJES_NEGOCIO.conRevalidaciones,
+                message: MENSAJES_NEGOCIO.conRevalidaciones
+            }
+        };
+    }
+
+    const codigoProfesion = formacion?.profesion?.codigo;
+    const numeracion: any = await getNumeracionPorCodigoProfesion(codigoProfesion);
+    if (!numeracion) {
+        return {
+            status: 400,
+            payload: {
+                canUndo: false,
+                reason: MENSAJES_NEGOCIO.datosInconsistentes,
+                message: MENSAJES_NEGOCIO.datosInconsistentes
+            }
+        };
+    }
+
+    const proximoNumero = Number(numeracion.proximoNumero);
+    const existenPosteriores = Number.isFinite(proximoNumero) && proximoNumero > (numero + 1);
+
+    return {
+        status: 200,
+        payload: {
+            canUndo: !existenPosteriores,
+            reason: existenPosteriores ? MENSAJES_NEGOCIO.conPosteriores : null,
+            message: existenPosteriores ? MENSAJES_NEGOCIO.conPosteriores : null,
+            matriculaNumero: numero,
+            profesionCodigo: codigoProfesion
+        }
+    };
+}
 
 router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
     const query = [
@@ -236,7 +411,8 @@ router.get('/profesionales/matching', async (req, res, next) => {
             apellido: p.apellido,
             documento: p.documento,
             fechaNacimiento: p.fechaNacimiento,
-            profesionalMatriculado: p.profesionalMatriculado
+            profesionalMatriculado: p.profesionalMatriculado,
+            formacionGrado: p.formacionGrado
         };
     });
     res.json(profesionales);
@@ -250,26 +426,59 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), async (req: any, re
     const img = '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCACgAKADAREAAhEBAxEB/8QAHQABAAEFAQEBAAAAAAAAAAAAAAkBBAUHCAoGA//EAD4QAAEEAQMBBQMHCwQDAAAAAAEAAgMEBQYHEQgJEiExQRNRYSIyQlJxgZEUFRYZI1ZigpWh0xeDo7MlM3L/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AlTQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQnhBqbeHqu2m2G70et9cYvD3Wt735ubIbFwj0PsIg6Tg+8gD4oOYtR9s1sniJ3RY7C6vzYB49tBQghjPxHtJg78WhA052zWyeXnbFkcLq/CAnj209CCaMfE+zmLvwaUHT2z3VbtNvz3Y9Ea4xeYulve/NzpDXuAceJ9hKGycD3gEfFBtgHlBVAQEBAQEBAQEBAQEBBY5zOY/TWHu5XK3YMdjaUL7Fm3akEcUMbRy57nHwAAHJJQQ+dZ/au6h17fvaU2duWNNaWYXQy6iYDHfvjyJiPnXjPoR+0PgSWclqCO63dnv2prNmaSxYmcXySyuLnvcTyS4nxJJ9Sg/FAQftUu2Mfahs1ppK9iFwfHLE8texwPILSPEEH1CCRLow7V3UOgr9HSm8VyxqXSzy2GLUTwZL9AeQMp87EY9Sf2g8Ty/gNQTBYTN4/UuHpZXFXYMjjbsLLFa3VkEkU0bhy17XDwIIIIIQXyAgICAgICAgICAgIIeu1o6yLWrtX2dl9LXjHp7DSNOfmhdx+WXBwRXJHnHF4cj1k55+YEEbiAgICAgIJJOyX6yLektXV9l9VXjJp7MSOOn5pnc/kdw8uNcE+UcvjwPSTyHyygmEQEBAQEBAQEBAQEGu+ofdOPZPZDWuuHhrpMLjJrMDH/NfPx3YWn7ZHMH3oPNLlspbzeUuZC/YfbvW5nz2J5Ty6SRzi57ifUkkn70FqgICAgICC7xOUt4TKU8jQsPqXqkzLFexEeHxSMcHMcD6EEA/cg9LPTzulHvXsjorXDA1r81jIbM7GfNZPx3ZmD/5ka8fcg2IgICAgICAgICAg4s7XTOzYjo5ydWNxazKZihTk4Pm0PdNx+MIQQVICAgICAgICCdbsjc7Nl+jnFVZHFzMZmL9OPk+TTIJuPxmKDtJAQEBAQEBAQEBBxp2tWnJs70a521EwvGJydC8/gc8N9r7En/mCCCJAQEBAQEBAQTvdkvpybBdGmBtSsLBlsnfvM5HHLfbexB/4UHZSAgICAgICAgICD4PffbOHeTZvWWipi1v58xc9ON7vKOVzD7J/8rwx33IPM9mMVbwWWu43IQPq36cz69iCQcOjkY4te0j3gghBaICAgICAgvMNibeey1LG4+B9q/cnZXrwRjl0kj3BrGge8uICD0w7E7aQ7ObOaN0VAWuGDxcFKR7fKSVrB7V/8zy933oPu0BAQEBAQEBAQEFEELna39LE+2+6o3TwdN36Masl/wDIGJvyauS45dz7hM0d8H1cJPggj7QEBAQEBBIL2R/SxPuPuod1M5Td+jGk5eMeZW/JtZLj5PHvELT3yfRxj+KCaJBVAQEBAQEBAQEBAQfKbpbY6d3k0FmdHaqoNyODysBgsQk8OHq17HfRe1wDmuHkQCggC6wOjrVnSXrt+PyccmS0tdkccPqCOPiK0zz7j/RkzR85h+1vLSCg5/QEBAQdA9H3R1qzq012zH42OTG6VpSNOY1BJHzFVZ59xnPg+Zw+awfa7ho5QT+bXbY6d2c0FhtHaVoNx2DxUAgrwg8uPq57z9J7nEuc4+ZJKD6tAQEBAQEBAQEBAQU54QY67qTE43IVKFvJ06t627uV601hjJZncc8MYTy48A+AHogx+vdvtN7paVvab1Xhqmewd1ncnpXI++x3uI9WuB8Q4EEHxBBQRf8AUP2Md+G5ayuzuoYbFRxLxp7UEhZLH/DFZAIePQCQNIA8XlBxjqvoS3/0bakgv7Ualncw8GTGVPy6M/EPgLwgaU6Et/8AWVqOChtRqSBzzwJMnU/IYx8S+csCDs/p37GO/Lcq5XeLUMNeo0h509p+Qvkk/hlskAMHoRGHEg+DwglA0Ft9pva7StHTelMNUwODpM7kFKnH3GN95Pq5xPiXEkk+JJKC/pakxOSyFuhUydO1eqO7litDYY+WF3nw9oPLT4jwI9UGR55QVQEBAQEBAQEBBzb1Vdem23StXfRy1p2f1g6Pvw6bxj2mccjlrp3n5MDD4eLuXEHlrXIIo99u1A3t3ksWa+Ozn6A4GTkMx+m3GGXu+nfs/wDtcePPuljT9VByrY1DlLeXGVnyNubKCQTC7JO504eDyHd8nvcg+PPPKDvXpr7XvXe2tWrhNy6DtwMLEAxuTbKIspE0fWefkT8D6/dcfV5QSCbZ9pN0+7mV4jHrutpu4/jvUtSxuoPj59DI79kf5XlBuvH70bfZWITUdcaauRHxElfL1ntP3h6BkN6NvsVEZr2uNNU4h4mSxl6zGj7y9BpTcztJun7bOvKZNd1tSXGc92lpqN198nwEjeIh/M8II+upXte9d7lVbWE21oO2+wsoLHZN0olykrT9V4+RByPqd5w9HhBwXX1DlKeXOVgyNuDKGQzG7HO5s5eTyXd8Hvck+PPPKDqrYntQd7dm7Favkc5+n2Bj4a/H6kcZpQ317lkftWnjy7xe0fVQSudK3Xntt1VV2UsTadgNXtj782m8m9onIA+U6F4+TOwePi3hwHi5rUHSSAgICAgICCP/ALRftFG7FR2tudurUU+4E0fF/JN4ezDMcOQADyDYIIIB8GAgkEkBBDFlsvez2StZHJXJ8hftSumsWrUjpJZpHHlz3ucSXOJ8ST4oLRAQEDkgeaCvePw/BA7x+H4IKckjzQEBAQXeJy97A5Orkcbcnx9+rK2avaqyujlhkaeWvY5pBa4HxBHigmd7OjtE277R1dutxLUUG4EMZFDJEBjMyxo5IIHAE4AJIHg8AkAEEIJAEBAQEBBzt10dUUHSvsbfz1V8Umqsk44/BVpAHA2XNJMrm+rIm8vPoT3W/SQeezNZm9qLL3cpk7c1/I3Zn2LNqw8vkmke4uc9xPmSSST8UFmgICAgICAgICAgICC9wuavaczFLK4u3NQyVKZlmtarvLZIZWODmvaR5EEAgoPQn0MdUUHVRsbj8/ZfFHqrHOGPztaMBobZa0EStb6Mkbw8egJc36KDohAQEFCeAggm7VrfKXdbqfyOn61gyYPRkf5orsB+SbPg60/j39/iP7IQg4xQEBAQEBAQEBAQEBAQEHZ/ZSb5S7U9T+P09ZsGPB60j/NE7CfkiyOXVX8e/v8AMf2TFBOwDyEFUBBj9QZiHT2DyGUsnivSryWZD/Cxpcf7BB5e9V6htat1Pl85ed372TtzXZ3H6Ukry9x/FxQYtAQEBAQEBAQEBAQEBAQZXSeobWkdUYjO0Xdy7i7kN6Bw+jJE8PafxaEHqEwGXh1Bg8flKx5r3a8dmM/wvaHD+xQX6Ag151FSvg6ftzZYuRKzTGUczjz5FSXhB5m3ef3IKICAgICAgICAgICAgICCrfP7kHpl6d5Xz7AbZyy8+1fpjGOfz5941IuUGwkBBiNXaeh1bpXM4OyeK+TpzUpT7myRuYf7OQeYvXWjcpt5rLNaZzdZ9TLYi3LRtQvaQWyRuLT5+h45B9QQfVBgkDg8c8eCDKYDSuZ1XcFTCYm9mLZ8oKFZ87z/ACsBKDcmmehHf/VsTJMftRqRjHjlpv1RSBH++WIPuavZZ9StmIP/ANP44efoy5ugD/3IP2/VVdSv7iVv65R/zIH6qrqV/cSt/XKP+ZA/VVdSv7iVv65R/wAyB+qq6lf3Erf1yj/mQfja7LPqVrRl/wDp/HNx9GLN0Cf+5B8NqboS3/0jE+TIbUakexg5caFUXQB/sF6DTef0tmdKXDUzWJvYe2POC/WfA8fyvAKDF8HjnjwQEGd0JozK7iaywumMJWfby2XuRUa0LGk96SRwaPL0HPJPoAT6IPTrpLT8Ok9LYfCVjzXxtOGlEfe2ONrB/ZqDLICAg5w6kugTabqfywzepcdcxWpfZiJ+bwc4gsTNaOGiUOa5knA4ALm94AAc8DhBo/Cdi7sxj7Ptb2o9ZZRgPhC+5WiaftLIOfwIQbv0D2dvT3t4YpKW22Mydlh59vnHSZEuPv7sznMH3NCDf2D03idMUW0sPjKeJpt+bXo12QRj7GsACDI90e5A4QOEDhA4QOEDhA7o9yDHZ3TeJ1PRdSzGMp5am751e9XZPGfta8EINA6+7O3p73DMsl3bbGYyy88+3wbpMeWn392FzWH72lBpDN9i7sxkLPtaOo9Z4thPjCy5WlaPsL4OfxJQbw6begXabpgypzWmsdcyupPZmJubzk4nsRNcOHCINa1kfI5BLW94gkc8HhB0egICAgICAgICAgICAgICAgICAgICAg//2Q==';
 
     try {
-        const fotoProf = makeFs();
-        const file = await fotoProf.findOne({ 'metadata.idProfesional': id });
-        if (file) {
-            const readStream = await fotoProf.readFile({ _id: file._id });
-            const _img = await streamToBase64(readStream);
-            return res.json(_img);
+        if (req.query.id) {
+            const idProf = req.query.id;
+            let fotoProf;
+            let metadataFind;
+
+            if (req.query.matricula) {
+                const matricula = parseInt(req.query.matricula, 10);
+                fotoProf = makeFsImagenOnline();
+                metadataFind = {
+                    'metadata.idProfesional': idProf,
+                    'metadata.matricula': matricula
+                };
+            } else {
+                fotoProf = makeFs();
+                metadataFind = {
+                    'metadata.idProfesional': idProf
+                };
+            }
+
+            const file = await fotoProf.findOne(metadataFind);
+            if (file) {
+                const readStream = await fotoProf.readFile({ _id: file._id });
+                const _img = await streamToBase64(readStream);
+                return res.json(_img);
+            }
+            return res.json(img);
         }
-        return res.json(img);
+
     } catch (ex) {
         return next(ex);
     }
-
 });
 router.get('/profesionales/firma', Auth.authenticate(), async (req: any, res, next) => {
-
     try {
         if (req.query.id) {
             const id = req.query.id;
-            const fotoProf = makeFsFirma();
-            const file = await fotoProf.findOne({ 'metadata.idProfesional': id });
+            let fotoProf;
+            let metadataFind;
+
+            if (req.query.matricula) {
+                const matricula = parseInt(req.query.matricula, 10);
+                fotoProf = makeFsFirmaOnline();
+                metadataFind = {
+                    'metadata.idProfesional': id,
+                    'metadata.matricula': matricula
+                };
+            } else {
+                fotoProf = makeFsFirma();
+                metadataFind = {
+                    'metadata.idProfesional': id
+                };
+            }
+            const file = await fotoProf.findOne(metadataFind);
             if (file) {
                 const readStream = await fotoProf.readFile({ _id: file._id });
                 const firma = await streamToBase64(readStream);
@@ -362,159 +571,70 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         match['rematriculado'] = false;
     }
     if (req.query.especialidadCodigo) {
-        match2['formacionPosgrado.especialidad.codigo'] = parseInt(req.query.especialidadCodigo, 10);
+        match2['formacionPosgrado.especialidad.codigo.sisa'] = parseInt(req.query.especialidadCodigo, 10);
     }
     if (req.query.profesionCodigo) {
         match2['formacionGrado.profesion.codigo'] = parseInt(req.query.profesionCodigo, 10);
     }
     let unwindOptions = {};
-    let projections = {};
+    let ultimaMatricula = {};
+    const estadoMatriculaConditions = [];
     if (req.query.tipoMatricula === 'grado') {
         match['formacionGrado.matriculacion.0'] = { $exists: true };
-
-        if (req.query.estado) {
-            if (req.query.estado === 'Vigentes') {
-                match['formacionGrado.matriculado'] = true;
-            }
-            if (req.query.estado === 'Suspendidas') {
-                match['formacionGrado.matriculado'] = false;
-            }
-        }
         if (req.query.vencidas) {
-            match2['ultimaMatricula.fin'] = { $lte: new Date() };
+            estadoMatriculaConditions.push({
+                'ultimaMatricula.fin': { $lte: new Date() },
+                'formacionGrado.renovacion': false,
+                'formacionGrado.papelesVerificados': true,
+                'formacionGrado.matriculado': true
+            });
         }
         if (req.query.bajaMatricula) {
-            match2['ultimaMatricula.baja.fecha'] = { $nin: [null, ''] };
+            estadoMatriculaConditions.push({
+                'ultimaMatricula.baja.fecha': { $nin: [null, ''] },
+                'formacionGrado.renovacion': false,
+                'formacionGrado.papelesVerificados': false,
+                'formacionGrado.matriculado': false
+            });
         }
         unwindOptions = { path: '$formacionGrado' };
-        projections = {
-            habilitado: 1,
-            nombre: 1,
-            apellido: 1,
-            tipoDocumento: 1,
-            documento: 1,
-            documentoVencimiento: 1,
-            cuit: 1,
-            fechaNacimiento: 1,
-            lugarNacimiento: 1,
-            fechaFallecimiento: 1,
-            nacionalidad: 1,
-            sexo: 1,
-            contactos: 1,
-            domicilios: 1,
-            fotoArchivo: 1,
-            firmas: 1,
-            incluidoSuperintendencia: 1,
-            formacionPosgrado: 1,
-            'formacionGrado.profesion': 1,
-            'formacionGrado.entidadFormadora': 1,
-            'formacionGrado.titulo': 1,
-            'formacionGrado.fechaTitulo': 1,
-            'formacionGrado.fechaEgreso': 1,
-            'formacionGrado.renovacion': 1,
-            'formacionGrado.papelesVerificados': 1,
-            'formacionGrado.matriculado': 1,
-            'formacionGrado.exportadoSisa': 1,
-            'formacionGrado.fechaDeInscripcion': 1,
-            ultimaMatricula: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] },
-            sanciones: 1,
-            notas: 1,
-            rematriculado: 1,
-            agenteMatriculador: 1,
-            supervisor: 1,
-            OtrosDatos: 1,
-            idRenovacion: 1,
-            documentoViejo: 1,
-            turno: 1,
-            profesionalMatriculado: 1
-        };
-
+        ultimaMatricula = { ultimaMatricula: { $arrayElemAt: ['$formacionGrado.matriculacion', -1] } };
     } else {
-
         match['formacionPosgrado.matriculacion.0'] = { $exists: true };
-
-        if (req.query.estado) {
-            if (req.query.estado === 'Vigentes') {
-                match['formacionPosgrado.matriculado'] = true;
-            }
-            if (req.query.estado === 'Suspendidas') {
-                match['formacionPosgrado.matriculado'] = false;
-            }
-        }
         if (req.query.bajaMatricula) {
-            match2['ultimaMatriculaPosgrado.baja.fecha'] = { $nin: [null, ''] };
+            estadoMatriculaConditions.push({
+                'formacionPosgrado.revalida': false,
+                'formacionPosgrado.papelesVerificados': false,
+                'formacionPosgrado.matriculado': false
+            });
         }
         if (req.query.vencidas) {
-            match2['formacionPosgrado.tieneVencimiento'] = true;
-            match2['ultimaMatriculaPosgrado.fin'] = { $lte: new Date() };
+            estadoMatriculaConditions.push({
+                'formacionPosgrado.tieneVencimiento': true,
+                'formacionPosgrado.matriculado': true,
+                'ultimaMatricula.fin': { $lte: new Date() }
+            });
         }
         unwindOptions = { path: '$formacionPosgrado' };
-        projections = {
-            habilitado: 1,
-            nombre: 1,
-            apellido: 1,
-            tipoDocumento: 1,
-            documento: 1,
-            documentoVencimiento: 1,
-            cuit: 1,
-            fechaNacimiento: 1,
-            lugarNacimiento: 1,
-            fechaFallecimiento: 1,
-            nacionalidad: 1,
-            sexo: 1,
-            contactos: 1,
-            domicilios: 1,
-            fotoArchivo: 1,
-            firmas: 1,
-            incluidoSuperintendencia: 1,
-            formacionGrado: 1,
-            'formacionPosgrado.profesion': 1,
-            'formacionPosgrado.institucionFormadora': 1,
-            'formacionPosgrado.especialidad': 1,
-            'formacionPosgrado.fechaIngreso': 1,
-            'formacionPosgrado.fechaEgreso': 1,
-            'formacionPosgrado.observacion': 1,
-            'formacionPosgrado.certificacion': 1,
-            'formacionPosgrado.fechasDeAltas': 1,
-            'formacionPosgrado.matriculado': 1,
-            'formacionPosgrado.revalida': 1,
-            'formacionPosgrado.papelesVerificados': 1,
-            'formacionPosgrado.exportadoSisa': 1,
-            'formacionPosgrado.tieneVencimiento': 1,
-            'formacionPosgrado.notas': 1,
-            ultimaMatriculaPosgrado: { $arrayElemAt: ['$formacionPosgrado.matriculacion', -1] },
-            sanciones: 1,
-            notas: 1,
-            rematriculado: 1,
-            agenteMatriculador: 1,
-            supervisor: 1,
-            OtrosDatos: 1,
-            idRenovacion: 1,
-            documentoViejo: 1,
-            turno: 1,
-            profesionalMatriculado: 1
-        };
+        ultimaMatricula = { ultimaMatricula: { $arrayElemAt: ['$formacionPosgrado.matriculacion', -1] } };
     }
     if (req.query.fechaDesde && req.query.fechaHasta) {
         if (req.query.matriculasPorVencer) {
-            if (req.query.tipoMatricula === 'grado') {
-                match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
-            } else {
-                match2['$and'] = [{ 'ultimaMatriculaPosgrado.fin': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatriculaPosgrado.fin': { $lte: new Date(req.query.fechaHasta) } }];
-            }
-        } else if (req.query.matriculasPorVencer === false) {
-            if (req.query.tipoMatricula === 'grado') {
-                match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
-            } else {
-                match2['$and'] = [{ 'ultimaMatriculaPosgrado.inicio': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatriculaPosgrado.inicio': { $lte: new Date(req.query.fechaHasta) } }];
-            }
+            match2['$and'] = [{ 'ultimaMatricula.fin': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.fin': { $lte: new Date(req.query.fechaHasta) } }];
+        } else {
+            match2['$and'] = [{ 'ultimaMatricula.inicio': { $gte: new Date(req.query.fechaDesde) } }, { 'ultimaMatricula.inicio': { $lte: new Date(req.query.fechaHasta) } }];
         }
     }
 
+    if (estadoMatriculaConditions.length === 1) {
+        Object.assign(match2, estadoMatriculaConditions[0]);
+    } else if (estadoMatriculaConditions.length > 1) {
+        match2['$or'] = estadoMatriculaConditions;
+    }
     const pipeline = [];
     pipeline.push({ $match: match });
     pipeline.push({ $unwind: unwindOptions });
-    pipeline.push({ $project: projections });
+    pipeline.push({ $addFields: ultimaMatricula });
     pipeline.push({ $match: match2 });
     if (!req.query.exportarPlanillaCalculo) {
         const radix = 10;
@@ -524,8 +644,6 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         limit = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
         pipeline.push({ $skip: skip });
         pipeline.push({ $limit: limit });
-    }
-    if (!req.query.exportarPlanillaCalculo) {
         const data = await Profesional.aggregate(pipeline);
         try {
             res.json(data);
@@ -970,28 +1088,8 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
     try {
 
         if (req.body.imagen) {
-            const _base64 = req.body.imagen.img;
-            const decoder = base64.decode();
-            const input = new stream.PassThrough();
-            const fotoProf = makeFs();
-            // remove la foto vieja antes de insertar la nueva
-            const file = await fotoProf.findOne({
-                'metadata.idProfesional': req.body.imagen.idProfesional
-            });
-            if (file?._id) {
-                await fotoProf.unlink(file._id, (error) => { });
-            }
-            // inserta en la bd en files y chucks
-            fotoProf.writeFile({
-                filename: 'foto.png',
-                contentType: 'image/png',
-                metadata: {
-                    idProfesional: req.body.imagen.idProfesional,
-                }
-            }, input.pipe(decoder), (error, createdFile) => {
-                res.json(createdFile);
-            });
-            input.end(_base64);
+            const response = await saveImage(req.body.imagen);
+            res.json(response);
         }
         if (req.body.firma) {
             const response = await saveFirma(req.body.firma);
@@ -1015,9 +1113,41 @@ router.patch('/profesionales/update/:id?', Auth.authenticate(), async (req, res,
         }
 
         if (req.body.domicilios || req.body.domiciliosMobile) {
-            const idProfesional = req.body.domicilios?.idProfesional ? req.body.domicilios.idProfesional : req.body.domiciliosMobile.idProfesional;
+            const idProfesional = req.body.domicilios?.idProfesional || req.body.domiciliosMobile.idProfesional;
             const profesional: any = await Profesional.findById(idProfesional);
-            profesional.domicilios = req.body.domicilios ? req.body.domicilios : req.body.domiciliosMobile.domicilios;
+
+            if (req.body.domiciliosMobile?.contactos) {
+                const contactosMobile = req.body.domiciliosMobile.contactos;
+                const pacienteAppData: any = {};
+
+                contactosMobile.map(async (contacto) => {
+                    pacienteAppData[contacto.tipo] = contacto.valor;
+                    if (contacto.tipo === 'email') {
+                        // actualizamos email del usuario de andes correspondiente al profesional
+                        await updateEmailUser(profesional.documento, contacto.valor);
+                    }
+                });
+
+                const profesionalApp = await PacienteApp.findOne({ profesionalId: idProfesional });
+                // actualizamos los datos del usuario profesional de la app mobile
+                // el email no debe cambiar ya que por defecto es el documento del profesional
+                await PacienteApp.update(
+                    { _id: Types.ObjectId(profesionalApp._id) },
+                    {
+                        telefono: pacienteAppData.celular,
+                        fijo: pacienteAppData.fijo
+                    },
+                    req
+                );
+            }
+            profesional.contactos = req.body.domiciliosMobile?.contactos || profesional.contactos;
+            if (req.body.domiciliosMobile?.domicilios) {
+                profesional.domicilios = req.body.domiciliosMobile.domicilios;
+            }
+            if (req.body.domicilios) {
+                profesional.domicilios = req.body.domicilios;
+            }
+
             Auth.audit(profesional, (userScheduler as any));
             await profesional.save();
             res.json(profesional);
@@ -1048,6 +1178,7 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
         if (req.body.id) {
             const resultado: any = await Profesional.findById(req.body.id);
             const profesionalOriginal = resultado.toObject();
+
             for (const key in req.body) {
                 resultado[key] = req.body[key];
             }
@@ -1067,6 +1198,75 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
         next(err);
     }
 
+});
+
+router.get('/profesionales/:id/formacionGrado/:formacionId/deshacer-matricula', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'matriculaciones:supervisor:aprobar')) {
+        return res.status(403).json({ message: MENSAJES_NEGOCIO.sinPermisoSupervisor });
+    }
+
+    try {
+        const resultado: any = await Profesional.findById(req.params.id);
+        if (!resultado) {
+            return res.status(404).json({ message: 'profesional no encontrado' });
+        }
+
+        const estado = await obtenerEstadoDeshacerMatricula(resultado, req.params.formacionId);
+        return res.status(estado.status).json(estado.payload);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/profesionales/:id/formacionGrado/:formacionId/deshacer-matricula', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'matriculaciones:supervisor:aprobar')) {
+        return res.status(403).json({ message: MENSAJES_NEGOCIO.sinPermisoSupervisor });
+    }
+
+    try {
+        const resultado: any = await Profesional.findById(req.params.id);
+        if (!resultado) {
+            return res.status(404).json({ message: 'profesional no encontrado' });
+        }
+
+        const estado = await obtenerEstadoDeshacerMatricula(resultado, req.params.formacionId);
+        if (estado.status !== 200 || !estado.payload.canUndo) {
+            return res.status(400).json({ message: estado.payload.message || MENSAJES_NEGOCIO.datosInconsistentes });
+        }
+
+        const formacionIndex = (resultado.formacionGrado || []).findIndex((fg: any) => toIdString(fg?._id) === req.params.formacionId);
+        if (formacionIndex < 0) {
+            return res.status(404).json({ message: 'formacion de grado no encontrada' });
+        }
+
+        const formacion = resultado.formacionGrado[formacionIndex];
+        const numeracion: any = await getNumeracionPorCodigoProfesion(formacion?.profesion?.codigo);
+        if (!numeracion) {
+            return res.status(400).json({ message: MENSAJES_NEGOCIO.datosInconsistentes });
+        }
+
+        if (Array.isArray(formacion.matriculacion) && formacion.matriculacion.length > 0) {
+            formacion.matriculacion = formacion.matriculacion.slice(0, formacion.matriculacion.length - 1);
+        }
+        normalizarMatriculacionVacia(formacion);
+        formacion.matriculado = false;
+        formacion.papelesVerificados = false;
+        formacion.fechaDeInscripcion = null;
+
+        numeracion.proximoNumero = estado.payload.matriculaNumero;
+
+        Auth.audit(resultado, req);
+        await numeracion.save();
+        await resultado.save();
+
+        return res.json({
+            success: true,
+            message: 'numero de matricula deshecho correctamente',
+            formacionId: req.params.formacionId
+        });
+    } catch (error) {
+        return next(error);
+    }
 });
 
 router.delete('/profesionales/:id/documentos/:fileId', async (req: any, res, next) => {
@@ -1122,13 +1322,25 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
     try {
         const resultado: any = await Profesional.findById(req.params.id);
         const profesionalOriginal = resultado.toObject();
+        const errorValidacion = null;
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
-                    resultado.notas = req.body.data;
-                    break;
-                case 'updateSancion':
-                    resultado.sansiones.push(req.body.data);
+                    if (req.body.accion === 'editar') {
+                        resultado.notas[req.body.indice].descripcion = req.body.data;
+                    } else if (req.body.accion === 'eliminar') {
+                        resultado.notas.splice(req.body.indice, 1);
+                    } else { // si no es editar ni eliminar, es agregar.
+                        if (!resultado.notas) {
+                            resultado.notas = [];
+                        }
+                        const nota = {
+                            descripcion: req.body.data,
+                            usuario: req.body.agente,
+                            fecha: new Date()
+                        };
+                        resultado.notas.unshift(nota);
+                    }
                     break;
                 case 'updatePosGrado':
                     if (!resultado.formacionPosgrado) {
@@ -1175,7 +1387,19 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
             if (req.body.foto) {
                 resultado.foto = req.body.foto;
             }
+            if (req.body.matricula) {
+
+                if (req.body.firmaP) {
+                    await saveFirma(req.body);
+                }
+                if (req.body.img) {
+                    await saveImage(req.body);
+                }
+                // await deleteFirmaFotoTemporal(req.params.id, req.body.matricula, next);
+
+            }
         }
+
         for (const key in req.body) {
             resultado[key] = req.body[key];
         }
@@ -1256,7 +1480,8 @@ router.post('/profesionales/validar', async (req, res, next) => {
             const profesional = await Profesional.findOne(params);
             if (profesional?.id) {
                 const token = await getTemporyTokenGenerarUsuario(documento);
-                return res.json({ profesional, token });
+                const userResponse = await findUser(documento);
+                return res.json({ profesional, user: userResponse?.user, token });
             } else {
                 return next('El profesional no se encuentra registrado en Andes.');
             }
@@ -1295,6 +1520,9 @@ function createResponseArray(matriculas: any[], req: any) {
             prof['fechaBaja1'] = matriculas[i].ultimaMatricula && matriculas[i].ultimaMatricula.baja && matriculas[i].ultimaMatricula.baja.fecha ? moment(matriculas[i].ultimaMatricula.baja.fecha).format('DD/MM/YYYY') : '';
             prof['motivoBaja1'] = matriculas[i].ultimaMatricula && matriculas[i].ultimaMatricula.baja ? matriculas[i].ultimaMatricula.baja.motivo : '';
             prof['fechaInscripcion1'] = matriculas[i].formacionGrado ? moment(matriculas[i].formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY') : '';
+            prof['esRenovacion'] = matriculas[i].formacionGrado.matriculacion?.length > 1 ? 'Si' : 'No';
+            prof['esRenovacionOnline'] = matriculas[i].formacionGrado.renovacionOnline?.estado === 'aprobada' ? 'Si' : 'No';
+
         } else {
             // formacionPosgrado1
             prof['especialidad1'] = matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.especialidad.nombre : '';

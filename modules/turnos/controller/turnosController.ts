@@ -158,6 +158,7 @@ export function getTurno(req) {
                     turno.bloque_id = elem.bloque_id;
                     turno.organizacion = elem.organizacion;
                     turno.profesionales = elem.profesionales;
+                    turno.webexLinks = elem.webexLinks;
                     turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
                     turnos.push(turno);
                 });
@@ -177,12 +178,9 @@ export async function getLiberadosPaciente(req) {
             const paciente: any = await PacienteCtr.findById(idPaciente);
             const query = {
                 paciente: { $in: paciente.vinculos },
-                operacion: 'turnos:liberar'
+                operacion: 'turnos:liberar',
+                'dataTurno.turno.updatedBy.organizacion._id': { $exists: true }
             };
-
-            if (req.user.organizacion?.id) {
-                query['dataTurno.turno.updatedBy.organizacion._id'] = req.user.organizacion.id;
-            }
 
             if (req.query.desde && req.query.hasta) {
                 query['dataTurno.turno.horaInicio'] = {
@@ -214,7 +212,10 @@ export async function getLiberadosPaciente(req) {
                 turno.bloque_id = elem.dataTurno.idBloque;
                 turno.organizacion = elem.dataTurno.turno.updatedBy.organizacion;
                 turno.profesionales = elem.dataTurno.profesionales;
+                turno.createdAt = elem.createdAt;
+                turno.createdBy = elem.createdBy;
                 turno.estado = 'liberado';
+                turno.observaciones = elem.observaciones;
                 turnos.push(turno);
             });
             return turnos;
@@ -237,27 +238,35 @@ export async function getLiberadosPaciente(req) {
  * @returns
  */
 export async function actualizarCarpeta(req: any, res: any, next: any, paciente: any, carpetas) {
-    const carpetasAux = (carpetas && carpetas.length > 0) ? (carpetas[0] as any).carpetaEfectores : [];
+    const carpetasAux = (carpetas && carpetas.length > 0)
+        ? (carpetas[0] as any).carpetaEfectores || []
+        : [];
+
     if (paciente) {
-        if (paciente.carpetaEfectores.length) {
-            if (carpetasAux.length < paciente.carpetaEfectores.length) {
-                req.body.carpetaEfectores = paciente.carpetaEfectores;
+        const carpetasPaciente = Array.isArray(paciente.carpetaEfectores)
+            ? paciente.carpetaEfectores
+            : [];
+
+        if (carpetasPaciente.length > 0) {
+            if (carpetasAux.length < carpetasPaciente.length) {
+                req.body.carpetaEfectores = carpetasPaciente;
             } else {
-                if (carpetasAux) {
+                if (carpetasAux && carpetasAux.length > 0) {
                     req.body.carpetaEfectores = carpetasAux;
                 }
             }
         } else {
-            if (carpetas.length) {
+            if (carpetasAux.length > 0) {
                 req.body.carpetaEfectores = carpetasAux;
             }
         }
+
         const repetida = await checkCarpeta(req);
         if (!repetida) {
             paciente.carpetaEfectores = req.body.carpetaEfectores;
             await PacienteCtr.update(paciente.id, paciente, req);
         } else {
-            return next('El nÚmero de carpeta ya existe');
+            return next('El número de carpeta ya existe');
         }
     }
 }
@@ -379,4 +388,16 @@ async function telefonoUnico() {
         log.error('cuerpoMensaje', { constante, key }, { error: error.message }, userScheduler);
         return '';
     }
+}
+
+export async function getAccesosVirtuales(): Promise<string[]> {
+    try {
+        const constante: any = await Constantes.findOne({ key: 'accesos-virtuales' });
+        if (constante && constante.nombre) {
+            return constante.nombre.split(',').map(s => s.trim().toLowerCase());
+        }
+    } catch (err) {
+        log.error('acceso-constantes', { error: err.message }, userScheduler);
+    }
+    return ['appmobile', 'totem', 'misalud'];
 }

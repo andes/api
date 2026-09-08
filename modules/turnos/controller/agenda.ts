@@ -2,9 +2,8 @@ import { EventCore } from '@andes/event-bus';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
-import * as request from 'request';
 import { Auth } from '../../../auth/auth.class';
-import { diasNoLaborables, userScheduler } from '../../../config.private';
+import { diasNoLaborables, diasNoLaborables2, userScheduler } from '../../../config.private';
 import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
@@ -13,10 +12,12 @@ import { toArray } from '../../../utils/utils';
 import * as prestacionController from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { Agenda, HistorialAgenda } from '../../turnos/schemas/agenda';
-import { agendaLog } from '../citasLog';
+import { agendaLog, agendaJob } from '../citasLog';
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
+import { getAccesosVirtuales } from '../../turnos/controller/turnosController';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import { ECLQueriesCtr } from './../../../core/tm/eclqueries.routes';
+import { handleHttpRequest } from '../../../utils/requestHandler';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -107,7 +108,10 @@ export function quitarTurnoDoble(req, data, tid = null) {
 // Turno y sobreturno
 export async function liberarTurno(req, data, turno) {
     const position = getPosition(req, data, turno._id);
+    const accesosVirtuales = await getAccesosVirtuales();
+    const esMobile = accesosVirtuales.includes(String(turno.emitidoPor).toLowerCase());
     const enEjecucion = await prestacionController.enEjecucion(turno);
+    const esHoy = moment(turno.horaInicio).isSame(moment(), 'day');
     if (enEjecucion) {
         return false;
     }
@@ -125,6 +129,13 @@ export async function liberarTurno(req, data, turno) {
             turno.nota = null;
             turno.confirmedAt = null;
             turno.reasignado = undefined; // Esto es necesario cuando se libera un turno reasignado
+            turno.emitidoPor = undefined;
+            turno.fechaHoraDacion = undefined;
+            turno.usuarioDacion = undefined;
+            turno.tipoTurno = undefined;
+            turno.link = undefined;
+            turno.motivoConsulta = undefined;
+            turno.webexLinks = null;
             turno.updatedAt = new Date();
             turno.updatedBy = req.user.usuario || req.user;
             let cant = 1;
@@ -141,19 +152,30 @@ export async function liberarTurno(req, data, turno) {
                 programados: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'programado').length || 0,
                 delDia: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'delDia').length || 0,
                 autocitados: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'profesional').length || 0,
-                gestion: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'gestion').length || 0
+                gestion: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.tipoTurno === 'gestion').length || 0,
+                mobile: data.bloques[position.indexBloque].turnos.filter(t => t.estado === 'asignado' && t.emitidoPor === 'appMobile').length || 0
+            };
+            const bloque = data.bloques[position.indexBloque];
+            const cuposMaximos = {
+                gestion: getBloqueCupoMaximo(bloque, 'reservadoGestion'),
+                profesional: getBloqueCupoMaximo(bloque, 'reservadoProfesional'),
+                programado: getBloqueCupoMaximo(bloque, 'accesoDirectoProgramado'),
+                mobile: getBloqueCupoMaximo(bloque, 'cupoMobile')
             };
 
-            if (data.bloques[position.indexBloque].restantesGestion < (data.bloques[position.indexBloque].reservadoGestion - turnosAsignados.gestion)) {
-                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+            if (bloque.restantesGestion < (cuposMaximos.gestion - turnosAsignados.gestion)) {
+                bloque.restantesGestion = bloque.restantesGestion + cant;
             } else {
-                if (data.bloques[position.indexBloque].restantesProfesional < (data.bloques[position.indexBloque].reservadoProfesional - turnosAsignados.autocitados)) {
-                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                if (bloque.restantesProfesional < (cuposMaximos.profesional - turnosAsignados.autocitados)) {
+                    bloque.restantesProfesional = bloque.restantesProfesional + cant;
                 } else {
-                    if (data.bloques[position.indexBloque].restantesProgramados < (data.bloques[position.indexBloque].accesoDirectoProgramado - turnosAsignados.programados)) {
-                        data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                    if (!esHoy && bloque.restantesProgramados < (cuposMaximos.programado - turnosAsignados.programados)) {
+                        bloque.restantesProgramados = bloque.restantesProgramados + cant;
                     } else {
-                        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                        bloque.restantesDelDia = bloque.restantesDelDia + cant;
+                    }
+                    if (esMobile && bloque.restantesMobile <= cuposMaximos.mobile) {
+                        bloque.restantesMobile = bloque.restantesMobile + cant;
                     }
                 }
             }
@@ -176,6 +198,11 @@ export async function liberarTurno(req, data, turno) {
     return true;
 }
 
+function getBloqueCupoMaximo(bloque, campo) {
+    const multiplicador = bloque.pacienteSimultaneos ? (bloque.cantidadSimultaneos || 1) : 1;
+    return (bloque[campo] || 0) * multiplicador;
+}
+
 
 // Turno
 export function suspenderTurno(req, data, turno) {
@@ -186,6 +213,7 @@ export function suspenderTurno(req, data, turno) {
     const efector = data.organizacion;
     delete turno.paciente;
     delete turno.tipoPrestacion;
+    turno.webexLinks = null;
     turno.motivoSuspension = req.body.motivoSuspension;
     turno.avisoSuspension = req.body.avisoSuspension;
     turno.updatedAt = new Date();
@@ -675,46 +703,67 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
 
 }
 
-function esFeriado(fecha) {
-    return new Promise((resolve, reject) => {
-
-        const anio = moment(fecha).year();
-        const mes = moment(fecha).month(); // de 0 a 11
-        const dia = moment(fecha).date(); // de 1 a 31
-        const url = diasNoLaborables + anio;
-
-        request({ url, json: true }, (err, response, body) => {
-            if (err) {
-                reject(err);
-            }
-            if (body) {
-                const feriados = body.filter(item => {
-                    return ((item.mes).toString() === (mes + 1).toString() && (item.dia).toString() === (dia).toString());
-                });
-                if (feriados.length > 0) {
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            }
-        });
-    });
+async function esFeriado(fecha) {
+    const anio = moment(fecha).year();
+    const feriados = await getFeriados(anio);
+    const fechaStr = moment(fecha).format('YYYY-MM-DD');
+    const feriado = (feriados.length > 0 && feriados.find(f => f === fechaStr)) ? true : false;
+    return feriado;
 }
 
 /**
- * Recupera las agendas a 48hs de la fecha actual y actualiza la cantidad de turnos restantes antes
+ * Consulta feriados y dias no laborables a 2 apis externas,
+ * una se usa como alternativa si la primera falla
+ * @param anio
+ * @returns fechas ['YYYY-MM-DD']
+ */
+async function getFeriados(anio) {
+
+    const url = diasNoLaborables + anio;
+    const options = {
+        url,
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+    };
+    let feriados = [];
+    let errorApi = true;
+    let status, body;
+    try {
+        [status, body] = await handleHttpRequest(options);
+        if (status === 200) {
+            errorApi = false;
+            feriados = body.map(item => anio + '-' + (item.mes).toString() + '-' + (item.dia).toString());
+        }
+    } catch (error) {
+        agendaJob.error('getFeriados', { urlError: url }, error);
+    }
+    if (errorApi) {
+        options.url = diasNoLaborables2 + anio;
+        [status, body] = await handleHttpRequest(options);
+        if (status === 200) {
+            feriados = JSON.parse(body).map(item => item.fecha);
+        }
+
+    }
+    return feriados;
+}
+
+/**
+ * Recupera las agendas a 48hs (segun constante getCantidadHsActualizar) de la fecha actual y actualiza la cantidad de turnos restantes antes
  * de su fecha de inicio. Se ejecuta una vez al día por el scheduler.
  *
  * @export actualizarTiposDeTurno()
  * @returns resultado
  */
 export async function actualizarTiposDeTurno() {
-    const hsActualizar = await actualizarTurnosHs();
+    // cantidad de horas a partir para actualizar las agendas (48hs por defecto)
+    const hsActualizar = await getCantidadHsActualizar();
     const cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
     const esDomingo = false;
     let feriado;
-    let agenda = null;
+    const agenda = null;
     let condicion = {};
     try {
         feriado = await esFeriado(fechaActualizar);
@@ -733,72 +782,94 @@ export async function actualizarTiposDeTurno() {
             feriado = await esFeriado(fechaActualizar);
         }
     } catch (error) {
-        agendaLog.error('actualizarTiposTurnos', { feriado, fechaActualizar }, error);
+        agendaJob.error('actualizarTiposTurnos', { feriado, fechaActualizar: fechaActualizar.toString() }, error);
         return null;
     }
 
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
+    // considerando agendas con bloques de turnos de acceso directo que tienen restantes de gestion o profesional
     condicion = {
         estado: 'publicada',
         horaInicio: {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
-        }
+        },
+        $and: [
+            {
+                $or: [
+                    { 'bloques.accesoDirectoDelDia': { $gt: 0 } },
+                    { 'bloques.accesoDirectoProgramado': { $gt: 0 } }
+                ]
+            },
+            {
+                $or: [
+                    { 'bloques.restantesGestion': { $gt: 0 } },
+                    { 'bloques.restantesProfesional': { $gt: 0 } },
+                ],
+            }
+        ]
     };
     const cursor = Agenda.find(condicion).cursor();
     return cursor.eachAsync(async doc => {
         try {
-            const data = this.actualizarTurnos(doc);
-            agenda = data.agenda;
-            Auth.audit(agenda, (userScheduler as any));
-            await agenda.save();
-            const objetoLog = {
-                idAgenda: agenda._id,
-                organizacion: agenda.organizacion,
-                horaInicio: agenda.horaInicio,
-                updatedAt: agenda.updatedAt,
-                updatedBy: agenda.updatedBy,
-                bloques: data.logs
-            };
-            agendaLog.info('actualizarTiposTurnos', objetoLog);
+            const { agenda: a, logs: bloques } = actualizarTurnos(doc);
+            if (bloques.length > 0) {
+                Auth.audit(a, (userScheduler as any));
+                await a.save();
+                const objetoLog = {
+                    idAgenda: a._id,
+                    organizacion: a.organizacion,
+                    horaInicio: a.horaInicio,
+                    updatedAt: a.updatedAt,
+                    updatedBy: a.updatedBy,
+                    bloques
+                };
+                agendaJob.info('actualizarTiposTurnos', objetoLog);
+            }
         } catch (error) {
-            agendaLog.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
+            agendaJob.error('actualizarTiposTurnos', { queryAgendas: condicion, agenda }, error);
         }
     });
 }
 
 /**
- * Método auxiliar para registrar los logs.
+ * Método auxiliar para registrar los logs de bloques modificados.
  *
  */
 function registrarLog(logs, bloque, estado, datos) {
-    logs.push({
-        bloque,
-        idBloque: datos._id,
-        estado,
+    const dataEstado = {
         restantesDelDia: datos.restantesDelDia,
         restantesProgramados: datos.restantesProgramados,
         restantesProfesional: datos.restantesProfesional,
         restantesMobile: datos.restantesMobile,
         restantesGestion: datos.restantesGestion,
-    });
+    };
+    const index = logs.findIndex(l => l.idBloque === datos._id);
+    if (index === -1) {
+        const log = {
+            bloque,
+            idBloque: datos._id
+        };
+        log[estado] = dataEstado;
+        logs.push(log);
+    } else {
+        logs[index][estado] = dataEstado;
+    }
 }
 
 // Dada una agenda, actualiza los turnos restantes (Para agendas dentro de las 48hs a partir de hoy).
 export function actualizarTurnos(agenda) {
     const logs = [];
-
     for (let j = 0; j < agenda.bloques.length; j++) {
-        registrarLog(logs, j, 'inicio', agenda.bloques[j]);
-
         const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
-        if (cantAccesoDirecto > 0) {
-            agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+        const restantesReservados = agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+        if (cantAccesoDirecto > 0 && restantesReservados > 0) {
+            registrarLog(logs, j, 'inicio', agenda.bloques[j]);
+            agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + restantesReservados;
             agenda.bloques[j].restantesGestion = 0;
             agenda.bloques[j].restantesProfesional = 0;
+            registrarLog(logs, j, 'fin', agenda.bloques[j]);
         }
-
-        registrarLog(logs, j, 'final', agenda.bloques[j]);
     }
     return { agenda, logs };
 }
@@ -859,7 +930,7 @@ export function actualizarEstadoAgendas(start, end) {
                 actualizarHistorial({ estado: agenda.estado }, agenda, (userScheduler as any));
             }
         } catch (error) {
-            agendaLog.error('actualizarEstadoAgendas', { agenda }, error);
+            agendaJob.error('actualizarEstadoAgendas', { agenda }, error);
         }
     });
 }
@@ -1466,12 +1537,17 @@ export async function verificarSolapamiento(data) {
 }
 
 // Verifica si un turno fue dado por la appMobile o el totem
-export function esVirtual(turnoEmitido) {
-    if (turnoEmitido === 'appMobile' || turnoEmitido === 'totem') {
-        return true;
-    } else {
-        return false;
+export async function esVirtual(turnoEmitido) {
+    try {
+        const constante: any = await Constantes.findOne({ key: 'accesos-virtuales' });
+        if (constante && constante.nombre) {
+            const accesos = constante.nombre.split(',').map(s => s.trim().toLowerCase());
+            return accesos.includes(String(turnoEmitido).toLowerCase());
+        }
+    } catch (err) {
+        log.error('acceso-constantes', { turnoEmitido }, { error: err.message }, userScheduler);
     }
+    return ['appmobile', 'totem', 'misalud'].includes(String(turnoEmitido).toLowerCase());
 }
 
 export function agendaNueva(data, clon, req) {
@@ -1539,15 +1615,16 @@ export function agendaNueva(data, clon, req) {
     });
     nueva['estado'] = 'planificacion';
     nueva['sobreturnos'] = [];
+    nueva['historial'] = [];
     return nueva;
 }
 
-async function actualizarTurnosHs() {
+async function getCantidadHsActualizar() {
     let constante;
     const key = 'actualizarTurnosHs';
     try {
         constante = await Constantes.findOne({ key });
-        return constante ? parseInt(constante.nombre, 10) : 48;
+        return constante ? parseInt(constante.nombre, 10) : 48; // valor por defecto 48hs
     } catch (error) {
         log.error('actualizarTurnosHs', { constante, key }, { error: error.message }, userScheduler);
         return 48;

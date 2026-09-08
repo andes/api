@@ -3,6 +3,8 @@ import { ESTADOCIVIL } from '../../../shared/constantes';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import { EspecialidadSIISASchema, ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { normalizeSanciones } from '../../../core/tm/utils/sanciones.utils';
+import { sancionSchema } from '../../../core/tm/schemas/profesional';
 
 const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -97,17 +99,11 @@ export const turnoSolicitadoSchema = new mongoose.Schema({
         },
         matriculacion: [matriculacionSchema]
     }],
-    sanciones: [{
-        numero: { type: Number, required: false },
-        sancion: {
-            id: Number,
-            nombre: String,
-        },
-        motivo: { type: String, required: false },
-        normaLegal: { type: String, required: false },
-        fecha: { type: Date, required: false },
-        vencimiento: { type: Date, required: false }
-    }],
+    sanciones: {
+        type: [sancionSchema],
+        default: undefined,
+        set: normalizeSanciones
+    },
     notas: [{ type: String, required: false }],
     rematriculado: { type: Boolean, default: false },
     agenteMatriculador: { type: String, required: false },
@@ -131,6 +127,11 @@ turnoSolicitadoSchema.virtual('nombreCompleto').get(function () {
 
 turnoSolicitadoSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
+});
+
+turnoSolicitadoSchema.pre('save', function (this: any, next) {
+    this.sanciones = normalizeSanciones(this.sanciones);
+    next();
 });
 
 turnoSolicitadoSchema.plugin(AuditPlugin);

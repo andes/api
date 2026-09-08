@@ -19,19 +19,20 @@ export class SelectPorRefsetComponent extends HTMLComponent {
 
     async process() {
         this.data = {
-            titulo: this.params.titulo || this.registro.concepto.term,
+            titulo: this.params.titulo || this.params.title || this.registro.concepto.term,
             registro: this.registro,
             valor: this.getValor()
         };
     }
 
     getValor() {
-        const valor = this.registro.valor || {};
-        if (valor.term) {
-            return valor.concepto.term;
-        } else if (Array.isArray(valor)) {
-            return valor.map(v => v.concepto.term).join(', ');
+        const valor = this.registro.valor;
+        if (!valor) { return ''; }
+        const getDisplay = (v) => v.label || v.term || (v.concepto && v.concepto.term) || v.nombre || '';
+        if (Array.isArray(valor)) {
+            return valor.map(getDisplay).filter(Boolean).join('<br>');
         }
+        return getDisplay(valor);
     }
 
 }

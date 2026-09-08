@@ -182,23 +182,13 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
             if (!response.length || !paciente) {
                 throw new Error('Error al generar laboratorio.');
             }
-            const docLaboratorio = new Laboratorio(req.body.protocolo, response, paciente, req.body.usuario);
+            const docLaboratorio = new Laboratorio(req.body.protocolo, response, paciente, req.body.usuario, req.user.type);
             const opciones = { header: { height: '2cm' } };
             const fileName: any = await docLaboratorio.informe(opciones);
             res.download(fileName);
 
         } catch (err) {
-            const dataError = {
-                id: req.params.id,
-                idProtocolo: req.body.protocolo.data.idProtocolo,
-                estado: req.query.estado,
-                documento: req.query.dni,
-                fechaNacimiento: req.query.fecNac,
-                apellido: req.query.apellido,
-                fechaDesde: req.query.fechaDde,
-                fechaHasta: req.query.fechaHta
-            };
-            await laboratorioLog.error('laboratorio-descargas', dataError, err, req);
+            await laboratorioLog.error('laboratorio-descargas', req.body.protocolo.data, err, req);
             return next(err);
         }
 
@@ -283,8 +273,9 @@ router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
     try {
         const idPrestacion = req.body.idPrestacion;
         const idRegistro = req.body.idRegistro;
+        const snapshots = req.body.snapshots;
 
-        const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
+        const informe = new InformeRUP(idPrestacion, idRegistro, req.user, snapshots);
         const fileName = await informe.informe();
 
         return res.download(fileName);

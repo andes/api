@@ -112,8 +112,6 @@ export async function exportFichaSNVS(done) {
             const fichas = await FormsEpidemiologia.aggregate(pipelineConfirmados);
             for (const unaFicha of fichas) {
                 const documento = unaFicha.Paciente_documento;
-                const idEvento = configSNVS.idEvento;
-                const idGrupoEvento = configSNVS.idGrupoEvento;
                 const idEstablecimientoCarga = unaFicha.Sisa.toString();
                 const idSisa = unaFicha.SisaInterno ? unaFicha.SisaInterno.toString() : unaFicha.Sisa.toString();
                 if (documento && ((!unaFicha.idCasoSnvs) || unaFicha.idCasoSnvs === '')) {
@@ -139,11 +137,11 @@ export async function exportFichaSNVS(done) {
                                 }
                             },
                             eventoCasoNominal: {
-                                idGrupoEvento,
-                                idEvento,
+                                idGrupoEvento: parseInt(clasificacion.idGrupoEvento, 10),
+                                idEvento: parseInt(clasificacion.idEvento, 10),
                                 idEstablecimientoCarga,
                                 fechaPapel: unaFicha.Fecha_Ficha,
-                                idClasificacionManualCaso: clasificacion
+                                idClasificacionManualCaso: parseInt(clasificacion.event, 10),
                             }
                         };
                         const log = {
@@ -155,7 +153,6 @@ export async function exportFichaSNVS(done) {
                             resultado: {}
                         };
                         if (eventoNominal.eventoCasoNominal.idClasificacionManualCaso) {
-
                             try {
                                 const response = await altaEventoV2(eventoNominal);
                                 if (response) {
@@ -209,11 +206,11 @@ function buscarClasificacion(configuracion, secciones) {
         for (const unaSeccion of secciones) {
             const salida = unaSeccion.fields.find(f => f[GC.key] === GC.value || f[GC.key]?.id === GC.value);
             if (salida) {
-                return parseInt(GC.event, 10);
+                return GC;
             }
         }
     };
-    return 0;
+    return null;
 }
 
 

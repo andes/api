@@ -13,10 +13,13 @@ import { NotificationService } from '../../mobileApp/controller/NotificationServ
 import * as prepagasController from '../../obraSocial/controller/prepagas';
 import { updateRegistroHistorialSolicitud } from '../../rup/controllers/prestacion';
 import { turnosLog } from '../citasLog';
+import * as webexController from '../../webex/webex.controller';
 import { getHistorial } from '../controller/historialCitasController/historialCitasController';
 import * as turnosController from '../controller/turnosController';
 import { Agenda } from '../schemas/agenda';
+import { Constantes } from '../../constantes/constantes.schema';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
+import { userScheduler } from '../../../config.private';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -72,7 +75,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         usuario.organizacion = (req as any).user.organizacion;
         const tipoTurno = (esHoy ? 'delDia' : 'programado');
         const fecha = new Date();
-        const turno = {
+        const turno: any = {
             horaInicio: (agendaRes as any).horaInicio,
             estado: 'asignado',
             tipoTurno,
@@ -84,8 +87,11 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             updatedAt: fecha,
             updatedBy: usuario,
             fechaHoraDacion: fecha,
-            usuarioDacion: usuario
+            usuarioDacion: usuario,
+            videoConferencia: req.body.videoConferencia || false
         };
+
+
         const turnos = ((agendaRes as any).bloques[0].turnos);
         turnos.push(turno);
         let update;
@@ -170,6 +176,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
     const pacienteTurno = req.body.paciente;
 
     if (continues.valid) {
+        const accesosVirtuales = await turnosController.getAccesosVirtuales();
         const agendaRes: any = await getAgenda(req.body.idAgenda);
         const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id) as any;
 
@@ -201,27 +208,25 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
 
         let posTurno: number;
 
-        let esHoy = false;
+        const posBloque = agendaRes.bloques.findIndex(item => item._id.toString() === req.body.idBloque.toString());
 
-        const posBloque = (agendaRes as any).bloques.findIndex(item => item._id.toString() === req.body.idBloque.toString());
+        // Verificamos si el día de la agenda coincide con la fecha actual
+        const hoyHrInicio = moment(new Date()).startOf('day').toDate();
+        const hoyHrFin = moment(new Date()).endOf('day').toDate();
+        const esHoy = (agendaRes.horaInicio >= hoyHrInicio && agendaRes.horaInicio <= hoyHrFin);
 
-        // Ver si el día de la agenda coincide con el día de hoy
-        if ((agendaRes as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (agendaRes as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
-            esHoy = true;
-        }
-
-        const contieneBloqueSoloGestion = agendaRes.bloques.some((bloque: any) => bloque.reservadoGestion > 0 && bloque.accesoDirectoDelDia === 0 && bloque.accesoDirectoProgramado === 0 && bloque.reservadoProfesional === 0);
-        const contieneBloqueSoloProfesional = agendaRes.bloques.some((bloque: any) => bloque.reservadoProfesional > 0 && bloque.accesoDirectoDelDia === 0 && bloque.accesoDirectoProgramado === 0 && bloque.reservadoGestion === 0);
         // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
+        // agenda creada con turnos de acceso directo
+        const contieneAccesoDirecto = agendaRes.bloques[posBloque].accesoDirectoDelDia > 0 || agendaRes.bloques[posBloque].accesoDirectoProgramado > 0;
+
         const countBloques = {
-            delDia: esHoy && !contieneBloqueSoloGestion ? (
-                ((agendaRes as any).bloques[posBloque].restantesDelDia as number) +
-                ((agendaRes as any).bloques[posBloque].restantesProgramados as number)
-            ) : (agendaRes as any).bloques[posBloque].restantesDelDia,
-            programado: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProgramados,
-            gestion: esHoy && !contieneBloqueSoloGestion ? 0 : (agendaRes as any).bloques[posBloque].restantesGestion,
-            profesional: esHoy && !contieneBloqueSoloProfesional ? 0 : (agendaRes as any).bloques[posBloque].restantesProfesional,
-            mobile: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesMobile,
+            delDia: (esHoy && contieneAccesoDirecto) ?
+                ((agendaRes.bloques[posBloque].restantesDelDia as number) + (agendaRes.bloques[posBloque].restantesProgramados as number))
+                : agendaRes.bloques[posBloque].restantesDelDia,
+            programado: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesProgramados,
+            gestion: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesGestion,
+            profesional: (esHoy && contieneAccesoDirecto) ? 0 : agendaRes.bloques[posBloque].restantesProfesional,
+            mobile: (agendaRes as any).bloques[posBloque].restantesMobile,
         };
         posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(item => item._id.toString() === req.body.idTurno.toString());
 
@@ -252,7 +257,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                 return next('No quedan turnos del tipo ' + tipoTurno);
             }
         }
-        if (req.body.emitidoPor && (req.body.emitidoPor === 'appMobile') && countBloques['mobile'] === 0) {
+        if (req.body.emitidoPor && accesosVirtuales.includes(String(req.body.emitidoPor).toLowerCase()) && countBloques['mobile'] === 0) {
             return next('Lo sentimos, ya no quedan más turnos para consumir desde la aplicación');
         }
         // Verifica si el turno se encuentra todavia disponible
@@ -270,9 +275,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                 if (countBloques.mobile > update['bloques.' + posBloque + '.restantesProgramados']) {
                     update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
                 }
-                if (req.body.emitidoPor && (req.body.emitidoPor === 'appMobile' || req.body.emitidoPor === 'totem')) {
-                    update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
-                }
                 break;
             case ('profesional'):
                 update['bloques.' + posBloque + '.restantesProfesional'] = countBloques.profesional - 1;
@@ -280,6 +282,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
             case ('gestion'):
                 update['bloques.' + posBloque + '.restantesGestion'] = countBloques.gestion - 1;
                 break;
+        }
+
+        if (req.body.emitidoPor && accesosVirtuales.includes(String(req.body.emitidoPor).toLowerCase())) {
+            update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
         }
         const usuario = Auth.getAuditUser(req);
         const bloqueTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
@@ -310,6 +316,21 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
         update[estadoFacturacion] = req.body.estadoFacturacion;
+
+        const etiquetaVideoConferencia = bloqueTurno + '.videoConferencia';
+        const etiquetaWebexLinks = bloqueTurno + '.webexLinks';
+        update[etiquetaVideoConferencia] = req.body.videoConferencia || false;
+
+        if (update[etiquetaVideoConferencia]) {
+            const profesional = agendaRes.profesionales?.[0] || usuario.documento;
+            const turnoObj = {
+                _id: req.body.idTurno,
+                horaInicio: agendaRes.bloques[posBloque].turnos[posTurno].horaInicio,
+                paciente: req.body.paciente
+            };
+            update[etiquetaWebexLinks] = await webexController.generateWebexLinks(turnoObj, agendaRes, profesional);
+        }
+
 
         if (req.body.reasignado) {
             update[etiquetaReasignado] = req.body.reasignado;
@@ -512,6 +533,21 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
         }
 
         update[etiquetaTurno] = req.body.turno;
+
+        if (req.body.turno.videoConferencia) {
+
+            const profesional = agendaRes.profesionales?.[0] || usuario.documento;
+            const turnoObj = {
+                horaInicio: agendaRes.bloques[posBloque].turnos[posTurno].horaInicio,
+                paciente: req.body.turno.paciente
+            };
+
+            const link = await webexController.generateWebexLinks(turnoObj, agendaRes, profesional);
+
+
+            req.body.turno.webexLinks = link;
+        }
+
 
         // Actualiza los audit de update de la agenda
         update.updatedAt = new Date();

@@ -40,7 +40,7 @@ async function consultarSisa(persona: any) {
             const datosAnteriores = { nombre: persona.nombre, apellido: persona.apellido };
             if (valorMatching >= 0.95) {
                 // Solo lo validamos con sisa si entra por aquí
-                const nuevosDatos = { nombre: pacienteSisa.nombre, apellido: pacienteSisa.apellido };
+                const nuevosDatos = { nombre: pacienteSisa.nombre, apellido: pacienteSisa.apellido, fechaNacimiento: pacienteSisa.fechaNacimiento };
                 await actualizarPaciente(persona, pacienteSisa);
                 await logMpiCorrector.info('update', nuevosDatos, userScheduler);
                 return true;
@@ -67,6 +67,7 @@ function actualizarPaciente(pacienteMpi: any, pacienteSisa: any) {
     const data = {
         nombre: pacienteSisa.nombre,
         apellido: pacienteSisa.apellido,
+        fechaNacimiento: pacienteSisa.fechaNacimiento,
         reportarError: false,
         notaError: '',
         entidadesValidadoras: pacienteMpi.entidadesValidadoras

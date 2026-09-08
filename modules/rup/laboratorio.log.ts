@@ -4,6 +4,7 @@ import { Logger } from '@andes/log';
 export const laboratorioLog = new Logger({
     connection: Connections.logs,
     module: 'laboratorio',
+    type: 'laboratorios-SIL2',
     application: 'andes',
     bucketBy: 'h',
     bucketSize: 100,

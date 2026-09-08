@@ -71,7 +71,8 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String,
             apellido: String,
-            documento: Number },
+            documento: Number
+        },
         registradoEn: Date
     },
     estadoCivil: ESTADOCIVIL,
@@ -113,6 +114,7 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
     reportarError: Boolean,
     nombreCorrectoReportado: String,
     apellidoCorrectoReportado: String,
+    fechaNacimientoCorrectoReportado: Date,
     carpetaEfectores: [{
         organizacion: NombreSchema,
         nroCarpeta: String
@@ -128,6 +130,7 @@ export const PacienteSchema: mongoose.Schema = new mongoose.Schema({
         lowercase: true
     }],
     validateAt: Date,
+    fechaUltimaValidacion: Date,
     documentos: [{
         fecha: Date,
         archivos: [{
@@ -147,10 +150,21 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     nombre: String,
     apellido: String,
     documento: String,
+    cuil: String,
     fechaNacimiento: Date,
     sexo: SEXO,
     genero: String,
     fechaFallecimiento: Date,
+    fallecimientoManual: {
+        fecha: Date,
+        registradoPor: {
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: Number
+        },
+        registradoEn: Date
+    },
     numeroIdentificacion: String,
     tipoIdentificacion: IDENTIFICACION,
     alias: String,
@@ -165,8 +179,7 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
     localidad: NombreSchemaV2,
     zona: NombreSchemaV2,
     areaPrograma: NombreSchemaV2,
-    addAt: Date
-
+    addAt: Date,
 
 }, { _id: false });
 

@@ -15,6 +15,7 @@ export interface IPacienteApp {
     genero: string;
     fechaNacimiento: Date;
     telefono: string;
+    fijo: string;
     password: string;
     lastLogin: Date;
     pacientes?: {
@@ -72,6 +73,9 @@ export const PacienteAppSchema = new mongoose.Schema({
     telefono: {
         type: String
     },
+    fijo: {
+        type: String
+    },
     password: {
         type: String
         // required: true
@@ -97,6 +101,11 @@ export const PacienteAppSchema = new mongoose.Schema({
     activacionApp: {
         type: Boolean,
         default: false
+    },
+    // borrado logico de la cuenta
+    baja: {
+        type: Boolean,
+        required: false
     },
     permisos: [String],
     restablecerPassword: {

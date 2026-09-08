@@ -7,6 +7,7 @@ import { Profesional } from './../core/tm/schemas/profesional';
 import { MailOptions, renderHTML, sendMail } from './../utils/roboSender/sendEmail';
 import { Auth } from './auth.class';
 import { AuthUsers } from './schemas/authUsers';
+import * as crypto from 'crypto';
 const sha1Hash = require('sha1');
 
 
@@ -16,6 +17,26 @@ if (RedisWebSockets.active) {
     AuthCache = new AndesCache({ adapter: 'redis', port: RedisWebSockets.port, host: RedisWebSockets.host });
 } else {
     AuthCache = new AndesCache({ adapter: 'memory' });
+}
+
+/**
+ * Envuelve una promesa con un tiempo límite.
+ * @param {Promise<T>} promise La promesa a la que se aplicará el timeout.
+ * @param {number} ms El tiempo límite en milisegundos.
+ * @param {string} errorMsg Mensaje de error para el timeout.
+ * @returns {Promise<T>} Una promesa que se resuelve con el resultado de la promesa original o se rechaza por timeout.
+ */
+function timeoutPromise(promise, ms, errorMsg = 'Timeout') {
+    const timeout = new Promise((_, reject) => {
+        const id = setTimeout(() => {
+            clearTimeout(id);
+            reject(new Error(errorMsg));
+        }, ms);
+    });
+    return Promise.race([
+        promise,
+        timeout
+    ]);
 }
 
 /**
@@ -44,6 +65,7 @@ export function createPayload(user, authOrg, prof) {
         },
         profesional: prof && String(prof._id),
         permisos: [...user.permisosGlobales, ...authOrg.permisos],
+        fechaVencimiento: authOrg.fechaVencimiento,
         feature: { ...(user.configuracion || {}) }
     };
 }
@@ -56,6 +78,7 @@ export async function findTokenData(username: number, organizacion: ObjectId) {
     const pProfesional = Profesional.findOne({ documento: String(username), habilitado: { $ne: false } }, { nombre: true, apellido: true });
     const [auth, prof]: [any, any] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
+        await checkAndInactivateExpired(auth);
         const authOrganizacion = auth.organizaciones.find(item => String(item._id) === String(organizacion));
         return {
             usuario: auth,
@@ -109,6 +132,7 @@ export async function findUser(username) {
     const pProfesional = Profesional.findOne({ documento: username, habilitado: { $ne: false } }, { matriculas: true, especialidad: true });
     const [auth, prof] = await Promise.all([pAuth, pProfesional]);
     if (auth) {
+        await checkAndInactivateExpired(auth);
         return {
             user: auth,
             profesional: prof
@@ -117,10 +141,36 @@ export async function findUser(username) {
     return null;
 }
 
+/**
+ * Chequea las organizaciones del usuario e inactiva las que tienen fecha de vencimiento cumplida.
+ * @param {any} user Instancia de AuthUsers
+ */
+export async function checkAndInactivateExpired(user) {
+    let changed = false;
+    const now = new Date();
+    user.organizaciones.forEach(org => {
+        if (org.activo && org.fechaVencimiento && org.fechaVencimiento < now) {
+            org.activo = false;
+            changed = true;
+        }
+    });
+    if (changed) {
+        user.audit(userScheduler);
+        await user.save();
+    }
+}
+
 export async function updateUser(documento, nombre, apellido, password) {
     return await AuthUsers.findOneAndUpdate(
         { usuario: documento },
         { password, nombre, apellido, lastLogin: new Date() },
+    );
+}
+
+export async function updateEmailUser(documento, email) {
+    return await AuthUsers.findOneAndUpdate(
+        { usuario: documento },
+        { email }
     );
 }
 
@@ -162,10 +212,13 @@ export async function setValidationTokenAndNotify(username) {
     try {
         const usuario = await AuthUsers.findOne({ usuario: username });
         if (usuario && usuario.tipo === 'temporal' && usuario.email) {
-            usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
-            usuario.audit(userScheduler);
-            await usuario.save();
-
+            if (!usuario.validationToken || !usuario.validationTokenExpiration || usuario.validationTokenExpiration < new Date()) {
+                // Si no tiene un token de validación o esta vencido, se genera uno nuevo
+                usuario.validationToken = new mongoose.Types.ObjectId().toHexString();
+                usuario.validationTokenExpiration = new Date(Date.now() + 72 * 60 * 60 * 1000); // Expira en 72 horas
+                usuario.audit(userScheduler);
+                await usuario.save();
+            }
             const extras: any = {
                 titulo: 'Recuperación de contraseña',
                 usuario,
@@ -181,6 +234,7 @@ export async function setValidationTokenAndNotify(username) {
                 html: htmlToSend,
                 attachments: null
             };
+
             await sendMail(options);
             return usuario;
         } else {
@@ -193,14 +247,97 @@ export async function setValidationTokenAndNotify(username) {
 }
 
 /**
+ * Envía un codigo OTP para recuperar la contraseña en caso que sea un usuario temporal con email (fuera de onelogin).
+ * AuthUser
+ */
+export async function sendOtpAndNotify(username): Promise<any> {
+    try {
+        const usuario = await AuthUsers.findOne({ usuario: username });
+
+        // Se mantiene la validación para usuarios temporales con email
+        if (usuario) {
+            if (usuario.tipo === 'temporal' && usuario.email) {
+                // Genera un código OTP de 6 dígitos
+                const otpCode = crypto.randomInt(100000, 999999).toString();
+
+                usuario.otp = {
+                    code: otpCode,
+                    expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 10 minutos en milisegundos
+                };
+
+                usuario.audit(userScheduler);
+                await usuario.save();
+
+                const extras: any = {
+                    titulo: 'Código de Verificación',
+                    usuario,
+                    otpCode,
+                };
+                const htmlToSend = await renderHTML('emails/otp-code.html', extras);
+
+                const options: MailOptions = {
+                    from: enviarMail.auth.user,
+                    to: usuario.email.toString(),
+                    subject: 'Tu código de verificación',
+                    text: '',
+                    html: htmlToSend,
+                    attachments: null,
+                };
+                await sendMail(options);
+            } else {
+                return null;
+            }
+            return usuario;
+        } else {
+            // El usuario no existe o no es un usuario temporal con email
+            throw { tipo: 'cuentaInexistenteAndes' };
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * Valida el código OTP ingresado por el usuario y actualiza su contraseña
+ * @param username - El nombre de usuario o correo electrónico.
+ * @param otpCode - El código OTP que el usuario ha ingresado.
+ * @param newPassword - La nueva contraseña a setear
+ */
+export async function validateOtpAndResetPassword(username, otpCode, newPassword) {
+    try {
+        const usuario = await AuthUsers.findOne({ usuario: username });
+        if (!usuario || !usuario.otp || !usuario.otp.code) {
+            return false;
+        }
+        const now = new Date();
+        if (
+            usuario.otp.code !== otpCode.toString() ||
+            usuario.otp.expiresAt < now
+        ) {
+            return false;
+        }
+        usuario.password = sha1Hash(newPassword);
+        // limpiar otpCode del usuario
+        usuario.otp.code = null;
+        usuario.otp.expiresAt = null;
+        usuario.audit(userScheduler);
+        await usuario.save();
+        return true;
+    } catch (error) {
+        throw new CustomError(error, 500);
+    }
+}
+
+/**
  * Busca el usuario que corresponde con el validationToken y si lo encuentra permite el reset de la contraseña.
  * AuthUser
  */
 export async function reset(token, password) {
     try {
         const usuario = await AuthUsers.findOne({ validationToken: token });
-        if (usuario) {
+        if (usuario && usuario.validationTokenExpiration > new Date()) {
             usuario.validationToken = null;
+            usuario.validationTokenExpiration = null;
             usuario.password = sha1Hash(password);
             usuario.audit(userScheduler);
             await usuario.save();
@@ -219,7 +356,7 @@ export async function updateUserPermisos(req) {
 
     const permisos = getPermisosByType(req.body.tipoPermisos);
 
-    if (permisos && permisos.length) {
+    if (permisos?.length) {
         const organizacionPermisos = user.organizaciones;
         if (organizacionPermisos && organizacionPermisos.length) {
             permisos.forEach(e => {

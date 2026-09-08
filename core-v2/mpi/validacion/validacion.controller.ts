@@ -21,8 +21,88 @@ function identidadSinAcentos(ciudadano) {
 }
 
 /**
+ * Convierte un texto de Latin1 a UTF-8 y lo pasa a mayúsculas. Esto es útil para normalizar nombres que puedan tener caracteres acentuados o especiales que no se muestren correctamente.
+ * @param texto
+ * @returns
+ */
+function convertirTextoLatin1AUtf8(texto: string) {
+    if (!texto || typeof texto !== 'string') {
+        return texto;
+    }
+    try {
+        return Buffer.from(texto, 'latin1').toString('utf8').toUpperCase();
+    } catch (error) {
+        return texto;
+    }
+}
+
+/**
+ * Normaliza el nombre y apellido de un ciudadano si contienen caracteres inválidos, convirtiéndolos de Latin1 a UTF-8 y pasándolos a mayúsculas. Esto ayuda a asegurar que los datos sean consistentes y legibles, especialmente si provienen de fuentes que podrían tener problemas de codificación.
+ * @param ciudadano
+ * @returns
+ */
+function normalizarIdentidadSiCorresponde(ciudadano: any) {
+    if (!ciudadano) {
+        return;
+    }
+    const nombreInvalido = ciudadano.nombre && caracteresInvalidos(ciudadano.nombre);
+    const apellidoInvalido = ciudadano.apellido && caracteresInvalidos(ciudadano.apellido);
+    if (nombreInvalido || apellidoInvalido) {
+        ciudadano.nombre = convertirTextoLatin1AUtf8(ciudadano.nombre);
+        ciudadano.apellido = convertirTextoLatin1AUtf8(ciudadano.apellido);
+    }
+}
+
+/**
  * Busca en fuentes auntenticas los datos de un ciudadano.
  */
+
+export function generarCUIL(dni, sexo) {
+    const sexoNorm = (sexo || '')
+        .toString()
+        .trim()
+        .toLowerCase();
+
+    let prefijo;
+
+    if (sexoNorm.startsWith('f')) {
+        prefijo = '27';
+    } else if (sexoNorm.startsWith('m')) {
+        prefijo = '20';
+    } else {
+        // casis no binario / X / desconocido
+        return '';
+    }
+
+    const dniStr = dni.toString().padStart(8, '0');
+
+    function calcularDigito(p, d) {
+        const base = (p + d).split('').map(Number);
+        const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+        const suma = base.reduce((acc, num, i) => acc + num * pesos[i], 0);
+
+        const resto = suma % 11;
+        let verificador = 11 - resto;
+
+        if (verificador === 11) { verificador = 0; }
+        if (verificador === 10) { return null; }
+
+        return verificador;
+    }
+
+    let digito = calcularDigito(prefijo, dniStr);
+    if (digito === null) {
+        prefijo = '23';
+        digito = calcularDigito(prefijo, dniStr);
+    }
+
+    return `${prefijo}${dniStr}${digito}`;
+}
+
+function formatearCUIL(cuil: string) {
+    return `${cuil.slice(0, 2)}-${cuil.slice(2, 10)}-${cuil.slice(10)}`;
+}
+
 
 export async function validar(documento: string, sexo: string) {
     // ---------- RENAPER ----------
@@ -32,6 +112,8 @@ export async function validar(documento: string, sexo: string) {
         ciudadanoRenaper = await renaperv3({ documento, sexo }, busInteroperabilidad, renaperToAndes);
 
         if (ciudadanoRenaper) {
+            normalizarIdentidadSiCorresponde(ciudadanoRenaper);
+            // Valida el tamaño de la foto
             ciudadanoRenaper.foto = ciudadanoRenaper.foto?.includes('image/jpg')
                 ? await validarTamañoFoto(ciudadanoRenaper.foto)
                 : null;
@@ -41,15 +123,20 @@ export async function validar(documento: string, sexo: string) {
 
             ciudadanoRenaper.direccion[0] = await matchDireccion(ciudadanoRenaper);
             ciudadanoRenaper.direccion[1] = ciudadanoRenaper.direccion[0];
+            if (!ciudadanoRenaper.cuil || ciudadanoRenaper.cuil === '0') {
+                ciudadanoRenaper.cuil = generarCUIL(documento, sexo);
+            }
             ciudadanoRenaper.validateAt = new Date();
 
             if (identidadSinAcentos(ciudadanoRenaper)) {
                 return ciudadanoRenaper;
+            } else {
+                // valida igual con atributo error a reportar
+                ciudadanoRenaper.errorData = true;
             }
         }
     } catch (error) {
         updateValidadosLog.error('consultaRenaper', { documento, sexo }, error, userScheduler);
-
     }
 
 
@@ -71,8 +158,11 @@ export async function validar(documento: string, sexo: string) {
         }
     } catch (error) {
         updateValidadosLog.error('consultaSisa', { documento, sexo }, error, userScheduler);
-
-        throw new Error(`Error al consultar SISA: ${error.message}`);
+        if (ciudadanoRenaper) {
+            return ciudadanoRenaper;
+        } else {
+            return null;
+        }
     }
 
     return ciudadanoRenaper;

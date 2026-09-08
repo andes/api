@@ -7,12 +7,13 @@ import { IPS } from './config.private';
 
 const appMiddleware = [
     Auth.authenticate(),
-    // Auth.deniedPatients()
+    Auth.deniedPatients()
 ];
 
 const mobileMiddleware = [
     Auth.authenticate()
 ];
+
 
 /*
 const publicMiddleware = [

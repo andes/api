@@ -135,12 +135,39 @@ router.get('/reglas', async (req: Request, res, next) => {
 });
 
 router.delete('/reglas', async (req, res, next) => {
-    ReglasTOP.deleteMany({
-        'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.organizacionDestino),
-        'destino.prestacion.conceptId': req.query.prestacionDestino
-    }).exec((err, data) => {
-        res.json(data);
-    });
+    try {
+        const data = await ReglasTOP.deleteMany({
+            'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.organizacionDestino),
+            'destino.prestacion.conceptId': req.query.prestacionDestino
+        });
+        return res.json(data);
+    } catch (err) {
+        return next(err);
+    }
 });
+
+router.delete('/reglas/:id', async (req, res, next) => {
+    try {
+        const data = await ReglasTOP.deleteOne({ _id: new mongoose.Types.ObjectId(req.params.id) });
+        return res.json(data);
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.delete('/reglas/:id/prestaciones/:prestacionId', async (req, res, next) => {
+    try {
+        const { id, prestacionId } = req.params;
+        const result = await ReglasTOP.updateOne(
+            { _id: new mongoose.Types.ObjectId(id) },
+            { $pull: { 'origen.prestaciones': { _id: new mongoose.Types.ObjectId(prestacionId) } } }
+        );
+
+        return res.json(result);
+    } catch (err) {
+        return next(err);
+    }
+});
+
 
 export = router;

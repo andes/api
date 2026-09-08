@@ -83,6 +83,10 @@ router.get('/localidades/:id?', (req, res, next) => {
     } else {
         const query = localidad.find({});
 
+        if (req.query.search) {
+            query.where(req.query.fields).equals(RegExp('^.*' + req.query.search + '.*$', 'i'));
+        }
+
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }

@@ -7,7 +7,7 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { validar } from '../../../core-v2/mpi/validacion';
 import * as ScanParse from '../../../shared/scanParse';
 import * as authController from '../controller/AuthController';
-import { enviarCodigoVerificacion, generarCodigoVerificacion } from '../controller/AuthController';
+import { generarCodigoVerificacion, enviarCodigoVerificacion, generateError } from '../controller/AuthController';
 import { PacienteAppCtr } from '../pacienteApp.routes';
 import { registroMobileLog } from '../registroMobile.log';
 import { PacienteApp } from '../schemas/pacienteApp';
@@ -36,7 +36,7 @@ router.post('/login', (req, res, next) => {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    return PacienteApp.findOne({ email }, (err, user) => {
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, user) => {
 
         if (!user) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
@@ -89,17 +89,19 @@ router.post('/olvide-password', (req, res, next) => {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
     const email = req.body.email.toLowerCase();
-    return PacienteApp.findOne({ email }, (err, datosUsuario: any) => {
+    const diaHoy = new Date();
+
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
 
-        if (!datosUsuario) {
+        if (!datosUsuario || !datosUsuario.activacionApp) {
             return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
-        if (!datosUsuario.activacionApp) {
-            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
+        if (datosUsuario.restablecerPassword?.fechaExpiracion > diaHoy && datosUsuario.restablecerPassword?.codigo) {
+            return res.status(422).send({ error: 'Ya posee un código de verificación para cambiar su password' });
         }
 
         datosUsuario.restablecerPassword.codigo = authController.generarCodigoVerificacion();
@@ -146,7 +148,7 @@ router.post('/reestablecer-password', (req, res, next) => {
         return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
     }
     const email = req.body.email.toLowerCase();
-    return PacienteApp.findOne({ email }, (err, datosUsuario: any) => {
+    return PacienteApp.findOne({ email, baja: { $exists: false } }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
@@ -200,15 +202,7 @@ router.post('/mailGenerico', async (req, res, next) => {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
     const body = req.body;
-    const usuario: any = (req as any).user;
-    // req.body['usuario'] = usuario.usuario.username ? usuario.usuario.username : '';
-    // req.body['organizacion'] = usuario.organizacion.nombre ? usuario.organizacion.nombre : '';
-    // renderizacion del email
     const html = await SendEmail.renderHTML('emails/emailGenerico.html', body);
-
-    const adjuntos = body.adjuntos.map(x => {
-        x.content = x.content.split('base64,')[1];
-    });
     const data = {
         to: body.emails,
         subject: body.asunto,
@@ -227,26 +221,14 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         const fcmToken = req.body.fcmToken;
 
         if (!ScanParse.isValid(scanText)) {
-            return res.status(400).send('Documento Inválido.');
+            return res.status(404).send('Documento Inválido.');
         }
 
         const documentoScan: any = ScanParse.scan(scanText);
+        const cuentaExistente = await authController.verificarCuentaExistente(documentoScan.documento, documentoScan.sexo.toLocaleLowerCase(), email);
 
-        // TODO: Llevar funcionalidad a controller
-        const cuentas = await PacienteAppCtr.search({ documento: documentoScan.documento, sexo: documentoScan.sexo, activacionApp: true });
-
-        // Verifica si el paciente se encuentra registrado y activo en la app mobile
-        const cuentaPaciente = cuentas.filter(c => { return c.pacientes.length; });
-        if (cuentaPaciente.length > 0) {
-            return res.status(404).send('Ya existe una cuenta activa asociada a su documento');
-        }
-        const pacienteApp = await PacienteAppCtr.findOne({ email });
-        if (pacienteApp) {
-            if (pacienteApp.activacionApp) { // si existe y está activa es porque el mail esta vinculado a otro DNI
-                return res.status(404).send('Ya existe una cuenta activa con ese e-mail');
-            } else { // existe una cuenta con ese mail pero sin activar. Se elimina y a continuacion se vuelve a crear
-                await PacienteAppCtr.remove(pacienteApp.id);
-            }
+        if (cuentaExistente) {
+            return res.status(404).send(generateError(cuentaExistente.error));
         }
 
         req.body.validado = false;
@@ -261,7 +243,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
                 const tramite = Number(documentoScan.tramite);
                 // Verifica el número de trámite
                 if (pacienteValidado.idTramite !== tramite) {
-                    return res.status(404).send('Número de trámite inválido');
+                    return res.status(404).send(generateError('tramite-invalido'));
                 }
                 // Guarda la foto de RENAPER en Andes
                 await extractFoto(pacienteValidado, configPrivate.userScheduler);
@@ -277,7 +259,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
                 'Error validando paciente al registrar cuenta',
                 req
             );
-            return res.status(404).send('No es posible verificar su identidad.');
+            return res.status(404).send(generateError('validacion-fallida'));
         }
 
         // Busca el paciente y si no existe lo crea
@@ -307,6 +289,22 @@ router.get('/documento/:documento', async (req: any, res, next) => {
     try {
         const resp = await PacienteApp.find({ documento: req.params.documento });
         return res.send(resp);
+    } catch (err) {
+        return res.send(err);
+    }
+});
+
+router.get('/restablecerPassword', Auth.authenticate(), async (req: any, res, next) => {
+    try {
+        if (!Auth.check(req, 'restablecer-password:read')) {
+            return next(403);
+        }
+        const email = req.query.email;
+        if (!email) {
+            return res.status(400).send('El parámetro "email" es requerido');
+        }
+        const resp = await PacienteApp.find({ email });
+        return res.json({ restablecerPassword: resp[0]?.restablecerPassword?.codigo ? true : false });
     } catch (err) {
         return res.send(err);
     }

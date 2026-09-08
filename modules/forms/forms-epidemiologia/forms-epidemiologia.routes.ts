@@ -3,8 +3,6 @@ import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../../auth/auth.class';
 import { updateField } from './controller/forms-epidemiologia.controller';
 import { FormsEpidemiologia } from './forms-epidemiologia-schema';
-import { SECCION_CLASIFICACION } from './constantes';
-import { altaEventoLAMP } from '../../../modules/sisa/controller/sisa.controller';
 
 class FormsEpidemiologiaResource extends ResourceBase {
     Model = FormsEpidemiologia;
@@ -87,14 +85,6 @@ export const patchField = async (req, res) => {
 
     Auth.audit(ficha, req);
     const response = await FormEpidemiologiaCtr.update(id, ficha, req);
-    const isSeccionClasificacion = seccion === SECCION_CLASIFICACION;
-    const isLAMPConfirmado = fields.find(f => f.lamp)?.lamp.id === 'confirmado';
-
-
-    if (isSeccionClasificacion && isLAMPConfirmado) {
-        altaEventoLAMP(ficha);
-    }
-
     return res.json(response);
 };
 

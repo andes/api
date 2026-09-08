@@ -17,8 +17,10 @@ export interface ITipoPrestacion extends Document {
     ambito: String[];
     queries: [Types.ObjectId];
     agendaDinamica?: Boolean;
+    teleConsulta?: Boolean;
+    tiempoVigencia?: number;
+    videoConferencia?: Boolean;
 }
-
 
 export const tipoPrestacionSchema = new Schema({
     conceptId: String,
@@ -48,7 +50,21 @@ export const tipoPrestacionSchema = new Schema({
         type: Boolean,
         required: false
     },
-    queries: [Types.ObjectId]
+    queries: [Types.ObjectId],
+    teleConsulta: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    videoConferencia: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    tiempoVigencia: {
+        type: Number,
+        required: false
+    }
 });
 
 /* Se definen los campos virtuals */

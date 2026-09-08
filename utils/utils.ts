@@ -62,7 +62,7 @@ export function makePattern(search_string: string, options?: any): RegExp {
     if (options && options.startWith) {
         regexp = `(^(${regexp})|(\ (${regexp})))`;
     }
-    return new RegExp(regexp, 'g');
+    return new RegExp(regexp, 'i');
 }
 
 /**

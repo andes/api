@@ -135,38 +135,42 @@ router.patch('/pacientes/:id', async (req: any, res, next) => {
 
 router.get('/laboratorios/(:id)', async (req: any, res, next) => {
     const idPaciente = req.params.id;
-    const paciente: any = await findById(idPaciente);
-    const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
-    let esFamiliar;
-    if (index < 0) {
-        const resultado = await findById((req as any).user.pacientes[0].id);
-        esFamiliar = resultado.relaciones.find(rel => {
-            return rel.referencia.toString() === paciente.id.toString();
-        });
-    }
-    if (index >= 0 || esFamiliar) {
-        if (!paciente) {
-            return next({ message: 'no existe el paciente' });
+    try {
+        const paciente: any = await findById(idPaciente);
+        const index = req.user.pacientes.findIndex(item => item.id === idPaciente);
+        let esFamiliar;
+        if (index < 0) {
+            const resultado = await findById((req as any).user.pacientes[0].id);
+            esFamiliar = resultado.relaciones.find(rel => {
+                return rel.referencia.toString() === paciente.id.toString();
+            });
         }
-        const limit = parseInt(req.query.limit || 10, 10);
-        const skip = parseInt(req.query.skip || 0, 10);
-        const fechaDesde = req.query.fechaDesde;
-        const fechaHasta = req.query.fechaHasta;
-
-        const cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip, fechaDesde, fechaHasta });
-
-        for (const cda of cdas) {
-            const _xml = await cdaCtr.loadCDA(cda.cda_id);
-            if (_xml) {
-                const dom: any = xmlToJson(_xml);
-                cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
-                cda.title = dom.ClinicalDocument.title['#text'];
-                cda.organizacion = dom.ClinicalDocument.author.assignedAuthor.representedOrganization.name['#text'];
+        if (index >= 0 || esFamiliar) {
+            if (!paciente) {
+                return next({ message: 'no existe el paciente' });
             }
+            const limit = parseInt(req.query.limit || 10, 10);
+            const skip = parseInt(req.query.skip || 0, 10);
+            const fechaDesde = req.query.fechaDesde;
+            const fechaHasta = req.query.fechaHasta;
+
+            const cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip, fechaDesde, fechaHasta });
+
+            for (const cda of cdas) {
+                const _xml = await cdaCtr.loadCDA(cda.cda_id);
+                if (_xml) {
+                    const dom: any = xmlToJson(_xml);
+                    cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
+                    cda.title = dom.ClinicalDocument.title['#text'];
+                    cda.organizacion = dom.ClinicalDocument.author.assignedAuthor.representedOrganization.name['#text'];
+                }
+            }
+            res.json(cdas);
+        } else {
+            return next({ message: 'unauthorized' });
         }
-        res.json(cdas);
-    } else {
-        return next({ message: 'unauthorized' });
+    } catch (err) {
+        return next(err);
     }
 });
 

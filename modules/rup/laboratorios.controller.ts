@@ -12,9 +12,11 @@ function agrupar(elementos) {
         esTitulo: e.esTitulo === 'True' ? true : false,
         resultado: e.Resultado || e.resultado,
         unidadMedida: e.UnidadMedida || e.unidadMedida,
-        metodo: e.Metodo,
+        metodo: (e.Metodo || e.metodo || '').replace(/^m[ée]todo:\s*/i, '').trim(),
         valorReferencia: e.valorReferencia,
-        firma: e.esTitulo === 'True' ? '' : e.userValida
+        firma: e.esTitulo === 'True' ? '' : e.userValida,
+        codificaHiv: e.codificaHiv === 'True' ? true : false,
+        fechaHoraValida: e.fechaHoraValida ? moment(e.fechaHoraValida).format('DD/MM/YYYY HH:mm') : ''
     });
 
     areasStr.forEach(area => {
@@ -29,7 +31,7 @@ function agrupar(elementos) {
                 res.grupo = g;
                 if (detallesAreaGrupo.length === 1 && detallesAreaGrupo[0].grupo === g) {
                     res.items = [toItem(detallesAreaGrupo[0])];
-                    res.visible = false;
+                    res.visible = true;
                 } else {
                     res.items = detallesAreaGrupo.map(toItem);
                     res.visible = true;
@@ -47,6 +49,7 @@ export async function search(data) {
     let params;
     const service = 'get-LABAPI';
     try {
+
         if (data.idProtocolo) {
             params = {
                 parametros: `nombre=LABAPI_GetResultadoProtocolo&parametros=${data.idProtocolo}`
@@ -57,12 +60,17 @@ export async function search(data) {
             };
         }
 
-
         const response = await services.get(service).exec(params);
+
+        if (!response || (Array.isArray(response) && response.length === 0)) {
+            throw new Error('El servicio no devolvió datos');
+        }
+
         const salida = data.idProtocolo ? agrupar(response[0].Data) : response;
         return salida;
     } catch (e) {
-        throw new Error('Error al obtener laboratorio');
+        const errorMessage = e.message || 'Error desconocido';
+        throw new Error('Error al obtener laboratorio: ' + errorMessage);
     }
 }
 
@@ -83,7 +91,7 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
                 estado = 'EX';
                 documento = paciente.numeroIdentificacion;
             } else {
-                if (paciente.edad <= 5) { // recien nacido (aun din dni)
+                if (paciente.edad <= 5 && paciente.relaciones?.length) { // recien nacido (aún sin dni)
                     estado = 'RN';
                     const tutorProgenitor = paciente.relaciones.find(rel => rel.relacion.nombre === 'progenitor/a') || paciente.relaciones.find(rel => rel.relacion.nombre === 'tutor');
                     documento = tutorProgenitor?.documento || tutorProgenitor?.numeroIdentificacion || null;
@@ -95,7 +103,7 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
             dataSearch = {
                 estado,
                 dni: documento,
-                fechaNac: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
+                fechaNac: moment(paciente.fechaNacimiento).utc().format('YYYYMMDD'),
                 apellido: paciente.apellido,
                 fechaDesde,
                 fechaHasta

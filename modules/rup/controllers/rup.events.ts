@@ -1,13 +1,21 @@
 import { EventCore } from '@andes/event-bus';
-import { getProfesionActualizada } from '../../recetas/recetasController';
+import { getProfesionActualizada, crearReceta } from '../../recetas/recetasController';
 import * as moment from 'moment';
 import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
+import { Profesional } from '../../../core/tm/schemas/profesional';
+import { generarCUIL } from '../../../core-v2/mpi/validacion/validacion.controller';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 
 EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
-        const idPrestacion = prestacion.id;
-        const profPrestacion = prestacion.solicitud.profesional;
+        const idRegistro = registro._id;
+        const documentoProfesional = prestacion.estadoActual.createdBy?.documento ? prestacion.estadoActual.createdBy?.documento : prestacion.solicitud.profesional.documento;
+        const profPrestacion = await Profesional.findOne({ documento: documentoProfesional });
+        if (!profPrestacion) {
+            logger.error('prestacion:receta:create', prestacion, `No se encontró el profesional con documento ${documentoProfesional}`);
+            return;
+        }
         const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
 
         const profesional = {
@@ -20,59 +28,69 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             matricula: matriculaGrado
         };
 
+        if (prestacion.ejecucion.organizacion?.id && prestacion.ejecucion.organizacion?.nombre === '') {
+            // Si la organización no tiene nombre, se busca en la base de datos para obtenerlo
+            const organizacionDB = await Organizacion.findOne({ _id: prestacion.ejecucion.organizacion.id });
+            if (organizacionDB) {
+                prestacion.ejecucion.organizacion.nombre = organizacionDB.nombre;
+            } else {
+                logger.error('prestacion:receta:create', prestacion, `No se encontró la organización con id ${prestacion.ejecucion.organizacion.id}`);
+            }
+        }
         const organizacion = {
             id: prestacion.ejecucion.organizacion.id,
             nombre: prestacion.ejecucion.organizacion.nombre
         };
 
-        for (const medicamento of registro.valor.medicamentos) {
-            let receta: any = await Receta.findOne({
-                'medicamento.concepto.conceptId': medicamento.generico.conceptId,
-                idRegistro: registro._id
-            });
-            if (!receta) {
-                const cantRecetas = medicamento.tratamientoProlongado ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
-                for (let i = 0; i < cantRecetas; i++) {
+        const pacienteCUIL = prestacion.paciente.cuil || generarCUIL(prestacion.paciente.documento, prestacion.paciente.sexo);
 
-                    try {
-                        receta = new Receta();
-                        receta.organizacion = organizacion;
-                        receta.profesional = profesional;
-                        receta.fechaRegistro = moment(prestacion.ejecucion.fecha).add(i * 30, 'days').toDate();
-                        receta.fechaPrestacion = moment(prestacion.ejecucion.fecha).toDate();
-                        receta.idPrestacion = idPrestacion;
-                        receta.idRegistro = registro._id;
-                        receta.diagnostico = medicamento.diagnostico;
-                        receta.medicamento = {
-                            concepto: medicamento.generico,
-                            presentacion: medicamento.presentacion.term,
-                            unidades: medicamento.unidades,
-                            cantidad: medicamento.cantidad,
-                            cantEnvases: medicamento.cantEnvases,
-                            dosisDiaria: {
-                                dosis: medicamento.dosisDiaria.dosis,
-                                intervalo: medicamento.dosisDiaria.intervalo,
-                                dias: medicamento.dosisDiaria.dias,
-                                notaMedica: medicamento.dosisDiaria.notaMedica
-                            },
-                            tratamientoProlongado: medicamento.tratamientoProlongado,
-                            tiempoTratamiento: medicamento.tiempoTratamiento,
-                            ordenTratamiento: i,
-                            tipoReceta: medicamento.tipoReceta?.id || medicamento.tipoReceta || 'simple',
-                            serie: medicamento.serie,
-                            numero: medicamento.numero
-                        };
-                        receta.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
-                        receta.estadoActual = i < 1 ? { tipo: 'vigente' } : { tipo: 'pendiente' };
-                        receta.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-                        receta.estadoDispensaActual = { tipo: 'sin-dispensa', fecha: moment().toDate() };
-                        receta.paciente = prestacion.paciente;
-                        receta.audit(prestacion.createdBy);
-                        await receta.save();
-                    } catch (err) {
-                        logger.error('prestacion:receta:create', prestacion, err);
-                    }
+        const dataRecetaBase = {
+            idPrestacion: prestacion.id,
+            idRegistro,
+            fechaRegistro: prestacion.ejecucion.fecha || moment().toDate(),
+            fechaPrestacion: prestacion.ejecucion.fecha,
+            paciente: prestacion.paciente,
+            profesional,
+            organizacion,
+            medicamento: null,
+            diagnostico: null,
+        };
+        dataRecetaBase.paciente.cuil = pacienteCUIL;
+
+        for (const medicamento of registro.valor.medicamentos) {
+            try {
+                const esMagistral = !!medicamento?.esMagistral;
+                const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
+
+                if (!conceptId && !esMagistral) {
+                    logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar conceptId del medicamento');
+                    continue;
                 }
+                if (esMagistral && !medicamento?.magistral?.nombre) {
+                    logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar nombre del medicamento magistral');
+                    continue;
+                }
+
+                const queryReceta: any = { idRegistro };
+                if (esMagistral) {
+                    queryReceta['medicamento.magistral.nombre'] = medicamento.magistral.nombre;
+                } else {
+                    queryReceta['medicamento.concepto.conceptId'] = conceptId;
+                }
+
+                const receta: any = await Receta.findOne(queryReceta);
+
+                if (!receta) {
+                    const dataReceta = {
+                        ...dataRecetaBase,
+                        medicamento,
+                        diagnostico: medicamento?.diagnostico || null,
+                    };
+
+                    await crearReceta(dataReceta, prestacion.createdBy);
+                }
+            } catch (errorMedicamento) {
+                logger.error('prestacion:receta:create', { idRegistro, medicamento }, errorMedicamento);
             }
 
         }

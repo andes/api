@@ -511,9 +511,8 @@ export async function loadCDA(cdaID) {
                 return resolve(xml);
             });
         } catch (e) {
-            return reject(null);
+            return resolve(null);
         }
-
     });
 }
 

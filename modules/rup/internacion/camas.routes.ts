@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 import * as CamasController from './camas.controller';
 import * as SalaComunController from './sala-comun/sala-comun.controller';
 import { asyncHandler, Request, Response } from '@andes/api-tool';
@@ -12,6 +13,7 @@ import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/pacien
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { userScheduler } from '../../../config.private';
+import { param } from 'auth/routes/routes';
 const dataLog: any = new Object(userScheduler);
 dataLog.body = { _id: null };
 
@@ -28,16 +30,19 @@ const capaMiddleware = (req: Request, res: Response, next: express.NextFunction)
 };
 
 router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response) => {
-    const organizacion = {
+
+    const { capa, fecha, organizacion } = req.query;
+
+
+    const unaOrganizacion = organizacion ? { _id: organizacion } : {
         _id: Auth.getOrganization(req),
         nombre: Auth.getOrganization(req, 'nombre')
     };
-    const { capa, fecha } = req.query;
 
     let salas = [];
     if (capa !== 'estadistica' && !req.query.idInternacion) {
         salas = await SalaComunController.listarSalaComun({
-            organizacion: organizacion._id,
+            organizacion: unaOrganizacion._id,
             fecha: moment(fecha).toDate(),
             ambito: req.query.ambito,
             id: req.query.cama
@@ -45,8 +50,7 @@ router.get('/camas', Auth.authenticate(), capaMiddleware, asyncHandler(async (re
         salas = populateSalaComun(salas);
     }
 
-    const camas = await CamasController.search({ organizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
-
+    const camas = await CamasController.search({ organizacion: unaOrganizacion, capa: req.query.capa, ambito: req.query.ambito, }, req.query);
     const result = [...camas, ...salas];
 
     res.json(result);
@@ -66,6 +70,24 @@ router.get('/camas/historial', Auth.authenticate(), capaMiddleware, asyncHandler
     return res.json(result);
 }));
 
+router.get('/camas/resumen', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
+    let organizacion;
+    const params = {
+        fecha: req.query.fecha
+    };
+
+    if (req.query.organizacion) {
+        organizacion = req.query.organizacion;
+    }
+
+    if (req.query.unidadOrganizativa) {
+        params['unidadOrganizativa'] = req.query.unidadOrganizativa;
+    }
+
+    const camas = await CamasController.searchCamas({ organizacion, capa: req.query.capa, ambito: req.query.ambito }, params);
+
+    return res.json(camas);
+}));
 
 router.get('/lista-espera', Auth.authenticate(), asyncHandler(async (req: Request, res: Response, next) => {
     const organizacion = Auth.getOrganization(req);

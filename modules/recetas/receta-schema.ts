@@ -3,6 +3,7 @@ import * as mongoose from 'mongoose';
 import { PacienteSubSchema } from '../../core-v2/mpi/paciente/paciente.schema';
 import { ProfesionalSubSchema } from '../../core/tm/schemas/profesional';
 import { SnomedConcept } from '../rup/schemas/snomed-concept';
+import { generarIdSecuencial } from './recetasController';
 
 export const motivosRecetaSchema = new mongoose.Schema({
     label: {
@@ -18,7 +19,7 @@ export const motivosRecetaSchema = new mongoose.Schema({
 const estadosSchema = new mongoose.Schema({
     tipo: {
         type: String,
-        enum: ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada'],
+        enum: ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada', 'eliminada'],
         required: true,
         default: 'vigente'
     },
@@ -97,7 +98,12 @@ const profesionalSubschema = new mongoose.Schema({
 });
 
 const medicamentoSubschema = new mongoose.Schema({
-    concepto: { type: SnomedConcept, required: true },
+    concepto: {
+        type: SnomedConcept,
+        required(this: any) {
+            return !this.esMagistral;
+        }
+    },
     presentacion: String,
     unidades: String, // (mg, cc, etc.)
     cantidad: Number,
@@ -109,6 +115,23 @@ const medicamentoSubschema = new mongoose.Schema({
         notaMedica: String
     },
     tratamientoProlongado: Boolean,
+    esMagistral: { type: Boolean, default: false },
+    magistral: {
+        type: {
+            codigo: [
+                {
+                    fuente: String,
+                    valor: String
+                }
+            ],
+            nombre: { type: String, required: true },
+            unidadMedida: String,
+            id: mongoose.SchemaTypes.ObjectId
+        },
+        required(this: any) {
+            return !!this.esMagistral;
+        }
+    },
     tiempoTratamiento: mongoose.SchemaTypes.Mixed,
     ordenTratamiento: Number,
     tipoReceta: {
@@ -124,12 +147,24 @@ const medicamentoSubschema = new mongoose.Schema({
         type: Number,
         required: false
     }
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+medicamentoSubschema.virtual('nombre').get(function (this: any) {
+    return this.esMagistral ? (this.magistral?.nombre || '') : (this.concepto?.term || '');
 });
 
 export const recetaSchema = new mongoose.Schema({
+    idReceta: {
+        type: String,
+        required: false
+    },
     organizacion: {
         id: mongoose.SchemaTypes.ObjectId,
-        nombre: String
+        nombre: String,
+        direccion: { type: String, required: false },
     },
     profesional: {
         type: profesionalSubschema,
@@ -178,6 +213,13 @@ export const recetaSchema = new mongoose.Schema({
         app: sistemaSchema,
         fecha: Date
     }
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+recetaSchema.virtual('nombre').get(function (this: any) {
+    return this.medicamento?.nombre || (this.medicamento?.esMagistral ? (this.medicamento?.magistral?.nombre || '') : (this.medicamento?.concepto?.term || ''));
 });
 
 recetaSchema.pre('save', function (next) {
@@ -191,6 +233,13 @@ recetaSchema.pre('save', function (next) {
     }
 
     next();
+});
+
+recetaSchema.post('save', async (prescription: any) => {
+    if (!prescription.idReceta) {
+        const id = await generarIdSecuencial(prescription.createdAt || new Date(), 0);
+        await mongoose.model('receta').updateOne({ _id: prescription._id }, { $set: { idReceta: id } });
+    }
 });
 
 recetaSchema.plugin(AuditPlugin);
