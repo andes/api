@@ -1,20 +1,24 @@
 const bwipjs = require('bwip-js');
 
 /**
- * Genera un código de barras como imagen PNG en base64.
+ * Genera un código de barras como SVG vectorial.
  * @param text Texto que será codificado
  * @param bcid Tipo de código de barras, por defecto 'code128'
- * @returns Cadena base64 para usar como <img src="data:image/png;base64,...">
+ * @returns String SVG para insertar directamente en el HTML
  */
-export async function generateBarcodeBase64(text: string, bcid: string) {
+export function generateBarcodeSVG(text: string, bcid: string) {
     bcid = bcid ? bcid : 'code128';
-    const pngBuffer = await bwipjs.toBuffer({
+    let svg = bwipjs.toSVG({
         bcid,
         text,
-        scale: 1,
+        scale: 4,
         height: 8,
         includetext: true,
+        textxalign: 'center',
     });
-
-    return pngBuffer.toString('base64');
+    // Agregar dimensiones explícitas en mm para que PhantomJS renderice correctamente
+    // viewBox: 0 0 448 123 → proporción ancho:alto = 3.64:1
+    // height=8mm → width=29mm
+    svg = svg.replace('<svg viewBox=', '<svg width="29mm" height="8mm" viewBox=');
+    return svg;
 }

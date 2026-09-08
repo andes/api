@@ -6,7 +6,7 @@ import { createLog, informarLog, updateLog } from '../recetaLogs';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from '../recetas.error';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
 import { Profesional } from '../../../core/tm/schemas/profesional';
-import { getProfesionActualizada, generarIdDesdeFecha } from '../recetasController';
+import { getProfesionActualizada, generarIdSecuencial } from '../recetasController';
 import { getReceta } from '../services/receta';
 
 export async function buscarRecetasInsumos(req) {
@@ -689,7 +689,7 @@ export async function buscarRecetasInsumosConFiltros(req) {
         const recetasActualizadas = [];
         for (const receta of recetasInsumos) {
             if (!receta.idReceta) {
-                receta.idReceta = generarIdDesdeFecha(receta.createdAt || new Date());
+                receta.idReceta = await generarIdSecuencial(receta.createdAt || new Date(), 0);
                 Auth.audit(receta, req);
                 await receta.save();
             }
