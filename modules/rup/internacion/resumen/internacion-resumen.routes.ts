@@ -91,6 +91,35 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
         },
         {
             $addFields: {
+                estadosCama: {
+                    $map: {
+                        input: '$estadosCama',
+                        as: 'ec',
+                        in: {
+                            $mergeObjects: [
+                                '$$ec',
+                                {
+                                    estados: {
+                                        $filter: {
+                                            input: '$$ec.estados',
+                                            as: 'est',
+                                            cond: {
+                                                $and: [
+                                                    { $eq: [{ $type: '$$est.deletedAt' }, 'missing'] },
+                                                    { $eq: [{ $type: '$$est.deletedBy' }, 'missing'] }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            $addFields: {
                 diagnosticos: {
                     $filter: {
                         input: '$registros',
@@ -112,37 +141,6 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
         },
         {
             $addFields: {
-                idPrestacionObj: {
-                    $cond: {
-                        if: { $eq: [{ $type: '$idPrestacion' }, 'string'] },
-                        then: { $toObjectId: '$idPrestacion' },
-                        else: '$idPrestacion'
-                    }
-                }
-            }
-        },
-        {
-            $lookup: {
-                from: 'prestaciones',
-                localField: 'idPrestacionObj',
-                foreignField: '_id',
-                as: 'prestacionData'
-            }
-        },
-        {
-            $unwind: {
-                path: '$prestacionData',
-                preserveNullAndEmptyArrays: true
-            }
-        },
-        {
-            $addFields: {
-                idPrestacion: {
-                    $mergeObjects: [
-                        '$prestacionData',
-                        { id: '$prestacionData._id' }
-                    ]
-                },
                 diagnostico: {
                     $ifNull: [
                         '$diagnostico.concepto',
@@ -174,28 +172,7 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
             }
         },
         {
-            $addFields: {
-                idPrestacion: {
-                    $cond: {
-                        if: { $eq: ['$idPrestacion', {}] },
-                        then: {
-                            unidadOrganizativa: {
-                                $arrayElemAt: [
-                                    {
-                                        $map: {
-                                            input: { $arrayElemAt: ['$estadosCama.estados', 0] },
-                                            as: 'est',
-                                            in: '$$est.unidadOrganizativa'
-                                        }
-                                    },
-                                    0
-                                ]
-                            }
-                        },
-                        else: '$idPrestacion'
-                    }
-                }
-            }
+            $unset: 'idPrestacion'
         }
     ];
 
@@ -204,14 +181,11 @@ InternacionResumenRouter.get('/listado-internacion', Auth.authenticate(), async 
             $match: {
                 $or: [
                     { unidadesIdsCama: req.query.unidad },
-                    { unidadesIdsCama: Number(req.query.unidad) },
-                    { 'idPrestacion.unidadOrganizativa.conceptId': req.query.unidad },
-                    { 'idPrestacion.solicitud.unidadOrganizativa.conceptId': req.query.unidad }
+                    { unidadesIdsCama: Number(req.query.unidad) }
                 ]
             }
         });
     }
-
     const listado = await InternacionResumen.aggregate(pipeline);
     return res.json(listado);
 });
