@@ -107,4 +107,46 @@ router.get('/snomed/relationships', async (req, res, next) => {
     }
 });
 
+/**
+ * Busca medicamentos por nombre comercial y devuelve el concepto con sus padres (genéricos)
+ */
+router.get('/snomed/medicamentos/comercial', async (req, res, next) => {
+    const term = req.query.term as string;
+    if (!term) {
+        return res.json([]);
+    }
+    try {
+        const results = await SnomedCtr.searchTerms(term, { expression: '<<373873005', languageCode: 'es' });
+        const ids = results.slice(0, 20).map(r => r.conceptId);
+        if (ids.length > 0) {
+            const concepts = await SnomedCtr.getConcepts(ids);
+            return res.json(concepts);
+        }
+        return res.json([]);
+    } catch (e) {
+        return next(e);
+    }
+});
+
+/**
+ * Busca el concepto genérico asociado a un concepto comercial
+ */
+router.get('/snomed/medicamentos/comercial/:sctid/generico', async (req, res, next) => {
+    const sctid = req.params.sctid;
+    try {
+        const concepts = await SnomedCtr.getConcepts([sctid], 'inferred');
+        if (concepts && concepts.length > 0) {
+            const concept = concepts[0];
+            if (concept.relationships && concept.relationships.length > 0) {
+                const parentIds = concept.relationships.map(r => r.conceptId);
+                const generics = await SnomedCtr.getConcepts(parentIds, 'inferred');
+                return res.json(generics);
+            }
+        }
+        return res.json([]);
+    } catch (e) {
+        return next(e);
+    }
+});
+
 export = router;
