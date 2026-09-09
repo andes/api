@@ -8,10 +8,7 @@ import { AndesDocWithAudit } from '@andes/mongoose-plugin-audit';
 const FarmaciaSchema = new mongoose.Schema({
     denominacion: String,
     razonSocial: String,
-    cuit: {
-        type: String,
-        maxlength: 11
-    },
+    cuit: String,
     DTResponsable: String,
     matriculaDTResponsable: String,
     disposicionAltaDT: String,
