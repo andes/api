@@ -1,6 +1,7 @@
 import { services } from '../../services';
 import { handleHttpRequest } from '../../utils/requestHandler';
 import { IPacsConfig } from './pacs-config.schema';
+import { hasDicomResults } from './pacs-reconciliation';
 
 
 export async function loginPacs(pacsConfig: IPacsConfig) {
@@ -36,6 +37,32 @@ export async function createWorkList(pacsConfig: IPacsConfig, data: any, token: 
     });
 
     return response;
+}
+
+export async function studyExists(pacsConfig: IPacsConfig, studyUID: string, token: string): Promise<boolean> {
+    const response = await services.get('dcm4chee-buscar-series-estudio').exec({
+        host: pacsConfig.host,
+        aet: pacsConfig.aet,
+        token,
+        studyUID,
+        limit: 1
+    });
+    return hasDicomResults(response);
+}
+
+export async function searchStudies(
+    pacsConfig: IPacsConfig,
+    patientID: string,
+    studyDate: string,
+    token: string
+): Promise<any> {
+    return services.get('dcm4chee-buscar-estudios').exec({
+        host: pacsConfig.host,
+        aet: pacsConfig.aet,
+        token,
+        patientID,
+        studyDate
+    });
 }
 
 
