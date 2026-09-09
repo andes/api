@@ -177,9 +177,22 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
     if (req.body.protocolo.data.idProtocolo && req.body.protocolo.data.documento) {
         try {
             const paciente = await Paciente.find({ documento: req.body.protocolo.data.documento });
+            if (!paciente || !paciente.length) {
+                throw new Error('Error al generar laboratorio.');
+            }
+
+            if (req.user.type === 'paciente-token') {
+                const tieneAcceso = paciente.some(p =>
+                    req.user.pacientes?.some(up => String(up.id) === String(p._id))
+                );
+                if (!tieneAcceso) {
+                    return res.status(403).send('No tiene permisos para acceder a este recurso.');
+                }
+            }
+
             dataSearch = { idProtocolo: req.body.protocolo.data.idProtocolo };
             const response = await laboratorioController.search(dataSearch);
-            if (!response.length || !paciente) {
+            if (!response.length) {
                 throw new Error('Error al generar laboratorio.');
             }
             const docLaboratorio = new Laboratorio(req.body.protocolo, response, paciente, req.body.usuario, req.user.type);
