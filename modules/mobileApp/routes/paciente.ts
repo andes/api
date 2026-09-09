@@ -39,7 +39,7 @@ router.get('/paciente/:id/relaciones', async (req: any, res, next) => {
         }
         const resultado = await findById(req.user.pacientes[0].id);
         // Verifico que el paciente sea familiar del usuario logueado
-        const esFamiliar = (resultado.relaciones).find(rel => rel.documento === paciente.documento);
+        const esFamiliar = (resultado.relaciones as any[])?.find(rel => rel.referencia && rel.referencia.documento === paciente.documento);
         if (esFamiliar) {
             return res.json(paciente);
         } else {
@@ -56,7 +56,7 @@ router.get('/relaciones', async (req: any, res, next) => {
         const arrayRelaciones = [];
         let pacienteRel;
         if (paciente.relaciones) {
-            for (const rel of paciente.relaciones) {
+            for (const rel of (paciente.relaciones as any[])) {
                 if (rel.relacion) {
                     const objRelacion = rel.toObject();
                     pacienteRel = await findById(rel.referencia as any);
@@ -86,8 +86,9 @@ router.put('/paciente/:id', async (req: any, res, next) => {
     let esFamiliar;
     if (index < 0) {
         const resultado = await findById(req.user.pacientes[0].id);
-        esFamiliar = resultado.relaciones.find(rel => {
-            return rel.referencia.toString() === paciente.id.toString();
+        esFamiliar = (resultado.relaciones as any[])?.find(rel => {
+            const refId = rel.referencia?.id || rel.referencia?._id;
+            return refId && refId.toString() === paciente.id.toString();
         });
     }
     if (index >= 0 || esFamiliar) {
@@ -141,8 +142,9 @@ router.get('/laboratorios/(:id)', async (req: any, res, next) => {
         let esFamiliar;
         if (index < 0) {
             const resultado = await findById((req as any).user.pacientes[0].id);
-            esFamiliar = resultado.relaciones.find(rel => {
-                return rel.referencia.toString() === paciente.id.toString();
+            esFamiliar = (resultado.relaciones as any[])?.find(rel => {
+                const refId = rel.referencia?.id || rel.referencia?._id;
+                return refId && refId.toString() === paciente.id.toString();
             });
         }
         if (index >= 0 || esFamiliar) {

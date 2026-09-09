@@ -3,7 +3,6 @@ import { Document, Schema, Types } from 'mongoose';
 import { IContacto, IContactoDoc, IDireccion, IDireccionDoc } from '../../../shared/interfaces';
 import { IFinanciador } from '../financiador/financiador.interface';
 import { IParentesco } from '../parentesco/parentesco.interface';
-
 export interface ICarpetaEfector {
     organizacion: any;
     nroCarpeta: String;
@@ -34,17 +33,7 @@ export interface IIdentificador {
 
 export interface IRelacion {
     relacion: IParentesco;
-    referencia: Schema.Types.ObjectId;
-    financiador: String;
-    nombre: String;
-    apellido: String;
-    documento: String;
-    foto: String;
-    fotoId?: Schema.Types.ObjectId;
-    fechaNacimiento?: Date | moment.Moment;
-    numeroIdentificacion?: String;
-    fechaFallecimiento?: Date | moment.Moment;
-    activo?: Boolean;
+    referencia: any; // objeto populado: { nombre, apellido, documento, ... }
 }
 
 export interface IPaciente {
