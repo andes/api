@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { userScheduler } from '../../../config.private';
 import { CarnetPerinatalCtr } from './../carnet-perinatal.routes';
 import { CarnetPerinatal } from './../schemas/carnet-perinatal.schema';
+import { perinatalLog } from '../perinatal.log';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import moment = require('moment');
 
@@ -17,75 +18,85 @@ EventCore.on('perinatal:control:validacion', async ({ prestacion, registro }) =>
         const fechaProximoControl = proximoCtrol(prestacion);
         const datos = cargarDatos(prestacion);
         if (carnetExistente) {
-            if (!carnetExistente.controles) {
-                carnetExistente.controles = [];
-            }
-            if (moment(carnetExistente.fecha).isAfter(moment(prestacion.ejecucion.fecha).startOf('day').toDate())) {
-                carnetExistente.fecha = moment(prestacion.ejecucion.fecha).startOf('day').toDate();
-            } else {
-                if (datos.fechaUltimaMenstruacion) {
-                    carnetExistente.fechaUltimaMenstruacion = moment(datos.fechaUltimaMenstruacion.valor).startOf('day').toDate();
+            try {
+                if (!carnetExistente.controles) {
+                    carnetExistente.controles = [];
                 }
-                if (datos.pesoPrevio) {
-                    carnetExistente.pesoPrevio = datos.pesoPrevio.valor;
+                if (moment(carnetExistente.fecha).isAfter(moment(prestacion.ejecucion.fecha).startOf('day').toDate())) {
+                    carnetExistente.fecha = moment(prestacion.ejecucion.fecha).startOf('day').toDate();
+                } else {
+                    if (datos.fechaUltimaMenstruacion) {
+                        carnetExistente.fechaUltimaMenstruacion = moment(datos.fechaUltimaMenstruacion.valor).startOf('day').toDate();
+                    }
+                    if (datos.pesoPrevio) {
+                        carnetExistente.pesoPrevio = datos.pesoPrevio.valor;
+                    }
+                    if (datos.talla) {
+                        carnetExistente.talla = datos.talla.valor;
+                    }
+                    if (datos.fechaProbableDeParto) {
+                        carnetExistente.fechaProbableDeParto = moment(datos.fechaProbableDeParto.valor).startOf('day').toDate();
+                    }
                 }
-                if (datos.talla) {
-                    carnetExistente.talla = datos.talla.valor;
-                }
-                if (datos.fechaProbableDeParto) {
-                    carnetExistente.fechaProbableDeParto = moment(datos.fechaProbableDeParto.valor).startOf('day').toDate();
-                }
-            }
-            const indexControl = carnetExistente.controles.findIndex(item => String(item.idPrestacion) === String(prestacion.id));
-            if (indexControl < 0) {
-                carnetExistente.controles.push({
-                    fechaControl: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
-                    idPrestacion: prestacion.id,
-                    organizacion: prestacion.ejecucion.organizacion,
-                    profesional: prestacion.solicitud.profesional
-                });
-            }
-            carnetExistente.controles = carnetExistente.controles.sort((a, b) => {
-                return new Date(a.fechaControl).getTime() - new Date(b.fechaControl).getTime();
-            });
-            carnetExistente.fechaProximoControl = fechaProximoControl;
-            carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
-            await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
-
-        } else {
-            const carnet: any = {
-                fecha: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
-                paciente: prestacion.paciente,
-                controles: [
-                    {
-                        fechaControl: prestacion.ejecucion.fecha,
+                const indexControl = carnetExistente.controles.findIndex(item => String(item.idPrestacion) === String(prestacion.id));
+                if (indexControl < 0) {
+                    carnetExistente.controles.push({
+                        fechaControl: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
                         idPrestacion: prestacion.id,
                         organizacion: prestacion.ejecucion.organizacion,
                         profesional: prestacion.solicitud.profesional
-                    }],
-                fechaUltimoControl: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
-                fechaProximoControl,
-                embarazo,
-            };
-            const registros = prestacion.ejecucion.registros.find(reg => reg.concepto.conceptId === '364323006');
-            if (registros) {
-                carnet['cantidadEmbarazos'] = registros.valor;
+                    });
+                }
+                carnetExistente.controles = carnetExistente.controles.sort((a, b) => {
+                    return new Date(a.fechaControl).getTime() - new Date(b.fechaControl).getTime();
+                });
+                carnetExistente.fechaProximoControl = fechaProximoControl;
+                carnetExistente.fechaUltimoControl = carnetExistente.controles[carnetExistente.controles.length - 1].fechaControl;
+                await CarnetPerinatalCtr.update(carnetExistente.id, carnetExistente, userScheduler as any);
+            } catch (error) {
+                await perinatalLog.error('control:validacion:existente', carnetExistente, error, userScheduler);
             }
-            carnet.primeriza = primeriza;
-            if (datos.fechaUltimaMenstruacion) {
-                carnet.fechaUltimaMenstruacion = moment(datos.fechaUltimaMenstruacion.valor).startOf('day').toDate();
+
+        } else {
+            try {
+                const carnet: any = {
+                    fecha: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
+                    paciente: prestacion.paciente,
+                    controles: [
+                        {
+                            fechaControl: prestacion.ejecucion.fecha,
+                            idPrestacion: prestacion.id,
+                            organizacion: prestacion.ejecucion.organizacion,
+                            profesional: prestacion.solicitud.profesional
+                        }],
+                    fechaUltimoControl: moment(prestacion.ejecucion.fecha).startOf('day').toDate(),
+                    fechaProximoControl,
+                    embarazo,
+                };
+                const registros = prestacion.ejecucion.registros.find(reg => reg.concepto.conceptId === '364323006');
+                if (registros) {
+                    carnet['cantidadEmbarazos'] = registros.valor;
+                }
+                carnet.primeriza = primeriza;
+                if (datos.fechaUltimaMenstruacion) {
+                    carnet.fechaUltimaMenstruacion = moment(datos.fechaUltimaMenstruacion.valor).startOf('day').toDate();
+                }
+                if (datos.pesoPrevio) {
+                    carnet.pesoPrevio = datos.pesoPrevio.valor;
+                }
+                if (datos.talla) {
+                    carnet.talla = datos.talla.valor;
+                }
+                if (datos.fechaProbableDeParto) {
+                    carnet.fechaProbableDeParto = moment(datos.fechaProbableDeParto.valor).startOf('day').toDate();
+                }
+                await CarnetPerinatalCtr.create(carnet, userScheduler as any);
+            } catch (error) {
+                await perinatalLog.error('control:validacion:nuevo', { paciente: prestacion.paciente, embarazo }, error, userScheduler);
             }
-            if (datos.pesoPrevio) {
-                carnet.pesoPrevio = datos.pesoPrevio.valor;
-            }
-            if (datos.talla) {
-                carnet.talla = datos.talla.valor;
-            }
-            if (datos.fechaProbableDeParto) {
-                carnet.fechaProbableDeParto = moment(datos.fechaProbableDeParto.valor).startOf('day').toDate();
-            }
-            await CarnetPerinatalCtr.create(carnet, userScheduler as any);
         }
+    } else {
+        await perinatalLog.error('control:validacion:error', { id: prestacion?._id }, { error: 'error en parámetros' }, userScheduler);
     }
 });
 
