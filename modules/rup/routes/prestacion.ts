@@ -800,8 +800,8 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
                 if (!req.body.desdeInternacion) {
                     const puedeValidar = Auth.check(req, 'rup:validacion:' + data.solicitud.tipoPrestacion.id);
-                    if ((req as any).user.usuario.username !== data.estadoActual.createdBy.documento && !puedeValidar) {
-                        return next('Solo puede romper la validación el usuario que haya creado.');
+                    if (!puedeValidar) {
+                        return next('No tiene permisos para romper la validación de esta prestación.');
                     }
                 }
                 const estadoModificada = {
