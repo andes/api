@@ -146,6 +146,10 @@ const medicamentoSubschema = new mongoose.Schema({
     numero: {
         type: Number,
         required: false
+    },
+    obraSocial: {
+        type: mongoose.SchemaTypes.Mixed,
+        required: false
     }
 }, {
     toJSON: { virtuals: true },
