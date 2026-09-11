@@ -222,6 +222,18 @@ recetaSchema.virtual('nombre').get(function (this: any) {
     return this.medicamento?.nombre || (this.medicamento?.esMagistral ? (this.medicamento?.magistral?.nombre || '') : (this.medicamento?.concepto?.term || ''));
 });
 
+recetaSchema.virtual('fechaVencimiento').get(function (this: any) {
+    if (!this.fechaRegistro) { return null; }
+    const fecha = new Date(this.fechaRegistro);
+    fecha.setDate(fecha.getDate() + 30);
+    return fecha;
+});
+
+recetaSchema.virtual('fechaEmision').get(function (this: any) {
+    return this.fechaRegistro;
+});
+
+
 recetaSchema.pre('save', function (next) {
     const receta: any = this;
 
