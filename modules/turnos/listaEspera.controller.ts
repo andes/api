@@ -284,7 +284,10 @@ export async function procesarOperacionAgenda(req, agenda) {
     if (fallidos.length) {
         // no corta el batch (igual que el comportamiento original), pero
         // deja registro de qué falló en vez de tragárselo en silencio
-        fallidos.forEach(f => console.error('Error creando listaEspera por suspensión de agenda:', (f as any).reason));
+        fallidos.forEach(f => {
+            // eslint-disable-next-line no-console
+            console.error('Error creando listaEspera por suspensión de agenda:', (f as any).reason);
+        });
     }
 
     return resultados;
