@@ -178,30 +178,30 @@ router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncH
                 },
                 { arrayFilters: [{ 'elemento.valor.informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate() }] }
             );
-            if (edicionFinanciador) {
-                result = await CamaEstados.update(
-                    {
-                        'estados.idInternacion': Types.ObjectId(req.body.idInternacion)
-                    },
-                    {
-                        $set: {
-                            'estados.$[elemento].paciente.obraSocial': req.body.paciente.obraSocial
-                        }
-                    },
-                    {
-                        arrayFilters: [{ 'elemento.idInternacion': Types.ObjectId(req.body.idInternacion) }],
-                        multi: true
+            result = await CamaEstados.update(
+                {
+                    'estados.idInternacion': Types.ObjectId(req.body.idInternacion)
+                },
+                {
+                    $set: {
+                        'estados.$[elemento].paciente.obraSocial': req.body.paciente.obraSocial
                     }
-                );
-            }
-        }
-        if (!edicionFinanciador) {
-
+                },
+                {
+                    arrayFilters: [{ 'elemento.idInternacion': Types.ObjectId(req.body.idInternacion) }],
+                    multi: true
+                }
+            );
+        } else {
             const organizacion = {
                 _id: Auth.getOrganization(req),
                 nombre: Auth.getOrganization(req, 'nombre')
             };
-            const data = { ...req.body, organizacion, id: req.params.idCama };
+            const data = {
+                ...req.body,
+                organizacion,
+                id: req.params.idCama
+            };
             result = await CamasController.patchEstados(data, req);
         }
     } catch (err) {
