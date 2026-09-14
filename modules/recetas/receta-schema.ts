@@ -161,6 +161,10 @@ export const recetaSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    idRecetaV1: {
+        type: String,
+        required: false
+    },
     organizacion: {
         id: mongoose.SchemaTypes.ObjectId,
         nombre: String,
