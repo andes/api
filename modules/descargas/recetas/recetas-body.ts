@@ -33,7 +33,7 @@ export class RecetasBody extends HTMLComponent {
                                 </td>
                                 <td style="width:35%; vertical-align:top; text-align:right; border:0px none; padding:0;">
                                     <div class="barcode" style="text-align:right;">
-                                        <img src="data:image/png;base64,{{barcodeBase64}}" alt="{{idReceta}}" style="max-height:1.2cm; max-width:5cm;" />
+                                        {{{barcodeSVG}}}
                                     </div>
                                 </td>
                             </tr>
@@ -44,9 +44,9 @@ export class RecetasBody extends HTMLComponent {
                         <thead>
                             <tr>
                                 <th colspan="2" style="text-align:left; background-color:#f0f0f0; font-size:0.26cm; padding:0.15cm;">
-                                    <span>{{nombre}}</span>
-                                    {{#if esMagistral}}<span style="float:right; font-weight:900;">FÓRMULA MAGISTRAL</span>{{/if}}
-                                    {{#if tratamientoProlongado}}<span style="float:right; font-weight:700; font-size:0.22cm;">TRATAMIENTO PROLONGADO — Mes {{ordenTratamiento}} de {{totalTratamiento}}</span>{{/if}}
+                                    <div>{{nombre}}</div>
+                                    {{#if esMagistral}}<div style="font-weight:900; font-size:0.22cm; margin-top:0.1cm;">FÓRMULA MAGISTRAL</div>{{/if}}
+                                    {{#if tratamientoProlongado}}<div style="font-weight:700; font-size:0.22cm; margin-top:0.05cm;">TRATAMIENTO PROLONGADO — Mes {{ordenTratamiento}} de {{totalTratamiento}}</div>{{/if}}
                                 </th>
                             </tr>
                         </thead>
@@ -194,12 +194,12 @@ export class RecetasBody extends HTMLComponent {
             const esMagistral = !esInsumo ? !!receta.medicamento?.esMagistral : receta.insumo?.tipo === 'magistral';
 
             const idReceta = receta.idReceta || receta._id?.toString() || '';
-            const barcodeBase64 = idReceta ? await generateBarcodeSVG(idReceta, 'code128') : '';
+            const barcodeSVG = idReceta ? generateBarcodeSVG(idReceta, 'code128') : '';
 
             recetas.push({
                 esInsumo,
                 idReceta,
-                barcodeBase64,
+                barcodeSVG,
                 fechaEmision,
                 fechaVencimiento,
                 estadoReceta,
