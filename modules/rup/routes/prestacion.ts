@@ -26,6 +26,22 @@ import { Agenda } from '../../turnos/schemas/agenda';
 
 const router = express.Router();
 
+/**
+ * Indica si corresponde aplicar el filtro de la HUDS parcial por tipo de prestación
+ * sobre las solicitudes del paciente.
+ */
+function aplicarFiltroHudsSolicitudes(req: any): boolean {
+    if (Auth.check(req, 'huds:visualizacionHuds')) {
+        return false;
+    }
+    const parcial = Auth.check(req, 'huds:visualizacionParcialHuds:*') || Auth.check(req, 'huds:visualizacionParcialHuds:solicitudes');
+    if (!parcial) {
+        return false;
+    }
+    const hudsTipoPrestaciones = Auth.getPermissions(req, 'huds:visualizacionParcialHuds:tipoPrestacion:tipoPrestacion:?');
+    return !!hudsTipoPrestaciones?.length && hudsTipoPrestaciones[0] !== '*';
+}
+
 /** *
  *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
  *
@@ -297,6 +313,16 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
             });
         }
 
+        // HUDS parcial: filtra solicitudes del paciente según el permiso de tipo de prestación de solicitudes
+        if (req.query.idPaciente && aplicarFiltroHudsSolicitudes(req)) {
+            const hudsTipoPrestaciones = Auth.getPermissions(req, 'huds:visualizacionParcialHuds:tipoPrestacion:tipoPrestacion:?');
+            match.$and.push({
+                $or: [
+                    { 'solicitud.tipoPrestacion.id': { $in: hudsTipoPrestaciones.map(e => Types.ObjectId(e)) } },
+                    { 'solicitud.tipoPrestacionOrigen.id': { $in: hudsTipoPrestaciones.map(e => Types.ObjectId(e)) } }]
+            });
+        }
+
         if (req.query.estados) {
             match.$and.push({ 'estadoActual.tipo': { $in: (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados } });
         }
@@ -521,6 +547,12 @@ router.get('/prestaciones', async (req: any, res, next) => {
             }
         }
         query.where({ 'solicitud.tipoPrestacion.conceptId': compare });
+    }
+
+    // HUDS parcial: filtra las prestaciones del paciente según el permiso de tipo de prestación de solicitudes
+    if (req.query.hudsToken && aplicarFiltroHudsSolicitudes(req)) {
+        const hudsTipoPrestaciones = Auth.getPermissions(req, 'huds:visualizacionParcialHuds:tipoPrestacion:tipoPrestacion:?');
+        query.where({ 'solicitud.tipoPrestacion.id': { $in: hudsTipoPrestaciones.map(id => Types.ObjectId(id)) } });
     }
 
     if (req.query.organizacion) {
