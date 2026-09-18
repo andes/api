@@ -1,9 +1,12 @@
-
 * {
     box-sizing: border-box;
 }
 
-header, main, section, article, footer {
+header,
+main,
+section,
+article,
+footer {
     display: block;
 }
 
@@ -92,21 +95,104 @@ hr {
 /* HEADER */
 /* ========================= */
 
+.contenedor-logos {
+    display: inline-block;
+    height: 1cm;
+    width: 100%;
+
+    .contenedor-logo-efector {
+        margin-top: .05cm;
+        display: inline-block;
+        height: 60px;
+        width: 40%;
+
+        .logo-efector {
+            height: .75cm;
+            width: auto;
+            max-width: 7cm;
+        }
+
+        .no-logo-efector {
+            font-size: .20cm;
+        }
+    }
+
+    .contenedor-logos-secundarios {
+        margin-top: .15cm;
+        float: right;
+        width: 40%;
+
+        .logo-adicional {
+            filter: grayscale(100%);
+            -webkit-filter: grayscale(1);
+            height: .55cm;
+            width: auto;
+        }
+
+        .logo-andes {
+            float: right;
+            height: .55cm;
+            width: auto;
+        }
+    }
+}
+
 .header-table {
-    border: 1px solid #000;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    border-left: none;
+    border-right: none;
     margin-top: 4px;
     margin-bottom: 10px;
 }
 
 .header-table .rTableRow:not(:last-child) {
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid #ccc;
 }
 
 .header-table .rTableCell1,
 .header-table .rTableCell2 {
-    padding: 5px 6px;
+    padding: 6px 4px;
     font-size: .20cm;
     text-align: left !important;
+}
+
+.header-section-title {
+    display: block;
+    margin-bottom: 3px;
+    color: #888888;
+    font-size: .22cm;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-patient-name {
+    display: block;
+    margin-bottom: 2px;
+    font-size: .36cm;
+    font-weight: 900;
+    color: #000;
+    text-transform: uppercase;
+}
+
+.header-patient-info {
+    display: block;
+    font-size: .24cm;
+    color: #222;
+}
+
+.protocolo-table {
+    border-collapse: separate;
+    border-spacing: 5px 0;
+    margin-left: -5px;
+    margin-bottom: 4px;
+}
+
+.protocolo-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
 }
 
 .header-table {
