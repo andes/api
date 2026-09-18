@@ -6,7 +6,7 @@ import { ObjSIISASchema, EspecialidadSIISASchema } from './siisa';
 import { IProfesional } from '../interfaces/profesional.interface';
 import { ITokenSearch, TokenSearch } from '@andes/mongoose-token-search';
 
-const matriculacionSchema = new mongoose.Schema({
+const matriculacionGradoSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
     folio: { type: String, required: false },
@@ -18,6 +18,26 @@ const matriculacionSchema = new mongoose.Schema({
     notificacionVencimiento: { type: Boolean, required: false },
     fin: Date,
     revalidacionNumero: Number
+});
+
+const MatriculacionPosgradoSchema = new mongoose.Schema({
+    fechaAlta: { type: Date, required: true },
+    matriculaNumero: { type: Number, required: false },
+
+    baja: {
+        motivo: { type: String, required: false },
+        fecha: { type: String, required: false },
+        usuario: { type: String, required: false }
+    },
+    folio: { type: String, required: false },
+    libro: { type: String, required: false },
+    periodos: [{
+        notificacionVencimiento: { type: Boolean, required: false },
+        inicio: Date,
+        fin: Date,
+        revalidacionNumero: Number,
+        revalida: { type: Boolean, default: false }
+    }]
 });
 
 export const sancionSchema = new mongoose.Schema({
@@ -82,7 +102,7 @@ ProfesionalSchema.add({
             required: false
         },
         papelesVerificados: { type: Boolean, default: false },
-        matriculacion: [matriculacionSchema],
+        matriculacion: [matriculacionGradoSchema],
         matriculado: { type: Boolean, default: false },
         exportadoSisa: Boolean,
         fechaDeInscripcion: Date
@@ -100,25 +120,12 @@ ProfesionalSchema.add({
             modalidad: { type: ObjSIISASchema, required: false },
             establecimiento: { type: ObjSIISASchema, required: false },
         },
-        matriculacion: [{
-            matriculaNumero: { type: Number, required: false },
-            libro: { type: String, required: false },
-            folio: { type: String, required: false },
-            inicio: Date,
-            baja: {
-                motivo: { type: String, required: false },
-                fecha: { type: String, required: false }
-            },
-            notificacionVencimiento: { type: Boolean, required: false },
-            fin: Date,
-            revalidacionNumero: Number
-        }],
-        fechasDeAltas: [{ fecha: { type: Date, required: false } }],
+        matriculacion: [MatriculacionPosgradoSchema],
         matriculado: { type: Boolean, default: false },
         revalida: { type: Boolean, default: false },
         papelesVerificados: { type: Boolean, default: false },
         fechaDeVencimiento: { type: Date, required: false },
-        exportadoSisa: Boolean,
+        exportadoSisa: Boolean, // Atributo para especialidades vitalicias o cargos politicos
         tieneVencimiento: Boolean,
         notas: [{ type: String, required: false }]
     }],
