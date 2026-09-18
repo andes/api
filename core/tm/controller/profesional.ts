@@ -354,6 +354,137 @@ export async function saveImage(data) {
     });
 }
 
+/**
+ * Detecta si hubo cambios en formacionGrado que indiquen aprobación
+ * (papelesVerificados o matriculado pasaron a true)
+ */
+export function detectaCambiosFormacionGrado(formacionPersistida: any[], formacionNueva: any[]): boolean {
+    if (!Array.isArray(formacionPersistida) || !Array.isArray(formacionNueva)) {
+        return false;
+    }
+
+    for (const nueva of formacionNueva) {
+        // Comparar por _id para ser robusto ante múltiples formaciones de grado
+        const persistida = formacionPersistida.find(
+            (f: any) => f && nueva && String(f._id) === String(nueva._id)
+        );
+
+        if (!persistida) {
+            continue;
+        }
+
+        // Detectar cambio en papelesVerificados
+        if (persistida.papelesVerificados === false && nueva.papelesVerificados === true) {
+            return true;
+        }
+
+        // Detectar cambio en matriculado
+        if (persistida.matriculado === false && nueva.matriculado === true) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Promueve imágenes temporales (renovacionOnline) a permanentes
+ * Copia firma y foto de makeFsFirmaOnline/makeFsImagenOnline a makeFsFirma/makeFs
+ */
+export async function promoverImagenesTempAPermanentes(idProfesional: string, matricula: number) {
+    try {
+        // Copiar firma de temporal a permanente
+        const firmaOnline = makeFsFirmaOnline();
+        const firmaPermanente = makeFsFirma();
+
+        const metadataOnline = {
+            'metadata.idProfesional': idProfesional,
+            'metadata.matricula': matricula
+        };
+        const metadataPermanente = { 'metadata.idProfesional': idProfesional };
+
+        const fileFirmaOnline = await firmaOnline.findOne(metadataOnline);
+        if (fileFirmaOnline?._id) {
+            // Leer la firma temporal
+            const readStream = await firmaOnline.readFile({ _id: fileFirmaOnline._id });
+
+            // Eliminar firma permanente anterior si existe
+            const fileFirmaExistente = await firmaPermanente.findOne(metadataPermanente);
+            if (fileFirmaExistente?._id) {
+                await new Promise<void>((resolve, reject) => {
+                    firmaPermanente.unlink(fileFirmaExistente._id, (error) => {
+                        if (error) {return reject(error);}
+                        resolve();
+                    });
+                });
+            }
+
+            // Escribir firma en permanente
+            await new Promise<void>((resolve, reject) => {
+                firmaPermanente.writeFile(
+                    {
+                        filename: 'firma.png',
+                        contentType: fileFirmaOnline.contentType || 'image/jpeg',
+                        metadata: metadataPermanente
+                    },
+                    readStream,
+                    (error) => {
+                        if (error) {return reject(error);}
+                        resolve();
+                    }
+                );
+            });
+        }
+
+        // Copiar foto de temporal a permanente
+        const fotoOnline = makeFsImagenOnline();
+        const fotoPermanente = makeFs();
+
+        const fileFotoOnline = await fotoOnline.findOne(metadataOnline);
+        if (fileFotoOnline?._id) {
+            // Leer la foto temporal
+            const readStream = await fotoOnline.readFile({ _id: fileFotoOnline._id });
+
+            // Eliminar foto permanente anterior si existe
+            const fileFotoExistente = await fotoPermanente.findOne(metadataPermanente);
+            if (fileFotoExistente?._id) {
+                await new Promise<void>((resolve, reject) => {
+                    fotoPermanente.unlink(fileFotoExistente._id, (error) => {
+                        if (error) {return reject(error);}
+                        resolve();
+                    });
+                });
+            }
+
+            // Escribir foto en permanente
+            await new Promise<void>((resolve, reject) => {
+                fotoPermanente.writeFile(
+                    {
+                        filename: 'foto.png',
+                        contentType: fileFotoOnline.contentType || 'image/jpeg',
+                        metadata: metadataPermanente
+                    },
+                    readStream,
+                    (error) => {
+                        if (error) {return reject(error);}
+                        resolve();
+                    }
+                );
+            });
+        }
+
+        // Limpiar temporales (se pasa un noop como next para evitar TypeError si falla)
+        // eslint-disable-next-line no-console
+        const noopNext = (err: any) => { if (err) { console.error('Error eliminando imágenes temporales:', err); } };
+        await deleteFirmaFotoTemporal(idProfesional, matricula, noopNext);
+
+    } catch (error) {
+        // Log error pero no fallo la operación completa
+        // eslint-disable-next-line no-console
+        console.error('Error promoting temporary images to permanent:', error);
+    }
+}
+
 export async function filtrarProfesionalesPorPrestacion(profesionales, prestaciones, organizacionId) {
     const usuarios = await findUsersByUsername(profesionales.map(p => p.documento));
 
