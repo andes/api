@@ -1,13 +1,13 @@
 
 import { CarnetPerinatal } from '../modules/perinatal/schemas/carnet-perinatal.schema';
 import { CarnetPerinatalCtr } from '../modules/perinatal/carnet-perinatal.routes';
-import { perinatalFechaFinEmbarazoLog } from '../modules/perinatal/perinatal.log';
+import { perinatalLog } from '../modules/perinatal/perinatal.log';
 import { getPaciente as getPacienteSP } from '../utils/servicioSipPlus';
 import { userScheduler } from '../config.private';
 import moment = require('moment');
 
 
-const fechaFinEmbLog = perinatalFechaFinEmbarazoLog.startTrace();
+const fechaFinEmbLog = perinatalLog.startTrace();
 
 
 /**
