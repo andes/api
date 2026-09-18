@@ -112,7 +112,8 @@ const medicamentoSubschema = new mongoose.Schema({
         dosis: { type: String, required: false },
         intervalo: mongoose.SchemaTypes.Mixed,
         dias: Number,
-        notaMedica: String
+        notaMedica: String,
+        notaFarmacia: String
     },
     tratamientoProlongado: Boolean,
     esMagistral: { type: Boolean, default: false },
