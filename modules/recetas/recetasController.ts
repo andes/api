@@ -548,23 +548,39 @@ export async function rechazar(idReceta, sistema, req) {
     }
 }
 
-export async function getProfesionActualizada(profesional) {
+export async function getProfesionActualizada(profesional, esRecetaInsumo = false) {
     let profesionGrado = '';
     let matriculaGrado = 0;
     let especialidades = '';
 
-    if (profesional.formacionGrado) {
-        // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente.
-        const filterFormaciones = (e) => { return e.matriculacion?.length && [1, 2, 23].includes(e.profesion.codigo); };
-
-        const formacionEncontrada = profesional.formacionGrado.find(filterFormaciones);
-
-        profesionGrado = formacionEncontrada ? formacionEncontrada.profesion.nombre : '';
-        matriculaGrado = formacionEncontrada ? formacionEncontrada.matriculacion[formacionEncontrada.matriculacion.length - 1].matriculaNumero : '';
+    if (!profesional) {
+        return { profesionGrado, matriculaGrado, especialidades };
     }
-    if (profesional.formacionPosgrado) {
-        const especialidadesTxt = profesional.formacionPosgrado.length ? profesional.formacionPosgrado.map(postgrado => postgrado.matriculacion ? `${postgrado.especialidad?.nombre} 
-                                                                                   (Mat. ${postgrado.matriculacion[postgrado.matriculacion.length - 1].matriculaNumero})` : '') : [];
+
+    let prof = profesional;
+    if (typeof profesional === 'string' || Types.ObjectId.isValid(profesional)) {
+        prof = await Profesional.findById(profesional);
+        if (!prof) {
+            return { profesionGrado, matriculaGrado, especialidades };
+        }
+    }
+
+    if (prof.formacionGrado) {
+        // Los codigos de los roles permitidos son los de las profesiones: Médico, Odontólogo y Obstetra respectivamente. Para insumos se permiten todas.
+        const filterFormaciones = (e) => {
+            const tieneMatricula = Boolean(e.matriculacion?.length);
+            const esCodigoPermitido = esRecetaInsumo || [1, 2, 23].includes(e.profesion?.codigo);
+            return tieneMatricula && esCodigoPermitido;
+        };
+
+        const formacionEncontrada = prof.formacionGrado.find(filterFormaciones);
+
+        profesionGrado = formacionEncontrada ? formacionEncontrada.profesion?.nombre || '' : '';
+        matriculaGrado = formacionEncontrada && formacionEncontrada.matriculacion?.length ? formacionEncontrada.matriculacion[formacionEncontrada.matriculacion.length - 1].matriculaNumero : '';
+    }
+    if (prof.formacionPosgrado) {
+        const especialidadesTxt = prof.formacionPosgrado.length ? prof.formacionPosgrado.map(postgrado => (postgrado.matriculacion && postgrado.matriculacion.length) ? `${postgrado.especialidad?.nombre} 
+                                                                                   (Mat. ${postgrado.matriculacion[postgrado.matriculacion.length - 1].matriculaNumero})` : '').filter(Boolean) : [];
         especialidades = especialidadesTxt?.join(', ') || especialidades;
     }
 
