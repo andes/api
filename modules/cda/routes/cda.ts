@@ -286,7 +286,10 @@ router.get('/paciente/:id', async (req: any, res, next) => {
         const paciente: any = await PacienteCtr.findById(pacienteID, {});
 
         if (paciente) {
-            const list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 }, organizacion);
+            let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 }, organizacion);
+            if (req.user.type === 'paciente-token') {
+                list = list.filter(item => !(item?.extras?.HPV === true));
+            }
             return res.json(list);
         }
     }
@@ -412,7 +415,6 @@ async function createCDA(req, res, next) {
         }
     }
     const cda = cdaCtr.generateCDA(uniqueId, confidencialidad, paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
-
     const metadata = {
         paciente: paciente._id,
         prestacion,
@@ -421,6 +423,7 @@ async function createCDA(req, res, next) {
         adjuntos,
         fecha,
         extras: {
+            HPV: req.body.confidencialidadHPV,
             id: idPrestacion,
             organizacion: organizacion._id
         }
