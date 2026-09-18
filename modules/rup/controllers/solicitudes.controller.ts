@@ -118,6 +118,14 @@ async function matchReglas(prestacion: IPrestacion, planes: IPrestacionRegistro[
     return Promise.all(ps);
 }
 
+export async function cancelarPrestacionSolicitud(req, prestacion) {
+    prestacion.ejecucion = { registros: [], organizacion: {}, fecha: null };
+    prestacion.estados.push({ tipo: 'pendiente' });
+    updateRegistroHistorialSolicitud(prestacion.solicitud, { op: 'pendiente' });
+    const solicitud: any = new Prestacion(prestacion);
+    Auth.audit(solicitud, req);
+    await solicitud.save();
+}
 
 EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacion) => {
     // [TODO] chequear duplicados al revalidar
