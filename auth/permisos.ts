@@ -269,7 +269,8 @@ export default [
                 child: [
                     { key: 'laboratorio', title: 'Ver solo laboratorios', type: 'boolean' },
                     { key: 'vacuna', title: 'Ver solo vacunas', type: 'boolean' },
-                    { key: 'receta', title: 'Ver solo recetas', type: 'boolean' }
+                    { key: 'receta', title: 'Ver solo recetas', type: 'boolean' },
+                    { key: 'solicitudes', title: 'Ver solo solicitudes', type: 'boolean' }
                 ]
             }
         ]
