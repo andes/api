@@ -1,6 +1,10 @@
 import { HTMLComponent } from '../model/html-component.class';
 import * as moment from 'moment';
 import { generateBarcodeSVG } from '../model/barcode';
+import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
+import { streamToBase64 } from '../../../core/tm/controller/file-storage';
+import { searchMatriculas } from '../../../core/tm/controller/profesional';
+import { Profesional } from '../../../core/tm/schemas/profesional';
 
 export class RecetasBody extends HTMLComponent {
     template = `
@@ -10,7 +14,7 @@ export class RecetasBody extends HTMLComponent {
                 <article class="cabezal-conceptos horizontal" style="width:100%; display:block; margin-top:0; padding-top:0;">
                     <div style="display:flex; gap: 2rem; width:100%; margin-top:0; flex-wrap: wrap;">
                         <div class="contenedor-bloque-texto">
-                            <h6 class="bolder">Fecha de Emisión</h6>
+                            <h6 class="bolder">Vigente Desde</h6>
                             <h6>{{fechaEmision}}</h6>
                         </div>
                         <div class="contenedor-bloque-texto">
@@ -74,6 +78,15 @@ export class RecetasBody extends HTMLComponent {
                     <div style="margin-top:0.25cm;">
                         <h6 class="volanta">NOTA MÉDICA PARA EL PACIENTE</h6>
                         <p style="font-style:italic; font-size:0.23cm; margin:0.05cm 0 0 0;">{{notaMedica}}</p>
+                    </div>
+                    {{/if}}
+                    {{#if firma}}
+                    <div style="margin-top:0.8cm; text-align:center;">
+                        <p style="font-weight:bold; font-style:italic; font-size:0.24cm; margin:0 0 0.15cm 0;">Este documento ha sido firmado electronicamente por:</p>
+                        {{#if firma}}<img src="data:image/png;base64,{{{firma}}}" style="max-height:2cm; max-width:5cm; display:block; margin:0 auto;" />{{/if}}
+                        <hr style="width:7cm; margin:0.25cm auto 0.15cm auto;" />
+                        <p style="font-weight:bold; font-size:0.22cm; margin:0;">{{detalle}}</p>
+                        {{#if matriculas}}<p style="font-size:0.18cm; line-height:0.24cm; margin:0.15cm 0 0 0;">{{{matriculas}}}</p>{{/if}}
                     </div>
                     {{/if}}
                 </div>
@@ -196,6 +209,25 @@ export class RecetasBody extends HTMLComponent {
             const idReceta = receta.idReceta || receta._id?.toString() || '';
             const barcodeSVG = idReceta ? generateBarcodeSVG(idReceta, 'code128') : '';
 
+            // Firma y formación del profesional (por receta, igual que informe-rup firma)
+            let firma = null;
+            let detalle = null;
+            let matriculas = null;
+            try {
+                const profData = receta.profesional;
+                const prof = profData?._id || profData?.id ? await Profesional.findOne({ _id: profData.id || profData._id }) as any : await Profesional.findOne({ documento: profData?.documento }) as any;
+                if (prof) {
+                    firma = await this.getFirma(prof);
+                    const mat = await this.getMatriculas(prof);
+                    matriculas = mat;
+                    detalle = prof.apellido + ', ' + prof.nombre;
+                } else if (profData) {
+                    detalle = (profData.apellido || '') + ', ' + (profData.nombre || '');
+                }
+            } catch (e) {
+                // silencioso, sin firma
+            }
+
             recetas.push({
                 esInsumo,
                 idReceta,
@@ -213,12 +245,40 @@ export class RecetasBody extends HTMLComponent {
                 esMagistral,
                 tratamientoProlongado,
                 ordenTratamiento,
-                totalTratamiento
+                totalTratamiento,
+                firma,
+                detalle,
+                matriculas
             });
         }
 
         this.data = {
             recetas
         };
+    }
+
+    private async getFirma(profesional) {
+        try {
+            const FirmaSchema = makeFsFirma();
+            const idProfesional = String(profesional.id || profesional._id);
+            const file = await FirmaSchema.findOne({ 'metadata.idProfesional': idProfesional });
+            if (file && file._id) {
+                const stream = await FirmaSchema.readFile({ _id: file._id });
+                const base64 = await streamToBase64(stream);
+                return base64;
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    private async getMatriculas(profesional) {
+        try {
+            const info = await searchMatriculas(profesional.id || profesional._id);
+            const grado = (info?.formacionGrado || []).map(e => `${e.nombre} MP ${e.numero}`);
+            const posgrado = (info?.formacionPosgrado || []).map(e => `${e.nombre} ME ${e.numero}`);
+            return [...grado, ...posgrado].join('<br>');
+        } catch (e) {
+            return null;
+        }
     }
 }
