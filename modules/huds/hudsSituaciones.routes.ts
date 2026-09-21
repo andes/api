@@ -12,7 +12,7 @@ router.get('/:idPaciente/situacionesActivas', asyncHandler(async (req: any, res)
     if (!Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Paciente no encontrado');
     }
-    const result = await situacionesActivas(req.params.idPaciente);
+    const result = await situacionesActivas(req.params.idPaciente, req);
     if (!result) {
         return res.status(404).send('Paciente no encontrado');
     }
