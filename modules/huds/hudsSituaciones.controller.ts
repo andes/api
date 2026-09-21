@@ -3,6 +3,7 @@ import { SnomedCtr } from '../../core/term/controller/snomed.controller';
 import { Prestacion } from '../rup/schemas/prestacion';
 import { CarnetPerinatal } from '../perinatal/schemas/carnet-perinatal.schema';
 import { buscarEnHuds } from '../rup/controllers/rup';
+import { Auth } from '../../auth/auth.class';
 import * as moment from 'moment';
 
 import { ECLQueries } from '../../core/tm/schemas/eclqueries.schema';
@@ -20,35 +21,92 @@ function registrosPorSemanticTag(registros, semanticTag) {
     return result;
 }
 
-export async function situacionesActivas(pacienteID) {
+export async function situacionesActivas(pacienteID, req: any) {
     const paciente = await PacienteCtr.findById(pacienteID);
     if (!paciente) {
         return null;
     }
 
-    const result: any[] = [];
-
-    const prestaciones: any[] = await Prestacion.find({
+    const query: any = {
         'paciente.id': { $in: paciente.vinculos },
         'estadoActual.tipo': 'validada'
-    });
+    };
 
+    // Mismo criterio que /modules/rup/prestaciones cuando el usuario tiene huds:soloEfectorActual
+    if (Auth.check(req, 'huds:soloEfectorActual')) {
+        query['ejecucion.organizacion.id'] = Auth.getOrganization(req);
+    }
+
+    const prestaciones: any[] = await Prestacion.find(query);
+
+    // Replica el filtro de privacidad aplicado en /modules/rup/prestaciones
+    const profesional = Auth.getProfesional(req);
+    const profesionalId = profesional && profesional.id && profesional.id.toString();
     for (const prestacion of prestaciones) {
-        const registros = registrosPorSemanticTag(prestacion.ejecucion.registros || [], 'trastorno');
-        for (const registro of registros) {
-            if (registro.valor?.estado === 'activo') {
-                result.push({
-                    tipo: 'trastorno',
-                    concepto: registro.concepto,
-                    fecha: prestacion.ejecucion.fecha,
-                    profesional: prestacion.solicitud.profesional,
-                    organizacion: prestacion.ejecucion.organizacion,
-                    idPrestacion: prestacion._id,
-                    tipoPrestacion: prestacion.solicitud.tipoPrestacion
-                });
+        let profId = false;
+        if (prestacion.solicitud.profesional && prestacion.solicitud.profesional.id) {
+            profId = prestacion.solicitud.profesional.id.toString();
+        }
+        const registros = prestacion.ejecucion.registros;
+        if (registros) {
+            for (let j = 0; j < registros.length; j++) {
+                const privacy = registros[j].privacy || { scope: 'public' };
+                if (privacy.scope !== 'public' && profesionalId !== profId) {
+                    switch (privacy.scope) {
+                        case 'private':
+                            registros.splice(j, 1);
+                            j--;
+                            break;
+                        case 'termOnly':
+                            registros[j].valor = 'El contenido de este registro sólo puede ser visualizado por el profesional que lo registró.';
+                            registros[j].registros = [];
+                            break;
+                    }
+                }
             }
         }
     }
+
+    // Agrupamos por concepto.conceptId, igual que getConceptosByPaciente en el front
+    const grupos = new Map<string, any>();
+    for (const prestacion of prestaciones) {
+        const registros = registrosPorSemanticTag(prestacion.ejecucion.registros || [], 'trastorno');
+        for (const registro of registros) {
+            const conceptId = registro.concepto.conceptId;
+            if (!grupos.has(conceptId)) {
+                grupos.set(conceptId, {
+                    tipo: 'trastorno',
+                    concepto: registro.concepto,
+                    evoluciones: []
+                });
+            }
+            grupos.get(conceptId).evoluciones.push({
+                idPrestacion: prestacion._id,
+                idRegistro: registro.id,
+                tipoPrestacion: prestacion.solicitud.tipoPrestacion?.term,
+                fechaCarga: prestacion.ejecucion.fecha,
+                profesional: registro.createdBy?.nombreCompleto,
+                organizacion: prestacion.ejecucion.organizacion?.nombre,
+                fechaInicio: registro.valor?.fechaInicio ?? null,
+                estado: registro.valor?.estado ?? '',
+                evolucion: registro.valor?.evolucion ?? '',
+                idRegistroOrigen: registro.valor?.idRegistroOrigen ?? null,
+                valor: registro.valor
+            });
+        }
+    }
+
+    const result: any[] = [];
+    for (const grupo of grupos.values()) {
+        grupo.evoluciones.sort((a, b) => moment(b.fechaCarga).valueOf() - moment(a.fechaCarga).valueOf());
+        // Solo dejamos las situaciones cuya última evolución está activa
+        if (grupo.evoluciones[0].estado === 'activo') {
+            result.push(grupo);
+        }
+    }
+
+    // Ordenamos los grupos por la evolución más reciente (descendente)
+    result.sort((a, b) => moment(b.evoluciones[0].fechaCarga).valueOf() - moment(a.evoluciones[0].fechaCarga).valueOf());
 
     // Usar vinculos para cubrir pacientes con múltiples identificadores ANDES
     const carnet: any = await CarnetPerinatal.findOne({
@@ -120,6 +178,5 @@ export async function antecedentesFamiliares(pacienteID) {
         'paciente.id': { $in: paciente.vinculos },
         'estadoActual.tipo': 'validada'
     });
-
     return buscarEnHuds(prestaciones, conceptos);
 }
