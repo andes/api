@@ -48,6 +48,22 @@ class DerivacionesResource extends ResourceBase {
             }
         },
 
+        ambito: (value) => {
+            if (!value || value === 'sin-ambito') {
+                return {
+                    $or: [
+                        { ambito: null },
+                        { ambito: { $exists: false } },
+                        { ambito: '' }
+                    ]
+                };
+            }
+            const variantes = {
+                internacion: ['internacion', 'Internación', 'Internacion', 'INTERNACIÓN'],
+                guardia: ['guardia', 'Guardia', 'GUARDIA']
+            };
+            return { $in: variantes[value] || [value] };
+        },
         prioridad: MongoQuery.equalMatch,
         paciente: (value) => {
             return {
