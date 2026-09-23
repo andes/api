@@ -163,7 +163,8 @@ router.patch('/camas/:id', Auth.authenticate(), capaMiddleware, asyncHandler(asy
 router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncHandler(async (req: Request, res: Response, next) => {
     let result;
     try {
-        if (req.body.extras?.ingreso) {
+        const edicionFinanciador = req.query?.edicionFinanciador;
+        if (edicionFinanciador) {
             // Si se editan los datos de cobertura, se actualiza la obra social del paciente
             const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id);
             const obraSocialUpdated = await updateObraSocial(pacienteMPI);
@@ -179,14 +180,32 @@ router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncH
                 },
                 { arrayFilters: [{ 'elemento.valor.informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate() }] }
             );
+            result = await CamaEstados.update(
+                {
+                    'estados.idInternacion': Types.ObjectId(req.body.idInternacion)
+                },
+                {
+                    $set: {
+                        'estados.$[elemento].paciente.obraSocial': req.body.paciente.obraSocial
+                    }
+                },
+                {
+                    arrayFilters: [{ 'elemento.idInternacion': Types.ObjectId(req.body.idInternacion) }],
+                    multi: true
+                }
+            );
+        } else {
+            const organizacion = {
+                _id: Auth.getOrganization(req),
+                nombre: Auth.getOrganization(req, 'nombre')
+            };
+            const data = {
+                ...req.body,
+                organizacion,
+                id: req.params.idCama
+            };
+            result = await CamasController.patchEstados(data, req);
         }
-
-        const organizacion = {
-            _id: Auth.getOrganization(req),
-            nombre: Auth.getOrganization(req, 'nombre')
-        };
-        const data = { ...req.body, organizacion, id: req.params.idCama };
-        result = await CamasController.patchEstados(data, req);
     } catch (err) {
         const dataErr = {
             ruta: '/camaEstados/:idCama',
