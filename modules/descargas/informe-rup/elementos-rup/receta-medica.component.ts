@@ -55,16 +55,24 @@ export class RecetaMedicaComponent extends HTMLComponent {
             {{#each registro.valor.medicamentos}}
                 <tr>
                     <td>
-                        {{generico.term}}
+                        {{#if esMagistralManual}}
+                            {{ formulacionMagistral }}
+                        {{else}}
+                            {{#if esMagistral}}
+                                {{ magistral.nombre }}
+                            {{else}}
+                                {{ generico.term }}
+                            {{/if}}
+                        {{/if}}
                         {{#if esMagistral}}
-                        <br><b>(Preparación Magistral)</b>
+                        <br><b>(Preparación Magistral{{#if esMagistralManual}} - Ingreso Manual{{/if}})</b>
                         {{/if}}
                     </td>
                     <td>
-                    {{ unidades }} {{presentacion.term }}(s)
+                    {{#if esMagistralManual}}-{{else}}{{ unidades }} {{presentacion.term }}(s){{/if}}
                     </td>
                     <td>
-                    {{ cantEnvases}} envase(s) de {{ cantidad }} {{presentacion.term }}(s)  
+                    {{#if esMagistralManual}}-{{else}}{{ cantEnvases}} envase(s){{#if cantidad}} de {{ cantidad }} {{presentacion.term }}(s){{/if}}{{/if}}  
                     </td>
                     <td>
                     {{#if dosisDiaria.dosis}}
