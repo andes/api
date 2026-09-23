@@ -107,7 +107,12 @@ const medicamentoSubschema = new mongoose.Schema({
     presentacion: String,
     unidades: String, // (mg, cc, etc.)
     cantidad: Number,
-    cantEnvases: { type: Number, required: true },
+    cantEnvases: {
+        type: Number,
+        required(this: any) {
+            return !this.esMagistralManual;
+        }
+    },
     dosisDiaria: {
         dosis: { type: String, required: false },
         intervalo: mongoose.SchemaTypes.Mixed,
@@ -117,6 +122,8 @@ const medicamentoSubschema = new mongoose.Schema({
     },
     tratamientoProlongado: Boolean,
     esMagistral: { type: Boolean, default: false },
+    esMagistralManual: { type: Boolean, default: false },
+    formulacionMagistral: { type: String, required: false },
     magistral: {
         type: {
             codigo: [
@@ -154,6 +161,9 @@ const medicamentoSubschema = new mongoose.Schema({
 });
 
 medicamentoSubschema.virtual('nombre').get(function (this: any) {
+    if (this.esMagistralManual) {
+        return this.formulacionMagistral || this.magistral?.nombre || '';
+    }
     return this.esMagistral ? (this.magistral?.nombre || '') : (this.concepto?.term || '');
 });
 
@@ -220,6 +230,9 @@ export const recetaSchema = new mongoose.Schema({
 });
 
 recetaSchema.virtual('nombre').get(function (this: any) {
+    if (this.medicamento?.esMagistralManual) {
+        return this.medicamento.formulacionMagistral || this.medicamento.magistral?.nombre || '';
+    }
     return this.medicamento?.nombre || (this.medicamento?.esMagistral ? (this.medicamento?.magistral?.nombre || '') : (this.medicamento?.concepto?.term || ''));
 });
 

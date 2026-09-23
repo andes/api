@@ -91,12 +91,16 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
                 }
                 const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
                 const { tipo, identificador } = getDatosPrescripcion(medicamento);
+                const esMagistralManual = !!medicamento?.esMagistralManual;
+                const nombreMagistral = esMagistralManual
+                    ? (medicamento?.formulacionMagistral || medicamento?.magistral?.nombre)
+                    : medicamento?.magistral?.nombre;
 
                 if (!conceptId && !esMagistral) {
                     logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar conceptId del medicamento');
                     continue;
                 }
-                if (esMagistral && (!medicamento?.magistral?.nombre || !identificador?.length)) {
+                if (esMagistral && (!nombreMagistral || !identificador?.length)) {
                     logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar el medicamento magistral');
                     continue;
                 }

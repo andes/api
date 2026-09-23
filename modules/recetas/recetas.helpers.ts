@@ -1,4 +1,4 @@
-export type FuenteCodigo = 'snomed' | 'sifaho';
+export type FuenteCodigo = 'snomed' | 'sifaho' | 'manual';
 
 export interface CodigoPrescripcion {
     fuente: FuenteCodigo;
@@ -17,8 +17,15 @@ export function getDatosPrescripcion(prescripcion) {
 
     if (prescripcion?.esMagistral) {
         tipo = 'magistral';
-        identificador = prescripcion.magistral?.codigo || [];
-        nombre = prescripcion.magistral?.nombre;
+        if (prescripcion.esMagistralManual) {
+            nombre = prescripcion.formulacionMagistral || prescripcion.magistral?.nombre;
+            identificador = prescripcion.magistral?.codigo?.length
+                ? prescripcion.magistral.codigo
+                : (nombre ? [{ fuente: 'manual', valor: nombre }] : []);
+        } else {
+            identificador = prescripcion.magistral?.codigo || [];
+            nombre = prescripcion.magistral?.nombre;
+        }
 
     } else {
         const esInsumo = ['dispositivo', 'nutricion'].includes(prescripcion?.generico?.tipo) || ['dispositivo', 'nutricion'].includes(prescripcion?.tipo);
