@@ -17,7 +17,7 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
             createLog.error('create', { dataReceta, prestacion, profesional: null }, null, { prestacion, registro });
             return;
         }
-        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion.id);
+        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
         profesional = {
             id: profPrestacion.id,
             nombre: profPrestacion.nombre,
