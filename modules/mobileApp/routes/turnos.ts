@@ -64,23 +64,39 @@ router.get('/turnos', async (req: any, res, next) => {
     if (req.query.codificado) {
         matchTurno['bloques.turnos.diagnosticos.0'] = { $exists: true };
     }
+    const matchTurnoPost = { ...matchTurno };
 
     if (req.query.horaInicio) {
-        matchTurno['bloques.turnos.horaInicio'] = { $gte: new Date(req.query.horaInicio) };
+        // Incluir agendas cuya horaFin esté hasta 1 hora después del inicio solicitado
+        const horaInicioDate = new Date(req.query.horaInicio);
+        const horaInicioMenos1Hora = new Date(horaInicioDate.getTime() + 60 * 60 * 1000);
+        matchTurno['horaFin'] = { $gte: horaInicioMenos1Hora };
+        matchTurnoPost['$expr'] = {
+            $gte: [
+                {
+                    $add: [
+                        '$bloques.turnos.horaInicio',
+                        { $multiply: ['$bloques.duracionTurno', 60, 1000] }
+                    ]
+                },
+                horaInicioDate
+            ]
+        };
     }
-
     if (req.query.horaFinal) {
-        matchTurno['bloques.turnos.horaInicio'] = { $lt: new Date(req.query.horaFinal) };
+        matchTurno['horaInicio'] = { $lt: new Date(req.query.horaFinal) };
+        matchTurnoPost['bloques.turnos.horaInicio'] = { $lt: new Date(req.query.horaFinal) };
     }
 
     if (req.query.tiposTurno) {
         matchTurno['bloques.turnos.tipoTurno'] = { $in: req.query.tiposTurno };
+        matchTurnoPost['bloques.turnos.tipoTurno'] = { $in: req.query.tiposTurno };
     }
 
     pipelineTurno.push({ $match: matchTurno });
     pipelineTurno.push({ $unwind: '$bloques' });
     pipelineTurno.push({ $unwind: '$bloques.turnos' });
-    pipelineTurno.push({ $match: matchTurno });
+    pipelineTurno.push({ $match: matchTurnoPost });
     pipelineTurno.push({
         $group: {
             _id: { id: '$_id', bloqueId: '$bloques._id' },
@@ -124,9 +140,11 @@ router.get('/turnos', async (req: any, res, next) => {
         turno.duracionTurno = elem.duracionTurno;
         turno.bloque_id = elem.bloque_id;
         turno.agenda_estado = elem.agenda_estado;
+        turno.webexLinks = elem.bloques.turnos.webexLinks;
 
         delete turno.updatedBy;
         delete turno.updatedAt;
+
 
         /* Busco el turno anterior cuando fue reasignado */
         const reasignado = turno.reasignado && turno.reasignado.siguiente;
