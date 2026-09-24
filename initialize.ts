@@ -125,7 +125,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules', require('./modules/recetas').RecetasRouter);
     app.use('/api/modules', require('./modules/insumos').InsumosRouter);
     app.use('/api/modules', require('./modules/recetas/recetasInsumos').RecetaInsumoRouter);
-
+    app.use('/api/modules/restriccion-huds', require('./modules/restriccion-huds').restriccionHudsRouter);
 
     if (configPrivate.hosts.BI_QUERY) {
         app.use(
