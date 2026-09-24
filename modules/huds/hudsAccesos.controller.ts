@@ -91,6 +91,7 @@ export async function search(filtros) {
                 motivoAcceso: '$accesos.motivoAcceso',
                 organizacion: '$accesos.organizacion',
                 detalleMotivo: '$accesos.detalleMotivo',
+                datosAcceso: '$accesos.datosAcceso',
                 labelPaciente: {
                     $ifNull: [
                         '$accesos.labelPaciente',
