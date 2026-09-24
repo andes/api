@@ -60,20 +60,22 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
         for (const medicamento of registro.valor.medicamentos) {
             try {
                 const esMagistral = !!medicamento?.esMagistral;
+                const esMagistralManual = !!medicamento?.esMagistralManual;
                 const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
+                const nombreMagistral = medicamento?.formulacionMagistral || medicamento?.magistral?.nombre;
 
                 if (!conceptId && !esMagistral) {
                     logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar conceptId del medicamento');
                     continue;
                 }
-                if (esMagistral && !medicamento?.magistral?.nombre) {
+                if (esMagistral && !nombreMagistral) {
                     logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar nombre del medicamento magistral');
                     continue;
                 }
 
                 const queryReceta: any = { idRegistro };
                 if (esMagistral) {
-                    queryReceta['medicamento.magistral.nombre'] = medicamento.magistral.nombre;
+                    queryReceta['medicamento.magistral.nombre'] = nombreMagistral;
                 } else {
                     queryReceta['medicamento.concepto.conceptId'] = conceptId;
                 }

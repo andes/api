@@ -650,10 +650,12 @@ export async function create(req) {
         dataReceta.fechaRegistro = dataReceta.fechaRegistro ? moment(dataReceta.fechaRegistro).toDate() : moment().toDate();
         dataReceta.fechaPrestacion = dataReceta.fechaPrestacion ? dataReceta.fechaPrestacion : dataReceta.fechaRegistro;
         const isMagistral = !!req.body.medicamento?.esMagistral;
+        const isMagistralManual = !!req.body.medicamento?.esMagistralManual;
         const medicamentoIncompleto = !req.body.medicamento ||
             (!isMagistral && !req.body.medicamento.concepto?.conceptId) ||
-            (isMagistral && !req.body.medicamento.magistral?.nombre) ||
-            !req.body.medicamento.cantEnvases;
+            (isMagistral && !isMagistralManual && !req.body.medicamento.magistral?.nombre) ||
+            (isMagistralManual && !req.body.medicamento.formulacionMagistral && !req.body.medicamento.magistral?.nombre) ||
+            (!isMagistralManual && !req.body.medicamento.cantEnvases);
         dataReceta.origenExterno = {
             id: req.body.origenExterno?.id || '',
             app: req.user.app?.nombre.toLowerCase() || '',
@@ -664,7 +666,7 @@ export async function create(req) {
         } else {
             const queryExistente: any = { idRegistro: dataReceta.idRegistro };
             if (isMagistral) {
-                queryExistente['medicamento.magistral.nombre'] = dataReceta.medicamento.magistral?.nombre;
+                queryExistente['medicamento.magistral.nombre'] = dataReceta.medicamento.magistral?.nombre || dataReceta.medicamento.formulacionMagistral;
             } else {
                 queryExistente['medicamento.concepto.conceptId'] = dataReceta.medicamento.concepto.conceptId;
             }
@@ -740,6 +742,7 @@ export async function crearReceta(dataReceta, req) {
             const diag = medicamento.diagnostico;
             receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
             const esMagistral = !!medicamento.esMagistral;
+            const esMagistralManual = !!medicamento.esMagistralManual;
             receta.medicamento = {
                 concepto: esMagistral ? null : (medicamento.concepto || medicamento.generico),
                 presentacion: medicamento.presentacion?.term || medicamento.presentacion,
@@ -754,6 +757,8 @@ export async function crearReceta(dataReceta, req) {
                 },
                 tratamientoProlongado,
                 esMagistral,
+                esMagistralManual,
+                formulacionMagistral: medicamento.formulacionMagistral || null,
                 magistral: esMagistral ? medicamento.magistral : null,
                 tiempoTratamiento: tratamientoProlongado ? medicamento.tiempoTratamiento : null,
                 ordenTratamiento: i,
