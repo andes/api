@@ -603,7 +603,7 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
         match['formacionPosgrado.matriculacion.0'] = { $exists: true };
         if (req.query.bajaMatricula) {
             estadoMatriculaConditions.push({
-                'formacionPosgrado.revalida': false,
+                'formacionPosgrado.renovacion': false,
                 'formacionPosgrado.papelesVerificados': false,
                 'formacionPosgrado.matriculado': false
             });
@@ -616,7 +616,14 @@ router.get('/profesionales/matriculas', Auth.authenticate(), async (req, res, ne
             });
         }
         unwindOptions = { path: '$formacionPosgrado' };
-        ultimaMatricula = { ultimaMatricula: { $arrayElemAt: ['$formacionPosgrado.matriculacion', -1] } };
+        ultimaMatricula = {
+            ultimaMatricula: {
+                $let: {
+                    vars: { mat: { $arrayElemAt: ['$formacionPosgrado.matriculacion', -1] } },
+                    in: { $mergeObjects: ['$$mat', { $ifNull: [{ $arrayElemAt: ['$$mat.periodos', -1] }, {}] }] }
+                }
+            }
+        };
     }
     if (req.query.fechaDesde && req.query.fechaHasta) {
         if (req.query.matriculasPorVencer) {
@@ -945,9 +952,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
                 // formacionPosgrado1
                 prof['especialidad1'] = data[i].formacionPosgrado && data[i].formacionPosgrado[0] ? data[i].formacionPosgrado[0].especialidad.nombre : '';
                 if (data[i].formacionPosgrado && data[i].formacionPosgrado[0] && data[i].formacionPosgrado[0].matriculado && data[i].formacionPosgrado[0].matriculacion) {
-                    const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[0].matriculacion.map(matricula => matricula.inicio));
-                    const ultimaMatricula = data[i].formacionPosgrado[0].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
-                    prof['matriculaPNumero1'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    prof['matriculaPNumero1'] = getMatriculaNumeroPosgrado(data[i].formacionPosgrado[0]);
                 } else {
                     prof['matriculaPNumero1'] = '';
                 }
@@ -955,9 +960,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
                 // formacionPosgrado2
                 prof['especialidad2'] = data[i].formacionPosgrado && data[i].formacionPosgrado[1] ? data[i].formacionPosgrado[1].especialidad.nombre : '';
                 if (data[i].formacionPosgrado && data[i].formacionPosgrado[1] && data[i].formacionPosgrado[1].matriculado && data[i].formacionPosgrado[1].matriculacion) {
-                    const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[1].matriculacion.map(matricula => matricula.inicio));
-                    const ultimaMatricula = data[i].formacionPosgrado[1].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
-                    prof['matriculaPNumero2'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    prof['matriculaPNumero2'] = getMatriculaNumeroPosgrado(data[i].formacionPosgrado[1]);
                 } else {
                     prof['matriculaPNumero2'] = '';
                 }
@@ -966,9 +969,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
                 // formacionPosgrado3
                 prof['especialidad3'] = data[i].formacionPosgrado && data[i].formacionPosgrado[2] ? data[i].formacionPosgrado[2].especialidad.nombre : '';
                 if (data[i].formacionPosgrado && data[i].formacionPosgrado[2] && data[i].formacionPosgrado[2].matriculado && data[i].formacionPosgrado[2].matriculacion) {
-                    const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[2].matriculacion.map(matricula => matricula.inicio));
-                    const ultimaMatricula = data[i].formacionPosgrado[2].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
-                    prof['matriculaPNumero3'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    prof['matriculaPNumero3'] = getMatriculaNumeroPosgrado(data[i].formacionPosgrado[2]);
                 } else {
                     prof['matriculaPNumero3'] = '';
                 }
@@ -976,9 +977,7 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
                 // formacionPosgrado4
                 prof['especialidad4'] = data[i].formacionPosgrado && data[i].formacionPosgrado[3] ? data[i].formacionPosgrado[3].especialidad.nombre : '';
                 if (data[i].formacionPosgrado && data[i].formacionPosgrado[3] && data[i].formacionPosgrado[3].matriculado && data[i].formacionPosgrado[3].matriculacion) {
-                    const fechaUltimaMatricula = Math.max.apply(null, data[i].formacionPosgrado[3].matriculacion.map(matricula => matricula.inicio));
-                    const ultimaMatricula = data[i].formacionPosgrado[3].matriculacion.find(matricula => { return matricula.inicio && matricula.inicio.getTime() === fechaUltimaMatricula; });
-                    prof['matriculaPNumero4'] = ultimaMatricula ? ultimaMatricula.matriculaNumero : '';
+                    prof['matriculaPNumero4'] = getMatriculaNumeroPosgrado(data[i].formacionPosgrado[3]);
                 } else {
                     prof['matriculaPNumero4'] = '';
                 }
@@ -1494,6 +1493,40 @@ router.post('/profesionales/validar', async (req, res, next) => {
 
 export = router;
 
+/**
+ * Devuelve el inicio de una matriculación de posgrado.
+ * Usa el último período (esquema nuevo) y cae a `inicio` plano (esquema viejo).
+ */
+function obtenerInicioMatriculacionPosgrado(matriculacion: any): number {
+    if (!matriculacion) {
+        return 0;
+    }
+    if (Array.isArray(matriculacion.periodos) && matriculacion.periodos.length) {
+        const ultimoPeriodo = matriculacion.periodos[matriculacion.periodos.length - 1];
+        return ultimoPeriodo?.inicio ? new Date(ultimoPeriodo.inicio).getTime() : 0;
+    }
+    return matriculacion.inicio ? new Date(matriculacion.inicio).getTime() : 0;
+}
+
+/**
+ * Devuelve el número de la última matriculación de un posgrado (por fecha de inicio).
+ */
+function getMatriculaNumeroPosgrado(formacion: any): any {
+    if (!formacion || !Array.isArray(formacion.matriculacion) || !formacion.matriculacion.length) {
+        return '';
+    }
+    let ultimaMatriculacion = null;
+    let maxInicio = -1;
+    formacion.matriculacion.forEach((matriculacion: any) => {
+        const inicio = obtenerInicioMatriculacionPosgrado(matriculacion);
+        if (inicio >= maxInicio) {
+            maxInicio = inicio;
+            ultimaMatriculacion = matriculacion;
+        }
+    });
+    return ultimaMatriculacion ? ultimaMatriculacion.matriculaNumero : '';
+}
+
 function createResponseArray(matriculas: any[], req: any) {
     const responseArray = [];
     for (let i = 0; i < matriculas.length; i++) {
@@ -1526,7 +1559,7 @@ function createResponseArray(matriculas: any[], req: any) {
         } else {
             // formacionPosgrado1
             prof['especialidad1'] = matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.especialidad.nombre : '';
-            prof['matriculaPNumero1'] = matriculas[i].ultimaMatriculaPosgrado ? matriculas[i].ultimaMatriculaPosgrado.matriculaNumero : '';
+            prof['matriculaPNumero1'] = matriculas[i].ultimaMatricula ? matriculas[i].ultimaMatricula.matriculaNumero : '';
             prof['tieneVencimiento1'] = matriculas[i].formacionPosgrado && matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.tieneVencimiento ? 'Si' : 'No' : '';
             prof['fechasDeAltas1'] = matriculas[i].formacionPosgrado ? matriculas[i].formacionPosgrado.fe ? 'Si' : 'No' : '';
         }
