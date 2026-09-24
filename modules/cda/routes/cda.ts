@@ -112,14 +112,22 @@ router.post('/', async (req: any, res, next) => {
                 cdaData.paciente.sexo = cdaData.paciente.sexo === 'M' ? 'masculino' : 'femenino';
 
                 const yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
+                const prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
+
                 if (yaExiste) {
-                    return next({ error: 'prestacion_existente' });
+                    const fechaCda = moment(yaExiste.metadata.fecha);
+                    const haceUnAnio = moment().subtract(1, 'year');
+
+                    if (fechaCda.isAfter(haceUnAnio)) {
+                        await cdaCtr.deleteCda(yaExiste._id, null);
+                    } else {
+                        return next({ error: 'prestacion_existente' });
+                    }
                 }
 
                 const organizacion = await Organizacion.findById(orgId);
                 const dataProfesional = req.body.profesional;
 
-                const prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
                 if (!prestacion) {
                     // Es obligatorio que posea prestación
                     return next({ error: 'prestacion_invalida' });
@@ -344,15 +352,22 @@ async function createCDA(req, res, next) {
         orgId = req.body.organizacion;
     }
     const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
+    const prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
+
     if (yaExiste) {
-        return res.json({ cda: yaExiste._id, paciente: yaExiste.paciente?._id });
+        const fechaCda = moment(yaExiste.metadata.fecha);
+        const haceUnAnio = moment().subtract(1, 'year');
+
+        if (fechaCda.isAfter(haceUnAnio)) {
+            await cdaCtr.deleteCda(yaExiste._id, null);
+        } else {
+            return res.json({ cda: yaExiste._id, paciente: yaExiste.paciente?._id });
+        }
     }
 
     const dataPaciente = req.body.paciente;
     const dataProfesional = req.body.profesional;
 
-    // Devuelve un Loinc asociado al código SNOMED
-    const prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
     if (!prestacion) {
         // Es obligatorio que posea prestación
         return next(`prestacion_invalida ${req.body.tipoPrestacion}`);
