@@ -20,7 +20,7 @@ const matriculacionGradoSchema = new mongoose.Schema({
     revalidacionNumero: Number
 });
 
-const MatriculacionPosgradoSchema = new mongoose.Schema({
+export const MatriculacionPosgradoSchema = new mongoose.Schema({
     fechaAlta: { type: Date, required: true },
     matriculaNumero: { type: Number, required: false },
 
@@ -35,8 +35,8 @@ const MatriculacionPosgradoSchema = new mongoose.Schema({
         notificacionVencimiento: { type: Boolean, required: false },
         inicio: Date,
         fin: Date,
-        revalidacionNumero: Number,
-        revalida: { type: Boolean, default: false }
+        renovacionNumero: Number,
+        renovacion: { type: Boolean, default: false }
     }]
 });
 
@@ -122,7 +122,7 @@ ProfesionalSchema.add({
         },
         matriculacion: [MatriculacionPosgradoSchema],
         matriculado: { type: Boolean, default: false },
-        revalida: { type: Boolean, default: false },
+        renovacion: { type: Boolean, default: false },
         papelesVerificados: { type: Boolean, default: false },
         fechaDeVencimiento: { type: Date, required: false },
         exportadoSisa: Boolean, // Atributo para especialidades vitalicias o cargos politicos

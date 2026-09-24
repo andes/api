@@ -8,8 +8,8 @@ async function run(done) {
         notificacionVencimiento: Boolean;
         inicio: Date;
         fin: Date;
-        revalidacionNumero: Number;
-        revalida: Boolean;
+        renovacionNumero: Number;
+        renovacion: Boolean;
     };
 
     interface Imatriculacion {
@@ -40,14 +40,13 @@ async function run(done) {
         };
         matriculacion: Imatriculacion[];
         matriculado: Boolean;
-        revalida: Boolean;
+        renovacion: Boolean;
         papelesVerificados: Boolean;
         fechaDeVencimiento: Date;
         exportadoSisa: Boolean;
         tieneVencimiento: Boolean;
         notas: [String];
     };
-
     const TotProf = await Profesional.aggregate([{ $count: 'Cant' }]);
     let totalProf: Number;
     for (const cp of TotProf) {
@@ -121,7 +120,7 @@ async function run(done) {
                     bajaMotivo.push(matriculacion.baja?.motivo ? matriculacion.baja.motivo : null);
                     notificacionVencimiento.push(matriculacion.notificacionVencimiento ? matriculacion.notificacionVencimiento : false);
 
-                    const revalida = false;
+                    const renovacion = false;
 
                     if (cantMatriculas !== 0) {
                         contMatriculas++;
@@ -137,8 +136,8 @@ async function run(done) {
                             notificacionVencimiento: notificacionVencimiento[cantMatriculas],
                             inicio: inicio[cantMatriculas],
                             fin: fin[cantMatriculas],
-                            revalidacionNumero: contMatriculas,
-                            revalida
+                            renovacionNumero: contMatriculas,
+                            renovacion
                         }
                     );
                     cantMatriculas++;
@@ -180,7 +179,7 @@ async function run(done) {
                     },
                     matriculacion: nuevaMatriculacion,
                     matriculado: formacionPosgrado[i].matriculado,
-                    revalida: formacionPosgrado[i].revalida,
+                    renovacion: formacionPosgrado[i].renovacion,
                     papelesVerificados: formacionPosgrado[i].papelesVerificados,
                     fechaDeVencimiento: formacionPosgrado[i].fechaDeVencimiento,
                     exportadoSisa: formacionPosgrado[i].exportadoSisa,

@@ -44,16 +44,34 @@ export async function vencimientoMatriculaGrado(done) {
     done();
 }
 
+/**
+ * Devuelve la fecha de fin de una matriculación de posgrado.
+ * Usa el último período (esquema nuevo) y cae a `fin` plano (esquema viejo).
+ */
+function obtenerFinMatriculacionPosgrado(matriculacion: any): Date {
+    if (!matriculacion) {
+        return null;
+    }
+    if (Array.isArray(matriculacion.periodos) && matriculacion.periodos.length) {
+        const ultimoPeriodo = matriculacion.periodos[matriculacion.periodos.length - 1];
+        return ultimoPeriodo?.fin ? new Date(ultimoPeriodo.fin) : null;
+    }
+    return matriculacion.fin ? new Date(matriculacion.fin) : null;
+}
+
 export async function vencimientoMatriculaPosgrado(done) {
     const profesionales: any = await Profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true, 'formacionPosgrado.tieneVencimiento': true }, (data: any) => { return data; });
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             if (profesionales[_n].formacionPosgrado) {
                 for (let _i = 0; _i < profesionales[_n].formacionPosgrado.length; _i++) {
-                    if (profesionales[_n].formacionPosgrado[_i].matriculacion.length > 0) {
-                        if (profesionales[_n].formacionPosgrado[_i].matriculado === true && profesionales[_n].formacionPosgrado[_i].tieneVencimiento === true && profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].fin.getFullYear() < new Date().getFullYear()) {
-                            profesionales[_n].formacionPosgrado[_i].matriculado = false;
-                            profesionales[_n].formacionPosgrado[_i].papelesVerificados = false;
+                    const formacion = profesionales[_n].formacionPosgrado[_i];
+                    if (formacion.matriculacion.length > 0) {
+                        const ultimaMatriculacion = formacion.matriculacion[formacion.matriculacion.length - 1];
+                        const fin = obtenerFinMatriculacionPosgrado(ultimaMatriculacion);
+                        if (formacion.matriculado === true && formacion.tieneVencimiento === true && fin && fin.getFullYear() < new Date().getFullYear()) {
+                            formacion.matriculado = false;
+                            formacion.papelesVerificados = false;
                             await actualizar(profesionales[_n]);
 
                         }
@@ -160,7 +178,12 @@ export async function search(filter, fields) {
 export async function searchMatriculas(profesionalId) {
     const _profesional: any = await Profesional.findById(profesionalId);
     const filterFormaciones = (e) => {
-        return e.matriculacion && e.matriculacion.length && !e.matriculacion[e.matriculacion.length - 1].baja.fecha && moment(e.matriculacion[e.matriculacion.length - 1].fin).isAfter(new Date());
+        if (!e.matriculacion || !e.matriculacion.length) {
+            return false;
+        }
+        const ultimaMatriculacion = e.matriculacion[e.matriculacion.length - 1];
+        const fin = obtenerFinMatriculacionPosgrado(ultimaMatriculacion);
+        return !ultimaMatriculacion.baja?.fecha && moment(fin).isAfter(new Date());
     };
 
     let formacionGrado;
