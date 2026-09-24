@@ -63,6 +63,7 @@ router.get('/relaciones', async (req: any, res, next) => {
                     pacienteRel = pacienteRel.toObject({ virtuals: true });
                     objRelacion.id = pacienteRel.id;
                     objRelacion.edad = pacienteRel.edad;
+                    objRelacion.documento = pacienteRel.documento;
                     arrayRelaciones.push(objRelacion);
                 }
             }
