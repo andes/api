@@ -93,8 +93,55 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
             } else {
                 if (paciente.edad <= 5 && paciente.relaciones?.length) { // recien nacido (aún sin dni)
                     estado = 'RN';
-                    const tutorProgenitor = paciente.relaciones.find(rel => rel.relacion.nombre === 'progenitor/a') || paciente.relaciones.find(rel => rel.relacion.nombre === 'tutor');
-                    documento = tutorProgenitor?.documento || tutorProgenitor?.numeroIdentificacion || null;
+
+                    // El bebé sin DNI queda asociado, del lado del laboratorio, a UN
+                    // solo referente (padre, madre o tutor/a) — nunca a varios a la
+                    // vez. No sabemos de antemano cuál de sus relaciones es la
+                    // asociada, así que se prueba cada una hasta encontrar la que
+                    // tiene laboratorios cargados.
+                    const referentes = paciente.relaciones.filter(
+                        rel => rel.relacion.nombre === 'progenitor/a' || rel.relacion.nombre === 'tutor'
+                    );
+
+                    if (!referentes.length) {
+                        return [];
+                    }
+
+                    const documentosReferentes = referentes
+                        .map(rel => rel.documento || rel.numeroIdentificacion)
+                        .filter(doc => !!doc);
+
+                    // Saco duplicados (ej: si por error padre y madre comparten el
+                    // mismo documento cargado, no se hace la misma consulta dos veces)
+                    const documentosUnicos = Array.from(new Set(documentosReferentes));
+
+                    if (!documentosUnicos.length) {
+                        return [];
+                    }
+
+                    const dataSearchBase = {
+                        estado,
+                        fechaNac: moment(paciente.fechaNacimiento).utc().format('YYYYMMDD'),
+                        apellido: paciente.apellido,
+                        fechaDesde,
+                        fechaHasta
+                    };
+
+                    for (const dni of documentosUnicos) {
+                        dataSearch = { ...dataSearchBase, dni };
+                        try {
+                            const resultado = await this.search(dataSearch);
+                            if (Array.isArray(resultado) && resultado.length > 0) {
+                                return resultado;
+                            }
+                        } catch (err) {
+                            // Este referente no tiene laboratorios (o falló la consulta
+                            // puntual): se sigue probando con el resto de los referentes.
+                        }
+                    }
+
+                    // Ningún referente tenía laboratorios asociados
+                    return [];
                 }
             }
             if (!estado || !documento) {
