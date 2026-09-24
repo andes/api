@@ -10,7 +10,7 @@ import { PacienteApp } from '../../../modules/mobileApp/schemas/pacienteApp';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { makePattern, toArray } from '../../../utils/utils';
 import { streamToBase64 } from '../controller/file-storage';
-import { formacionCero, matriculaCero, migrarTurnos, saveFirma, filtrarProfesionalesPorPrestacion, saveImage, deleteFirmaFotoTemporal } from '../controller/profesional';
+import { formacionCero, matriculaCero, migrarTurnos, saveFirma, filtrarProfesionalesPorPrestacion, saveImage, deleteFirmaFotoTemporal, detectaCambiosFormacionGrado, promoverImagenesTempAPermanentes } from '../controller/profesional';
 import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import { makeFsFirma } from '../schemas/firmaProf';
 import { makeFsFirmaOnline } from '../schemas/firmaRenovacionOnline';
@@ -1355,7 +1355,22 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                     resultado.OtrosDatos = req.body.data;
                     break;
                 case 'updateEstadoGrado':
-                    resultado.formacionGrado = req.body.data;
+                    // Detectar si hay cambios de aprobación (papelesVerificados o matriculado pasaron a true)
+                    const formacionAnterior = resultado.formacionGrado;
+                    const formacionNueva = req.body.data;
+
+                    resultado.formacionGrado = formacionNueva;
+
+                    // Si hay cambio de aprobación y tenemos matricula, promover imágenes temporales
+                    if (req.body.matricula && detectaCambiosFormacionGrado(formacionAnterior, formacionNueva)) {
+                        try {
+                            await promoverImagenesTempAPermanentes(req.params.id, req.body.matricula);
+                        } catch (error) {
+                            // Log pero no falla el request - la matrícula ya fue aprobada
+                            // eslint-disable-next-line no-console
+                            console.error('Error promoting temporary images:', error);
+                        }
+                    }
                     break;
                 case 'updateEstadoPosGrado':
                     resultado.formacionPosgrado = req.body.data;
@@ -1387,7 +1402,9 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
             if (req.body.foto) {
                 resultado.foto = req.body.foto;
             }
-            if (req.body.matricula) {
+            // Nota: Para updateEstadoGrado, las imágenes temporales se promocionan automáticamente
+            // en el handler. Las siguientes líneas son para operaciones que envíen firmaP e img directamente.
+            if (req.body.matricula && req.body.op !== 'updateEstadoGrado') {
 
                 if (req.body.firmaP) {
                     await saveFirma(req.body);
