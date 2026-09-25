@@ -3,7 +3,6 @@ import { Auth } from '../../../auth/auth.class';
 import { InformeEstadistica } from './informe-estadistica.schema';
 import { EventCore } from '@andes/event-bus';
 import { Request, Response } from 'express';
-import { Types } from 'mongoose';
 import { asyncHandler } from '@andes/api-tool'; // Asegúrate de que esta importación sea correcta
 
 class InformeEstadisticaResource extends ResourceBase {
@@ -12,7 +11,7 @@ class InformeEstadisticaResource extends ResourceBase {
     resourceName = 'informe-estadistica';
     keyId = '_id';
     middlewares = [Auth.authenticate()];
-    searchFields = {
+    searchFileds = {
         paciente: {
             field: 'paciente.id',
             fn: MongoQuery.equalMatch
@@ -21,7 +20,7 @@ class InformeEstadisticaResource extends ResourceBase {
             field: 'estados.tipo',
             fn: MongoQuery.equalMatch
         },
-        search: ['nroCarpeta', 'paciente.apellido', 'paciente.nombre']
+        search: ['informeIngreso.nroCarpeta', 'paciente.apellido', 'paciente.nombre']
     };
 }
 

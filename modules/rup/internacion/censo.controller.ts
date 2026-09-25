@@ -185,9 +185,11 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                 estadistico = null;
             }
         }
+        // Censo de capa medica (estadistica-v2) roto ..SOLUCIONADO
 
-        if (estadistico) {
-            const informesInternacion: any = getInformesInternacion(estadistico);
+        const datosInternacion = prestacion || estadistico;
+        if (datosInternacion) {
+            const informesInternacion: any = getInformesInternacion(datosInternacion);
             const desde = informesInternacion.informeIngreso.fechaIngreso;
             dataInternaciones[idInter] = {};
             dataInternaciones[idInter]['informesInternacion'] = informesInternacion;
@@ -222,6 +224,7 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                 dataInternaciones[idInter]['allMovimientos'] = allMovimientos;
                 dataInternaciones[idInter]['ultimoMovimientoUO'] = ultimoMovimientoUO;
                 dataInternaciones[idInter]['fechaIngresoUO'] = fechaIngresoUO;
+                dataInternaciones[idInter]['prestacion'] = prestacion;
                 dataInternaciones[idInter]['estadistico'] = estadistico;
                 dataInternaciones[idInter]['esPaseA'] = esPaseA;
             }
@@ -233,13 +236,15 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
             return;
         }
         const estadistico = dataInternaciones[idInter]['estadistico'];
+        const prestacion = dataInternaciones[idInter]['prestacion'];
         const ultimoMovimiento = allMovimientos[allMovimientos.length - 1];
-        const estadisticoInternacion = (estadistico as any);
+        const datosInternacion = (prestacion || estadistico) as any;
         const ultimoMovimientoUO = dataInternaciones[idInter]['ultimoMovimientoUO'];
         const indiceCama = arrayCamas.findIndex(x => x.toString() === ultimoMovimiento.idCama.toString());
-        if (!estadistico) {
+        const esCensable = estadistico?.informeIngreso?.esCensable ?? datosInternacion?.esCensable;
+        if (!datosInternacion) {
             return;
-        } else if (estadisticoInternacion.esCensable && indiceCama === -1) {
+        } else if (esCensable && indiceCama === -1) {
             arrayCamas.push(ultimoMovimiento.idCama);
             disponibles++;
         }
@@ -295,16 +300,25 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                     });
                 }
             }
+            // 4 Defunciones contadas como altas
             if (ultimaUO === String(unidadOrganizativa)) {
                 if (egresaDiaCenso) {
+                    // Normalizamos el tipoEgresoId a minúsculas y sin acentos
+                    const tipoEgresoNormalized = (tipoEgresoId || '')
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .toLowerCase();
 
-                    if (tipoEgresoId === 'defuncion') {
+                    if (tipoEgresoNormalized === 'defuncion') {
                         defunciones++;
                     } else {
                         altas++;
                     }
+
                     if (!ingresoEgresoCargado) {
                         checkPaciente(ultimoMovimiento);
+
+                        // Estructura adaptada para la actividad del informe estadístico
                         tablaPacientes[ultimoMovimiento.paciente.id].actividad.push({
                             fechaIngreso,
                             egreso: informesInternacion?.informeEgreso?.tipoEgreso?.id || null,
@@ -314,8 +328,9 @@ async function realizarConteo(internaciones, unidadOrganizativa, timestampStart,
                                 tipoCama: ultimoMovimiento.tipoCama,
                                 sectores: ultimoMovimiento.sectores
                             },
-                            paciente: ultimoMovimiento.paciente
-
+                            paciente: ultimoMovimiento.paciente,
+                            // Referencia implícita / campo adicional si mapeas a la nueva colección:
+                            informeEstadistico: informesInternacion?.informeEgreso?.id || null
                         });
                     }
                 }

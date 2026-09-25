@@ -1,5 +1,5 @@
 
-const { MatchingAndes } = require('@andes/match');
+import { MatchingAndes } from '@andes/match/dist/lib/matchingAndes.class.js';
 import * as localidad from '../schemas/localidad';
 import * as provincia from '../schemas/provincia_model';
 import { ZonaSanitaria } from '../schemas/zonaSanitarias';
