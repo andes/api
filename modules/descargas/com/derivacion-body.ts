@@ -201,6 +201,45 @@ export class DerivacionBody extends HTMLComponent {
                 </div>
             {{/if}}
 
+            {{#if historial}}
+            <br><br>
+            <div class="row">
+                <div class="col">
+                    <span><b>HISTORIAL DE DERIVACIÓN</b></span>
+                </div>
+            </div>
+            <br>
+            {{#each historial}}
+            <div class="row" style="margin-bottom: 8px;">
+                <div class="col">
+                    <span>FECHA: {{ fechaCreacion }} hs</span><br>
+                    {{#if estado}}
+                    <span>Pasa a <b>{{ estado }}</b> por {{ createdBy.nombreCompleto }}{{#if createdBy.organizacion.nombre}} de {{ createdBy.organizacion.nombre }}{{/if}}</span><br>
+                    {{else}}
+                    <span>Actualizado por {{ createdBy.nombreCompleto }}{{#if createdBy.organizacion.nombre}} de {{ createdBy.organizacion.nombre }}{{/if}}</span><br>
+                    {{/if}}
+                    {{#if observacion}}
+                    <span>Observaciones: {{ observacion }}</span><br>
+                    {{/if}}
+                    {{#if dispositivo}}
+                    <span>Dispositivo de soporte de oxígeno: {{ dispositivo.nombre }}: {{ dispositivo.descripcion }}</span><br>
+                    {{/if}}
+                    {{#if prioridad}}
+                    {{#if reporteCOM}}
+                    <span>Nueva prioridad: {{ prioridad }}</span><br>
+                    {{/if}}
+                    {{/if}}
+                    {{#if organizacionDestino}}
+                    <span>Destino: {{ organizacionDestino.nombre }}</span><br>
+                    {{/if}}
+                    {{#if unidadDestino}}
+                    <span>Unidad Destino: {{ unidadDestino.term }}</span><br>
+                    {{/if}}
+                </div>
+            </div>
+            {{/each}}
+            {{/if}}
+
             {{#if firmaHTML}}
                 {{{ firmaHTML }}}
             {{/if}}
@@ -259,7 +298,7 @@ export class DerivacionBody extends HTMLComponent {
             datosSolicitud,
             firmaHTML,
             historial,
-            reporteCOM: organizacion?.esCOM
+            reporteCOM: organizacion ? Boolean(organizacion.esCOM) : true
         };
     }
 
@@ -274,15 +313,18 @@ export class DerivacionBody extends HTMLComponent {
     }
 
     async getHistorialDerivacion(organizacion, derivacion) {
-        derivacion.historial.shift();
-        let historial = organizacion.esCOM ? derivacion.historial : derivacion.historial.filter((h) => h.createdBy.organizacion.id === organizacion.id);
+        const copyHistorial = [...(derivacion.historial || [])];
+        const esCOM = organizacion ? Boolean(organizacion.esCOM) : true;
+        let historial = esCOM
+            ? copyHistorial
+            : copyHistorial.filter((h) => h.createdBy?.organizacion?.id?.toString() === organizacion?.id?.toString());
         historial = historial.filter(h => !h.eliminado);
         historial.forEach(h => {
             h.fechaCreacion = moment(h.createdAt).locale('es').format('DD/MM/YYYY HH:mm');
-            h.reporteCOM = organizacion.esCOM;
+            h.reporteCOM = esCOM;
             h.esActualizacion = !h?.estado;
         });
-        return historial.sort((a, b) => b.createdAt - a.createdAt);
+        return historial.sort((a, b) => moment(b.createdAt).diff(moment(a.createdAt)));
     }
 
     async getDatosSolicitud(derivacion) {
