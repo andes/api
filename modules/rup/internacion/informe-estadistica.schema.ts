@@ -20,6 +20,7 @@ const InformeIngresoSchema = new Schema({
         type: Date,
         required: true
     },
+    esCensable: Boolean,
     origen: {
         tipo: String, // Origen hospitalización  enumerado?
         organizacionOrigen: { type: OrganizacionSchema, required: false }, // Organización origen - solo para "traslado"
@@ -50,7 +51,11 @@ const InformeIngresoSchema = new Schema({
             type: ObraSocialSchema,
             required: false
         },
-    }
+    },
+    asociado: String,
+    horaNacimiento: Date,
+    edadAlIngreso: Number,
+    financiador: String
 
 });
 
@@ -61,7 +66,7 @@ const InformeEgresoSchema = new Schema({
         {
             procedimiento: {
                 // revisar no incluye campo  nom: que es una concatenacion de nombre y codigo
-                type: procQuirurgicosSchema, requied: false
+                type: procQuirurgicosSchema, required: false
             },
             fecha: Date,
         }
@@ -84,7 +89,11 @@ const InformeEgresoSchema = new Schema({
         otrasCircunstancias: Cie10,
         diasEstadaOtrasCircunstancias: Number,
         diasDePermisoDeSalida: Number
-    }
+    },
+    terminacionEmbarazo: Date,
+    edadGestacional: Number,
+    paridad: Number,
+    tipoParto: String
 });
 
 const InternacionEstadoSchema = new Schema({
@@ -93,6 +102,11 @@ const InternacionEstadoSchema = new Schema({
         enum: ['anulada', 'ejecucion', 'validada'],
         required: true,
     },
+    fecha: {
+        type: Date,
+        required: true,
+        default: Date.now
+    }
 });
 
 export const InformeEstadisticaSchema = new Schema({

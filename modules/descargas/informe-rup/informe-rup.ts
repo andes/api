@@ -29,12 +29,25 @@ export class InformeRUP extends InformePDF {
         let organizacion: any;
         let cama = null;
 
-        const prestacion = await Prestacion.findById(this.prestacionId) as any;
+        const informeEstadistico: any = await InformeEstadistica.findById(this.prestacionId);
 
-        if (prestacion) {
+        if (informeEstadistico) {
 
-            paciente = await findById(prestacion.paciente.id);
-            organizacion = await Organizacion.findById(prestacion.ejecucion.organizacion.id);
+            paciente = informeEstadistico.paciente?.id ? await findById(informeEstadistico.paciente.id) : informeEstadistico.paciente;
+            organizacion = informeEstadistico.organizacion?.id ? await Organizacion.findById(informeEstadistico.organizacion.id) : informeEstadistico.organizacion;
+
+            cama = await this.getCamaInternacion(informeEstadistico);
+            prestacionFinal = this.mapInformeToPrestacion(informeEstadistico);
+
+        } else {
+
+            const prestacion = await Prestacion.findById(this.prestacionId) as any;
+            if (!prestacion) {
+                throw new Error(`Prestacion not found with id ${this.prestacionId}`);
+            }
+
+            paciente = prestacion.paciente?.id ? await findById(prestacion.paciente.id) : prestacion.paciente;
+            organizacion = prestacion.ejecucion?.organizacion?.id ? await Organizacion.findById(prestacion.ejecucion.organizacion.id) : prestacion.ejecucion?.organizacion;
 
             const elementosRUPSet = await elementosRUPAsSet();
             await fulfillPrestacion(prestacion, elementosRUPSet);
@@ -42,27 +55,18 @@ export class InformeRUP extends InformePDF {
             cama = await this.getCamaInternacion(prestacion);
             prestacionFinal = prestacion;
 
-        } else {
-
-            const informeEstadistico: any = await InformeEstadistica.findById(this.prestacionId);
-            if (!informeEstadistico) {
-                throw new Error(`Prestacion not found with id ${this.prestacionId}`);
-            }
-
-            paciente = await findById(informeEstadistico.paciente.id);
-            organizacion = await Organizacion.findById(informeEstadistico.organizacion.id);
-
-            cama = await this.getCamaInternacion(informeEstadistico);
-            prestacionFinal = this.mapInformeToPrestacion(informeEstadistico);
-
         }
 
         const idInternacion = prestacionFinal._id || prestacionFinal.id;
+        // NOTA: el PDF no renderiza InformeEstadistica.cambiosCamas; el historial de camas
+        // (ingreso/pases/egreso) se obtiene de obtenerHistorialInternacion mas abajo.
         const fechaDesde = prestacionFinal.ejecucion?.fecha || prestacionFinal.informeIngreso?.fechaIngreso;
-        const fechaHasta = prestacionFinal.informeEgreso?.fechaEgreso || new Date();
+        const fechaHasta = prestacionFinal.informeEstadistico?.egreso?.fecha || new Date();
+
+        const esInternacion = prestacionFinal.solicitud?.ambitoOrigen === 'internacion' || prestacionFinal.inicio === 'internacion';
 
         let movimientos = [];
-        if (idInternacion && organizacion) {
+        if (esInternacion && idInternacion && organizacion) {
             const orgId = organizacion.id || organizacion._id || organizacion;
             // Intentamos obtener movimientos de capa médica
             movimientos = await obtenerHistorialInternacion(
@@ -104,6 +108,11 @@ export class InformeRUP extends InformePDF {
 
 
     async getCamaInternacion(data: any) {
+        const esInternacion = data.solicitud?.ambitoOrigen === 'internacion' || data.inicio === 'internacion';
+        if (!esInternacion) {
+            return null;
+        }
+
         const org = data.solicitud?.organizacion || data.organizacion;
         const fecha = data.ejecucion?.fecha || data.informeIngreso?.fechaIngreso;
 
@@ -158,8 +167,8 @@ export class InformeRUP extends InformePDF {
         if (!hasEjecucion) {
             estados.unshift({
                 tipo: 'ejecucion',
-                createdAt: informe.createdAt || informe.informeIngreso.fechaIngreso,
-                createdBy: informe.estadoActual.createdBy
+                createdAt: informe.createdAt || informe.informeIngreso?.fechaIngreso,
+                createdBy: informe.estadoActual?.createdBy
             });
         }
         return {
@@ -205,7 +214,24 @@ export class InformeRUP extends InformePDF {
                     } : null
                 } : null
             },
-            findRegistroById: () => null
+            // : Se reemplazó la función findRegistroById: () => null por una implementación recursiva de búsqueda en la lista de registros
+            findRegistroById: (id: string | Types.ObjectId) => {
+                const search = (list: any[]) => {
+                    for (const item of list || []) {
+                        if (item._id?.toString() === id?.toString() || item.id?.toString() === id?.toString()) {
+                            return item;
+                        }
+                        if (item.registros?.length) {
+                            const found = search(item.registros);
+                            if (found) {
+                                return found;
+                            }
+                        }
+                    }
+                    return null;
+                };
+                return search(registros);
+            }
         };
     }
 

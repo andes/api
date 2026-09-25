@@ -32,7 +32,9 @@ export class InformeRupFirma extends HTMLComponent {
     }
 
     async process() {
-        this.profesional = (this.profesional._id) ? await Profesional.findOne({ _id: this.profesional.id }) : await Profesional.findOne({ documento: this.profesional.documento });
+        this.profesional = (this.profesional?._id || this.profesional?.id)
+            ? await Profesional.findOne({ _id: this.profesional._id || this.profesional.id })
+            : (this.profesional?.documento ? await Profesional.findOne({ documento: this.profesional.documento }) : null);
         let firma;
         let matriculas;
         let detalle;
@@ -42,9 +44,9 @@ export class InformeRupFirma extends HTMLComponent {
 
             matriculas = await this.getMatriculas();
 
-            detalle = this.profesional.apellido + ', ' + this.profesional.nombre;
+            detalle = (this.profesional.apellido || '') + (this.profesional.nombre ? ', ' + this.profesional.nombre : '');
         }
-        const detalle2 = this.organizacion.nombre.substring(0, this.organizacion.nombre.indexOf('-'));
+        const detalle2 = this.organizacion?.nombre ? (this.organizacion.nombre.indexOf('-') !== -1 ? this.organizacion.nombre.substring(0, this.organizacion.nombre.indexOf('-')) : this.organizacion.nombre) : '';
 
         this.data = {
             firma,

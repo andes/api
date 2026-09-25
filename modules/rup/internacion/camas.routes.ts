@@ -146,23 +146,6 @@ router.patch('/camaEstados/:idCama', Auth.authenticate(), capaMiddleware, asyncH
 
     try {
         if (req.body.extras?.ingreso) {
-            // Si se editan los datos de cobertura, se actualiza la obra social del paciente
-            const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id);
-            const obraSocialUpdated = await updateObraSocial(pacienteMPI);
-            const financiador = updateFinanciador(obraSocialUpdated, req.body.paciente.obraSocial);
-            pacienteMPI.financiador = financiador;
-            await PacienteCtr.update(pacienteMPI.id, pacienteMPI, dataLog);
-            await Prestacion.update(
-                { _id: req.body.idInternacion },
-                {
-                    $set: {
-                        'ejecucion.registros.$[elemento].valor.informeIngreso.obraSocial': req.body.paciente.obraSocial
-                    }
-                },
-                { arrayFilters: [{ 'elemento.valor.informeIngreso.fechaIngreso': moment(req.body.fechaIngreso).toDate() }] }
-            );
-        }
-        if (req.body.extras?.ingreso) {
             const pacienteMPI = await PacienteCtr.findById(req.body.paciente.id);
             const obraSocialUpdated = await updateObraSocial(pacienteMPI);
             const financiador = updateFinanciador(obraSocialUpdated, req.body.paciente.obraSocial);

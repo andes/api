@@ -450,10 +450,15 @@ export async function checkSectorDelete(idOrganizacion: string, idSector: string
     return true;
 }
 
+// Fuente unica de cambiosCamas: capa 'estadistica' + InformeEstadistica.
+// En organizaciones con usaEstadisticaV2 los eventos llegan en capa 'medica'
+// y su idInternacion corresponde a InternacionResumen, no a InformeEstadistica,
+// por lo que no se duplican aqui (esos movimientos los cubre el historial del PDF).
 EventCore.on('mapa-camas:paciente:ingreso', async (estado) => {
     if (estado?.idInternacion && estado.capa === 'estadistica') {
         const informe: any = await InformeEstadistica.findById(estado.idInternacion);
         if (informe) {
+            informe.cambiosCamas = informe.cambiosCamas || [];
             informe.cambiosCamas.push({
                 fecha: estado.fecha || new Date(),
                 idCama: estado.id || estado._id,
@@ -470,12 +475,30 @@ EventCore.on('mapa-camas:paciente:pase', async (estado) => {
     if (estado?.idInternacion && estado.capa === 'estadistica') {
         const informe: any = await InformeEstadistica.findById(estado.idInternacion);
         if (informe) {
+            informe.cambiosCamas = informe.cambiosCamas || [];
             informe.cambiosCamas.push({
                 fecha: estado.fecha || new Date(),
                 idCama: estado.id || estado._id,
                 unidadOrganizativa: estado.unidadOrganizativa
             });
             informe.unidadOrganizativa = estado.unidadOrganizativa;
+            const user = Auth.getUserFromResource(informe);
+            Auth.audit(informe, user as any);
+            await informe.save();
+        }
+    }
+});
+
+EventCore.on('mapa-camas:paciente:egreso', async (estado) => {
+    if (estado?.idInternacion && estado.capa === 'estadistica') {
+        const informe: any = await InformeEstadistica.findById(estado.idInternacion);
+        if (informe) {
+            informe.cambiosCamas = informe.cambiosCamas || [];
+            informe.cambiosCamas.push({
+                fecha: estado.fecha || new Date(),
+                idCama: estado.id || estado._id || estado.idCama,
+                unidadOrganizativa: estado.unidadOrganizativa
+            });
             const user = Auth.getUserFromResource(informe);
             Auth.audit(informe, user as any);
             await informe.save();

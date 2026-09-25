@@ -209,8 +209,11 @@ export class InformeRupBody extends HTMLComponent {
 
         if (this.registroId) {
             const registro = this.prestacion.findRegistroById(this.registroId);
-            this.prestacion.solicitud.tipoPrestacion = registro.concepto;
-            this.prestacion.ejecucion.registros = [registro];
+            // Se agregó una validación para verificar que registro no sea nulo antes de acceder a registro.concepto, evitando así el TypeError cuando se realiza la descarga pasando un idRegistro que no existe en el informe.
+            if (registro) {
+                this.prestacion.solicitud.tipoPrestacion = registro.concepto;
+                this.prestacion.ejecucion.registros = [registro];
+            }
         }
 
         const ps = this.prestacion.ejecucion.registros
