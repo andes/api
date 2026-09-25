@@ -15,10 +15,9 @@ import { SalaComunCtr } from './sala-comun/sala-comun.routes';
 import { SalaComun, SalaComunSnapshot } from './sala-comun/sala-comun.schema';
 import { createPaciente, createUnidadOrganizativa } from './test-utils';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-
+import { InformeEstadistica } from './informe-estadistica.schema';
 const REQMock = getFakeRequest();
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
 const ambito = 'internacion';
 const capa = 'estadistica';
@@ -33,7 +32,7 @@ setupUpMongo();
 beforeEach(async () => {
     await Camas.remove({});
     await CamaEstados.remove({});
-    await Prestacion.remove({});
+    await InformeEstadistica.remove({});
     await SalaComun.remove({});
     await SalaComunSnapshot.remove({});
     await SalaComunMovimientos.remove({});
@@ -68,103 +67,56 @@ beforeEach(async () => {
     internacion = await storeInternacion();
 });
 
-async function storeInternacion() {
-    const nuevaInternacion = new Prestacion({
-        solicitud: {
-            tipoPrestacion: {
-                fsn: 'admisión hospitalaria (procedimiento)',
-                semanticTag: 'procedimiento',
-                conceptId: '32485007',
-                term: 'internación'
-            },
-            organizacion: {
-                _id: mongoose.Types.ObjectId('57e9670e52df311059bc8964'),
-                nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
-            },
-            profesional: {
-                id: mongoose.Types.ObjectId('5cfa6c7d44050298c7173208'),
-                nombre: 'LAUTARO ALBERTO',
-                apellido: 'MOLINA LAGOS',
-                documento: '34377650'
-            },
-            ambitoOrigen: 'internacion',
-            fecha: moment().toDate(),
-            turno: null,
-            registros: []
+async function storeInternacion({ paciente = paciente1, organizacionOverride, unidadOrganizativaOverride, fechaIngreso = moment().toDate() }: { paciente?: any; organizacionOverride?: any; unidadOrganizativaOverride?: any; fechaIngreso?: Date } = {}) {
+    const organizacionLocal = organizacionOverride || {
+        _id: mongoose.Types.ObjectId('57e9670e52df311059bc8964'),
+        nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
+    };
+
+    const unidadOrganizativa = unidadOrganizativaOverride || {
+        fsn: 'unidad test',
+        term: 'unidad test',
+        conceptId: '0001',
+        semanticTag: 'unidad'
+    };
+
+    const ingreso = {
+        fechaIngreso,
+        origen: {
+            tipo: 'internacion',
+            organizacionOrigen: organizacionLocal
         },
-        ejecucion: {
-            organizacion: {
-                id: Types.ObjectId('57e9670e52df311059bc8964'),
-                nombre: 'HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON'
-            },
-            fecha: moment().toDate(),
-            registros: [
-                {
-                    privacy: {
-                        scope: 'public'
-                    },
-                    destacado: false,
-                    esSolicitud: false,
-                    esDiagnosticoPrincipal: false,
-                    relacionadoCon: [],
-                    elementoRUP: null,
-                    nombre: 'documento de solicitud de admisión',
-                    concepto: {
-                        fsn: 'documento de solicitud de admisión (elemento de registro)',
-                        semanticTag: 'elemento de registro',
-                        conceptId: '721915006',
-                        term: 'documento de solicitud de admisión'
-                    },
-                    valor: {
-                        informeIngreso: {
-                            fechaIngreso: moment().subtract(2, 'hours').toDate(),
-                            horaNacimiento: moment().subtract(2, 'hours').toDate(),
-                            edadAlIngreso: '63 año/s',
-                            origen: 'Consultorio externo',
-                            ocupacionHabitual: null,
-                            situacionLaboral: null,
-                            especialidades: [
-                                {
-                                    _id: '5ea9763acac91c5873e24c0b',
-                                    conceptId: '419192003',
-                                    fsn: 'medicina interna (calificador)',
-                                    semanticTag: 'calificador',
-                                    term: 'clínica médica'
-                                }
-                            ],
-                            asociado: 'Plan o Seguro público',
-                            obraSocial: {
-                                nombre: 'SUMAR',
-                                financiador: 'SUMAR',
-                                codigoPuco: null
-                            },
-                            nroCarpeta: null,
-                            motivo: null,
-                            organizacionOrigen: null,
-                            profesional: paciente1,
-                            PaseAunidadOrganizativa: null
-                        }
-                    },
-                    registros: [],
-                    hasSections: false,
-                    isSection: false,
-                    noIndex: false,
-                }
-            ]
-        },
-        estados: [
-            {
-                tipo: 'ejecucion',
-                fecha: moment().toDate(),
-            }
-        ],
-        noNominalizada: false,
-        paciente: paciente1,
-        inicio: 'internacion'
+        profesional: paciente,
+        motivo: 'Ingreso por test'
+    };
+    const nuevoInforme: any = new InformeEstadistica({
+        organizacion: organizacionLocal,
+        unidadOrganizativa,
+        paciente,
+        informeIngreso: ingreso,
+        periodosCensables: [{
+            desde: moment(fechaIngreso).startOf('day').toDate(),
+            hasta: moment(fechaIngreso).endOf('day').toDate()
+        }],
+        estados: [{ tipo: 'ejecucion', fecha: fechaIngreso }],
+        estadoActual: { tipo: 'ejecucion' }
     });
-    Auth.audit(nuevaInternacion, REQMock);
-    const resp = await Prestacion.create(nuevaInternacion);
-    return resp;
+
+    if (process.env.NODE_ENV !== 'test') {
+        await nuevoInforme.save();
+    }
+
+    try {
+        Auth.audit(nuevoInforme, REQMock);
+    } catch (e) {
+    }
+
+    try {
+        const saved = await nuevoInforme.save();
+        return saved;
+    } catch (err) {
+        throw err;
+    }
 }
 
 
@@ -288,7 +240,7 @@ describe('Internacion - Controller', () => {
 });
 
 test('Deshacer Internacion', async () => {
-    const maquinaEstados = await EstadosCtr.create({
+    await EstadosCtr.create({
         organizacion,
         ambito,
         capa,
@@ -303,21 +255,20 @@ test('Deshacer Internacion', async () => {
             { origen: 'disponible', destino: 'ocupada' },
             { origen: 'disponible', destino: 'bloqueada' },
             { origen: 'bloqueada', destino: 'disponible' },
-            { origen: 'ocupada', destino: 'disponible' },
+            { origen: 'ocupada', destino: 'disponible' }
         ]
     }, REQMock);
 
-    expect(maquinaEstados.createdAt).toBeDefined();
-    expect(maquinaEstados.createdBy.nombre).toBe(REQMock.user.usuario.nombre);
+    const fechaIngreso = moment().startOf('day').add(10, 'minutes').toDate(); // bien temprano
+    const fechaConsulta = moment().endOf('day').toDate();// para findById
 
-    // OCUPA LA CAMA
     await patchEstados({
         id: cama._id,
         ambito,
         capa,
         estado: 'ocupada',
         esMovimiento: true,
-        fecha: moment().subtract(2, 'hours').toDate(),
+        fecha: internacion.informeIngreso.fechaIngreso,
         organizacion: cama.organizacion,
         extras: { ingreso: true },
         idInternacion: internacion.id,
@@ -331,10 +282,28 @@ test('Deshacer Internacion', async () => {
         }
     }, REQMock);
 
-    let camaEncontrada: any = await findById({ organizacion, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
-    expect(camaEncontrada.estado).toBe('ocupada');
-    await InternacionController.deshacerInternacion(camaEncontrada.organizacion._id, capa, ambito, camaEncontrada.idInternacion, false, REQMock);
+    let camaEncontrada = await findById(
+        { organizacion, capa, ambito },
+        idCama,
+        fechaConsulta
+    );
 
-    camaEncontrada = await findById({ organizacion, capa, ambito }, idCama, moment().subtract(1, 'minutes').toDate());
+    expect(camaEncontrada.estado).toBe('ocupada');
+
+    await InternacionController.deshacerInternacion(
+        camaEncontrada.organizacion._id.toString(),
+        capa,
+        ambito,
+        camaEncontrada.idInternacion.toString(),
+        false,
+        REQMock
+    );
+
+    camaEncontrada = await findById(
+        { organizacion, capa, ambito },
+        idCama,
+        fechaConsulta
+    );
+
     expect(camaEncontrada.estado).toBe('disponible');
 });

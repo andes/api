@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, SchemaTypes, model } from 'mongoose';
 import { SnomedConcept } from '../schemas/snomed-concept';
 import * as OrganizacionSchema from '../../../core/tm/schemas/nombre';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
@@ -7,24 +7,38 @@ import { ObraSocialSchema } from '../../obraSocial/schemas/obraSocial';
 import { PacienteSubSchema } from '../../../core-v2/mpi';
 import { schema as procQuirurgicosSchema } from '../../../core/tm/schemas/procedimientoQuirurgico';
 import { schema as Cie10 } from '../../../core/term/schemas/cie10';
-import { model as OcupacionSchema } from '../../../core/tm/schemas/ocupacion';
+import { schema as OcupacionSchema } from '../../../core/tm/schemas/ocupacion';
+
+const CambioCamaSchema = new Schema({
+    fecha: Date,
+    idCama: SchemaTypes.ObjectId,
+    unidadOrganizativa: SnomedConcept
+}, { _id: false });
 
 const InformeIngresoSchema = new Schema({
     fechaIngreso: {
         type: Date,
         required: true
     },
+    esCensable: Boolean,
     origen: {
         tipo: String, // Origen hospitalización  enumerado?
-        organizacionOrigen: OrganizacionSchema, // Organización origen - solo para "traslado"
+        organizacionOrigen: { type: OrganizacionSchema, required: false }, // Organización origen - solo para "traslado"
         otraOrganizacion: { // solo para "traslado"
             type: String,
             required: false
         },
     },
+    // datos estadisticos
     ocupacionHabitual: OcupacionSchema,
-    situacionLaboral: String,
-    nivelInstruccion: String,
+    situacionLaboral: {
+        id: String,
+        nombre: String
+    },
+    nivelInstruccion: {
+        id: String,
+        nombre: String
+    },
     especialidades: [SnomedConcept],
     nroCarpeta: String, // evaluar continuidad de este dato
     motivo: String,
@@ -48,24 +62,22 @@ const InformeEgresoSchema = new Schema({
         {
             procedimiento: {
                 // revisar no incluye campo  nom: que es una concatenacion de nombre y codigo
-                type: procQuirurgicosSchema, requied: false
+                type: procQuirurgicosSchema, required: false
             },
             fecha: Date,
         }
     ],
     causaExterna: {
-        producidaPor: null,
-        lugar: null,
-        comoSeProdujo: null
+        producidaPor: Schema.Types.Mixed, // acepta string o objeto
+        lugar: Schema.Types.Mixed,
+        comoSeProdujo: Schema.Types.Mixed
     },
     diasDeEstada: Number,
     tipoEgreso: {
-        tipo: String, // ver si pasa a un enumerado: alta, traslado, defuncion
+        id: { type: String, required: false },
+        nombre: { type: String, required: false },
         OrganizacionDestino: OrganizacionSchema,
-        otraOrganizacion: { // solo para "traslado" (ex UnidadOrganizativaDestino)
-            type: String,
-            required: false
-        }
+        otraOrganizacion: { type: String, required: false }
     },
     diagnosticos: {
         principal: Cie10, // diagnosticoPrincipal
@@ -82,6 +94,11 @@ const InternacionEstadoSchema = new Schema({
         enum: ['anulada', 'ejecucion', 'validada'],
         required: true,
     },
+    fecha: {
+        type: Date,
+        required: true,
+        default: Date.now
+    }
 });
 
 export const InformeEstadisticaSchema = new Schema({
@@ -100,9 +117,10 @@ export const InformeEstadisticaSchema = new Schema({
     },
     informeEgreso: {
         type: InformeEgresoSchema,
-        required: true
+        required: false
     },
     periodosCensables: [{ desde: Date, hasta: Date }],
+    cambiosCamas: [CambioCamaSchema],
     estados: [InternacionEstadoSchema],
     estadoActual: InternacionEstadoSchema,
 

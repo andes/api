@@ -9,14 +9,16 @@ import { CamaEstados } from './cama-estados.schema';
 import { storeEstados } from './camas.controller';
 import { Camas } from './camas.schema';
 import * as CensoController from './censo.controller';
-import { createInternacionPrestacion, estadoOcupada } from './test-utils';
+import { createInternacionInforme, createInternacionPrestacion, estadoOcupada } from './test-utils';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
+import { InformeEstadistica } from './informe-estadistica.schema';
+import { InternacionResumen } from './resumen/internacion-resumen.schema';
 
 const REQMock: any = {
     user: {}
 };
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
+// jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
 let mongoServer: any;
 const ambito = 'internacion';
@@ -31,10 +33,14 @@ const otraUnidadOrganizativa = {
     conceptId: '309957000',
     semanticTag: 'medio ambiente'
 };
-
 beforeAll(async () => {
     try {
-        mongoServer = await MongoMemoryServer.create();
+        mongoServer = await MongoMemoryServer.create({
+            binary: {
+                // version: '4.0.3'
+                version: '4.2.6'
+            }
+        });
         const mongoUri = mongoServer.getUri();
         await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
     } catch (error) {
@@ -47,6 +53,8 @@ beforeAll(async () => {
 beforeEach(async () => {
     await Camas.remove({});
     await CamaEstados.remove({});
+    await InformeEstadistica.remove({});
+    await InternacionResumen.remove({});
     await Prestacion.remove({});
     await Organizacion.remove({});
 
@@ -164,18 +172,22 @@ test('Censo diario - vacio', async () => {
 });
 
 test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'd').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(1, 'd').toDate();
+
+    InformeEstadistico.informeEgreso = null;
+
+
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
 
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
         estadoOcupada(moment().subtract(1, 'd').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
         REQMock
     );
-
+    const timestampStart = moment().startOf('day');
+    const snapshots = await CamasEstadosController.snapshotEstados({ fecha: timestampStart, organizacion, ambito, capa: 'medica' }, {});
     const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
 
     expect(resultado.censo).toEqual({
@@ -193,14 +205,44 @@ test('Censo diario - Paciente desde 0hs hasta 24hs', async () => {
     });
 });
 
-test('Censo diario - Paciente desde 0hs tiene alta', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'minute').toDate();
+// Censo de capa medica (estadistica-v2) roto ..SOLUCIONADO
+test('Censo diario usa la prestación en la capa médica para organizaciones con estadística v2', async () => {
+    await Organizacion.updateOne({ _id: organizacion }, { $set: { usaEstadisticaV2: true } });
 
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    const prestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
+    Auth.audit(prestacion, REQMock);
+    await prestacion.save();
 
+    const resumen: any = new InternacionResumen({
+        organizacion: { id: cama.organizacion._id, nombre: cama.organizacion.nombre },
+        idPrestacion: prestacion._id
+    });
+    Auth.audit(resumen, REQMock);
+    await resumen.save();
+
+    await CamasEstadosController.store(
+        { organizacion, ambito, capa: 'medica', cama: idCama },
+        estadoOcupada(moment().subtract(1, 'd').toDate(), resumen._id, cama.unidadOrganizativaOriginal),
+        REQMock
+    );
+
+    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+
+    expect(resultado).not.toBeNull();
+    expect(resultado.censo.existenciaALas0).toBe(1);
+});
+test('Censo diario - Paciente desde 0hs tiene alta ', async () => {
+    const informe: any = new InformeEstadistica(
+        createInternacionInforme(cama.organizacion, cama.unidadOrganizativa)
+    );
+    informe.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
+    informe.informeEgreso = {
+        fechaEgreso: moment().subtract(1, 'minute').toDate(),
+    };
+
+    Auth.audit(informe, ({ user: {} }) as any);
+
+    const internacion = await informe.save();
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
         estadoOcupada(moment().subtract(1, 'd').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
@@ -231,14 +273,22 @@ test('Censo diario - Paciente desde 0hs tiene alta', async () => {
 });
 
 test('Censo diario - Paciente desde 0hs tiene defuncion', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'hour').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
 
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
+
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: moment().subtract(1, 'hour').toDate(),
+        tipoEgreso: {
+            id: 'defuncion',
+            nombre: 'Defunción'
+        }
+    };
+
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
+
 
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
@@ -268,12 +318,14 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
     cama2.audit(REQMock);
     cama2 = await cama2.save();
     await storeEstados(cama2, REQMock);
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'day').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(1, 'd').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: null
+    };
 
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
 
 
     await CamasEstadosController.store(
@@ -329,11 +381,15 @@ test('Censo diario - Paciente desde 0hs tiene pase A', async () => {
 });
 
 test('Censo diario - Paciente ingresa y se queda', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(1, 'minute').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(1, 'minute').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: null
+    };
+
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
     await CamasEstadosController.store(
         {
             organizacion,
@@ -361,12 +417,48 @@ test('Censo diario - Paciente ingresa y se queda', async () => {
     });
 });
 
+test('Censo diario - informeIngreso.esCensable persiste y se refleja en el censo', async () => {
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(1, 'd').toDate();
+    InformeEstadistico.informeIngreso.esCensable = false;
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
+
+    await CamasEstadosController.store(
+        { organizacion, ambito, capa, cama: idCama },
+        estadoOcupada(moment().subtract(1, 'd').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
+        REQMock
+    );
+
+    const guardado: any = await InformeEstadistica.findById(internacion._id);
+    expect(guardado.informeIngreso.esCensable).toBe(false);
+
+    const resultadoSinCensar = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+    expect(resultadoSinCensar.censo.existenciaALas24).toBe(1);
+    expect(resultadoSinCensar.censo.disponibles).toBe(1);
+
+    await InformeEstadistica.updateOne({ _id: internacion._id }, { $set: { 'informeIngreso.esCensable': true } });
+
+    const guardadoCensable: any = await InformeEstadistica.findById(internacion._id);
+    expect(guardadoCensable.informeIngreso.esCensable).toBe(true);
+
+    const resultadoCensable = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+    expect(resultadoCensable.censo.existenciaALas24).toBe(1);
+    expect(resultadoCensable.censo.disponibles).toBe(2);
+});
+
 test('Censo diario - Paciente ingresa y tiene alta', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'minute').toDate();
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    // const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
+    // nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
+    // nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'minute').toDate();
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: moment().subtract(1, 'minute').toDate()
+    };
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
 
     await CamasEstadosController.store({
         organizacion,
@@ -374,8 +466,7 @@ test('Censo diario - Paciente ingresa y tiene alta', async () => {
         capa,
         cama: idCama
     }, estadoOcupada(
-        moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
-    REQMock
+        moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal), REQMock
     );
 
     await CamasEstadosController.store({
@@ -403,13 +494,29 @@ test('Censo diario - Paciente ingresa y tiene alta', async () => {
 });
 
 test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().subtract(1, 'minute').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+
+    const InformeEstadistico: any = new InformeEstadistica(
+        createInternacionInforme(cama.organizacion, cama.unidadOrganizativa)
+    );
+
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
+
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: moment().toDate(),
+        tipoEgreso: {
+            id: 'defuncion',
+            nombre: 'Defunción'
+        }
+    };
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+
+    const internacion = await InformeEstadistico.save();
+
+    const estadoOcup = estadoOcupada(
+        moment().subtract(2, 'm').toDate(),
+        internacion._id,
+        cama.unidadOrganizativaOriginal
+    );
 
     await CamasEstadosController.store(
         {
@@ -418,18 +525,29 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
             capa,
             cama: idCama
         },
-        estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
+        estadoOcup,
         REQMock
     );
 
-    await CamasEstadosController.store({
-        organizacion,
-        ambito,
-        capa,
-        cama: idCama
-    }, estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute'), REQMock);
+    const estadoDisp = estadoDisponible(cama.unidadOrganizativaOriginal, 1, 'minute');
 
-    const resultado = await CensoController.censoDiario({ organizacion, timestamp: moment().toDate(), unidadOrganizativa });
+    await CamasEstadosController.store(
+        {
+            organizacion,
+            ambito,
+            capa,
+            cama: idCama
+        },
+        estadoDisp,
+        REQMock
+    );
+
+    const resultado = await CensoController.censoDiario({
+        organizacion,
+        timestamp: moment().toDate(),
+        unidadOrganizativa
+    });
+
 
     expect(resultado.censo).toEqual({
         existenciaALas0: 0,
@@ -446,16 +564,16 @@ test('Censo diario - Paciente ingresa y tiene defuncion', async () => {
     });
 });
 
+
 test('Censo diario - Paciente ingresa y tiene pase A', async () => {
     let cama2: any = new Camas(seedCama(1, 'y', otraUnidadOrganizativa));
     cama2.audit(REQMock);
     cama2 = await cama2.save();
     await storeEstados(cama2, REQMock);
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
-
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(2, 'minute').toDate();
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
 
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
@@ -491,11 +609,10 @@ test('Censo diario - Paciente ingresa y tiene pase A', async () => {
 });
 
 test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
-
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
         estadoOcupada(moment().subtract(4, 'm').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
@@ -532,11 +649,14 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y se queda', 
 });
 
 test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene alta', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: moment().toDate()
+    };
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
+
 
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
@@ -574,13 +694,17 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene alta'
 });
 
 test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defuncion', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(4, 'minutes').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: moment().toDate(),
+        tipoEgreso: {
+            id: 'defuncion',
+            nombre: 'Defunción'
+        }
+    };
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
 
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
@@ -618,12 +742,13 @@ test('Censo diario - Paciente ingresa y tiene paseA y luego paseDe y tiene defun
 });
 
 test('Censo diario - Paciente tiene paseDe y se queda', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
-
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: null
+    };
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
         estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, otraUnidadOrganizativa),
@@ -655,14 +780,15 @@ test('Censo diario - Paciente tiene paseDe y se queda', async () => {
     });
 });
 
+
 test('Censo diario - Paciente tiene paseDe y tiene alta', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
-
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: moment().subtract(1, 'minute').toDate()
+    };
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
         estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, otraUnidadOrganizativa),
@@ -693,15 +819,19 @@ test('Censo diario - Paciente tiene paseDe y tiene alta', async () => {
 });
 
 test('Censo diario - Paciente tiene paseDe y tiene defuncion', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = moment().toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.id = 'Defunción';
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.tipoEgreso.nombre = 'Defunción';
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(2, 'minutes').toDate();
 
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: moment().toDate(),
+        tipoEgreso: {
+            id: 'defuncion',
+            nombre: 'Defunción'
+        }
+    };
 
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
         estadoOcupada(moment().subtract(2, 'm').toDate(), internacion._id, otraUnidadOrganizativa),
@@ -736,11 +866,11 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
     cama2.audit(REQMock);
     cama2 = await cama2.save();
     await storeEstados(cama2, REQMock);
-    const nuevaPrestacion: any = new Prestacion(
-        createInternacionPrestacion(cama.organizacion, moment().add(4, 'd').toDate())
+    const InformeEstadistico: any = new InformeEstadistica(
+        createInternacionInforme(cama.organizacion, moment().add(4, 'd').toDate())
     );
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
 
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: cama2._id },
@@ -784,14 +914,16 @@ test('Censo diario - Paciente tiene paseDe y tiene paseA', async () => {
 
 
 test('Censo diario - Prestación con periodos censables incluyentes', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(10, 'd').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
-    nuevaPrestacion.periodosCensables = [{ desde: moment().subtract(1, 'd'), hasta: moment().add(1, 'd') }];
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(10, 'd').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: null,
+    };
 
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
+    InformeEstadistico.periodosCensables = [{ desde: moment().subtract(1, 'd'), hasta: moment().add(1, 'd') }];
 
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
         estadoOcupada(moment().subtract(10, 'd').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
@@ -816,14 +948,16 @@ test('Censo diario - Prestación con periodos censables incluyentes', async () =
 });
 
 test('Censo diario - Prestación con periodos censables excluyentes', async () => {
-    const nuevaPrestacion: any = new Prestacion(createInternacionPrestacion(cama.organizacion));
-    nuevaPrestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso = moment().subtract(10, 'd').toDate();
-    nuevaPrestacion.ejecucion.registros[1].valor.InformeEgreso.fechaEgreso = null;
-    nuevaPrestacion.periodosCensables = [{ desde: moment().add(1, 'd'), hasta: moment().add(3, 'd') }];
+    const InformeEstadistico: any = new InformeEstadistica(createInternacionInforme(cama.organizacion, cama.unidadOrganizativa));
+    InformeEstadistico.informeIngreso.fechaIngreso = moment().subtract(10, 'd').toDate();
+    InformeEstadistico.informeEgreso = {
+        fechaEgreso: null,
+    };
 
-    Auth.audit(nuevaPrestacion, ({ user: {} }) as any);
-    const internacion = await nuevaPrestacion.save();
 
+    InformeEstadistico.periodosCensables = [{ desde: moment().add(1, 'd'), hasta: moment().add(3, 'd') }];
+    Auth.audit(InformeEstadistico, ({ user: {} }) as any);
+    const internacion = await InformeEstadistico.save();
     await CamasEstadosController.store(
         { organizacion, ambito, capa, cama: idCama },
         estadoOcupada(moment().subtract(10, 'd').toDate(), internacion._id, cama.unidadOrganizativaOriginal),
@@ -846,7 +980,6 @@ test('Censo diario - Prestación con periodos censables excluyentes', async () =
         disponibles: 1
     });
 });
-
 function estadoDisponible(unidadOrganizativaEstado, cantidad, unidad) {
     return {
         fecha: moment().subtract(cantidad, unidad).toDate(),

@@ -1,5 +1,5 @@
 
-import { MatchingAndes } from '@andes/match/lib/matchingAndes.class';
+import { MatchingAndes } from '@andes/match/dist/lib/matchingAndes.class.js';
 import * as localidad from '../schemas/localidad';
 import * as provincia from '../schemas/provincia_model';
 import { ZonaSanitaria } from '../schemas/zonaSanitarias';
