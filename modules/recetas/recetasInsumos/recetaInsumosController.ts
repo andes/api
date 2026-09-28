@@ -18,7 +18,13 @@ export async function buscarRecetasInsumos(req) {
     const sexo = params.sexo || null;
     const user = req.user || {};
     try {
-        if (!params.id && !params.idRegistro && ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId)))) {
+        if (params.id && !Types.ObjectId.isValid(params.id)) {
+            throw new ParamsIncorrect();
+        }
+        if (pacienteId && !Types.ObjectId.isValid(pacienteId)) {
+            throw new ParamsIncorrect();
+        }
+        if (!params.id && !params.idRegistro && !pacienteId && (!documento || !sexo)) {
             throw new ParamsIncorrect();
         }
         const paramMap = {
