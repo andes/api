@@ -130,16 +130,25 @@ export async function buscarRecetas(req) {
     const sexo = params.sexo || null;
     const user = req.user;
     try {
-        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId)) || (params.id && !Types.ObjectId.isValid(params.id))) {
+        if (params.id && !Types.ObjectId.isValid(params.id)) {
             throw new ParamsIncorrect();
         }
+        if (pacienteId && !Types.ObjectId.isValid(pacienteId)) {
+            throw new ParamsIncorrect();
+        }
+        if (!params.id && !params.idRegistro && !pacienteId && (!documento || !sexo)) {
+            throw new ParamsIncorrect();
+        }
+
         // se verifica paciente y sus vinculados si tuviera
-        const pacienteAndes: any = pacienteId ? await Paciente.findById(pacienteId) :
-            (documento && sexo) ? await Paciente.findOne({ documento, sexo, activo: true }) : null;
-        if (!pacienteAndes) {
-            throw new ParamsIncorrect();
+        if (pacienteId || (documento && sexo)) {
+            const pacienteAndes: any = pacienteId ? await Paciente.findById(pacienteId) :
+                await Paciente.findOne({ documento, sexo, activo: true });
+            if (!pacienteAndes) {
+                throw new ParamsIncorrect();
+            }
+            options['paciente.id'] = { $in: pacienteAndes.vinculos };
         }
-        options['paciente.id'] = { $in: pacienteAndes.vinculos };
         if (params.id) {
             options['_id'] = Types.ObjectId(params.id);
         }

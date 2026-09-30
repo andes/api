@@ -125,5 +125,6 @@ RecetasRouter.get('/recetas/motivos', asyncHandler(getMotivos));
 RecetasRouter.get('/recetas/filtros', authorizeByToken, asyncHandler(getConFiltros));
 RecetasRouter.get('/recetas/profesional/:id', authorizeByToken, asyncHandler(getByProfesional));
 RecetasRouter.get('/recetas/verificar', authorizeByToken, asyncHandler(getVerificarReceta));
+RecetasRouter.get('/recetas/:id', authorizeByToken, asyncHandler(get));
 RecetasRouter.patch('/recetas', authorizeByToken, asyncHandler(patch));
 RecetasRouter.post('/recetas', authorizeByToken, asyncHandler(post));

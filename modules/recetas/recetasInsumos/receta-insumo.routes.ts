@@ -95,6 +95,7 @@ RecetaInsumoRouter.use(Auth.authenticate());
 RecetaInsumoRouter.get('/recetasInsumos', authorizeByToken, asyncHandler(get));
 RecetaInsumoRouter.get('/recetasInsumos/filtros', authorizeByToken, asyncHandler(getConFiltros));
 RecetaInsumoRouter.get('/recetasInsumos/profesional/:id', authorizeByToken, asyncHandler(getByProfesional));
+RecetaInsumoRouter.get('/recetasInsumos/:id', authorizeByToken, asyncHandler(get));
 RecetaInsumoRouter.post('/recetasInsumos', authorizeByToken, asyncHandler(post));
 RecetaInsumoRouter.patch('/recetasInsumos', authorizeByToken, asyncHandler(patch));
 
