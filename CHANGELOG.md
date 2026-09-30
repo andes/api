@@ -1,3 +1,11 @@
+# [5.148.0](https://github.com/andes/api/compare/v5.147.5...v5.148.0) (2026-09-30)
+
+
+### Features
+
+* **MPI:** implementa numero de telefono extranjero ([#2170](https://github.com/andes/api/issues/2170)) ([da49f7b](https://github.com/andes/api/commit/da49f7b71719c382aa0d1007cbefa37b6b304725))
+* **MPI-478:** Filtros para busqueda de paciente ([#2237](https://github.com/andes/api/issues/2237)) ([c210c83](https://github.com/andes/api/commit/c210c83e95c6da1cbe765f6a9a2e2305afa42390))
+
 ## [5.147.5](https://github.com/andes/api/compare/v5.147.4...v5.147.5) (2026-09-02)
 
 ## [5.147.4](https://github.com/andes/api/compare/v5.147.3...v5.147.4) (2026-08-12)
