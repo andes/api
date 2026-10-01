@@ -134,6 +134,25 @@ export function initAPI(app: Express) {
             proxy(configPrivate.hosts.BI_QUERY)
         );
     }
+
+    if (configPrivate.hosts.VADEMECUM) {
+        app.use(
+            '/api/vademecum',
+            Auth.authenticate(),
+            proxy(configPrivate.hosts.VADEMECUM, {
+                proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+                    if (configPrivate.hosts.VADEMECUM_API_KEY) {
+                        proxyReqOpts.headers['x-api-key'] = configPrivate.hosts.VADEMECUM_API_KEY;
+                    }
+                    return proxyReqOpts;
+                },
+                proxyReqPathResolver: (req) => {
+                    const path = req.url.startsWith('/') ? req.url : '/' + req.url;
+                    return path.startsWith('/api') ? path : '/api' + path;
+                }
+            })
+        );
+    }
     app.use('/api/modules/turnos', require('./modules/turnos').InstitucionRouter);
 
     const { PacienteAppRouter, SendMessageCacheRouter } = require('./modules/mobileApp');
