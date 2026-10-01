@@ -10,7 +10,8 @@ export async function getVacunas(paciente) {
 
         const resultados = await vacunas.find(conditions).sort(sort);
         if (resultados.length > 0) {
-            resultados.forEach((vacuna: any, index) => {
+            // filter en lugar de splice: borrar elementos mientras se recorre el array corre los índices
+            return resultados.filter((vacuna: any) => {
                 const pacienteVacuna = {
                     nombre: vacuna.nombre,
                     apellido: vacuna.apellido,
@@ -21,13 +22,14 @@ export async function getVacunas(paciente) {
                 const match = new Matching();
                 const resultadoMatching = match.matchPersonas(paciente, pacienteVacuna, weightsVaccine, 'Levenshtein');
                 if (resultadoMatching < 0.90) {
-                    resultados.splice(index, 1);
+                    return false;
                 } else {
                     vacuna.nombre = undefined;
                     vacuna.apellido = undefined;
                     vacuna.sexo = undefined;
                     vacuna.documento = undefined;
                     vacuna.fechaNacimiento = undefined;
+                    return true;
                 }
             });
         }
