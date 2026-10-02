@@ -115,6 +115,7 @@ const authorizeByToken = async (req: Request, res: Response, next) =>
         'huds:visualizacionParcialHuds:laboratorio',
         'huds:visualizacionParcialHuds:vacuna',
         'huds:visualizacionParcialHuds:receta',
+        'huds:visualizacionParcialHuds:solicitudes',
         'huds:visualizacionParcialHuds:*',
         'recetas:read'
     ]);
