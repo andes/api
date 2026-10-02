@@ -178,7 +178,7 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
         try {
             const paciente = await Paciente.find({ documento: req.body.protocolo.data.documento });
             if (!paciente || !paciente.length) {
-                throw new Error('Error al generar laboratorio.');
+                throw new Error('Ocurrió un error generando el archivo.');
             }
 
             if (req.user.type === 'paciente-token') {
@@ -193,7 +193,7 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
             dataSearch = { idProtocolo: req.body.protocolo.data.idProtocolo };
             const response = await laboratorioController.search(dataSearch);
             if (!response.length) {
-                throw new Error('Error al generar laboratorio.');
+                throw new Error('Ocurrió un error generando el archivo.');
             }
             const docLaboratorio = new Laboratorio(req.body.protocolo, response, paciente, req.body.usuario, req.user.type);
             const opciones = { header: { height: '2cm' } };
