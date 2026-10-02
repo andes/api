@@ -135,7 +135,7 @@ export class CertificadoEticaBody extends HTMLComponent {
 
         _data.sanciones?.map(s => {
             s.fecha = s.fecha ? moment(s.fecha).format('DD/MM/YYYY') : '-';
-            s.vencimiento = s.vencimiento ? moment(s.vencimiento).format('DD/MM/YYYY') : '-';
+            s.vencimiento = (s.sancion.nombre !== 'Multa' && s.vencimiento) ? moment(s.vencimiento).format('DD/MM/YYYY') : '-';
             s.normaLegal = s.normaLegal || '-';
             return s;
         });
@@ -145,7 +145,7 @@ export class CertificadoEticaBody extends HTMLComponent {
         }
 
         _data.sanciones = _data.sanciones?.filter(sancion =>
-            sancion.vencimiento && moment(sancion.vencimiento, 'DD/MM/YYYY').isAfter(moment())
+            sancion.sancion.nombre === 'Multa' || (sancion.vencimiento && moment(sancion.vencimiento, 'DD/MM/YYYY').isAfter(moment()))
         ) || [];
 
         const tieneSanciones = (_data.sanciones?.length > 0);
