@@ -1,5 +1,5 @@
 import { Profesional } from '../core/tm/schemas/profesional';
-import { SIISAObject, SIISAEspecialidad } from 'core/tm/schemas/siisa';
+import { matriculacionLog } from '../modules/matriculaciones/controller/matriculaciones.log';
 import * as moment from 'moment';
 
 async function run(done) {
@@ -25,179 +25,140 @@ async function run(done) {
         periodos: Iperiodos[];
     };
 
-    interface IformacionPosgrado {
-        profesion: SIISAObject;
-        institucionFormadora: SIISAObject;
-        especialidad: SIISAEspecialidad;
-        fechaIngreso: Date;
-        fechaEgreso: Date;
-        tituloFileId: String;
-        observacion: String;
-        certificacion: {
-            fecha: Date;
-            modalidad: SIISAObject;
-            establecimiento: SIISAObject;
-        };
-        matriculacion: Imatriculacion[];
-        matriculado: Boolean;
-        renovacion: Boolean;
-        papelesVerificados: Boolean;
-        fechaDeVencimiento: Date;
-        exportadoSisa: Boolean;
-        tieneVencimiento: Boolean;
-        notas: [String];
-    };
-    const TotProf = await Profesional.aggregate([{ $count: 'Cant' }]);
-    let totalProf: Number;
-    for (const cp of TotProf) {
-        totalProf = cp.Cant;
-    }
-
-    const actualizar = true;
-
     const profesionales = Profesional.find({
         formacionPosgrado: {
             $exists: true,
             $ne: null,
             $not: { $size: 0 }
-        },
-        'formacionPosgrado.matriculacion': { $ne: null }
-
+        }
     }).lean().cursor({ batchSize: 100 });
 
-    let upProf: boolean;
-    for await (const profesional of profesionales) {
+    let cantProcesados = 0;
+    let cantConCambios = 0;
+    let cantErrores = 0;
 
-        const profesionalId = profesional._id;
-        const formacionPosgrado = profesional.formacionPosgrado;
+    try {
+        for await (const profesional of profesionales) {
 
-        upProf = false;
+            const profesionalId = profesional._id;
+            const formacionPosgrado = profesional.formacionPosgrado;
 
-        for (let i = 0; i < formacionPosgrado.length; i++) {
+            let upProf = false;
 
-            const profMatriculacion = formacionPosgrado[i].matriculacion;
-            const fechasDeAltas = formacionPosgrado[i].fechasDeAltas;
-            const fechasAlta: Date[] = [];
-            const periodos: Iperiodos[][] = [];
+            try {
+                for (let i = 0; i < formacionPosgrado.length; i++) {
 
-            if (fechasDeAltas) {
-                for (const fechasdealtas of fechasDeAltas) {
-                    fechasAlta.push(fechasdealtas.fecha ? moment(fechasdealtas.fecha).toDate() : null);
-                }
-            }
-
-            let cantMatriculas = 0;
-            let contMatriculas = 0;
-            let nuevaCantMatriculas = 0;
-
-            const inicio: Date[] = [];
-            const fin: Date[] = [];
-            const matriculaNumero: number[] = [];
-            const folio: String[] = [];
-            const libro: String[] = [];
-            const bajaFecha: Date[] = [];
-            const bajaMotivo: String[] = [];
-            const notificacionVencimiento: boolean[] = [];
-
-            for (const matriculacion of profMatriculacion) {
-
-                if (!matriculacion.periodos?.length) {
-                    matriculaNumero.push(matriculacion.matriculaNumero);
-                    if (matriculacion.inicio) {
-                        inicio.push(matriculacion.inicio);
-                    } else {
-                        inicio.push(fechasAlta[cantMatriculas]);
-                    }
-                    if (matriculacion.folio) {
-                        folio.push(matriculacion.folio);
-                    }
-                    if (matriculacion.libro) {
-                        libro.push(matriculacion.libro);
+                    const fp = formacionPosgrado[i];
+                    if (!fp || !fp.matriculacion) {
+                        continue;
                     }
 
-                    fin.push(matriculacion.fin ? moment(matriculacion.fin).toDate() : null);
-                    bajaFecha.push(matriculacion.baja?.fecha ? moment(matriculacion.baja.fecha).toDate() : null);
-                    bajaMotivo.push(matriculacion.baja?.motivo ? matriculacion.baja.motivo : null);
-                    notificacionVencimiento.push(matriculacion.notificacionVencimiento ? matriculacion.notificacionVencimiento : false);
+                    // La matriculacion puede venir como objeto suelto por cómo se cargó históricamente
+                    const profMatriculacion = Array.isArray(fp.matriculacion) ? fp.matriculacion : [fp.matriculacion];
 
-                    const renovacion = false;
-
-                    if (cantMatriculas !== 0) {
-                        contMatriculas++;
-                        nuevaCantMatriculas++;
+                    // Si algún elemento ya tiene periodos, el posgrado ya está migrado y se ignora
+                    const yaMigrado = profMatriculacion.some(m => m && Array.isArray(m.periodos) && m.periodos.length > 0);
+                    if (yaMigrado) {
+                        continue;
                     }
 
-                    if (!periodos[nuevaCantMatriculas]) {
-                        periodos[nuevaCantMatriculas] = [];
-                    }
-
-                    periodos[nuevaCantMatriculas].push(
-                        {
-                            notificacionVencimiento: notificacionVencimiento[cantMatriculas],
-                            inicio: inicio[cantMatriculas],
-                            fin: fin[cantMatriculas],
-                            renovacionNumero: contMatriculas,
-                            renovacion
+                    // Recolecta las altas desde fechasDeAltas
+                    const fechasAlta: Date[] = [];
+                    if (fp.fechasDeAltas && Array.isArray(fp.fechasDeAltas)) {
+                        for (const fechasdealtas of fp.fechasDeAltas) {
+                            if (fechasdealtas && fechasdealtas.fecha) {
+                                fechasAlta.push(moment(fechasdealtas.fecha).toDate());
+                            }
                         }
-                    );
-                    cantMatriculas++;
-                }
-            }
+                    }
 
-            const nuevaMatriculacion: Imatriculacion[] = [];
+                    // Matrícula de referencia: sus datos (numero, libro, folio, baja) se reusan en todas las altas
+                    const referencia = profMatriculacion[profMatriculacion.length - 1] || null;
 
-            if (cantMatriculas > 0) {
-                for (let mat = 0; mat <= nuevaCantMatriculas; mat++) {
-                    nuevaMatriculacion.push(
-                        {
-                            matriculaNumero: matriculaNumero[mat],
-                            fechaAlta: fechasAlta[mat] ? fechasAlta[mat] : inicio[mat],
-                            baja:
-                            {
-                                fecha: bajaFecha[mat],
-                                motivo: bajaMotivo[mat]
+                    // Sin altas, se usa una sola alta implícita con el inicio de la matrícula actual
+                    if (fechasAlta.length === 0) {
+                        if (referencia && referencia.inicio) {
+                            fechasAlta.push(moment(referencia.inicio).toDate());
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    const nuevaMatriculacion: Imatriculacion[] = [];
+
+                    // Una entrada de matriculacion por cada alta
+                    for (let idx = 0; idx < fechasAlta.length; idx++) {
+                        const esUltima = idx === fechasAlta.length - 1;
+                        const fechaAlta = fechasAlta[idx];
+
+                        // La última alta arma sus periodos con las matrículas legacy (renovaciones),
+                        // las altas anteriores llevan un único periodo inicial de 5 años
+                        const periodos: Iperiodos[] = (esUltima && profMatriculacion.length > 0)
+                            ? profMatriculacion.map((m, j) => ({
+                                notificacionVencimiento: m.notificacionVencimiento ? true : false,
+                                inicio: m.inicio ? moment(m.inicio).toDate() : (j === 0 ? fechaAlta : null),
+                                fin: m.fin ? moment(m.fin).toDate() : null,
+                                renovacionNumero: j,
+                                renovacion: j > 0
+                            }))
+                            : [{
+                                notificacionVencimiento: false,
+                                inicio: fechaAlta,
+                                fin: moment(fechaAlta).add(5, 'years').toDate(),
+                                renovacionNumero: 0,
+                                renovacion: false
+                            }];
+
+                        nuevaMatriculacion.push({
+                            fechaAlta,
+                            matriculaNumero: referencia?.matriculaNumero ?? null,
+                            baja: {
+                                fecha: referencia?.baja?.fecha ? referencia.baja.fecha : null,
+                                motivo: referencia?.baja?.motivo ? referencia.baja.motivo : null
                             },
-                            folio: folio[mat],
-                            libro: libro[mat],
-                            periodos: periodos[mat]
-                        }
-                    );
+                            folio: referencia?.folio ?? null,
+                            libro: referencia?.libro ?? null,
+                            periodos
+                        });
+                    }
+
+                    // Reconstruye el posgrado sin los campos legacy
+                    const nuevoFp: any = {
+                        ...fp,
+                        matriculacion: nuevaMatriculacion
+                    };
+                    delete nuevoFp.renovacion;
+                    delete nuevoFp.fechaDeVencimiento;
+                    delete nuevoFp.revalida;
+                    delete nuevoFp.fechasDeAltas;
+
+                    formacionPosgrado[i] = nuevoFp;
+                    upProf = true;
                 }
-
-                const nuevaFormacionPosgrado: IformacionPosgrado = {
-                    profesion: formacionPosgrado[i].profesion,
-                    institucionFormadora: formacionPosgrado[i].institucionFormadora,
-                    especialidad: formacionPosgrado[i].especialidad,
-                    fechaIngreso: formacionPosgrado[i].fechaIngreso,
-                    fechaEgreso: formacionPosgrado[i].fechaEgreso,
-                    tituloFileId: formacionPosgrado[i].tituloFileId,
-                    observacion: formacionPosgrado[i].observacion,
-                    certificacion: {
-                        fecha: formacionPosgrado[i].certificacion?.fecha,
-                        modalidad: formacionPosgrado[i].certificacion?.modalidad,
-                        establecimiento: formacionPosgrado[i].certificacion?.establecimiento,
-                    },
-                    matriculacion: nuevaMatriculacion,
-                    matriculado: formacionPosgrado[i].matriculado,
-                    renovacion: formacionPosgrado[i].renovacion,
-                    papelesVerificados: formacionPosgrado[i].papelesVerificados,
-                    fechaDeVencimiento: formacionPosgrado[i].fechaDeVencimiento,
-                    exportadoSisa: formacionPosgrado[i].exportadoSisa,
-                    tieneVencimiento: formacionPosgrado[i].tieneVencimiento,
-                    notas: formacionPosgrado[i].notas,
-                };
-
-                formacionPosgrado[i] = nuevaFormacionPosgrado;
-                upProf = true;
-
+            } catch (err) {
+                cantErrores++;
+                await matriculacionLog.error(
+                    'matriculaciones:MAT-119:formacionPosgrado',
+                    { _id: profesionalId, profesionalId },
+                    err
+                );
+                continue;
             }
-        }
 
-        if (upProf) {
-            if (actualizar) {
+            cantProcesados++;
+
+            if (upProf) {
+                cantConCambios++;
                 await Profesional.findByIdAndUpdate(profesionalId, { $set: { formacionPosgrado } });
             }
         }
+    } catch (err) {
+        cantErrores++;
+        await matriculacionLog.error(
+            'matriculaciones:MAT-119',
+            null,
+            err
+        );
     }
     done();
 }
