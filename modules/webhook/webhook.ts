@@ -21,6 +21,7 @@ EventCore.on(/.*/, async function (body) {
 
     subscriptions.forEach(async (sub: any) => {
 
+        body.relaciones = undefined; // Se elimina relaciones ya que los datos son referencias a ids de pacientes propios
         const valid = await verificarFiltros(sub, body);
         if (!valid) {
             return;
