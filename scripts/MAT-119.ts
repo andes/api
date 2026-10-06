@@ -3,7 +3,12 @@ import { matriculacionLog } from '../modules/matriculaciones/controller/matricul
 import * as moment from 'moment';
 
 async function run(done) {
-
+    /* Si una matrícula de posgrado vence y la solicitud se realiza dentro del mismo año calendario del vencimiento, corresponde realizar una renovación.
+    En cambio, si la solicitud se realiza en un año calendario posterior al año en que venció la matrícula, corresponde realizar una revalidación.
+    Ejemplo:
+    - Si la matrícula vence el 01/09/2026 y la solicitud se realiza durante 2026, corresponde una renovación.
+    - Si la matrícula vence el 01/09/2026 y la solicitud se realiza durante 2027 o posteriormente, corresponde una revalidación.
+    */
     interface Iperiodos {
         notificacionVencimiento: Boolean;
         inicio: Date;
@@ -32,16 +37,14 @@ async function run(done) {
             $not: { $size: 0 }
         }
     }).lean().cursor({ batchSize: 100 });
-
-    let cantProcesados = 0;
-    let cantConCambios = 0;
-    let cantErrores = 0;
-
+    let cantProfAct = 0;
+    let cantMigrados = 0;
     try {
         for await (const profesional of profesionales) {
 
             const profesionalId = profesional._id;
             const formacionPosgrado = profesional.formacionPosgrado;
+            const formacionPosgradoAntes = formacionPosgrado.slice();
 
             let upProf = false;
 
@@ -59,6 +62,7 @@ async function run(done) {
                     // Si algún elemento ya tiene periodos, el posgrado ya está migrado y se ignora
                     const yaMigrado = profMatriculacion.some(m => m && Array.isArray(m.periodos) && m.periodos.length > 0);
                     if (yaMigrado) {
+                        cantMigrados++;
                         continue;
                     }
 
@@ -136,7 +140,6 @@ async function run(done) {
                     upProf = true;
                 }
             } catch (err) {
-                cantErrores++;
                 await matriculacionLog.error(
                     'matriculaciones:MAT-119:formacionPosgrado',
                     { _id: profesionalId, profesionalId },
@@ -144,22 +147,41 @@ async function run(done) {
                 );
                 continue;
             }
-
-            cantProcesados++;
-
             if (upProf) {
-                cantConCambios++;
                 await Profesional.findByIdAndUpdate(profesionalId, { $set: { formacionPosgrado } });
+                cantProfAct = cantProfAct + 1;
+                // Se aisla en un try/catch para que un fallo de escritura del log no caiga en el catch externo y aborte el resto de los profesionales.
+                try {
+                    await matriculacionLog.info(
+                        'matriculaciones:MAT-119:formacionPosgrado',
+                        {
+                            _id: profesionalId,
+                            profesionalId,
+                            documento: profesional.documento,
+                            posgradoAntes: formacionPosgradoAntes,
+                            posgradoDespues: formacionPosgrado
+                        }
+                    );
+                } catch (errLog) {
+                    await matriculacionLog.error(
+                        'matriculaciones:MAT-119:formacionPosgrado:log',
+                        { _id: profesionalId, profesionalId },
+                        errLog
+                    );
+                }
             }
         }
     } catch (err) {
-        cantErrores++;
         await matriculacionLog.error(
             'matriculaciones:MAT-119',
             null,
             err
         );
+        console.log('PROFESIONALES ACTUALIZADOS', cantProfAct);
+        console.log('PROFESIONALES QUE YA FUERON MIGRADOS', cantMigrados);
     }
+    console.log('PROFESIONALES ACTUALIZADOS', cantProfAct);
+    console.log('PROFESIONALES QUE YA FUERON MIGRADOS', cantMigrados);
     done();
 }
 
