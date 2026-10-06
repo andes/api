@@ -1,4 +1,4 @@
-import { PacienteCtr } from '../../core-v2/mpi';
+import { Paciente } from '../../core-v2/mpi';
 import { services } from './../../services';
 import { IDENTIFICACION } from '../../shared/constantes';
 import * as moment from 'moment';
@@ -79,7 +79,10 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
     fechaDesde = fechaDesde ? moment(fechaDesde).format('YYYYMMDD') : moment('01/01/2020', 'DD-MM-YYYY').format('YYYYMMDD');
     fechaHasta = fechaHasta ? moment(fechaHasta).format('YYYYMMDD') : moment().format('YYYYMMDD');
     try {
-        const paciente = await PacienteCtr.findById(pacienteId);
+        const paciente: any = await Paciente.findById(pacienteId).populate({
+            path: 'relaciones.referencia',
+            select: 'nombre apellido documento tipoIdentificacion numeroIdentificacion fechaNacimiento relaciones'
+        });
         if (paciente) {
             let estado;
             let documento = paciente.documento;
@@ -93,9 +96,12 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
                 documento = paciente.numeroIdentificacion;
             } else {
                 if (paciente.edad <= 5 && paciente.relaciones?.length) { // recien nacido (aún sin dni)
-                    estado = 'RN';
-                    const tutorProgenitor = paciente.relaciones.find(rel => rel.relacion.nombre === 'progenitor/a') || paciente.relaciones.find(rel => rel.relacion.nombre === 'tutor');
-                    documento = tutorProgenitor?.documento || tutorProgenitor?.numeroIdentificacion || null;
+                    const tutorRel: any = paciente.relaciones.find(rel => rel.relacion?.nombre === 'progenitor/a') || paciente.relaciones.find(rel => rel.relacion?.nombre === 'tutor');
+
+                    if (tutorRel?.referencia) {
+                        estado = 'RN';
+                        documento = tutorRel.referencia.documento || tutorRel.referencia.numeroIdentificacion || null;
+                    }
                     const fecha = paciente.fechaNacimiento.toLocaleDateString('es-AR');
                     fechaNacimiento = moment(fecha, 'DD/MM/YYYY').format('YYYYMMDD');
                 }
@@ -113,6 +119,7 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
             };
             return await this.search(dataSearch);
         }
+        return [];
     } catch (err) {
         return { err, dataSearch };
     }
