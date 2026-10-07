@@ -7,6 +7,7 @@ import { verificarCondicionPaciente } from '../../../modules/turnos/condicionPac
 import { CondicionPaciente } from '../../../modules/turnos/condicionPaciente/condicionPaciente.schema';
 import { Constantes, Constante } from '../../../modules/constantes/constantes.schema';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 
 const router = express.Router();
 
@@ -23,7 +24,30 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
 
     if (req.user.type === 'paciente-token') {
         const idPacienteQuery = req.query?.idPaciente;
-        const idPacienteToken = req.user.pacientes.find(p => String(p.id) === String(idPacienteQuery));
+
+        let idPacienteToken = req.user.pacientes?.find(p => String(p.id) === String(idPacienteQuery));
+
+        // Si no está en req.user.pacientes, obtener el paciente principal y verificar sus relaciones / vínculos en MPI
+        if (!idPacienteToken && req.user.pacientes?.length > 0) {
+            const pacientePrincipalToken = req.user.pacientes.find(p => p.relacion === 'principal') || req.user.pacientes[0];
+            const pacientePrincipalId = pacientePrincipalToken?.id || pacientePrincipalToken?._id;
+
+            if (pacientePrincipalId) {
+                const pacientePrincipal: any = await PacienteCtr.findById(pacientePrincipalId);
+
+                if (pacientePrincipal) {
+                    const esVinculoMPI = pacientePrincipal.vinculos?.some(vinculoId => String(vinculoId) === String(idPacienteQuery));
+                    const esRelacionFamiliar = pacientePrincipal.relaciones?.some((rel: any) => {
+                        const referenciaId = rel.referencia?._id || rel.referencia?.id || rel.referencia;
+                        return referenciaId && String(referenciaId) === String(idPacienteQuery);
+                    });
+
+                    if (esVinculoMPI || esRelacionFamiliar) {
+                        idPacienteToken = pacientePrincipal;
+                    }
+                }
+            }
+        }
 
         if (!idPacienteToken) {
             return next(401);
