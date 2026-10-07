@@ -4,7 +4,7 @@ import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import { EspecialidadSIISASchema, ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { normalizeSanciones } from '../../../core/tm/utils/sanciones.utils';
-import { sancionSchema } from '../../../core/tm/schemas/profesional';
+import { sancionSchema, MatriculacionPosgradoSchema } from '../../../core/tm/schemas/profesional';
 
 const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -97,7 +97,7 @@ export const turnoSolicitadoSchema = new mongoose.Schema({
             modalidad: { type: ObjSIISASchema, required: false },
             establecimiento: { type: ObjSIISASchema, required: false },
         },
-        matriculacion: [matriculacionSchema]
+        matriculacion: [MatriculacionPosgradoSchema]
     }],
     sanciones: {
         type: [sancionSchema],
