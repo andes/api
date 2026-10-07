@@ -7,6 +7,7 @@ import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
 import * as configPrivate from '../config.private';
 import { handleHttpRequest } from '../utils/requestHandler';
+import { Paciente } from '../core-v2/mpi/paciente/paciente.schema';
 import { AppToken } from './schemas/app-token.interface';
 import { authApps } from './schemas/authApps';
 import { PacienteToken } from './schemas/paciente-token.interface';
@@ -168,7 +169,7 @@ export class Auth {
      * @memberOf Auth
      */
     static deniedPatients() {
-        return (req, res, next) => {
+        return async (req, res, next) => {
 
             if (req.user.type !== 'paciente-token') {
                 return next();
@@ -192,6 +193,18 @@ export class Auth {
 
                 if (idPacienteToken) {
                     return next();
+                }
+                // Permitir si el paciente consultado es un familiar vinculado al paciente principal del token
+                try {
+                    const principal = await Paciente.findById(req.user.pacientes[0].id).select('relaciones').exec();
+                    const esFamiliar = (principal?.relaciones as any[])?.find(rel => {
+                        return rel.referencia && String(rel.referencia) === String(idPacienteQuery);
+                    });
+                    if (esFamiliar) {
+                        return next();
+                    }
+                } catch (err) {
+                    // Si falla la búsqueda del familiar, se deniega por defecto más abajo
                 }
             } else {
                 if (requestPath.endsWith('.pdf')) {
