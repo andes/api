@@ -1,3 +1,11 @@
+## [5.148.1](https://github.com/andes/api/compare/v5.148.0...v5.148.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **LABO:** Corrige el horario en casos de bebe RN para no tener problemas con la fecha de nacimiento ([#2314](https://github.com/andes/api/issues/2314)) ([8b99382](https://github.com/andes/api/commit/8b99382fd330c9ddaa0b7e860cfc8013b21cd85d))
+* **MISC-368:** Facturación no-nominalizadas ([#1990](https://github.com/andes/api/issues/1990)) ([b8051e6](https://github.com/andes/api/commit/b8051e626a0ebe839dc3727896aa9a062bbf90bd))
+
 # [5.148.0](https://github.com/andes/api/compare/v5.147.5...v5.148.0) (2026-09-30)
 
 
