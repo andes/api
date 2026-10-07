@@ -177,11 +177,11 @@ async function run(done) {
             null,
             err
         );
-        console.log('PROFESIONALES ACTUALIZADOS', cantProfAct);
-        console.log('PROFESIONALES QUE YA FUERON MIGRADOS', cantMigrados);
+        // eslint-disable-next-line no-console
+        console.log('OCURRIO UN ERROR: \n', err, '\n PROFESIONALES ACTUALIZADOS', cantProfAct, '\n PROFESIONALES QUE YA FUERON MIGRADOS', cantMigrados);
     }
-    console.log('PROFESIONALES ACTUALIZADOS', cantProfAct);
-    console.log('PROFESIONALES QUE YA FUERON MIGRADOS', cantMigrados);
+    // eslint-disable-next-line no-console
+    console.log('PROFESIONALES ACTUALIZADOS', cantProfAct, '\n PROFESIONALES QUE YA FUERON MIGRADOS', cantMigrados);
     done();
 }
 
