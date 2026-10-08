@@ -29,6 +29,9 @@ export class Connections {
         (mongoose as any).Promise = global.Promise;
         mongoose.plugin(schemaDefaults);
 
+        // Deshabilita la creación automática de índices
+        mongoose.set('autoIndex', false);
+
         // Configura logger de consultas
         const queryLogger = debug('mongoose');
         if (queryLogger.enabled) {
