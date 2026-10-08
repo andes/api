@@ -32,17 +32,21 @@ export class InformeRupFirma extends HTMLComponent {
     }
 
     async process() {
-        this.profesional = (this.profesional._id) ? await Profesional.findOne({ _id: this.profesional.id }) : await Profesional.findOne({ documento: this.profesional.documento });
+        this.profesional = (this.profesional?._id || this.profesional?.id)
+            ? await Profesional.findOne({ _id: this.profesional._id || this.profesional.id })
+            : (this.profesional?.documento ? await Profesional.findOne({ documento: this.profesional.documento }) : null);
         let firma;
         let matriculas;
         let detalle;
 
         if (this.profesional) {
             firma = await this.getFirma(this.profesional);
+
             matriculas = await this.getMatriculas();
-            detalle = this.profesional.apellido + ', ' + this.profesional.nombre;
+
+            detalle = (this.profesional.apellido || '') + (this.profesional.nombre ? ', ' + this.profesional.nombre : '');
         }
-        const detalle2 = this.organizacion.nombre.substring(0, this.organizacion.nombre.indexOf('-'));
+        const detalle2 = this.organizacion?.nombre ? (this.organizacion.nombre.indexOf('-') !== -1 ? this.organizacion.nombre.substring(0, this.organizacion.nombre.indexOf('-')) : this.organizacion.nombre) : '';
 
         this.data = {
             firma,
@@ -55,22 +59,30 @@ export class InformeRupFirma extends HTMLComponent {
     private async getFirma(profesional) {
         const FirmaSchema = makeFsFirma();
         const idProfesional = String(profesional.id);
-        const file = await FirmaSchema.findOne({ 'metadata.idProfesional': idProfesional });
+
+        const file = await FirmaSchema.findOne({
+            'metadata.idProfesional': idProfesional
+        });
+
         if (file && file._id) {
             const stream = await FirmaSchema.readFile({ _id: file._id });
             const base64 = await streamToBase64(stream);
             return base64;
         }
+
         return null;
     }
 
     private async getMatriculas() {
+
         const infoMatriculas = await searchMatriculas(this.profesional.id);
 
+        if (!infoMatriculas) {
+            return null;
+        }
         const grado = infoMatriculas.formacionGrado.map(e => `${e.nombre} MP ${e.numero}`);
         const posgrado = infoMatriculas.formacionPosgrado.map(e => `${e.nombre} ME ${e.numero}`);
-
-        return [...grado, ...posgrado].join('<br>');
-
+        const result = [...grado, ...posgrado].join('<br>');
+        return result;
     }
 }

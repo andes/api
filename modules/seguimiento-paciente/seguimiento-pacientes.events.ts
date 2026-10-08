@@ -10,7 +10,7 @@ import { getOrganizacionSeguimiento } from './controller/seguimiento-paciente.co
 import { getScoreValue } from './../../modules/forms/forms-epidemiologia/controller/forms-epidemiologia.controller';
 import { SECCION_CONTACTOS_ESTRECHOS, SECCION_MPI } from '../../modules/forms/forms-epidemiologia/constantes';
 import { FormsEpidemiologia } from '../forms/forms-epidemiologia/forms-epidemiologia-schema';
-
+import { InformeEstadistica } from '../rup/internacion/informe-estadistica.schema';
 const dataLog: any = new Object(userScheduler);
 
 function moreThan14Days(seguimientos, data) {
@@ -159,24 +159,37 @@ EventCore.on('mapa-camas:paciente:ingreso', async (estado) => {
 
 EventCore.on('mapa-camas:paciente:egreso', async (estado) => {
     let idPaciente;
+
     if (estado.extras?.idInternacion) {
-        if (estado.capa === 'estadistica') {
-            const prestacion: any = await Prestacion.findById(estado.extras.idInternacion);
-            idPaciente = prestacion.paciente.id;
-        } else if (estado.capa === 'medica') {
-            const resumen = await InternacionResumen.findById(estado.extras.idInternacion);
-            idPaciente = resumen.paciente.id;
-        }
         try {
+            if (estado.capa === 'estadistica') {
+                // Primero busca en InformeEstadistica
+                const informe: any = await InformeEstadistica.findById(estado.extras.idInternacion);
+                if (informe?.paciente?.id) {
+                    idPaciente = informe.paciente.id;
+                } else {
+                    const prestacion: any = await Prestacion.findById(estado.extras.idInternacion);
+                    idPaciente = prestacion?.paciente?.id;
+                }
+            } else if (estado.capa === 'medica') {
+                const resumen = await InternacionResumen.findById(estado.extras.idInternacion);
+                idPaciente = resumen?.paciente?.id;
+            }
+
+            if (!idPaciente) {
+                return;
+            }
+
             const lastSeguimiento = await SeguimientoPaciente.findOne({ 'paciente.id': idPaciente }).sort({ createdAt: -1 });
             if (lastSeguimiento) {
-                return await SeguimientoPacienteCtr.update(lastSeguimiento.id, { internacion: false }, dataLog);
+                await SeguimientoPacienteCtr.update(lastSeguimiento.id, { internacion: false }, dataLog);
             }
+
         } catch (err) {
-            return err;
         }
     }
 });
+
 
 EventCore.on('rup:paciente:internadoValidacion', async (data) => {
     try {
