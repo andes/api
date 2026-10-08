@@ -290,7 +290,7 @@ router.get('/recetas/:idPrestacion/(:idRegistro)?', Auth.authenticate(), async (
         const idRegistro = req.params.idRegistro;
         const recetasIds = req.query.recetasIds ? String(req.query.recetasIds).split(',').filter(Boolean) : null;
         const informe = new InformeRecetas(idPrestacion, idRegistro, req.user, null, recetasIds);
-        const fileName = await informe.informe();
+        const fileName = await informe.informe({ header: { height: '6.0cm' } });
         return res.download(fileName);
     } catch (err) {
         return next(err);
@@ -307,7 +307,7 @@ router.post('/recetas', Auth.authenticate(), async (req: any, res, next) => {
             return next(new Error('Se requiere idPrestacion o recetasIds'));
         }
         const informe = new InformeRecetas(idPrestacion, idRegistro, req.user, snapshots, recetasIds);
-        const fileName = await informe.informe();
+        const fileName = await informe.informe({ header: { height: '6.0cm' } });
         return res.download(fileName);
     } catch (err) {
         return next(err);
