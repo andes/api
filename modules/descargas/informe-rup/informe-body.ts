@@ -12,6 +12,7 @@ export class InformeRupBody extends HTMLComponent {
                         <div class="tipo-prestacion">
                             {{ titulo }}
                         </div>
+                   
                     </div>
 
                     <div class="contenedor-bloque-texto">
@@ -20,6 +21,12 @@ export class InformeRupBody extends HTMLComponent {
                         </h6>
                         <h6>
                             {{ fechaEjecucion }}hs
+                        </h6>
+                         <h6 class="bolder">
+                            Inicio de Prestación
+                        </h6>
+                        <h6>
+                            {{ fechaPrestacion }}hs
                         </h6>
                     </div>
                     <div class="contenedor-bloque-texto">
@@ -36,16 +43,17 @@ export class InformeRupBody extends HTMLComponent {
                             </h6>
                         {{/if}}
                     </div>
-                    <div class="contenedor-bloque-texto">
-                        <h6 class="bolder">
-                            Inicio de Prestación
-                        </h6>
-                        <h6>
-                            {{ fechaPrestacion }}hs
-                        </h6>
-                    </div>
+                
                 </article>
                 <hr>
+                {{#if valorPrestacion}}
+                    <h6 class="bolder">
+                        {{ nombrePrestacion }}:
+                    </h6>
+                    <h6>
+                        {{ valorPrestacion }}
+                    </h6>
+                {{/if}}
                 <div class="registros">
                     {{#each registros}}
                         {{{this}}}
@@ -68,7 +76,8 @@ export class InformeRupBody extends HTMLComponent {
         const fechaValidacion = this.getFechaEstado('validada');
         const fechaPrestacion = this.prestacion.estados.find(estado => { return estado.tipo === 'ejecucion'; }).createdAt;
         const esValidada = (fechaValidacion !== null);
-
+        const valorPrestacion = this.prestacion.ejecucion.registros[0].valor || null;
+        const nombrePrestacion = this.prestacion.ejecucion.registros[0].nombre || null;
         if (this.registroId) {
             const registro = this.prestacion.findRegistroById(this.registroId);
             this.prestacion.solicitud.tipoPrestacion = registro.concepto;
@@ -93,10 +102,28 @@ export class InformeRupBody extends HTMLComponent {
             fechaValidacion: fechaValidacion && moment(fechaValidacion).format('DD/MM/YYYY HH:mm'),
             fechaPrestacion: fechaPrestacion && moment(fechaPrestacion).format('DD/MM/YYYY HH:mm'),
             titulo: this.prestacion.solicitud.tipoPrestacion.term,
+            valorPrestacion: this.cleanValue(valorPrestacion),
+            nombrePrestacion: this.cleanValue(nombrePrestacion),
             registros,
             esValidada,
             firmaHTML
         };
+    }
+
+    cleanValue(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        if (typeof value === 'string') {
+            return value.replace(/&nbsp;/g, ' ');
+        }
+        if (typeof value === 'object') {
+            if (value.term) {
+                return String(value.term).replace(/&nbsp;/g, ' ');
+            }
+            return '';
+        }
+        return String(value);
     }
 
     async getFirmaHTML() {
