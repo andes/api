@@ -256,7 +256,7 @@ export async function sendOtpAndNotify(username): Promise<any> {
 
         // Se mantiene la validación para usuarios temporales con email
         if (usuario) {
-            if (usuario.tipo === 'temporal' && usuario.email) {
+            if (usuario.tipo === 'temporal' && usuario.authMethod === 'password' && usuario.email) {
                 // Genera un código OTP de 6 dígitos
                 const otpCode = crypto.randomInt(100000, 999999).toString();
 
@@ -284,10 +284,10 @@ export async function sendOtpAndNotify(username): Promise<any> {
                     attachments: null,
                 };
                 await sendMail(options);
+                return usuario;
             } else {
                 return null;
             }
-            return usuario;
         } else {
             // El usuario no existe o no es un usuario temporal con email
             throw { tipo: 'cuentaInexistenteAndes' };
