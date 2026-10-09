@@ -14,20 +14,6 @@ export class InformeRupFooter extends HTMLComponent {
             <article class="contenedor-data-pdp">
                 <h6>Nota: {{{ notaPie }}} </h6>
             </article>
-            <article class="contenedor-data-validacion">
-                {{#if validacion}}
-                    <h6 class="bolder">Validado por:</h6>
-                    <h6>
-                        {{ validacion.usuario }}
-                    </h6>
-                    <div class="matriculas-grid">
-                        {{{ validacion.matriculas }}}
-                    </div>
-                    <h6>
-                        {{ validacion.fecha }}hs
-                    </h6>
-                {{/if}}
-            </article>
             <article class="contenedor-data-organizacion">
                 <h6>
                     {{{ organizacion.nombre }}}
@@ -45,6 +31,21 @@ export class InformeRupFooter extends HTMLComponent {
                     {{ hora }}hs
                 </h6>
             </article>
+            <article class="contenedor-data-impresion">
+                {{#if validacion}}
+                    <h6 class="bolder">Validado por:</h6>
+                    <h6>
+                        {{ validacion.usuario }}
+                    </h6>
+                    <h6>
+                        {{{ validacion.matriculas }}}
+                    </h6>
+                    <h6>
+                        {{ validacion.fecha }}hs
+                    </h6>
+                {{/if}}
+            </article>
+            
             <hr>
             <span class="numeracion">
                 {{{ numeracionHTML }}}

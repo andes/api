@@ -360,6 +360,7 @@ footer {
         width: 37%;
         display: inline-block;
         margin-left: 0.5cm;
+        text-align: justify;
     }
 
     .contenedor-data-pdpCenso {
@@ -380,27 +381,6 @@ footer {
         text-align: left;
     }
 
-    .contenedor-data-validacion {
-        width: 25%;
-        display: inline-block;
-        margin-left: 0.25cm;
-        text-align: justify;
-    }
-
-    .matriculas-grid {
-        column-count: 2;
-        column-gap: 4px;
-        font-size: 9px;
-        line-height: 1.1;
-        margin-top: 4px;
-    }
-
-    .matriculas-grid h6,
-    .matriculas-grid p,
-    .matriculas-grid span {
-        margin: 0;
-        padding: 0;
-    }
 
     .numeracion {
         // display: inline-block;
