@@ -16,6 +16,7 @@ export interface IPacsConfig {
     aet: string;
     host: string;
     visualizador_host: string;
+    reconcileMatchingModalities?: string[];
     auth: {
         host: string;
         clientId: string;
@@ -23,6 +24,7 @@ export interface IPacsConfig {
     };
     featureFlags: {
         usoIdDNI: boolean;
+        reconciliarEstudios?: boolean;
     };
 }
 
@@ -36,6 +38,7 @@ export const PacsConfigSchema = new Schema({
     aet: String,
     host: String,
     visualizador_host: String,
+    reconcileMatchingModalities: [String],
     auth: {
         host: String,
         clientId: String,
@@ -43,6 +46,10 @@ export const PacsConfigSchema = new Schema({
     },
     featureFlags: {
         usoIdDNI: {
+            type: Boolean,
+            default: false
+        },
+        reconciliarEstudios: {
             type: Boolean,
             default: false
         }
