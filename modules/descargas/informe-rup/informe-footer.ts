@@ -1,3 +1,5 @@
+import { Profesional } from '../../../core/tm/schemas/profesional';
+import { searchMatriculas } from '../../../core/tm/controller/profesional';
 import { HTMLComponent } from '../model/html-component.class';
 import { loadImage } from '../model/informe.class';
 import * as moment from 'moment';
@@ -29,17 +31,21 @@ export class InformeRupFooter extends HTMLComponent {
                     {{ hora }}hs
                 </h6>
             </article>
-            <article class="contenedor-data-validacion">
+            <article class="contenedor-data-impresion">
                 {{#if validacion}}
                     <h6 class="bolder">Validado por:</h6>
                     <h6>
                         {{ validacion.usuario }}
                     </h6>
                     <h6>
+                        {{{ validacion.matriculas }}}
+                    </h6>
+                    <h6>
                         {{ validacion.fecha }}hs
                     </h6>
                 {{/if}}
             </article>
+            
             <hr>
             <span class="numeracion">
                 {{{ numeracionHTML }}}
@@ -49,34 +55,58 @@ export class InformeRupFooter extends HTMLComponent {
 
     constructor(public prestacion, public paciente, public organizacion, public user) {
         super();
+    }
 
+    public async process() {
+        const validacion = await this.getDatosValidacion();
 
         this.data = {
-            usuario: user.usuario,
+            usuario: this.user.usuario,
             organizacion: {
-                nombre: organizacion ? organizacion.nombre.replace(' - ', '</br>') : '',
-                direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
+                nombre: this.organizacion ? this.organizacion.nombre.replace(' - ', '</br>') : '',
+                direccion: this.organizacion ? this.organizacion.direccion.valor + ', ' + this.organizacion.direccion.ubicacion.localidad.nombre : ''
             },
             hora: moment().format('DD/MM/YYYY HH:mm'),
             logos: {
                 pdp: loadImage('templates/rup/informes/img/logo-pdp.png'),
             },
-            validacion: this.getDatosValidacion(),
+            validacion,
             numeracionHTML: '<small> {{page}} </small> de <small> {{pages}} </small>',
-            notaPie: organizacion.configuraciones?.notaAlPie || InformeRupFooter.notaAlPieDefault
+            notaPie: this.organizacion.configuraciones?.notaAlPie || InformeRupFooter.notaAlPieDefault
         };
     }
 
-    getDatosValidacion() {
+    async getDatosValidacion() {
         const lastState = this.prestacion.estados[this.prestacion.estados.length - 1];
         const esValidada = lastState.tipo === 'validada';
+        let matriculas;
+        const searchProfesional: any = await Profesional.findOne({ documento: lastState.createdBy.documento });
+
+        if (searchProfesional) {
+            matriculas = await this.getMatriculas(searchProfesional);
+        }
+
         if (esValidada) {
             return {
                 usuario: lastState.createdBy.nombreCompleto,
-                fecha: moment(lastState.createdAt).format('DD/MM/YYYY HH:mm')
+                fecha: moment(lastState.createdAt).format('DD/MM/YYYY HH:mm'),
+                matriculas
             };
         }
         return null;
+    }
+
+    private async getMatriculas(profesional) {
+        const infoMatriculas = await searchMatriculas(profesional.id);
+
+        const grado = infoMatriculas.formacionGrado.map(e => {
+            return `${e.nombre} MP ${e.numero}`;
+        });
+        const posgrado = infoMatriculas.formacionPosgrado.map(e => {
+            return `${e.nombre} ME ${e.numero}`;
+        });
+
+        return [...grado, ...posgrado].join(' - ');
     }
 
     static readonly notaAlPieDefault = `El contenido de este informe ha sido validado digitalmente siguiendo los estándares de
