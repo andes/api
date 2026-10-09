@@ -41,6 +41,8 @@ export const hosts = {
     main: getEnv('MAIN_HOST', 'http://localhost:3002'),
     ldap: getEnv('LDAP_HOST', 'ldap.neuquen.gov.ar'),
     BI_QUERY: getEnv('BI_QUERY_HOST', 'http://localhost:3000'),
+    VADEMECUM: getEnv('VADEMECUM_HOST', 'http://localhost:4001'),
+    VADEMECUM_API_KEY: getEnv('VADEMECUM_API_KEY', ''),
     mongoDB_main: {
         host: getEnv('MONGO_MAIN', 'localhost:27017/andes'), // ?authSource=admin
         options: {

@@ -3,7 +3,12 @@
 // !!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import { Auth } from './auth/auth.class';
-import { IPS } from './config.private';
+import { IPS, hosts } from './config.private';
+
+export const vademecum = {
+    host: hosts.VADEMECUM,
+    apiKey: hosts.VADEMECUM_API_KEY
+};
 
 const appMiddleware = [
     Auth.authenticate(),
