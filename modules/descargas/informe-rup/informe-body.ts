@@ -96,14 +96,17 @@ export class InformeRupBody extends HTMLComponent {
         const registros = await Promise.all(ps);
         const firmaHTML = await this.getFirmaHTML();
 
+        // Si el primer registro ya se renderiza en el detalle, evitamos repetir su nombre/valor en el encabezado
+        const primerRegistroRenderizado = registros.length > 0 && String(registros[0]).trim() !== '';
+
         this.data = {
 
             fechaEjecucion: fechaEjecucion && moment(fechaEjecucion).format('DD/MM/YYYY HH:mm'),
             fechaValidacion: fechaValidacion && moment(fechaValidacion).format('DD/MM/YYYY HH:mm'),
             fechaPrestacion: fechaPrestacion && moment(fechaPrestacion).format('DD/MM/YYYY HH:mm'),
             titulo: this.prestacion.solicitud.tipoPrestacion.term,
-            valorPrestacion: this.cleanValue(valorPrestacion),
-            nombrePrestacion: this.cleanValue(nombrePrestacion),
+            valorPrestacion: primerRegistroRenderizado ? '' : this.cleanValue(valorPrestacion),
+            nombrePrestacion: primerRegistroRenderizado ? '' : this.cleanValue(nombrePrestacion),
             registros,
             esValidada,
             firmaHTML
