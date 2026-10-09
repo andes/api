@@ -1057,7 +1057,6 @@ router.get('/profesionales', Auth.authenticate(), async (req, res, next) => {
     });
 });
 
-
 router.post('/profesionales', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:postProfesional') && !req.user.profesional) {
         return next(403);
@@ -1356,6 +1355,9 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
                 case 'updateEstadoGrado':
                     resultado.formacionGrado = req.body.data;
                     break;
+                case 'upConfigSIISA':
+                    resultado.formacionGrado = req.body.data;
+                    break;
                 case 'updateEstadoPosGrado':
                     resultado.formacionPosgrado = req.body.data;
                     break;
@@ -1404,6 +1406,9 @@ router.patch('/profesionales/:id?', Auth.authenticate(), async (req, res, next) 
         }
         Auth.audit(resultado, req);
         await resultado.save();
+        if (req.body.op === 'updateEstadoGrado') {
+            EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
+        }
         log(req, 'profesional:patch', null, 'profesional:patch', resultado, profesionalOriginal);
         res.json(resultado);
     } catch (err) {
