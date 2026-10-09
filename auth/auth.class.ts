@@ -7,7 +7,6 @@ import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
 import * as configPrivate from '../config.private';
 import { handleHttpRequest } from '../utils/requestHandler';
-import { Paciente } from '../core-v2/mpi/paciente/paciente.schema';
 import { AppToken } from './schemas/app-token.interface';
 import { authApps } from './schemas/authApps';
 import { PacienteToken } from './schemas/paciente-token.interface';
@@ -196,7 +195,8 @@ export class Auth {
                 }
                 // Permitir si el paciente consultado es un familiar vinculado al paciente principal del token
                 try {
-                    const principal = await Paciente.findById(req.user.pacientes[0].id).select('relaciones').exec();
+                    // Se obtiene el modelo en runtime: importar el schema acá lo compilaría antes del plugin global de connections.ts
+                    const principal: any = await mongoose.model('paciente_2').findById(req.user.pacientes[0].id).select('relaciones').exec();
                     const esFamiliar = (principal?.relaciones as any[])?.find(rel => {
                         return rel.referencia && String(rel.referencia) === String(idPacienteQuery);
                     });
