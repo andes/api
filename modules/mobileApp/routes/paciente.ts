@@ -23,7 +23,7 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     if (index >= 0) {
         const resultado: any = await findById(pacientes[index].id, { fields: '-claveBlocking -entidadesValidadoras -carpetaEfectores -createdBy' });
         if (resultado) {
-            return res.json(resultado.toJSON({ virtuals: true }));
+            return res.json(resultado);
         }
         return res.status(422).send({ message: 'invalid_id' });
     } else {
@@ -41,7 +41,7 @@ router.get('/paciente/:id/relaciones', async (req: any, res, next) => {
         // Verifico que el paciente sea familiar del usuario logueado
         const esFamiliar = (resultado.relaciones as any[])?.find(rel => rel.referencia && rel.referencia.documento === paciente.documento);
         if (esFamiliar) {
-            return res.json((paciente as any).toJSON({ virtuals: true }));
+            return res.json(paciente);
         } else {
             return res.status(422).send({ message: 'unauthorized' });
         }
