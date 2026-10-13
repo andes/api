@@ -29,6 +29,7 @@ export class Connections {
         (mongoose as any).Promise = global.Promise;
         mongoose.plugin(schemaDefaults);
 
+
         // Configura logger de consultas
         const queryLogger = debug('mongoose');
         if (queryLogger.enabled) {
@@ -44,18 +45,49 @@ export class Connections {
         }
 
 
+        // Opciones comunes para todas las conexiones MongoDB
+        const mongoOptions = {
+            useNewUrlParser: true,
+            autoIndex: false
+        };
+
         // Conecta y configura conexiones
+
         // 1. PRINCIPAL
-        mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options);
+        mongoose.connect(
+            configPrivate.hosts.mongoDB_main.host,
+            {
+                ...configPrivate.hosts.mongoDB_main.options,
+                ...mongoOptions
+            }
+        );
         this.main = mongoose.connection;
 
         // 2. PUCO
-        this.puco = mongoose.createConnection(configPrivate.hosts.mongoDB_puco.host, configPrivate.hosts.mongoDB_puco.options);
+        this.puco = mongoose.createConnection(
+            configPrivate.hosts.mongoDB_puco.host,
+            {
+                ...configPrivate.hosts.mongoDB_puco.options,
+                ...mongoOptions
+            }
+        );
 
         // 3. LOGGER
-        loggerConnections.initialize(configPrivate.logDatabase.log.host, configPrivate.logDatabase.log.options);
+        loggerConnections.initialize(
+            configPrivate.logDatabase.log.host,
+            {
+                ...configPrivate.logDatabase.log.options,
+                ...mongoOptions
+            }
+        );
 
-        this.logs = mongoose.createConnection(configPrivate.logDatabase.log.host, configPrivate.logDatabase.log.options);
+        this.logs = mongoose.createConnection(
+            configPrivate.logDatabase.log.host,
+            {
+                ...configPrivate.logDatabase.log.options,
+                ...mongoOptions
+            }
+        );
 
         // Configura eventos
         this.configEvents('main', this.main);
