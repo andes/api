@@ -124,7 +124,7 @@ export const get = async (req: Request, res: Response) => {
         delete conditions.search;
         Object.keys(options).map(opt => delete conditions[opt]);
         const filter = MongoQuery.buildQuery(conditions, PacienteCtr.searchFileds);
-        const pacientes = await multimatch(req.query.search, filter, options);
+        const pacientes = await multimatch(req.query.search as any, filter, options);
         return res.json(pacientes);
     } else {
         if (Object.keys(req.query).length) {
