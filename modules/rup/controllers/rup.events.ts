@@ -1,5 +1,6 @@
 import { EventCore } from '@andes/event-bus';
 import { getProfesionActualizada, crearReceta } from '../../recetas/recetasController';
+import { recetarClient, isRecetarConfigured } from '../../recetas/recetar-client';
 import * as moment from 'moment';
 import { rupEventsLog as logger } from './rup.events.log';
 import { Profesional } from '../../../core/tm/schemas/profesional';
@@ -107,7 +108,13 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
                     diagnostico: medicamento?.diagnostico || null,
                 };
 
-                const recetasCreadas: any = await crearReceta(dataReceta, prestacion.createdBy);
+                let recetasCreadas: any;
+                if (isRecetarConfigured()) {
+                    const ingestadas: any = await recetarClient.ingest(dataReceta);
+                    recetasCreadas = ingestadas?.data ?? ingestadas;
+                } else {
+                    recetasCreadas = await crearReceta(dataReceta, prestacion.createdBy);
+                }
 
                 const queryControl: any = {
                     idPrestacion: prestacion.id || prestacion._id,
@@ -124,7 +131,7 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
 
                     if (Array.isArray(recetasCreadas)) {
                         for (const r of recetasCreadas) {
-                            const orden = r.medicamento?.ordenTratamiento ?? 0;
+                            const orden = r.medicamento?.ordenTratamiento ?? r.ordenTratamiento ?? 0;
                             const rId = r._id || r.id;
                             const recetaCreada = control.recetas.find((item: any) => String(item.id) === String(rId));
 
