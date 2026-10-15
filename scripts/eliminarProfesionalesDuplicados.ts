@@ -7,6 +7,7 @@ import { makeFs } from '../core/tm/schemas/imagenes';
 import * as base64 from 'base64-stream';
 import * as stream from 'stream';
 import moment = require('moment');
+
 interface IDuplicado {
     _id: {
         documento: string;
@@ -33,36 +34,56 @@ interface IDuplicado {
  */
 async function asociarFirma(idNew: string, idOld: string) {
     const firma = makeFsFirma();
-    const fileFirmaNuevo = await firma.findOne({ 'metadata.idProfesional': idNew });
-    if (!fileFirmaNuevo) {
-        const fileFirmaViejo = await firma.findOne({ 'metadata.idProfesional': idOld });
-        if (fileFirmaViejo) {
-            const decoder1 = base64.decode();
-            const input1 = new stream.PassThrough();
-            const readStream = await firma.readFile({ _id: fileFirmaViejo._id });
-            const firmaProfesional = await streamToBase64(readStream);
-            if (firmaProfesional) {
-                await firma.unlink(fileFirmaViejo._id, (error) => { });
-                await new Promise((resolve, reject) => {
-                    firma.writeFile(
-                        {
-                            filename: 'foto.png',
-                            contentType: 'image/png',
-                            metadata: {
-                                idProfesional: idNew,
-                            }
-                        }, input1.pipe(decoder1),
-                        (error, createdFile) => {
-                            if (error) {
-                                reject(error);
-                            }
-                            resolve(createdFile);
-                        });
-                    input1.end(firmaProfesional);
-                });
-            }
-        }
+    const [fileFirmaNuevo] = await firma
+        .find({ 'metadata.idProfesional': idNew })
+        .limit(1)
+        .toArray();
+
+    if (fileFirmaNuevo) {
+        return;
     }
+
+    const [fileFirmaViejo] = await firma
+        .find({ 'metadata.idProfesional': idOld })
+        .limit(1)
+        .toArray();
+
+    if (!fileFirmaViejo) {
+        return;
+    }
+
+    const readStream = firma.openDownloadStream(fileFirmaViejo._id);
+    const firmaProfesional = await streamToBase64(readStream);
+
+    if (!firmaProfesional) {
+        return;
+    }
+
+    await new Promise<void>((resolve, reject) => {
+        const decoder = base64.decode();
+        const input = new stream.PassThrough();
+        const uploadStream = firma.openUploadStream(
+            fileFirmaViejo.filename || 'firma.png',
+            {
+                contentType: fileFirmaViejo.contentType || 'image/png',
+                metadata: {
+                    ...fileFirmaViejo.metadata,
+                    idProfesional: idNew
+                }
+            }
+        );
+
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => resolve());
+        input
+            .pipe(decoder)
+            .pipe(uploadStream);
+
+        input.end(firmaProfesional);
+    });
+
+    // Borrar recién cuando la nueva firma quedó guardada correctamente
+    await firma.delete(fileFirmaViejo._id);
 }
 
 /**
@@ -72,36 +93,57 @@ async function asociarFirma(idNew: string, idOld: string) {
  */
 async function asociarFoto(idNew: string, idOld: string) {
     const foto = makeFs();
-    const fileFotoNuevo = await foto.findOne({ 'metadata.idProfesional': idNew });
-    if (!fileFotoNuevo) {
-        const fileFotoViejo = await foto.findOne({ 'metadata.idProfesional': idOld });
-        if (fileFotoViejo) {
-            const input2 = new stream.PassThrough();
-            const decoder2 = base64.decode();
-            const readStream = await foto.readFile({ _id: fileFotoViejo._id });
-            const fotoProfesional = await streamToBase64(readStream);
-            if (fotoProfesional) {
-                await foto.unlink(fileFotoViejo._id, (error) => { });
-                await new Promise((resolve, reject) => {
-                    foto.writeFile(
-                        {
-                            filename: 'foto.png',
-                            contentType: 'image/png',
-                            metadata: {
-                                idProfesional: idNew,
-                            }
-                        }, input2.pipe(decoder2),
-                        (error, createdFile) => {
-                            if (error) {
-                                reject(error);
-                            }
-                            resolve(createdFile);
-                        });
-                    input2.end(fotoProfesional);
-                });
-            }
-        }
+    const [fileFotoNuevo] = await foto
+        .find({ 'metadata.idProfesional': idNew })
+        .limit(1)
+        .toArray();
+
+    if (fileFotoNuevo) {
+        return;
     }
+
+    const [fileFotoViejo] = await foto
+        .find({ 'metadata.idProfesional': idOld })
+        .limit(1)
+        .toArray();
+
+    if (!fileFotoViejo) {
+        return;
+    }
+
+    const readStream = foto.openDownloadStream(fileFotoViejo._id);
+    const fotoProfesional = await streamToBase64(readStream);
+
+    if (!fotoProfesional) {
+        return;
+    }
+
+    await new Promise<void>((resolve, reject) => {
+        const decoder = base64.decode();
+        const input = new stream.PassThrough();
+        const uploadStream = foto.openUploadStream(
+            fileFotoViejo.filename || 'foto.png',
+            {
+                contentType: fileFotoViejo.contentType || 'image/png',
+                metadata: {
+                    ...fileFotoViejo.metadata,
+                    idProfesional: idNew
+                }
+            }
+        );
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', () => resolve());
+
+        input
+            .pipe(decoder)
+            .pipe(uploadStream);
+
+        input.end(fotoProfesional);
+    });
+
+    // Borramos el archivo viejo solo después de confirmar
+    // que el nuevo quedó guardado correctamente.
+    await foto.delete(fileFotoViejo._id);
 }
 
 // Función para obtener las imagenes de fotos y firmas del profesional.

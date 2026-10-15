@@ -219,8 +219,8 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
  * Devuelve los turnos del tipo y mes pasados por parametro.
  */
 router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
-    if (req.query.fecha) {
-        const fecha = new Date(req.query.fecha);
+    if (req.query.fecha as any) {
+        const fecha = new Date(req.query.fecha as any);
         const anio = fecha.getFullYear();
         const mes = fecha.getMonth() + 1;
         const aggregate = await turno.aggregate(
@@ -264,19 +264,19 @@ router.get('/turnos/:tipo/?', async (req, response, errorHandler) => {
 
     }
     const matchObj = {};
-    if (req.query.anio) {
-        matchObj['anio'] = parseInt(req.query.anio, 10);
+    if (req.query.anio as any) {
+        matchObj['anio'] = parseInt(req.query.anio as any, 10);
     }
 
-    if (req.query.mes) {
-        matchObj['mes'] = parseInt(req.query.mes, 10);
+    if (req.query.mes as any) {
+        matchObj['mes'] = parseInt(req.query.mes as any, 10);
     }
 
-    if (req.query.dia) {
-        matchObj['dia'] = parseInt(req.query.dia, 10);
+    if (req.query.dia as any) {
+        matchObj['dia'] = parseInt(req.query.dia as any, 10);
     }
 
-    if (!req.query.dia) {
+    if (!req.query.dia as any) {
         const aggregate = await turno.aggregate(
             [
                 {

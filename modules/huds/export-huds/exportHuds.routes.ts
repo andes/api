@@ -13,14 +13,14 @@ ExportHudsRouter.get('/export', async (req, res, next) => {
         'user.usuario.id': req.query.id,
         status: { $in: ['pending', 'completed'] }
     };
-    if (req.query.fechaDesde && req.query.fechaHasta) {
-        query.createdAt = { $gte: new Date(req.query.fechaDesde), $lte: new Date(req.query.fechaHasta) };
+    if (req.query.fechaDesde as any && req.query.fechaHasta as any) {
+        query.createdAt = { $gte: new Date(req.query.fechaDesde as any), $lte: new Date(req.query.fechaHasta as any) };
     } else {
-        if (req.query.fechaDesde) {
-            query.createdAt = { $gte: new Date(req.query.fechaDesde) };
+        if (req.query.fechaDesde as any) {
+            query.createdAt = { $gte: new Date(req.query.fechaDesde as any) };
         }
-        if (req.query.fechaHasta) {
-            query.createdAt = { $lte: new Date(req.query.fechaHasta) };
+        if (req.query.fechaHasta as any) {
+            query.createdAt = { $lte: new Date(req.query.fechaHasta as any) };
         }
     }
     const pending = await ExportHudsModel.find(query).sort({ createdAt: -1 });
@@ -35,21 +35,37 @@ ExportHudsRouter.post('/export', async (req: any, res, next) => {
     return next(400);
 
 });
+
 ExportHudsRouter.post('/export/:id', async (req, res, next) => {
     const hudsFiles = getHUDSExportarModel();
+
     try {
         const archivo = await readFile(req.params.id);
+
         res.contentType(archivo?.file?.contentType);
+
+        archivo.stream.on('error', next);
+        archivo.stream.on('end', async () => {
+            try {
+                const peticionExport: any = await ExportHudsModel.findById(req.body.idHuds);
+
+                peticionExport.status = 'success';
+                peticionExport.updatedAt = new Date();
+
+                await peticionExport.save();
+
+                const idFile = Types.ObjectId(req.body.id);
+                await hudsFiles.delete(idFile);
+
+            } catch (error) {
+                // La respuesta ya pudo haber terminado. Al menos dejamos registrado el error
+                next(error);
+            }
+        });
+
         archivo.stream.pipe(res);
+
     } catch (error) {
         return next(error);
     }
-    // Borro despues de descargar
-    const peticionExport: any = await ExportHudsModel.findById(req.body.idHuds);
-    peticionExport.status = 'success';
-    peticionExport.updatedAt = new Date();
-    peticionExport.save();
-    const idFile = Types.ObjectId(req.body.id);
-    const file = await hudsFiles.findOne({ _id: idFile });
-    hudsFiles.unlink(file._id, () => { });
 });

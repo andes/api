@@ -1,13 +1,13 @@
 module.exports = {
-    roots: ['./'],
+    testEnvironment: 'node',
+    testTimeout: 60000,
+    setupFiles: ['<rootDir>/jest.setup.js'],
     transform: {
-        '^.+\\.tsx?$': 'ts-jest',
-        "^.+\\.jsx?$": "babel-jest",
+        '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
     },
     testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-    testEnvironment: 'node',
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'json', 'node'],
     moduleNameMapper: {
         '@andes/unit-test': '<rootDir>/packages/unit-testing/index.ts'
     }
-}
+};

@@ -14,8 +14,8 @@ router.get('/noticias/:name', async (req, res) => {
             count: 200,
             tweet_mode: 'extended'
         };
-        if (req.query.count) {
-            params.count = parseInt(req.query.count, 10);
+        if (req.query.count as any) {
+            params.count = parseInt(req.query.count as any, 10);
         }
         if (req.query.max_id) {
             params.max_id = req.query.max_id;

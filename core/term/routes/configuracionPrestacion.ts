@@ -10,8 +10,8 @@ router.get('/configuracionPrestaciones/:id*?', (req, res, next) => {
     //     return next(403);
     // }
 
-    if (req.params.id) {
-        configuracionPrestacion.configuracionPrestacionModel.findById(req.params.id
+    if ((req.params as any).id) {
+        configuracionPrestacion.configuracionPrestacionModel.findById((req.params as any).id
             , (err, data) => {
                 if (err) {
                     return next(err);
@@ -47,13 +47,15 @@ Elimina un 'mapeo' (Elemento del arreglo 'organizaciones') de tipoPrestacion - E
 router.put('/configuracionPrestaciones', (req, res, next) => {
     if (req.body.idTipoPrestacion && req.body.idOrganizacion) {
         // busca por especialidad
-        configuracionPrestacion.configuracionPrestacionModel.update(
-            { _id: req.body.idTipoPrestacion }, { $pull: { organizaciones: { _id: req.body.idOrganizacion } } }, (err, data) => {
-                if (err) {
-                    return next(err);
-                }
-                res.json(data);
-            });
+        configuracionPrestacion.configuracionPrestacionModel.updateOne(
+            { _id: req.body.idTipoPrestacion },
+            { $pull: { organizaciones: { _id: req.body.idOrganizacion } } } as any
+        ).exec((err: Error | null, data: any) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
     } else {
         res.status(404).send('Error, parámetros incorrectos.');
     }
@@ -84,11 +86,14 @@ router.post('/configuracionPrestaciones', async (req, res, next) => {
                     nombreEspecialidad: req.body.prestacionLegacy.nombreEspecialidad,
                     codigo: req.body.prestacionLegacy.codigo
                 }];
-                configuracionPrestacion.configuracionPrestacionModel.update({ 'snomed.conceptId': idSnomed }, { $push: { organizaciones: newOrganizacion } }, (err, resultado) => {
+                configuracionPrestacion.configuracionPrestacionModel.updateOne(
+                    { 'snomed.conceptId': idSnomed },
+                    { $push: { organizaciones: newOrganizacion } } as any
+                ).exec((err: Error | null, data: any) => {
                     if (err) {
                         return next(err);
                     } else {
-                        res.json(resultado);
+                        res.json(data);
                     }
                 });
             }

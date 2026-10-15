@@ -25,13 +25,22 @@ function validarFileToken(req, res, next) {
 
 router.get('/store/:id', validarFileToken, (req, res, next) => {
     readFile(req.params.id).then((data: any) => {
-        res.contentType(data.file.contentType);
-        data.stream.on('data', (data2) => {
-            res.write(data2);
+        if (!data.file || !data.stream) {
+            return res.sendStatus(404);
+        }
+
+        res.contentType(data.file.contentType || 'application/octet-stream');
+
+        data.stream.on('error', (error) => {
+            if (!res.headersSent) {
+                return next(error);
+            }
+
+            res.destroy(error);
         });
-        data.stream.on('end', () => {
-            res.end();
-        });
+
+        return data.stream.pipe(res);
+
     }).catch(next);
 });
 

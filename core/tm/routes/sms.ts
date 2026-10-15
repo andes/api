@@ -6,8 +6,8 @@ const router = express.Router();
 
 router.get('/sms', async (req, res, next) => {
     const smsOptions: SmsOptions = {
-        telefono: req.query.telefono,
-        mensaje: req.query.mensaje
+        telefono: req.query.telefono as any,
+        mensaje: req.query.mensaje as any
     };
     try {
         const resultado = await sendSms(smsOptions);

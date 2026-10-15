@@ -25,9 +25,9 @@ router.get('/farmacias/localidades', (req: any, res, next) => {
  */
 
 router.get('/farmacias/turnos', (req, res, next) => {
-    const localidad = req.query.localidad;
-    const desde = moment(req.query.desde, 'YYYY-MM-DD').toDate();
-    const hasta = moment(req.query.hasta, 'YYYY-MM-DD').toDate();
+    const localidad = req.query.localidad as any;
+    const desde = moment(req.query.desde as any, 'YYYY-MM-DD').toDate();
+    const hasta = moment(req.query.hasta as any, 'YYYY-MM-DD').toDate();
     const query: any = {
         fecha: { $gte: desde, $lte: hasta }
     };

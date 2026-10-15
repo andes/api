@@ -20,10 +20,10 @@ router.get('/snomed', async (req, res, next) => {
         return next('Debe ingresar un parámetro de búsqueda');
     }
 
-    const semanticTags = asArray(req.query.semanticTag);
-    const search = req.query.search;
-    const expression = req.query.expression;
-    const languageCode = req.query.languageCode || 'es';
+    const semanticTags = asArray(req.query.semanticTag as any);
+    const search = req.query.search as any;
+    const expression = req.query.expression as any;
+    const languageCode = req.query.languageCode as any || 'es';
     if (isNaN(search) || expression) {
         const conceptos = await SnomedCtr.searchTerms(search, { semanticTags, languageCode, expression });
         const conceptoFiltrado = conceptos.filter(c => c.term !== c.fsn);
