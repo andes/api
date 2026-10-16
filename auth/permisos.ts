@@ -267,9 +267,38 @@ export default [
                 key: 'visualizacionParcialHuds',
                 title: 'Visualización parcial de la HUDS',
                 child: [
-                    { key: 'laboratorio', title: 'Ver solo laboratorios', type: 'boolean' },
-                    { key: 'vacuna', title: 'Ver solo vacunas', type: 'boolean' },
-                    { key: 'receta', title: 'Ver solo recetas', type: 'boolean' }
+
+                    {
+                        key: 'laboratorio',
+                        title: 'Ver solo laboratorios',
+                        type: 'boolean'
+                    },
+
+                    {
+                        key: 'vacuna',
+                        title: 'Ver solo vacunas',
+                        type: 'boolean'
+                    },
+
+                    {
+                        key: 'receta',
+                        title: 'Ver solo recetas',
+                        type: 'boolean'
+                    },
+
+                    {
+                        key: 'solicitudes',
+                        title: 'Ver solo solicitudes',
+                        type: 'boolean'
+                    },
+
+                    {
+                        key: 'tipoPrestacion',
+                        title: 'Tipo de prestación',
+                        type: 'prestacion',
+                        requires: 'solicitudes'
+                    }
+
                 ]
             }
         ]

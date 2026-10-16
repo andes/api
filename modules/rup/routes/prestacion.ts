@@ -7,6 +7,7 @@ import { Types } from 'mongoose';
 import { AppCache } from '../../../connections';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
+import { tipoPrestacion as tipoPrestacionModel } from '../../../core/tm/schemas/tipoPrestacion';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { removeDiacritics } from '../../../utils/utils';
 import { getVisualizadorURL } from '../../pacs';
@@ -25,6 +26,54 @@ import { parseDate } from './../../../shared/parse';
 import { Agenda } from '../../turnos/schemas/agenda';
 
 const router = express.Router();
+
+/**
+ * Indica si corresponde aplicar el filtro de la HUDS parcial por tipo de prestación
+ * sobre las solicitudes del paciente.
+ */
+function aplicarFiltroHudsSolicitudes(req: any): boolean {
+    if (Auth.check(req, 'huds:visualizacionHuds')) {
+        return false;
+    }
+    const parcial = Auth.check(req, 'huds:visualizacionParcialHuds:*') || Auth.check(req, 'huds:visualizacionParcialHuds:solicitudes');
+    if (!parcial) {
+        return false;
+    }
+    const hudsTipoPrestaciones = Auth.getPermissions(req, 'huds:visualizacionParcialHuds:tipoPrestacion:?');
+    return !!hudsTipoPrestaciones?.length && hudsTipoPrestaciones[0] !== '*';
+}
+
+async function obtenerConceptosPermitidosHuds(req: any): Promise<Set<string> | null> {
+    if (!aplicarFiltroHudsSolicitudes(req)) {
+        return null;
+    }
+    const ids = Auth.getPermissions(req, 'huds:visualizacionParcialHuds:tipoPrestacion:?')
+        .filter(id => Types.ObjectId.isValid(id))
+        .map(id => Types.ObjectId(id));
+    const prestaciones = await tipoPrestacionModel.find({ _id: { $in: ids } }, { conceptId: 1 }).lean();
+    return new Set(prestaciones.map(prestacion => prestacion.conceptId).filter(Boolean));
+}
+
+function filtrarRegistrosSolicitudHuds(registros: any[], conceptosPermitidos: Set<string>): void {
+    if (!Array.isArray(registros)) {
+        return;
+    }
+    for (let i = registros.length - 1; i >= 0; i--) {
+        const registro = registros[i];
+        if (registro.esSolicitud) {
+            const conceptId = registro.valor?.solicitudPrestacion?.prestacionSolicitada?.conceptId;
+            if (!conceptosPermitidos.has(conceptId)) {
+                registros.splice(i, 1);
+                continue;
+            }
+        }
+        filtrarRegistrosSolicitudHuds(registro.registros, conceptosPermitidos);
+    }
+}
+
+function filtrarSolicitudesHuds(prestacion: any, conceptosPermitidos: Set<string>): void {
+    filtrarRegistrosSolicitudHuds(prestacion.ejecucion?.registros, conceptosPermitidos);
+}
 
 /** *
  *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
@@ -212,7 +261,12 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
 
         if (req.query.origen === 'top') {
             match.$and.push({ inicio: 'top' });
-            match.$and.push({ 'solicitud.prestacionOrigen': { $exists: false } });
+            // Si se consulta la HUDS de un paciente puntual (idPaciente) no se excluyen
+            // las solicitudes derivadas (con prestacionOrigen), ya que también son parte
+            // de su historia. En la bandeja de entrada del TOP (sin idPaciente) sí se excluyen.
+            if (!req.query.idPaciente) {
+                match.$and.push({ 'solicitud.prestacionOrigen': { $exists: false } });
+            }
         }
 
         if (req.query.tieneTurno !== undefined) {
@@ -295,6 +349,14 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
                     { 'solicitud.tipoPrestacion.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } },
                     { 'solicitud.tipoPrestacionOrigen.id': { $in: tipoPrestaciones.map(e => Types.ObjectId(e)) } }]
             });
+        }
+
+        // HUDS parcial: filtra solicitudes del paciente según el permiso de tipo de prestación de solicitudes
+        let conceptosPermitidosHuds: Set<string> = null;
+        if (req.query.idPaciente && aplicarFiltroHudsSolicitudes(req)) {
+            const hudsTipoPrestaciones = Auth.getPermissions(req, 'huds:visualizacionParcialHuds:tipoPrestacion:?');
+            match.$and.push({ 'solicitud.tipoPrestacion.id': { $in: hudsTipoPrestaciones.map(e => Types.ObjectId(e)) } });
+            conceptosPermitidosHuds = await obtenerConceptosPermitidosHuds(req);
         }
 
         if (req.query.estados) {
@@ -414,7 +476,11 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         if (req.query.limit) {
             pipeline.push({ $limit: parseInt(req.query.limit, 10) });
         }
-        res.json(await Prestacion.aggregate(pipeline).option({ hint: indice }).allowDiskUse(true));
+        const resultados = await Prestacion.aggregate(pipeline).option({ hint: indice }).allowDiskUse(true);
+        if (conceptosPermitidosHuds) {
+            resultados.forEach(prestacion => filtrarSolicitudesHuds(prestacion, conceptosPermitidosHuds));
+        }
+        res.json(resultados);
     } catch (err) {
         return next(err);
     }
@@ -523,6 +589,14 @@ router.get('/prestaciones', async (req: any, res, next) => {
         query.where({ 'solicitud.tipoPrestacion.conceptId': compare });
     }
 
+    // HUDS parcial: filtra las prestaciones del paciente según el permiso de tipo de prestación de solicitudes
+    let conceptosPermitidosHuds: Set<string> = null;
+    if (req.query.hudsToken && aplicarFiltroHudsSolicitudes(req)) {
+        const hudsTipoPrestaciones = Auth.getPermissions(req, 'huds:visualizacionParcialHuds:tipoPrestacion:?');
+        query.where({ 'solicitud.tipoPrestacion.id': { $in: hudsTipoPrestaciones.map(id => Types.ObjectId(id)) } });
+        conceptosPermitidosHuds = await obtenerConceptosPermitidosHuds(req);
+    }
+
     if (req.query.organizacion) {
         query.where('solicitud.organizacion.id').equals(req.query.organizacion);
     }
@@ -560,6 +634,9 @@ router.get('/prestaciones', async (req: any, res, next) => {
             const profesional = Auth.getProfesional(req);
             const profesionalId = profesional && profesional.id && profesional.id.toString();
             for (let i = 0; i < data.length; i++) {
+                if (conceptosPermitidosHuds) {
+                    filtrarSolicitudesHuds(data[i], conceptosPermitidosHuds);
+                }
                 let profId = false;
                 if (data[i].solicitud.profesional && data[i].solicitud.profesional.id) {
                     profId = data[i].solicitud.profesional.id.toString();
