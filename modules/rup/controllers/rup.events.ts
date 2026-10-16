@@ -2,6 +2,7 @@ import { EventCore } from '@andes/event-bus';
 import { getProfesionActualizada, crearReceta } from '../../recetas/recetasController';
 import * as moment from 'moment';
 import { Receta } from '../../recetas/receta-schema';
+import { RecetaControl } from '../../recetas/receta-control-schema';
 import { rupEventsLog as logger } from './rup.events.log';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { generarCUIL } from '../../../core-v2/mpi/validacion/validacion.controller';
@@ -71,23 +72,57 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
                     continue;
                 }
 
-                const queryReceta: any = { idRegistro };
-                if (esMagistral) {
-                    queryReceta['medicamento.magistral.nombre'] = medicamento.magistral.nombre;
+                const recetasExistentes = await Receta.find({
+                    'medicamento.concepto.conceptId': conceptId,
+                    idRegistro
+                });
+
+                if (recetasExistentes && recetasExistentes.length > 0) {
+                    for (const r of recetasExistentes) {
+                        await RecetaControl.updateOne(
+                            {
+                                idPrestacion: prestacion.id,
+                                idRegistro,
+                                conceptId,
+                                ordenTratamiento: (r as any).medicamento.ordenTratamiento
+                            },
+                            {
+                                $set: {
+                                    creada: true,
+                                    idReceta: (r as any).idReceta
+                                }
+                            }
+                        );
+                    }
                 } else {
-                    queryReceta['medicamento.concepto.conceptId'] = conceptId;
-                }
-
-                const receta: any = await Receta.findOne(queryReceta);
-
-                if (!receta) {
                     const dataReceta = {
                         ...dataRecetaBase,
                         medicamento,
                         diagnostico: medicamento?.diagnostico || null,
                     };
 
-                    await crearReceta(dataReceta, prestacion.createdBy);
+                    const recetasCreadas = await crearReceta(dataReceta, prestacion.createdBy);
+                    if (Array.isArray(recetasCreadas)) {
+                        for (const r of recetasCreadas) {
+                            const rDb = await Receta.findById(r._id);
+                            if (rDb) {
+                                await RecetaControl.updateOne(
+                                    {
+                                        idPrestacion: prestacion.id,
+                                        idRegistro,
+                                        conceptId,
+                                        ordenTratamiento: (rDb as any).medicamento.ordenTratamiento
+                                    },
+                                    {
+                                        $set: {
+                                            creada: true,
+                                            idReceta: (rDb as any).idReceta
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                    }
                 }
             } catch (errorMedicamento) {
                 logger.error('prestacion:receta:create', { idRegistro, medicamento }, errorMedicamento);
