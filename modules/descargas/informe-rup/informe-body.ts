@@ -54,7 +54,7 @@ export class InformeRupBody extends HTMLComponent {
                         {{ nombrePrestacion }}:
                     </h6>
                     <h6>
-                        {{ valorPrestacion }}
+                        {{{ valorPrestacion }}}
                     </h6>
                 {{/if}}
                 <div class="registros">
