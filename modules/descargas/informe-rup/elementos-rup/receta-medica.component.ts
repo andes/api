@@ -1,6 +1,7 @@
 import { HTMLComponent } from '../../model/html-component.class';
 import { generateBarcodeSVG } from '../../model/barcode';
 import { Receta } from '../../../recetas/receta-schema';
+import { recetarClient, isRecetarConfigured } from '../../../recetas/recetar-client';
 
 
 export class RecetaMedicaComponent extends HTMLComponent {
@@ -119,10 +120,7 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
 
         if (tieneReceta) {
             try {
-                const recetas: any[] = await Receta.find({
-                    idPrestacion: this.prestacion._id.toString(),
-                    idRegistro: this.registro.id,
-                }).sort({ fechaRegistro: -1 });
+                const recetas = await this.getRecetasCombinadas();
 
                 const recetaPorPrestacion = recetas.find(r =>
                     !['pendiente', 'eliminada'].includes(r.estadoActual?.tipo)
@@ -133,6 +131,9 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
                         .split('-')
                         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                         .join(' ');
+                }
+                if (!idReceta && recetaPorPrestacion?.idReceta) {
+                    idReceta = recetaPorPrestacion.idReceta;
                 }
             } catch (error) {
                 estadoReceta = null;
@@ -159,5 +160,24 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
             estadoReceta,
             barcodeSVG: generateBarcodeSVG(finalIdReceta, 'code128')
         };
+    }
+
+    private async getRecetasCombinadas(): Promise<any[]> {
+        const local: any[] = await Receta.find({
+            idPrestacion: this.prestacion._id.toString(),
+            idRegistro: this.registro.id,
+        }).sort({ fechaRegistro: -1 });
+
+        if (!isRecetarConfigured()) {
+            return local;
+        }
+
+        try {
+            const remotas: any[] = await recetarClient.getRecetasPorPrestacion(this.prestacion._id.toString());
+            const filtradas = remotas.filter(r => !r.idRegistro || r.idRegistro === this.registro.id);
+            return [...local, ...filtradas];
+        } catch (error) {
+            return local;
+        }
     }
 }
