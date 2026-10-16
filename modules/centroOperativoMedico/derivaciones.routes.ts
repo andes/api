@@ -110,6 +110,14 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                 nuevoEstado.organizacionDestino = { id, nombre, direccion };
                 delete nuevoEstado.unidadDestino;
             }
+            if (nuevoEstado.estado === 'rechazada') {
+                const orgCOM = (await Organizacion.find({ esCOM: true }))[0];
+                if (orgCOM) {
+                    const { id, nombre, direccion } = orgCOM;
+                    nuevoEstado.organizacionDestino = { id, nombre, direccion };
+                    delete nuevoEstado.unidadDestino;
+                }
+            }
 
             derivacion.historial.push(nuevoEstado);
             if (nuevoEstado.prioridad) {
