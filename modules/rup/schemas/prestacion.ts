@@ -8,6 +8,26 @@ import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.histo
 import { SemanticTag } from './semantic-tag';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
+/**
+ * Firma de pre-validación (doble firma del informe).
+ * Guarda un snapshot del profesional firmante y del rol que tenía al firmar,
+ * para que informes ya firmados no cambien si después cambian sus permisos.
+ * Ver ADR 0001 (docs/adr/0001-doble-firma-informe.md).
+ */
+export const FirmaPrevalidacionSchema = new Schema({
+    profesional: {
+        id: { type: Schema.Types.ObjectId, required: true },
+        nombre: String,
+        apellido: String,
+        documento: String
+    },
+    // Rol derivado de permisos al momento de firmar (snapshot): 'validador' | 'prevalidador'
+    rol: { type: String, required: true },
+    // Matrícula del profesional al momento de firmar (snapshot, para el informe)
+    matricula: { type: String, default: null },
+    fecha: { type: Date, default: Date.now }
+}, { _id: false });
+
 export const PrestacionSchema = new Schema({
     /**
      * ID de un EVENTO externo (internacion, guardia, embarazo) para agrupar un conjunto de prestaciones referidas a ese evento
@@ -171,6 +191,9 @@ export const PrestacionSchema = new Schema({
     // Historia de estado de la prestación
     estados: [PrestacionEstadoSchema],
     estadoActual: PrestacionEstadoSchema,
+    // Firmas previas (residentes) de la doble firma. La firma del validador se
+    // deriva de estadoActual.createdBy del estado 'validada'. Ver ADR 0001.
+    firmasPrevalidacion: { type: [FirmaPrevalidacionSchema], default: [] },
     unidadOrganizativa: SnomedConcept,
     periodosCensables: []
 }, { usePushEach: true } as any);
@@ -306,6 +329,8 @@ PrestacionSchema.methods.getRegistros = function (all = false) {
 PrestacionSchema.plugin(AuditPlugin);
 PrestacionSchema.index({ 'solicitud.turno': 1 });
 PrestacionSchema.index({ 'paciente.id': 1, 'estadoActual.tipo': 1 });
+// Estadísticas por profesional firmante (producción académica del residente)
+PrestacionSchema.index({ 'firmasPrevalidacion.profesional.id': 1 }, { sparse: true });
 PrestacionSchema.index({ groupId: 1 }, { sparse: true });
 PrestacionSchema.index({
     'solicitud.organizacion.id': 1,

@@ -12,6 +12,23 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 
 /**
+ * Deriva el rol del profesional firmante a partir de sus permisos (ADR 0001).
+ * Único punto de derivación: si en el futuro se agrega un atributo explícito de
+ * rol en Profesional, solo cambia esta función.
+ *
+ * - Con permiso de validación sobre el tipo de prestación  -> 'validador' (médico de planta)
+ * - Sin ese permiso (solo pre-validación)                  -> 'prevalidador' (residente)
+ *
+ * @export
+ * @param {*} req request autenticado
+ * @param {string} tipoPrestacionId id del tipo de prestación
+ * @returns {'validador' | 'prevalidador'}
+ */
+export function deriveRolFirmante(req, tipoPrestacionId: string): 'validador' | 'prevalidador' {
+    return Auth.check(req, 'rup:validacion:' + tipoPrestacionId) ? 'validador' : 'prevalidador';
+}
+
+/**
  * Libera la referencia al turno dentro de la solicitud
  *
  * @export
@@ -60,6 +77,8 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
         suspenderTurno: 'Turno suspendido',
         asignada: 'Profesional asignado',
         validada: 'Validada',
+        prevalidacion: 'Pre-validada',
+        quitarPrevalidacion: 'Ejecutada',
         ejecucion: 'Ejecutada',
         romperValidacion: 'Ejecutada',
         anulada: 'Anulada',
