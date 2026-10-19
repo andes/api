@@ -137,6 +137,7 @@ export default [
         child: [
             { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion', avoidAll: true },
             { key: 'validacion', title: 'Validación extras', type: 'prestacion', avoidAll: true },
+            { key: 'prevalidacion', title: 'Pre-validación (doble firma)', type: 'prestacion', avoidAll: true },
             { key: 'servicio-intermedio', title: 'Servicio Intermedio', type: 'servicio-intermedio', avoidAll: true, visibility: 'restricted' },
             { key: 'plantilla', title: 'Cargar o editar plantillas', type: 'boolean', visibility: 'restricted' }
         ]

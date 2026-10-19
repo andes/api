@@ -6,6 +6,7 @@ import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { AppCache } from '../../../connections';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { Profesional } from '../../../core/tm/schemas/profesional';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { removeDiacritics } from '../../../utils/utils';
@@ -15,7 +16,7 @@ import { getTurnoById } from '../../turnos/controller/turnosController';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
+import { deriveRolFirmante, hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
@@ -164,7 +165,12 @@ router.post('/solicitudes/dashboard', async (req, res, next) => {
 
 
 router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
-    const servicios = Auth.getPermissions(req, 'rup:servicio-intermedio:?').map(id => new Types.ObjectId(id));
+    // getPermissions puede devolver el comodín '*' (p.ej. si el usuario tiene
+    // rup:servicio-intermedio:* o rup:*). ObjectId('*') lanza y tira el proceso,
+    // así que descartamos lo que no sea un ObjectId válido.
+    const servicios = Auth.getPermissions(req, 'rup:servicio-intermedio:?')
+        .filter(id => id !== '*' && Types.ObjectId.isValid(id))
+        .map(id => new Types.ObjectId(id));
     const query = {
         inicio: 'servicio-intermedio',
         servicioIntermedioId: MongoQuery.inArray(servicios),
@@ -692,6 +698,137 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
 
                 break;
+            case 'prevalidacion': {
+                // Pre-validación (doble firma). Opcional y aditiva: NO reemplaza ni
+                // modifica la validación. Ver ADR 0001.
+                const tipoPrestacionId = data.solicitud.tipoPrestacion.id;
+
+                // Gate de permiso (enforcement real en la API para pre-validar)
+                if (!Auth.check(req, 'rup:prevalidacion:' + tipoPrestacionId)) {
+                    return next('No tiene permiso para pre-validar este tipo de prestación.');
+                }
+                // Solo se puede pre-firmar en ejecución o mientras está pendiente de validación
+                if (data.estadoActual.tipo !== 'ejecucion' && data.estadoActual.tipo !== 'pendienteValidacion') {
+                    return next('Solo se puede pre-validar una prestación en ejecución o pendiente de validación.');
+                }
+                const profesional = Auth.getProfesional(req);
+                if (!profesional || !profesional.id) {
+                    return next('Solo un profesional puede pre-validar.');
+                }
+
+                // Matrícula vigente del profesional (snapshot para el informe). Se toma la
+                // última matriculación de grado cargada; si no hay, queda null.
+                let matricula = null;
+                try {
+                    const prof: any = await Profesional.findById(profesional.id, { formacionGrado: 1 });
+                    const fg = (prof && prof.formacionGrado || []).find(f => f.matriculacion && f.matriculacion.length);
+                    if (fg) {
+                        const m = fg.matriculacion[fg.matriculacion.length - 1];
+                        matricula = m && m.matriculaNumero != null ? String(m.matriculaNumero) : null;
+                    }
+                } catch (e) { /* matrícula opcional: si falla la lectura, queda null */ }
+
+                const firma = {
+                    profesional,
+                    rol: deriveRolFirmante(req, tipoPrestacionId), // snapshot del rol al firmar
+                    matricula,
+                    fecha: new Date()
+                };
+                // createdBy del nuevo estado, mismo shape que arma el AuditPlugin
+                const createdByEstado = Object.assign({}, (req as any).user.usuario, { organizacion: (req as any).user.organizacion });
+                const estadoPendiente = { tipo: 'pendienteValidacion', createdAt: new Date(), createdBy: createdByEstado };
+
+                // Push atómico: tope de 4 y anti-duplicado forzados en el filtro.
+                // Si está en 'ejecucion', además transiciona a 'pendienteValidacion' una sola vez.
+                // Reintenta si otro residente cambió el estado entre la lectura y la escritura
+                // (así ninguna firma se pierde por concurrencia).
+                let prestacionActualizada: any = null;
+                for (let intento = 0; intento < 3 && !prestacionActualizada; intento++) {
+                    const fresh: any = await Prestacion.findById(data._id, { estadoActual: 1, firmasPrevalidacion: 1 });
+                    if (!fresh) {
+                        return next(404);
+                    }
+                    const tipoActual = fresh.estadoActual.tipo;
+                    if (tipoActual !== 'ejecucion' && tipoActual !== 'pendienteValidacion') {
+                        return next('Solo se puede pre-validar una prestación en ejecución o pendiente de validación.');
+                    }
+                    const firmas = fresh.firmasPrevalidacion || [];
+                    if (firmas.some(f => String(f.profesional.id) === String(profesional.id))) {
+                        return next('Ya registró su pre-validación en esta prestación.');
+                    }
+                    if (firmas.length >= 4) {
+                        return next('Se alcanzó el máximo de firmas de pre-validación (4).');
+                    }
+                    const filtro: any = {
+                        _id: data._id,
+                        'estadoActual.tipo': tipoActual,
+                        'firmasPrevalidacion.profesional.id': { $ne: profesional.id },
+                        $expr: { $lt: [{ $size: { $ifNull: ['$firmasPrevalidacion', []] } }, 4] }
+                    };
+                    const update: any = tipoActual === 'ejecucion'
+                        ? { $push: { firmasPrevalidacion: firma, estados: estadoPendiente }, $set: { estadoActual: estadoPendiente } }
+                        : { $push: { firmasPrevalidacion: firma } };
+                    prestacionActualizada = await Prestacion.findOneAndUpdate(filtro, update, { new: true });
+                }
+                if (!prestacionActualizada) {
+                    return next('No se pudo registrar la pre-validación, reintente.');
+                }
+                EventCore.emitAsync('rup:prestacion:prevalidate', prestacionActualizada);
+                if (prestacionActualizada.paciente) {
+                    AppCache.clear(`huds-${prestacionActualizada.paciente.id}`);
+                }
+                return res.json(prestacionActualizada);
+            }
+            case 'quitarPrevalidacion': {
+                // Quita una firma de pre-validación del informe (p. ej. el residente se
+                // equivocó). Análogo a romperValidacion pero para la pre-firma. Ver ADR 0001.
+                if (data.estadoActual.tipo !== 'pendienteValidacion') {
+                    return next('Solo se puede quitar una pre-validación mientras la prestación está pendiente de validación.');
+                }
+                const prof = Auth.getProfesional(req);
+                const esValidador = Auth.check(req, 'rup:validacion:' + data.solicitud.tipoPrestacion.id);
+                // Por defecto se quita la propia firma; un validador puede quitar la de otro.
+                const targetId = (esValidador && req.body.firmaProfesionalId) ? req.body.firmaProfesionalId : (prof && prof.id);
+                if (!targetId) {
+                    return next('No se pudo identificar la firma a quitar.');
+                }
+                const firmasActuales = data.firmasPrevalidacion || [];
+                const existe = firmasActuales.some(f => String(f.profesional.id) === String(targetId));
+                if (!existe) {
+                    return next('No hay una pre-validación de ese profesional para quitar.');
+                }
+                // Solo el propio firmante o un validador pueden quitar
+                if (!esValidador && String(targetId) !== String(prof && prof.id)) {
+                    return next('Solo puede quitar su propia pre-validación.');
+                }
+                const quedan = firmasActuales.filter(f => String(f.profesional.id) !== String(targetId)).length;
+                let update: any;
+                if (quedan === 0) {
+                    // Sin más pre-firmas, la prestación vuelve a ejecución
+                    const createdByEjec = Object.assign({}, (req as any).user.usuario, { organizacion: (req as any).user.organizacion });
+                    const estadoEjec = { tipo: 'ejecucion', createdAt: new Date(), createdBy: createdByEjec };
+                    update = {
+                        $pull: { firmasPrevalidacion: { 'profesional.id': Types.ObjectId(targetId) } },
+                        $push: { estados: estadoEjec },
+                        $set: { estadoActual: estadoEjec }
+                    };
+                } else {
+                    update = { $pull: { firmasPrevalidacion: { 'profesional.id': Types.ObjectId(targetId) } } };
+                }
+                const sinFirma = await Prestacion.findOneAndUpdate(
+                    { _id: data._id, 'estadoActual.tipo': 'pendienteValidacion' },
+                    update,
+                    { new: true }
+                );
+                if (!sinFirma) {
+                    return next('No se pudo quitar la pre-validación, reintente.');
+                }
+                EventCore.emitAsync('rup:prestacion:quitarPrevalidacion', sinFirma);
+                if (sinFirma.paciente) {
+                    AppCache.clear(`huds-${sinFirma.paciente.id}`);
+                }
+                return res.json(sinFirma);
+            }
             case 'romperValidacion':
                 if (data.estadoActual.tipo !== 'validada') {
                     return next('Para poder romper la validación, primero debe validar la prestación.');
