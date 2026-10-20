@@ -735,7 +735,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     fecha: new Date()
                 };
                 // createdBy del nuevo estado, mismo shape que arma el AuditPlugin
-                const createdByEstado = Object.assign({}, (req as any).user.usuario, { organizacion: (req as any).user.organizacion });
+                const createdByEstado = { ...(req as any).user.usuario, organizacion: (req as any).user.organizacion };
                 const estadoPendiente = { tipo: 'pendienteValidacion', createdAt: new Date(), createdBy: createdByEstado };
 
                 // Push atómico: tope de 4 y anti-duplicado forzados en el filtro.
@@ -805,7 +805,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 let update: any;
                 if (quedan === 0) {
                     // Sin más pre-firmas, la prestación vuelve a ejecución
-                    const createdByEjec = Object.assign({}, (req as any).user.usuario, { organizacion: (req as any).user.organizacion });
+                    const createdByEjec = { ...(req as any).user.usuario, organizacion: (req as any).user.organizacion };
                     const estadoEjec = { tipo: 'ejecucion', createdAt: new Date(), createdBy: createdByEjec };
                     update = {
                         $pull: { firmasPrevalidacion: { 'profesional.id': Types.ObjectId(targetId) } },
