@@ -1,5 +1,6 @@
 import { getFakeRequest } from '@andes/unit-test';
-import { admitePrevalidacion, deriveRolFirmante, formatearMatriculas, historialParaUpdateAtomico } from './controllers/prestacion';
+import { rup as rupConfig } from '../../config';
+import { admitePrevalidacion, configPrevalidacion, deriveRolFirmante, formatearMatriculas, historialParaUpdateAtomico } from './controllers/prestacion';
 
 /**
  * Tests de la derivación de rol del firmante (ADR 0001).
@@ -88,5 +89,12 @@ describe('historialParaUpdateAtomico', () => {
     it('fuera de top no corresponde historial => null', () => {
         const prestacion = { inicio: 'agenda', solicitud: { historial: [{ accion: 'prevalidacion' }] } };
         expect(historialParaUpdateAtomico(prestacion, usuario)).toBeNull();
+    });
+});
+
+describe('configPrevalidacion', () => {
+    it('expone el tope de firmas definido en config', () => {
+        expect(configPrevalidacion()).toEqual({ maxFirmasPrevalidacion: rupConfig.maxFirmasPrevalidacion });
+        expect(rupConfig.maxFirmasPrevalidacion).toBe(4);
     });
 });
