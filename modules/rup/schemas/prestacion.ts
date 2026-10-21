@@ -12,7 +12,7 @@ import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema
  * Firma de pre-validación (doble firma del informe).
  * Guarda un snapshot del profesional firmante y del rol que tenía al firmar,
  * para que informes ya firmados no cambien si después cambian sus permisos.
- * Ver ADR 0001 (docs/adr/0001-doble-firma-informe.md).
+ * Ver ADR 0001 (docs/rup/0001-doble-firma-informe.md).
  */
 export const FirmaPrevalidacionSchema = new Schema({
     profesional: {
