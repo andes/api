@@ -1,3 +1,13 @@
+---
+tags:
+  - rup
+  - auth
+  - pdf
+scope:
+  - api
+  - app
+---
+
 # ADR 0001: Doble firma del informe y rol del profesional firmante
 
 - **Estado:** Aceptada. Enmendada el 2026-10-01 (el rol se deriva de permisos en esta etapa, ver "Decisión") y el 2026-10-19 (pre-validar requiere el permiso explícito `rup:prevalidacion`; etapa 1 implementada, ver "Historial de cambios").
@@ -49,7 +59,8 @@ por `documento == username`.
    `rup:validacion:<tipoPrestacion>`.
 3. Un profesional con `rup:prevalidacion` y **sin** `rup:validacion` solo puede
    pre-validar. Por convención administrativa, un usuario no debería tener ambos
-   permisos; si los tuviera, la derivación de rol da prioridad a validador.
+   permisos; si los tuviera, la derivación de rol da prioridad a validador y la API
+   **rechaza** la pre-validación (debe validar directo). Enmienda 2026-10-21.
 
 ### Rol derivado de permisos (en esta etapa)
 
@@ -74,8 +85,9 @@ tocar a los consumidores.
 ### Modelo de datos
 
 - `firmasPrevalidacion`: **lista** de firmas previas. Cada una guarda el profesional
-  (`id`, `nombre`, `apellido`, `documento`), el rol (snapshot), la **matrícula** (snapshot,
-  tomada de `formacionGrado[].matriculacion[].matriculaNumero` al firmar) y la fecha.
+  (`id`, `nombre`, `apellido`, `documento`), el rol (snapshot), las **matrículas** vigentes
+  (snapshot en texto, obtenidas con `searchMatriculas` y con el mismo formato que el pie del
+  informe PDF: `Título MP 123 - Especialidad ME 456`) y la fecha.
   **Implementado** (`modules/rup/schemas/prestacion.ts`, subschema `FirmaPrevalidacionSchema`).
 - `firmaValidacion`: **una sola** firma, con la misma forma. **Diferido en esta etapa:**
   como la validación no se modifica (ver enmienda 2026-10-19), el validador se deriva en
@@ -97,8 +109,10 @@ ejecucion ───────────────────────�
 
 - **Quitar pre-validación** (op `quitarPrevalidacion`, análoga a `romperValidacion`): saca una
   firma de `firmasPrevalidacion` (p. ej. el residente se equivocó). La puede quitar el propio
-  firmante o un validador (`rup:validacion`). Solo con la prestación en `pendienteValidacion`.
-  `$pull` atómico; si era la última firma, la prestación vuelve a `ejecucion`.
+  firmante o un validador (`rup:validacion`); quitar la firma de otro sin ese permiso se
+  rechaza. Solo con la prestación en `pendienteValidacion`. `$pull` atómico condicionado a
+  que la firma exista; si la lista queda vacía, la prestación vuelve a `ejecucion` (también
+  de forma condicionada, para no pisar una firma concurrente).
 - El validador puede corregir el contenido antes de validar. No hay rechazo ni devolución.
 - Cualquier médico con el permiso puede validar; no se asigna un validador específico.
 - En la firma única, el validador no tiene firmas previas y se muestra una sola firma.
@@ -106,7 +120,8 @@ ejecucion ───────────────────────�
 ### Reglas del conjunto de firmas
 
 - **Tope:** hasta 4 firmas previas (residentes) y 1 validador (médico de planta). Se hace
-  cumplir en la API, no solo en la interfaz.
+  cumplir en la API, no solo en la interfaz. El valor vive en `config.ts`
+  (`rup.maxFirmasPrevalidacion`).
 - **Concurrencia:** las firmas previas se agregan de forma atómica (`$push`); varios
   residentes pueden firmar al mismo tiempo y ninguna se puede perder.
 - **Sin duplicados:** un mismo profesional no puede figurar dos veces.
@@ -209,3 +224,4 @@ Pendiente de definir:
 | 2026-10-01 | Precisado que `rup:tipoPrestacion` no reemplaza al control de `rup:validacion` en la API. |
 | 2026-10-19 | Visibilidad en punto de inicio RUP: el residente (permiso `rup:prevalidacion`) ve y puede continuar/pre-validar prestaciones que no creó, tanto fuera de agenda como por agenda (antes el filtro solo contemplaba creador o permiso de validación). |
 | 2026-10-19 | Implementación etapa 1. Pre-validar pasa a requerir el permiso explícito `rup:prevalidacion:<tipo>` (el que tendrán los residentes); rol sigue derivándose de permisos vía `deriveRolFirmante`. Se implementan `firmasPrevalidacion` (lista, `$push` atómico, tope 4, anti-duplicado), el estado `pendienteValidacion` (admite pre-firmar en `ejecucion` o `pendienteValidacion`) y el permiso en `permisos.ts`. `firmaValidacion` se difiere: la validación NO se modifica y el validador se deriva de `estadoActual.createdBy`. Enforcement de validación: solo UI ambulatoria (botón gateado por `rup:validacion`); internación sin tocar; backend sin exigir el permiso. |
+| 2026-10-21 | Ubicación: `docs/rup/`, con metadata (`tags`, `scope`) en front matter. Tope de firmas movido a `config.ts`. La API rechaza la pre-validación de usuarios con `rup:validacion`. Matrícula de la firma vía `searchMatriculas` (vigencia, posgrado, matrícula externa). `quitarPrevalidacion` rechaza quitar firmas ajenas sin permiso de validación. |
