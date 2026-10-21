@@ -1,6 +1,7 @@
 import { ObjectId } from '@andes/core';
 import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
+import { rup as rupConfig } from '../../../config';
 import { userScheduler } from '../../../config.private';
 import { AppCache } from '../../../connections';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
@@ -26,6 +27,13 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
  */
 export function deriveRolFirmante(req, tipoPrestacionId: string): 'validador' | 'prevalidador' {
     return Auth.check(req, 'rup:validacion:' + tipoPrestacionId) ? 'validador' : 'prevalidador';
+}
+
+/**
+ * Configuración de la pre-validación que necesita la app (ADR 0001), para no duplicar el tope.
+ */
+export function configPrevalidacion() {
+    return { maxFirmasPrevalidacion: rupConfig.maxFirmasPrevalidacion };
 }
 
 /**
