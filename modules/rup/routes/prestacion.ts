@@ -4,6 +4,7 @@ import { EventCore } from '@andes/event-bus';
 import * as express from 'express';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
+import { rup as rupConfig } from '../../../config';
 import { AppCache } from '../../../connections';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Profesional } from '../../../core/tm/schemas/profesional';
@@ -738,7 +739,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 const createdByEstado = { ...(req as any).user.usuario, organizacion: (req as any).user.organizacion };
                 const estadoPendiente = { tipo: 'pendienteValidacion', createdAt: new Date(), createdBy: createdByEstado };
 
-                // Push atómico: tope de 4 y anti-duplicado forzados en el filtro.
+                // Push atómico: tope de firmas (config) y anti-duplicado forzados en el filtro.
                 // Si está en 'ejecucion', además transiciona a 'pendienteValidacion' una sola vez.
                 // Reintenta si otro residente cambió el estado entre la lectura y la escritura
                 // (así ninguna firma se pierde por concurrencia).
@@ -756,14 +757,14 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if (firmas.some(f => String(f.profesional.id) === String(profesional.id))) {
                         return next('Ya registró su pre-validación en esta prestación.');
                     }
-                    if (firmas.length >= 4) {
-                        return next('Se alcanzó el máximo de firmas de pre-validación (4).');
+                    if (firmas.length >= rupConfig.maxFirmasPrevalidacion) {
+                        return next(`Se alcanzó el máximo de firmas de pre-validación (${rupConfig.maxFirmasPrevalidacion}).`);
                     }
                     const filtro: any = {
                         _id: data._id,
                         'estadoActual.tipo': tipoActual,
                         'firmasPrevalidacion.profesional.id': { $ne: profesional.id },
-                        $expr: { $lt: [{ $size: { $ifNull: ['$firmasPrevalidacion', []] } }, 4] }
+                        $expr: { $lt: [{ $size: { $ifNull: ['$firmasPrevalidacion', []] } }, rupConfig.maxFirmasPrevalidacion] }
                     };
                     const update: any = tipoActual === 'ejecucion'
                         ? { $push: { firmasPrevalidacion: firma, estados: estadoPendiente }, $set: { estadoActual: estadoPendiente } }
