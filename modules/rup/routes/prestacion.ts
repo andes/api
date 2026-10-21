@@ -731,9 +731,15 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     return next('Solo un profesional puede pre-validar.');
                 }
 
+                // Pre-validación y validación son excluyentes (ADR 0001): quien puede validar, valida directo.
+                const rol = deriveRolFirmante(req, tipoPrestacionId);
+                if (rol === 'validador') {
+                    return next('Tiene permiso de validación sobre este tipo de prestación: debe validar, no pre-validar.');
+                }
+
                 const firma = {
                     profesional,
-                    rol: deriveRolFirmante(req, tipoPrestacionId), // snapshot del rol al firmar
+                    rol, // snapshot del rol al firmar
                     matricula: await matriculasFirmante(profesional.id), // snapshot para el informe
                     fecha: new Date()
                 };
