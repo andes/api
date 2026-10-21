@@ -185,7 +185,7 @@ export const maxLimit = 1000;
 
 // Configuración RUP
 export const rup = {
-    // Tope de firmas de pre-validación (residentes) por informe. Ver docs/adr/0001-doble-firma-informe.md
+    // Tope de firmas de pre-validación (residentes) por informe. Ver docs/rup/0001-doble-firma-informe.md
     maxFirmasPrevalidacion: 4
 };
 
