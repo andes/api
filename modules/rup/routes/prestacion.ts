@@ -866,6 +866,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     idOrigenModifica: data.id
                 };
                 const prestacionOld = await saveEnHistorial(data, estadoModificada, req);
+                // Las firmas de pre-validación avalan el contenido validado: al volver a ejecución
+                // se limpian (quedan en la copia del historial) y, si corresponde, se vuelve a firmar.
+                // Ver ADR 0001.
+                data.firmasPrevalidacion = [];
                 data.estados.push({
                     tipo: 'ejecucion',
                     idOrigenModifica: prestacionOld.id
