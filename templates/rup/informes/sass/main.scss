@@ -189,7 +189,15 @@ main {
         font-weight: 400;
     }
 
-    // padding: 1rem 0;
+    img {
+        // imágenes "pegadas" desde el portapapeles, no como adjuntos
+        max-width: 100%;
+        max-height: 700px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+
     .contenedor-concepto {
         display: inline-block;
         padding: 1rem 0; // max-height: 10cm;
@@ -205,7 +213,6 @@ main {
         }
 
         img {
-            //    float: right;
             text-align: center;
             max-width: 5cm;
             max-height: 5cm;
@@ -449,24 +456,3 @@ footer {
     -o-transform: rotate(-43deg);
     transform: rotate(-43deg);
 }
-
-// Media query
-// @media screen and (min-width: 980px) {
-//     .contenedor-zocalo {
-//         img {
-//             &.logo-pdp {
-//                 display: none;
-//             }
-//             &.logo-pdp-h {
-//                 display: initial;
-//                 align-self: center;
-//                 width: 100px;
-//             }
-//         }
-//     }
-// }
-// @media screen and (min-width: 320px) and (max-width: 979px)  {  
-//     header .contenedor-logos .contenedor-logos-secundarios {
-//         // display: none;
-//     }
-// }

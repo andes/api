@@ -48,9 +48,9 @@ export class InformeRupHeader extends HTMLComponent {
                                 <b>Obra Social: </b>
 
                                 {{#if paciente.obraSocial}}
-                                {{paciente.obraSocial}}
+                                    {{paciente.obraSocial}}
                                 {{else}}
-                                sin obra social
+                                    sin obra social
                                 {{/if}}
                             </h6>
                             <h6>
@@ -170,6 +170,11 @@ export class InformeRupHeader extends HTMLComponent {
         const numeroCarpeta = paciente.carpetaEfectores.find(x => String(x.organizacion._id) === organizacionId);
         const consultaValidada = (prestacion.estados[prestacion.estados.length - 1].tipo === 'validada');
         const provincia = configPrivate.provincia || 'neuquen';
+        const obraSocial = prestacion.paciente.obraSocial
+            ? prestacion.paciente.obraSocial.financiador.length > 80
+                ? prestacion.paciente.obraSocial.financiador.substring(0, 80) + '...'
+                : prestacion.paciente.obraSocial.financiador
+            : false;
         this.data = {
             paciente: {
                 nombre: paciente.nombre,
@@ -181,7 +186,7 @@ export class InformeRupHeader extends HTMLComponent {
                 numeroIdentificacion: paciente.numeroIdentificacion || undefined,
                 edad,
                 numeroCarpeta: numeroCarpeta?.nroCarpeta,
-                obraSocial: prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial.financiador : false,
+                obraSocial,
                 numeroAfiliado: prestacion.paciente.obraSocial?.numeroAfiliado || undefined
             },
             organizacion: {
