@@ -23,7 +23,7 @@ export const FirmaPrevalidacionSchema = new Schema({
     },
     // Rol derivado de permisos al momento de firmar (snapshot): 'validador' | 'prevalidador'
     rol: { type: String, required: true },
-    // Matrícula del profesional al momento de firmar (snapshot, para el informe)
+    // Matrículas vigentes al momento de firmar (snapshot, mismo formato que el pie del informe PDF)
     matricula: { type: String, default: null },
     fecha: { type: Date, default: Date.now }
 }, { _id: false });
