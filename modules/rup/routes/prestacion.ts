@@ -17,7 +17,7 @@ import { getTurnoById } from '../../turnos/controller/turnosController';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { admitePrevalidacion, deriveRolFirmante, formatearMatriculas, historialParaUpdateAtomico, hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud, usuarioAuditoria } from '../controllers/prestacion';
+import { admitePrevalidacion, configPrevalidacion, deriveRolFirmante, formatearMatriculas, historialParaUpdateAtomico, hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud, usuarioAuditoria } from '../controllers/prestacion';
 import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
@@ -179,6 +179,11 @@ router.post('/solicitudes/dashboard', async (req, res, next) => {
     return res.json(solicitudes);
 });
 
+
+// Configuración de la pre-validación (tope de firmas), para que la app no la duplique. Ver ADR 0001.
+router.get('/prevalidacion/config', (req, res) => {
+    return res.json(configPrevalidacion());
+});
 
 router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
     // getPermissions puede devolver el comodín '*' (p.ej. si el usuario tiene

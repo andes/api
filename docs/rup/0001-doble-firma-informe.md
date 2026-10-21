@@ -121,7 +121,8 @@ ejecucion ───────────────────────�
 
 - **Tope:** hasta 4 firmas previas (residentes) y 1 validador (médico de planta). Se hace
   cumplir en la API, no solo en la interfaz. El valor vive en `config.ts`
-  (`rup.maxFirmasPrevalidacion`).
+  (`rup.maxFirmasPrevalidacion`) y la app lo obtiene de
+  `GET /api/modules/rup/prevalidacion/config` → `{ maxFirmasPrevalidacion }`, para no duplicarlo.
 - **Concurrencia:** las firmas previas se agregan de forma atómica (`$push`); varios
   residentes pueden firmar al mismo tiempo y ninguna se puede perder.
 - **Sin duplicados:** un mismo profesional no puede figurar dos veces.
