@@ -28,11 +28,9 @@ import { InformeEpicrisisComponent } from './informe-epicrisis.component';
 import { ChecklistComponent } from './checklist.component';
 import { OdontogramaRefsetComponent } from './odontograma.component';
 import { ProcedimientoDeEnfermeriaComponent } from './procedicimiento-enfermeria.component';
+import { InternacionIngresoComponent } from './internacion-ingreso.component';
+import { InternacionEgresoComponent } from './internacion-egreso.component';
 /**
- * [TODO] ProcedimientoDeEnfermeriaComponent
- * [TODO] OdontogramaRefsetComponent
- * [TODO] InternacionIngresoComponent
- * [TODO] InternacionEgresoComponent
  * [TODO] GraficoLinealComponent
  * [TODO] DesarrolloPsicomotorComponent -> NO SE VE EN DEMO
  */
@@ -109,5 +107,7 @@ export const ElementosRUPHTML = {
     AdjuntarDocumentoComponent,
     ElementoDeRegistroComponent: SeccionComponent,
     InformeEpicrisisComponent,
-    RecetaMedicaComponent
+    RecetaMedicaComponent,
+    InternacionIngresoComponent,
+    InternacionEgresoComponent
 };
