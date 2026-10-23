@@ -7,6 +7,7 @@ import { rupEventsLog as logger } from './rup.events.log';
 import { Profesional } from '../../../core/tm/schemas/profesional';
 import { generarCUIL } from '../../../core-v2/mpi/validacion/validacion.controller';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
+import { Auth } from '../../../auth/auth.class';
 
 EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
@@ -72,58 +73,93 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
                     continue;
                 }
 
-                const recetasExistentes = await Receta.find({
-                    'medicamento.concepto.conceptId': conceptId,
+                const dataReceta = {
+                    ...dataRecetaBase,
+                    medicamento,
+                    diagnostico: medicamento?.diagnostico || null,
+                };
+
+                await crearReceta(dataReceta, prestacion.createdBy);
+
+                // Buscamos todas las recetas creadas / existentes para este registro
+                const queryRecetasDb: any = {
+                    idPrestacion: prestacion.id,
                     idRegistro
+                };
+                if (esMagistral) {
+                    queryRecetasDb['medicamento.magistral.nombre'] = medicamento.magistral?.nombre;
+                } else {
+                    queryRecetasDb['medicamento.concepto.conceptId'] = conceptId;
+                }
+                const recetasEnDb = await Receta.find(queryRecetasDb);
+
+                const tratamientoProlongado = !!(medicamento.tratamientoProlongado && medicamento.tiempoTratamiento && medicamento.tiempoTratamiento.id !== null);
+                const cantRecetas = tratamientoProlongado ? parseInt(medicamento.tiempoTratamiento.id, 10) : 1;
+                const nombre = esMagistral ? medicamento.magistral?.nombre : (medicamento.concepto?.term || medicamento.generico?.term);
+
+                let control: any = await RecetaControl.findOne({
+                    prestacionId: prestacion.id,
+                    registroId: idRegistro,
+                    tipo: esMagistral ? 'magistral' : 'medicamento',
+                    ...(esMagistral
+                        ? { nombre }
+                        : { $or: [{ 'codigo.conceptId': conceptId }, { codigo: conceptId }] }
+                    )
                 });
 
-                if (recetasExistentes && recetasExistentes.length > 0) {
-                    for (const r of recetasExistentes) {
-                        await RecetaControl.updateOne(
-                            {
-                                idPrestacion: prestacion.id,
-                                idRegistro,
-                                conceptId,
-                                ordenTratamiento: (r as any).medicamento.ordenTratamiento
-                            },
-                            {
-                                $set: {
-                                    creada: true,
-                                    idReceta: (r as any).idReceta
-                                }
-                            }
-                        );
-                    }
-                } else {
-                    const dataReceta = {
-                        ...dataRecetaBase,
-                        medicamento,
-                        diagnostico: medicamento?.diagnostico || null,
-                    };
+                if (!control) {
+                    control = new RecetaControl({
+                        prestacionId: prestacion.id,
+                        registroId: idRegistro,
+                        pacienteId: prestacion.paciente.id || prestacion.paciente._id,
+                        tipo: esMagistral ? 'magistral' : 'medicamento',
+                        codigo: esMagistral ? (medicamento.magistral?.codigo || medicamento.magistral?.nombre) : (medicamento.generico || medicamento.concepto),
+                        nombre,
+                        tratamientoProlongado,
+                        total: cantRecetas,
+                        intento: 0,
+                        estado: 'pendiente',
+                        recetas: []
+                    });
+                }
 
-                    const recetasCreadas = await crearReceta(dataReceta, prestacion.createdBy);
-                    if (Array.isArray(recetasCreadas)) {
-                        for (const r of recetasCreadas) {
-                            const rDb = await Receta.findById(r._id);
-                            if (rDb) {
-                                await RecetaControl.updateOne(
-                                    {
-                                        idPrestacion: prestacion.id,
-                                        idRegistro,
-                                        conceptId,
-                                        ordenTratamiento: (rDb as any).medicamento.ordenTratamiento
-                                    },
-                                    {
-                                        $set: {
-                                            creada: true,
-                                            idReceta: (rDb as any).idReceta
-                                        }
-                                    }
-                                );
-                            }
-                        }
+                if (!Array.isArray(control.recetas)) {
+                    control.recetas = [];
+                }
+
+                for (const r of recetasEnDb) {
+                    const orden = r.medicamento?.ordenTratamiento ?? 0;
+                    const indexExistente = control.recetas.findIndex((item: any) =>
+                        (item.recetaId && String(item.recetaId) === String(r._id)) || item.ordenTratamiento === orden
+                    );
+                    const itemReceta = {
+                        idReceta: r.idReceta || r._id.toString(),
+                        recetaId: r._id,
+                        ordenTratamiento: orden,
+                        origen: 'evento',
+                        fecha: r.createdAt || new Date()
+                    };
+                    if (indexExistente >= 0) {
+                        control.recetas[indexExistente] = { ...control.recetas[indexExistente], ...itemReceta };
+                    } else {
+                        control.recetas.push(itemReceta);
                     }
                 }
+
+                if (control.recetas.length >= control.total) {
+                    control.estado = 'completo';
+                } else {
+                    control.estado = 'incompleto';
+                }
+
+                if (prestacion.createdBy) {
+                    if (typeof (control as any).audit === 'function') {
+                        (control as any).audit(prestacion.createdBy);
+                    } else {
+                        Auth.audit(control, { user: prestacion.createdBy } as any);
+                    }
+                }
+                await control.save();
             } catch (errorMedicamento) {
                 logger.error('prestacion:receta:create', { idRegistro, medicamento }, errorMedicamento);
             }

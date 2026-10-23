@@ -4,12 +4,13 @@ import { Auth } from '../../auth/auth.class';
 import { userScheduler } from '../../config.private';
 import { RecetasParametros } from './parametros.schema';
 import { MotivosReceta, Receta } from './receta-schema';
-import { createLog, informarLog, updateLog, jobsLog } from './recetaLogs';
+import { createLog, informarLog, updateLog, jobsLog, preCargaLog } from './recetaLogs';
 import { ParamsIncorrect, RecetaNotEdit, RecetaNotFound } from './recetas.error';
 import { getReceta } from './services/receta';
 import { Paciente } from '../../core-v2/mpi/paciente/paciente.schema';
 import { Profesional } from '../../core/tm/schemas/profesional';
 import { Counter } from './counter.model';
+import { RecetaControl } from './receta-control-schema';
 
 const pad = (num: number, size: number) => num.toString().padStart(size, '0');
 
@@ -417,6 +418,15 @@ export async function suspender(recetaId, req) {
 
             const rec = recSusp.concat(await Promise.all(await recetasUpdate(recetasEliminar, 'eliminada', motivo, observacion, profesional, req)));
 
+            try {
+                await RecetaControl.updateMany(
+                    { registroId: recetaR.idRegistro },
+                    { $set: { estado: 'suspendido' } }
+                );
+            } catch (errCtrl) {
+                updateLog.error('suspender:control', { recetaId, registroId: recetaR.idRegistro }, errCtrl);
+            }
+
             return rec;
         }
         return recetasASuspender;
@@ -783,12 +793,31 @@ export async function crearReceta(dataReceta, req) {
     let receta;
     for (let i = 0; i < cantRecetas; i++) {
         try {
+            const esMagistral = !!medicamento.esMagistral;
+            const conceptId = medicamento.concepto?.conceptId || medicamento.generico?.conceptId;
+
+            const queryExistente: any = {
+                idPrestacion: dataReceta.idPrestacion,
+                idRegistro: dataReceta.idRegistro,
+                'medicamento.ordenTratamiento': i
+            };
+            if (esMagistral && medicamento.magistral?.nombre) {
+                queryExistente['medicamento.magistral.nombre'] = medicamento.magistral.nombre;
+            } else if (conceptId) {
+                queryExistente['medicamento.concepto.conceptId'] = conceptId;
+            }
+
+            const yaExiste = await Receta.findOne(queryExistente);
+            if (yaExiste) {
+                recetas.push(yaExiste);
+                continue;
+            }
+
             receta = new Receta();
             receta.idPrestacion = dataReceta.idPrestacion;
             receta.idRegistro = dataReceta.idRegistro;
             const diag = medicamento.diagnostico;
             receta.diagnostico = (typeof diag === 'string') ? { descripcion: diag } : diag;
-            const esMagistral = !!medicamento.esMagistral;
             receta.medicamento = {
                 concepto: esMagistral ? null : (medicamento.concepto || medicamento.generico),
                 presentacion: medicamento.presentacion?.term || medicamento.presentacion,
@@ -1068,4 +1097,98 @@ export async function verificarRecetaExistente(documento: string, sexo: string, 
         existe: !!receta,
         receta: receta || null
     };
+}
+
+/// PRECARGA DE RECETAS: COLECCIÓN AUXILIAR
+
+export async function generarPrecargaReceta(prestacion, req) {
+    const registros = (prestacion.getRegistros ? prestacion.getRegistros() : (prestacion?.ejecucion?.registros || []));
+    const tipoPrescripciones = [
+        { conceptId: '33633005', tipo: 'medicamento' },
+        { conceptId: '313047003', tipo: 'dispositivo' },
+        { conceptId: '1217195001', tipo: 'nutricion' },
+        { conceptId: '1217196000', tipo: 'nutricion' }
+    ];
+    const getTipo = (conceptId) => tipoPrescripciones.find(t => t.conceptId === conceptId);
+
+    const registrosReceta = registros.filter(r => r.concepto?.conceptId && getTipo(r.concepto.conceptId));
+    await Promise.all(registrosReceta.map(async (registro) => {
+        let recetaAuxiliar: any;
+        try {
+            const prescripciones = registro.valor?.medicamentos || registro.valor?.insumos || [];
+            if (!prescripciones.length) {
+                return;
+            }
+
+            for (const prescripcion of prescripciones) {
+                const tipoConfig = getTipo(registro.concepto.conceptId)?.tipo;
+                const tipo = prescripcion.esMagistral ? 'magistral' : (prescripcion.tipo || tipoConfig || 'medicamento');
+                const esMedicamento = tipo === 'medicamento';
+                const esMagistral = tipo === 'magistral';
+
+                const conceptId = prescripcion.concepto?.conceptId || prescripcion.generico?.conceptId;
+                const insumoId = prescripcion.generico?.id || prescripcion.id;
+                const nombre = esMagistral
+                    ? prescripcion.magistral?.nombre
+                    : (esMedicamento
+                        ? (prescripcion.concepto?.term || prescripcion.generico?.term)
+                        : (prescripcion.generico?.nombre || prescripcion.nombre));
+
+                const codigo = esMagistral
+                    ? (prescripcion.magistral?.codigo || prescripcion.magistral?.nombre)
+                    : (esMedicamento
+                        ? (prescripcion.generico || prescripcion.concepto)
+                        : (prescripcion.generico?.codigo || prescripcion.codigo || insumoId));
+
+                // Verificamos si ya existe control para esta prescripción específica
+                const queryExiste: any = {
+                    prestacionId: prestacion._id,
+                    registroId: registro._id,
+                    tipo
+                };
+                if (esMagistral && nombre) {
+                    queryExiste.nombre = nombre;
+                } else if (esMedicamento && conceptId) {
+                    queryExiste.$or = [
+                        { 'codigo.conceptId': conceptId },
+                        { codigo: conceptId }
+                    ];
+                } else if (insumoId) {
+                    queryExiste.$or = [
+                        { 'codigo.id': insumoId },
+                        { codigo: insumoId },
+                        ...(nombre ? [{ nombre }] : [])
+                    ];
+                }
+
+                const existe = await RecetaControl.findOne(queryExiste);
+                if (!existe) {
+                    const tratamientoProlongado = !!(prescripcion.tratamientoProlongado && prescripcion.tiempoTratamiento?.id);
+                    const total = tratamientoProlongado ? Number(prescripcion.tiempoTratamiento.id) : 1;
+
+                    recetaAuxiliar = new RecetaControl({
+                        prestacionId: prestacion._id,
+                        registroId: registro._id,
+                        pacienteId: prestacion.paciente?.id || prestacion.paciente?._id,
+                        tipo,
+                        codigo,
+                        nombre,
+                        tratamientoProlongado,
+                        total,
+                        intento: 0,
+                        estado: 'pendiente',
+                        recetas: []
+                    });
+                    if (req.user) {
+                        Auth.audit(recetaAuxiliar, req);
+                    } else {
+                        (recetaAuxiliar as any).audit(req);
+                    }
+                    await recetaAuxiliar.save();
+                }
+            }
+        } catch (error) {
+            preCargaLog.error('generarPrecarga', { prestacionId: prestacion._id, registro, recetaAuxiliar }, error, req);
+        }
+    }));
 }

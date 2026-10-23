@@ -1,51 +1,95 @@
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
-import * as mongoose from 'mongoose';
+import { SnomedConcept } from '../rup/schemas/snomed-concept';
+import { Schema, SchemaTypes, model } from 'mongoose';
 
-export const recetaControlSchema = new mongoose.Schema({
-    idPrestacion: {
-        type: String,
+
+export const recetaControlSchema = new Schema({
+    prestacionId: {
+        type: SchemaTypes.ObjectId,
         required: true
     },
-    idRegistro: {
-        type: String,
+    registroId: {
+        type: SchemaTypes.ObjectId,
         required: true
     },
-    idPaciente: {
-        type: String,
+    pacienteId: {
+        type: SchemaTypes.ObjectId,
         required: true
     },
-    tipoPrescripcion: {
+    tipo: {
         type: String,
-        enum: ['medicamento', 'insumos', 'magistrales'],
+        enum: ['medicamento', 'magistral', 'dispositivo', 'nutricion'],
         required: true
     },
-    creada: {
+    codigo: {
+        type: SchemaTypes.Mixed,
+        required: false
+    },
+    nombre: {
+        type: String,
+        required: false
+    },
+    tratamientoProlongado: {
         type: Boolean,
         default: false,
         required: true
     },
-    idReceta: {
-        type: String,
-        required: false
-    },
-    conceptId: {
-        type: String,
-        required: false
-    },
-    insumoId: {
-        type: String,
-        required: false
-    },
-    ordenTratamiento: {
+    total: {
         type: Number,
+        default: 1,
+        required: true
+    },
+    intento: {
+        type: Number,
+        default: 0,
+        required: true
+    },
+    estado: {
+        type: String,
+        enum: ['pendiente', 'incompleto', 'completo', 'suspendido', 'error'],
+        default: 'pendiente',
+        required: true
+    },
+    recetas: [{
+        _id: false,
+        idReceta: {
+            type: String,
+            required: false
+        },
+        recetaId: {
+            type: SchemaTypes.ObjectId,
+            required: false
+        },
+        ordenTratamiento: {
+            type: Number,
+            required: true
+        },
+        origen: {
+            type: String,
+            enum: ['evento', 'job'],
+            required: false
+        },
+        fecha: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    ultimoError: {
+        type: SchemaTypes.Mixed,
+        required: false
+    },
+    fechaUltimoIntento: {
+        type: Date,
         required: false
     }
 });
 
 recetaControlSchema.plugin(AuditPlugin);
 
-recetaControlSchema.index({ idPrestacion: 1 });
-recetaControlSchema.index({ idRegistro: 1 });
-recetaControlSchema.index({ idPaciente: 1 });
+recetaControlSchema.index({ prestacionId: 1, registroId: 1 });
+recetaControlSchema.index({ pacienteId: 1 });
+recetaControlSchema.index({ estado: 1, intento: 1 });
+recetaControlSchema.index({ createdAt: 1 });
 
-export const RecetaControl = mongoose.model('recetaControl', recetaControlSchema, 'recetaControl');
+export const RecetaControl = model('recetaControl', recetaControlSchema, 'recetaControl');
+
