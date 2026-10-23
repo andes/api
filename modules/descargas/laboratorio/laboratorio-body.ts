@@ -7,47 +7,47 @@ export class FarmaciaBody extends HTMLComponent {
             <div class="rTable header-table">
               <div class="rTableRow">
                 <div class="rTableCell1">
-                  &nbsp;Paciente: <strong>{{ encabezado.data.apellido }} {{ encabezado.data.nombre }}</strong>
-                  <br/>&nbsp;DNI: <strong>{{ encabezado.data.documento }}</strong>
+                  <span class="header-section-title">DATOS DEL PACIENTE</span>
+                  <strong class="header-patient-name">{{ encabezado.data.apellido }} {{ encabezado.data.nombre }}</strong>
+                  <span class="header-patient-info">{{ encabezado.data.sexo }} | {{#if encabezado.data.edad }}{{ encabezado.data.edad }} años | {{/if}}DNI: {{ encabezado.data.documento }}</span>
                 </div>
-                <div class="rTableCell2">
-                  Fecha Nac.: <strong>{{ encabezado.data.fechanacimiento }}</strong>
-                </div>
-                <div class="rTableCell2">
-                  Género: <strong>{{ encabezado.data.sexo }}</strong>
+              </div>
+              <div class="rTableRow">
+                <div class="rTableCell1" style="width: 100%;">
+                  <span class="header-section-title">DATOS DEL PROTOCOLO / LABORATORIO</span>
+                  <table class="protocolo-table" style="width: 100%; border-collapse: separate; border-spacing: 5px 0; margin-bottom: 4px;">
+                    <tr>
+                      <td style="background-color: #eee; padding: 3px 6px; font-size: .24cm; color: #333; border-radius: 2px; white-space: nowrap;">
+                        PROTOCOLO N°: <strong style="font-size: .30cm; color: #000;">{{ encabezado.data.numero }}</strong>
+                      </td>
+                      <td style="background-color: #eee; padding: 3px 6px; font-size: .24cm; color: #333; border-radius: 2px; white-space: nowrap;">
+                        FECHA: <strong style="font-size: .28cm; color: #000;">{{ encabezado.data.fecha }}</strong>
+                      </td>
+                      <td style="background-color: #eee; padding: 3px 6px; font-size: .24cm; color: #333; border-radius: 2px; white-space: nowrap;">
+                        Prioridad: <strong style="font-size: .26cm; color: #000; text-transform: uppercase;">{{ encabezado.data.prioridad }}</strong>
+                      </td>
+                      <td style="width: 100%;"></td>
+                    </tr>
+                  </table>
+                  <table class="protocolo-details-table" style="width: 100%; border-collapse: collapse; margin-top: 4px;">
+                    <tr>
+                      <td style="width: 60%; vertical-align: top; font-size: .21cm; line-height: 1.35; color: #333;">
+                        Laboratorio: <strong style="color: #000;">{{ encabezado.data.laboratorio }}</strong><br/>
+                        Efector Solicitante: <strong style="color: #000;">{{ encabezado.data.efectorSolicitante }}</strong><br/>
+                        Solicitante: <strong style="color: #000;">{{ encabezado.data.solicitante }}</strong>
+                      </td>
+                      <td style="width: 40%; vertical-align: top; font-size: .21cm; line-height: 1.35; color: #333;">
+                        Origen: <strong style="color: #000;">{{ encabezado.data.origen }}</strong><br/>
+                        Servicio: <strong style="color: #000;">{{ encabezado.data.tipoServicio }}</strong>
+                      </td>
+                    </tr>
+                  </table>
                 </div>
               </div>
               <div class="rTableRow">
                 <div class="rTableCell1">
-                  &nbsp;Laboratorio: <strong>{{ encabezado.data.laboratorio }}</strong>
-                  <br/>&nbsp;Efector solicitante: <strong>{{ encabezado.data.efectorSolicitante }}</strong>
+                  <span class="header-section-title">PRÁCTICAS</span>
                 </div>
-                <div class="rTableCell2">
-                  Orden Nro: <strong>{{ encabezado.data.numero }}</strong>
-                  <br/>Origen: <strong>{{ encabezado.data.origen }}</strong>
-                </div>
-                <div class="rTableCell2">
-                  Fecha: <strong>{{ encabezado.data.fecha }}</strong>
-                  <br/>Prioridad: <strong>{{ encabezado.data.prioridad }}</strong>
-                </div>
-              </div>
-              <div class="rTableRow">
-                <div class="rTableCell1">
-                  &nbsp;Solicitante: <strong>{{ encabezado.data.solicitante }}</strong>
-                </div>
-                <div class="rTableCell2">
-                  Tipo de Servicio: <strong>{{ encabezado.data.tipoServicio }}</strong>
-                </div>
-                <div class="rTableCell2">
-                  Muestra: <strong>{{ encabezado.data.tipoMuestra }}</strong>
-                </div>
-              </div>
-              <div class="rTableRow">
-                <div class="rTableCell1">
-                  &nbsp;Prácticas: <strong>{{ encabezado.data.practicas }}</strong>
-                </div>
-                <div class="rTableCell2"></div>
-                <div class="rTableCell2"></div>
               </div>
             </div>
             <br/>
@@ -161,7 +161,11 @@ export class FarmaciaBody extends HTMLComponent {
     public async process() {
         this.encabezado.data.fecha = moment(this.encabezado.data.fecha).format('DD-MM-YYYY');
         this.encabezado.data.fechanacimiento = moment(this.encabezado.data.fechanacimiento || this.encabezado.data.fechaNacimiento).format('DD-MM-YYYY');
-        this.encabezado.data.sexo = this.paciente[0].genero;
+        const fechaNac = this.paciente[0]?.fechaNacimiento || this.encabezado.data.fechanacimiento || this.encabezado.data.fechaNacimiento;
+        if (fechaNac) {
+            this.encabezado.data.edad = moment().diff(moment(fechaNac), 'years');
+        }
+        this.encabezado.data.sexo = this.paciente[0]?.genero || this.encabezado.data.sexo;
         if (this.encabezado.data.estado !== 'EnProceso') {
             this.encabezado.data.estado = null;
         } else {
