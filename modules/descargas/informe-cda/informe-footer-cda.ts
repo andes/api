@@ -40,18 +40,29 @@ export class InformeCDAFooter extends HTMLComponent {
         super();
 
         this.data = {
-            usuario,
+            usuario: usuario || {},
             organizacion: {
-                nombre: organizacion ? organizacion.nombre.replace(' - ', '</br>') : '',
-                direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
+                nombre: organizacion?.nombre?.replace(' - ', '</br>') || '',
+                direccion: this.getDireccion(organizacion)
             },
             hora: moment().format('DD/MM/YYYY HH:mm'),
             logos: {
                 pdp: loadImage('templates/rup/informes/img/logo-pdp.png'),
             },
             numeracionHTML: '<small> {{page}} </small> de <small> {{pages}} </small>',
-            notaPie: organizacion.configuraciones?.notaAlPie || InformeCDAFooter.notaAlPieDefault
+            notaPie: organizacion?.configuraciones?.notaAlPie || InformeCDAFooter.notaAlPieDefault
         };
+    }
+
+    getDireccion(organizacion) {
+        const valor = organizacion?.direccion?.valor;
+        const localidad = organizacion?.direccion?.ubicacion?.localidad?.nombre;
+
+        if (!valor && !localidad) {
+            return '';
+        }
+
+        return [valor, localidad].filter(Boolean).join(', ');
     }
 
     static readonly notaAlPieDefault = `El contenido de este informe ha sido validado digitalmente siguiendo los estándares de

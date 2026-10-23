@@ -13,6 +13,27 @@ import moment = require('moment');
 export async function createFile(idExportHuds) {
     const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
 
+    if (!peticionExport) {
+        return;
+    }
+
+    try {
+        await buildExportFile(peticionExport);
+    } catch (error) {
+        peticionExport.status = 'error';
+        peticionExport.updatedAt = new Date();
+        await peticionExport.save();
+
+        exportHudsLog.error('Exportar HUDS', {
+            usuario: peticionExport.user?.usuario,
+            organizacion: peticionExport.user?.organizacion
+        }, error);
+
+        throw error;
+    }
+}
+
+async function buildExportFile(peticionExport: any) {
     let fechaCondicion = null;
     let prestaciones: any[] = [];
     let cdas = [];
@@ -68,7 +89,7 @@ export async function createFile(idExportHuds) {
         cdas = await cdaFiles.find(queryCda).toArray();
     }
 
-    const fecha = moment(peticionExport.createAt).format('YYYY-MM-DD');
+    const fecha = moment(peticionExport.createdAt).format('YYYY-MM-DD');
 
     const archive = archiver('zip', {
         zlib: { level: 9 }
@@ -87,9 +108,9 @@ export async function createFile(idExportHuds) {
     const HudsFiles = getHUDSExportarModel();
 
     const objectLog = {
-        usuario: peticionExport.user.usuario,
+        usuario: peticionExport.user?.usuario,
         huds: options.filename,
-        organizacion: peticionExport.user.organizacion
+        organizacion: peticionExport.user?.organizacion
     };
 
     const uploadStream = HudsFiles.openUploadStream(
@@ -162,8 +183,9 @@ export async function createFile(idExportHuds) {
     const getCdas = (excluye: string[]) => {
         return Promise.all(
             cdas.map(async (cda: any) => {
-                if (excluye.includes(cda.metadata.prestacion?.snomed?.conceptId)
-                ) {
+                const conceptId = cda.metadata?.prestacion?.snomed?.conceptId;
+
+                if (excluye.includes(conceptId)) {
                     return;
                 }
 
@@ -175,6 +197,11 @@ export async function createFile(idExportHuds) {
                             cda,
                             realName
                         );
+
+                        if (!fileCda?.stream) {
+                            return;
+                        }
+
                         archive.append(fileCda.stream, {
                             name:
                                 `${moment(cda.metadata.fecha)
@@ -191,24 +218,27 @@ export async function createFile(idExportHuds) {
                     return;
                 }
 
-                if (
-                    cda.metadata.prestacion &&
-                    cda.metadata.prestacion.snomed.conceptId !==
-                    '33879002'
-                ) {
+                if (conceptId && conceptId !== '33879002') {
                     try {
                         const cdaData: any = await cdaToJSON(cda._id);
 
-                        cda.metadata.codificacion =
-                            cdaData.ClinicalDocument
-                                .component
-                                .structuredBody
-                                .component
-                                .section;
+                        const codificacion = cdaData?.ClinicalDocument
+                            ?.component?.structuredBody?.component?.section;
+
+                        if (!codificacion) {
+                            exportHudsLog.error(
+                                'Crear informe cda',
+                                objectLog,
+                                new Error('CDA sin codificación')
+                            );
+                            return;
+                        }
+
+                        cda.metadata.codificacion = codificacion;
 
                         const informe = new InformeCDA(
                             cda.metadata,
-                            peticionExport.usuario
+                            peticionExport.user?.usuario
                         );
 
                         const archivo: any = await informe.informe();
@@ -238,8 +268,13 @@ export async function createFile(idExportHuds) {
         );
     };
 
-    await getData();
-    await getCdas(peticionExport.excluye || []);
-    await archive.finalize();
-    await stored; // No marcamos "completed" hasta que GridFS haya terminado efectivamente de recibir y guardar el ZIP
+    try {
+        await getData();
+        await getCdas(peticionExport.excluye || []);
+        await archive.finalize();
+        await stored; // No marcamos "completed" hasta que GridFS haya terminado efectivamente de recibir y guardar el ZIP
+    } catch (error) {
+        (uploadStream as any).abort?.();
+        throw error;
+    }
 }

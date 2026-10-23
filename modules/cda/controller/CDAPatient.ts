@@ -513,23 +513,19 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip, fechaDesd
  * Levante el XML a partir de un ID cd CDA
  */
 export async function loadCDA(cdaID) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const CDAFiles = makeFs();
-            const files = await CDAFiles.find({ filename: String(cdaID) + '.xml' })
-                .limit(1)
-                .toArray();
-            const file = files[0];
+    try {
+        const CDAFiles = makeFs();
+        const file = await findOneGridFS(CDAFiles, { filename: String(cdaID) + '.xml' });
 
-            if (!file) {
-                return null;
-            }
-
-            const buffer = await streamToBuffer(CDAFiles.openDownloadStream(file._id));
-        } catch (e) {
-            return resolve(null);
+        if (!file) {
+            return null;
         }
-    });
+
+        const buffer = await streamToBuffer(CDAFiles.openDownloadStream(file._id));
+        return buffer.toString('utf8');
+    } catch (e) {
+        return null;
+    }
 }
 
 /**
@@ -866,47 +862,55 @@ export async function deleteCda(idCda, idPaciente) {
     return { success: true };
 }
 
-export function cdaToJSON(idCDA) {
-    return new Promise(async (resolve, reject) => {
-        const _base64 = idCDA;
-        let contexto = await cdaCtr.loadCDA(_base64);
-        let setText = false;
-        if (contexto) {
-            // Limpiamos xml previo al parsing
-            contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
-            contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
-            contexto = contexto.toString().replace(new RegExp('&#xD', 'g'), '');
+export async function cdaToJSON(idCDA) {
+    const contextoXml = await cdaCtr.loadCDA(idCDA);
 
-            /**
-             * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros.
-             * Obtenemos el texto dentro de los tags <text> del xml, la extraemos tal cual está y la agregamos luego de la ejecución del parser
-             * para conservala tal cual la escribieron.
-             * PD: Deberemos mejorar esto a futuro!
-             */
-            let resultado = contexto.toString().match('(<text>)[^~]*(<\/text>)')[0];
-            if (!resultado.includes('Sin datos')) {
-                resultado = resultado.replace('<text>', '');
-                resultado = resultado.replace('</text>', '');
-                setText = true;
-            }
-            contexto = contexto.toString().replace(new RegExp('(<text>)[^~]*(<\/text>)'), '');
-            to_json(contexto, (error, data) => {
-                if (error) {
-                    return reject(error);
-                } else {
-                    if (setText) {
-                        // Volvemos a agregar el texto de la evolución
-                        if (typeof data.ClinicalDocument.component.structuredBody.component.section === 'object') {
-                            data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
-                        } else {
-                            data.ClinicalDocument.component.structuredBody.component.section = { text: resultado };
-                        }
-                    }
-                    return resolve(data);
-                }
-            });
-        } else {
-            return reject(null);
+    if (!contextoXml) {
+        throw new Error('cda_not_found');
+    }
+
+    // Limpiamos xml previo al parsing
+    let contexto = contextoXml.toString()
+        .replace(new RegExp('<br>', 'g'), ' ')
+        .replace(new RegExp('[\$]', 'g'), '')
+        .replace(new RegExp('&#xD', 'g'), '');
+
+    /**
+     * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros.
+     * Obtenemos el texto dentro de los tags <text> del xml, la extraemos tal cual está y la agregamos luego de la ejecución del parser
+     * para conservala tal cual la escribieron.
+     * PD: Deberemos mejorar esto a futuro!
+     */
+    let resultado;
+    let setText = false;
+    const match = contexto.match(/(<text>)[^~]*(<\/text>)/);
+
+    if (match) {
+        resultado = match[0];
+        if (!resultado.includes('Sin datos')) {
+            resultado = resultado.replace('<text>', '');
+            resultado = resultado.replace('</text>', '');
+            setText = true;
         }
+        contexto = contexto.replace(new RegExp('(<text>)[^~]*(<\/text>)'), '');
+    }
+
+    return new Promise((resolve, reject) => {
+        to_json(contexto, (error, data) => {
+            if (error) {
+                return reject(error);
+            }
+
+            if (setText && data?.ClinicalDocument?.component?.structuredBody) {
+                const section = data.ClinicalDocument.component.structuredBody.component.section;
+                if (typeof section === 'object') {
+                    section.text = resultado;
+                } else {
+                    data.ClinicalDocument.component.structuredBody.component.section = { text: resultado };
+                }
+            }
+
+            return resolve(data);
+        });
     });
 }
