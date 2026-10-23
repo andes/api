@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { RecetaInsumo } from './receta-insumo.schema';
+import { RecetaControl } from '../receta-control-schema';
 import { createLog, informarLog, updateLog } from '../recetaLogs';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from '../recetas.error';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
@@ -196,6 +197,22 @@ export async function crearRecetaInsumo(dataRecetaInsumo, req) {
     let recetaInsumo;
     for (let i = 0; i < cantRecetas; i++) {
         try {
+            const insumoId = insumo.generico?.id || insumo.id;
+            const queryExistente: any = {
+                idPrestacion: dataRecetaInsumo.idPrestacion,
+                idRegistro: dataRecetaInsumo.idRegistro,
+                'insumo.ordenTratamiento': i
+            };
+            if (insumoId) {
+                queryExistente['insumo.id'] = insumoId;
+            }
+
+            const yaExiste = await RecetaInsumo.findOne(queryExistente);
+            if (yaExiste) {
+                recetas.push(yaExiste);
+                continue;
+            }
+
             recetaInsumo = new RecetaInsumo();
             recetaInsumo.idPrestacion = dataRecetaInsumo.idPrestacion;
             recetaInsumo.idRegistro = dataRecetaInsumo.idRegistro;
@@ -338,6 +355,15 @@ export async function suspender(recetaInsumoId, req) {
             const recSusp = await Promise.all(await recetasInsumoUpdate(recetasSuspender, 'suspendida', motivo, observacion, profesional, req));
 
             const rec = recSusp.concat(await Promise.all(await recetasInsumoUpdate(recetasEliminar, 'eliminada', motivo, observacion, profesional, req)));
+
+            try {
+                await RecetaControl.updateMany(
+                    { registroId: recetaInsumo.idRegistro },
+                    { $set: { estado: 'suspendido' } }
+                );
+            } catch (errCtrl) {
+                updateLog.error('suspender:insumo:control', { recetaInsumoId, registroId: recetaInsumo.idRegistro }, errCtrl);
+            }
 
             return rec;
         }
