@@ -168,7 +168,7 @@ export class Auth {
      * @memberOf Auth
      */
     static deniedPatients() {
-        return (req, res, next) => {
+        return async (req, res, next) => {
 
             if (req.user.type !== 'paciente-token') {
                 return next();
@@ -192,6 +192,19 @@ export class Auth {
 
                 if (idPacienteToken) {
                     return next();
+                }
+                // Permitir si el paciente consultado es un familiar vinculado al paciente principal del token
+                try {
+                    // Se obtiene el modelo en runtime: importar el schema acá lo compilaría antes del plugin global de connections.ts
+                    const principal: any = await mongoose.model('paciente_2').findById(req.user.pacientes[0].id).select('relaciones').exec();
+                    const esFamiliar = (principal?.relaciones as any[])?.find(rel => {
+                        return rel.referencia && String(rel.referencia) === String(idPacienteQuery);
+                    });
+                    if (esFamiliar) {
+                        return next();
+                    }
+                } catch (err) {
+                    // Si falla la búsqueda del familiar, se deniega por defecto más abajo
                 }
             } else {
                 if (requestPath.endsWith('.pdf')) {
