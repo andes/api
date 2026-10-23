@@ -104,7 +104,7 @@ export class InformeCDAHeader extends HTMLComponent {
         const provincia = configPrivate.provincia || 'neuquen';
         const fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
         const edad = moment().diff(moment(paciente.fechaNacimiento), 'years');
-        const numeroCarpeta = paciente.carpetaEfectores.find(efector => String(efector.organizacion._id) === organizacion._id);
+        const numeroCarpeta = paciente.carpetaEfectores?.find(efector => String(efector.organizacion?._id) === String(organizacion?._id));
         this.data = {
             logos: {
                 adicional: loadImage(`templates/rup/informes/img/logo-adicional-${provincia}.png`),
@@ -112,8 +112,8 @@ export class InformeCDAHeader extends HTMLComponent {
                 organizacion: organizacion ? this.getLogoOrganizacion(organizacion) : ''
             },
             organizacion: {
-                nombre: organizacion.nombre,
-                direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
+                nombre: organizacion?.nombre || '',
+                direccion: this.getDireccion(organizacion)
             },
             paciente: {
                 nombre: paciente.nombre,
@@ -125,13 +125,24 @@ export class InformeCDAHeader extends HTMLComponent {
                 numeroIdentificacion: paciente.numeroIdentificacion || undefined,
                 edad,
                 numeroCarpeta: numeroCarpeta?.nroCarpeta,
-                obraSocial: paciente.financiador.length ? paciente.financiador[paciente.financiador.length - 1].nombre : false
+                obraSocial: paciente.financiador?.length ? paciente.financiador[paciente.financiador.length - 1].nombre : false
             },
             profesional: {
-                nombre: profesional.nombre,
-                apellido: profesional.apellido
+                nombre: profesional?.nombre || '',
+                apellido: profesional?.apellido || ''
             }
         };
+    }
+
+    getDireccion(organizacion) {
+        const valor = organizacion?.direccion?.valor;
+        const localidad = organizacion?.direccion?.ubicacion?.localidad?.nombre;
+
+        if (!valor && !localidad) {
+            return '';
+        }
+
+        return [valor, localidad].filter(Boolean).join(', ');
     }
 
     getLogoOrganizacion(organizacion) {
