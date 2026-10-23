@@ -8,7 +8,7 @@ export const updateLog = new Logger({
     application: 'andes',
     bucketBy: 'h',
     bucketSize: 100,
-    expiredAt: '6 M'
+    expiredAt: '3 M'
 });
 
 export const informarLog = new Logger({
@@ -35,6 +35,16 @@ export const jobsLog = new Logger({
     connection: Connections.logs,
     module: 'recetas',
     type: 'jobs',
+    application: 'andes',
+    bucketBy: 'h',
+    bucketSize: 100,
+    expiredAt: '3 M'
+});
+
+export const preCargaLog = new Logger({
+    connection: Connections.logs,
+    module: 'recetas',
+    type: 'precarga',
     application: 'andes',
     bucketBy: 'h',
     bucketSize: 100,
