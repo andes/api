@@ -9,85 +9,87 @@ import { crearRecetaInsumo } from '../modules/recetas/recetasInsumos/recetaInsum
 import { generarCUIL } from '../core-v2/mpi/validacion/validacion.controller';
 import { jobsLog as logger } from '../modules/recetas/recetaLogs';
 import { userScheduler } from '../config.private';
+import { Auth } from '../auth/auth.class';
 
 /**
- * Job: generarRecetasFaltantes
+ * Job: generarRecetasFaltantes (Autosaneamiento de Recetas)
  *
- * Recorre la colección auxiliar `recetaPendiente` buscando registros
- * `realizada: false` dentro de un rango de fechas/horas, reconstruye los
- * datos necesarios desde `Prestacion` y crea la receta faltante.
+ * Recorre la colección `recetaControl` buscando registros no completos
+ * (estados 'pendiente' o 'incompleto') que tengan menos de 3 intentos,
+ * reconstruye el contexto desde la Prestación RUP y genera las recetas faltantes
+ * (tanto para tratamientos prolongados como simples, medicamentos e insumos).
  *
- * Soporta tres tipos de prescripción:
- *   - 'medicamento' y 'magistral' -> comparten flujo/colección (Receta / crearReceta),
- *     se diferencian internamente por `medicamento.tipoReceta`.
- *   - 'insumo' -> flujo/colección separados (RecetaInsumo / crearRecetaInsumo).
+ * En producción se ejecuta aproximadamente cada 10 minutos.
  *
- * Parametrización (recibida por args, ver bin/jobsDaemon.js):
+ * Parametrización opcional por CLI:
  *   --desde   YYYY-MM-DD[THH:mm]   (opcional)
- *   --hasta   YYYY-MM-DD[THH:mm]   (opcional, default: ahora)
- *   --horas   N                    (opcional, alternativa a --desde: últimas N horas)
- *
- * Uso típico (jobsDaemon):
- *   node bin/jobsDaemon.js generarRecetasFaltantes --horas 6
- *   node bin/jobsDaemon.js generarRecetasFaltantes --desde 2024-05-01 --hasta 2024-05-02
+ *   --hasta   YYYY-MM-DD[THH:mm]   (opcional, default: ahora - 5 min)
+ *   --horas   N                    (opcional, default: sin límite, recorre todo)
+ *   <minutos> N                    (opcional posicional o --minutos, default: 5 min)
  */
 
 interface ParamsJob {
     desde?: string;
     hasta?: string;
     horas?: number;
+    minutosHasta?: number;
 }
 
 function resolverRangoFechas(params: ParamsJob) {
-    const hasta = params.hasta ? moment(params.hasta) : moment();
+    // Por defecto se resta 5 minutos al hasta para evitar procesar registros que se estén validando en el instante actual
+    // Si se pasa minutosHasta (ej: node jobs/manual.js jobs/jobRecetaControl.js 3), se restan esos minutos
+    const minutosHasta = (params.minutosHasta !== undefined && !isNaN(params.minutosHasta) && params.minutosHasta >= 0)
+        ? params.minutosHasta
+        : 5;
 
-    let desde;
+    const hasta = params.hasta ? moment(params.hasta).toDate() : moment().subtract(minutosHasta, 'minutes').toDate();
+
+    let desde: Date | null = null;
     if (params.desde) {
-        desde = moment(params.desde);
-    } else {
-        const horas = params.horas && Number(params.horas) > 0 ? Number(params.horas) : 24;
-        desde = moment(hasta).subtract(horas, 'hours');
+        desde = moment(params.desde).toDate();
+    } else if (params.horas && Number(params.horas) > 0) {
+        desde = moment(hasta).subtract(Number(params.horas), 'hours').toDate();
     }
+    // Si no se especifica desde ni horas, queda null (recorre todo hasta la fecha fin)
 
-    return { desde: desde.toDate(), hasta: hasta.toDate() };
+    return { desde, hasta };
 }
 
 /**
- * Datos comunes a los tres tipos de prescripción: prestación, registro RUP
- * y organización. Reconstruye lo mismo que arman los listeners
- * `prestacion:receta:create` y `prestacion:recetaInsumo:create` antes de
- * llamar a crearReceta/crearRecetaInsumo.
+ * Reconstruye el contexto común: prestación, registro RUP y organización.
  */
-async function reconstruirContexto(pendiente: any) {
-    const prestacion: any = await Prestacion.findById(pendiente.idPrestacion);
+async function reconstruirContexto(control: any) {
+    const prestacion: any = await Prestacion.findById(control.idPrestacion);
     if (!prestacion) {
-        throw new Error(`No se encontró la prestación ${pendiente.idPrestacion}`);
+        throw new Error(`No se encontró la prestación ${control.idPrestacion}`);
     }
 
-    // Supuesto a confirmar: tanto medicamentos como magistrales viven en el mismo
-    // array `registro.valor.medicamentos` (se diferencian por `tipoReceta`), e insumos
-    // en `registro.valor.insumos`. Si el modelo real difiere, ajustar este lookup.
-    const registro = (prestacion.ejecucion?.registros || []).find((r: any) => String(r._id) === String(pendiente.idRegistro))
-        || (prestacion.evolucion || []).find((r: any) => String(r._id) === String(pendiente.idRegistro))
-        || (prestacion.solicitud?.registros || []).find((r: any) => String(r._id) === String(pendiente.idRegistro));
+    const registros = prestacion.getRegistros ? prestacion.getRegistros() : (prestacion.ejecucion?.registros || []);
+    const registro = (registros || []).find((r: any) => String(r._id) === String(control.idRegistro))
+        || (prestacion.evolucion || []).find((r: any) => String(r._id) === String(control.idRegistro))
+        || (prestacion.solicitud?.registros || []).find((r: any) => String(r._id) === String(control.idRegistro));
 
     if (!registro) {
-        throw new Error(`No se encontró el registro ${pendiente.idRegistro} en la prestación ${pendiente.idPrestacion}`);
+        throw new Error(`No se encontró el registro ${control.idRegistro} en la prestación ${control.idPrestacion}`);
     }
 
     const organizacion = {
-        id: prestacion.ejecucion.organizacion.id,
-        nombre: prestacion.ejecucion.organizacion.nombre
+        id: prestacion.ejecucion?.organizacion?.id,
+        nombre: prestacion.ejecucion?.organizacion?.nombre
     };
 
     return { prestacion, registro, organizacion };
 }
 
-/** Resuelve profesional para medicamento/magistral: por documento del createdBy o de la solicitud. */
+/** Resuelve profesional para medicamento/magistral */
 async function resolverProfesionalReceta(prestacion: any) {
-    const documentoProfesional = prestacion.estadoActual.createdBy?.documento
-        ? prestacion.estadoActual.createdBy?.documento
-        : prestacion.solicitud.profesional.documento;
+    const documentoProfesional = prestacion.estadoActual?.createdBy?.documento
+        ? prestacion.estadoActual.createdBy.documento
+        : prestacion.solicitud?.profesional?.documento;
+
+    if (!documentoProfesional) {
+        throw new Error('No se pudo identificar el documento del profesional en la prestación');
+    }
 
     const profPrestacion = await Profesional.findOne({ documento: documentoProfesional });
     if (!profPrestacion) {
@@ -107,25 +109,27 @@ async function resolverProfesionalReceta(prestacion: any) {
     };
 }
 
-/** Resuelve profesional para insumo: directamente desde prestacion.solicitud.profesional (igual que el listener). */
+/** Resuelve profesional para insumo */
 async function resolverProfesionalInsumo(prestacion: any) {
-    const profPrestacion = prestacion.solicitud.profesional;
-    const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
-
-    return {
-        id: profPrestacion.id,
-        nombre: profPrestacion.nombre,
-        apellido: profPrestacion.apellido,
-        documento: profPrestacion.documento,
-        profesion: profesionGrado,
-        especialidad: especialidades,
-        matricula: matriculaGrado
-    };
+    const profPrestacion = prestacion.solicitud?.profesional;
+    if (profPrestacion) {
+        const { profesionGrado, matriculaGrado, especialidades } = await getProfesionActualizada(profPrestacion);
+        return {
+            id: profPrestacion.id,
+            nombre: profPrestacion.nombre,
+            apellido: profPrestacion.apellido,
+            documento: profPrestacion.documento,
+            profesion: profesionGrado,
+            especialidad: especialidades,
+            matricula: matriculaGrado
+        };
+    }
+    return resolverProfesionalReceta(prestacion);
 }
 
-/** Rama medicamento/magistral: comparten Receta + crearReceta. */
-async function crearFaltantesMedicamento(pendiente: any) {
-    const { prestacion, registro, organizacion } = await reconstruirContexto(pendiente);
+/** Procesa control de medicamentos / magistrales */
+async function procesarMedicamento(control: any) {
+    const { prestacion, registro, organizacion } = await reconstruirContexto(control);
     const profesional = await resolverProfesionalReceta(prestacion);
 
     const pacienteCUIL = prestacion.paciente.cuil || generarCUIL(prestacion.paciente.documento, prestacion.paciente.sexo);
@@ -134,9 +138,9 @@ async function crearFaltantesMedicamento(pendiente: any) {
 
     const dataRecetaBase = {
         idPrestacion: prestacion.id,
-        idRegistro: pendiente.idRegistro,
-        fechaRegistro: prestacion.ejecucion.fecha || moment().toDate(),
-        fechaPrestacion: prestacion.ejecucion.fecha,
+        idRegistro: control.idRegistro,
+        fechaRegistro: prestacion.ejecucion?.fecha || moment().toDate(),
+        fechaPrestacion: prestacion.ejecucion?.fecha,
         paciente,
         profesional,
         organizacion,
@@ -145,45 +149,86 @@ async function crearFaltantesMedicamento(pendiente: any) {
     };
 
     const medicamentos = registro.valor?.medicamentos || [];
-    const recetasCreadas = [];
-    for (const medicamento of medicamentos) {
-        const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
-        if (!conceptId) {
-            continue;
-        }
+    const esMagistral = control.tipo === 'magistral';
+    const conceptIdControl = control.identificador?.conceptId;
+    const codigosControl = (control.identificador?.codigo || []).map((c: any) => c.valor);
 
-        const yaExiste = await Receta.findOne({
-            'medicamento.concepto.conceptId': conceptId,
-            idRegistro: pendiente.idRegistro
+    // Buscamos el medicamento correspondiente a este control
+    const medicamento = medicamentos.find((m: any) => {
+        if (esMagistral) {
+            const codigosM = (m.magistral?.codigo || m.concepto?.codigo || []).map((c: any) => c.valor);
+            const matchCodigo = codigosM.some((c: string) => codigosControl.includes(c));
+            return m.esMagistral && (
+                matchCodigo ||
+                (conceptIdControl && (m.concepto?.conceptId === conceptIdControl || String(m.concepto?._id) === conceptIdControl)) ||
+                m.magistral?.nombre === control.nombre ||
+                m.concepto?.nombre === control.nombre
+            );
+        }
+        const cId = m.concepto?.conceptId || m.generico?.conceptId;
+        return (conceptIdControl && cId === conceptIdControl)
+            || m.concepto?.term === control.nombre
+            || m.generico?.term === control.nombre;
+    }) || medicamentos[0]; // fallback al primero si no hubo match estricto
+
+    if (!medicamento) {
+        throw new Error(`No se encontró el medicamento en el registro ${control.idRegistro}`);
+    }
+
+    const dataReceta = {
+        ...dataRecetaBase,
+        medicamento,
+        diagnostico: medicamento?.diagnostico || null,
+    };
+
+    // Crear las recetas faltantes de forma idempotente
+    const respCrear: any = await crearReceta(dataReceta, userScheduler);
+    if (respCrear instanceof Error || (respCrear && !Array.isArray(respCrear) && (respCrear.message || respCrear.errors || respCrear.status))) {
+        throw (respCrear instanceof Error ? respCrear : new Error(respCrear.message || JSON.stringify(respCrear)));
+    }
+
+    // Recuperamos todas las recetas en DB para sincronizar control.recetas
+    const queryRecetasDb: any = {
+        idPrestacion: prestacion.id,
+        idRegistro: control.idRegistro
+    };
+    if (esMagistral) {
+        queryRecetasDb['medicamento.magistral.nombre'] = medicamento.magistral?.nombre || control.nombre;
+    } else if (medicamento.concepto?.conceptId || medicamento.generico?.conceptId) {
+        queryRecetasDb['medicamento.concepto.conceptId'] = medicamento.concepto?.conceptId || medicamento.generico?.conceptId;
+    }
+
+    const recetasEnDb = await Receta.find(queryRecetasDb);
+
+    if (!Array.isArray(control.recetas)) {
+        control.recetas = [];
+    }
+
+    for (const r of recetasEnDb) {
+        const orden = r.medicamento?.ordenTratamiento ?? 0;
+        const indexExistente = control.recetas.findIndex((item: any) => {
+            const id = item.receta_id || item.idReceta;
+            return (id && (String(id) === String(r._id) || String(id) === String(r.idReceta))) || item.ordenTratamiento === orden;
         });
-
-        if (yaExiste) {
-            recetasCreadas.push(yaExiste);
-            continue;
-        }
-
-        const dataReceta = {
-            ...dataRecetaBase,
-            medicamento,
-            diagnostico: medicamento?.diagnostico || null,
+        const esRecetar = Boolean(r.origenExterno?.id || r.origenExterno?.app === 'recetar');
+        const origenReceta = esRecetar ? 'recetar' : 'andes';
+        const itemReceta = {
+            receta_id: r._id || r.id,
+            ordenTratamiento: orden,
+            origen: (indexExistente >= 0 && control.recetas[indexExistente].origen === 'recetar') ? 'recetar' : origenReceta,
+            fecha: r.createdAt || new Date()
         };
-
-        const creadas = await crearReceta(dataReceta, userScheduler);
-        if (Array.isArray(creadas)) {
-            recetasCreadas.push(...creadas);
+        if (indexExistente >= 0) {
+            control.recetas[indexExistente] = { ...control.recetas[indexExistente], ...itemReceta };
+        } else {
+            control.recetas.push(itemReceta);
         }
     }
-
-    if (!recetasCreadas.length) {
-        throw new Error('No se pudo crear ninguna receta de medicamento/magistral (sin items válidos en el registro)');
-    }
-
-    return recetasCreadas;
 }
 
-/** Rama insumo: RecetaInsumo + crearRecetaInsumo. */
-async function crearFaltantesInsumo(pendiente: any) {
-    const { prestacion, registro, organizacion } = await reconstruirContexto(pendiente);
+/** Procesa control de insumos (dispositivo, nutrición, etc.) */
+async function procesarInsumo(control: any) {
+    const { prestacion, registro, organizacion } = await reconstruirContexto(control);
     const profesional = await resolverProfesionalInsumo(prestacion);
 
     const pacienteObj = (typeof prestacion.paciente.toObject === 'function') ? prestacion.paciente.toObject() : prestacion.paciente;
@@ -191,9 +236,9 @@ async function crearFaltantesInsumo(pendiente: any) {
 
     const dataRecetaBase = {
         idPrestacion: prestacion.id,
-        idRegistro: pendiente.idRegistro,
-        fechaRegistro: prestacion.ejecucion.fecha || moment().toDate(),
-        fechaPrestacion: prestacion.ejecucion.fecha,
+        idRegistro: control.idRegistro,
+        fechaRegistro: prestacion.ejecucion?.fecha || moment().toDate(),
+        fechaPrestacion: prestacion.ejecucion?.fecha,
         paciente,
         profesional,
         organizacion,
@@ -202,53 +247,83 @@ async function crearFaltantesInsumo(pendiente: any) {
     };
 
     const insumos = registro.valor?.insumos || [];
-    const recetasCreadas = [];
+    const codigosControl = (control.identificador?.codigo || []).map((c: any) => c.valor);
+    const conceptIdControl = control.identificador?.conceptId;
 
-    for (const insumo of insumos) {
-        const idGenerico = insumo?.generico?.id;
-        const nombreGenerico = insumo?.generico?.nombre;
-        if (!idGenerico || !nombreGenerico) {
-            continue;
-        }
+    const insumo = insumos.find((ins: any) => {
+        const codigosIns = (ins.generico?.codigo || ins.codigo || []).map((c: any) => c.valor);
+        const matchCodigo = codigosIns.some((c: string) => codigosControl.includes(c));
+        const insId = ins.generico?.id || ins.id;
+        return matchCodigo
+            || (conceptIdControl && (insId === conceptIdControl || ins.generico?.conceptId === conceptIdControl))
+            || ins.generico?.nombre === control.nombre
+            || ins.nombre === control.nombre;
+    }) || insumos[0];
 
-        const yaExiste = await RecetaInsumo.findOne({
-            'insumo.id': idGenerico,
-            'insumo.nombre': nombreGenerico,
-            idRegistro: pendiente.idRegistro
+    if (!insumo) {
+        throw new Error(`No se encontró el insumo en el registro ${control.idRegistro}`);
+    }
+
+    const dataRecetaInsumo = {
+        ...dataRecetaBase,
+        insumo
+    };
+
+    const respInsumo: any = await crearRecetaInsumo(dataRecetaInsumo, { user: userScheduler });
+    if (respInsumo instanceof Error || (respInsumo && !Array.isArray(respInsumo) && (respInsumo.message || respInsumo.errors || respInsumo.status))) {
+        throw (respInsumo instanceof Error ? respInsumo : new Error(respInsumo.message || JSON.stringify(respInsumo)));
+    }
+
+    const insumoId = insumo.generico?.id || insumo.id;
+    const queryInsumosDb: any = {
+        idPrestacion: prestacion.id,
+        idRegistro: control.idRegistro
+    };
+    if (insumoId) {
+        queryInsumosDb['insumo.id'] = insumoId;
+    }
+
+    const recetasEnDb = await RecetaInsumo.find(queryInsumosDb);
+
+    if (!Array.isArray(control.recetas)) {
+        control.recetas = [];
+    }
+
+    for (const r of recetasEnDb) {
+        const orden = r.insumo?.ordenTratamiento ?? 0;
+        const indexExistente = control.recetas.findIndex((item: any) => {
+            const id = item.receta_id || item.idReceta;
+            return (id && (String(id) === String(r._id) || String(id) === String(r.idReceta))) || item.ordenTratamiento === orden;
         });
-
-        if (yaExiste) {
-            recetasCreadas.push(yaExiste);
-            continue;
-        }
-
-        const dataRecetaInsumo = {
-            ...dataRecetaBase,
-            insumo
+        const esRecetar = Boolean(r.origenExterno?.id || r.origenExterno?.app === 'recetar');
+        const origenReceta = esRecetar ? 'recetar' : 'andes';
+        const itemReceta = {
+            receta_id: r._id || r.id,
+            ordenTratamiento: orden,
+            origen: (indexExistente >= 0 && control.recetas[indexExistente].origen === 'recetar') ? 'recetar' : origenReceta,
+            fecha: r.createdAt || new Date()
         };
-
-        const creadas = await crearRecetaInsumo(dataRecetaInsumo, { user: userScheduler });
-        if (Array.isArray(creadas)) {
-            recetasCreadas.push(...creadas);
+        if (indexExistente >= 0) {
+            control.recetas[indexExistente] = { ...control.recetas[indexExistente], ...itemReceta };
+        } else {
+            control.recetas.push(itemReceta);
         }
     }
-
-    if (!recetasCreadas.length) {
-        throw new Error('No se pudo crear ninguna receta de insumo (sin items válidos en el registro)');
-    }
-
-    return recetasCreadas;
 }
 
-async function crearRecetaFaltante(pendiente: any) {
-    switch (pendiente.tipoPrescripcion) {
+async function procesarControl(control: any) {
+    switch (control.tipo) {
         case 'medicamento':
-        case 'magistrales':
-            return crearFaltantesMedicamento(pendiente);
+            return procesarMedicamento(control);
+        case 'magistral':
+            // Puede provenir de medicamentos o de insumos
+            return procesarMedicamento(control);
+        case 'dispositivo':
+        case 'nutricion':
         case 'insumos':
-            return crearFaltantesInsumo(pendiente);
+            return procesarInsumo(control);
         default:
-            throw new Error(`tipoPrescripcion '${pendiente.tipoPrescripcion}' no soportado por el job`);
+            throw new Error(`Tipo de control '${control.tipo}' no reconocido`);
     }
 }
 
@@ -263,29 +338,43 @@ async function generarRecetasFaltantes(params: ParamsJob | any, done?: any) {
 
     if (!actualParams || Object.keys(actualParams).length === 0) {
         actualParams = {};
-        process.argv.forEach(val => {
+        process.argv.forEach((val, idx) => {
             if (val.startsWith('--desde=')) {
                 actualParams.desde = val.split('=')[1];
             } else if (val === '--desde') {
-                const idx = process.argv.indexOf('--desde');
-                if (idx !== -1 && process.argv[idx + 1]) {
-                    actualParams.desde = process.argv[idx + 1];
+                const nextVal = process.argv[idx + 1];
+                if (nextVal && !nextVal.startsWith('--')) {
+                    actualParams.desde = nextVal;
                 }
             }
             if (val.startsWith('--hasta=')) {
                 actualParams.hasta = val.split('=')[1];
             } else if (val === '--hasta') {
-                const idx = process.argv.indexOf('--hasta');
-                if (idx !== -1 && process.argv[idx + 1]) {
-                    actualParams.hasta = process.argv[idx + 1];
+                const nextVal = process.argv[idx + 1];
+                if (nextVal && !nextVal.startsWith('--')) {
+                    actualParams.hasta = nextVal;
                 }
             }
             if (val.startsWith('--horas=')) {
                 actualParams.horas = parseInt(val.split('=')[1], 10);
             } else if (val === '--horas') {
-                const idx = process.argv.indexOf('--horas');
-                if (idx !== -1 && process.argv[idx + 1]) {
-                    actualParams.horas = parseInt(process.argv[idx + 1], 10);
+                const nextVal = process.argv[idx + 1];
+                if (nextVal && !nextVal.startsWith('--')) {
+                    actualParams.horas = parseInt(nextVal, 10);
+                }
+            }
+            if (val.startsWith('--minutos=')) {
+                actualParams.minutosHasta = parseInt(val.split('=')[1], 10);
+            } else if (val === '--minutos') {
+                const nextVal = process.argv[idx + 1];
+                if (nextVal && !nextVal.startsWith('--')) {
+                    actualParams.minutosHasta = parseInt(nextVal, 10);
+                }
+            } else if (idx >= 3 && /^\d+$/.test(val)) {
+                const prevVal = process.argv[idx - 1];
+                if (prevVal !== '--horas' && prevVal !== '--minutos' && prevVal !== '--desde' && prevVal !== '--hasta') {
+                    // Argumento posicional numérico (ej: node jobs/manual.js jobs/jobRecetaControl.js 3)
+                    actualParams.minutosHasta = parseInt(val, 10);
                 }
             }
         });
@@ -295,47 +384,99 @@ async function generarRecetasFaltantes(params: ParamsJob | any, done?: any) {
 
     const resultados = {
         total: 0,
-        creadas: 0,
+        completas: 0,
+        incompletas: 0,
         errores: 0,
-        porTipo: { medicamento: 0, magistrales: 0, insumos: 0 }
+        porTipo: { medicamento: 0, magistral: 0, dispositivo: 0, nutricion: 0, insumos: 0 }
     };
 
     try {
-        const query = {
-            creada: false,
-            createdAt: { $gte: desde, $lte: hasta }
+        // Se procesan estados 'pendiente' e 'incompleto'. No se filtra por intentos en la query.
+        const query: any = {
+            estado: { $in: ['pendiente', 'incompleto'] },
+            createdAt: { $lte: hasta }
         };
+        if (desde) {
+            query.createdAt.$gte = desde;
+        }
 
         const cursor = RecetaControl.find(query).cursor({ batchSize: 50 });
 
-        await cursor.eachAsync(async (pendiente: any) => {
+        await cursor.eachAsync(async (control: any) => {
             resultados.total++;
+            control.intento = (control.intento || 0) + 1;
+            control.fechaUltimoIntento = new Date();
+
             try {
-                const recetas = await crearRecetaFaltante(pendiente);
+                await procesarControl(control);
 
-                pendiente.creada = true;
-                pendiente.idReceta = recetas[0]?.idReceta || recetas[0]?._id?.toString() || null;
-                if (typeof (pendiente as any).audit === 'function') {
-                    (pendiente as any).audit(userScheduler);
+                if (control.recetas.length >= control.cantTotalRecetas) {
+                    control.estado = 'completo';
+                    control.ultimoError = null;
+                    control.markModified('ultimoError');
+                    resultados.completas++;
+                } else {
+                    if (control.intento >= 3) {
+                        control.estado = 'error';
+                    } else {
+                        control.estado = 'incompleto';
+                    }
+                    if (!control.ultimoError) {
+                        control.ultimoError = {
+                            message: `No se generaron todas las recetas (${control.recetas.length}/${control.cantTotalRecetas})`,
+                            fecha: new Date()
+                        };
+                    }
+                    control.markModified('ultimoError');
+                    resultados.incompletas++;
                 }
-                await pendiente.save();
 
-                resultados.creadas++;
-                resultados.porTipo[pendiente.tipoPrescripcion] = (resultados.porTipo[pendiente.tipoPrescripcion] || 0) + 1;
-            } catch (error) {
+                if (control.tipo && resultados.porTipo[control.tipo] !== undefined) {
+                    resultados.porTipo[control.tipo]++;
+                }
+            } catch (error: any) {
                 resultados.errores++;
-                await logger.error('generarRecetasFaltantes', { idPendiente: pendiente.id, tipoPrescripcion: pendiente.tipoPrescripcion }, error);
+                if (control.intento >= 3) {
+                    control.estado = 'error';
+                } else {
+                    control.estado = 'incompleto';
+                }
+                const errorObj: any = {
+                    message: error?.message || (typeof error === 'string' ? error : JSON.stringify(error)),
+                    fecha: new Date()
+                };
+                if (error?.status) {
+                    errorObj.status = error.status;
+                }
+                if (error?.name) {
+                    errorObj.name = error.name;
+                }
+                control.ultimoError = errorObj;
+                control.markModified('ultimoError');
+                await logger.error('generarRecetasFaltantes:item', { controlId: control._id, tipo: control.tipo, intento: control.intento }, error);
+            }
+
+            try {
+                if (typeof (control as any).audit === 'function') {
+                    (control as any).audit(userScheduler);
+                } else {
+                    Auth.audit(control, { user: userScheduler } as any);
+                }
+                await control.save();
+            } catch (errSave) {
+                await logger.error('generarRecetasFaltantes:save', { controlId: control._id }, errSave);
             }
         }, { parallel: 1 });
 
-        await logger.info('generarRecetasFaltantes', { desde, hasta, resultados });
+        await logger.info('generarRecetasFaltantes:fin', { desde, hasta, resultados });
     } catch (err) {
-        await logger.error('generarRecetasFaltantes', { desde, hasta, resultados }, err);
+        await logger.error('generarRecetasFaltantes:general', { desde, hasta, resultados }, err);
         if (callback) {
             return callback(err);
         }
         return;
     }
+
     if (callback) {
         callback();
     }
