@@ -18,6 +18,7 @@ import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDi
 import { Agenda } from '../schemas/agenda';
 import { Auth } from './../../../auth/auth.class';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { ServicionIntermedioCtr } from '../../../core/tm/servicio-intermedio.routes';
 
 const router = express.Router();
 
@@ -274,7 +275,30 @@ router.get('/agenda/:id?', async (req, res, next) => {
             query.limit(parseInt(req.query.limit as any || 0, 10));
         }
 
-        if (!req.query.tipoPrestacion && !req.query.teleConsulta) {
+        if (req.query.servicioIntermedio) {
+            const servicioId = String(req.query.servicioIntermedio);
+            if (!mongoose.Types.ObjectId.isValid(servicioId)) {
+                res.status(404).send('Servicio intermedio no encontrado');
+                return;
+            }
+            if (!Auth.check(req, `rup:servicio-intermedio:${servicioId}`)) {
+                return next(403);
+            }
+            const servicios = await ServicionIntermedioCtr.search({ ids: [servicioId] });
+            if (!servicios || !servicios.length) {
+                res.status(404).send('Servicio intermedio no encontrado');
+                return;
+            }
+            const conceptos = await ServicionIntermedioCtr.getConceptosFromIds([servicioId]);
+            const conceptIds = Array.from(new Set(conceptos.map((concepto: any) => concepto.conceptId).filter(Boolean)));
+            if (!conceptIds.length) {
+                res.json([]);
+                return;
+            }
+            query.where('tipoPrestaciones.conceptId').in(conceptIds);
+        }
+
+        if (!req.query.tipoPrestacion && !req.query.teleConsulta && !req.query.servicioIntermedio) {
             const conceptosTurneables: any = await tipoPrestacion.find({ teleConsulta: true });
             const conceptIdArray = conceptosTurneables?.map(ct => ct.conceptId);
             if (conceptIdArray?.length > 0) {
