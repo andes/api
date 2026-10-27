@@ -33,11 +33,15 @@ export const logPacienteSchema = new mongoose.Schema({
         required: false
     },
     dataTurno: {
-        turno: turnoSchema,
-        profesionales: [NombreApellidoSchema],
-        tipoPrestacion: tipoPrestacionSchema,
-        idBloque: mongoose.Schema.Types.ObjectId,
-        idAgenda: mongoose.Schema.Types.ObjectId
+        // Subdocumento explícito para evitar errores de validación
+        // de Mongoose 5 con objetos anidados que contienen null.
+        type: new mongoose.Schema({
+            turno: turnoSchema,
+            profesionales: [NombreApellidoSchema],
+            tipoPrestacion: tipoPrestacionSchema,
+            idBloque: mongoose.Schema.Types.ObjectId,
+            idAgenda: mongoose.Schema.Types.ObjectId
+        }, { _id: false })
     },
     error: {
         type: String,
