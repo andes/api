@@ -35,16 +35,19 @@ export async function obtenerPrestaciones(organizacion, filtros) {
     }
 
     const matchEgreso = {};
+
     if (filtros.fechaEgresoDesde || filtros.fechaEgresoHasta) {
         const fechaEgresoFilter = {};
+
         if (filtros.fechaEgresoDesde) {
             fechaEgresoFilter['$gte'] = moment(filtros.fechaEgresoDesde).startOf('day').toDate();
         }
+
         if (filtros.fechaEgresoHasta) {
             fechaEgresoFilter['$lte'] = moment(filtros.fechaEgresoHasta).endOf('day').toDate();
         }
-        matchEgreso['ejecucion.registros.valor.InformeEgreso.fechaEgreso'] = fechaEgresoFilter;
 
+        // El rango completo debe cumplirse en un mismo registro de egreso.
         matchEgreso['ejecucion.registros'] = {
             $elemMatch: {
                 'valor.InformeEgreso.fechaEgreso': fechaEgresoFilter
