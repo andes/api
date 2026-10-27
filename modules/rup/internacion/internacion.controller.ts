@@ -63,18 +63,27 @@ export async function obtenerPrestaciones(organizacion, filtros) {
         $match['paciente.id'] = { $in: paciente.vinculos };
     }
 
-    const consutlaCompleta = {
+    // almacenados en elementos distintos del array.
+    const condiciones = [];
+
+    if (Object.keys(matchIngreso).length) {
+        condiciones.push(matchIngreso);
+    }
+
+    if (Object.keys(matchEgreso).length) {
+        condiciones.push(matchEgreso);
+    }
+
+    const consultaCompleta = {
         'solicitud.organizacion.id': mongoose.Types.ObjectId(organizacion as any),
         'solicitud.ambitoOrigen': 'internacion',
         'solicitud.tipoPrestacion.conceptId': '32485007',
         'estadoActual.tipo': { $in: ['ejecucion', 'validada'] },
-        ...matchIngreso,
-        ...matchEgreso,
-        ...$match
-
+        ...$match,
+        ...(condiciones.length ? { $and: condiciones } : {})
     };
 
-    return Prestacion.find(consutlaCompleta);
+    return Prestacion.find(consultaCompleta);
 }
 
 export async function obtenerHistorialInternacion(organizacion: ObjectId, capa: string, idInternacion: ObjectId, desde: Date, hasta: Date) {
