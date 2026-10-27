@@ -22,7 +22,8 @@ const router = express.Router();
 const to_json = require('xmljson').to_json;
 
 router.post('/createInformeCDA', Auth.authenticate(), async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:post')) {
+    const puedeDescargar = Auth.check(req, 'cda:post') || Auth.check(req, 'huds:impresion') || Auth.check(req, 'cda:get');
+    if (!puedeDescargar) {
         return next(403);
     }
     try {
@@ -286,6 +287,9 @@ router.get('/tojson/:id', async (req: any, res, next) => {
 
         return res.json(cda ?? {});
     }).catch(err => {
+        if (err?.message === 'cda_not_found') {
+            return res.status(404).json({ error: 'cda_not_found' });
+        }
         return next(err);
     });
 
