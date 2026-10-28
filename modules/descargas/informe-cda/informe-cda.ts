@@ -16,7 +16,14 @@ export class InformeCDA extends InformePDF {
 
     public async process() {
         const paciente: any = await Paciente.findById(this.datos.paciente || this.datos.idPaciente);
-        const organizacion = await Organizacion.findById(this.datos.organizacion._id);
+
+        if (!paciente) {
+            throw new Error('paciente_not_found');
+        }
+
+        const organizacionId = this.datos.organizacion?._id || this.datos.organizacion;
+        const organizacion: any = organizacionId ? await Organizacion.findById(organizacionId) : null;
+
         this.header = new InformeCDAHeader(organizacion, paciente, this.datos.profesional);
         this.body = new InformeCDABody(this.datos, organizacion, paciente, this.datos.codificacion);
         this.footer = new InformeCDAFooter(this.usuario, organizacion);

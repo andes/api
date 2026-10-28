@@ -44,13 +44,17 @@ export class InformeCDABody extends HTMLComponent {
     constructor(public datos, public organizacion, public paciente, public codificacion) {
         super();
         const fechaEjecucion = this.datos.fecha;
+        const section = codificacion || {};
+        const code = section.code?.$ || {};
+        const registros = typeof section.text === 'string' ? section.text.split(';') : null;
+
         this.data = {
-            titulo: this.datos.prestacion.snomed.term,
+            titulo: this.datos.prestacion?.snomed?.term || '',
             fechaEjecucion: fechaEjecucion && moment(fechaEjecucion).format('DD/MM/YYYY HH:mm'),
             codificacion: {
-                codigo: codificacion.code.$.code,
-                nombre: codificacion.code.$.displayName,
-                registros: codificacion.text?.split(';')
+                codigo: code.code || '',
+                nombre: code.displayName || '',
+                registros
             }
         };
     }
