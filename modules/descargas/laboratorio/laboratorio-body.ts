@@ -193,12 +193,8 @@ export class FarmaciaBody extends HTMLComponent {
                 const firmasArea = new Set<string>();
                 if (area.grupos) {
                     for (const grupo of area.grupos) {
-                        if (grupo.item) {
-                            this.limpiarSiEsDerivacionRecibidoEn(grupo.item);
-                        }
                         if (grupo.items) {
                             for (const item of grupo.items) {
-                                this.limpiarSiEsDerivacionRecibidoEn(item);
                                 if (item.firma) {
                                     firmasArea.add(item.firma);
                                 }
@@ -229,19 +225,6 @@ export class FarmaciaBody extends HTMLComponent {
             areas: this.detalle,
             encabezado: this.encabezado
         };
-    }
-
-    private limpiarSiEsDerivacionRecibidoEn(item: any): void {
-        const PATRON_DERIVACION = /^\s*(derivado|recibido en)/i;
-        const resultado = item?.resultado || '';
-
-        if (PATRON_DERIVACION.test(resultado)) {
-            item.unidadMedida = '';
-            item.valorReferencia = '';
-            item.metodo = '';
-            item.fechaHoraValida = '';
-            item.firma = '';
-        }
     }
 
 }
