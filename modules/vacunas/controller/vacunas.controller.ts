@@ -15,7 +15,8 @@ export async function getVacunas(paciente) {
     };
     const sort = { fechaAplicacion: -1 };
     const resultados = await vacunas.find(conditions).sort(sort);
-    resultados.forEach(async (vacuna: any, index) => {
+    // filter en lugar de splice: borrar elementos mientras se recorre el array corre los índices
+    return resultados.filter((vacuna: any) => {
         const pacienteVacuna: IPaciente = {
             nombre: vacuna.nombre,
             apellido: vacuna.apellido,
@@ -25,19 +26,19 @@ export async function getVacunas(paciente) {
             genero: vacuna.sexo,
             estado: 'temporal'
         };
-        const resultadoMatching = await matching(paciente, pacienteVacuna);
+        const resultadoMatching = matching(paciente, pacienteVacuna);
         // no cumple con el numero del matching
         if (resultadoMatching < 0.90) {
-            resultados.splice(index, 1);
+            return false;
         } else {
             vacuna.nombre = undefined;
             vacuna.apellido = undefined;
             vacuna.sexo = undefined;
             vacuna.documento = undefined;
             vacuna.fechaNacimiento = undefined;
+            return true;
         }
     });
-    return resultados;
 }
 
 export async function exportCovid19(horas, pacienteId?, desde?, hasta?) {
