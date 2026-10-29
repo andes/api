@@ -3,21 +3,41 @@ import { services } from './../../services';
 import { IDENTIFICACION } from '../../shared/constantes';
 import * as moment from 'moment';
 
+const PATRON_RESULTADO_DERIVACION = /^\s*(derivado|recibido en)/i;
+
+function esVerdadero(valor): boolean {
+    return valor === true || String(valor).toLowerCase() === 'true';
+}
+
+function esDerivacion(e): boolean {
+    const indicador = e.esderivacion ?? e.esDerivacion;
+    if (indicador !== undefined && indicador !== null && indicador !== '') {
+        return esVerdadero(indicador);
+    }
+    return PATRON_RESULTADO_DERIVACION.test(e.Resultado || e.resultado || '');
+}
+
 function agrupar(elementos) {
     const setAreas = new Set(elementos.map(d => d.area));
     const areasStr = Array.from(setAreas);
     const areas = [];
-    const toItem = (e) => ({
-        nombre: e.item,
-        esTitulo: e.esTitulo === 'True' ? true : false,
-        resultado: e.Resultado || e.resultado,
-        unidadMedida: e.UnidadMedida || e.unidadMedida,
-        metodo: (e.Metodo || e.metodo || '').replace(/^m[ée]todo:\s*/i, '').trim(),
-        valorReferencia: e.valorReferencia,
-        firma: e.esTitulo === 'True' ? '' : e.userValida,
-        codificaHiv: e.codificaHiv === 'True' ? true : false,
-        fechaHoraValida: e.fechaHoraValida ? moment(e.fechaHoraValida).format('DD/MM/YYYY HH:mm') : ''
-    });
+    const toItem = (e) => {
+        const resultado = e.Resultado || e.resultado;
+        const derivacion = esDerivacion(e);
+        return {
+            nombre: e.item,
+            esTitulo: e.esTitulo === 'True' ? true : false,
+            esDerivacion: derivacion,
+            resultado,
+            unidadMedida: PATRON_RESULTADO_DERIVACION.test(resultado || '') ? '' : (e.UnidadMedida || e.unidadMedida),
+            metodo: derivacion ? '' : (e.Metodo || e.metodo || '').replace(/^m[ée]todo:\s*/i, '').trim(),
+            valorReferencia: derivacion ? '' : e.valorReferencia,
+            firma: e.esTitulo === 'True' || derivacion ? '' : e.userValida,
+            codificaHiv: e.codificaHiv === 'True' ? true : false,
+            fechaHoraValida: !derivacion && e.fechaHoraValida ? moment(e.fechaHoraValida).format('DD/MM/YYYY HH:mm') : ''
+        };
+    };
+
 
     areasStr.forEach(area => {
         const detallesArea = elementos.filter(d => d.area === area);

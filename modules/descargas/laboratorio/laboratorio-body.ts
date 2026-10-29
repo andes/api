@@ -226,4 +226,5 @@ export class FarmaciaBody extends HTMLComponent {
             encabezado: this.encabezado
         };
     }
+
 }
