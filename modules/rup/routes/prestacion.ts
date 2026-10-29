@@ -15,7 +15,7 @@ import { getTurnoById } from '../../turnos/controller/turnosController';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
+import { estaFueraDePlazoRomperValidacion, hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
@@ -701,6 +701,15 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     if ((req as any).user.usuario.username !== data.estadoActual.createdBy.documento && !puedeValidar) {
                         return next('Solo puede romper la validación el usuario que haya creado.');
                     }
+                }
+                let fueraDePlazo = false;
+                try {
+                    fueraDePlazo = await estaFueraDePlazoRomperValidacion(data);
+                } catch (error) {
+                    return next(error);
+                }
+                if (fueraDePlazo) {
+                    return next('El tiempo para romper la validación ha vencido.');
                 }
                 const estadoModificada = {
                     tipo: 'modificada',
