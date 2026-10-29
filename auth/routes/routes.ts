@@ -262,9 +262,9 @@ router.post('/sendOTPCode', async (req, res, next) => {
         if (username) {
             const result = await sendOtpAndNotify(username);
             if (result) {
-                return res.json({ status: 'ok' });
+                return res.json({ status: 'ok' });// Profesional de Andes
             } else {
-                return res.json({ status: 'redirectOneLogin' });
+                return res.json({ status: 'redirectOneLogin' });// Profesional de OneLogin
             }
         } else {
             return next(403);
