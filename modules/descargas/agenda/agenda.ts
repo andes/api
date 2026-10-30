@@ -14,8 +14,12 @@ export class Agenda extends InformePDF {
 
     public async process() {
 
-        const dataAgenda: any = await getAgendaById(this.req.body.agendaId);
-        const dataBody = {
+        const ids = (Array.isArray(this.req.body.agendaIds) && this.req.body.agendaIds.length
+            ? this.req.body.agendaIds
+            : [this.req.body.agendaId]).filter(id => !!id);
+
+        const dataAgendas = (await Promise.all(ids.map(id => getAgendaById(id)))).filter(agenda => !!agenda);
+        const agendas = dataAgendas.map((dataAgenda: any) => ({
             horaInicio: dataAgenda.horaInicio,
             horaFin: dataAgenda.horaFin,
             prestaciones: dataAgenda.tipoPrestaciones,
@@ -23,9 +27,10 @@ export class Agenda extends InformePDF {
             bloques: dataAgenda.bloques,
             organizacion: dataAgenda.organizacion,
             sobreturnos: dataAgenda.sobreturnos
-        };
+        }));
+
         this.header = new AgendaHeader();
-        this.body = new AgendaBody({ dataBody });
+        this.body = new AgendaBody({ agendas });
         await super.process();
 
     }

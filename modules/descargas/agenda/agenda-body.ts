@@ -3,6 +3,7 @@ import { HTMLComponent } from '../model/html-component.class';
 
 export class AgendaBody extends HTMLComponent {
     template = `
+    {{#each agendas}}
     <section class="bordered-section">
         <header>
             <div class="row">
@@ -36,7 +37,7 @@ export class AgendaBody extends HTMLComponent {
         {{#each bloques}}
             <table class="table">
                 <thead>
-                    <tr colspan="14">Bloque de {{inicioBloque}} a {{finBloque}} hs
+                    <tr colspan="12">Bloque de {{inicioBloque}} a {{finBloque}} hs
                     {{#if descripcion}}
                         <span>Descripción: {{descripcion}}</span>
                     {{/if}}
@@ -49,6 +50,7 @@ export class AgendaBody extends HTMLComponent {
                         <th>Estado</th>
                         <th>Fecha Nac</th>
                         <th>Sexo</th>
+                        <th>Identidad de género</th>
                         <th>Diagnóstico</th>
                         <th>Primera Vez</th>
                         <th>Ulterior</th>
@@ -85,6 +87,9 @@ export class AgendaBody extends HTMLComponent {
                                 {{#if paciente.obraSocial.financiador}}
                                     {{paciente.obraSocial.financiador}}
                                 {{/if}}
+                                {{#if paciente.obraSocial.numeroAfiliado}}
+                                    <br>{{paciente.obraSocial.numeroAfiliado}}
+                                {{/if}}
                             {{/if}}
                         {{/if}}
                         </small>
@@ -97,7 +102,7 @@ export class AgendaBody extends HTMLComponent {
                                     {{paciente.apellido}}, {{paciente.alias}}
                                 {{else}}
                                     {{paciente.apellido}}, {{paciente.nombre}}
-                                {{/if}}                                   
+                                {{/if}}
                             {{/if}}
                         {{/if}}
                         </small>
@@ -115,6 +120,11 @@ export class AgendaBody extends HTMLComponent {
                         {{paciente.sexo}}
                         </small>
                     </td>
+                    <td>
+                        <small>
+                        {{paciente.genero}}
+                        </small>
+                    </td>
                     <td class="diagnostico"></td>
                     <td></td>
                     <td></td>
@@ -129,7 +139,7 @@ export class AgendaBody extends HTMLComponent {
         {{#if cantSobreturnos}}
             <table class="table">
                 <thead>
-                    <tr colspan="14">
+                    <tr colspan="12">
                         <span>Sobreturnos</span>
                     </tr>
                     <tr>
@@ -140,6 +150,7 @@ export class AgendaBody extends HTMLComponent {
                         <th>Estado</th>
                         <th>Fecha Nac</th>
                         <th>Sexo</th>
+                        <th>Identidad de género</th>
                         <th>Diagnóstico</th>
                         <th>Primera Vez</th>
                         <th>Ulterior</th>
@@ -163,6 +174,9 @@ export class AgendaBody extends HTMLComponent {
                                     <small>Sin documento(temporal)</small>
                                 {{/if}}
                                 <span>| {{paciente.carpeta}}</span>
+                                {{#if autocitado}}
+                                    <small>(autocitado)</small>
+                                {{/if}}
                             {{/if}}
                             </small>
                         </td>
@@ -181,7 +195,11 @@ export class AgendaBody extends HTMLComponent {
                             <small>
                             {{#if paciente}}
                                 {{#if paciente.id}}
-                                    {{paciente.apellido}}, {{paciente.nombre}}
+                                    {{#if paciente.alias}}
+                                        {{paciente.apellido}}, {{paciente.alias}}
+                                    {{else}}
+                                        {{paciente.apellido}}, {{paciente.nombre}}
+                                    {{/if}}
                                 {{/if}}
                             {{/if}}
                             </small>
@@ -199,6 +217,11 @@ export class AgendaBody extends HTMLComponent {
                             {{paciente.sexo}}
                             </small>
                         </td>
+                        <td>
+                            <small>
+                            {{paciente.genero}}
+                            </small>
+                        </td>
                         <td class="diagnostico"></td>
                         <td></td>
                         <td></td>
@@ -213,40 +236,50 @@ export class AgendaBody extends HTMLComponent {
             <label>Firma Equipo de Salud</label>
         </div>
     </section>
+    {{#unless @last}}
+        <div style="page-break-after: always;"></div>
+    {{/unless}}
+    {{/each}}
     `;
 
     constructor(public _data) {
         super();
-        const agenda = _data.dataBody;
+        const agendas = Array.isArray(_data.agendas) ? _data.agendas : (_data.dataBody ? [_data.dataBody] : []);
         this.data = {
+            agendas: agendas.map(agenda => this.prepararAgenda(agenda))
+        };
+    }
+
+    private prepararAgenda(agenda) {
+        const data: any = {
             dia: moment(agenda.horaInicio).locale('es').format('dddd'),
             fecha: moment(agenda.horaInicio).locale('es').format('L'),
             horaDesde: moment(agenda.horaInicio).locale('es').format('HH:mm'),
             horaHasta: moment(agenda.horaFin).locale('es').format('HH:mm'),
             tipoPrestaciones: agenda.prestaciones,
-            bloques: agenda.bloques,
+            bloques: agenda.bloques || [],
             profesionales: agenda.profesionales,
             organizacion: agenda.organizacion,
-            sobreturnos: agenda.sobreturnos,
+            sobreturnos: agenda.sobreturnos || [],
             cantSobreturnos: agenda.sobreturnos?.length ? true : false
         };
 
         // TURNOS
-        this.data.bloques.forEach(bloque => {
+        data.bloques.forEach(bloque => {
             bloque.inicioBloque = moment(bloque.horaInicio).locale('es').format('HH:mm');
             bloque.finBloque = moment(bloque.horaFin).locale('es').format('HH:mm');
             bloque.turnos.forEach(turno => {
                 turno.inicio = moment(turno.horaInicio).locale('es').format('HH:mm');
 
                 if (turno?.paciente?.id && turno?.paciente?.fechaNacimiento) {
-                    turno.paciente.nacimiento = moment(turno.paciente.fechaNacimiento).locale('es').format('DD/MM/YYYY');
+                    turno.paciente.nacimiento = moment.utc(turno.paciente.fechaNacimiento).locale('es').format('DD/MM/YYYY');
                 }
 
                 turno.autocitado = (turno.tipoTurno === 'profesional') ? true : false;
 
                 if (turno?.paciente?.id && turno.paciente.carpetaEfectores?.length) {
                     turno.paciente.carpetaEfectores.forEach(carpeta => {
-                        if (JSON.stringify(carpeta.organizacion._id) === JSON.stringify(this.data.organizacion._id)) {
+                        if (JSON.stringify(carpeta.organizacion._id) === JSON.stringify(data.organizacion._id)) {
                             turno.paciente.carpeta = carpeta.nroCarpeta;
                         }
                     });
@@ -262,17 +295,24 @@ export class AgendaBody extends HTMLComponent {
         });
 
         // SOBRETURNOS
-        this.data.sobreturnos.forEach(sobreturno => {
+        data.sobreturnos.forEach(sobreturno => {
             sobreturno.inicioSobreturno = moment(sobreturno.horaInicio).locale('es').format('HH:mm');
             sobreturno.estadoTurno = (sobreturno && sobreturno.estado === 'suspendido') ? 'Suspendido' : '';
+            sobreturno.autocitado = (sobreturno.tipoTurno === 'profesional') ? true : false;
+
+            if (sobreturno?.paciente?.id && sobreturno?.paciente?.fechaNacimiento) {
+                sobreturno.paciente.nacimiento = moment.utc(sobreturno.paciente.fechaNacimiento).locale('es').format('DD/MM/YYYY');
+            }
 
             if (sobreturno?.paciente?.id && sobreturno.paciente.carpetaEfectores?.length) {
                 sobreturno.paciente.carpetaEfectores.forEach(carpeta => {
-                    if (JSON.stringify(carpeta.organizacion._id) === JSON.stringify(this.data.organizacion._id)) {
+                    if (JSON.stringify(carpeta.organizacion._id) === JSON.stringify(data.organizacion._id)) {
                         sobreturno.paciente.carpeta = carpeta.nroCarpeta;
                     }
                 });
             }
         });
+
+        return data;
     }
 }
