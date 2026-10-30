@@ -566,6 +566,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         }
                         break;
                     case 'agregarSobreturno':
+                        if (!agendaCtrl.condicionPacienteSobreturnoValida(req.body.sobreturno)) {
+                            return next({ status: 400, message: 'Condición del paciente inválida' });
+                        }
                         event = { object: 'turno', accion: 'asignar', data: null };
                         event.data = await agendaCtrl.agregarSobreturno(req, data);
                         break;
