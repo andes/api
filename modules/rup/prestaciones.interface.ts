@@ -4,10 +4,13 @@ import { IFinanciador } from '../../core-v2/mpi/financiador';
 import { IOrganizacion } from '../../core/tm/interfaces/IOrganizacion';
 import { ISnomedConcept } from './schemas/snomed-concept';
 
+export type CondicionPaciente = 'ambulatorio' | 'internado' | 'guardia';
+
 export interface IPrestacion {
     id: ObjectId;
     trackId?: ObjectId;
     groupId?: ObjectId;
+    condicionPaciente?: CondicionPaciente;
     paciente?: {
         id: ObjectId;
         nombre: string;
