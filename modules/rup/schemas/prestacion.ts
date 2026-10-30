@@ -8,6 +8,10 @@ import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.histo
 import { SemanticTag } from './semantic-tag';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
+import { CONDICIONES_PACIENTE } from '../condicion-paciente';
+
+export { CONDICIONES_PACIENTE };
+
 export const PrestacionSchema = new Schema({
     /**
      * ID de un EVENTO externo (internacion, guardia, embarazo) para agrupar un conjunto de prestaciones referidas a ese evento
@@ -18,6 +22,12 @@ export const PrestacionSchema = new Schema({
      * Clave para agrupar varias prestaciones como un único suceso
      */
     groupId: { required: false, type: Schema.Types.ObjectId },
+
+    condicionPaciente: {
+        type: String,
+        enum: CONDICIONES_PACIENTE,
+        required: false
+    },
 
     inicio: {
         type: String,
@@ -373,4 +383,3 @@ PrestacionSchema.index(
 
 export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');
 export const PrestacionHistorial = model('prestacion-historial', PrestacionHistorialSchema, 'prestacion-historial');
-

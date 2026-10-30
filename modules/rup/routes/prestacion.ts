@@ -20,6 +20,7 @@ import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
+import { condicionPacienteValida } from '../condicion-paciente';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
 import { Agenda } from '../../turnos/schemas/agenda';
@@ -591,6 +592,9 @@ router.get('/prestaciones', async (req: any, res, next) => {
 router.post('/prestaciones', async (req, res, next) => {
     try {
         const dto = parseDate(JSON.stringify(req.body));
+        if (dto.condicionPaciente !== undefined && !condicionPacienteValida(dto.condicionPaciente)) {
+            return next('Condición del paciente inválida');
+        }
 
         if (dto.inicio === 'top') {
             updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
@@ -638,6 +642,15 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
                 break;
             case 'estadoPush':
+                if (req.body.condicionPaciente !== undefined) {
+                    if (data.estadoActual.tipo === 'validada') {
+                        return next('Prestación validada, no se puede modificar.');
+                    }
+                    if (!condicionPacienteValida(req.body.condicionPaciente)) {
+                        return next('Condición del paciente inválida');
+                    }
+                    data.condicionPaciente = req.body.condicionPaciente;
+                }
                 if (req.body.estado) {
                     // SI LA SOLICITUD FUE ANULADA NO SE PUEDE REALIZAR OTRA OPERACION
                     if (data.estadoActual.tipo === 'anulada') {
