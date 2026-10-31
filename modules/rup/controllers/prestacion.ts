@@ -1,6 +1,7 @@
 import { ObjectId } from '@andes/core';
 import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
+import { rup as rupConfig } from '../../../config';
 import { userScheduler } from '../../../config.private';
 import { AppCache } from '../../../connections';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
@@ -10,6 +11,75 @@ import { buscarEnHuds } from '../controllers/rup';
 import moment = require('moment');
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
+
+/**
+ * Deriva el rol del profesional firmante a partir de sus permisos (ADR 0001).
+ * Único punto de derivación: si en el futuro se agrega un atributo explícito de
+ * rol en Profesional, solo cambia esta función.
+ *
+ * - Con permiso de validación sobre el tipo de prestación  -> 'validador' (médico de planta)
+ * - Sin ese permiso (solo pre-validación)                  -> 'prevalidador' (residente)
+ *
+ * @export
+ * @param {*} req request autenticado
+ * @param {string} tipoPrestacionId id del tipo de prestación
+ * @returns {'validador' | 'prevalidador'}
+ */
+export function deriveRolFirmante(req, tipoPrestacionId: string): 'validador' | 'prevalidador' {
+    return Auth.check(req, 'rup:validacion:' + tipoPrestacionId) ? 'validador' : 'prevalidador';
+}
+
+/**
+ * Configuración de la pre-validación que necesita la app (ADR 0001), para no duplicar el tope.
+ */
+export function configPrevalidacion() {
+    return { maxFirmasPrevalidacion: rupConfig.maxFirmasPrevalidacion };
+}
+
+/**
+ * Estados en los que una prestación admite agregar o quitar una firma de pre-validación (ADR 0001).
+ * La pre-validación no cambia el estado: la prestación sigue en ejecución con N firmas.
+ */
+export function admitePrevalidacion(tipoEstado: string): boolean {
+    return tipoEstado === 'ejecucion';
+}
+
+/**
+ * Matrículas vigentes del profesional en texto, con el mismo formato que el pie del
+ * informe PDF ("Título MP 123 - Especialidad ME 456"). Devuelve null si no hay ninguna.
+ *
+ * @export
+ * @param {*} infoMatriculas resultado de searchMatriculas
+ * @returns {(string | null)}
+ */
+export function formatearMatriculas(infoMatriculas): string | null {
+    const grado = (infoMatriculas?.formacionGrado || []).map(e => `${e.nombre} MP ${e.numero}`);
+    const posgrado = (infoMatriculas?.formacionPosgrado || []).map(e => `${e.nombre} ME ${e.numero}`);
+    const matriculas = [...grado, ...posgrado];
+    return matriculas.length ? matriculas.join(' - ') : null;
+}
+
+/**
+ * Usuario del request con el mismo shape que arma el AuditPlugin (usuario u app + organización).
+ * Se usa en las operaciones atómicas (findOneAndUpdate), donde el plugin no corre.
+ */
+export function usuarioAuditoria(req) {
+    return { ...(req.user.usuario || req.user.app), organizacion: req.user.organizacion };
+}
+
+/**
+ * Las operaciones atómicas no hacen data.save(), así que la entrada de historial que
+ * updateRegistroHistorialSolicitud agregó en memoria (solo prestaciones 'top') se perdería.
+ * Devuelve esa entrada lista para un $push, o null si no corresponde.
+ */
+export function historialParaUpdateAtomico(prestacion, usuario) {
+    const historial = prestacion.inicio === 'top' && prestacion.solicitud?.historial;
+    if (!historial?.length) {
+        return null;
+    }
+    const ultima = historial[historial.length - 1];
+    return { ...(ultima.toObject ? ultima.toObject() : ultima), createdAt: new Date(), createdBy: usuario };
+}
 
 /**
  * Libera la referencia al turno dentro de la solicitud
@@ -60,6 +130,8 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
         suspenderTurno: 'Turno suspendido',
         asignada: 'Profesional asignado',
         validada: 'Validada',
+        prevalidacion: 'Pre-validada',
+        quitarPrevalidacion: 'Pre-validación quitada',
         ejecucion: 'Ejecutada',
         romperValidacion: 'Ejecutada',
         anulada: 'Anulada',

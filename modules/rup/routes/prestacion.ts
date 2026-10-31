@@ -4,8 +4,10 @@ import { EventCore } from '@andes/event-bus';
 import * as express from 'express';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
+import { rup as rupConfig } from '../../../config';
 import { AppCache } from '../../../connections';
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { searchMatriculas } from '../../../core/tm/controller/profesional';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 import { removeDiacritics } from '../../../utils/utils';
@@ -15,7 +17,7 @@ import { getTurnoById } from '../../turnos/controller/turnosController';
 import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
+import { admitePrevalidacion, configPrevalidacion, deriveRolFirmante, formatearMatriculas, historialParaUpdateAtomico, hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud, usuarioAuditoria } from '../controllers/prestacion';
 import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
@@ -25,6 +27,21 @@ import { parseDate } from './../../../shared/parse';
 import { Agenda } from '../../turnos/schemas/agenda';
 
 const router = express.Router();
+
+const ERROR_ESTADO_PREVALIDACION = 'Solo se puede pre-validar una prestación en ejecución.';
+
+/**
+ * Snapshot de matrículas para una firma de pre-validación. Reutiliza searchMatriculas
+ * (vigencia, baja, posgrado y matrícula externa), igual que el informe PDF.
+ * Es opcional: si falla la lectura, queda null.
+ */
+async function matriculasFirmante(profesionalId): Promise<string | null> {
+    try {
+        return formatearMatriculas(await searchMatriculas(profesionalId));
+    } catch (e) {
+        return null;
+    }
+}
 
 /** *
  *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
@@ -163,8 +180,18 @@ router.post('/solicitudes/dashboard', async (req, res, next) => {
 });
 
 
+// Configuración de la pre-validación (tope de firmas), para que la app no la duplique. Ver ADR 0001.
+router.get('/prevalidacion/config', (req, res) => {
+    return res.json(configPrevalidacion());
+});
+
 router.get('/prestaciones/servicio-intermedio', async (req: any, res, next) => {
-    const servicios = Auth.getPermissions(req, 'rup:servicio-intermedio:?').map(id => new Types.ObjectId(id));
+    // getPermissions puede devolver el comodín '*' (p.ej. si el usuario tiene
+    // rup:servicio-intermedio:* o rup:*). ObjectId('*') lanza y tira el proceso,
+    // así que descartamos lo que no sea un ObjectId válido.
+    const servicios = Auth.getPermissions(req, 'rup:servicio-intermedio:?')
+        .filter(id => id !== '*' && Types.ObjectId.isValid(id))
+        .map(id => new Types.ObjectId(id));
     const query = {
         inicio: 'servicio-intermedio',
         servicioIntermedioId: MongoQuery.inArray(servicios),
@@ -692,6 +719,120 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
 
                 break;
+            case 'prevalidacion': {
+                // Pre-validación (doble firma). Opcional y aditiva: NO reemplaza ni
+                // modifica la validación. Ver ADR 0001.
+                const tipoPrestacionId = data.solicitud.tipoPrestacion.id;
+
+                // Gate de permiso (enforcement real en la API para pre-validar)
+                if (!Auth.check(req, 'rup:prevalidacion:' + tipoPrestacionId)) {
+                    return next('No tiene permiso para pre-validar este tipo de prestación.');
+                }
+                if (!admitePrevalidacion(data.estadoActual.tipo)) {
+                    return next(ERROR_ESTADO_PREVALIDACION);
+                }
+                const profesional = Auth.getProfesional(req);
+                if (!profesional?.id) {
+                    return next('Solo un profesional puede pre-validar.');
+                }
+
+                // Pre-validación y validación son excluyentes (ADR 0001): quien puede validar, valida directo.
+                const rol = deriveRolFirmante(req, tipoPrestacionId);
+                if (rol === 'validador') {
+                    return next('Tiene permiso de validación sobre este tipo de prestación: debe validar, no pre-validar.');
+                }
+
+                const firma = {
+                    profesional,
+                    rol, // snapshot del rol al firmar
+                    matricula: await matriculasFirmante(profesional.id), // snapshot para el informe
+                    fecha: new Date()
+                };
+                const usuario = usuarioAuditoria(req);
+                const historial = historialParaUpdateAtomico(data, usuario);
+
+                // La pre-validación NO cambia el estado: la prestación sigue en ejecución y
+                // acumula firmas. Se lee fresco para dar un mensaje claro (duplicado / tope) y
+                // luego se hace un $push atómico con anti-duplicado y tope forzados en el filtro,
+                // así dos residentes firmando a la vez no pierden ninguna firma ni superan el tope.
+                const fresh: any = await Prestacion.findById(data._id, { estadoActual: 1, firmasPrevalidacion: 1 });
+                if (!fresh) {
+                    return next(404);
+                }
+                if (!admitePrevalidacion(fresh.estadoActual.tipo)) {
+                    return next(ERROR_ESTADO_PREVALIDACION);
+                }
+                const firmas = fresh.firmasPrevalidacion || [];
+                if (firmas.some(f => String(f.profesional.id) === String(profesional.id))) {
+                    return next('Ya registró su pre-validación en esta prestación.');
+                }
+                if (firmas.length >= rupConfig.maxFirmasPrevalidacion) {
+                    return next(`Se alcanzó el máximo de firmas de pre-validación (${rupConfig.maxFirmasPrevalidacion}).`);
+                }
+                const prestacionActualizada: any = await Prestacion.findOneAndUpdate(
+                    {
+                        _id: data._id,
+                        'estadoActual.tipo': 'ejecucion',
+                        'firmasPrevalidacion.profesional.id': { $ne: profesional.id },
+                        $expr: { $lt: [{ $size: { $ifNull: ['$firmasPrevalidacion', []] } }, rupConfig.maxFirmasPrevalidacion] }
+                    },
+                    {
+                        $push: {
+                            firmasPrevalidacion: firma,
+                            ...(historial ? { 'solicitud.historial': historial } : {})
+                        },
+                        $set: { updatedAt: new Date(), updatedBy: usuario }
+                    },
+                    { new: true }
+                );
+                if (!prestacionActualizada) {
+                    return next('No se pudo registrar la pre-validación, reintente.');
+                }
+                EventCore.emitAsync('rup:prestacion:prevalidate', prestacionActualizada);
+                if (prestacionActualizada.paciente) {
+                    AppCache.clear(`huds-${prestacionActualizada.paciente.id}`);
+                }
+                return res.json(prestacionActualizada);
+            }
+            case 'quitarPrevalidacion': {
+                // Quita una firma de pre-validación del informe (p. ej. el residente se
+                // equivocó). Análogo a romperValidacion pero para la pre-firma. Ver ADR 0001.
+                if (!admitePrevalidacion(data.estadoActual.tipo)) {
+                    return next('Solo se puede quitar una pre-validación mientras la prestación está en ejecución.');
+                }
+                const profesional = Auth.getProfesional(req);
+                const esValidador = Auth.check(req, 'rup:validacion:' + data.solicitud.tipoPrestacion.id);
+                // Sin firmaProfesionalId se quita la propia firma; quitar la de otro requiere ser validador.
+                const targetId = req.body.firmaProfesionalId || profesional?.id;
+                if (!targetId || !Types.ObjectId.isValid(targetId)) {
+                    return next('No se pudo identificar la firma a quitar.');
+                }
+                if (!esValidador && String(targetId) !== String(profesional?.id)) {
+                    return next('Solo puede quitar su propia pre-validación.');
+                }
+                const usuario = usuarioAuditoria(req);
+                const historial = historialParaUpdateAtomico(data, usuario);
+
+                // $pull atómico, condicionado a que la firma siga existiendo. El estado no cambia:
+                // la prestación sigue en ejecución con una firma menos.
+                const prestacionActualizada: any = await Prestacion.findOneAndUpdate(
+                    { _id: data._id, 'estadoActual.tipo': 'ejecucion', 'firmasPrevalidacion.profesional.id': targetId },
+                    {
+                        $pull: { firmasPrevalidacion: { 'profesional.id': Types.ObjectId(targetId) } },
+                        $set: { updatedAt: new Date(), updatedBy: usuario },
+                        ...(historial ? { $push: { 'solicitud.historial': historial } } : {})
+                    },
+                    { new: true }
+                );
+                if (!prestacionActualizada) {
+                    return next('No hay una pre-validación de ese profesional para quitar.');
+                }
+                EventCore.emitAsync('rup:prestacion:quitarPrevalidacion', prestacionActualizada);
+                if (prestacionActualizada.paciente) {
+                    AppCache.clear(`huds-${prestacionActualizada.paciente.id}`);
+                }
+                return res.json(prestacionActualizada);
+            }
             case 'romperValidacion':
                 if (data.estadoActual.tipo !== 'validada') {
                     return next('Para poder romper la validación, primero debe validar la prestación.');
@@ -707,6 +848,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     idOrigenModifica: data.id
                 };
                 const prestacionOld = await saveEnHistorial(data, estadoModificada, req);
+                // Las firmas de pre-validación avalan el contenido validado: al volver a ejecución
+                // se limpian (quedan en la copia del historial) y, si corresponde, se vuelve a firmar.
+                // Ver ADR 0001.
+                data.firmasPrevalidacion = [];
                 data.estados.push({
                     tipo: 'ejecucion',
                     idOrigenModifica: prestacionOld.id
