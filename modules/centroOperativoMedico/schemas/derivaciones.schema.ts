@@ -108,6 +108,7 @@ export const DerivacionSchema = new mongoose.Schema({
     comorbilidades: String,
     condicion: String,
     necesidad: String,
+    ambito: String,
     adjuntos: mongoose.Schema.Types.Mixed,
     historial: [DerivacionHistorialSchema],
     cancelada: {
