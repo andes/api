@@ -33,6 +33,7 @@ const router = express.Router();
  * @param estado: buscar en prestaciones con un estado distinto a validada
  * @param idPrestacion: buscar concepto/s en una prestacion especifica
  * @param deadline: fecha de partida para la busqueda
+ * @param deadlineHasta: fecha de fin para la busqueda
  * @param expresion: expresion snomed que incluye los conceptos que estamos buscando
  *
  */
@@ -50,12 +51,13 @@ router.get('/prestaciones/huds/:idPaciente', async (req: any, res, next) => {
         const estado = req.query.estado || 'validada';
         const idPrestacion = req.query.idPrestacion;
         const deadline = req.query.deadline;
+        const deadlineHasta = req.query.deadlineHasta;
         const expresion = req.query.expresion;
         const valor = req.query.valor;
         const termSearch = req.query.termSearch;
         const form = req.query.form;
 
-        const response = await hudsPaciente(id, expresion, idPrestacion, estado, deadline, valor, termSearch, form);
+        const response = await hudsPaciente(id, expresion, idPrestacion, estado, deadline, valor, termSearch, form, deadlineHasta);
         if (!response) {
             return res.status(404).send('Turno no encontrado');
         }
