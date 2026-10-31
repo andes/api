@@ -10,7 +10,7 @@ scope:
 
 # ADR 0001: Doble firma del informe y rol del profesional firmante
 
-- **Estado:** Aceptada. Enmendada el 2026-10-01 (el rol se deriva de permisos en esta etapa, ver "Decisión") y el 2026-10-19 (pre-validar requiere el permiso explícito `rup:prevalidacion`; etapa 1 implementada, ver "Historial de cambios").
+- **Estado:** Aceptada. Enmendada el 2026-10-01 (el rol se deriva de permisos en esta etapa, ver "Decisión"), el 2026-10-19 (pre-validar requiere el permiso explícito `rup:prevalidacion`; etapa 1 implementada, ver "Historial de cambios") y el 2026-10-31 (se elimina el estado `pendienteValidacion` y la cola de pendientes del punto de inicio; "Validar" se oculta solo a quien tiene `rup:prevalidacion`).
 - **Fecha:** 2026-10-01
 - **Repos afectados:** `api`, `app`
 
@@ -55,12 +55,17 @@ por `documento == username`.
    `rup:prevalidacion:<tipoPrestacion>`. Este permiso es el que se asigna a los
    médicos residentes. (Enmienda 2026-10-19: antes la pre-validación estaba abierta
    a cualquier profesional; ahora requiere el permiso explícito.)
-2. **Validar:** un profesional que además tenga el permiso Shiro
-   `rup:validacion:<tipoPrestacion>`.
-3. Un profesional con `rup:prevalidacion` y **sin** `rup:validacion` solo puede
-   pre-validar. Por convención administrativa, un usuario no debería tener ambos
-   permisos; si los tuviera, la derivación de rol da prioridad a validador y la API
-   **rechaza** la pre-validación (debe validar directo). Enmienda 2026-10-21.
+2. **Validar:** cualquier profesional que hoy pueda validar la prestación (creador, o quien
+   tiene `rup:validacion:<tipoPrestacion>` para validar prestaciones ajenas), **salvo** que
+   tenga `rup:prevalidacion:<tipoPrestacion>`. (Enmienda 2026-10-31: `rup:validacion` NO es
+   requisito para validar; nunca lo fue. Ese permiso habilita abrir y validar prestaciones de
+   otros en el punto de inicio. Exigirlo para el botón "Validar" fue una regresión: ocultaba el
+   botón a médicos que validaban sus propias prestaciones sin ese permiso.)
+3. Un profesional con `rup:prevalidacion` **solo puede pre-validar**: tener ese permiso es,
+   para el sistema, lo que define al residente. Por convención administrativa, un usuario no
+   debería tener `rup:prevalidacion` y `rup:validacion` a la vez; si los tuviera, la
+   derivación de rol da prioridad a validador y la API **rechaza** la pre-validación (debe
+   validar directo). Enmienda 2026-10-21.
 
 ### Rol derivado de permisos (en esta etapa)
 
@@ -95,24 +100,27 @@ tocar a los consumidores.
   informes históricos). El campo propio se agregará cuando se decida tocar el flujo de validación.
 - Las firmas previas no se derivan de `estados[]`, porque un estado tiene un único
   `createdBy`. Todas las firmas son rastreables.
-- Se agrega el estado `pendienteValidacion`. La pre-validación se admite cuando la prestación
-  está en `ejecucion` o en `pendienteValidacion`, de modo que varios residentes puedan sumar
-  firmas; la primera pre-validación transiciona a `pendienteValidacion` y las siguientes solo
-  agregan su firma (transición idempotente, `$push` atómico con reintento ante carrera).
+- **La pre-validación no cambia el estado** (enmienda 2026-10-31). La prestación sigue en
+  `ejecucion` y acumula firmas en `firmasPrevalidacion`; varios residentes pueden sumar la
+  suya (`$push` atómico con anti-duplicado y tope en el filtro). La cantidad de firmas se
+  muestra como **badge** sobre la prestación en los listados del punto de inicio (agenda,
+  sobreturnos y fuera de agenda) y en el panel de firmas de la pantalla de validación.
+  **Reemplaza** al estado `pendienteValidacion` de la etapa 1: los usuarios reportaron que un
+  estado nuevo les generaba problemas en los flujos existentes (acciones del punto de inicio
+  gateadas por `ejecucion`, filtros, reportes) y saturaba la pantalla junto con la cola
+  dedicada. El estado se eliminó del enum sin migración: no llegó a producción.
 
 Flujo:
 
 ```
-ejecucion ──(pre-validación)──► pendienteValidacion ──(valida)──► validada   [doble firma]
-ejecucion ────────────────────────(valida directo)──────────────► validada   [firma única]
+ejecucion (0..4 firmas de pre-validación) ──(valida)──► validada   [doble firma o firma única]
 ```
 
 - **Quitar pre-validación** (op `quitarPrevalidacion`, análoga a `romperValidacion`): saca una
   firma de `firmasPrevalidacion` (p. ej. el residente se equivocó). La puede quitar el propio
   firmante o un validador (`rup:validacion`); quitar la firma de otro sin ese permiso se
-  rechaza. Solo con la prestación en `pendienteValidacion`. `$pull` atómico condicionado a
-  que la firma exista; si la lista queda vacía, la prestación vuelve a `ejecucion` (también
-  de forma condicionada, para no pisar una firma concurrente).
+  rechaza. Solo con la prestación en `ejecucion`. `$pull` atómico condicionado a que la firma
+  exista. El estado no cambia.
 - **Romper validación** (op `romperValidacion`): la prestación vuelve a `ejecucion` y
   `firmasPrevalidacion` se limpia, porque las firmas avalaban el contenido validado. Quedan en
   la copia de `prestacionesHistorial`; si corresponde, los residentes vuelven a pre-validar.
@@ -181,11 +189,15 @@ ejecucion ───────────────────────�
   **cortar flujos que hoy validan sin el permiso** (por ejemplo internación, que ya se
   exceptúa en `romperValidacion` con `desdeInternacion`). Hay que relevarlos antes de
   activar el control.
-  - **Decisión 2026-10-19:** en esta etapa se agrega enforcement **solo en la UI** del flujo
-    ambulatorio: el botón "Validar" de `prestacionValidacion` ahora se muestra únicamente con
-    `rup:validacion:<tipo>`. El backend (`estadoPush` con `validada`) sigue sin exigir el
-    permiso, y la validación de internación (`listado-internacion`, flujo propio por egreso)
-    queda **sin tocar**. El enforcement real en la API sigue pendiente de relevamiento.
+  - **Decisión 2026-10-19 (revertida el 2026-10-31):** se había gateado el botón "Validar"
+    de `prestacionValidacion` por `rup:validacion:<tipo>`. Eso materializó el riesgo de arriba:
+    médicos que validaban sus propias prestaciones sin `rup:validacion` dejaron de ver el
+    botón. Se revierte.
+  - **Decisión 2026-10-31:** el botón "Validar" se muestra como antes de la doble firma, y se
+    oculta **únicamente** a quien tiene `rup:prevalidacion:<tipo>` (residente). El backend
+    (`estadoPush` con `validada`) sigue sin exigir permiso alguno, y la validación de
+    internación (`listado-internacion`, flujo propio por egreso) queda **sin tocar**. El
+    enforcement real en la API sigue pendiente de relevamiento.
   - **UI excluyente:** el botón "Pre-validar" no se muestra a quien tiene `rup:validacion`
     (un médico de planta valida directo, no pre-valida), reforzando en la interfaz la
     convención de que ambos permisos son excluyentes.
@@ -228,3 +240,4 @@ Pendiente de definir:
 | 2026-10-19 | Implementación etapa 1. Pre-validar pasa a requerir el permiso explícito `rup:prevalidacion:<tipo>` (el que tendrán los residentes); rol sigue derivándose de permisos vía `deriveRolFirmante`. Se implementan `firmasPrevalidacion` (lista, `$push` atómico, tope 4, anti-duplicado), el estado `pendienteValidacion` (admite pre-firmar en `ejecucion` o `pendienteValidacion`) y el permiso en `permisos.ts`. `firmaValidacion` se difiere: la validación NO se modifica y el validador se deriva de `estadoActual.createdBy`. Enforcement de validación: solo UI ambulatoria (botón gateado por `rup:validacion`); internación sin tocar; backend sin exigir el permiso. |
 | 2026-10-21 | Ubicación: `docs/rup/`, con metadata (`tags`, `scope`) en front matter. Tope de firmas movido a `config.ts`. La API rechaza la pre-validación de usuarios con `rup:validacion`. Matrícula de la firma vía `searchMatriculas` (vigencia, posgrado, matrícula externa). `quitarPrevalidacion` rechaza quitar firmas ajenas sin permiso de validación. |
 | 2026-10-21 | Resuelto el punto abierto de `romperValidacion`: al volver a `ejecucion` se limpian las firmas de pre-validación (quedan en el historial). |
+| 2026-10-31 | Feedback de usuarios. (1) Se elimina la cola "Pendientes de validación" del punto de inicio: saturaba la pantalla junto con agendas y fuera de agenda. (2) Se elimina el estado `pendienteValidacion`: la pre-validación ya no cambia el estado, la prestación sigue en `ejecucion` y los listados muestran un badge con la cantidad de firmas; `quitarPrevalidacion` opera en `ejecucion` y no transiciona. (3) Se revierte el gate de "Validar" por `rup:validacion` (regresión: ocultaba el botón a médicos que validaban sin ese permiso); ahora solo se oculta a quien tiene `rup:prevalidacion`. |
