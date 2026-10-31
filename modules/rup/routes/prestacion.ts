@@ -23,6 +23,7 @@ import { Prestacion } from '../schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
 import { Agenda } from '../../turnos/schemas/agenda';
+import { generarPrecargaReceta } from '../../recetas/recetasController';
 
 const router = express.Router();
 
@@ -145,7 +146,8 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req: any, res, ne
                             fecha: prestacion.createdAt,
                             profesional: prestacion.createdBy,
                             conceptos: registros
-                        });
+                        }
+                        );
                     }
                 }
             });
@@ -804,6 +806,9 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 AppCache.clear(`huds-${data.paciente.id}`);
             }
             if (req.body.estado?.tipo === 'validada') {
+
+                // obtener todas las recetas que se generaron en la prestacion y crear las recetas auxiliares correspondientes
+                generarPrecargaReceta(prestacion, req as any);
                 EventCore.emitAsync('rup:prestacion:validate', data);
 
                 // buscarYCrearSolicitudes y saveTurnoProfesional se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
@@ -946,3 +951,5 @@ EventCore.on('rup:prestacion:romperValidacion', async (prestacion: IPrestacionDo
         }
     }
 });
+
+
