@@ -9,6 +9,7 @@ import { Prestacion, PrestacionHistorial } from '../../rup/schemas/prestacion';
 import { buscarEnHuds } from '../controllers/rup';
 import moment = require('moment');
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { Constantes } from '../../constantes/constantes.schema';
 
 
 /**
@@ -246,4 +247,36 @@ export async function vencimientoPrestacion(done) {
     } catch (error) {
         return error;
     }
+}
+
+function parsearDiasLimite(value): number | null {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+    const dias = Number(value);
+    return Number.isFinite(dias) && dias >= 0 ? dias : null;
+}
+
+export async function estaFueraDePlazoRomperValidacion(prestacion): Promise<boolean> {
+    const estadoValidada = prestacion?.estados?.find(estado => estado.tipo === 'validada');
+    if (!estadoValidada?.createdAt) {
+        return false;
+    }
+
+    const conceptId = prestacion?.solicitud?.tipoPrestacion?.conceptId;
+    const concepto: any = conceptId ? await tipoPrestacion.findOne({ conceptId }) : null;
+    const limiteConcepto = parsearDiasLimite(concepto?.tiempoLimiteRomperValidacion);
+
+    let limiteDias = limiteConcepto;
+    if (limiteDias === null) {
+        const constante: any = await Constantes.findOne({ source: 'prestacion:validacion' });
+        const limiteConstante = parsearDiasLimite(constante?.key) ?? parsearDiasLimite(constante?.nombre);
+        limiteDias = limiteConstante ?? 30;
+    }
+
+    if (limiteDias === 0) {
+        return true;
+    }
+
+    return moment().diff(moment(estadoValidada.createdAt), 'days') > limiteDias;
 }
