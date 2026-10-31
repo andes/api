@@ -178,7 +178,7 @@ export const PacienteSubSchema: mongoose.Schema = new mongoose.Schema({
 }, { _id: false });
 
 
-PacienteSchema.pre('save', function (next) {
+PacienteSchema.pre('save', async function (next) {
     const user: any = this;
     const words = [];
     if (user.isModified('nombre')) {
@@ -222,6 +222,13 @@ PacienteSchema.pre('save', function (next) {
         words.push(user.numeroIdentificacion.toLowerCase());
     }
     user.tokens = words.map(replaceChars);
+    // hack hasta que se actualice eventCore y poder popular y/o fhir
+    if (user.relaciones?.length) {
+        await user.populate({
+            path: 'relaciones.referencia',
+            select: 'nombre apellido documento numeroIdentificacion fechaNacimiento fechaFallecimiento activo'
+        }).execPopulate();
+    }
     next();
 
 });

@@ -11,6 +11,34 @@ const trasform = {
     fhir: Patient.encode
 };
 
+// hack momentaneo hasta corregir librería fhir
+async function normalizePatientEvent(event: string, body: any) {
+
+    if ((event === 'mpi:pacientes:create' || event === 'mpi:pacientes:update') && body.relaciones?.length) {
+        const plainBody = typeof body.toObject === 'function' ? body.toObject() : body;
+
+        plainBody.relaciones = await Promise.all(plainBody.relaciones.map(async (r: any) => {
+            const referencia = r.referencia || {};
+            const newRelacion: any = {
+                referencia: referencia._id || referencia,
+                nombre: referencia.nombre,
+                apellido: referencia.apellido,
+                documento: referencia.documento || null,
+                numeroIdentificacion: referencia.numeroIdentificacion,
+                fechaNacimiento: referencia.fechaNacimiento
+            };
+            return newRelacion;
+        }));
+        plainBody.genero = plainBody.sexo;
+
+        if (!plainBody.createdBy?.organizacion) {
+            plainBody.createdBy = { organizacion: { nombre: '', id: '', _id: '' } };
+        }
+        return plainBody;
+    }
+    return body;
+}
+
 
 EventCore.on(/.*/, async function (body) {
     const event = this.event;
@@ -21,12 +49,11 @@ EventCore.on(/.*/, async function (body) {
 
     subscriptions.forEach(async (sub: any) => {
 
-        body.relaciones = undefined; // Se elimina relaciones ya que los datos son referencias a ids de pacientes propios
         const valid = await verificarFiltros(sub, body);
         if (!valid) {
             return;
         }
-
+        body = await normalizePatientEvent(sub.event, body);
         const bodyTransform = trasform[sub.trasform] ? trasform[sub.trasform](body) : body;
 
         const data = {
