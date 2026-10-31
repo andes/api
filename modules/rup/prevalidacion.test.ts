@@ -48,15 +48,15 @@ describe('deriveRolFirmante', () => {
 });
 
 describe('admitePrevalidacion', () => {
-    it('admite ejecución y pendiente de validación', () => {
+    it('admite solo ejecución (la pre-validación no cambia el estado)', () => {
         expect(admitePrevalidacion('ejecucion')).toBe(true);
-        expect(admitePrevalidacion('pendienteValidacion')).toBe(true);
     });
 
     it('no admite otros estados', () => {
         expect(admitePrevalidacion('validada')).toBe(false);
         expect(admitePrevalidacion('pendiente')).toBe(false);
         expect(admitePrevalidacion('anulada')).toBe(false);
+        expect(admitePrevalidacion('pendienteValidacion')).toBe(false);
     });
 });
 

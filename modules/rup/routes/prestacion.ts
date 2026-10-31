@@ -28,7 +28,7 @@ import { Agenda } from '../../turnos/schemas/agenda';
 
 const router = express.Router();
 
-const ERROR_ESTADO_PREVALIDACION = 'Solo se puede pre-validar una prestación en ejecución o pendiente de validación.';
+const ERROR_ESTADO_PREVALIDACION = 'Solo se puede pre-validar una prestación en ejecución.';
 
 /**
  * Snapshot de matrículas para una firma de pre-validación. Reutiliza searchMatriculas
@@ -749,51 +749,42 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                     fecha: new Date()
                 };
                 const usuario = usuarioAuditoria(req);
-                const estadoPendiente = { tipo: 'pendienteValidacion', createdAt: new Date(), createdBy: usuario };
                 const historial = historialParaUpdateAtomico(data, usuario);
 
-                // Push atómico: tope de firmas (config) y anti-duplicado forzados en el filtro.
-                // Si está en 'ejecucion', además transiciona a 'pendienteValidacion' una sola vez.
-                // Reintenta si otro residente cambió el estado entre la lectura y la escritura
-                // (así ninguna firma se pierde por concurrencia).
-                let prestacionActualizada: any = null;
-                for (let intento = 0; intento < 3 && !prestacionActualizada; intento++) {
-                    const fresh: any = await Prestacion.findById(data._id, { estadoActual: 1, firmasPrevalidacion: 1 });
-                    if (!fresh) {
-                        return next(404);
-                    }
-                    const tipoActual = fresh.estadoActual.tipo;
-                    if (!admitePrevalidacion(tipoActual)) {
-                        return next(ERROR_ESTADO_PREVALIDACION);
-                    }
-                    const firmas = fresh.firmasPrevalidacion || [];
-                    if (firmas.some(f => String(f.profesional.id) === String(profesional.id))) {
-                        return next('Ya registró su pre-validación en esta prestación.');
-                    }
-                    if (firmas.length >= rupConfig.maxFirmasPrevalidacion) {
-                        return next(`Se alcanzó el máximo de firmas de pre-validación (${rupConfig.maxFirmasPrevalidacion}).`);
-                    }
-                    const filtro: any = {
+                // La pre-validación NO cambia el estado: la prestación sigue en ejecución y
+                // acumula firmas. Se lee fresco para dar un mensaje claro (duplicado / tope) y
+                // luego se hace un $push atómico con anti-duplicado y tope forzados en el filtro,
+                // así dos residentes firmando a la vez no pierden ninguna firma ni superan el tope.
+                const fresh: any = await Prestacion.findById(data._id, { estadoActual: 1, firmasPrevalidacion: 1 });
+                if (!fresh) {
+                    return next(404);
+                }
+                if (!admitePrevalidacion(fresh.estadoActual.tipo)) {
+                    return next(ERROR_ESTADO_PREVALIDACION);
+                }
+                const firmas = fresh.firmasPrevalidacion || [];
+                if (firmas.some(f => String(f.profesional.id) === String(profesional.id))) {
+                    return next('Ya registró su pre-validación en esta prestación.');
+                }
+                if (firmas.length >= rupConfig.maxFirmasPrevalidacion) {
+                    return next(`Se alcanzó el máximo de firmas de pre-validación (${rupConfig.maxFirmasPrevalidacion}).`);
+                }
+                const prestacionActualizada: any = await Prestacion.findOneAndUpdate(
+                    {
                         _id: data._id,
-                        'estadoActual.tipo': tipoActual,
+                        'estadoActual.tipo': 'ejecucion',
                         'firmasPrevalidacion.profesional.id': { $ne: profesional.id },
                         $expr: { $lt: [{ $size: { $ifNull: ['$firmasPrevalidacion', []] } }, rupConfig.maxFirmasPrevalidacion] }
-                    };
-                    const transiciona = tipoActual === 'ejecucion';
-                    const update: any = {
+                    },
+                    {
                         $push: {
                             firmasPrevalidacion: firma,
-                            ...(transiciona ? { estados: estadoPendiente } : {}),
                             ...(historial ? { 'solicitud.historial': historial } : {})
                         },
-                        $set: {
-                            updatedAt: new Date(),
-                            updatedBy: usuario,
-                            ...(transiciona ? { estadoActual: estadoPendiente } : {})
-                        }
-                    };
-                    prestacionActualizada = await Prestacion.findOneAndUpdate(filtro, update, { new: true });
-                }
+                        $set: { updatedAt: new Date(), updatedBy: usuario }
+                    },
+                    { new: true }
+                );
                 if (!prestacionActualizada) {
                     return next('No se pudo registrar la pre-validación, reintente.');
                 }
@@ -806,8 +797,8 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
             case 'quitarPrevalidacion': {
                 // Quita una firma de pre-validación del informe (p. ej. el residente se
                 // equivocó). Análogo a romperValidacion pero para la pre-firma. Ver ADR 0001.
-                if (data.estadoActual.tipo !== 'pendienteValidacion') {
-                    return next('Solo se puede quitar una pre-validación mientras la prestación está pendiente de validación.');
+                if (!admitePrevalidacion(data.estadoActual.tipo)) {
+                    return next('Solo se puede quitar una pre-validación mientras la prestación está en ejecución.');
                 }
                 const profesional = Auth.getProfesional(req);
                 const esValidador = Auth.check(req, 'rup:validacion:' + data.solicitud.tipoPrestacion.id);
@@ -822,9 +813,10 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 const usuario = usuarioAuditoria(req);
                 const historial = historialParaUpdateAtomico(data, usuario);
 
-                // $pull atómico, condicionado a que la firma siga existiendo.
-                let prestacionActualizada: any = await Prestacion.findOneAndUpdate(
-                    { _id: data._id, 'estadoActual.tipo': 'pendienteValidacion', 'firmasPrevalidacion.profesional.id': targetId },
+                // $pull atómico, condicionado a que la firma siga existiendo. El estado no cambia:
+                // la prestación sigue en ejecución con una firma menos.
+                const prestacionActualizada: any = await Prestacion.findOneAndUpdate(
+                    { _id: data._id, 'estadoActual.tipo': 'ejecucion', 'firmasPrevalidacion.profesional.id': targetId },
                     {
                         $pull: { firmasPrevalidacion: { 'profesional.id': Types.ObjectId(targetId) } },
                         $set: { updatedAt: new Date(), updatedBy: usuario },
@@ -834,16 +826,6 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 );
                 if (!prestacionActualizada) {
                     return next('No hay una pre-validación de ese profesional para quitar.');
-                }
-                // Si era la última firma, vuelve a ejecución. Se condiciona a que la lista siga
-                // vacía: si otro residente firmó en el medio, queda pendiente de validación.
-                if (!prestacionActualizada.firmasPrevalidacion.length) {
-                    const estadoEjecucion = { tipo: 'ejecucion', createdAt: new Date(), createdBy: usuario };
-                    prestacionActualizada = await Prestacion.findOneAndUpdate(
-                        { _id: data._id, 'estadoActual.tipo': 'pendienteValidacion', firmasPrevalidacion: { $size: 0 } },
-                        { $push: { estados: estadoEjecucion }, $set: { estadoActual: estadoEjecucion } },
-                        { new: true }
-                    ) || await Prestacion.findById(data._id);
                 }
                 EventCore.emitAsync('rup:prestacion:quitarPrevalidacion', prestacionActualizada);
                 if (prestacionActualizada.paciente) {

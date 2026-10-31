@@ -37,10 +37,11 @@ export function configPrevalidacion() {
 }
 
 /**
- * Estados en los que una prestación admite agregar una firma de pre-validación (ADR 0001).
+ * Estados en los que una prestación admite agregar o quitar una firma de pre-validación (ADR 0001).
+ * La pre-validación no cambia el estado: la prestación sigue en ejecución con N firmas.
  */
 export function admitePrevalidacion(tipoEstado: string): boolean {
-    return tipoEstado === 'ejecucion' || tipoEstado === 'pendienteValidacion';
+    return tipoEstado === 'ejecucion';
 }
 
 /**
@@ -130,7 +131,7 @@ export function updateRegistroHistorialSolicitud(solicitud, datos) {
         asignada: 'Profesional asignado',
         validada: 'Validada',
         prevalidacion: 'Pre-validada',
-        quitarPrevalidacion: 'Ejecutada',
+        quitarPrevalidacion: 'Pre-validación quitada',
         ejecucion: 'Ejecutada',
         romperValidacion: 'Ejecutada',
         anulada: 'Anulada',
