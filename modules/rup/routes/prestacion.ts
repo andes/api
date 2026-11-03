@@ -541,6 +541,10 @@ router.get('/prestaciones', async (req: any, res, next) => {
         query.sort({ 'ejecucion.fecha': -1 });
     }
 
+    if (req.query.skip) {
+        query.skip(parseInt(req.query.skip, 10));
+    }
+
     if (req.query.limit) {
         query.limit(parseInt(req.query.limit, 10));
     }
