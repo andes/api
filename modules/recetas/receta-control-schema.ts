@@ -2,28 +2,6 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { Schema, SchemaTypes, model } from 'mongoose';
 
 
-export const identificadorSubschema = new Schema({
-    _id: false,
-    nombre: {
-        type: String,
-        required: false
-    },
-    conceptId: {
-        type: String,
-        required: false
-    },
-    codigo: [{
-        _id: false,
-        fuente: {
-            type: String,
-            required: false
-        },
-        valor: {
-            type: String,
-            required: false
-        }
-    }]
-}, { _id: false });
 
 export const recetaControlSchema = new Schema({
     idPrestacion: {
@@ -47,10 +25,17 @@ export const recetaControlSchema = new Schema({
         type: String,
         required: false
     },
-    identificador: {
-        type: identificadorSubschema,
-        required: false
-    },
+    identificador: [{
+        _id: false,
+        fuente: {
+            type: String,
+            required: true
+        },
+        valor: {
+            type: String,
+            required: true
+        }
+    }],
     tratamientoProlongado: {
         type: Boolean,
         default: false,
@@ -74,18 +59,13 @@ export const recetaControlSchema = new Schema({
     },
     recetas: [{
         _id: false,
-        receta_id: {
+        id: {
             type: SchemaTypes.ObjectId,
             required: false
         },
         ordenTratamiento: {
             type: Number,
             required: true
-        },
-        origen: {
-            type: String,
-            enum: ['andes', 'recetar'],
-            required: false
         },
         fecha: {
             type: Date,
@@ -104,11 +84,8 @@ export const recetaControlSchema = new Schema({
 
 recetaControlSchema.plugin(AuditPlugin);
 
-recetaControlSchema.index({ idPrestacion: 1, idRegistro: 1 });
+recetaControlSchema.index({ idPrestacion: 1, idRegistro: 1, 'identificador.valor': 1, 'identificador.fuente': 1 });
 recetaControlSchema.index({ idPaciente: 1 });
-recetaControlSchema.index({ estado: 1, createdAt: 1 });
-recetaControlSchema.index({ 'identificador.conceptId': 1 });
-recetaControlSchema.index({ 'identificador.codigo.valor': 1 });
 
 export const RecetaControl = model('recetaControl', recetaControlSchema, 'recetaControl');
 

@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { RecetaInsumo } from './receta-insumo.schema';
 import { RecetaControl } from '../receta-control-schema';
-import { resolverIdentificador } from '../recetas.helpers';
+import { getDatosPrescripcion } from '../recetas.helpers';
 import { createLog, informarLog, updateLog } from '../recetaLogs';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from '../recetas.error';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
@@ -184,94 +184,7 @@ export async function create(req) {
             };
         }
         const recetasCreadas: any = await crearRecetaInsumo(dataRecetaInsumo, req);
-        if (Array.isArray(recetasCreadas) && recetasCreadas.length > 0) {
-            try {
-                const insumo = dataRecetaInsumo.insumo;
-                const tipoInsumo = insumo.generico?.tipo || insumo.tipo;
-                const tipo = (tipoInsumo === 'magistral') ? 'magistral' : (tipoInsumo || 'dispositivo');
-                const identificador = resolverIdentificador(insumo, tipo);
-                const nombre = identificador?.nombre;
 
-                const queryControl: any = {
-                    idPrestacion: dataRecetaInsumo.idPrestacion,
-                    idRegistro: dataRecetaInsumo.idRegistro,
-                    tipo
-                };
-                const orConditions: any[] = [];
-                if (identificador?.conceptId) {
-                    orConditions.push({ 'identificador.conceptId': identificador.conceptId });
-                }
-                if (identificador?.codigo?.length) {
-                    orConditions.push({ 'identificador.codigo.valor': { $in: identificador.codigo.map((c: any) => c.valor) } });
-                }
-                if (nombre) {
-                    orConditions.push({ nombre });
-                    orConditions.push({ 'identificador.nombre': nombre });
-                }
-                if (orConditions.length > 0) {
-                    queryControl.$or = orConditions;
-                }
-
-                let control: any = await RecetaControl.findOne(queryControl);
-                if (!control) {
-                    const tratamientoProlongado = !!(insumo.tratamientoProlongado && insumo.tiempoTratamiento && insumo.tiempoTratamiento.id !== null);
-                    const cantRecetas = tratamientoProlongado ? parseInt(insumo.tiempoTratamiento.id, 10) : 1;
-                    control = new RecetaControl({
-                        idPrestacion: dataRecetaInsumo.idPrestacion,
-                        idRegistro: dataRecetaInsumo.idRegistro,
-                        idPaciente: dataRecetaInsumo.paciente?.id || dataRecetaInsumo.paciente?._id,
-                        tipo,
-                        nombre,
-                        identificador,
-                        tratamientoProlongado,
-                        cantTotalRecetas: cantRecetas,
-                        intento: 0,
-                        estado: 'pendiente',
-                        recetas: []
-                    });
-                }
-
-                if (!Array.isArray(control.recetas)) {
-                    control.recetas = [];
-                }
-
-                for (const r of recetasCreadas) {
-                    const orden = r.insumo?.ordenTratamiento ?? 0;
-                    const indexExistente = control.recetas.findIndex((item: any) => {
-                        const id = item.receta_id || item.idReceta;
-                        return (id && (String(id) === String(r._id) || String(id) === String(r.idReceta))) || item.ordenTratamiento === orden;
-                    });
-                    const itemReceta = {
-                        receta_id: r._id || r.id,
-                        ordenTratamiento: orden,
-                        origen: 'recetar',
-                        fecha: r.createdAt || new Date()
-                    };
-                    if (indexExistente >= 0) {
-                        control.recetas[indexExistente] = { ...control.recetas[indexExistente], ...itemReceta };
-                    } else {
-                        control.recetas.push(itemReceta);
-                    }
-                }
-
-                if (control.estado !== 'suspendido') {
-                    if (control.recetas.length >= control.cantTotalRecetas) {
-                        control.estado = 'completo';
-                    } else {
-                        control.estado = 'incompleto';
-                    }
-                }
-
-                if (req.user) {
-                    Auth.audit(control, req as any);
-                } else if (typeof (control as any).audit === 'function') {
-                    (control as any).audit(req);
-                }
-                await control.save();
-            } catch (errControl) {
-                createLog.error('create:recetaControl', { dataRecetaInsumo }, errControl, req);
-            }
-        }
         return recetasCreadas;
     } catch (err) {
         createLog.error('create', { dataRecetaInsumo, pacienteRecetar, profRecetar }, err, req);
@@ -447,33 +360,15 @@ export async function suspender(recetaInsumoId, req) {
             const rec = recSusp.concat(await Promise.all(await recetasInsumoUpdate(recetasEliminar, 'eliminada', motivo, observacion, profesional, req)));
 
             try {
-                const tipoInsumo = recetaInsumo.insumo?.esMagistral ? 'magistral' : (recetaInsumo.insumo?.tipo || 'dispositivo');
-                const identificador = resolverIdentificador(recetaInsumo.insumo, tipoInsumo);
-                const nombre = identificador?.nombre;
 
+                const { tipo, identificador, nombre } = getDatosPrescripcion(recetaInsumo.insumo);
                 const queryControl: any = {
                     idPrestacion: recetaInsumo.idPrestacion,
                     idRegistro: recetaInsumo.idRegistro,
-                    tipo: tipoInsumo
+                    identificador: { $in: identificador },
+                    estado: { $in: ['pendiente', 'incompleto'] },
+                    tipo
                 };
-                const orConditions: any[] = [];
-                if (recetaInsumo._id) {
-                    orConditions.push({ 'recetas.receta_id': recetaInsumo._id });
-                }
-                if (identificador?.conceptId) {
-                    orConditions.push({ 'identificador.conceptId': identificador.conceptId });
-                }
-                if (identificador?.codigo?.length) {
-                    orConditions.push({ 'identificador.codigo.valor': { $in: identificador.codigo.map((c: any) => c.valor) } });
-                }
-                if (nombre) {
-                    orConditions.push({ nombre });
-                    orConditions.push({ 'identificador.nombre': nombre });
-                }
-                if (orConditions.length > 0) {
-                    queryControl.$or = orConditions;
-                }
-
                 await RecetaControl.updateMany(
                     queryControl,
                     { $set: { estado: 'suspendido' } }
@@ -486,7 +381,7 @@ export async function suspender(recetaInsumoId, req) {
         }
         return recetasASuspender;
     } catch (error) {
-        await updateLog.error('suspender', { motivo, observacion, profesional, recetaInsumoId }, error);
+        updateLog.error('suspender', { motivo, observacion, profesional, recetaInsumoId }, error);
         return error;
     }
 }

@@ -3,69 +3,30 @@ export interface CodigoPrescripcion {
     valor: string;
 }
 
-export interface IdentificadorPrescripcion {
-    nombre: string;
-    conceptId: string;
-    codigo: CodigoPrescripcion[];
-}
 
-/**
- * Resuelve y normaliza la identificación de una prescripción (medicamento, magistral, insumo, dispositivo, nutrición).
- * Extrae nombre descriptivo, conceptId de SNOMED/ANDES y códigos externos/magistrales.
- */
-export function resolverIdentificador(prescripcion: any, tipo?: string): IdentificadorPrescripcion {
-    if (!prescripcion) {
-        return null;
-    }
-    const esMagistral = tipo === 'magistral' || !!prescripcion.esMagistral;
-    const esMedicamento = tipo === 'medicamento';
+export function getDatosPrescripcion(prescripcion) {
+    let tipo: string, nombre: string, identificador: CodigoPrescripcion[];
 
-    // 1. Nombre
-    const nombre = esMagistral
-        ? (prescripcion.magistral?.nombre || prescripcion.concepto?.nombre || prescripcion.concepto?.term || prescripcion.nombre)
-        : (esMedicamento
-            ? (prescripcion.concepto?.term || prescripcion.generico?.term || prescripcion.nombre)
-            : (prescripcion.generico?.nombre || prescripcion.nombre));
+    if (prescripcion.esMagistral) {
+        tipo = 'magistral';
+        identificador = prescripcion.magistral.codigo;
+        nombre = prescripcion.magistral.nombre;
 
-    // 2. conceptId de ANDES (si es de SNOMED o concepto ANDES)
-    const conceptId = prescripcion.concepto?.conceptId
-        || prescripcion.generico?.conceptId
-        || (prescripcion.concepto?._id ? String(prescripcion.concepto._id) : null);
+    } else {
+        const esInsumo = ['dispositivo', 'nutricion'].includes(prescripcion.generico?.tipo) || ['dispositivo', 'nutricion'].includes(prescripcion.tipo);
+        if (esInsumo) {
+            tipo = prescripcion.generico?.tipo || prescripcion.tipo;
+            identificador = prescripcion.generico.codigo || prescripcion.codigo; // creo que prescripcion.codigo no hace falta, sacar despues de pruebas
+            nombre = prescripcion.generico.nombre || prescripcion.nombre;
 
-    // 3. Códigos (magistrales, insumos con [{ fuente, valor }], o código alfanumérico externo)
-    let codigosRaw = prescripcion.magistral?.codigo
-        || prescripcion.concepto?.codigo
-        || prescripcion.generico?.codigo
-        || prescripcion.codigo
-        || prescripcion.insumo?.codigo
-        || [];
-
-    if (!Array.isArray(codigosRaw)) {
-        if (codigosRaw && typeof codigosRaw === 'object' && (codigosRaw.fuente || codigosRaw.valor)) {
-            codigosRaw = [codigosRaw];
-        } else if (typeof codigosRaw === 'string' && codigosRaw.trim()) {
-            codigosRaw = [{ fuente: prescripcion.fuente || 'externo', valor: codigosRaw.trim() }];
         } else {
-            codigosRaw = [];
+            tipo = 'medicamento';
+            identificador = [{ valor: prescripcion.generico.conceptId || prescripcion.concepto?.conceptId, fuente: 'SNOMED' }];
+            nombre = prescripcion.generico?.term || prescripcion.concepto?.term;
+
         }
     }
-
-    const codigo: CodigoPrescripcion[] = codigosRaw.map((c: any) => ({
-        fuente: c.fuente || 'externo',
-        valor: c.valor || c.codigo || (typeof c === 'string' ? c : '')
-    })).filter((c: any) => c.valor);
-
-    // Si viene código externo en prescripcion.origenExterno y no está en codigo
-    if (prescripcion.origenExterno?.id && !codigo.some((c: any) => c.valor === prescripcion.origenExterno.id)) {
-        codigo.push({
-            fuente: prescripcion.origenExterno.app || 'recetar',
-            valor: String(prescripcion.origenExterno.id)
-        });
-    }
-
-    return {
-        nombre,
-        conceptId,
-        codigo
-    };
+    // se eliminan ids de algunos codigos
+    identificador = identificador.map(i => ({ valor: i.valor, fuente: i.fuente }));
+    return { tipo, nombre, identificador };
 }

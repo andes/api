@@ -808,7 +808,7 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
             if (req.body.estado?.tipo === 'validada') {
 
                 // obtener todas las recetas que se generaron en la prestacion y crear las recetas auxiliares correspondientes
-                generarPrecargaReceta(prestacion, req as any);
+                generarPrecargaReceta(prestacion, prestacion.getRegistros(), req);
                 EventCore.emitAsync('rup:prestacion:validate', data);
 
                 // buscarYCrearSolicitudes y saveTurnoProfesional se hace acá para obtener datos del REQ a futuro se debería asociar al EventCore
