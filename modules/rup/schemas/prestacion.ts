@@ -8,10 +8,6 @@ import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.histo
 import { SemanticTag } from './semantic-tag';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
 
-import { CONDICIONES_PACIENTE } from '../condicion-paciente';
-
-export { CONDICIONES_PACIENTE };
-
 export const PrestacionSchema = new Schema({
     /**
      * ID de un EVENTO externo (internacion, guardia, embarazo) para agrupar un conjunto de prestaciones referidas a ese evento
@@ -22,12 +18,6 @@ export const PrestacionSchema = new Schema({
      * Clave para agrupar varias prestaciones como un único suceso
      */
     groupId: { required: false, type: Schema.Types.ObjectId },
-
-    condicionPaciente: {
-        type: String,
-        enum: CONDICIONES_PACIENTE,
-        required: false
-    },
 
     inicio: {
         type: String,
@@ -65,7 +55,7 @@ export const PrestacionSchema = new Schema({
             required: true
         },
 
-        // Ambito de la prestacion: ambulatorio, internacion, emergencia, etc.
+        // Ambito de la prestacion: ambulatorio, internacion o guardia
         ambitoOrigen: {
             type: String,
             required: false,

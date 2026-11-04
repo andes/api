@@ -20,7 +20,7 @@ import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
-import { condicionPacienteValida } from '../condicion-paciente';
+import { ambitoOrigenValido } from '../ambito-origen';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
 import { Agenda } from '../../turnos/schemas/agenda';
@@ -592,8 +592,8 @@ router.get('/prestaciones', async (req: any, res, next) => {
 router.post('/prestaciones', async (req, res, next) => {
     try {
         const dto = parseDate(JSON.stringify(req.body));
-        if (dto.condicionPaciente !== undefined && !condicionPacienteValida(dto.condicionPaciente)) {
-            return next('Condición del paciente inválida');
+        if (dto.solicitud?.ambitoOrigen !== undefined && !ambitoOrigenValido(dto.solicitud.ambitoOrigen)) {
+            return next('Ámbito de origen inválido');
         }
 
         if (dto.inicio === 'top') {
@@ -642,14 +642,17 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
                 break;
             case 'estadoPush':
-                if (req.body.condicionPaciente !== undefined) {
+                if (req.body.ambitoOrigen !== undefined) {
                     if (data.estadoActual.tipo === 'validada') {
                         return next('Prestación validada, no se puede modificar.');
                     }
-                    if (!condicionPacienteValida(req.body.condicionPaciente)) {
-                        return next('Condición del paciente inválida');
+                    if (data.trackId) {
+                        return next('No se puede modificar el ámbito de una prestación asociada a un evento.');
                     }
-                    data.condicionPaciente = req.body.condicionPaciente;
+                    if (!ambitoOrigenValido(req.body.ambitoOrigen)) {
+                        return next('Ámbito de origen inválido');
+                    }
+                    data.solicitud.ambitoOrigen = req.body.ambitoOrigen;
                 }
                 if (req.body.estado) {
                     // SI LA SOLICITUD FUE ANULADA NO SE PUEDE REALIZAR OTRA OPERACION
