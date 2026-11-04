@@ -3,7 +3,7 @@ import * as cie10 from '../../../core/term/schemas/cie10';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
-import { CONDICIONES_PACIENTE } from '../../rup/condicion-paciente';
+import { AMBITOS_ORIGEN } from '../../rup/ambito-origen';
 
 const turnoSchema = new mongoose.Schema({
     horaInicio: Date,
@@ -65,9 +65,9 @@ const turnoSchema = new mongoose.Schema({
     emitidoPor: String, // Agregamos para identificar desde donde se emitio el turno. Ej: appmobile.
     paciente: PacienteSubSchema,
     motivoConsulta: String,
-    condicionPaciente: {
+    ambitoOrigen: {
         type: String,
-        enum: [...CONDICIONES_PACIENTE, null],
+        enum: [...AMBITOS_ORIGEN, null],
         required: false
     },
     tipoPrestacion: {
