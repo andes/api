@@ -4,6 +4,7 @@ import { Profesional } from '../core/tm/schemas/profesional';
 import { Receta } from '../modules/recetas/receta-schema';
 import { RecetaInsumo } from '../modules/recetas/recetasInsumos/receta-insumo.schema';
 import { RecetaControl } from '../modules/recetas/receta-control-schema';
+import { getDatosPrescripcion, matchIdentificador, buildCodigoQuery } from '../modules/recetas/recetas.helpers';
 import { crearReceta, getProfesionActualizada } from '../modules/recetas/recetasController';
 import { crearRecetaInsumo } from '../modules/recetas/recetasInsumos/recetaInsumosController';
 import { generarCUIL } from '../core-v2/mpi/validacion/validacion.controller';
@@ -150,26 +151,15 @@ async function procesarMedicamento(control: any) {
 
     const medicamentos = registro.valor?.medicamentos || [];
     const esMagistral = control.tipo === 'magistral';
-    const conceptIdControl = control.identificador?.conceptId;
-    const codigosControl = (control.identificador?.codigo || []).map((c: any) => c.valor);
 
     // Buscamos el medicamento correspondiente a este control
     const medicamento = medicamentos.find((m: any) => {
-        if (esMagistral) {
-            const codigosM = (m.magistral?.codigo || m.concepto?.codigo || []).map((c: any) => c.valor);
-            const matchCodigo = codigosM.some((c: string) => codigosControl.includes(c));
-            return m.esMagistral && (
-                matchCodigo ||
-                (conceptIdControl && (m.concepto?.conceptId === conceptIdControl || String(m.concepto?._id) === conceptIdControl)) ||
-                m.magistral?.nombre === control.nombre ||
-                m.concepto?.nombre === control.nombre
-            );
+        if (Boolean(m.esMagistral) !== esMagistral) {
+            return false;
         }
-        const cId = m.concepto?.conceptId || m.generico?.conceptId;
-        return (conceptIdControl && cId === conceptIdControl)
-            || m.concepto?.term === control.nombre
-            || m.generico?.term === control.nombre;
-    }) || medicamentos[0]; // fallback al primero si no hubo match estricto
+        const datosM = getDatosPrescripcion(m);
+        return matchIdentificador(control.identificador, datosM.identificador) || (datosM.nombre && datosM.nombre === control.nombre);
+    });
 
     if (!medicamento) {
         throw new Error(`No se encontró el medicamento en el registro ${control.idRegistro}`);
@@ -193,7 +183,12 @@ async function procesarMedicamento(control: any) {
         idRegistro: control.idRegistro
     };
     if (esMagistral) {
-        queryRecetasDb['medicamento.magistral.nombre'] = medicamento.magistral?.nombre || control.nombre;
+        const queryCodigo = buildCodigoQuery(control.identificador?.length ? control.identificador : medicamento.magistral?.codigo);
+        if (queryCodigo) {
+            queryRecetasDb['medicamento.magistral.codigo'] = queryCodigo;
+        } else {
+            queryRecetasDb['medicamento.magistral.nombre'] = medicamento.magistral?.nombre || control.nombre;
+        }
     } else if (medicamento.concepto?.conceptId || medicamento.generico?.conceptId) {
         queryRecetasDb['medicamento.concepto.conceptId'] = medicamento.concepto?.conceptId || medicamento.generico?.conceptId;
     }
@@ -206,27 +201,25 @@ async function procesarMedicamento(control: any) {
 
     for (const r of recetasEnDb) {
         const orden = r.medicamento?.ordenTratamiento ?? 0;
+        const rId = r._id || r.id;
         const indexExistente = control.recetas.findIndex((item: any) => {
-            const id = item.receta_id || item.idReceta;
-            return (id && (String(id) === String(r._id) || String(id) === String(r.idReceta))) || item.ordenTratamiento === orden;
+            const id = item.id || item.receta_id || item.idReceta;
+            return (id && String(id) === String(rId)) || item.ordenTratamiento === orden;
         });
-        const esRecetar = Boolean(r.origenExterno?.id || r.origenExterno?.app === 'recetar');
-        const origenReceta = esRecetar ? 'recetar' : 'andes';
         const itemReceta = {
-            receta_id: r._id || r.id,
+            id: rId,
             ordenTratamiento: orden,
-            origen: (indexExistente >= 0 && control.recetas[indexExistente].origen === 'recetar') ? 'recetar' : origenReceta,
             fecha: r.createdAt || new Date()
         };
         if (indexExistente >= 0) {
-            control.recetas[indexExistente] = { ...control.recetas[indexExistente], ...itemReceta };
+            control.recetas[indexExistente] = itemReceta;
         } else {
             control.recetas.push(itemReceta);
         }
     }
 }
 
-/** Procesa control de insumos (dispositivo, nutrición, etc.) */
+/** Procesa control de insumos (dispositivo, nutrición) */
 async function procesarInsumo(control: any) {
     const { prestacion, registro, organizacion } = await reconstruirContexto(control);
     const profesional = await resolverProfesionalInsumo(prestacion);
@@ -247,18 +240,11 @@ async function procesarInsumo(control: any) {
     };
 
     const insumos = registro.valor?.insumos || [];
-    const codigosControl = (control.identificador?.codigo || []).map((c: any) => c.valor);
-    const conceptIdControl = control.identificador?.conceptId;
 
     const insumo = insumos.find((ins: any) => {
-        const codigosIns = (ins.generico?.codigo || ins.codigo || []).map((c: any) => c.valor);
-        const matchCodigo = codigosIns.some((c: string) => codigosControl.includes(c));
-        const insId = ins.generico?.id || ins.id;
-        return matchCodigo
-            || (conceptIdControl && (insId === conceptIdControl || ins.generico?.conceptId === conceptIdControl))
-            || ins.generico?.nombre === control.nombre
-            || ins.nombre === control.nombre;
-    }) || insumos[0];
+        const datosIns = getDatosPrescripcion(ins);
+        return matchIdentificador(control.identificador, datosIns.identificador) || (datosIns.nombre && datosIns.nombre === control.nombre);
+    });
 
     if (!insumo) {
         throw new Error(`No se encontró el insumo en el registro ${control.idRegistro}`);
@@ -275,11 +261,15 @@ async function procesarInsumo(control: any) {
     }
 
     const insumoId = insumo.generico?.id || insumo.id;
+    const codigosInsumo = control.identificador?.length ? control.identificador : (insumo.generico?.codigo || insumo.codigo || []);
     const queryInsumosDb: any = {
         idPrestacion: prestacion.id,
         idRegistro: control.idRegistro
     };
-    if (insumoId) {
+    const queryCodigo = buildCodigoQuery(codigosInsumo);
+    if (queryCodigo) {
+        queryInsumosDb['insumo.codigo'] = queryCodigo;
+    } else if (insumoId) {
         queryInsumosDb['insumo.id'] = insumoId;
     }
 
@@ -291,20 +281,18 @@ async function procesarInsumo(control: any) {
 
     for (const r of recetasEnDb) {
         const orden = r.insumo?.ordenTratamiento ?? 0;
+        const rId = r._id || r.id;
         const indexExistente = control.recetas.findIndex((item: any) => {
-            const id = item.receta_id || item.idReceta;
-            return (id && (String(id) === String(r._id) || String(id) === String(r.idReceta))) || item.ordenTratamiento === orden;
+            const id = item.id || item.receta_id || item.idReceta;
+            return (id && String(id) === String(rId)) || item.ordenTratamiento === orden;
         });
-        const esRecetar = Boolean(r.origenExterno?.id || r.origenExterno?.app === 'recetar');
-        const origenReceta = esRecetar ? 'recetar' : 'andes';
         const itemReceta = {
-            receta_id: r._id || r.id,
+            id: rId,
             ordenTratamiento: orden,
-            origen: (indexExistente >= 0 && control.recetas[indexExistente].origen === 'recetar') ? 'recetar' : origenReceta,
             fecha: r.createdAt || new Date()
         };
         if (indexExistente >= 0) {
-            control.recetas[indexExistente] = { ...control.recetas[indexExistente], ...itemReceta };
+            control.recetas[indexExistente] = itemReceta;
         } else {
             control.recetas.push(itemReceta);
         }
@@ -314,13 +302,10 @@ async function procesarInsumo(control: any) {
 async function procesarControl(control: any) {
     switch (control.tipo) {
         case 'medicamento':
-            return procesarMedicamento(control);
         case 'magistral':
-            // Puede provenir de medicamentos o de insumos
             return procesarMedicamento(control);
         case 'dispositivo':
         case 'nutricion':
-        case 'insumos':
             return procesarInsumo(control);
         default:
             throw new Error(`Tipo de control '${control.tipo}' no reconocido`);
@@ -387,7 +372,7 @@ async function generarRecetasFaltantes(params: ParamsJob | any, done?: any) {
         completas: 0,
         incompletas: 0,
         errores: 0,
-        porTipo: { medicamento: 0, magistral: 0, dispositivo: 0, nutricion: 0, insumos: 0 }
+        porTipo: { medicamento: 0, magistral: 0, dispositivo: 0, nutricion: 0 }
     };
 
     try {

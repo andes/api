@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { RecetaInsumo } from './receta-insumo.schema';
 import { RecetaControl } from '../receta-control-schema';
-import { getDatosPrescripcion } from '../recetas.helpers';
+import { getDatosPrescripcion, buildCodigoQuery } from '../recetas.helpers';
 import { createLog, informarLog, updateLog } from '../recetaLogs';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from '../recetas.error';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
@@ -121,7 +121,8 @@ export async function create(req) {
     try {
         dataRecetaInsumo.fechaRegistro = dataRecetaInsumo.fechaRegistro ? moment(dataRecetaInsumo.fechaRegistro).toDate() : moment().toDate();
         dataRecetaInsumo.fechaPrestacion = dataRecetaInsumo.fechaPrestacion ? dataRecetaInsumo.fechaPrestacion : dataRecetaInsumo.fechaRegistro;
-        const insumoIncompleto = !req.body.insumo || (!req.body.insumo.concepto?.conceptId && !req.body.insumo.generico?.id);
+        const codigosInsumo = req.body.insumo?.generico?.codigo || req.body.insumo?.codigo || [];
+        const insumoIncompleto = !req.body.insumo || (!req.body.insumo.concepto?.conceptId && !req.body.insumo.generico?.id && !req.body.insumo.id && !codigosInsumo.length);
         dataRecetaInsumo.origenExterno = {
             id: req.body.origenExterno?.id || '',
             app: req.user.app?.nombre.toLowerCase() || '',
@@ -133,9 +134,14 @@ export async function create(req) {
             const query: any = {
                 idRegistro: dataRecetaInsumo.idRegistro
             };
-            if (dataRecetaInsumo.insumo.generico) {
-                query['insumo.nombre'] = dataRecetaInsumo.insumo.generico.nombre;
-            } else {
+            const queryCodigo = buildCodigoQuery(codigosInsumo);
+            if (queryCodigo) {
+                query['insumo.codigo'] = queryCodigo;
+            } else if (dataRecetaInsumo.insumo.generico?.id || dataRecetaInsumo.insumo.id) {
+                query['insumo.id'] = dataRecetaInsumo.insumo.generico?.id || dataRecetaInsumo.insumo.id;
+            } else if (dataRecetaInsumo.insumo.generico?.nombre || dataRecetaInsumo.insumo.nombre) {
+                query['insumo.nombre'] = dataRecetaInsumo.insumo.generico?.nombre || dataRecetaInsumo.insumo.nombre;
+            } else if (dataRecetaInsumo.insumo.concepto?.conceptId) {
                 query['insumo.concepto.conceptId'] = dataRecetaInsumo.insumo.concepto.conceptId;
             }
             const recetaInsumo = await RecetaInsumo.findOne(query);
@@ -201,12 +207,16 @@ export async function crearRecetaInsumo(dataRecetaInsumo, req) {
     for (let i = 0; i < cantRecetas; i++) {
         try {
             const insumoId = insumo.generico?.id || insumo.id;
+            const codigosInsumo = insumo.generico?.codigo || insumo.codigo || [];
             const queryExistente: any = {
                 idPrestacion: dataRecetaInsumo.idPrestacion,
                 idRegistro: dataRecetaInsumo.idRegistro,
                 'insumo.ordenTratamiento': i
             };
-            if (insumoId) {
+            const queryCodigo = buildCodigoQuery(codigosInsumo);
+            if (queryCodigo) {
+                queryExistente['insumo.codigo'] = queryCodigo;
+            } else if (insumoId) {
                 queryExistente['insumo.id'] = insumoId;
             }
 
@@ -337,10 +347,13 @@ export async function suspender(recetaInsumoId, req) {
             idRegistro: recetaInsumo.idRegistro,
             'estadoActual.tipo': { $nin: ['vencida', 'finalizada'] }
         };
-        if (recetaInsumo.insumo?.concepto?.conceptId) {
-            query['insumo.concepto.conceptId'] = recetaInsumo.insumo.concepto.conceptId;
+        const queryCodigo = buildCodigoQuery(recetaInsumo.insumo?.codigo);
+        if (queryCodigo) {
+            query['insumo.codigo'] = queryCodigo;
         } else if (recetaInsumo.insumo?.id) {
             query['insumo.id'] = recetaInsumo.insumo.id;
+        } else if (recetaInsumo.insumo?.concepto?.conceptId) {
+            query['insumo.concepto.conceptId'] = recetaInsumo.insumo.concepto.conceptId;
         } else if (recetaInsumo.insumo?.nombre) {
             query['insumo.nombre'] = recetaInsumo.insumo.nombre;
         }

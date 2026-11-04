@@ -11,7 +11,7 @@ import { Paciente } from '../../core-v2/mpi/paciente/paciente.schema';
 import { Profesional } from '../../core/tm/schemas/profesional';
 import { Counter } from './counter.model';
 import { RecetaControl } from './receta-control-schema';
-import { getDatosPrescripcion } from './recetas.helpers';
+import { getDatosPrescripcion, buildCodigoQuery } from './recetas.helpers';
 
 const pad = (num: number, size: number) => num.toString().padStart(size, '0');
 
@@ -400,7 +400,12 @@ export async function suspender(recetaId, req) {
             'estadoActual.tipo': { $nin: ['vencida', 'finalizada'] }
         };
         if (recetaR?.medicamento?.esMagistral) {
-            queryASuspender['medicamento.magistral.nombre'] = recetaR.medicamento.magistral?.nombre;
+            const queryCodigo = buildCodigoQuery(recetaR.medicamento.magistral?.codigo);
+            if (queryCodigo) {
+                queryASuspender['medicamento.magistral.codigo'] = queryCodigo;
+            } else {
+                queryASuspender['medicamento.magistral.nombre'] = recetaR.medicamento.magistral?.nombre;
+            }
         } else if (recetaR?.medicamento?.concepto?.conceptId) {
             queryASuspender['medicamento.concepto.conceptId'] = recetaR.medicamento.concepto.conceptId;
         }
@@ -731,7 +736,12 @@ export async function create(req) {
         } else {
             const queryExistente: any = { idRegistro: dataReceta.idRegistro };
             if (isMagistral) {
-                queryExistente['medicamento.magistral.nombre'] = dataReceta.medicamento.magistral?.nombre;
+                const queryCodigo = buildCodigoQuery(dataReceta.medicamento.magistral?.codigo);
+                if (queryCodigo) {
+                    queryExistente['medicamento.magistral.codigo'] = queryCodigo;
+                } else {
+                    queryExistente['medicamento.magistral.nombre'] = dataReceta.medicamento.magistral?.nombre;
+                }
             } else {
                 queryExistente['medicamento.concepto.conceptId'] = dataReceta.medicamento.concepto.conceptId;
             }
@@ -803,6 +813,29 @@ export async function crearReceta(dataReceta, req) {
     for (let i = 0; i < cantRecetas; i++) {
         try {
             const esMagistral = !!medicamento.esMagistral;
+            const queryExistente: any = {
+                idPrestacion: dataReceta.idPrestacion,
+                idRegistro: dataReceta.idRegistro,
+                'medicamento.ordenTratamiento': i
+            };
+            if (esMagistral) {
+                const queryCodigo = buildCodigoQuery(medicamento.magistral?.codigo);
+                if (queryCodigo) {
+                    queryExistente['medicamento.magistral.codigo'] = queryCodigo;
+                } else {
+                    queryExistente['medicamento.magistral.nombre'] = medicamento.magistral?.nombre;
+                }
+            } else {
+                queryExistente['medicamento.concepto.conceptId'] = (medicamento.concepto || medicamento.generico)?.conceptId;
+            }
+
+            const yaExiste = await Receta.findOne(queryExistente);
+            if (yaExiste) {
+                recetas.push(yaExiste);
+                continue;
+            }
+
+            receta = new Receta();
             receta.idPrestacion = dataReceta.idPrestacion;
             receta.idRegistro = dataReceta.idRegistro;
             const diag = medicamento.diagnostico;

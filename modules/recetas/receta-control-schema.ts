@@ -2,7 +2,6 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { Schema, SchemaTypes, model } from 'mongoose';
 
 
-
 export const recetaControlSchema = new Schema({
     idPrestacion: {
         type: SchemaTypes.ObjectId,
@@ -88,5 +87,3 @@ recetaControlSchema.index({ idPrestacion: 1, idRegistro: 1, 'identificador.valor
 recetaControlSchema.index({ idPaciente: 1 });
 
 export const RecetaControl = model('recetaControl', recetaControlSchema, 'recetaControl');
-
-

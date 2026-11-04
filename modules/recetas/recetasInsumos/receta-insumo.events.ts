@@ -2,7 +2,6 @@ import { EventCore } from '@andes/event-bus';
 import { crearRecetaInsumo } from '../../recetas/recetasInsumos/recetaInsumosController';
 import { getProfesionActualizada } from '../../recetas/recetasController';
 import * as moment from 'moment';
-import { RecetaInsumo } from './receta-insumo.schema';
 import { RecetaControl } from '../../recetas/receta-control-schema';
 import { getDatosPrescripcion } from '../../recetas/recetas.helpers';
 import { createLog } from './../recetaLogs';
@@ -48,17 +47,14 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
 
         for (const insumo of registro.valor.insumos) {
             const insumoId = insumo.generico?.id || insumo.id;
-            if (!insumoId) {
+            const { tipo, identificador } = getDatosPrescripcion(insumo);
+            if (!insumoId && !identificador?.length) {
                 continue;
             }
 
             dataReceta.insumo = insumo;
-            const recetasEnDb = await crearRecetaInsumo(dataReceta, prestacion.createdBy);
+            const recetasEnDb: any = await crearRecetaInsumo(dataReceta, prestacion.createdBy);
 
-            const tratamientoProlongado = !!(insumo.tratamientoProlongado && insumo.tiempoTratamiento && insumo.tiempoTratamiento.id !== null);
-            const cantRecetas = tratamientoProlongado ? parseInt(insumo.tiempoTratamiento.id, 10) : 1;
-
-            const { tipo, identificador, nombre } = getDatosPrescripcion(insumo);
             const queryControl: any = {
                 idPrestacion: dataReceta.idPrestacion,
                 idRegistro: dataReceta.idRegistro,
@@ -66,26 +62,49 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
                 estado: { $in: ['pendiente', 'incompleto'] },
                 tipo
             };
-            let control: any = await RecetaControl.findOne(queryControl);
+            const control: any = await RecetaControl.findOne(queryControl);
 
             if (control) {
-                if (control.recetas?.length) {
+                if (!Array.isArray(control.recetas)) {
                     control.recetas = [];
                 }
-                for (const r of recetasEnDb as any[]) {
-                    const orden = r.insumo?.ordenTratamiento ?? 0;
-                    const recetaCreada = control.recetas.find((item: any) => item.id === r.id);
-                    if (!recetaCreada) {
-                        const itemReceta = {
-                            id: r.id,
-                            ordenTratamiento: orden,
-                            fecha: r.createdAt || new Date()
-                        };
-                        control.recetas.push(itemReceta);
+                if (Array.isArray(recetasEnDb)) {
+                    for (const r of recetasEnDb) {
+                        const orden = r.insumo?.ordenTratamiento ?? 0;
+                        const rId = r._id || r.id;
+                        const recetaCreada = control.recetas.find((item: any) => String(item.id) === String(rId));
+                        if (!recetaCreada) {
+                            const itemReceta = {
+                                id: rId,
+                                ordenTratamiento: orden,
+                                fecha: r.createdAt || new Date()
+                            };
+                            control.recetas.push(itemReceta);
+                        }
                     }
+                } else if (recetasEnDb) {
+                    control.ultimoError = {
+                        message: recetasEnDb?.message || (typeof recetasEnDb === 'string' ? recetasEnDb : JSON.stringify(recetasEnDb)),
+                        fecha: new Date()
+                    };
+                    control.markModified('ultimoError');
                 }
 
-                control.estado = (control.estado !== 'suspendido') && (control.recetas.length >= control.cantTotalRecetas) ? 'completo' : 'incompleto';
+                if (control.estado !== 'suspendido') {
+                    if (control.recetas.length >= control.cantTotalRecetas) {
+                        control.estado = 'completo';
+                        control.ultimoError = null;
+                    } else {
+                        control.estado = 'incompleto';
+                        if (!control.ultimoError) {
+                            control.ultimoError = {
+                                message: `No se generaron todas las recetas (${control.recetas.length}/${control.cantTotalRecetas})`,
+                                fecha: new Date()
+                            };
+                        }
+                    }
+                    control.markModified('ultimoError');
+                }
 
                 if (prestacion.createdBy) {
                     if (typeof (control as any).audit === 'function') {
