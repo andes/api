@@ -28,6 +28,8 @@ export const recetaControlSchema = new Schema({
         _id: false,
         fuente: {
             type: String,
+            enum: ['snomed', 'sifaho'],
+            lowercase: true,
             required: true
         },
         valor: {

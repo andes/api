@@ -69,7 +69,7 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
                     logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar conceptId del medicamento');
                     continue;
                 }
-                if (esMagistral && !medicamento?.magistral?.nombre && !identificador?.length) {
+                if (esMagistral && (!medicamento?.magistral?.nombre || !identificador?.length)) {
                     logger.error('prestacion:receta:create', { idRegistro, medicamento }, 'No se pudo identificar el medicamento magistral');
                     continue;
                 }
