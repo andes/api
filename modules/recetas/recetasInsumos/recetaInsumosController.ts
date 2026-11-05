@@ -2,6 +2,8 @@ import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { RecetaInsumo } from './receta-insumo.schema';
+import { RecetaControl } from '../receta-control-schema';
+import { getDatosPrescripcion, buildCodigoQuery } from '../recetas.helpers';
 import { createLog, informarLog, updateLog } from '../recetaLogs';
 import { ParamsIncorrect, RecetaNotFound, RecetaNotEdit } from '../recetas.error';
 import { Paciente } from '../../../core-v2/mpi/paciente/paciente.schema';
@@ -119,7 +121,8 @@ export async function create(req) {
     try {
         dataRecetaInsumo.fechaRegistro = dataRecetaInsumo.fechaRegistro ? moment(dataRecetaInsumo.fechaRegistro).toDate() : moment().toDate();
         dataRecetaInsumo.fechaPrestacion = dataRecetaInsumo.fechaPrestacion ? dataRecetaInsumo.fechaPrestacion : dataRecetaInsumo.fechaRegistro;
-        const insumoIncompleto = !req.body.insumo || (!req.body.insumo.concepto?.conceptId && !req.body.insumo.generico?.id);
+        const codigosInsumo = req.body.insumo?.generico?.codigo || req.body.insumo?.codigo || [];
+        const insumoIncompleto = !req.body.insumo || (!req.body.insumo.concepto?.conceptId && !req.body.insumo.generico?.id && !req.body.insumo.id && !codigosInsumo.length);
         dataRecetaInsumo.origenExterno = {
             id: req.body.origenExterno?.id || '',
             app: req.user.app?.nombre.toLowerCase() || '',
@@ -131,9 +134,14 @@ export async function create(req) {
             const query: any = {
                 idRegistro: dataRecetaInsumo.idRegistro
             };
-            if (dataRecetaInsumo.insumo.generico) {
-                query['insumo.nombre'] = dataRecetaInsumo.insumo.generico.nombre;
-            } else {
+            const queryCodigo = buildCodigoQuery(codigosInsumo);
+            if (queryCodigo) {
+                query['insumo.codigo'] = queryCodigo;
+            } else if (dataRecetaInsumo.insumo.generico?.id || dataRecetaInsumo.insumo.id) {
+                query['insumo.id'] = dataRecetaInsumo.insumo.generico?.id || dataRecetaInsumo.insumo.id;
+            } else if (dataRecetaInsumo.insumo.generico?.nombre || dataRecetaInsumo.insumo.nombre) {
+                query['insumo.nombre'] = dataRecetaInsumo.insumo.generico?.nombre || dataRecetaInsumo.insumo.nombre;
+            } else if (dataRecetaInsumo.insumo.concepto?.conceptId) {
                 query['insumo.concepto.conceptId'] = dataRecetaInsumo.insumo.concepto.conceptId;
             }
             const recetaInsumo = await RecetaInsumo.findOne(query);
@@ -181,7 +189,9 @@ export async function create(req) {
                 matricula: matriculaGrado
             };
         }
-        return await crearRecetaInsumo(dataRecetaInsumo, req);
+        const recetasCreadas: any = await crearRecetaInsumo(dataRecetaInsumo, req);
+
+        return recetasCreadas;
     } catch (err) {
         createLog.error('create', { dataRecetaInsumo, pacienteRecetar, profRecetar }, err, req);
         return err;
@@ -196,6 +206,26 @@ export async function crearRecetaInsumo(dataRecetaInsumo, req) {
     let recetaInsumo;
     for (let i = 0; i < cantRecetas; i++) {
         try {
+            const insumoId = insumo.generico?.id || insumo.id;
+            const codigosInsumo = insumo.generico?.codigo || insumo.codigo || [];
+            const queryExistente: any = {
+                idPrestacion: dataRecetaInsumo.idPrestacion,
+                idRegistro: dataRecetaInsumo.idRegistro,
+                'insumo.ordenTratamiento': i
+            };
+            const queryCodigo = buildCodigoQuery(codigosInsumo);
+            if (queryCodigo) {
+                queryExistente['insumo.codigo'] = queryCodigo;
+            } else if (insumoId) {
+                queryExistente['insumo.id'] = insumoId;
+            }
+
+            const yaExiste = await RecetaInsumo.findOne(queryExistente);
+            if (yaExiste) {
+                recetas.push(yaExiste);
+                continue;
+            }
+
             recetaInsumo = new RecetaInsumo();
             recetaInsumo.idPrestacion = dataRecetaInsumo.idPrestacion;
             recetaInsumo.idRegistro = dataRecetaInsumo.idRegistro;
@@ -317,10 +347,13 @@ export async function suspender(recetaInsumoId, req) {
             idRegistro: recetaInsumo.idRegistro,
             'estadoActual.tipo': { $nin: ['vencida', 'finalizada'] }
         };
-        if (recetaInsumo.insumo?.concepto?.conceptId) {
-            query['insumo.concepto.conceptId'] = recetaInsumo.insumo.concepto.conceptId;
+        const queryCodigo = buildCodigoQuery(recetaInsumo.insumo?.codigo);
+        if (queryCodigo) {
+            query['insumo.codigo'] = queryCodigo;
         } else if (recetaInsumo.insumo?.id) {
             query['insumo.id'] = recetaInsumo.insumo.id;
+        } else if (recetaInsumo.insumo?.concepto?.conceptId) {
+            query['insumo.concepto.conceptId'] = recetaInsumo.insumo.concepto.conceptId;
         } else if (recetaInsumo.insumo?.nombre) {
             query['insumo.nombre'] = recetaInsumo.insumo.nombre;
         }
@@ -339,11 +372,29 @@ export async function suspender(recetaInsumoId, req) {
 
             const rec = recSusp.concat(await Promise.all(await recetasInsumoUpdate(recetasEliminar, 'eliminada', motivo, observacion, profesional, req)));
 
+            try {
+
+                const { tipo, identificador, nombre } = getDatosPrescripcion(recetaInsumo.insumo);
+                const queryControl: any = {
+                    idPrestacion: recetaInsumo.idPrestacion,
+                    idRegistro: recetaInsumo.idRegistro,
+                    identificador: { $in: identificador },
+                    estado: { $in: ['pendiente', 'incompleto'] },
+                    tipo
+                };
+                await RecetaControl.updateMany(
+                    queryControl,
+                    { $set: { estado: 'suspendido' } }
+                );
+            } catch (errCtrl) {
+                updateLog.error('suspender:insumo:control', { recetaInsumoId, idRegistro: recetaInsumo.idRegistro }, errCtrl);
+            }
+
             return rec;
         }
         return recetasASuspender;
     } catch (error) {
-        await updateLog.error('suspender', { motivo, observacion, profesional, recetaInsumoId }, error);
+        updateLog.error('suspender', { motivo, observacion, profesional, recetaInsumoId }, error);
         return error;
     }
 }
