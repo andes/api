@@ -1,5 +1,6 @@
 import { EventCore } from '@andes/event-bus';
 import { getProfesionActualizada, crearReceta } from '../../recetas/recetasController';
+import { recetarClient, isRecetarConfigured } from '../../recetas/recetar-client';
 import * as moment from 'moment';
 import { Receta } from '../../recetas/receta-schema';
 import { rupEventsLog as logger } from './rup.events.log';
@@ -87,7 +88,11 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
                         diagnostico: medicamento?.diagnostico || null,
                     };
 
-                    await crearReceta(dataReceta, prestacion.createdBy);
+                    if (isRecetarConfigured()) {
+                        await recetarClient.ingest(dataReceta);
+                    } else {
+                        await crearReceta(dataReceta, prestacion.createdBy);
+                    }
                 }
             } catch (errorMedicamento) {
                 logger.error('prestacion:receta:create', { idRegistro, medicamento }, errorMedicamento);
