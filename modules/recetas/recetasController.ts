@@ -1124,15 +1124,13 @@ export async function verificarRecetaExistente(documento: string, sexo: string, 
 /// PRECARGA DE RECETAS: COLECCIÓN AUXILIAR
 
 export async function generarPrecargaReceta(prestacion, registros: any[] = [], req) {
-    const tipoPrescripciones = [
-        { conceptId: '33633005', tipo: 'medicamento' },
-        { conceptId: '313047003', tipo: 'dispositivo' },
-        { conceptId: '1217195001', tipo: 'nutricion' },
-        { conceptId: '1217196000', tipo: 'nutricion' }
-    ];
-    const getTipo = (conceptId) => tipoPrescripciones.find(t => t.conceptId === conceptId);
-
-    const registrosReceta = registros.filter(r => r.concepto?.conceptId && getTipo(r.concepto.conceptId));
+    // Un registro de prescripción se identifica por su contenido y no por un listado fijo de conceptIds.
+    // Tanto la receta de medicamentos como la de insumos guardan las prescripciones en `valor`, y el
+    // tipo de cada prescripción se resuelve después con `getDatosPrescripcion`.
+    const registrosReceta = registros.filter(r =>
+        (Array.isArray(r.valor?.medicamentos) && r.valor.medicamentos.length > 0) ||
+        (Array.isArray(r.valor?.insumos) && r.valor.insumos.length > 0)
+    );
     await Promise.all(registrosReceta.map(async (registro) => {
         let recetaAuxiliar: any;
         try {
