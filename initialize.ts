@@ -160,6 +160,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/mobileApp', PacienteAppRouter);
     app.use('/api/modules', require('./modules/personalSalud').PersonalSaludRouter);
     app.use('/api/modules/turnos', require('./modules/turnos/condicionPaciente').CondicionPacienteRouter);
+    app.use('/api/modules/turnos', require('./modules/turnos/nota-agenda/nota-agenda.routes').NotaAgendaRouter);
 
     /**
      * Inicializa las rutas para adjuntar archivos
