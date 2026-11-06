@@ -15,7 +15,7 @@ class ServicioIntermedioResource extends ResourceBase {
 
     async getConceptosFromIds(ids: string[]) {
         const serviciosObj = await ServicionIntermedioCtr.search({ ids });
-        const conceptos = serviciosObj.reduce((acc, current) => [...acc, ...current.tipoPrestacion], []);
+        const conceptos = serviciosObj.reduce((acc, current) => [...acc, ...(current.conceptosTurneables || [])], []);
         return conceptos;
     }
 }

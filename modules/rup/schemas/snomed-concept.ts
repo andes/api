@@ -13,3 +13,9 @@ export const SnomedConcept = {
     fsn: String,
     semanticTag: SemanticTag
 };
+
+
+export const SnomedConceptRaw = {
+    ...SnomedConcept,
+    _id: false
+};

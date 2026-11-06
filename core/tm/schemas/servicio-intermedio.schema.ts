@@ -1,10 +1,16 @@
-import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { model, Schema } from 'mongoose';
+import { SnomedConceptRaw } from '../../../modules/rup/schemas/snomed-concept';
+
+/**
+ * Esquema de servicio intermedio.
+ * No siempre el espectro de concepto turneables abarca todos los procedimientos asociados.
+ */
 
 export const ServicioIntermedioSchema = new Schema({
     nombre: String,
-    tipoPrestacion: [SnomedConcept],
-    concepto: { required: false, type: SnomedConcept }
+    concepto: { required: false, type: SnomedConceptRaw },
+    conceptosTurneables: [SnomedConceptRaw], // Agendas del servicio intermedio.
+    procedimientos: [SnomedConceptRaw] // procedimientos snomed asociados al servicio intermedio.
 });
 
 export const ServicioIntermedio = model('rup-servicios-intermedio', ServicioIntermedioSchema, 'rup-servicios-intermedio');
