@@ -25,12 +25,20 @@ import { Forms } from '../../forms/forms.schema';
 
 const router = express.Router();
 
+function sendPdf(res: any, pdfBuffer: Buffer, options: { filename?: string; disposition?: 'inline' | 'attachment' } = {}) {
+    const filename = options.filename || 'informe.pdf';
+    const disposition = options.disposition || 'inline';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
+    return res.send(pdfBuffer);
+}
+
 router.post('/reporteDerivacion', Auth.authenticate(), async (req: any, res, next) => {
     try {
         const derivacion = new Derivacion(req);
         const opciones = { margin: { top: '3cm' } };
-        const fileName: any = await derivacion.informe(opciones);
-        res.download(fileName);
+        const pdfBuffer = await derivacion.informe(opciones);
+        return sendPdf(res, pdfBuffer, { filename: 'reporte-derivacion.pdf', disposition: 'attachment' });
     } catch (err) {
         return next(err);
     }
@@ -45,9 +53,7 @@ router.post('/censo', async (req: any, res, next) => {
     const opciones = { margin: { top: '6cm' } };
     const pdfBuffer = await docCenso.informe(opciones);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-    return res.send(pdfBuffer);
+    return sendPdf(res, pdfBuffer);
 });
 
 
@@ -56,17 +62,15 @@ router.post('/censoMensual', async (req: any, res, next) => {
     const opciones = { margin: { top: '6cm' }, landscape: true };
     const pdfBuffer = await docCenso.informe(opciones);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-    return res.send(pdfBuffer);
+    return sendPdf(res, pdfBuffer);
 });
 
 router.post('/anexo-dos', async (req: any, res) => {
     const docRecupero = new RecuperoCosto(req);
     const opciones = { margin: { top: '3cm' } };
-    const fileName: any = await docRecupero.informe(opciones);
+    const pdfBuffer = await docRecupero.informe(opciones);
 
-    res.download(fileName);
+    return sendPdf(res, pdfBuffer, { filename: 'anexo-dos.pdf', disposition: 'attachment' });
 });
 
 /**
@@ -77,9 +81,12 @@ router.get('/rup/:idPrestacion/(:idRegistro)?', Auth.authenticate(), async (req:
         const idPrestacion = req.params.idPrestacion;
         const idRegistro = req.params.idRegistro;
         const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
-        const fileName = await informe.informe();
+        const pdfBuffer = await informe.informe();
 
-        return res.download(fileName);
+        return sendPdf(res, pdfBuffer, {
+            filename: `informe-${idPrestacion}${idRegistro ? `-${idRegistro}` : ''}.pdf`,
+            disposition: 'attachment'
+        });
     } catch (err) {
         return next(err);
     }
@@ -136,7 +143,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     if (emailFiltrado) {
         try {
             const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
-            const fileName = await informe.informe();
+            const pdfBuffer = await informe.informe();
 
             const html = await SendEmail.renderHTML('emails/email-informe.html', handlebarsData);
             const data = {
@@ -146,7 +153,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
                 attachments: [
                     {
                         filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
-                        path: fileName
+                        content: pdfBuffer
                     },
                     ...attachments
                 ]
@@ -173,9 +180,7 @@ router.post('/constanciaPuco/:tipo?', Auth.authenticate(), async (req: any, res)
     const opciones = { margin: { top: '3cm' } };
     const pdfBuffer = await docPuco.informe(opciones);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-    return res.send(pdfBuffer);
+    return sendPdf(res, pdfBuffer);
 });
 
 router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
@@ -206,9 +211,7 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
             const opciones = { margin: { top: '2cm' } };
             const pdfBuffer = await docLaboratorio.informe(opciones);
 
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-            return res.send(pdfBuffer);
+            return sendPdf(res, pdfBuffer);
 
         } catch (err) {
             await laboratorioLog.error('laboratorio-descargas', req.body.protocolo.data, err, req);
@@ -232,9 +235,7 @@ router.post('/fichaEpidemiologia/:tipo?', Auth.authenticate(), async (req: any, 
             const opciones = { margin: { top: '2.5cm', bottom: '3.5cm' } };
             const pdfBuffer = await docFichaEpidemiologica.informe(opciones);
 
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-            return res.send(pdfBuffer);
+            return sendPdf(res, pdfBuffer);
         } catch (err) {
             return next(err);
         }
@@ -250,26 +251,19 @@ router.post('/arancelamiento/:tipo?', Auth.authenticate(), async (req: any, res)
     if (provincia === 'neuquen') {
         const docPuco = new Arancelamiento(req);
         pdfBuffer = await docPuco.informe(opciones);
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
     } else {
         const docRecupero = new RecuperoCosto(req);
         pdfBuffer = await docRecupero.informe(opciones);
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
     }
-    return res.send(pdfBuffer);
+    return sendPdf(res, pdfBuffer);
 });
 
 router.post('/agenda/:id', Auth.authenticate(), async (req: any, res) => {
-    const opciones = { margin: { top: '3cm' }, orientation: 'landscape' };
+    const opciones = { margin: { top: '3cm' }, landscape: true };
     const docAgenda = new Agenda(req);
     const pdfBuffer = await docAgenda.informe(opciones);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-    return res.send(pdfBuffer);
+    return sendPdf(res, pdfBuffer);
 });
 
 // Certificado de etica para profesional desde matriculaciones
@@ -278,9 +272,7 @@ router.post('/certificadoEtica', Auth.authenticate(), async (req: any, res) => {
     const opciones = { margin: { top: '3cm' } };
     const pdfBuffer = await certificado.informe(opciones);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-    return res.send(pdfBuffer);
+    return sendPdf(res, pdfBuffer);
 });
 
 //
@@ -292,9 +284,7 @@ router.get('/credencialProfesional/:idProfesional/:idFormacionGrado/:qrcode', Au
     const opciones = { margin: { top: '3cm' } };
     const pdfBuffer = await certificado.informe(opciones);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-    return res.send(pdfBuffer);
+    return sendPdf(res, pdfBuffer);
 });
 
 router.post('/listadoTurnos', Auth.authenticate(), async (req: any, res, next) => {
@@ -302,9 +292,7 @@ router.post('/listadoTurnos', Auth.authenticate(), async (req: any, res, next) =
     const docTurnos = new InformeTurnos(req);
     const pdfBuffer = await docTurnos.informe(opciones);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-    return res.send(pdfBuffer);
+    return sendPdf(res, pdfBuffer);
 });
 
 /**
@@ -320,9 +308,7 @@ router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
         const informe = new InformeRUP(idPrestacion, idRegistro, req.user, snapshots);
         const pdfBuffer = await informe.informe();
 
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline; filename="informe.pdf"');
-        return res.send(pdfBuffer);
+        return sendPdf(res, pdfBuffer);
     } catch (err) {
         return next(err);
     }

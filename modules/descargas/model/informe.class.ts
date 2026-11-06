@@ -19,7 +19,6 @@ export class InformePDF extends HTMLComponent {
     header: HTMLComponent;
     body: HTMLComponent;
     footer: HTMLComponent;
-    firma?: HTMLComponent; // firma de profesional
     style: string;
     stylesUrl: string[];
 
@@ -56,7 +55,15 @@ export class InformePDF extends HTMLComponent {
         // asegura que this.data tenga header/footer/body/css
         await this.process();
 
-        const opciones = { ...this.getDefaultOptions(), ...(options || {}) };
+        const defaults = this.getDefaultOptions();
+        const opciones = {
+            ...defaults,
+            ...(options || {}),
+            margin: {
+                ...defaults.margin,
+                ...((options && options.margin) || {})
+            }
+        };
         const css = this.data?.css || '';
 
         const headerTemplate = this.wrapTemplate(this.data?.header, css);
@@ -82,9 +89,6 @@ export class InformePDF extends HTMLComponent {
         }
         if (this.footer) {
             data.footer = await this.footer.render();
-        }
-        if (this.firma) {
-            data.firma = await this.firma.render();
         }
         data.body = await this.body.render();
 
