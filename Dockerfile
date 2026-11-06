@@ -5,6 +5,20 @@ FROM node:${NODE_VERSION}
 RUN apk add --no-cache libxml2 git \
     && apk add --no-cache --virtual .build-deps python3 make g++ libxml2-dev
 
+ENV PUPPETEER_SKIP_DOWNLOAD=1
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    fontconfig \
+    ttf-freefont \
+    ttf-liberation
+
 WORKDIR /usr/src/api
 
 COPY package.json package-lock.json ./

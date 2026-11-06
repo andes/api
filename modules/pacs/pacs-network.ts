@@ -39,8 +39,7 @@ export async function createWorkList(pacsConfig: IPacsConfig, data: any, token: 
 }
 
 
-export async function enviarInforme(pacsConfig: IPacsConfig, uid: string, data: any, pdf: any, token: string) {
-    const fs = require('fs');
+export async function enviarInforme(pacsConfig: IPacsConfig, uid: string, data: any, pdf: Buffer, token: string) {
     const url = `${pacsConfig.host}/dcm4chee-arc/aets/${pacsConfig.aet}/rs/studies/${uid}`;
     const [status, body] = await handleHttpRequest({
         method: 'POST',
@@ -60,7 +59,7 @@ export async function enviarInforme(pacsConfig: IPacsConfig, uid: string, data: 
             {
                 'content-type': 'application/pdf',
                 'content-Location': 'informe.pdf',
-                body: fs.createReadStream(pdf),
+                body: pdf,
             }
         ]
     });

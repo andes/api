@@ -9,7 +9,6 @@ import { ExportHudsModel } from './exportHuds.schema';
 import { getHUDSExportarModel } from './hudsFiles';
 import { Paciente } from '../../../core-v2/mpi';
 import { ObjectId } from 'mongodb';
-import { Readable } from 'stream';
 import moment = require('moment');
 const pLimit = require('p-limit');
 
@@ -179,7 +178,7 @@ async function buildExportFile(peticionExport: any) {
     const limit = pLimit(4);
 
     const getData = async () => {
-        const files = await Promise.all(
+        await Promise.all(
             prestaciones.map((prestacion: any) => limit(async () => {
                 try {
                     const informe = new InformeRUP(
@@ -198,10 +197,9 @@ async function buildExportFile(peticionExport: any) {
                         prestacion.solicitud.fecha
                     ).format('YYYY-MM-DD-HHmmss');
 
-                    return {
-                        buffer: Buffer.from(pdfBuffer),
+                    archive.append(pdfBuffer, {
                         name: `${fechaArchivo} - ${safe(nombreArchivo)}.pdf`
-                    };
+                    });
 
                 } catch (error) {
                     exportHudsLog.error(
@@ -209,25 +207,18 @@ async function buildExportFile(peticionExport: any) {
                         objectLog,
                         error
                     );
-                    return null;
                 }
             }))
         );
-
-        for (const file of files.filter(Boolean)) {
-            archive.append(Readable.from(file.buffer), {
-                name: file.name
-            });
-        }
     };
 
     const getCdas = async (excluye: string[]) => {
-        const files = await Promise.all(
+        await Promise.all(
             cdas.map((cda: any) => limit(async () => {
                 const conceptId = cda.metadata?.prestacion?.snomed?.conceptId;
 
                 if (excluye.includes(conceptId)) {
-                    return null;
+                    return;
                 }
 
                 if (cda.metadata.adjuntos?.length > 0) {
@@ -240,7 +231,7 @@ async function buildExportFile(peticionExport: any) {
                         );
 
                         if (!fileCda?.stream) {
-                            return null;
+                            return;
                         }
 
                         const cdaBuffer = await streamToBuffer(fileCda.stream);
@@ -248,13 +239,12 @@ async function buildExportFile(peticionExport: any) {
                             throw new Error(`CDA adjunto vacío ${cda._id}`);
                         }
 
-                        return {
-                            buffer: Buffer.from(cdaBuffer),
+                        archive.append(cdaBuffer, {
                             name:
                                 `${moment(cda.metadata.fecha)
                                     .format('YYYY-MM-DD-HHmmss')} - ` +
                                 `${safe(cda.metadata.prestacion?.snomed?.term || 'CDA')}.pdf`
-                        };
+                        });
                     } catch (error) {
                         exportHudsLog.error(
                             'Crear cda',
@@ -262,7 +252,7 @@ async function buildExportFile(peticionExport: any) {
                             error
                         );
                     }
-                    return null;
+                    return;
                 }
 
                 if (conceptId && conceptId !== '33879002') {
@@ -278,7 +268,7 @@ async function buildExportFile(peticionExport: any) {
                                 objectLog,
                                 new Error('CDA sin codificación')
                             );
-                            return null;
+                            return;
                         }
 
                         cda.metadata.codificacion = codificacion;
@@ -300,12 +290,11 @@ async function buildExportFile(peticionExport: any) {
                         const nombreArchivo =
                             cda.metadata.prestacion.snomed.term;
 
-                        return {
-                            buffer: Buffer.from(pdfBuffer),
+                        archive.append(pdfBuffer, {
                             name:
                                 `${fechaArchivo} - ` +
                                 `${safe(nombreArchivo)}.pdf`
-                        };
+                        });
 
                     } catch (error) {
                         exportHudsLog.error(
@@ -315,15 +304,8 @@ async function buildExportFile(peticionExport: any) {
                         );
                     }
                 }
-                return null;
             }))
         );
-
-        for (const file of files.filter(Boolean)) {
-            archive.append(Readable.from(file.buffer), {
-                name: file.name
-            });
-        }
     };
 
     try {

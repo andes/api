@@ -47,100 +47,130 @@ type PdfOpts = {
     preferCSSPageSize?: boolean;
 };
 
+const MAX_CONCURRENT_RENDERS = Number(process.env.PDF_MAX_CONCURRENT_RENDERS || 2);
+const ACQUIRE_TIMEOUT_MS = Number(process.env.PDF_ACQUIRE_TIMEOUT_MS || 60_000);
+const DEFAULT_RENDER_TIMEOUT_MS = 180_000;
+
 let browserPromise: Promise<Browser> | null = null;
+let activeRenders = 0;
 
-const POOL_SIZE = 2;
+interface Waiter {
+    resolve: () => void;
+    reject: (error: Error) => void;
+    timer: NodeJS.Timeout;
+}
 
-let initPromise: Promise<void> | null = null;
-const freePages: Page[] = [];
-const waiters: Array<(page: Page) => void> = [];
+const pendingWaiters: Waiter[] = [];
 
-async function getBrowser(): Promise<Browser> {
-    if (!browserPromise) {
-        browserPromise = puppeteer.launch({
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-            ],
-        });
-
-        process.on('exit', async () => {
-            try { (await browserPromise!).close(); } catch { }
-        });
+function getBrowser(): Promise<Browser> {
+    if (browserPromise) {
+        return browserPromise;
     }
+
+    browserPromise = puppeteer.launch({
+        headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+        ],
+    }).then((browser) => {
+        browser.on('disconnected', () => {
+            browserPromise = null;
+        });
+        return browser;
+    }).catch((error) => {
+        browserPromise = null;
+        throw error;
+    });
+
     return browserPromise;
 }
 
-async function initPool() {
-    if (initPromise) { return initPromise; }
-
-    initPromise = (async () => {
-        const browser = await getBrowser();
-        for (let i = 0; i < POOL_SIZE; i++) {
-            const p = await browser.newPage();
-            p.setDefaultTimeout(60_000);
-            p.setDefaultNavigationTimeout(60_000);
-            freePages.push(p);
-        }
-    })();
-
-    return initPromise;
-}
-
-// El pool es para evitar abrir y cerrar paginas (que es lo que mas tarda) y para limitar la concurrencia (puppeteer puede consumir mucha memoria)
-async function acquirePage(): Promise<Page> {
-    await initPool();
-
-    if (freePages.length > 0) {
-        return freePages.pop()!;
+function acquireSlot(): Promise<void> {
+    if (activeRenders < MAX_CONCURRENT_RENDERS) {
+        activeRenders++;
+        return Promise.resolve();
     }
-    return new Promise<Page>((resolve) => waiters.push(resolve));
+
+    return new Promise<void>((resolve, reject) => {
+        const waiter: Waiter = {
+            resolve,
+            reject,
+            timer: setTimeout(() => {
+                const index = pendingWaiters.indexOf(waiter);
+                if (index >= 0) {
+                    pendingWaiters.splice(index, 1);
+                }
+                reject(new Error('Timeout esperando slot para generar PDF'));
+            }, ACQUIRE_TIMEOUT_MS)
+        };
+        pendingWaiters.push(waiter);
+    });
 }
 
-// Cuando se libera una pagina, se resuelve la promesa del siguiente en la cola (si hay) o se agrega a las paginas libres
-function releasePage(page: Page) {
-    const next = waiters.shift();
+function releaseSlot() {
+    const next = pendingWaiters.shift();
     if (next) {
-        next(page);
+        clearTimeout(next.timer);
+        next.resolve();
     } else {
-        freePages.push(page);
+        activeRenders--;
     }
 }
 
-// evita que se acumulen cosas entre renders y que se consuma mucha memoria
-async function hardResetPage(page: Page) {
-    try {
-        await page.goto('about:blank', { waitUntil: 'domcontentloaded' });
-    } catch { }
-}
-
-let renderCount = 0;
-
-// reinicia el navegador cada 50 renders para evitar fugas de memoria o acumulacion de procesos
-async function restartBrowser() {
-    if (browserPromise) {
-        try { (await browserPromise).close(); } catch { }
+async function shutdown() {
+    if (!browserPromise) {
+        return;
     }
+    const browser = await browserPromise.catch(() => null);
     browserPromise = null;
-    initPromise = null;
-    freePages.length = 0;
+    if (browser) {
+        try {
+            await browser.close();
+        } catch {
+            // el proceso está terminando
+        }
+    }
+}
+
+let shutdownRegistered = false;
+function registerShutdown() {
+    if (shutdownRegistered) {
+        return;
+    }
+    shutdownRegistered = true;
+    process.once('SIGTERM', shutdown);
+    process.once('SIGINT', shutdown);
 }
 
 export async function htmlToPdfBuffer(html: string, opts: PdfOpts = {}): Promise<Buffer> {
-    renderCount++;
-    if (renderCount % 50 === 0) {
-        await restartBrowser();
-    }
+    const timeoutMs = opts.timeoutMs ?? DEFAULT_RENDER_TIMEOUT_MS;
 
-    const page = await acquirePage();
-    const timeoutMs = opts.timeoutMs ?? 180_000;
+    await acquireSlot();
+    let page: Page = null;
 
     try {
-        await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        registerShutdown();
+        const browser = await getBrowser();
+        page = await browser.newPage();
+        page.setDefaultTimeout(timeoutMs);
+        page.setDefaultNavigationTimeout(timeoutMs);
+
+        await page.setJavaScriptEnabled(false);
+        await page.setRequestInterception(true);
+        page.on('request', (request) => {
+            const url = request.url();
+            if (url === 'about:blank' || url.startsWith('data:')) {
+                return request.continue();
+            }
+            return request.abort();
+        });
+
+        await page.setContent(html, { waitUntil: 'load', timeout: timeoutMs });
+
         const pdfOptions: PDFOptions = {
             format: opts.format || 'A4',
             printBackground: true,
@@ -155,7 +185,13 @@ export async function htmlToPdfBuffer(html: string, opts: PdfOpts = {}): Promise
         const pdfBytes = await page.pdf(pdfOptions);
         return Buffer.from(pdfBytes);
     } finally {
-        await hardResetPage(page);
-        releasePage(page);
+        if (page) {
+            try {
+                await page.close();
+            } catch {
+                // la página pudo haberse cerrado por un error
+            }
+        }
+        releaseSlot();
     }
 }
