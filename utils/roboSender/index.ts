@@ -104,6 +104,7 @@ export function exportHuds(data, user) {
         tipoPrestacion: data.tipoPrestacion,
         prestaciones: data.prestaciones,
         excluye: data.excluye,
+        organizacion: data.organizacion,
         user
     });
     new RoboModel({

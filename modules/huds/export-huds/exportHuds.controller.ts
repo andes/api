@@ -8,8 +8,125 @@ import { exportHudsLog } from './exportHuds.log';
 import { ExportHudsModel } from './exportHuds.schema';
 import { getHUDSExportarModel } from './hudsFiles';
 import { Paciente } from '../../../core-v2/mpi';
-import moment = require('moment');
+import { ObjectId } from 'mongodb';
+import { Readable } from 'stream';
+import * as moment from 'moment';
+import * as pLimit from 'p-limit';
 
+// convierte un stream a Buffer
+const streamToBuffer = (stream): Promise<Buffer> => {
+    return new Promise((resolve, reject) => {
+        const chunks: Buffer[] = [];
+
+        stream.on('data', chunk => chunks.push(Buffer.from(chunk)));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+};
+
+const safe = (s: string) =>
+    (s || '')
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-') // al parecer inválidos windows/zip
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 150);
+
+interface HistoryParams {
+    pacienteId: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+    tipoPrestacion?: string;
+    organizacion?: any;
+}
+
+/**
+ * @param pacienteId ID del paciente
+ * @returns IDs del paciente y sus vinculaciones ANDES
+ */
+async function getPacienteIds(pacienteId: string) {
+    const paciente = await Paciente.findById(pacienteId);
+    const vinculacionesPaciente = paciente?.identificadores
+        ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
+        ?.map(item => String(item.valor));
+    return vinculacionesPaciente?.length ? [...vinculacionesPaciente, pacienteId] : [pacienteId];
+}
+
+/**
+ * @param params filtros de fecha, tipoPrestacion y organizacion
+ * @param idsPaciente IDs del paciente y sus vinculaciones ANDES
+ * @returns consulta para buscar prestaciones validadas
+ */
+const buildPrestacionesQuery = (params: Partial<HistoryParams>, idsPaciente: string[]) => {
+    const query: any = {
+        'paciente.id': { $in: idsPaciente },
+        'estadoActual.tipo': 'validada'
+    };
+
+    if (params.fechaDesde && params.fechaHasta) {
+        query['ejecucion.fecha'] = {
+            $gte: moment(params.fechaDesde).toDate(),
+            $lte: moment(params.fechaHasta).toDate()
+        };
+    }
+    if (params.tipoPrestacion) {
+        query['solicitud.tipoPrestacion.conceptId'] = params.tipoPrestacion;
+    }
+    if (params.organizacion) {
+        query['solicitud.organizacion.id'] = params.organizacion;
+    }
+
+    return query;
+};
+
+/**
+ * @param params filtros de fecha y organizacion
+ * @param idsPacienteObjectId IDs del paciente y sus vinculaciones como ObjectId
+ * @returns consulta para buscar CDAs, excluyendo préstamos de carpeta
+ */
+const buildCdaQuery = (params: Partial<HistoryParams>, idsPacienteObjectId: ObjectId[]) => {
+    const queryCda: any = {
+        'metadata.paciente': { $in: idsPacienteObjectId },
+        'metadata.prestacion.snomed.conceptId': { $ne: '2881000013106' } // prestamo de carpeta
+    };
+
+    if (params.fechaDesde && params.fechaHasta) {
+        queryCda['metadata.fecha'] = {
+            $gte: moment(params.fechaDesde).toDate(),
+            $lte: moment(params.fechaHasta).toDate()
+        };
+    }
+    if (params.organizacion) {
+        queryCda['metadata.organizacion._id'] = new ObjectId(params.organizacion.toString());
+    }
+
+    return queryCda;
+};
+
+/**
+ * @param params filtros de paciente, fechas, tipoPrestacion y organizacion
+ * @returns IDs y consultas de prestaciones y CDAs, junto con el bucket de CDAFiles
+ */
+async function getHudsSearchCriteria(params: any) {
+    const idsPaciente = await getPacienteIds(params.pacienteId);
+    const query = buildPrestacionesQuery(params, idsPaciente);
+
+    const cdaFiles = makeFs();
+
+    // Usamos el mismo driver que CDAFiles para construir los ObjectId.
+    const idsPacienteObjectId = idsPaciente
+        .map(id => String(id))
+        .filter(id => ObjectId.isValid(id))
+        .map(id => new ObjectId(id));
+
+    const queryCda = buildCdaQuery(params, idsPacienteObjectId);
+
+    return { idsPaciente, query, idsPacienteObjectId, queryCda, cdaFiles };
+}
+
+/**
+ * @param idExportHuds ID de la solicitud en la colección exportHuds
+ * @returns promesa que finaliza al procesar la solicitud de exportación
+ */
 export async function createFile(idExportHuds) {
     const peticionExport: any = await ExportHudsModel.findById(idExportHuds);
 
@@ -34,7 +151,6 @@ export async function createFile(idExportHuds) {
 }
 
 async function buildExportFile(peticionExport: any) {
-    let fechaCondicion = null;
     let prestaciones: any[] = [];
     let cdas = [];
 
@@ -43,56 +159,19 @@ async function buildExportFile(peticionExport: any) {
             _id: { $in: peticionExport.prestaciones }
         });
     } else {
-        const paciente = await Paciente.findById(peticionExport.pacienteId);
-
-        const vinculacionesPaciente = paciente.identificadores
-            ?.filter(item => item.entidad === 'ANDES' && item.valor?.length)
-            ?.map(item => item.valor);
-
-        const idsPaciente = vinculacionesPaciente?.length
-            ? [...vinculacionesPaciente, peticionExport.pacienteId]
-            : [peticionExport.pacienteId];
-
-        const query: any = {
-            'paciente.id': { $in: idsPaciente },
-            'estadoActual.tipo': 'validada'
-        };
-
-        if (peticionExport.fechaDesde && peticionExport.fechaHasta) {
-            fechaCondicion = {
-                $gte: moment(peticionExport.fechaDesde),
-                $lte: moment(peticionExport.fechaHasta)
-            };
-
-            query['ejecucion.fecha'] = fechaCondicion;
-        }
-
-        if (peticionExport.tipoPrestacion) {
-            query['solicitud.tipoPrestacion.conceptId'] =
-                peticionExport.tipoPrestacion;
-        }
-
-        prestaciones = await Prestacion.find(query);
-
-        const queryCda: any = {
-            'metadata.paciente': { $in: idsPaciente },
-            'metadata.prestacion.snomed.conceptId': {
-                $ne: '2881000013106'
-            }
-        };
-
-        if (fechaCondicion) {
-            queryCda['metadata.fecha'] = fechaCondicion;
-        }
-
-        const cdaFiles = makeFs();
-        cdas = await cdaFiles.find(queryCda).toArray();
+        const criteria = await getHudsSearchCriteria(peticionExport);
+        prestaciones = await Prestacion.find(criteria.query);
+        cdas = await criteria.cdaFiles.find(criteria.queryCda).toArray();
     }
 
     const fecha = moment(peticionExport.createdAt).format('YYYY-MM-DD');
 
     const archive = archiver('zip', {
-        zlib: { level: 9 }
+        zlib: { level: 3 } // nivel de compresión (0-9)
+    });
+
+    archive.on('warning', (warning) => {
+        exportHudsLog.error('warning creando archivo .zip', {}, warning);
     });
 
     const metadata = {
@@ -100,7 +179,7 @@ async function buildExportFile(peticionExport: any) {
     };
 
     const options = {
-        filename: `HUDS-${peticionExport.pacienteNombre || ''}-${fecha}`,
+        filename: `HUDS-${safe(peticionExport.pacienteNombre || '')}-${fecha}`,
         contentType: 'application/zip',
         metadata
     };
@@ -145,9 +224,11 @@ async function buildExportFile(peticionExport: any) {
 
     exportHudsLog.info('exportaHuds', objectLog);
 
-    const getData = () => {
-        return Promise.all(
-            prestaciones.map(async (prestacion: any) => {
+    const limit = pLimit(4);
+
+    const getData = async () => {
+        const files = await Promise.all(
+            prestaciones.map((prestacion: any) => limit(async () => {
                 try {
                     const informe = new InformeRUP(
                         prestacion.id,
@@ -155,7 +236,7 @@ async function buildExportFile(peticionExport: any) {
                         peticionExport.user
                     );
 
-                    const archivo = await informe.informe();
+                    const pdfBuffer: Buffer = await informe.informe();
 
                     const nombreArchivo = peticionExport.prestaciones.length
                         ? prestacion.paciente.documento
@@ -163,11 +244,12 @@ async function buildExportFile(peticionExport: any) {
 
                     const fechaArchivo = moment(
                         prestacion.solicitud.fecha
-                    ).format('YYYY-MM-DD-hhmmss');
+                    ).format('YYYY-MM-DD-HHmmss');
 
-                    archive.file(`${archivo}`, {
-                        name: `${fechaArchivo} - ${nombreArchivo}.pdf`
-                    });
+                    return {
+                        buffer: Buffer.from(pdfBuffer),
+                        name: `${fechaArchivo} - ${safe(nombreArchivo)}.pdf`
+                    };
 
                 } catch (error) {
                     exportHudsLog.error(
@@ -175,18 +257,25 @@ async function buildExportFile(peticionExport: any) {
                         objectLog,
                         error
                     );
+                    return null;
                 }
-            })
+            }))
         );
+
+        for (const file of files.filter(Boolean)) {
+            archive.append(Readable.from(file.buffer), {
+                name: file.name
+            });
+        }
     };
 
-    const getCdas = (excluye: string[]) => {
-        return Promise.all(
-            cdas.map(async (cda: any) => {
+    const getCdas = async (excluye: string[]) => {
+        const files = await Promise.all(
+            cdas.map((cda: any) => limit(async () => {
                 const conceptId = cda.metadata?.prestacion?.snomed?.conceptId;
 
                 if (excluye.includes(conceptId)) {
-                    return;
+                    return null;
                 }
 
                 if (cda.metadata.adjuntos?.length > 0) {
@@ -199,15 +288,21 @@ async function buildExportFile(peticionExport: any) {
                         );
 
                         if (!fileCda?.stream) {
-                            return;
+                            return null;
                         }
 
-                        archive.append(fileCda.stream, {
+                        const cdaBuffer = await streamToBuffer(fileCda.stream);
+                        if (!cdaBuffer?.length) {
+                            throw new Error(`CDA adjunto vacío ${cda._id}`);
+                        }
+
+                        return {
+                            buffer: Buffer.from(cdaBuffer),
                             name:
                                 `${moment(cda.metadata.fecha)
-                                    .format('YYYY-MM-DD-hhmmss')} - ` +
-                                `${cda.metadata.prestacion.snomed.term}.pdf`
-                        });
+                                    .format('YYYY-MM-DD-HHmmss')} - ` +
+                                `${safe(cda.metadata.prestacion?.snomed?.term || 'CDA')}.pdf`
+                        };
                     } catch (error) {
                         exportHudsLog.error(
                             'Crear cda',
@@ -215,7 +310,7 @@ async function buildExportFile(peticionExport: any) {
                             error
                         );
                     }
-                    return;
+                    return null;
                 }
 
                 if (conceptId && conceptId !== '33879002') {
@@ -231,7 +326,7 @@ async function buildExportFile(peticionExport: any) {
                                 objectLog,
                                 new Error('CDA sin codificación')
                             );
-                            return;
+                            return null;
                         }
 
                         cda.metadata.codificacion = codificacion;
@@ -241,20 +336,24 @@ async function buildExportFile(peticionExport: any) {
                             peticionExport.user?.usuario
                         );
 
-                        const archivo: any = await informe.informe();
+                        const pdfBuffer: Buffer = await informe.informe();
+                        if (!pdfBuffer?.length) {
+                            throw new Error(`PDF vacío para CDA ${cda._id}`);
+                        }
 
                         const fechaArchivo = moment(
                             cda.metadata.fecha
-                        ).format('YYYY-MM-DD-hhmmss');
+                        ).format('YYYY-MM-DD-HHmmss');
 
                         const nombreArchivo =
                             cda.metadata.prestacion.snomed.term;
 
-                        archive.file(`${archivo}`, {
+                        return {
+                            buffer: Buffer.from(pdfBuffer),
                             name:
                                 `${fechaArchivo} - ` +
-                                `${nombreArchivo}.pdf`
-                        });
+                                `${safe(nombreArchivo)}.pdf`
+                        };
 
                     } catch (error) {
                         exportHudsLog.error(
@@ -264,8 +363,15 @@ async function buildExportFile(peticionExport: any) {
                         );
                     }
                 }
-            })
+                return null;
+            }))
         );
+
+        for (const file of files.filter(Boolean)) {
+            archive.append(Readable.from(file.buffer), {
+                name: file.name
+            });
+        }
     };
 
     try {
@@ -277,4 +383,20 @@ async function buildExportFile(peticionExport: any) {
         (uploadStream as any).abort?.();
         throw error;
     }
+}
+
+/**
+ * @param params filtros para buscar prestaciones y CDAs
+ * @returns true si existe al menos una prestación o un CDA para esos filtros
+ */
+export async function checkHistory(params) {
+    const { query, queryCda, cdaFiles } = await getHudsSearchCriteria(params);
+
+    const prestacionExists = await Prestacion.findOne(query).select({ _id: 1 }).lean();
+    if (prestacionExists) {
+        return true;
+    }
+
+    const cdaMatch = await cdaFiles.find(queryCda).limit(1).toArray();
+    return cdaMatch.length > 0;
 }

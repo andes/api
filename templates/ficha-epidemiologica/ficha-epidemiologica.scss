@@ -1,18 +1,35 @@
 .contenedor-secundario {
     display: block;
-    text-align: center;
+    width: 100%;
+    margin-left: 1.5cm;
     font-size: .25cm;
+
+    h6 {
+        font-size: 0.3cm;
+        margin-bottom: 0.25cm;
+    }
+
+    p {
+        margin: 5px 0;
+        font-family: Arial, sans-serif;
+        font-size: .27cm;
+    }
 }
 
-p {
-    margin: 5px 0;
-    font-family: Arial, sans-serif;
-    font-size: .27cm;
+hr {
+    margin-left: .75cm;
+    width: 90%;
 }
 
 .foot {
-    font-family: Arial, sans-serif;
-    font-size: 10px;
+    display: block;
+    width: 100%;
+    margin: .5cm 1.5cm;
+
+    p {
+        font-family: Arial, sans-serif;
+        font-size: .2cm;
+    }
 }
 
 .logoHeader {

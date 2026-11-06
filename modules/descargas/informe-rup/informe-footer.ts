@@ -45,11 +45,10 @@ export class InformeRupFooter extends HTMLComponent {
                     </h6>
                 {{/if}}
             </article>
-            
-            <hr>
-            <span class="numeracion">
-                {{{ numeracionHTML }}}
-            </span>
+        </span>
+        <hr>
+        <span class="numeracion">
+            {{{ numeracionHTML }}}
         </span>
     `;
 
@@ -71,7 +70,7 @@ export class InformeRupFooter extends HTMLComponent {
                 pdp: loadImage('templates/rup/informes/img/logo-pdp.png'),
             },
             validacion,
-            numeracionHTML: '<small> {{page}} </small> de <small> {{pages}} </small>',
+            numeracionHTML: '<small><span class="pageNumber"></span></small> de <small><span class="totalPages"></span></small>',
             notaPie: this.organizacion.configuraciones?.notaAlPie || InformeRupFooter.notaAlPieDefault
         };
     }
