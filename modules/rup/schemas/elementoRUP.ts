@@ -19,6 +19,7 @@ export interface IElementoRUP {
         elementoRUP: ObjectId;
         concepto: ISnomedConcept;
         parms: any;
+        esSolicitud: boolean;
         style: any;
         sexo?: string;
     }[];
@@ -133,6 +134,12 @@ export const ElementoRUPSchema = new mongoose.Schema({
                     default: 12
                 },
                 cssClass: String
+            },
+            // Indica si este elementoRUP aplica a una solicitud
+            esSolicitud: {
+                type: Boolean,
+                required: false,
+                default: false
             },
             // Indica parámetros para la instancia del elementoRUP en formato {key: value}
             params: {
