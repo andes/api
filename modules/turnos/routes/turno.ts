@@ -20,9 +20,14 @@ import { Agenda } from '../schemas/agenda';
 import { Constantes } from '../../constantes/constantes.schema';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import { userScheduler } from '../../../config.private';
+import { ambitoOrigenValido } from '../../rup/ambito-origen';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
+
+function ambitoOrigenTurnoInvalido(ambitoOrigen: any): boolean {
+    return ambitoOrigen !== undefined && ambitoOrigen !== null && !ambitoOrigenValido(ambitoOrigen);
+}
 
 router.get('/turno/:id*?', async (req, res, next) => {
 
@@ -55,6 +60,9 @@ function getCarpeta(nroDocumento, idOrganizacion) {
 }
 
 router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
+    if (ambitoOrigenTurnoInvalido(req.body.ambitoOrigen)) {
+        return next({ status: 400, message: 'Ámbito de origen inválido' });
+    }
     const continues = ValidateDarTurno.checkTurno(req.body);
 
     if (continues.valid) {
@@ -82,6 +90,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             nota: req.body.nota,
             link: req.body.link,
             motivoConsulta: req.body.motivoConsulta,
+            ambitoOrigen: req.body.ambitoOrigen || undefined,
             paciente: req.body.paciente,
             tipoPrestacion: req.body.tipoPrestacion,
             updatedAt: fecha,
@@ -172,6 +181,9 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
  */
 
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: any, res, next) => {
+    if (ambitoOrigenTurnoInvalido(req.body.ambitoOrigen)) {
+        return next({ status: 400, message: 'Ámbito de origen inválido' });
+    }
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
 
@@ -315,6 +327,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
         update[etiquetaLink] = req.body.link;
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+        update[bloqueTurno + '.ambitoOrigen'] = req.body.ambitoOrigen || undefined;
         update[estadoFacturacion] = req.body.estadoFacturacion;
 
         const etiquetaVideoConferencia = bloqueTurno + '.videoConferencia';
