@@ -93,7 +93,7 @@
     },
     "scripts": {
         "startNode": "tsc && gulp && concurrently \"npm run node\" ",
-        "start": "DEBUG=andes concurrently -r \"npm run tsc:w\" \"npm run node\" ",
+        "start": "set DEBUG=andes && concurrently -r \"npm run tsc:w\" \"npm run node\" ",
         "node": "nodemon -q ./index.js",
         "tsc": "node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc",
         "tsc:w": "tsc -w",
