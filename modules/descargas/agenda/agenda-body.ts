@@ -288,6 +288,8 @@ export class AgendaBody extends HTMLComponent {
                     turno.estadoTurno = 'Turno Doble';
                 } else if (turno && turno.estado === 'suspendido') {
                     turno.estadoTurno = 'Suspendido';
+                } else if (turno && turno.estado === 'asignado') {
+                    turno.estadoTurno = 'Asignado';
                 } else {
                     turno.estadoTurno = '';
                 }
@@ -297,7 +299,15 @@ export class AgendaBody extends HTMLComponent {
         // SOBRETURNOS
         data.sobreturnos.forEach(sobreturno => {
             sobreturno.inicioSobreturno = moment(sobreturno.horaInicio).locale('es').format('HH:mm');
-            sobreturno.estadoTurno = (sobreturno && sobreturno.estado === 'suspendido') ? 'Suspendido' : '';
+            if (sobreturno && sobreturno.estado === 'turnoDoble') {
+                sobreturno.estadoTurno = 'Turno Doble';
+            } else if (sobreturno && sobreturno.estado === 'suspendido') {
+                sobreturno.estadoTurno = 'Suspendido';
+            } else if (sobreturno && sobreturno.estado === 'asignado') {
+                sobreturno.estadoTurno = 'Asignado';
+            } else {
+                sobreturno.estadoTurno = '';
+            }
             sobreturno.autocitado = (sobreturno.tipoTurno === 'profesional') ? true : false;
 
             if (sobreturno?.paciente?.id && sobreturno?.paciente?.fechaNacimiento) {
