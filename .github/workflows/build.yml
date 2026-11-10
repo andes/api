@@ -1,16 +1,20 @@
 name: BUILD AND TEST
+
+# Apunta a la rama de desarrollo de shared-workflows.
+# Pasa a @v1 cuando node-ci esté en ese tag.
 on: [push]
+
+permissions:
+  contents: read
+
 jobs:
-    build:
-        runs-on: ubuntu-22.04
-        steps:
-            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-            - name: Use Node.js
-              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-              with:
-                  node-version: '22.x'
-            - run: npm ci
-            - run: cp config.private.ts.example config.private.ts   
-            - run: npm run lint
-            - run: NODE_OPTIONS=--max-old-space-size=4096 npm run tsc
-            - run: npm run test 
+  build:
+    uses: andes/shared-workflows/.github/workflows/node-ci.yml@feat/api-wf
+    with:
+      runner: ubuntu-22.04
+      node-version: 22.x
+      commands: |
+        cp config.private.ts.example config.private.ts
+        npm run lint
+        NODE_OPTIONS=--max-old-space-size=4096 npm run tsc
+        npm run test
