@@ -82,6 +82,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             nota: req.body.nota,
             link: req.body.link,
             motivoConsulta: req.body.motivoConsulta,
+            procedimiento: req.body.procedimiento,
             paciente: req.body.paciente,
             tipoPrestacion: req.body.tipoPrestacion,
             updatedAt: fecha,
@@ -137,7 +138,8 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
                     tipoTurno: doc2.tipoTurno,
                     nota: doc2.nota,
                     link: doc2.link,
-                    motivoConsulta: doc2.motivoConsulta
+                    motivoConsulta: doc2.motivoConsulta,
+                    procedimiento: turno.procedimiento
                 };
                 turnosLog.info('asignarTurno', datosOp, req);
                 const turnoLog = doc2.bloques[0].turnos[turnos.length - 1];
@@ -298,6 +300,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
         const etiquetaLink: string = bloqueTurno + '.link';
         const etiquetaEmitidoPor: string = bloqueTurno + '.emitidoPor';
         const etiquetaMotivoConsulta: string = bloqueTurno + '.motivoConsulta';
+        const etiquetaProcedimiento: string = bloqueTurno + '.procedimiento';
         const estadoFacturacion: string = bloqueTurno + '.estadoFacturacion';
         const etiquetaReasignado: string = bloqueTurno + '.reasignado';
         const etiquetaNotificar = bloqueTurno + '.notificar';
@@ -315,6 +318,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
         update[etiquetaLink] = req.body.link;
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+        update[etiquetaProcedimiento] = req.body.procedimiento;
         update[estadoFacturacion] = req.body.estadoFacturacion;
 
         const etiquetaVideoConferencia = bloqueTurno + '.videoConferencia';
@@ -374,6 +378,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                     link: update[etiquetaLink],
                     emitidoPor: update[etiquetaEmitidoPor], // agregamos el emitidoPor
                     motivoConsulta: update[etiquetaMotivoConsulta],
+                    procedimiento: update[etiquetaProcedimiento],
                     usuarioDacion: update[etiquetaUsuarioDacion],
                     fechaHoraDacion: update[etiquetaFechHoraDacion]
                 };
@@ -455,6 +460,10 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         const etiquetaMotivoConsulta: string = etiquetaTurno + '.motivoConsulta';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
 
+    }
+    if (req.body.procedimiento) {
+        const etiquetaProcedimiento: string = etiquetaTurno + '.procedimiento';
+        update[etiquetaProcedimiento] = req.body.procedimiento;
     }
     if (req.body.actualizaObraSocial) {
         const etiquetaPaciente: string = etiquetaTurno + '.paciente.obraSocial';

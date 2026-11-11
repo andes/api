@@ -135,6 +135,7 @@ export async function liberarTurno(req, data, turno) {
             turno.tipoTurno = undefined;
             turno.link = undefined;
             turno.motivoConsulta = undefined;
+            turno.procedimiento = undefined;
             turno.webexLinks = null;
             turno.updatedAt = new Date();
             turno.updatedBy = req.user.usuario || req.user;
@@ -213,6 +214,7 @@ export function suspenderTurno(req, data, turno) {
     const efector = data.organizacion;
     delete turno.paciente;
     delete turno.tipoPrestacion;
+    // Se conserva procedimiento en el subdocumento suspendido para trazabilidad (qué SNOMED estaba planificado).
     turno.webexLinks = null;
     turno.motivoSuspension = req.body.motivoSuspension;
     turno.avisoSuspension = req.body.avisoSuspension;
@@ -1605,6 +1607,7 @@ export function agendaNueva(data, clon, req) {
                 turno.fechaHoraDacion = undefined;
                 turno.link = undefined;
                 turno.motivoConsulta = undefined;
+                turno.procedimiento = undefined;
                 turno.usuarioDacion = undefined;
                 turno.profesional = undefined;
                 turno.horaAsistencia = undefined;
