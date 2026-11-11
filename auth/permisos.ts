@@ -390,6 +390,15 @@ export default [
                     { key: 'edit', title: 'Editar farmacias', type: 'boolean' },
                     { key: 'delete', title: 'Borrar farmacias', type: 'boolean' },
                 ]
+            },
+            {
+                key: 'servicios-intermedio',
+                title: 'Servicios Intermedio',
+                child: [
+                    { key: 'create', title: 'Crear nuevo servicio intermedio', type: 'boolean' },
+                    { key: 'edit', title: 'Editar servicios intermedio', type: 'boolean' },
+                    { key: 'delete', title: 'Borrar servicios intermedio', type: 'boolean' },
+                ]
             }
         ]
     },

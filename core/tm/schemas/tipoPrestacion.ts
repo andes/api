@@ -1,4 +1,4 @@
-import { Document, Model, model, Schema, Types } from 'mongoose';
+import { Document, model, Schema, Types } from 'mongoose';
 
 export interface ITipoPrestacion extends Document {
     nombre?: string;
@@ -74,3 +74,15 @@ tipoPrestacionSchema.virtual('nombre').get(function () {
 
 export const tipoPrestacion = model<ITipoPrestacion>('tipoPrestacion', tipoPrestacionSchema, 'conceptoTurneable');
 
+
+export const ConceptoTurneableSchema = new Schema({
+    id: Types.ObjectId,
+    conceptId: String,
+    term: String,
+    fsn: String,
+    semanticTag: String,
+
+}, { _id: false });
+ConceptoTurneableSchema.virtual('nombre').get(function () {
+    return this.term;
+});
