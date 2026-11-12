@@ -99,6 +99,27 @@ export default [
                     { key: 'darSobreturno', title: 'Dar sobreturno', type: 'boolean' },
 
                 ]
+            },
+            {
+                key: 'mapa-agenda-colores',
+                title: 'Colores del mapa de agendas',
+                comment: 'ABM de colores SNOMED por concepto en el mapa de citas',
+                child: [
+                    {
+                        key: 'organizacion',
+                        title: 'Nivel organización',
+                        child: [
+                            { key: 'write', title: 'Crear y editar colores de la organización', type: 'boolean' }
+                        ]
+                    },
+                    {
+                        key: 'profesional',
+                        title: 'Nivel profesional',
+                        child: [
+                            { key: 'write', title: 'Crear y editar colores del profesional (cualquiera en la org)', type: 'boolean' }
+                        ]
+                    }
+                ]
             }
         ]
     },
@@ -398,6 +419,20 @@ export default [
                     { key: 'create', title: 'Crear nuevo servicio intermedio', type: 'boolean' },
                     { key: 'edit', title: 'Editar servicios intermedio', type: 'boolean' },
                     { key: 'delete', title: 'Borrar servicios intermedio', type: 'boolean' },
+                ]
+            },
+            {
+                key: 'mapa-agenda-colores',
+                title: 'Colores mapa de agendas (global)',
+                comment: 'Reglas de color globales SNOMED para el mapa de agendas',
+                child: [
+                    {
+                        key: 'global',
+                        title: 'Alcance global',
+                        child: [
+                            { key: 'write', title: 'Crear y editar colores globales', type: 'boolean' }
+                        ]
+                    }
                 ]
             }
         ]
