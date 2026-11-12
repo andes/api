@@ -2,9 +2,7 @@
  * Corre una Jobs de forma manual. Corre desde el root del proyecto.
  *
  * node jobs/manual.js [Js File to run]
- */
-
-// Prueba del labeler. Se saca cuando aparezca el label script.
+*/
 
 
 import { Connections } from '../connections';

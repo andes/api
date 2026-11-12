@@ -350,5 +350,3 @@ export const SIP_PLUS = {
 };
 
 export const defaultPointReference = [-68.0863283, -38.945162]; // Setear el punto de referencia default para cada provincia
-
-// Prueba del labeler. Se saca cuando aparezca el label config.
