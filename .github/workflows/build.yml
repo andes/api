@@ -1,7 +1,4 @@
 name: BUILD AND TEST
-
-# Apunta a la rama de desarrollo de shared-workflows.
-# Pasa a @v1 cuando node-ci esté en ese tag.
 on: [push]
 
 permissions:
@@ -9,7 +6,7 @@ permissions:
 
 jobs:
   build:
-    uses: andes/shared-workflows/.github/workflows/node-ci.yml@feat/api-wf
+    uses: andes/shared-workflows/.github/workflows/node-ci.yml@v1
     with:
       runner: ubuntu-22.04
       node-version: 22.x
