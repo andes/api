@@ -1,7 +1,4 @@
 name: "Pull Request Labeler"
-
-# Apunta a la rama de desarrollo de shared-workflows.
-# Pasa a @v1 cuando el labeler esté en ese tag.
 on:
   pull_request:
 
@@ -11,4 +8,4 @@ permissions:
 
 jobs:
   triage:
-    uses: andes/shared-workflows/.github/workflows/labeler.yml@feat/api-wf
+    uses: andes/shared-workflows/.github/workflows/labeler.yml@v1
