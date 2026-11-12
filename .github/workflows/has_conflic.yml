@@ -1,22 +1,17 @@
 name: Label merge conflicts
+
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - master
   pull_request_target:
-    types:
-      - synchronize
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [master]
 
 permissions:
   contents: read
   pull-requests: write
 
 jobs:
-  triage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: eps1lon/actions-label-merge-conflict@v3.1.0
-        with:
-          dirtyLabel: "has_conflicts"
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
+  conflicts:
+    uses: andes/shared-workflows/.github/workflows/label-merge-conflicts.yml@v1
+    with:
+      label: has_conflicts
