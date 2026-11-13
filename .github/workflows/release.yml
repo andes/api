@@ -17,3 +17,16 @@ jobs:
       skip_npm: false
       # Se apaga después de revisar el análisis en master.
       dry_run: true
+
+  # Con dry_run, published queda en false y este job no corre.
+  image:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    uses: andes/shared-workflows/.github/workflows/docker-image.yml@chore/docker
+    with:
+      image: andesnqn/api
+      tags: ${{ needs.release.outputs.version }},${{ needs.release.outputs.short_sha }}
+      ref: ${{ needs.release.outputs.sha }}
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
