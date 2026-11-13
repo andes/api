@@ -1,3 +1,24 @@
+# [5.149.0](https://github.com/andes/api/compare/v5.148.1...v5.149.0) (2026-11-13)
+
+
+### Bug Fixes
+
+* **docker:** arma la imagen con Node 22 ([#2358](https://github.com/andes/api/issues/2358)) ([1dedb04](https://github.com/andes/api/commit/1dedb04b12b5f3198d6487429063a78d636376cf))
+* **HUDS:** restaura descarga de CDAs historicos sin adjuntos ([#2335](https://github.com/andes/api/issues/2335)) ([0dd6321](https://github.com/andes/api/commit/0dd63218a9dedf87c9c156dd5d0faeca89720c19))
+* **logPaciente:** evita error de validación con campos null en turnos ([#2336](https://github.com/andes/api/issues/2336)) ([2cb5145](https://github.com/andes/api/commit/2cb514513cd5a9aad82236179188745082ffcf6d))
+* **MPI:** se corrigen datos de paciente andes por falla paciente fhir ([#2342](https://github.com/andes/api/issues/2342)) ([7fb39f8](https://github.com/andes/api/commit/7fb39f8eea63e61306b17bf846dd6bfcbb1ed365))
+
+
+### Features
+
+* **REC-297:** Nuevo buscador de insumos desde vademecum-ms ([#2322](https://github.com/andes/api/issues/2322)) ([3884822](https://github.com/andes/api/commit/3884822cbedae8e7ec9ab658ec9f1f6b83186895))
+* **Receta:** Se agrega proxy a vademecum ([#2353](https://github.com/andes/api/issues/2353)) ([42e4200](https://github.com/andes/api/commit/42e42003a60571a7aeca76f50954f8a38f77652f))
+
+
+### Reverts
+
+* Revert "feat(REC-297): Nuevo buscador de insumos desde vademecum-ms ([#2322](https://github.com/andes/api/issues/2322))" ([#2352](https://github.com/andes/api/issues/2352)) ([84dc955](https://github.com/andes/api/commit/84dc95552e95372d1a90cff9cf62ae9715d7cea9))
+
 ## [5.148.1](https://github.com/andes/api/compare/v5.148.0...v5.148.1) (2026-10-07)
 
 
