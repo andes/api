@@ -9,11 +9,9 @@ permissions:
   pull-requests: write
 jobs:
   release:
-    uses: andes/shared-workflows/.github/workflows/semantic-release.yml@feat/api-wf
+    uses: andes/shared-workflows/.github/workflows/semantic-release.yml@v1
     secrets:
       release_token: ${{ secrets.DEPLOY_TOKEN }}
     with:
       branches: "['master']"
       skip_npm: false
-      # Se apaga después de revisar el análisis en master.
-      dry_run: true
