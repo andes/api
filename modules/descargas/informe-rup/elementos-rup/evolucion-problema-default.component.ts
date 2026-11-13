@@ -22,9 +22,11 @@ export class EvolucionProblemaDefaultComponent extends HTMLComponent {
     }
 
     async process() {
+        // paliativo para epicrisis con evoluciones mal guardadas. Debería resolverse en el front
+        const evoString = !!(typeof this.registro.valor.evolucion === 'string');
         this.data = {
             registro: this.registro,
-            evolucion: this.registro.valor.evolucion?.replace('<p>', '')
+            evolucion: evoString ? this.registro.valor.evolucion?.replace('<p>', '') : null
         };
     }
 
