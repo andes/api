@@ -1,16 +1,17 @@
 name: BUILD AND TEST
 on: [push]
+
+permissions:
+  contents: read
+
 jobs:
-    build:
-        runs-on: ubuntu-22.04
-        steps:
-            - uses: actions/checkout@v7
-            - name: Use Node.js
-              uses: actions/setup-node@v7
-              with:
-                  node-version: '22.x'
-            - run: npm ci
-            - run: cp config.private.ts.example config.private.ts   
-            - run: npm run lint
-            - run: NODE_OPTIONS=--max-old-space-size=4096 npm run tsc
-            - run: npm run test 
+  build:
+    uses: andes/shared-workflows/.github/workflows/node-ci.yml@v1
+    with:
+      runner: ubuntu-22.04
+      node-version: 22.x
+      commands: |
+        cp config.private.ts.example config.private.ts
+        npm run lint
+        NODE_OPTIONS=--max-old-space-size=4096 npm run tsc
+        npm run test
