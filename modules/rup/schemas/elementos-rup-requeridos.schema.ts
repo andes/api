@@ -27,7 +27,6 @@ export const ElementoRUPRequeridosSchema = new mongoose.Schema({
     concepto: SnomedConcept,
     contexto: [mongoose.SchemaTypes.Mixed],
     rules: mongoose.SchemaTypes.Mixed,
-
     target: [{
         concepto: SnomedConcept,
         tipo: String
