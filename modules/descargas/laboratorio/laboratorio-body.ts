@@ -80,7 +80,13 @@ export class FarmaciaBody extends HTMLComponent {
                                                     {{unidadMedida}}
                                                 {{/if}}
                                             </div>
-                                            <div class="rTableCell1 small">{{ item.valorReferencia}}</div>
+                                            <div class="rTableCell1 small">
+                                                {{#if item.hasHtml}}
+                                                    {{{ item.valorReferencia }}}
+                                                {{else}}
+                                                    {{ item.valorReferencia }}
+                                                {{/if}}
+                                            </div>
                                             <div class="rTableCell1 small">
                                                 {{#if item.metodo}}
                                                     {{ item.metodo }}
@@ -118,7 +124,13 @@ export class FarmaciaBody extends HTMLComponent {
                                                     {{unidadMedida}}
                                                 {{/if}}
                                             </div>
-                                            <div class="rTableCell1 small">{{valorReferencia}}</div>
+                                            <div class="rTableCell1 small">
+                                                {{#if hasHtml}}
+                                                    {{{ valorReferencia }}}
+                                                {{else}}
+                                                    {{ valorReferencia }}
+                                                {{/if}}
+                                            </div>
                                             <div class="rTableCell1 small">
                                                 {{#if metodo}}
                                                     {{ metodo }}
@@ -158,6 +170,10 @@ export class FarmaciaBody extends HTMLComponent {
         super();
     }
 
+    public hasHtml(str: string): boolean {
+        return Boolean(str && typeof str === 'string' && /<\/?([a-z][a-z0-9]*)(\s+[^>]*)?\/?>/i.test(str));
+    }
+
     public async process() {
         this.encabezado.data.fecha = moment(this.encabezado.data.fecha).format('DD-MM-YYYY');
         this.encabezado.data.fechanacimiento = moment(this.encabezado.data.fechanacimiento || this.encabezado.data.fechaNacimiento).format('DD-MM-YYYY');
@@ -193,8 +209,12 @@ export class FarmaciaBody extends HTMLComponent {
                 const firmasArea = new Set<string>();
                 if (area.grupos) {
                     for (const grupo of area.grupos) {
+                        if (grupo.item) {
+                            grupo.item.hasHtml = this.hasHtml(grupo.item.valorReferencia);
+                        }
                         if (grupo.items) {
                             for (const item of grupo.items) {
+                                item.hasHtml = this.hasHtml(item.valorReferencia);
                                 if (item.firma) {
                                     firmasArea.add(item.firma);
                                 }
