@@ -22,6 +22,10 @@ export function initAPI(app: Express) {
     const { Connections } = require('./connections');
     Connections.initialize();
 
+    // Crea/actualiza motivos de acceso a HUDS por defecto
+    const { setUpMotivosHuds } = require('./modules/huds/motivosHuds');
+    setUpMotivosHuds();
+
     // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
 
