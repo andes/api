@@ -189,6 +189,7 @@ router.post('/registro-familiar/:id', async (req: any, res, next) => {
                 return res.status(400).send('Documento Inválido.');
             }
             const documentoScan: any = ScanParse.scan(scanText);
+            documentoScan.sexo = documentoScan.sexo || req.body.sexo || '';
             req.body.documento = documentoScan.documento;
             req.body.sexo = documentoScan.sexo;
             req.body.validado = false;

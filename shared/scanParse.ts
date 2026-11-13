@@ -32,6 +32,19 @@ export const DocumentoEscaneados: DocumentoEscaneado[] = [
         grupoTramite: 1
     },
 
+    // DNI Argentino versión 2026 (QR, no informa el sexo)
+    // Formato: NroTramite@Apellido@Nombres@NroDni@Ejemplar@FechaNacimiento@FechaEmision@TokenValidacion
+    // Formato: 00123456789@PEREZ@ANA LUCIA@12345678@A@15/03/80@19/05/26@eyJ0eXAiOiJKV1Qi...
+    {
+        regEx: /([0-9]+)@([a-zA-ZñÑáéíóúÁÉÍÓÚÜü'\-\s]+)@([a-zA-ZñÑáéíóúÁÉÍÓÚÜü'\-\s]+)@([0-9]+)@([A-Z]+)@([0-9]{2}\/[0-9]{2}\/[0-9]{2,4})@([0-9]{2}\/[0-9]{2}\/[0-9]{2,4})@(.*)/i,
+        grupoNumeroDocumento: 4,
+        grupoApellido: 2,
+        grupoNombre: 3,
+        grupoSexo: 0,
+        grupoFechaNacimiento: 6,
+        grupoTramite: 1
+    },
+
     // QR ACTA DE NACIMIENTO
     // Formato: INOSTROZA, Ramiro Daniel DNI: 54852844Tomo: 5Folio: 88Acta: 507Año: 2015Formato de archivo de imágen no reconocido
     {
