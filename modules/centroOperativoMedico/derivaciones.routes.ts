@@ -104,6 +104,12 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
         if (derivacion) {
             const nuevoEstado = req.body.estado;
 
+            // Si se cambió la cobertura (null = sin obra social), se actualiza también en el paciente de la derivación
+            if (nuevoEstado.obraSocial !== undefined) {
+                derivacion.paciente.obraSocial = nuevoEstado.obraSocial;
+                derivacion.markModified('paciente');
+            }
+
             if (nuevoEstado.estado === 'habilitada') {
                 const orgCOM = (await Organizacion.find({ esCOM: true }))[0];
                 const { id, nombre, direccion } = orgCOM;
