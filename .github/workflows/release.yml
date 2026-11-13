@@ -9,7 +9,7 @@ permissions:
   pull-requests: write
 jobs:
   release:
-    uses: andes/shared-workflows/.github/workflows/semantic-release.yml@feat/api-wf
+    uses: andes/shared-workflows/.github/workflows/semantic-release.yml@chore/docker
     secrets:
       release_token: ${{ secrets.DEPLOY_TOKEN }}
     with:
