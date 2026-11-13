@@ -1,13 +1,17 @@
+name: Label merge conflicts
+
 on:
-  workflow_dispatch:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
   push:
-    branches:
-      - master
+    branches: [master]
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
-  triage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: mschilde/auto-label-merge-conflicts@master
-        with:
-          CONFLICT_LABEL_NAME: "has_conflicts"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  conflicts:
+    uses: andes/shared-workflows/.github/workflows/label-merge-conflicts.yml@v1
+    with:
+      label: has_conflicts
