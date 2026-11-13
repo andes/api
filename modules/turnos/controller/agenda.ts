@@ -18,6 +18,7 @@ import { getAccesosVirtuales } from '../../turnos/controller/turnosController';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import { ECLQueriesCtr } from './../../../core/tm/eclqueries.routes';
 import { handleHttpRequest } from '../../../utils/requestHandler';
+import { ambitoOrigenValido } from '../../rup/ambito-origen';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -135,6 +136,7 @@ export async function liberarTurno(req, data, turno) {
             turno.tipoTurno = undefined;
             turno.link = undefined;
             turno.motivoConsulta = undefined;
+            turno.ambitoOrigen = undefined;
             turno.webexLinks = null;
             turno.updatedAt = new Date();
             turno.updatedBy = req.user.usuario || req.user;
@@ -434,6 +436,13 @@ export async function actualizarPaciente(pacienteTurno: any, req: any) {
 }
 
 // Agenda
+export function ambitoOrigenSobreturnoValido(sobreturno): boolean {
+    if (sobreturno && (sobreturno.ambitoOrigen === null || sobreturno.ambitoOrigen === '')) {
+        delete sobreturno.ambitoOrigen;
+    }
+    return !sobreturno || sobreturno.ambitoOrigen === undefined || ambitoOrigenValido(sobreturno.ambitoOrigen);
+}
+
 export async function agregarSobreturno(req, data) {
     const sobreturno = req.body.sobreturno;
     if (sobreturno) {
@@ -1605,6 +1614,7 @@ export function agendaNueva(data, clon, req) {
                 turno.fechaHoraDacion = undefined;
                 turno.link = undefined;
                 turno.motivoConsulta = undefined;
+                turno.ambitoOrigen = undefined;
                 turno.usuarioDacion = undefined;
                 turno.profesional = undefined;
                 turno.horaAsistencia = undefined;
