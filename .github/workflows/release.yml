@@ -15,10 +15,9 @@ jobs:
     with:
       branches: "['master']"
       skip_npm: false
-      # Se apaga después de revisar el análisis en master.
-      dry_run: true
+      # Igual que @v1: mueve el tag v<major>.
+      floating_tag: true
 
-  # Con dry_run, published queda en false y este job no corre.
   image:
     needs: release
     if: needs.release.outputs.published == 'true'

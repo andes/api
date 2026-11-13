@@ -1,4 +1,6 @@
 script:
-    - scripts/*
+  - changed-files:
+      - any-glob-to-any-file: scripts/*
 config:
-    - config.private.ts.example
+  - changed-files:
+      - any-glob-to-any-file: config.private.ts.example
