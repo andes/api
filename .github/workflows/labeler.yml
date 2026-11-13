@@ -1,11 +1,11 @@
 name: "Pull Request Labeler"
 on:
-- pull_request
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   triage:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/labeler@v2
-      with:
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+    uses: andes/shared-workflows/.github/workflows/labeler.yml@v1
