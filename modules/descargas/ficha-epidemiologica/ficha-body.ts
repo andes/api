@@ -4,16 +4,18 @@ export class FichaEpidemiologicaBody extends HTMLComponent {
     template = `
         <main>
             <p class="texto-centrado">FICHA {{tipo}}</p>
-            {{#each arreSecciones}}
-                <h6><u>{{seccionNombre}}:</u></h6>
-                {{#each arreFields}}
-                    {{#if fieldValor.nombre}}
-                        <p><b>{{fieldNombre}}:</b> {{fieldValor.nombre}}</p>
-                    {{else}}
-                        <p><b>{{fieldNombre}}:</b> {{fieldValor}}</p>
-                    {{/if}}
+            <section class="contenedor-secundario">
+                {{#each arreSecciones}}
+                    <h6><u>{{seccionNombre}}:</u></h6>
+                    {{#each arreFields}}
+                        {{#if fieldValor.nombre}}
+                            <p><b>{{fieldNombre}}:</b> {{fieldValor.nombre}}</p>
+                        {{else}}
+                            <p><b>{{fieldNombre}}:</b> {{fieldValor}}</p>
+                        {{/if}}
+                    {{/each}}
                 {{/each}}
-            {{/each}}
+            </section>
         </main>
     `;
 

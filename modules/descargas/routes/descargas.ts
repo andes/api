@@ -25,12 +25,20 @@ import { Forms } from '../../forms/forms.schema';
 
 const router = express.Router();
 
+function sendPdf(res: any, pdfBuffer: Buffer, options: { filename?: string; disposition?: 'inline' | 'attachment' } = {}) {
+    const filename = options.filename || 'informe.pdf';
+    const disposition = options.disposition || 'inline';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
+    return res.send(pdfBuffer);
+}
+
 router.post('/reporteDerivacion', Auth.authenticate(), async (req: any, res, next) => {
     try {
         const derivacion = new Derivacion(req);
-        const opciones = { header: { height: '3cm' } };
-        const fileName: any = await derivacion.informe(opciones);
-        res.download(fileName);
+        const opciones = { margin: { top: '3cm' } };
+        const pdfBuffer = await derivacion.informe(opciones);
+        return sendPdf(res, pdfBuffer, { filename: 'reporte-derivacion.pdf', disposition: 'attachment' });
     } catch (err) {
         return next(err);
     }
@@ -42,26 +50,27 @@ router.post('/reporteDerivacion', Auth.authenticate(), async (req: any, res, nex
  */
 router.post('/censo', async (req: any, res, next) => {
     const docCenso = new InformeCenso('diario', req);
-    const fileName: any = await docCenso.informe();
+    const opciones = { margin: { top: '6cm' } };
+    const pdfBuffer = await docCenso.informe(opciones);
 
-    return res.download(fileName);
+    return sendPdf(res, pdfBuffer);
 });
 
 
 router.post('/censoMensual', async (req: any, res, next) => {
     const docCenso = new InformeCenso('mensual', req);
-    const opciones = { header: { height: '4.5cm' }, orientation: 'landscape' };
-    const fileName: any = await docCenso.informe(opciones);
+    const opciones = { margin: { top: '6cm' }, landscape: true };
+    const pdfBuffer = await docCenso.informe(opciones);
 
-    return res.download(fileName);
+    return sendPdf(res, pdfBuffer);
 });
 
 router.post('/anexo-dos', async (req: any, res) => {
     const docRecupero = new RecuperoCosto(req);
-    const opciones = { header: { height: '3cm' } };
-    const fileName: any = await docRecupero.informe(opciones);
+    const opciones = { margin: { top: '3cm' } };
+    const pdfBuffer = await docRecupero.informe(opciones);
 
-    res.download(fileName);
+    return sendPdf(res, pdfBuffer, { filename: 'anexo-dos.pdf', disposition: 'attachment' });
 });
 
 /**
@@ -72,9 +81,12 @@ router.get('/rup/:idPrestacion/(:idRegistro)?', Auth.authenticate(), async (req:
         const idPrestacion = req.params.idPrestacion;
         const idRegistro = req.params.idRegistro;
         const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
-        const fileName = await informe.informe();
+        const pdfBuffer = await informe.informe();
 
-        return res.download(fileName);
+        return sendPdf(res, pdfBuffer, {
+            filename: `informe-${idPrestacion}${idRegistro ? `-${idRegistro}` : ''}.pdf`,
+            disposition: 'attachment'
+        });
     } catch (err) {
         return next(err);
     }
@@ -131,7 +143,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
     if (emailFiltrado) {
         try {
             const informe = new InformeRUP(idPrestacion, idRegistro, req.user);
-            const fileName = await informe.informe();
+            const pdfBuffer = await informe.informe();
 
             const html = await SendEmail.renderHTML('emails/email-informe.html', handlebarsData);
             const data = {
@@ -141,7 +153,7 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
                 attachments: [
                     {
                         filename: `informe-${moment(handlebarsData.fechaInicio).format('DD-MM-YYYY-H-mm-ss')}.pdf`,
-                        path: fileName
+                        content: pdfBuffer
                     },
                     ...attachments
                 ]
@@ -165,10 +177,10 @@ router.post('/send/:tipo', Auth.authenticate(), async (req, res, next) => {
 
 router.post('/constanciaPuco/:tipo?', Auth.authenticate(), async (req: any, res) => {
     const docPuco = new ConstanciaPuco(req);
-    const opciones = { header: { height: '3cm' } };
-    const fileName: any = await docPuco.informe(opciones);
+    const opciones = { margin: { top: '3cm' } };
+    const pdfBuffer = await docPuco.informe(opciones);
 
-    res.download(fileName);
+    return sendPdf(res, pdfBuffer);
 });
 
 router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
@@ -196,9 +208,10 @@ router.post('/laboratorio/:tipo?', Auth.authenticate(), async (req: any, res, ne
                 throw new Error('Ocurrió un error generando el archivo.');
             }
             const docLaboratorio = new Laboratorio(req.body.protocolo, response, paciente, req.body.usuario, req.user.type);
-            const opciones = { header: { height: '2cm' } };
-            const fileName: any = await docLaboratorio.informe(opciones);
-            res.download(fileName);
+            const opciones = { margin: { top: '2cm' } };
+            const pdfBuffer = await docLaboratorio.informe(opciones);
+
+            return sendPdf(res, pdfBuffer);
 
         } catch (err) {
             await laboratorioLog.error('laboratorio-descargas', req.body.protocolo.data, err, req);
@@ -219,9 +232,10 @@ router.post('/fichaEpidemiologia/:tipo?', Auth.authenticate(), async (req: any, 
                 throw new Error(`Error al generar ficha de ${req.body.ficha.type.name}`);
             }
             const docFichaEpidemiologica = new FichaEpidemiologica(req.body.ficha, req.body.usuario, ficha);
-            const opciones = { header: { height: '2cm' } };
-            const fileName: any = await docFichaEpidemiologica.informe(opciones);
-            res.download(fileName);
+            const opciones = { margin: { top: '2.5cm', bottom: '3.5cm' } };
+            const pdfBuffer = await docFichaEpidemiologica.informe(opciones);
+
+            return sendPdf(res, pdfBuffer);
         } catch (err) {
             return next(err);
         }
@@ -232,31 +246,33 @@ router.post('/fichaEpidemiologia/:tipo?', Auth.authenticate(), async (req: any, 
 
 router.post('/arancelamiento/:tipo?', Auth.authenticate(), async (req: any, res) => {
     const provincia = configPrivate.provincia || 'neuquen';
-    const opciones = { header: { height: '3cm' } };
-    let fileName: any;
+    const opciones = { margin: { top: '3cm' } };
+    let pdfBuffer: Buffer;
     if (provincia === 'neuquen') {
         const docPuco = new Arancelamiento(req);
-        fileName = await docPuco.informe(opciones);
+        pdfBuffer = await docPuco.informe(opciones);
     } else {
         const docRecupero = new RecuperoCosto(req);
-        fileName = await docRecupero.informe(opciones);
+        pdfBuffer = await docRecupero.informe(opciones);
     }
-    res.download(fileName);
+    return sendPdf(res, pdfBuffer);
 });
 
 router.post('/agenda/:id', Auth.authenticate(), async (req: any, res) => {
-    const opciones = { header: { height: '3cm' }, orientation: 'landscape' };
+    const opciones = { margin: { top: '3cm' }, landscape: true };
     const docAgenda = new Agenda(req);
-    const fileName = await docAgenda.informe(opciones);
-    res.download(fileName);
+    const pdfBuffer = await docAgenda.informe(opciones);
+
+    return sendPdf(res, pdfBuffer);
 });
 
 // Certificado de etica para profesional desde matriculaciones
 router.post('/certificadoEtica', Auth.authenticate(), async (req: any, res) => {
     const certificado = new CertificadoEtica(req);
-    const opciones = { header: { height: '3cm' } };
-    const fileName = await certificado.informe(opciones);
-    return res.download(fileName);
+    const opciones = { margin: { top: '3cm' } };
+    const pdfBuffer = await certificado.informe(opciones);
+
+    return sendPdf(res, pdfBuffer);
 });
 
 //
@@ -265,17 +281,18 @@ router.get('/credencialProfesional/:idProfesional/:idFormacionGrado/:qrcode', Au
     const idFormacionGrado = req.params.idFormacionGrado;
     const qrcode = req.params.qrcode;
     const certificado = new CredencialProfesional(idProfesional, idFormacionGrado, qrcode);
-    const opciones = { header: { height: '3cm' } };
-    const fileName = await certificado.informe(opciones);
-    return res.download(fileName);
+    const opciones = { margin: { top: '3cm' } };
+    const pdfBuffer = await certificado.informe(opciones);
+
+    return sendPdf(res, pdfBuffer);
 });
 
 router.post('/listadoTurnos', Auth.authenticate(), async (req: any, res, next) => {
-    const opciones = { header: { height: '3cm' } };
+    const opciones = { margin: { top: '3cm' } };
     const docTurnos = new InformeTurnos(req);
-    const fileName: any = await docTurnos.informe(opciones);
-    return res.download(fileName);
+    const pdfBuffer = await docTurnos.informe(opciones);
 
+    return sendPdf(res, pdfBuffer);
 });
 
 /**
@@ -289,9 +306,9 @@ router.post('/:tipo?', Auth.authenticate(), async (req: any, res, next) => {
         const snapshots = req.body.snapshots;
 
         const informe = new InformeRUP(idPrestacion, idRegistro, req.user, snapshots);
-        const fileName = await informe.informe();
+        const pdfBuffer = await informe.informe();
 
-        return res.download(fileName);
+        return sendPdf(res, pdfBuffer);
     } catch (err) {
         return next(err);
     }

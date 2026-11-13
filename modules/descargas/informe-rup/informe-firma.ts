@@ -6,7 +6,7 @@ import { Profesional } from '../../../core/tm/schemas/profesional';
 
 export class InformeRupFirma extends HTMLComponent {
     template = `
-        <footer id="last">
+        <section id="last">
             <!-- Firmas -->
             <span class="contenedor-firmas">
                 <div class="contenedor-bloque-texto">
@@ -24,7 +24,7 @@ export class InformeRupFirma extends HTMLComponent {
                     {{/if}}
                 </div>
             </span>
-        </footer>
+        </section>
     `;
 
     constructor(public profesional, public organizacion) {

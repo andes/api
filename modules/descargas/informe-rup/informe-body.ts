@@ -7,48 +7,45 @@ export class InformeRupBody extends HTMLComponent {
     template = `
         <main>
             <section class="contenedor-informe">
-                <article class="cabezal-conceptos horizontal">
-                    <div class="contenedor-bloque-texto w-50" >
+                <span class="cabezal-conceptos horizontal">
+                    <div class="contenedor-bloque-texto w-50">
                         <div class="tipo-prestacion">
                             {{ titulo }}
                         </div>
                     </div>
-
-                    <div class="contenedor-bloque-texto ">
-                        <h6 class="bolder">
-                            Fecha Consulta
+                    <div class="contenedor-bloque-texto">
+                        <h6>
+                            <b>Fecha Consulta</b>
                         </h6>
                         <h6>
                             {{ fechaEjecucion }}hs
                         </h6>
-                        </div>
-                        <div class="contenedor-bloque-texto ">
-                        <h6 class="bolder">
-                            Inicio de Prestación
-                        </h6>
-                        <h6>
-                            {{ fechaPrestacion }}hs
-                        </h6>
                     </div>
-                    <div class="contenedor-bloque-texto ">
+                    <div class="contenedor-bloque-texto">
                         {{#if esValidada}}
-                            <h6 class="bolder">
-                                Fecha Validación
+                            <h6>
+                                <b>Fecha Validación</b>
                             </h6>
                             <h6>
                                 {{ fechaValidacion }}hs
                             </h6>
                         {{else}}
-                            <h6 class="bolder">
-                                Sin validar
+                            <h6>
+                                <b>Sin validar</b>
                             </h6>
                         {{/if}}
                     </div>
-                        </div>
-                
-                </article>
-                <hr style="margin-bottom: 1rem;">
-
+                    <div class="contenedor-bloque-texto">
+                        <h6>
+                            <b>Inicio de Prestación</b>
+                        </h6>
+                        <h6>
+                            {{ fechaPrestacion }}hs
+                        </h6>
+                    </div>
+                </span>
+                <hr>
+                <br>
                 {{#if valorPrestacion}}
                     <h6 class="bolder">
                         {{ nombrePrestacion }}:
