@@ -18,9 +18,17 @@ export async function registroToHTML(prestacion, registro, depth: number) {
     const HTMLClass = ElementosRUPHTML[elementoRUP.componente];
 
     if (HTMLClass) {
-        const componenteHTML: HTMLComponent = new (HTMLClass)(prestacion, registro, registro.params, depth);
-        await componenteHTML.process();
-        return componenteHTML.render();
+        try {
+            const componenteHTML: HTMLComponent = new (HTMLClass)(prestacion, registro, registro.params, depth);
+            await componenteHTML.process();
+            return componenteHTML.render();
+        } catch (err) {
+            const error: any = new Error(
+                `INFORME-RUP: error en prestacion ${prestacion?.id} registro ${registro?.id} componente ${elementoRUP.componente}: ${err.message}`
+            );
+            error.status = err.status || 500;
+            throw error;
+        }
     } else {
         // eslint-disable-next-line no-console
         console.warn(`INFORME-RUP: Componente ${elementoRUP.componente} no tiene implementacion`);
