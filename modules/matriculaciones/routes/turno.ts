@@ -28,6 +28,18 @@ router.post('/turnos/:tipo/:profesionalId/', async (req, res, next) => {
     // Convert date to user datetime.
     try {
         const fechaTurno = new Date(req.body.turno.fecha);
+
+        // Validar que no se pueda sacar turno para mañana si es posterior a las 15:00
+        const ahora = new Date();
+        const manana = new Date();
+        manana.setDate(manana.getDate() + 1);
+        manana.setHours(0, 0, 0, 0);
+        const fechaTurnoInicio = new Date(fechaTurno);
+        fechaTurnoInicio.setHours(0, 0, 0, 0);
+        if (ahora.getHours() >= 15 && fechaTurnoInicio.getTime() === manana.getTime()) {
+            return next('No es posible sacar turnos para el día siguiente después de las 15:00 hs.');
+        }
+
         const busquedaTurno = {
             $and: [
                 { anulado: { $exists: false } },
