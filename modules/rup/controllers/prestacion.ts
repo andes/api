@@ -120,7 +120,7 @@ export async function search(params) {
 }
 
 
-export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPrestacion: string, estado: string, deadline, valor?, termSearch?, form?) {
+export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPrestacion: string, estado: string, deadline, valor?, termSearch?, form?, deadlineHasta?) {
     let useCache = true;
     if (!expresion) {
         return null;
@@ -140,11 +140,16 @@ export async function hudsPaciente(pacienteID: ObjectId, expresion: string, idPr
         query['_id'] = Types.ObjectId(idPrestacion);
     }
 
-    if (deadline) {
+    if (deadline || deadlineHasta) {
         useCache = false;
-        query['ejecucion.fecha'] = {
-            $gte: moment(deadline).startOf('day').toDate()
-        };
+        const rangoFechas: any = {};
+        if (deadline) {
+            rangoFechas.$gte = moment(deadline).startOf('day').toDate();
+        }
+        if (deadlineHasta) {
+            rangoFechas.$lte = moment(deadlineHasta).endOf('day').toDate();
+        }
+        query['ejecucion.fecha'] = rangoFechas;
     }
 
     let prestaciones;
