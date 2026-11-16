@@ -1,7 +1,5 @@
 name: Docker image
 
-# Dispatch manual. Apunta a la rama de prueba de shared-workflows.
-# Cuando salga el próximo 1.x, el ref pasa a @v1.
 on:
   workflow_dispatch:
 
@@ -19,7 +17,7 @@ jobs:
 
   image:
     needs: sha
-    uses: andes/shared-workflows/.github/workflows/docker-image.yml@chore/docker
+    uses: andes/shared-workflows/.github/workflows/docker-image.yml@v1
     with:
       image: andesnqn/api
       tags: ${{ needs.sha.outputs.short }}
