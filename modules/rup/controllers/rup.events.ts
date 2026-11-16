@@ -8,6 +8,8 @@ import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { RecetaControl } from '../../recetas/receta-control-schema';
 import { getDatosPrescripcion } from '../../recetas/recetas.helpers';
 import { Auth } from '../../../auth/auth.class';
+import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
+import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/paciente/paciente.controller';
 
 EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
     try {
@@ -58,10 +60,35 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
             diagnostico: null,
         };
         dataRecetaBase.paciente.cuil = pacienteCUIL;
+        if (dataRecetaBase.paciente?.obraSocial?.nombre === 'Sin obra social') {
+            dataRecetaBase.paciente.obraSocial = null;
+        }
+
+        const pacienteMPI = prestacion.paciente?.id ? await PacienteCtr.findById(prestacion.paciente.id) : null;
+        let financiadorMPI = pacienteMPI ? await updateObraSocial(pacienteMPI) : null;
+        let financiadorModificado = false;
 
         for (const medicamento of registro.valor.medicamentos) {
             try {
                 const esMagistral = !!medicamento?.esMagistral;
+                if (medicamento.obraSocial?.nombre === 'Sin obra social') {
+                    medicamento.obraSocial = null;
+                }
+                if (pacienteMPI && financiadorMPI && medicamento.obraSocial?.nombre) {
+                    const osMed = medicamento.obraSocial;
+                    if (osMed.origen !== 'PUCO' && osMed.origen !== 'SUMAR') {
+                        financiadorMPI = updateFinanciador(financiadorMPI, {
+                            codigoPuco: osMed.codigoPuco,
+                            nombre: osMed.nombre,
+                            financiador: osMed.financiador || osMed.nombre,
+                            numeroAfiliado: osMed.numeroAfiliado || '',
+                            prepaga: osMed.prepaga || false,
+                            idObraSocial: osMed.idObraSocial,
+                            origen: 'ANDES'
+                        } as any);
+                        financiadorModificado = true;
+                    }
+                }
                 const conceptId = medicamento?.concepto?.conceptId || medicamento?.generico?.conceptId;
                 const { tipo, identificador } = getDatosPrescripcion(medicamento);
 
@@ -148,6 +175,15 @@ EventCore.on('prestacion:receta:create', async ({ prestacion, registro }) => {
                 logger.error('prestacion:receta:create', { idRegistro, medicamento }, errorMedicamento);
             }
 
+        }
+
+        if (pacienteMPI && financiadorModificado) {
+            try {
+                const reqAudit = { user: prestacion.estadoActual?.createdBy || prestacion.createdBy } as any;
+                await PacienteCtr.update(pacienteMPI.id, { financiador: financiadorMPI }, reqAudit);
+            } catch (errorFinanciador) {
+                logger.error('prestacion:receta:create', { pacienteId: pacienteMPI.id }, errorFinanciador);
+            }
         }
     } catch (err) {
         logger.error('prestacion:receta:create', prestacion, err);
