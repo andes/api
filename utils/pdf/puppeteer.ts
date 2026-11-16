@@ -121,7 +121,7 @@ function releaseSlot() {
     }
 }
 
-async function shutdown() {
+export async function closePdfBrowser() {
     if (!browserPromise) {
         return;
     }
@@ -136,16 +136,6 @@ async function shutdown() {
     }
 }
 
-let shutdownRegistered = false;
-function registerShutdown() {
-    if (shutdownRegistered) {
-        return;
-    }
-    shutdownRegistered = true;
-    process.once('SIGTERM', shutdown);
-    process.once('SIGINT', shutdown);
-}
-
 export async function htmlToPdfBuffer(html: string, opts: PdfOpts = {}): Promise<Buffer> {
     const timeoutMs = opts.timeoutMs ?? DEFAULT_RENDER_TIMEOUT_MS;
 
@@ -153,7 +143,6 @@ export async function htmlToPdfBuffer(html: string, opts: PdfOpts = {}): Promise
     let page: Page = null;
 
     try {
-        registerShutdown();
         const browser = await getBrowser();
         page = await browser.newPage();
         page.setDefaultTimeout(timeoutMs);
