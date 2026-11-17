@@ -287,10 +287,15 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
 
 router.get('/documento/:documento', async (req: any, res, next) => {
     try {
-        const resp = await PacienteApp.find({ documento: req.params.documento });
-        return res.send(resp);
+        const cuentas = await PacienteApp.find({ documento: req.params.documento, profesionalId: null }, { email: 1, activacionApp: 1 });
+
+        const resp = cuentas.map(cuenta => ({
+            email: authController.enmascararEmail(cuenta.email),
+            activacionApp: cuenta.activacionApp
+        }));
+        return res.json(resp);
     } catch (err) {
-        return res.send(err);
+        return next(err);
     }
 });
 
