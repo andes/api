@@ -1,4 +1,6 @@
+import { asyncHandler } from '@andes/api-tool';
 import { CustomError, MongoQuery, ResourceBase, ResourceForbidden } from '@andes/core';
+import { Router } from 'express';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
@@ -193,12 +195,6 @@ class MapaAgendaColoresController extends ResourceBase {
             return next();
         }
     };
-    extrasRoutes = [
-        {
-            path: 'resolver',
-            callback: 'resolver'
-        }
-    ];
     searchFileds = {
         conceptId: {
             field: 'concepto.conceptId',
@@ -633,4 +629,21 @@ class MapaAgendaColoresController extends ResourceBase {
 }
 
 export const MapaAgendaColoresCtr = new MapaAgendaColoresController({});
-export const MapaAgendaColoresRouter = MapaAgendaColoresCtr.makeRoutes();
+
+/**
+ * ResourceBase registra GET /:id antes que extrasRoutes en @andes/core (sin fix publicado);
+ * `resolver` no es ObjectId y el middleware de get devuelve 404.
+ */
+function mapaAgendaColoresRouter(): Router {
+    const router = Router();
+    const ctr = MapaAgendaColoresCtr;
+    router.get(
+        `/${ctr.resourceName}/resolver`,
+        ...ctr.makeMiddleware('resolver'),
+        asyncHandler(ctr.resolver.bind(ctr))
+    );
+    router.use(ctr.makeRoutes());
+    return router;
+}
+
+export const MapaAgendaColoresRouter = mapaAgendaColoresRouter();
