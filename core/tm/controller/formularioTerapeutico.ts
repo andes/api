@@ -1,6 +1,13 @@
 import * as formularioTerapeutico from '../schemas/formularioTerapeutico';
 import * as mongoose from 'mongoose';
 
+export function listarMedicamentos() {
+    return formularioTerapeutico.find({
+        'sistema.id': { $exists: true },
+        borrado: { $ne: true }
+    }).sort({ 'sistema.codigo': 1, funcion: 1, grupoFarmacologico: 1, descripcion: 1 });
+}
+
 export function getAncestro(hijo) {
     return new Promise((resolve, reject) => {
         const query = formularioTerapeutico.find({ _id: { $eq: mongoose.Types.ObjectId(hijo) } });

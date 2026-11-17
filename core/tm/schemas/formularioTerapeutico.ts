@@ -15,7 +15,21 @@ const schema = new mongoose.Schema({
     comentario: String,
     conceptId: String,
     borrado: Boolean,
-    concepto: Object
+    concepto: Object,
+    sistema: {
+        id: String,
+        codigo: String,
+        nombre: String
+    },
+    funcion: String,
+    grupoFarmacologico: String,
+    atc: String,
+    principioActivo: String,
+    via: String,
+    formaFarmaceutica: String,
+    potencia: String,
+    unidades: String,
+    presentacion: String
     // padre: {
     //     nombre: String,
     //     conceptId: String,
