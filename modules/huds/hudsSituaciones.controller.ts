@@ -153,8 +153,13 @@ export async function situacionesActivas(pacienteID, req: any) {
 
 /**
  * Antecedentes personales: trastornos registrados en prestaciones validadas del paciente.
- * Filtra por semanticTag === 'trastorno' en memoria (sin llamada a Snowstorm).
- * Incluye registros anidados recursivamente.
+ *
+ * Se combinan dos criterios porque la ECL por defecto ('<< 312850006') corresponde a
+ * "antecedente personal de trastorno" (situaciones), que no coincide con los conceptos
+ * que realmente se registran en las prestaciones (ej. diabetes, hipertensión, gripe).
+ * Por eso también se incluyen los registros con semanticTag 'trastorno', que era el
+ * criterio original y el que usa situacionesActivas.
+ * El resultado se devuelve en el formato que espera el front (registro, tipoPrestacion, etc.).
  */
 export async function antecedentesPersonales(pacienteID) {
     const paciente = await PacienteCtr.findById(pacienteID);
@@ -162,19 +167,58 @@ export async function antecedentesPersonales(pacienteID) {
         return null;
     }
 
-    const eclQuery = await ECLQueries.findOne({ key: 'antecedentes_personales' });
-    const expression = eclQuery ? eclQuery.valor : '<< 312850006';
-    const conceptos = await SnomedCtr.getConceptByExpression(expression);
-    if (!conceptos || conceptos.length === 0) {
-        return [];
-    }
-
     const prestaciones: any[] = await Prestacion.find({
         'paciente.id': { $in: paciente.vinculos },
         'estadoActual.tipo': 'validada'
     });
 
-    return buscarEnHuds(prestaciones, conceptos);
+    const prestacionesById = new Map<string, any>(
+        prestaciones.map(p => [String(p._id), p])
+    );
+    const resultado: any[] = [];
+    const idsRegistros = new Set<string>();
+
+    const agregar = (prestacion: any, registro: any) => {
+        const idRegistro = registro?._id || registro?.id;
+        if (idRegistro && idsRegistros.has(String(idRegistro))) {
+            return;
+        }
+        if (idRegistro) {
+            idsRegistros.add(String(idRegistro));
+        }
+        resultado.push({
+            idPrestacion: prestacion._id,
+            tipoPrestacion: prestacion.solicitud.tipoPrestacion,
+            organizacion: prestacion.ejecucion.organizacion,
+            fecha: prestacion.ejecucion.fecha,
+            profesional: registro?.createdBy || prestacion.solicitud.profesional,
+            registro
+        });
+    };
+
+    // 1) Conceptos configurados por ECL (antecedentes personales explícitos)
+    const eclQuery = await ECLQueries.findOne({ key: 'antecedentes_personales' });
+    const expression = eclQuery ? eclQuery.valor : '<< 312850006';
+    const conceptos = await SnomedCtr.getConceptByExpression(expression);
+    if (conceptos && conceptos.length > 0) {
+        for (const item of buscarEnHuds(prestaciones, conceptos)) {
+            const prestacion = prestacionesById.get(String(item.idPrestacion));
+            if (prestacion) {
+                agregar(prestacion, item.registro);
+            }
+        }
+    }
+
+    // 2) Trastornos registrados (incluye registros anidados, ej. secciones de epicrisis)
+    for (const prestacion of prestaciones) {
+        const registros = registrosPorSemanticTag(prestacion.ejecucion?.registros || [], 'trastorno');
+        for (const registro of registros) {
+            agregar(prestacion, registro);
+        }
+    }
+
+    resultado.sort((a, b) => moment(b.fecha).valueOf() - moment(a.fecha).valueOf());
+    return resultado;
 }
 
 export async function antecedentesFamiliares(pacienteID) {
