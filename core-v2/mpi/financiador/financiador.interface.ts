@@ -2,12 +2,12 @@ import { Document } from 'mongoose';
 
 
 export interface IFinanciador {
-    codigoPuco: Number;
-    nombre: String;
-    financiador: String;
-    numeroAfiliado: String;
-    prepaga: Boolean;
-    idObraSocial: Number;
+    codigoPuco: number;
+    nombre: string;
+    financiador: string;
+    numeroAfiliado: string;
+    prepaga: boolean;
+    idObraSocial: number;
     origen: 'PUCO' | 'SUMAR' | 'ANDES';
     fechaDeActualizacion: Date;
 }
