@@ -30,6 +30,7 @@ import { OdontogramaRefsetComponent } from './odontograma.component';
 import { ProcedimientoDeEnfermeriaComponent } from './procedicimiento-enfermeria.component';
 import { InternacionIngresoComponent } from './internacion-ingreso.component';
 import { InternacionEgresoComponent } from './internacion-egreso.component';
+import { HistorialComponent } from './evolucion-medica.component';
 /**
  * [TODO] GraficoLinealComponent
  * [TODO] DesarrolloPsicomotorComponent -> NO SE VE EN DEMO
@@ -109,5 +110,6 @@ export const ElementosRUPHTML = {
     InformeEpicrisisComponent,
     RecetaMedicaComponent,
     InternacionIngresoComponent,
-    InternacionEgresoComponent
+    InternacionEgresoComponent,
+    HistorialComponent
 };

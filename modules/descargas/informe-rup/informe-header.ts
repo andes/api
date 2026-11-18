@@ -171,7 +171,7 @@ export class InformeRupHeader extends HTMLComponent {
         const consultaValidada = (prestacion.estados[prestacion.estados.length - 1].tipo === 'validada');
         const provincia = configPrivate.provincia || 'neuquen';
         const obraSocial = prestacion.paciente.obraSocial
-            ? prestacion.paciente.obraSocial.financiador.length > 80
+            ? prestacion.paciente.obraSocial.financiador?.length > 80
                 ? prestacion.paciente.obraSocial.financiador.substring(0, 80) + '...'
                 : prestacion.paciente.obraSocial.financiador
             : false;
