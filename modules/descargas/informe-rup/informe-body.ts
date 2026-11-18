@@ -14,8 +14,8 @@ export class InformeRupBody extends HTMLComponent {
                         </div>
                     </div>
                     <div class="contenedor-bloque-texto">
-                        <h6>
-                            <b>Fecha Consulta</b>
+                        <h6 class="bolder">
+                            Fecha Consulta
                         </h6>
                         <h6>
                             {{ fechaEjecucion }}hs
@@ -23,42 +23,45 @@ export class InformeRupBody extends HTMLComponent {
                     </div>
                     <div class="contenedor-bloque-texto">
                         {{#if esValidada}}
-                            <h6>
-                                <b>Fecha Validación</b>
+                            <h6 class="bolder">
+                                Fecha Validación
                             </h6>
                             <h6>
                                 {{ fechaValidacion }}hs
                             </h6>
                         {{else}}
-                            <h6>
-                                <b>Sin validar</b>
+                            <h6 class="bolder">
+                                Sin validar
                             </h6>
                         {{/if}}
                     </div>
                     <div class="contenedor-bloque-texto">
-                        <h6>
-                            <b>Inicio de Prestación</b>
+                        <h6 class="bolder">
+                            Inicio de Prestación
                         </h6>
                         <h6>
                             {{ fechaPrestacion }}hs
                         </h6>
                     </div>
                 </span>
-                <hr>
+                <hr style="width: 100%; margin: 0.5cm 0;">
                 <br>
-                {{#if valorPrestacion}}
-                    <h6 class="bolder">
+                
+               {{#if valorPrestacion}}
+                    <h5 class="bolder">
                         {{ nombrePrestacion }}:
-                    </h6>
-                    <h6>
+                    </h5>
+                    <h5>
                         {{{ valorPrestacion }}}
-                    </h6>
+                    </h5>
                 {{/if}}
+
                 <div class="registros">
                     {{#each registros}}
                         {{{this}}}
                     {{/each}}
                 </div>
+                
                 {{#if firmaHTML}}
                     {{{ firmaHTML }}}
                 {{/if}}

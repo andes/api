@@ -113,7 +113,7 @@ export class InformePDF extends HTMLComponent {
             format: 'A4',
             margin: {
                 // por defecto 0, unidades: mm, cm, in, px
-                top: '7cm',
+                top: '6cm',
                 right: '0cm',
                 bottom: '3.5cm',
                 left: '0cm'

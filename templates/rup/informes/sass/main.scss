@@ -3,7 +3,7 @@
 
 html {
     display: inline-block;
-    padding: 0 2rem;
+    padding: 0 1cm;
     font-family: sans-serif;
 }
 
@@ -17,7 +17,6 @@ body {
     display: inline-block;
     height: 1cm;
     width: 90%;
-    margin-left: 0.8cm;
 
     .contenedor-logo-efector {
         margin-top: .05cm;
@@ -38,7 +37,7 @@ body {
 
     .contenedor-logos-secundarios {
         margin-top: .15cm;
-        float: right; // display: inline-block; // width: 300px;
+        float: right;
         width: 40%;
 
         .logo-adicional {
@@ -59,23 +58,13 @@ body {
 .contenedor-data-origen {
     display: inline-block;
     width: 100%;
-    margin-left: 0.6cm;
-    margin-right: 0.6cm;
 
     .contenedor-principal-data {
         display: inline-block;
         margin-top: 0.15cm;
         margin-bottom: 0.1cm;
-        width: 50%;
-
-        &:nth-of-type(2) {
-            float: right;
-        }
-    }
-
-    hr {
-        padding: 0;
-        width: 90%;
+        width: 48%;
+        vertical-align: top;
     }
 }
 
@@ -88,10 +77,6 @@ body {
     &.horizontal {
         float: right;
         margin-bottom: .1cm;
-
-        hr {
-            margin: 0 0;
-        }
     }
 
     &.vertical {
@@ -104,13 +89,11 @@ body {
 .contenedor-bloque-texto {
     display: inline-block;
     position: relative;
-    margin-right: 1rem;
     line-height: 0.35cm;
 
     &:last-child {
         margin-right: 0;
     }
-
 }
 
 
@@ -131,6 +114,7 @@ h3,
 h4,
 h5,
 h6 {
+    font-weight: 400;
     margin: 0.1cm 0;
 
     &.bolder {
@@ -148,19 +132,17 @@ h4 {
 
 h5,
 h6 {
-    font-size: .20cm;
-}
-
-h6 {
-    font-weight: lighter;
+    min-width: 1.2cm;
+    font-size: .25cm;
 }
 
 p {
-    font-size: 0.25cm;
+    font-size: 0.3cm;
 }
 
 hr {
-    width: 100%;
+    width: 90%;
+    float: left;
 
     &.sm {
         width: 15px;
@@ -188,11 +170,10 @@ hr {
 // Cuerpo
 main {
 
-
     img {
         // imágenes "pegadas" desde el portapapeles, no como adjuntos
         max-width: 100%;
-        max-height: 700px;
+        max-height: 7cm;
         width: auto;
         height: auto;
         object-fit: contain;
@@ -237,20 +218,11 @@ main {
                 margin-right: 1rem;
                 line-height: 0.35cm;
 
-                h6 {
-                    margin: 0;
-                    min-width: 1.2cm;
-                    font-size: 10px;
-                    font-weight: lighter !important;
-                    line-height: 0.5cm;
-                }
-
                 &:last-child {
                     margin-right: 0;
                 }
             }
         }
-
     }
 
     .registros {
@@ -301,7 +273,6 @@ main {
 
         .adjunto {
             padding: .2cm 0;
-            //      border-bottom: 1px solid rgba(0, 0, 0, 0.25);
 
             small {
                 font-size: 0.25cm;
@@ -318,7 +289,6 @@ main {
         .subregistro {
             display: flex;
             flex-direction: column;
-            align-items: center;
 
             page-break-inside: avoid;
             break-inside: avoid;
@@ -336,6 +306,10 @@ main {
             object-fit: contain;
 
             margin: 0 .35cm;
+        }
+
+        b {
+            font-weight: 900;
         }
     }
 }
@@ -371,8 +345,6 @@ main {
 
 .contenedor-zocalo {
     display: inline-block;
-    margin-left: 0.5cm;
-    margin-right: 0.5cm;
 
     img {
         float: left;
@@ -408,12 +380,13 @@ main {
     .contenedor-data-impresion,
     .contenedor-data-organizacion {
         float: right;
-        max-width: 2.25cm;
+        max-width: 3cm;
         margin-left: 0.25cm;
     }
 
     .contenedor-data-organizacion {
         text-align: left;
+        margin-right: 2cm;
     }
 }
 
@@ -421,8 +394,8 @@ main {
     float: right;
     width: auto;
     height: auto;
-    font-size: .2cm;
-    margin-right: 0.5cm;
+    font-size: .3cm;
+    margin-right: 2cm;
 }
 
 .table {
@@ -441,8 +414,6 @@ main {
 .table thead {
     display: table-header-group;
 }
-
-
 
 .table thead tr th {
     border: 0.03cm solid lightgray;

@@ -28,7 +28,7 @@ export class InformeRupHeader extends HTMLComponent {
                 <span class="contenedor-principal-data">
                     <div class="contenedor-secundario">
                         <h6 class="volanta">Datos del paciente</h6>
-                        <h4>
+                        <h4 class="bolder">
                             {{ paciente.apellido }},  
                                 {{#if paciente.alias}} 
                                     {{paciente.alias}}
@@ -36,7 +36,7 @@ export class InformeRupHeader extends HTMLComponent {
                                      {{paciente.nombre}}
                                 {{/if}}
                         </h4>
-                        <h4>
+                        <h4 class="bolder">
                             {{ paciente.genero }} |
                             {{#if paciente.edad }}
                                 {{ paciente.edad }} años |
@@ -45,7 +45,7 @@ export class InformeRupHeader extends HTMLComponent {
                         </h4>
                     </div>
                     <div class="contenedor-secundario">
-                        <div class="contenedor-bloque-texto" >
+                        <div class="contenedor-bloque-texto">
                             <h6>
                                 <b>Obra Social: </b>
 
@@ -111,10 +111,10 @@ export class InformeRupHeader extends HTMLComponent {
 
                         <div class="contenedor-secundario">
                             <div class="contenedor-bloque-texto">
-                                    <h6 class="bolder">Profesional</h6>
-                                    <h6>
-                                        {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
-                                    </h6>
+                                <h6 class="bolder">Profesional</h6>
+                                <h6>
+                                    {{ origen.profesionalOrigenApellido }}, {{ origen.profesionalOrigenNombre }}
+                                </h6>
                             </div>
                         </div>
                         <div class="contenedor-bloque-texto">
@@ -128,7 +128,7 @@ export class InformeRupHeader extends HTMLComponent {
                     {{else}}
                         <div class="contenedor-secundario">
                             <h6 class="volanta">Datos de la prestación</h6>
-                            <h4>
+                            <h4 class="bolder">
                                 {{{ organizacion.nombre }}}
                             </h4>
                             <h5>
