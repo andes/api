@@ -1,3 +1,15 @@
+# [5.150.0](https://github.com/andes/api/compare/v5.149.0...v5.150.0) (2026-11-18)
+
+
+### Bug Fixes
+
+* **RUP:** para poder descargar epicrisis con evoluciones mal guardadas ([#2357](https://github.com/andes/api/issues/2357)) ([a6f0ce7](https://github.com/andes/api/commit/a6f0ce7ea85d232ebe4646d6f64825a35fbb3d84))
+
+
+### Features
+
+* **COM-124:** Descarga de historial de solicitud ([#2320](https://github.com/andes/api/issues/2320)) ([a5619ac](https://github.com/andes/api/commit/a5619ac44c0285e08d584f53733c97e1bb20b385))
+
 # [5.149.0](https://github.com/andes/api/compare/v5.148.1...v5.149.0) (2026-11-13)
 
 
