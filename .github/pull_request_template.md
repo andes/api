@@ -38,27 +38,24 @@ _____________________________________________
 
 
 ### Test
-```
-# este PR: api
-# app: master
-# mobile: master
-# monitoreo: master
-# matriculaciones: master
-# tests: master
-# descomentá la rama si no es master
-# stack, default andes
-# andes
-# pacs
-# recetar
-# grupos. vacío corre los del stack
-# core
-# citas
-# rup-internacion
-# rup
-# apps
-# monitoreo
-# mobile
-# todos
+```yaml
+# este PR pisa la rama del componente
+# branches:
+#   app: master
+#   mobile: master
+#   monitoreo: master
+#   matriculaciones: master
+#   tests: master
+# stack: andes
+# groups:
+#   - core
+#   - citas
+#   - rup-internacion
+#   - rup
+#   - apps
+#   - monitoreo
+#   - mobile
+# all: true
 ```
 
 <!-- Agregar captura de pantalla, si fuera relevante  -->
