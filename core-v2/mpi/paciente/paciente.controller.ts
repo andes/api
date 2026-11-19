@@ -129,8 +129,8 @@ export async function updateObraSocial(paciente: IPacienteDoc) {
         item.prepaga = false;
     });
 
-    const currentFinanciador = getFinanciador(paciente);
-    financiador.push(...currentFinanciador);
+    // Nota: NO se agregan los financiadores ANDES aquí para evitar duplicarlos
+    // en el evento findById, que ya los maneja por separado vía getFinanciador().
 
     return financiador;
 };
