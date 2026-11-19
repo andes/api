@@ -1,8 +1,6 @@
-import * as mongoose from 'mongoose';
 import { MongoQuery, ResourceBase } from '@andes/core';
 import { Auth } from '../../auth/auth.class';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
-import { sendMailComprobanteDerivacion } from './controllers/com.controller';
 import { Derivaciones } from './schemas/derivaciones.schema';
 import moment = require('moment');
 
@@ -125,26 +123,6 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                     return next('La derivación ya no está asignada a su organización');
                 }
                 derivacion.estado = nuevoEstado.estado;
-
-                const isPacienteDestino = derivacion.estado === 'finalizada' && derivacion.organizacionDestino && derivacion.organizacionDestino.id !== derivacion.organizacionOrigen.id;
-                if (isPacienteDestino && organizacion.esCOM) {
-                    const organizacionDestino = organizacionId !== derivacion.organizacionDestino.id ? await Organizacion.findById(derivacion.organizacionDestino.id) : null;
-
-                    const destinatarios = [];
-                    const emailDestino = organizacionDestino?.configuraciones?.emails?.find(e => e.nombre === 'comDerivacionesRecupero')?.email;
-                    const emailCOM = organizacion.configuraciones?.emails?.find(e => e.nombre === 'comDerivacionesRecupero')?.email;
-
-                    if (emailDestino) {
-                        destinatarios.push(emailDestino);
-                    }
-                    if (emailCOM) {
-                        destinatarios.push(emailCOM);
-                    }
-
-                    if (destinatarios.length) {
-                        sendMailComprobanteDerivacion(derivacion, destinatarios);
-                    }
-                }
             }
 
             if (nuevoEstado.organizacionDestino) {
