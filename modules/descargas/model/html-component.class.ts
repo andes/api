@@ -42,10 +42,28 @@ export abstract class HTMLComponent {
         }
 
         if (typeof value.toObject === 'function') {
-            return this.toPlainObject(value.toObject({
+            const obj = value.toObject({
                 getters: true,
                 virtuals: true
-            }));
+            });
+
+            if (obj === null || obj === undefined || typeof obj !== 'object') {
+                return obj;
+            }
+
+            Object.keys(obj).forEach(key => {
+                const original = value[key];
+                obj[key] = this.toPlainObject(original === undefined ? obj[key] : original);
+            });
+
+            Object.keys(value).forEach(key => {
+                if (key.startsWith('$') || key.startsWith('_') || key === 'isNew' || key === 'errors') {
+                    return;
+                }
+                obj[key] = this.toPlainObject(value[key]);
+            });
+
+            return obj;
         }
 
         if (typeof value === 'object') {
