@@ -111,7 +111,7 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
                 delete nuevoEstado.unidadDestino;
             }
             if (nuevoEstado.estado === 'rechazada') {
-                const orgCOM = (await Organizacion.find({ esCOM: true }))[0];
+                const orgCOM = await Organizacion.findOne({ esCOM: true });
                 if (orgCOM) {
                     const { id, nombre, direccion } = orgCOM;
                     nuevoEstado.organizacionDestino = { id, nombre, direccion };
