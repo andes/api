@@ -77,12 +77,22 @@ router.post('/paciente', async (req: any, res, next) => {
         return next(403);
     }
 
-    // elimina vacunas y cdas previos antes de generar nuevos
-    await vacunas.deleteMany({ documento: req.body.paciente.documento });
-    await cdaCtr.deleteCda(null, req.body.paciente.id);
-
     EventCore.emitAsync('monitoreo:cda:create', req.body);
     res.json({ status: 'ok' });
+});
+
+router.post('/clean-vacunas', async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:post')) {
+        return next(403);
+    }
+    try {
+        // elimina vacunas y cdas previos antes de generar nuevos
+        await vacunas.deleteMany({ documento: req.body.paciente.documento });
+        await cdaCtr.deleteCda(null, req.body.paciente.id || req.body.paciente._id);
+        return res.json({ status: 'ok' });
+    } catch (err) {
+        return next(err);
+    }
 });
 
 /**
