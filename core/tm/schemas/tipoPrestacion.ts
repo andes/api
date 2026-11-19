@@ -20,6 +20,7 @@ export interface ITipoPrestacion extends Document {
     teleConsulta?: Boolean;
     tiempoVigencia?: number;
     videoConferencia?: Boolean;
+    tiempoLimiteRomperValidacion?: number;
 }
 
 export const tipoPrestacionSchema = new Schema({
@@ -62,6 +63,10 @@ export const tipoPrestacionSchema = new Schema({
         default: false
     },
     tiempoVigencia: {
+        type: Number,
+        required: false
+    },
+    tiempoLimiteRomperValidacion: {
         type: Number,
         required: false
     }
