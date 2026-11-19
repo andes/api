@@ -253,6 +253,14 @@ export function createUserFromPaciente(pacienteData, contacto) {
     });
 }
 
+export function enmascararEmail(email: string): string {
+    if (!email) {
+        return '';
+    }
+    const [usuario, dominio] = email.split('@');
+    return usuario.length > 3 ? `${usuario.slice(0, 3)}****@${dominio}` : `***@${dominio}`;
+}
+
 export async function verificarCuentaExistente(documento, sexo, email) {
 
     const cuentasActivas = await PacienteAppCtr.search({ documento, sexo, activacionApp: true });
