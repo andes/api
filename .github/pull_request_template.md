@@ -39,13 +39,16 @@ _____________________________________________
 
 ### Test
 ```
-# este PR: api
+# este PR pisa la rama del componente
+# descomentá una rama si no es master
 # app: master
 # mobile: master
 # monitoreo: master
 # matriculaciones: master
 # tests: master
-# descomentá la rama si no es master, y el grupo
+# un stack, o un grupo. andes es el default. recetar no tiene grupos
+# andes
+# pacs
 # core
 # citas
 # rup-internacion
