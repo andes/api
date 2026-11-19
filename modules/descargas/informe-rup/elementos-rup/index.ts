@@ -82,7 +82,6 @@ export const ElementosRUPHTML = {
     FrecuenciaRespiratoriaComponent: ValorNumericoFactory('PPM'),
     FrecuenciaCardiacaComponent: ValorNumericoFactory('PPM'),
     SaturacionOxigenoComponent: ValorNumericoFactory('%'),
-    TallaComponent: ValorNumericoFactory('cm'),
     PerimetroCefalicoComponent: ValorNumericoFactory('cm'),
     CircunferenciaCinturaComponent: ValorNumericoFactory('cm'),
     PercentiloTallaComponent: ValorNumericoFactory(''),
