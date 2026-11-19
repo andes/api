@@ -45,7 +45,12 @@ _____________________________________________
 # monitoreo: master
 # matriculaciones: master
 # tests: master
-# descomentá la rama si no es master, y el grupo
+# descomentá la rama si no es master
+# stack, default andes
+# andes
+# pacs
+# recetar
+# grupos. vacío corre los del stack
 # core
 # citas
 # rup-internacion
@@ -53,7 +58,6 @@ _____________________________________________
 # apps
 # monitoreo
 # mobile
-# pacs
 # todos
 ```
 
