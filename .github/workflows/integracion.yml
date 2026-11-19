@@ -23,6 +23,7 @@ jobs:
       run: ${{ steps.sel.outputs.run }}
       spec: ${{ steps.sel.outputs.spec }}
       grupos: ${{ steps.sel.outputs.grupos }}
+      stack: ${{ steps.sel.outputs.stack }}
       app: ${{ steps.sel.outputs.app }}
       api: ${{ steps.sel.outputs.api }}
       tests: ${{ steps.sel.outputs.tests }}
@@ -52,6 +53,7 @@ jobs:
       mobile: ${{ needs.seleccion.outputs.mobile }}
       spec: ${{ needs.seleccion.outputs.spec }}
       grupos: ${{ needs.seleccion.outputs.grupos }}
+      stack: ${{ needs.seleccion.outputs.stack }}
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
