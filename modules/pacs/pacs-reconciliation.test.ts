@@ -74,6 +74,14 @@ describe('PACS reconciliation', () => {
         });
     });
 
+    test('treats empty QIDO responses from the http client as no match', async () => {
+        execMock.mockRejectedValueOnce(new Error('Unexpected end of JSON input'));
+        await expect(studyExists(config, '1.2.3', 'token')).resolves.toBe(false);
+
+        execMock.mockRejectedValueOnce(new Error('Unexpected end of JSON input'));
+        await expect(searchStudies(config, 'patient-1', '20260814', 'token')).resolves.toEqual([]);
+    });
+
     test('requires actual DICOM results even on a successful response', () => {
         expect(hasDicomResults('[]')).toBe(false);
         expect(hasDicomResults(JSON.stringify([dicomStudy('1', ['CR'])]))).toBe(true);

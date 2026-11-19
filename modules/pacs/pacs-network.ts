@@ -40,14 +40,19 @@ export async function createWorkList(pacsConfig: IPacsConfig, data: any, token: 
 }
 
 export async function studyExists(pacsConfig: IPacsConfig, studyUID: string, token: string): Promise<boolean> {
-    const response = await services.get('dcm4chee-buscar-series-estudio').exec({
-        host: pacsConfig.host,
-        aet: pacsConfig.aet,
-        token,
-        studyUID,
-        limit: 1
-    });
-    return hasDicomResults(response);
+    try {
+        const response = await services.get('dcm4chee-buscar-series-estudio').exec({
+            host: pacsConfig.host,
+            aet: pacsConfig.aet,
+            token,
+            studyUID,
+            limit: 1
+        });
+        return hasDicomResults(response);
+    } catch (err) {
+        // QIDO vacío responde 204 y @andes/services falla al parsear el body.
+        return false;
+    }
 }
 
 export async function searchStudies(
@@ -56,13 +61,18 @@ export async function searchStudies(
     studyDate: string,
     token: string
 ): Promise<any> {
-    return services.get('dcm4chee-buscar-estudios').exec({
-        host: pacsConfig.host,
-        aet: pacsConfig.aet,
-        token,
-        patientID,
-        studyDate
-    });
+    try {
+        return await services.get('dcm4chee-buscar-estudios').exec({
+            host: pacsConfig.host,
+            aet: pacsConfig.aet,
+            token,
+            patientID,
+            studyDate
+        });
+    } catch (err) {
+        // Misma convención QIDO: sin coincidencias → 204 sin body.
+        return [];
+    }
 }
 
 
