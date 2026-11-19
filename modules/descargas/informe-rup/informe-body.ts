@@ -7,30 +7,21 @@ export class InformeRupBody extends HTMLComponent {
     template = `
         <main>
             <section class="contenedor-informe">
-                <article class="cabezal-conceptos horizontal">
-                    <div class="contenedor-bloque-texto w-50" >
+                <span class="cabezal-conceptos horizontal">
+                    <div class="contenedor-bloque-texto w-50">
                         <div class="tipo-prestacion">
                             {{ titulo }}
                         </div>
                     </div>
-
-                    <div class="contenedor-bloque-texto ">
+                    <div class="contenedor-bloque-texto">
                         <h6 class="bolder">
                             Fecha Consulta
                         </h6>
                         <h6>
                             {{ fechaEjecucion }}hs
                         </h6>
-                        </div>
-                        <div class="contenedor-bloque-texto ">
-                        <h6 class="bolder">
-                            Inicio de Prestación
-                        </h6>
-                        <h6>
-                            {{ fechaPrestacion }}hs
-                        </h6>
                     </div>
-                    <div class="contenedor-bloque-texto ">
+                    <div class="contenedor-bloque-texto">
                         {{#if esValidada}}
                             <h6 class="bolder">
                                 Fecha Validación
@@ -44,24 +35,33 @@ export class InformeRupBody extends HTMLComponent {
                             </h6>
                         {{/if}}
                     </div>
-                        </div>
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
+                            Inicio de Prestación
+                        </h6>
+                        <h6>
+                            {{ fechaPrestacion }}hs
+                        </h6>
+                    </div>
+                </span>
+                <hr style="width: 100%; margin: 0.5cm 0;">
+                <br>
                 
-                </article>
-                <hr style="margin-bottom: 1rem;">
-
-                {{#if valorPrestacion}}
-                    <h6 class="bolder">
+               {{#if valorPrestacion}}
+                    <h5 class="bolder">
                         {{ nombrePrestacion }}:
-                    </h6>
-                    <h6>
+                    </h5>
+                    <h5>
                         {{{ valorPrestacion }}}
-                    </h6>
+                    </h5>
                 {{/if}}
+
                 <div class="registros">
                     {{#each registros}}
                         {{{this}}}
                     {{/each}}
                 </div>
+                
                 {{#if firmaHTML}}
                     {{{ firmaHTML }}}
                 {{/if}}

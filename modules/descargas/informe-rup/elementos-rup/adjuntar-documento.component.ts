@@ -1,25 +1,31 @@
 import { HTMLComponent } from '../../model/html-component.class';
 import * as mime from 'mime-types';
-import { streamToBase64, readFile } from '../../../../core/tm/controller/file-storage';
 import { getArchivoAdjunto } from '../../../../modules/rup/controllers/rup';
+import { streamToJpegDataUri } from '../../../../utils/pdf/puppeteer';
 
 
 export class AdjuntarDocumentoComponent extends HTMLComponent {
     template = `
             <div style="page-break-before: auto; page-break-after: auto;">
-                <div class="nivel-1" >
+                <div class="nivel-1">
                     <p>
                         {{ registro.concepto.term }}
-                        {{#if noSoportados}} (Hay {{noSoportados}} documentos que no se pueden visualizar) {{/if}}
+                        {{#if noSoportados}}
+                            (Hay {{noSoportados}} documentos que no se pueden visualizar)
+                        {{/if}}
                         :
                     </p>
                 </div>
-                {{#each documentos}}
-                    <div class="subregistro">
-                        <p> {{ term }}: </p>
-                        <img class="w-25 archivo-adjunto" src="data:image/png;base64,{{img}}">
-                    </div>
-                {{/each}}
+
+                <div class="adjuntos-grid">
+                    {{#each documentos}}
+                        <div class="subregistro">
+                            <p>{{ term }}:</p>
+
+                            <img class="archivo-adjunto" src="{{img}}">
+                        </div>
+                    {{/each}}
+                </div>
             </div>
 
         `;
@@ -45,8 +51,8 @@ export class AdjuntarDocumentoComponent extends HTMLComponent {
                 return new Promise(async (resolve, reject) => {
                     if (documento.id) {
                         const stream = await getArchivoAdjunto(documento.id);
-                        const base64 = await streamToBase64(stream);
-                        return resolve({ img: base64, term: documento?.descripcion?.term });
+                        const img = await streamToJpegDataUri(stream, { maxWidth: 1024, quality: 40 });
+                        return resolve({ img, term: documento?.descripcion?.term });
                     }
                     return;
                 });

@@ -5,13 +5,13 @@ const moment = require('moment');
 export async function sendMailComprobanteDerivacion(derivacion, to) {
     const body = { derivacionId: derivacion._id };
     const comprobante = new Derivacion({ body });
-    const opciones = { header: { height: '3cm' } };
-    const fileName: any = await comprobante.informe(opciones);
+    const opciones = { margin: { top: '3cm' } };
+    const pdfBuffer: Buffer = await comprobante.informe(opciones);
     const fechaFinalizacion = moment(derivacion.historial.createdAt).format('DD/MM/YYYY');
 
     const attachments = [{
         filename: `comprobante derivacion ${derivacion.paciente.nombre}${derivacion.paciente.apellido}-${fechaFinalizacion}.pdf`,
-        path: fileName
+        content: pdfBuffer
     }];
 
     const handleBarsData = {

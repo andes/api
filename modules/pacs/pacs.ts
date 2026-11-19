@@ -134,15 +134,14 @@ export async function sendInformePDF(prestacion: IPrestacion) {
             const metadata = DICOMInformePDFObject(dicomInforme);
 
             const informe = new InformeRUP(prestacion.id, null, {});
-            const fileName = await informe.informe();
+            const pdfBuffer = await informe.informe();
 
-            await enviarInforme(config, uid, metadata, fileName, token);
+            await enviarInforme(config, uid, metadata, pdfBuffer, token);
 
         }
         return null;
     } catch (err) {
-        // [TODO] Logger
-        // console.error(err);
+        pacsLogs.error('syncWorkList', { prestacion: prestacion.id }, err, userScheduler);
         return null;
     }
 }
