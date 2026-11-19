@@ -209,12 +209,8 @@ export class FarmaciaBody extends HTMLComponent {
                 const firmasArea = new Set<string>();
                 if (area.grupos) {
                     for (const grupo of area.grupos) {
-                        if (grupo.item) {
-                            grupo.item.hasHtml = this.hasHtml(grupo.item.valorReferencia);
-                        }
                         if (grupo.items) {
                             for (const item of grupo.items) {
-                                item.hasHtml = this.hasHtml(item.valorReferencia);
                                 if (item.firma) {
                                     firmasArea.add(item.firma);
                                 }
@@ -246,4 +242,5 @@ export class FarmaciaBody extends HTMLComponent {
             encabezado: this.encabezado
         };
     }
+
 }
