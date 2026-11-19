@@ -7,6 +7,8 @@ export class ObservacionesComponent extends HTMLComponent {
                 {{ registro.concepto.term }}
                 {{#if registro.esDiagnosticoPrincipal}}<small>(PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL)</small>{{/if}}
                 {{#if registro.valor}}:
+                    <br>
+                    <br>
                     <small class="subregistro">
                         {{{ valor }}}
                     </small>

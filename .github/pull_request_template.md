@@ -37,6 +37,28 @@ _____________________________________________
 - [ ] No
 
 
+### Test
+```
+# este PR pisa la rama del componente
+# descomentá una rama si no es master
+# app: master
+# mobile: master
+# monitoreo: master
+# matriculaciones: master
+# tests: master
+# un stack, o un grupo. andes es el default. recetar no tiene grupos
+# andes
+# pacs
+# core
+# citas
+# rup-internacion
+# rup
+# apps
+# monitoreo
+# mobile
+# todos
+```
+
 <!-- Agregar captura de pantalla, si fuera relevante  -->
 
 
