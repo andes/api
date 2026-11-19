@@ -38,24 +38,25 @@ _____________________________________________
 
 
 ### Test
-```yaml
+```
 # este PR pisa la rama del componente
-# branches:
-#   app: master
-#   mobile: master
-#   monitoreo: master
-#   matriculaciones: master
-#   tests: master
-# stack: andes
-# groups:
-#   - core
-#   - citas
-#   - rup-internacion
-#   - rup
-#   - apps
-#   - monitoreo
-#   - mobile
-# all: true
+# descomentá una rama si no es master
+# app: master
+# mobile: master
+# monitoreo: master
+# matriculaciones: master
+# tests: master
+# un stack, o un grupo. andes es el default. recetar no tiene grupos
+# andes
+# pacs
+# core
+# citas
+# rup-internacion
+# rup
+# apps
+# monitoreo
+# mobile
+# todos
 ```
 
 <!-- Agregar captura de pantalla, si fuera relevante  -->
