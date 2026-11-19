@@ -2,7 +2,7 @@ name: Test de integración
 
 # Lee el bloque Test del PR y llama a andes-test-integracion.
 # El bloque vacío no corre la suite. El repo de este PR queda en el SHA del push.
-# Mientras se prueba, la suite sale de ci/workflow-call. Después pasa a @master.
+# La suite sale de master.
 
 on:
   pull_request:
@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Leer el bloque
         id: sel
-        uses: andes/andes-test-integracion/.github/actions/seleccion@ci/workflow-call
+        uses: andes/andes-test-integracion/.github/actions/seleccion@master
         with:
           body: ${{ github.event.pull_request.body || '' }}
           origen: api
@@ -43,7 +43,7 @@ jobs:
     name: Cypress
     needs: seleccion
     if: needs.seleccion.outputs.run == 'true' && github.event.pull_request.head.repo.full_name == github.repository
-    uses: andes/andes-test-integracion/.github/workflows/test.yml@ci/workflow-call
+    uses: andes/andes-test-integracion/.github/workflows/test.yml@master
     with:
       app: ${{ needs.seleccion.outputs.app }}
       api: ${{ needs.seleccion.outputs.api }}
