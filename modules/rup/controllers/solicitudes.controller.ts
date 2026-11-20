@@ -178,3 +178,44 @@ EventCore.on('rup:prestacion:validate', async (prestacion: IPrestacion) => {
     }
 
 });
+
+export async function getDetalleSolicitud(idSolicitud: string) {
+    const solicitud: any = await Prestacion.findById(idSolicitud).lean();
+    if (!solicitud) {
+        return null;
+    }
+
+    const idPrestacionOrigen = solicitud.solicitud?.prestacionOrigen;
+    if (!idPrestacionOrigen) {
+        return solicitud;
+    }
+
+    const prestacionOrigen: any = await Prestacion.findById(idPrestacionOrigen).lean();
+    const registrosOrigen = prestacionOrigen?.ejecucion?.registros;
+    if (!registrosOrigen?.length) {
+        return solicitud;
+    }
+
+    const idsRegistros = (solicitud.solicitud.registros || []).map((registro: any) => String(registro._id));
+    let registrosActuales = registrosOrigen.filter((registro: any) =>
+        registro.esSolicitud && idsRegistros.includes(String(registro._id))
+    );
+
+    if (!registrosActuales.length) {
+        registrosActuales = registrosOrigen
+            .filter((registro: any) => registro.esSolicitud)
+            .slice(0, (solicitud.solicitud.registros || []).length || 1);
+    }
+
+    if (!registrosActuales.length) {
+        return solicitud;
+    }
+
+    return {
+        ...solicitud,
+        solicitud: {
+            ...solicitud.solicitud,
+            registros: registrosActuales
+        }
+    };
+}
