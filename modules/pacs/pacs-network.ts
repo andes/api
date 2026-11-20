@@ -39,6 +39,11 @@ export async function createWorkList(pacsConfig: IPacsConfig, data: any, token: 
     return response;
 }
 
+function isEmptyQidoParseError(err: unknown): boolean {
+    const msg = err instanceof Error ? err.message : String(err);
+    return /Unexpected end of JSON input/i.test(msg);
+}
+
 export async function studyExists(pacsConfig: IPacsConfig, studyUID: string, token: string): Promise<boolean> {
     try {
         const response = await services.get('dcm4chee-buscar-series-estudio').exec({
@@ -51,7 +56,10 @@ export async function studyExists(pacsConfig: IPacsConfig, studyUID: string, tok
         return hasDicomResults(response);
     } catch (err) {
         // QIDO vacío responde 204 y @andes/services falla al parsear el body.
-        return false;
+        if (isEmptyQidoParseError(err)) {
+            return false;
+        }
+        throw err;
     }
 }
 
@@ -71,7 +79,10 @@ export async function searchStudies(
         });
     } catch (err) {
         // Misma convención QIDO: sin coincidencias → 204 sin body.
-        return [];
+        if (isEmptyQidoParseError(err)) {
+            return [];
+        }
+        throw err;
     }
 }
 

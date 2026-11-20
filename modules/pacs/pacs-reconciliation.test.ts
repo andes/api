@@ -82,6 +82,28 @@ describe('PACS reconciliation', () => {
         await expect(searchStudies(config, 'patient-1', '20260814', 'token')).resolves.toEqual([]);
     });
 
+    test('rethrows non-empty QIDO client errors from studyExists', async () => {
+        execMock.mockRejectedValueOnce(new Error('Request failed with status code 401'));
+        await expect(studyExists(config, '1.2.3', 'token')).rejects.toThrow('status code 401');
+
+        execMock.mockRejectedValueOnce(Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }));
+        await expect(studyExists(config, '1.2.3', 'token')).rejects.toThrow('ECONNREFUSED');
+
+        execMock.mockRejectedValueOnce(new Error('boom'));
+        await expect(studyExists(config, '1.2.3', 'token')).rejects.toThrow('boom');
+    });
+
+    test('rethrows non-empty QIDO client errors from searchStudies', async () => {
+        execMock.mockRejectedValueOnce(new Error('Request failed with status code 401'));
+        await expect(searchStudies(config, 'patient-1', '20260814', 'token')).rejects.toThrow('status code 401');
+
+        execMock.mockRejectedValueOnce(Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }));
+        await expect(searchStudies(config, 'patient-1', '20260814', 'token')).rejects.toThrow('ECONNREFUSED');
+
+        execMock.mockRejectedValueOnce(new Error('boom'));
+        await expect(searchStudies(config, 'patient-1', '20260814', 'token')).rejects.toThrow('boom');
+    });
+
     test('requires actual DICOM results even on a successful response', () => {
         expect(hasDicomResults('[]')).toBe(false);
         expect(hasDicomResults(JSON.stringify([dicomStudy('1', ['CR'])]))).toBe(true);
