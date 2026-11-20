@@ -22,7 +22,8 @@ const done = () => {
 };
 
 const actionName = process.argv[2];
+const args = process.argv.slice(3);
 require('./../modules/webhook');
 const action = require(path.join('..', actionName));
 
-action(done);
+action(done, args);

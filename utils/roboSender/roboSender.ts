@@ -1,5 +1,4 @@
 import * as debug from 'debug';
-import { createFile } from '../../modules/huds/export-huds/exportHuds.controller';
 import { PushClient } from '../../modules/mobileApp/controller/PushClient';
 import { services } from '../../services';
 import { RoboModel } from './roboSchema';
@@ -16,7 +15,8 @@ export function roboSender() {
 
         const condition = {
             status: 'pending',
-            scheduledAt: { $lte: new Date() }
+            scheduledAt: { $lte: new Date() },
+            idExportHuds: { $exists: false }
         };
 
         let counter = 0;
@@ -73,13 +73,6 @@ export function roboSender() {
                                 { device_fcm_token: env.device_fcm_token }
                             ];
                             await sendPushNotification(device, env.notificationData);
-                        }
-
-                        // Exportar HUDS
-                        if (env.idExportHuds) {
-                            if (today <= env.expiredAt) {
-                                await createFile(env.idExportHuds);
-                            } else { error = true; }
                         }
 
                         if (env.service) {

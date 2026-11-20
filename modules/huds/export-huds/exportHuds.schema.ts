@@ -14,6 +14,10 @@ export const ExportHudsSchema = new mongoose.Schema({
     createdAt: Date,
     updatedAt: Date,
     expiredAt: Date,
+    tries: {
+        type: Number,
+        default: 0
+    },
     status: {
         type: String,
         enum: ['pending', 'success', 'error', 'canceled', 'completed'],

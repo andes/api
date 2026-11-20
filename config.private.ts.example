@@ -191,6 +191,10 @@ export const jobs = [
     {
         when: '*/5 * * * * * ',
         action: './jobs/roboSenderJob'
+    },
+    {
+        when: '*/30 * * * * *',
+        action: './jobs/exportHudsJob'
     }
 ];
 
