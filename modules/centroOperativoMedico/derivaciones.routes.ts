@@ -1,10 +1,51 @@
 import * as mongoose from 'mongoose';
 import { MongoQuery, ResourceBase } from '@andes/core';
+import { Request } from '@andes/api-tool';
 import { Auth } from '../../auth/auth.class';
 import { Organizacion } from '../../core/tm/schemas/organizacion';
+import { updateFinanciador, updateObraSocial } from '../../core-v2/mpi/paciente/paciente.controller';
+import { PacienteCtr } from '../../core-v2/mpi/paciente/paciente.routes';
 import { sendMailComprobanteDerivacion } from './controllers/com.controller';
 import { Derivaciones } from './schemas/derivaciones.schema';
 import moment = require('moment');
+
+/**
+ * Sincroniza en MPI la cobertura enviada en la derivación (null = sin obra social).
+ * Cubre a cualquier cliente que modifique la obra social desde una derivación.
+ */
+async function sincronizarObraSocialPaciente(idPaciente: any, obraSocial: any, req: Request) {
+    if (!idPaciente || obraSocial === undefined) {
+        return;
+    }
+
+    const paciente: any = await PacienteCtr.findById(idPaciente);
+    if (!paciente || paciente.fechaFallecimiento) {
+        return;
+    }
+
+    const valorOS = obraSocial?.nombre === 'Sin obra social' ? null : obraSocial;
+    const nombre = (os: any) => (os?.nombre || os?.financiador || '').toString().trim().toLowerCase();
+    const principal = paciente.financiador?.[0] || null;
+
+    if (nombre(principal) === nombre(valorOS) && (principal?.numeroAfiliado || '') === (valorOS?.numeroAfiliado || '')) {
+        return;
+    }
+
+    const financiadoresBase = await updateObraSocial(paciente);
+    let financiador: any[];
+    if (valorOS) {
+        financiador = updateFinanciador(financiadoresBase, valorOS);
+        const index = financiador.findIndex(f => nombre(f) === nombre(valorOS));
+        if (index !== -1) {
+            const [elegido] = financiador.splice(index, 1);
+            financiador.unshift(elegido);
+        }
+    } else {
+        financiador = financiadoresBase.filter(f => f?.origen !== 'ANDES');
+    }
+
+    await PacienteCtr.update(paciente.id, { financiador }, req);
+}
 
 class DerivacionesResource extends ResourceBase {
     Model = Derivaciones;
@@ -109,6 +150,13 @@ class DerivacionesResource extends ResourceBase {
             return {};
         }
     };
+
+    public async create(dto: any, req: Request) {
+        if (dto?.paciente?.obraSocial !== undefined) {
+            await sincronizarObraSocialPaciente(dto.paciente.id, dto.paciente.obraSocial, req);
+        }
+        return super.create(dto, req);
+    }
 }
 
 export const DerivacionesCtr = new DerivacionesResource({});
@@ -120,8 +168,8 @@ DerivacionesRouter.post('/derivaciones/:id/historial', Auth.authenticate(), asyn
         if (derivacion) {
             const nuevoEstado = req.body.estado;
 
-            // Si se cambió la cobertura (null = sin obra social), se actualiza también en el paciente de la derivación
             if (nuevoEstado.obraSocial !== undefined) {
+                await sincronizarObraSocialPaciente(derivacion.paciente?.id, nuevoEstado.obraSocial, req as Request);
                 derivacion.paciente.obraSocial = nuevoEstado.obraSocial;
                 derivacion.markModified('paciente');
             }
