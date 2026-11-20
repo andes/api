@@ -44,19 +44,17 @@ export class InformeRupBody extends HTMLComponent {
                             </h6>
                         {{/if}}
                     </div>
-                        </div>
-                
-                </article>
-                <hr style="margin-bottom: 1rem;">
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
+                            Inicio de Prestación
+                        </h6>
+                        <h6>
+                            {{ fechaPrestacion }}hs
+                        </h6>
+                    </div>
+                </span>
+                <hr style="width: 100%; margin: 0.5cm 0;">
 
-                {{#if valorPrestacion}}
-                    <h6 class="bolder">
-                        {{ nombrePrestacion }}:
-                    </h6>
-                    <h6>
-                        {{{ valorPrestacion }}}
-                    </h6>
-                {{/if}}
                 <div class="registros">
                     {{#each registros}}
                         {{{this}}}
@@ -79,8 +77,7 @@ export class InformeRupBody extends HTMLComponent {
         const fechaValidacion = this.getFechaEstado('validada');
         const fechaPrestacion = this.prestacion.estados.find(estado => { return estado.tipo === 'ejecucion'; }).createdAt;
         const esValidada = (fechaValidacion !== null);
-        const valorPrestacion = this.prestacion.ejecucion.registros[0].valor || null;
-        const nombrePrestacion = this.prestacion.ejecucion.registros[0].nombre || null;
+
         if (this.registroId) {
             const registro = this.prestacion.findRegistroById(this.registroId);
             this.prestacion.solicitud.tipoPrestacion = registro.concepto;
@@ -99,37 +96,15 @@ export class InformeRupBody extends HTMLComponent {
         const registros = await Promise.all(ps);
         const firmaHTML = await this.getFirmaHTML();
 
-        // Si el primer registro ya se renderiza en el detalle, evitamos repetir su nombre/valor en el encabezado
-        const primerRegistroRenderizado = registros.length > 0 && String(registros[0]).trim() !== '';
-
         this.data = {
-
             fechaEjecucion: fechaEjecucion && moment(fechaEjecucion).format('DD/MM/YYYY HH:mm'),
             fechaValidacion: fechaValidacion && moment(fechaValidacion).format('DD/MM/YYYY HH:mm'),
             fechaPrestacion: fechaPrestacion && moment(fechaPrestacion).format('DD/MM/YYYY HH:mm'),
             titulo: this.prestacion.solicitud.tipoPrestacion.term,
-            valorPrestacion: primerRegistroRenderizado ? '' : this.cleanValue(valorPrestacion),
-            nombrePrestacion: primerRegistroRenderizado ? '' : this.cleanValue(nombrePrestacion),
             registros,
             esValidada,
             firmaHTML
         };
-    }
-
-    cleanValue(value) {
-        if (value === null || value === undefined) {
-            return '';
-        }
-        if (typeof value === 'string') {
-            return value.replace(/&nbsp;/g, ' ');
-        }
-        if (typeof value === 'object') {
-            if (value.term) {
-                return String(value.term).replace(/&nbsp;/g, ' ');
-            }
-            return '';
-        }
-        return String(value);
     }
 
     async getFirmaHTML() {
