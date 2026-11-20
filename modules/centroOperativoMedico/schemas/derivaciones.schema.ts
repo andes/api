@@ -25,7 +25,8 @@ const DerivacionHistorialSchema = new mongoose.Schema({
     dispositivo: DispositivoSchema,
     observacion: String,
     adjuntos: mongoose.Schema.Types.Mixed,
-    eliminado: Boolean
+    eliminado: Boolean,
+    obraSocial: { type: obraSocialSchema }
 });
 
 DerivacionHistorialSchema.plugin(AuditPlugin);
@@ -93,7 +94,7 @@ export const DerivacionSchema = new mongoose.Schema({
             alias: String,
             apellido: String,
             fechaNacimiento: Date,
-            ObraSocial: { type: obraSocialSchema }
+            obraSocial: { type: obraSocialSchema }
         },
         required: true
     },
