@@ -18,7 +18,7 @@ import { getAccesosVirtuales } from '../../turnos/controller/turnosController';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import { ECLQueriesCtr } from './../../../core/tm/eclqueries.routes';
 import { handleHttpRequest } from '../../../utils/requestHandler';
-import { ambitoOrigenValido } from '../../rup/ambito-origen';
+import { procedenciaValida } from '../../rup/ambito-origen';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -136,7 +136,7 @@ export async function liberarTurno(req, data, turno) {
             turno.tipoTurno = undefined;
             turno.link = undefined;
             turno.motivoConsulta = undefined;
-            turno.ambitoOrigen = undefined;
+            turno.procedencia = undefined;
             turno.webexLinks = null;
             turno.updatedAt = new Date();
             turno.updatedBy = req.user.usuario || req.user;
@@ -436,11 +436,11 @@ export async function actualizarPaciente(pacienteTurno: any, req: any) {
 }
 
 // Agenda
-export function ambitoOrigenSobreturnoValido(sobreturno): boolean {
-    if (sobreturno && (sobreturno.ambitoOrigen === null || sobreturno.ambitoOrigen === '')) {
-        delete sobreturno.ambitoOrigen;
+export function procedenciaSobreturnoValida(sobreturno): boolean {
+    if (sobreturno && (sobreturno.procedencia === null || sobreturno.procedencia === '')) {
+        delete sobreturno.procedencia;
     }
-    return !sobreturno || sobreturno.ambitoOrigen === undefined || ambitoOrigenValido(sobreturno.ambitoOrigen);
+    return !sobreturno || sobreturno.procedencia === undefined || procedenciaValida(sobreturno.procedencia);
 }
 
 export async function agregarSobreturno(req, data) {
@@ -1614,7 +1614,7 @@ export function agendaNueva(data, clon, req) {
                 turno.fechaHoraDacion = undefined;
                 turno.link = undefined;
                 turno.motivoConsulta = undefined;
-                turno.ambitoOrigen = undefined;
+                turno.procedencia = undefined;
                 turno.usuarioDacion = undefined;
                 turno.profesional = undefined;
                 turno.horaAsistencia = undefined;

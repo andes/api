@@ -65,7 +65,8 @@ const turnoSchema = new mongoose.Schema({
     emitidoPor: String, // Agregamos para identificar desde donde se emitio el turno. Ej: appmobile.
     paciente: PacienteSubSchema,
     motivoConsulta: String,
-    ambitoOrigen: {
+    // Procedencia del paciente (ambulatorio, internacion o guardia). Informativa; ver ADR de ámbito de origen.
+    procedencia: {
         type: String,
         enum: [...AMBITOS_ORIGEN, null],
         required: false

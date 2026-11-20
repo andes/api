@@ -55,11 +55,19 @@ export const PrestacionSchema = new Schema({
             required: true
         },
 
-        // Ambito de la prestacion: ambulatorio, internacion o guardia
+        // Ámbito donde nace la prestación: ambulatorio, internacion o guardia. Lo define el
+        // sistema según el flujo de creación (decide listados, navegación e `inicio`).
         ambitoOrigen: {
             type: String,
             required: false,
             default: 'ambulatorio'
+        },
+
+        // Procedencia del paciente (ambulatorio, internacion o guardia), informada por el
+        // usuario. Es solo informativa: no cambia el flujo de la prestación. Se valida en las rutas.
+        procedencia: {
+            type: String,
+            required: false
         },
 
         // Tipo de Prestación a ejecutarse (destino)

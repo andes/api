@@ -20,7 +20,7 @@ import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
-import { ambitoOrigenValido } from '../ambito-origen';
+import { procedenciaValida } from '../ambito-origen';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
 import { Agenda } from '../../turnos/schemas/agenda';
@@ -594,8 +594,10 @@ router.get('/prestaciones', async (req: any, res, next) => {
 router.post('/prestaciones', async (req, res, next) => {
     try {
         const dto = parseDate(JSON.stringify(req.body));
-        if (dto.solicitud?.ambitoOrigen !== undefined && !ambitoOrigenValido(dto.solicitud.ambitoOrigen)) {
-            return next('Ámbito de origen inválido');
+        // procedencia: de dónde viene el paciente (informativo). ambitoOrigen no se valida acá:
+        // lo define el sistema según el flujo de creación. Ver ADR de ámbito de origen.
+        if (dto.solicitud?.procedencia !== undefined && !procedenciaValida(dto.solicitud.procedencia)) {
+            return next('Procedencia inválida');
         }
 
         if (dto.inicio === 'top') {
@@ -644,17 +646,15 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
                 break;
             case 'estadoPush':
-                if (req.body.ambitoOrigen !== undefined) {
+                // Procedencia del paciente (informativa). Nunca modifica solicitud.ambitoOrigen.
+                if (req.body.procedencia !== undefined) {
                     if (data.estadoActual.tipo === 'validada') {
                         return next('Prestación validada, no se puede modificar.');
                     }
-                    if (data.trackId) {
-                        return next('No se puede modificar el ámbito de una prestación asociada a un evento.');
+                    if (!procedenciaValida(req.body.procedencia)) {
+                        return next('Procedencia inválida');
                     }
-                    if (!ambitoOrigenValido(req.body.ambitoOrigen)) {
-                        return next('Ámbito de origen inválido');
-                    }
-                    data.solicitud.ambitoOrigen = req.body.ambitoOrigen;
+                    data.solicitud.procedencia = req.body.procedencia;
                 }
                 if (req.body.estado) {
                     // SI LA SOLICITUD FUE ANULADA NO SE PUEDE REALIZAR OTRA OPERACION
