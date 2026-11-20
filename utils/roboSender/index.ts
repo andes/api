@@ -1,5 +1,5 @@
 import moment = require('moment');
-import { ExportHudsModel } from '../../modules/huds/export-huds/exportHuds.schema';
+import { exportHuds as createExportHuds } from '../../modules/huds/export-huds/exportHuds.controller';
 import { INotification } from '../../modules/mobileApp/controller/PushClient';
 import { RoboModel } from './roboSchema';
 
@@ -94,23 +94,5 @@ export function sendNotification(data: INotification, devices, options: any = {}
 }
 
 export function exportHuds(data, user) {
-    const obj = new ExportHudsModel({
-        fechaDesde: data.fechaDesde,
-        fechaHasta: data.fechaHasta,
-        pacienteId: data.pacienteId,
-        pacienteNombre: data.pacienteNombre,
-        createdAt: moment().toDate(),
-        updatedAt: moment().toDate(),
-        tipoPrestacion: data.tipoPrestacion,
-        prestaciones: data.prestaciones,
-        excluye: data.excluye,
-        user
-    });
-    new RoboModel({
-        idExportHuds: obj._id,
-        expiredAt: moment().add(2, 'd').toDate(),
-        scheduledAt: new Date(),
-        tries: 0
-    }).save();
-    return obj.save();
+    return createExportHuds(data, user);
 }

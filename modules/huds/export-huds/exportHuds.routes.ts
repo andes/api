@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { Auth } from '../../../auth/auth.class';
-import { exportHuds } from '../../../utils/roboSender';
+import { exportHuds } from './exportHuds.controller';
 import { ExportHudsModel } from './exportHuds.schema';
 import { getHUDSExportarModel, readFile } from './hudsFiles';
 import { Types } from 'mongoose';
