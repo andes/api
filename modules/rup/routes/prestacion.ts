@@ -17,7 +17,7 @@ import { dashboardSolicitudes } from '../controllers/estadisticas';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 import { hudsPaciente, saveEnHistorial, updateRegistroHistorialSolicitud } from '../controllers/prestacion';
 import { registrosProfundidad } from '../controllers/rup';
-import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
+import { buscarYCrearSolicitudes, getDetalleSolicitud } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
@@ -421,6 +421,18 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
         return next(err);
     }
 });
+
+// El detalle de la molécula solo puede ser consultado por usuarios con el permiso específico.
+const authorizeDetalleSolicitud = async (req: Request, res, next) =>
+    Auth.authorizeByToken(req, res, next, ['solicitudes:verDetalles']);
+
+router.get('/prestaciones/solicitudes/:id/detalle', authorizeDetalleSolicitud, asyncHandler(async (req: any, res, next) => {
+    const solicitud = await getDetalleSolicitud(req.params.id);
+    if (!solicitud) {
+        return next(404);
+    }
+    return res.json(solicitud);
+}));
 
 router.get('/prestaciones/:id', asyncHandler(async (req: any, res, next) => {
     const prestacion = await Prestacion.findById(req.params.id);
