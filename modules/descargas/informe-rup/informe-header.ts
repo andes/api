@@ -84,7 +84,7 @@ export class InformeRupHeader extends HTMLComponent {
                                 <h6 class="bolder">
                                     Internación
                                 </h6>
-                                {{ubicacion}}
+                                {{{ubicacion}}}
                             </div>
                         </div>
                     {{/if}}
@@ -145,50 +145,49 @@ export class InformeRupHeader extends HTMLComponent {
             {{/unless}}
     `;
 
-    constructor(public prestacion, public paciente, public organizacion, public cama) {
+    constructor(public prestacion, public paciente, public organizacion, public cama, public movimientos = []) {
         super();
 
-        // [TODO] helpers date formats en Handlerbars
 
-        const fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
-        const fechaPrestacion = moment(prestacion.ejecucion.fecha);
-        const edad = paciente.fechaNacimiento && fechaPrestacion.diff(moment(paciente.fechaNacimiento), 'years');
-        const organizacionId = String(prestacion.ejecucion.organizacion.id);
+        const fechaNacimiento = paciente?.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
+        const fechaPrestacion = prestacion.ejecucion?.fecha ? moment(prestacion.ejecucion.fecha) : null;
+        const edad = paciente?.fechaNacimiento && fechaPrestacion ? fechaPrestacion.diff(moment(paciente.fechaNacimiento), 'years') : null;
+        const organizacionId = prestacion.ejecucion?.organizacion?.id ? String(prestacion.ejecucion.organizacion.id) : null;
         const origenTop = (prestacion.inicio === 'top');
-        const solicitudOrigen = prestacion.solicitud;
-        const fechaSolicitud = this.prestacion.solicitud.fecha;
+        const solicitudOrigen = prestacion.solicitud || {};
+        const fechaSolicitud = prestacion.solicitud?.fecha;
 
         // [TODO] metodo getCarpeta en paciente
-        const numeroCarpeta = paciente.carpetaEfectores.find(x => String(x.organizacion._id) === organizacionId);
-        const consultaValidada = (prestacion.estados[prestacion.estados.length - 1].tipo === 'validada');
+        const numeroCarpeta = paciente?.carpetaEfectores?.find(x => x.organizacion && String(x.organizacion._id) === organizacionId);
+        const consultaValidada = prestacion.estados?.length ? (prestacion.estados[prestacion.estados.length - 1].tipo === 'validada') : false;
         const provincia = configPrivate.provincia || 'neuquen';
         this.data = {
             paciente: {
-                nombre: paciente.nombre,
-                apellido: paciente.apellido,
-                alias: paciente.alias || undefined,
-                genero: paciente.genero,
+                nombre: paciente?.nombre,
+                apellido: paciente?.apellido,
+                alias: paciente?.alias || undefined,
+                genero: paciente?.genero,
                 fechaNacimiento,
-                documento: paciente.documento,
-                numeroIdentificacion: paciente.numeroIdentificacion || undefined,
+                documento: paciente?.documento,
+                numeroIdentificacion: paciente?.numeroIdentificacion || undefined,
                 edad,
                 numeroCarpeta: numeroCarpeta?.nroCarpeta,
-                obraSocial: prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial.financiador : false
+                obraSocial: prestacion.paciente?.obraSocial ? prestacion.paciente.obraSocial.financiador : false
             },
             organizacion: {
-                nombre: organizacion ? organizacion.nombre.replace('-', '</br>') : '',
-                direccion: organizacion ? organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre : ''
+                nombre: organizacion?.nombre ? organizacion.nombre.replace('-', '</br>') : '',
+                direccion: organizacion?.direccion ? (organizacion.direccion.valor || '') + (organizacion.direccion.ubicacion?.localidad?.nombre ? ', ' + organizacion.direccion.ubicacion.localidad.nombre : '') : ''
             },
             origen: {
-                efectorOrigen: solicitudOrigen.organizacionOrigen.nombre ? solicitudOrigen.organizacionOrigen.nombre.replace('-', '</br>') : '',
-                profesionalOrigenNombre: solicitudOrigen.profesionalOrigen.nombre,
-                profesionalOrigenApellido: solicitudOrigen.profesionalOrigen.apellido,
-                fechaSolicitud: moment(fechaSolicitud).format('DD/MM/YYYY HH:mm')
+                efectorOrigen: solicitudOrigen.organizacionOrigen?.nombre ? solicitudOrigen.organizacionOrigen.nombre.replace('-', '</br>') : '',
+                profesionalOrigenNombre: solicitudOrigen.profesionalOrigen?.nombre,
+                profesionalOrigenApellido: solicitudOrigen.profesionalOrigen?.apellido,
+                fechaSolicitud: fechaSolicitud ? moment(fechaSolicitud).format('DD/MM/YYYY HH:mm') : ''
             }
             ,
             profesional: {
-                nombre: prestacion.solicitud.profesional.nombre,
-                apellido: prestacion.solicitud.profesional.apellido
+                nombre: prestacion.solicitud?.profesional?.nombre,
+                apellido: prestacion.solicitud?.profesional?.apellido
             },
             consultaValidada,
             logos: {
@@ -213,8 +212,33 @@ export class InformeRupHeader extends HTMLComponent {
     }
 
     ubicacionName() {
+        if (this.movimientos?.length > 0) {
+            // Ordenamos por fecha ascendente para mostrar Ingreso -> Movimientos -> Egreso
+            const sortedMovs = [...this.movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+            return sortedMovs.map(mov => {
+                const fecha = moment(mov.fecha).format('DD/MM/YYYY HH:mm');
+                let label = '';
+                if (mov.extras?.ingreso) {
+                    label = 'INGRESO: ';
+                } else if (mov.extras?.egreso) {
+                    label = 'EGRESO: ';
+                } else {
+                    label = 'MOVIMIENTO: ';
+                }
+                const bedName = mov.nombre || '';
+                const sector = mov.sectorName ? ` (${mov.sectorName})` : '';
+                return `${label}${bedName}${sector} - ${fecha}`;
+            }).join('<br>');
+        }
+
         if (this.cama) {
-            return `${this.cama.nombre}, ${this.cama.sectorName}`;
+            const fecha = moment(this.prestacion.ejecucion.fecha).format('DD/MM/YYYY HH:mm');
+            let name = `${this.cama.nombre}, ${this.cama.sectorName}<br>${fecha}`;
+            if (this.cama.unidadOrganizativa) {
+                const unit = typeof this.cama.unidadOrganizativa === 'object' ? (this.cama.unidadOrganizativa.term || this.cama.unidadOrganizativa.nombre) : this.cama.unidadOrganizativa;
+                name += `<br>(${unit})`;
+            }
+            return name;
         }
         return null;
     }
