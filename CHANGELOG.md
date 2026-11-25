@@ -1,3 +1,15 @@
+# [5.151.0](https://github.com/andes/api/compare/v5.150.0...v5.151.0) (2026-11-25)
+
+
+### Bug Fixes
+
+* **conflicts:** etiqueta con pull_request ([#2362](https://github.com/andes/api/issues/2362)) ([1f257ba](https://github.com/andes/api/commit/1f257bab938a85290ebceffb3b2deeeea0069645))
+
+
+### Features
+
+* **PACS-7:** Implementa reconciliación automática de estudios manuales a nivel de metadata ([#2307](https://github.com/andes/api/issues/2307)) ([f27d98d](https://github.com/andes/api/commit/f27d98d28fcb7d5d290fadc9c3841ef7ac00ca71))
+
 # [5.150.0](https://github.com/andes/api/compare/v5.149.0...v5.150.0) (2026-11-18)
 
 
