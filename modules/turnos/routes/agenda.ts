@@ -12,6 +12,7 @@ import { liberarRefTurno } from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { agendaLog } from '../citasLog';
 import * as agendaCtrl from '../controller/agenda';
+import { populateIncluyePrestaciones, populatePrestaciones } from '../controller/agenda-prestaciones';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import * as AgendasEstadisticas from '../controller/estadisticas';
 import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
@@ -306,12 +307,15 @@ router.get('/agenda/:id?', async (req, res, next) => {
             }
         }
 
-        query.exec((err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        try {
+            const data: any = await query.exec();
+            const resultado = populateIncluyePrestaciones(req.query.populate)
+                ? await populatePrestaciones(data)
+                : data;
+            res.json(resultado);
+        } catch (err) {
+            return next(err);
+        }
     }
 });
 
