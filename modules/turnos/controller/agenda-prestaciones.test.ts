@@ -71,8 +71,10 @@ describe('populatePrestaciones', () => {
 
     it('adjunta la prestación al turno asignado y al sobreturno, no al disponible', async () => {
         const idAsignado = new Types.ObjectId();
+        const idDisponible = new Types.ObjectId();
         const idSobreturno = new Types.ObjectId();
         await insertarPrestacion(idAsignado, ids.turnoAsignado, 'pendiente', new Date('2026-11-01T10:00:00Z'));
+        await insertarPrestacion(idDisponible, ids.turnoDisponible, 'pendiente', new Date('2026-11-01T10:30:00Z'));
         await insertarPrestacion(idSobreturno, ids.sobreturno, 'validada', new Date('2026-11-01T11:00:00Z'));
 
         const [agenda] = await populatePrestaciones([crearAgenda(ids)]);
@@ -113,6 +115,17 @@ describe('populatePrestaciones', () => {
         const [agenda] = await populatePrestaciones([crearAgenda(ids)]);
 
         expect(agenda.bloques[0].turnos[0].prestacion._id.toString()).toBe(idNueva.toString());
+    });
+
+    it('prioriza la prestación viva sobre la anulada más reciente', async () => {
+        const idViva = new Types.ObjectId();
+        const idAnulada = new Types.ObjectId();
+        await insertarPrestacion(idViva, ids.turnoAsignado, 'ejecucion', new Date('2026-11-01T09:00:00Z'));
+        await insertarPrestacion(idAnulada, ids.turnoAsignado, 'anulada', new Date('2026-11-01T12:00:00Z'));
+
+        const [agenda] = await populatePrestaciones([crearAgenda(ids)]);
+
+        expect(agenda.bloques[0].turnos[0].prestacion._id.toString()).toBe(idViva.toString());
     });
 
     it('si la consulta falla, devuelve las agendas sin prestación', async () => {

@@ -39,10 +39,11 @@ function idsTurnos(agendas: any[]): any[] {
 }
 
 function esMasRelevante(candidata: any, actual: any): boolean {
-    const candidataModificada = candidata.estadoActual?.tipo === 'modificada' ? 0 : 1;
-    const actualModificada = actual.estadoActual?.tipo === 'modificada' ? 0 : 1;
-    if (candidataModificada !== actualModificada) {
-        return candidataModificada > actualModificada;
+    const esViva = (prestacion: any) => ['modificada', 'anulada'].includes(prestacion.estadoActual?.tipo) ? 0 : 1;
+    const candidataViva = esViva(candidata);
+    const actualViva = esViva(actual);
+    if (candidataViva !== actualViva) {
+        return candidataViva > actualViva;
     }
     return new Date(candidata.createdAt || 0).getTime() > new Date(actual.createdAt || 0).getTime();
 }
