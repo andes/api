@@ -33,12 +33,15 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
             id: prestacion.ejecucion.organizacion.id,
             nombre: prestacion.ejecucion.organizacion.nombre
         };
+        const pacienteBase = prestacion.paciente?.toObject
+            ? prestacion.paciente.toObject()
+            : JSON.parse(JSON.stringify(prestacion.paciente || {}));
         dataReceta = {
             idPrestacion: prestacion.id,
             idRegistro,
             fechaRegistro: prestacion.ejecucion.fecha || moment().toDate(),
             fechaPrestacion: prestacion.ejecucion.fecha,
-            paciente: prestacion.paciente,
+            paciente: pacienteBase,
             profesional,
             organizacion,
             insumo: null,
@@ -52,7 +55,24 @@ EventCore.on('prestacion:recetaInsumo:create', async ({ prestacion, registro }) 
                 continue;
             }
 
-            dataReceta.insumo = insumo;
+            // Cada insumo puede tener su propia obra social. Si no la tiene,
+            // se mantiene la de la prestación como fallback.
+            const obraSocialInsumo = (insumo.obraSocial !== undefined)
+                ? insumo.obraSocial
+                : pacienteBase?.obraSocial;
+            const obraSocialFinal = (obraSocialInsumo && obraSocialInsumo.nombre !== 'Sin obra social')
+                ? obraSocialInsumo
+                : null;
+
+            dataReceta = {
+                ...dataReceta,
+                insumo,
+                diagnostico: insumo?.diagnostico || null,
+                paciente: {
+                    ...pacienteBase,
+                    obraSocial: obraSocialFinal
+                }
+            };
             const recetasEnDb: any = await crearRecetaInsumo(dataReceta, prestacion.createdBy);
 
             const queryControl: any = {
