@@ -38,17 +38,29 @@ _____________________________________________
 
 
 ### Test
+
+<!--
+Descomentá las opciones que correspondan a los tests que quieras ejecutar.
+Si dejás todas las opciones comentadas, no se ejecutarán los tests.
+
+Documentación:
+https://github.com/andes/andes-test-integracion#readme
+-->
+
 ```
-# este PR pisa la rama del componente
-# descomentá una rama si no es master
-# app: master
-# mobile: master
-# monitoreo: master
-# matriculaciones: master
-# tests: master
-# un stack, o un grupo. andes es el default. recetar no tiene grupos
+# 1. STACK (entorno de integración)
+# Seleccionar como máximo uno. Por defecto: andes.
+
 # andes
 # pacs
+
+# 2. GRUPOS DE TESTS
+# Seleccionar uno o varios grupos del stack correspondiente.
+# Usar "todos" para ejecutar todos los grupos del stack.
+
+# todos
+
+# Grupos del stack ANDES:
 # core
 # citas
 # rup-internacion
@@ -56,7 +68,23 @@ _____________________________________________
 # apps
 # monitoreo
 # mobile
-# todos
+
+# 3. ARCHIVOS O DIRECTORIOS ESPECÍFICOS (opcional)
+# Alternativa a la selección de grupos.
+# No combinar con grupos ni con "todos".
+
+# cypress/e2e/apps/mobile
+
+# 4. RAMAS DE LOS REPOSITORIOS (opcional)
+# Descomentar y reemplazar "master" por la rama deseada.
+# El repositorio del PR utiliza automáticamente el commit del PR.
+
+# app: master
+# api: master
+# mobile: master
+# monitoreo: master
+# matriculaciones: master
+# tests: master
 ```
 
 <!-- Agregar captura de pantalla, si fuera relevante  -->
