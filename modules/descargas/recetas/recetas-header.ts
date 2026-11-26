@@ -4,7 +4,7 @@ import { loadImage } from '../model/informe.class';
 export class RecetasHeader extends InformeRupHeader {
     template = `
             <section class="contenedor-header-recetas" style="width:100%; height:1.32cm; overflow:hidden; border-bottom: solid 1px black;">
-                <img src="data:image/png;base64,{{ logoHeader }}" style="width:100%; display:block; margin-top:-0.62cm;">
+                <img src="data:image/png;base64,{{ logoHeader }}" style="width:100%; display:block; margin-top:-0.50cm;">
             </section>
             <section class="contenedor-data-origen">
                 <!-- Datos paciente -->
