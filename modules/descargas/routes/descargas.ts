@@ -284,7 +284,7 @@ router.post('/listadoTurnos', Auth.authenticate(), async (req: any, res, next) =
  * Genera una hoja por cada medicamento/insumo con barcode propio,
  * obra social, nota médica, fórmula magistral y fechas emisión/vencimiento.
  */
-router.get('/recetas/:idPrestacion/(:idRegistro)?', Auth.authenticate(), async (req: any, res, next) => {
+router.get('/recetas/:idPrestacion/:idRegistro?', Auth.authenticate(), async (req: any, res, next) => {
     try {
         const idPrestacion = req.params.idPrestacion;
         const idRegistro = req.params.idRegistro;

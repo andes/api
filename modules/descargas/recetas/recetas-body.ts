@@ -69,7 +69,10 @@ export class RecetasBody extends HTMLComponent {
                             </tr>
                             <tr>
                                 <td style="font-weight:900;">Obra Social</td>
-                                <td>{{obraSocial}}</td>
+                                <td>
+                                    {{obraSocial}}
+                                    {{#if numeroAfiliado}}<br><small>Af. {{numeroAfiliado}}</small>{{/if}}
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -193,7 +196,19 @@ export class RecetasBody extends HTMLComponent {
             }
 
             const diagnostico = receta.diagnostico?.term || receta.diagnostico?.descripcion || '-';
-            const obraSocial = receta.paciente?.obraSocial?.financiador || receta.paciente?.obraSocial?.nombre || this.prestacion?.paciente?.obraSocial?.financiador || 'sin obra social';
+            // La obra social de la receta manda. Si es null (sin obra social) no se debe
+            // caer a la de la prestación, porque mostraría una obra social ajena a la receta.
+            const obraSocialReceta = receta.paciente?.obraSocial;
+            const obraSocialAux = obraSocialReceta !== undefined
+                ? obraSocialReceta
+                : this.prestacion?.paciente?.obraSocial;
+            const obraSocialNombre = typeof obraSocialAux === 'string'
+                ? obraSocialAux
+                : (obraSocialAux?.financiador || obraSocialAux?.nombre);
+            const obraSocial = obraSocialNombre || 'sin obra social';
+            const numeroAfiliado = (obraSocialAux && typeof obraSocialAux === 'object')
+                ? (obraSocialAux.numeroAfiliado || null)
+                : null;
             const notaMedica = !esInsumo ? (receta.medicamento?.dosisDiaria?.notaMedica || null) : (receta.insumo?.especificacion || null);
             const notaFinal = (!esInsumo && notaMedica) ? notaMedica : (esInsumo ? null : notaMedica);
             const estadoRaw = receta.estadoActual?.tipo || 'vigente';
@@ -241,6 +256,7 @@ export class RecetasBody extends HTMLComponent {
                 dosisDiaria,
                 diagnostico,
                 obraSocial,
+                numeroAfiliado,
                 notaMedica: notaFinal,
                 esMagistral,
                 tratamientoProlongado,

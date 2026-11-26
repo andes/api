@@ -28,27 +28,6 @@ export class RecetasHeader extends InformeRupHeader {
                         </h4>
                     </div>
                     <div class="contenedor-secundario">
-                    <div class="contenedor-bloque-texto" >
-                                <h6>
-                                <b>Obra Social: </b>
-
-                                {{#if paciente.obraSocial}}
-                                {{paciente.obraSocial}}
-                                {{else}}
-                                sin obra social
-                                {{/if}}
-                            </h6>
-                            <h6>
-                                <b>Nro. Afiliado: </b>
-                                {{#if paciente.numeroAfiliado}}
-                                    {{ paciente.numeroAfiliado }}
-                                {{else}}
-                                    Sin datos
-                                {{/if}}
-                            </h6>
-                    </div>
-                    </div>
-                    <div class="contenedor-secundario">
                         <div class="contenedor-bloque-texto">
                             <h6 class="bolder">
                                 Fecha de Nac.
