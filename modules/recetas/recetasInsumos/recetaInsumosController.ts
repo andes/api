@@ -202,6 +202,10 @@ export async function crearRecetaInsumo(dataRecetaInsumo, req) {
     const insumo = dataRecetaInsumo.insumo;
     const tratamientoProlongado: Boolean = insumo.tratamientoProlongado && insumo.tiempoTratamiento && insumo.tiempoTratamiento.id !== null;
     const cantRecetas = (tratamientoProlongado) ? parseInt(insumo.tiempoTratamiento.id, 10) : 1;
+    const obraSocialAux = (insumo.obraSocial !== undefined)
+        ? insumo.obraSocial
+        : (dataRecetaInsumo.paciente?.obraSocial || null);
+    const obraSocialFinal = (obraSocialAux && obraSocialAux.nombre !== 'Sin obra social') ? obraSocialAux : null;
     const recetas = [];
     let recetaInsumo;
     for (let i = 0; i < cantRecetas; i++) {
@@ -253,8 +257,11 @@ export async function crearRecetaInsumo(dataRecetaInsumo, req) {
             }
             recetaInsumo.estados = i < 1 ? [{ tipo: 'vigente' }] : [{ tipo: 'pendiente' }];
             recetaInsumo.estadosDispensa = [{ tipo: 'sin-dispensa', fecha: moment().toDate() }];
-            recetaInsumo.paciente = dataRecetaInsumo.paciente;
-            recetaInsumo.paciente.obraSocial = dataRecetaInsumo.paciente.obraSocial;
+            const pacienteClone = dataRecetaInsumo.paciente?.toObject
+                ? dataRecetaInsumo.paciente.toObject()
+                : JSON.parse(JSON.stringify(dataRecetaInsumo.paciente || {}));
+            recetaInsumo.paciente = pacienteClone;
+            recetaInsumo.paciente.obraSocial = obraSocialFinal;
             recetaInsumo.paciente.id = dataRecetaInsumo.paciente.id || dataRecetaInsumo.paciente._id;
             recetaInsumo.profesional = dataRecetaInsumo.profesional;
             recetaInsumo.profesional._id = dataRecetaInsumo.profesional.id || dataRecetaInsumo.profesional._id;
