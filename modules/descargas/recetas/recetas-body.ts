@@ -83,12 +83,17 @@ export class RecetasBody extends HTMLComponent {
                         <p style="font-style:italic; font-size:0.23cm; margin:0.05cm 0 0 0;">{{notaMedica}}</p>
                     </div>
                     {{/if}}
-                    {{#if firma}}
+                    {{#if mostrarFirma}}
                     <div style="margin-top:0.8cm; text-align:center;">
+                        {{#if firma}}
                         <p style="font-weight:bold; font-style:italic; font-size:0.24cm; margin:0 0 0.15cm 0;">Este documento ha sido firmado electronicamente por:</p>
-                        {{#if firma}}<img src="data:image/png;base64,{{{firma}}}" style="max-height:2cm; max-width:5cm; display:block; margin:0 auto;" />{{/if}}
+                        <img src="data:image/png;base64,{{{firma}}}" style="max-height:2cm; max-width:5cm; display:block; margin:0 auto;" />
+                        {{/if}}
+                        {{#if matriculas}}
                         <hr style="width:7cm; margin:0.25cm auto 0.15cm auto;" />
-                        <p style="font-weight:bold; font-size:0.22cm; margin:0;">{{detalle}}</p>
+                        {{/if}}
+                        {{#if detalle}}<p style="font-weight:bold; font-size:0.22cm; margin:0;">{{detalle}}</p>{{/if}}
+                        {{#if detalle2}}<p style="font-size:0.2cm; margin:0.05cm 0 0 0;">{{detalle2}}</p>{{/if}}
                         {{#if matriculas}}<p style="font-size:0.18cm; line-height:0.24cm; margin:0.15cm 0 0 0;">{{{matriculas}}}</p>{{/if}}
                     </div>
                     {{/if}}
@@ -243,6 +248,11 @@ export class RecetasBody extends HTMLComponent {
                 // silencioso, sin firma
             }
 
+            const organizacionNombre = this.organizacion?.nombre || '';
+            const detalle2 = organizacionNombre.includes('-')
+                ? organizacionNombre.substring(0, organizacionNombre.indexOf('-')).trim()
+                : organizacionNombre;
+
             recetas.push({
                 esInsumo,
                 idReceta,
@@ -264,7 +274,9 @@ export class RecetasBody extends HTMLComponent {
                 totalTratamiento,
                 firma,
                 detalle,
-                matriculas
+                detalle2,
+                matriculas,
+                mostrarFirma: !!(firma || matriculas)
             });
         }
 
