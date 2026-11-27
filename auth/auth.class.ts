@@ -217,6 +217,140 @@ export class Auth {
     }
 
     /**
+     * Devuelve el id de paciente de un valor que puede ser un id, un ObjectId o un objeto con id/_id.
+     */
+    private static getPacienteId(value: any): string | null {
+        if (value === null || value === undefined) {
+            return null;
+        }
+        if (Array.isArray(value)) {
+            return this.getPacienteId(value[0]);
+        }
+        if (value instanceof mongoose.Types.ObjectId || value?._bsontype === 'ObjectID') {
+            return String(value);
+        }
+        if (typeof value === 'object') {
+            return this.getPacienteId(value.id || value._id);
+        }
+        const id = String(value).trim();
+        return id || null;
+    }
+
+    /**
+     * Obtiene los ids de paciente solicitados en la request. Solo toma parámetros que
+     * representan un paciente, para no confundirlos con ids de organización, cuenta,
+     * dispositivo, etc.
+     *
+     * Los middlewares registrados con app.use() no reciben los params de la ruta final,
+     * por eso también se capturan los ids directamente desde la URL.
+     */
+    private static getPacienteIdsFromRequest(req: express.Request): { ids: string[]; invalid: boolean } {
+        const query: any = req.query || {};
+        const body: any = req.body || {};
+        const params: any = req.params || {};
+        const url = req.path || req.originalUrl || req.url || '';
+        const path = url.split('?')[0];
+        const values: any[] = [
+            query.pacienteId,
+            query.idPaciente,
+            body.pacienteId,
+            body.idPaciente,
+            body.paciente,
+            params.idPaciente,
+            params.pacienteId
+        ];
+
+        // En turnos el familiar puede viajar como JSON en query o como objeto en el body
+        for (const familiar of [query.familiar, body.familiar]) {
+            if (familiar) {
+                if (typeof familiar === 'string') {
+                    try {
+                        values.push(JSON.parse(familiar));
+                    } catch (err) {
+                        return { ids: [], invalid: true };
+                    }
+                } else {
+                    values.push(familiar);
+                }
+            }
+        }
+
+        // /relaciones?id=...
+        if (path.includes('/relaciones')) {
+            values.push(query.id);
+        }
+
+        // Rutas con id de paciente en la URL. No depender de req.params porque el
+        // middleware se registra con app.use() antes de que Express resuelva la ruta.
+        const pathPatterns = [
+            /\/pacientes?\/([^/?]+)/,
+            /\/laboratorios\/([^/?]+)/,
+            /\/registro-familiar\/([^/?]+)/,
+            /\/prestaciones\/huds\/([^/?]+)/
+        ];
+        for (const pattern of pathPatterns) {
+            const match = path.match(pattern);
+            if (match) {
+                values.push(match[1]);
+            }
+        }
+
+        const ids = values.map(value => this.getPacienteId(value)).filter(Boolean) as string[];
+        return { ids: Array.from(new Set(ids)), invalid: false };
+    }
+
+    /**
+     * Middleware para las rutas de la App Mobile.
+     * Verifica que el paciente enviado en la request sea el mismo del token.
+     * Acepta también pacientes parientes y familiares vinculados al paciente principal.
+     */
+    static authorizePacienteToken() {
+        return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            const user: any = (req as any).user;
+            if (user?.type !== 'paciente-token') {
+                return next();
+            }
+
+            const { ids: pacienteIds, invalid } = this.getPacienteIdsFromRequest(req);
+            if (invalid) {
+                return next(403);
+            }
+            if (!pacienteIds.length) {
+                return next();
+            }
+
+            const pacientesToken: any[] = user.pacientes || [];
+            const permitidos = new Set(
+                pacientesToken.map(p => this.getPacienteId(p)).filter(Boolean) as string[]
+            );
+            const noAutorizados = pacienteIds.filter(id => !permitidos.has(id));
+            if (!noAutorizados.length) {
+                return next();
+            }
+
+            try {
+                // Se obtiene el modelo en runtime: importar el schema acá lo compilaría antes del plugin global de connections.ts
+                const principal = pacientesToken.find(p => p?.relacion === 'principal') || pacientesToken[0];
+                const principalId = this.getPacienteId(principal);
+                if (principalId) {
+                    const pacientePrincipal: any = await mongoose.model('paciente_2').findById(principalId).select('relaciones').exec();
+                    const familiares = new Set(
+                        ((pacientePrincipal?.relaciones as any[]) || [])
+                            .map(rel => this.getPacienteId(rel?.referencia))
+                            .filter(Boolean) as string[]
+                    );
+                    if (noAutorizados.every(id => familiares.has(id))) {
+                        return next();
+                    }
+                }
+            } catch (err) {
+                // Si falla la búsqueda del familiar, se deniega por defecto más abajo
+            }
+            return next(403);
+        };
+    }
+
+    /**
      * Middleware para controlar los apps token.
      * Controla que el token esta almacenado en la DB.
      * @memberOf Auth

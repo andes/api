@@ -11,7 +11,8 @@ const appMiddleware = [
 ];
 
 const mobileMiddleware = [
-    Auth.authenticate()
+    Auth.authenticate(),
+    Auth.authorizePacienteToken()
 ];
 
 
