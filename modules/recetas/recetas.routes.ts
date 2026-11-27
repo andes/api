@@ -4,6 +4,7 @@ import { Auth } from '../../auth/auth.class';
 import { Receta } from './receta-schema';
 import { buscarRecetas, getMotivosReceta, setEstadoDispensa, suspender, actualizarAppNotificada, cancelarDispensa, create, buscarRecetasPorProfesional, buscarRecetasConFiltros, verificarRecetaExistente } from './recetasController';
 import { ParamsIncorrect } from './recetas.error';
+import { recetarClient, isRecetarConfigured } from './recetar-client';
 
 class RecetasResource extends ResourceBase {
     Model = Receta;
@@ -28,7 +29,8 @@ class RecetasResource extends ResourceBase {
 
 export const get = async (req, res) => {
     const result = await buscarRecetas(req);
-    res.json(result);
+    const extra = await fetchRecetar(req);
+    res.json(extra ? mergeResult(result, extra) : result);
 };
 
 export const getMotivos = async (req, res) => {
@@ -43,8 +45,36 @@ export const getByProfesional = async (req, res) => {
 
 export const getConFiltros = async (req, res) => {
     const result = await buscarRecetasConFiltros(req);
-    res.json(result);
+    const extra = await fetchRecetar(req);
+    res.json(extra ? mergeResult(result, extra) : result);
 };
+
+// Lee las recetas nuevas desde RecetAr (fuente de verdad) para mergear con las historicas de ANDES.
+async function fetchRecetar(req: any): Promise<any[] | null> {
+    if (!isRecetarConfigured()) {
+        return null;
+    }
+    const documento = req.query?.documento;
+    if (!documento) {
+        return null;
+    }
+    try {
+        const estado = req.query.estado || req.query.status;
+        return await recetarClient.getRecetas({ documento, estado, ambito: req.query.ambito });
+    } catch (err) {
+        return null;
+    }
+}
+
+function mergeResult(result: any, extra: any[]): any {
+    if (Array.isArray(result)) {
+        return [...extra, ...result];
+    }
+    if (result && Array.isArray(result.data)) {
+        return { ...result, data: [...extra, ...result.data] };
+    }
+    return result;
+}
 
 export const getVerificarReceta = async (req, res) => {
     try {
@@ -79,6 +109,16 @@ export const patch = async (req, res) => {
     } else {
         switch (operacion) {
             case 'suspender':
+                if (isRecetarConfigured()) {
+                    try {
+                        const proxied = await recetarClient.patchReceta({ op: 'suspender', recetaId, motivo: req.body.motivo, observacion: req.body.observacion, sistema: app });
+                        if (proxied) {
+                            return res.status(200).json(proxied);
+                        }
+                    } catch (err) {
+                        // fallback a la coleccion local de ANDES (historicas)
+                    }
+                }
                 result = await suspender(recetaId, req);
                 break;
             case 'dispensar':
