@@ -172,6 +172,17 @@ recetaInsumoSchema.post('save', async (prescription: any) => {
     }
 });
 
+recetaInsumoSchema.virtual('fechaVencimiento').get(function (this: any) {
+    if (!this.fechaRegistro) { return null; }
+    const fecha = new Date(this.fechaRegistro);
+    fecha.setDate(fecha.getDate() + 30);
+    return fecha;
+});
+
+recetaInsumoSchema.virtual('fechaEmision').get(function (this: any) {
+    return this.fechaRegistro;
+});
+
 recetaInsumoSchema.plugin(AuditPlugin);
 
 recetaInsumoSchema.index({
