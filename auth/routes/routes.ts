@@ -7,6 +7,8 @@ import { checkPassword } from '../ldap.controller';
 import { AuthUsers } from '../schemas/authUsers';
 import { Organizacion } from './../../core/tm/schemas/organizacion';
 import { Auth } from './../auth.class';
+import { logUsuarioIngreso } from '../usuarioIngresos';
+import { SystemLog } from '../../core/log/system.log';
 
 
 const sha1Hash = require('sha1');
@@ -96,6 +98,11 @@ router.post('/v2/organizaciones', Auth.authenticate(), async (req, res, next) =>
     const dto = await generateTokenPayload(username, orgId, account_id);
     updateOrganizacion(usuario, orgId);
     if (dto) {
+        try {
+            await logUsuarioIngreso(req, dto.payload.usuario, dto.payload.organizacion);
+        } catch (logErr) {
+            await SystemLog.error('logUsuarioIngreso', { username, orgId }, logErr, req);
+        }
         return res.send({
             token: dto.token
         });
@@ -118,6 +125,11 @@ router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
         const oldToken: string = String(req.headers.authorization).substring(4);
         const nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
         const refreshToken = Auth.refreshToken(oldToken, user, [...user.permisosGlobales, ...nuevosPermisos.permisos], org);
+        try {
+            await logUsuarioIngreso(req, { id: user._id, usuario: user.usuario }, org);
+        } catch (logErr) {
+            await SystemLog.error('logUsuarioIngreso:legacy', { username, orgId }, logErr, req);
+        }
         return res.send({
             token: refreshToken
         });
