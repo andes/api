@@ -422,6 +422,97 @@ router.get('/prestaciones/solicitudes', async (req: any, res, next) => {
     }
 });
 
+router.get('/prestaciones/sin-validar', async (req: any, res, next) => {
+    try {
+        const usuarioId = req.user?.usuario?.id;
+        const organizacionId = Auth.getOrganization(req);
+
+        if (!usuarioId || !organizacionId) {
+            return res.status(403).json({ message: 'Usuario u organización no asociados' });
+        }
+
+        const skipParam = Number.parseInt(req.query.skip, 10);
+        const limitParam = Number.parseInt(req.query.limit, 10);
+        const skip = Number.isNaN(skipParam) ? 0 : Math.max(skipParam, 0);
+        const limit = Number.isNaN(limitParam) || limitParam <= 0 ? 15 : Math.min(limitParam, 100);
+
+        const filtro = {
+            'estadoActual.tipo': 'ejecucion',
+            'estadoActual.createdBy.id': usuarioId,
+            'solicitud.ambitoOrigen': 'ambulatorio',
+            'solicitud.organizacion.id': Types.ObjectId(organizacionId)
+        };
+
+        // Todo sale del token de logueo, no de params, asi que el usuario no puede pedir las de otro profesional.
+        const prestaciones = await Prestacion.find(filtro)
+            .select('paciente solicitud.tipoPrestacion solicitud.turno solicitud.profesional ejecucion.fecha estadoActual.tipo')
+            .sort({ 'ejecucion.fecha': -1, _id: -1 })
+            .skip(skip)
+            .limit(limit + 1);
+
+        // hasMore le indica a la app si debe seguir scrolleando o cortar. Luego items lo que hace es descontar un elemento si llegara a sobrar
+        // Ej: Vienen 16 documentos, hasMore = true, items = primeros 15, el 16 solo lo usa para saber si hay mas.
+        const hasMore = prestaciones.length > limit;
+        const items = hasMore ? prestaciones.slice(0, limit) : prestaciones;
+
+        // Calcula si hay mas y arma la pagina real.
+        const turnoIds = items
+            .filter(prestacion => prestacion.solicitud?.turno)
+            .map(prestacion => prestacion.solicitud.turno);
+
+        const turnosPorId = new Map<string, any>();
+
+        // Junta los ids del turno de la pagina. Solo de items, no del documento extra.
+        if (turnoIds.length) {
+            const agendas = await Agenda.find({
+                $or: [
+                    { 'bloques.turnos._id': { $in: turnoIds } },
+                    { 'sobreturnos._id': { $in: turnoIds } }
+                ]
+            })
+                .select('bloques.turnos._id bloques.turnos.asistencia sobreturnos._id sobreturnos.asistencia')
+                .lean();
+
+            for (const agenda of agendas) {
+                for (const bloque of agenda.bloques || []) {
+                    for (const turno of bloque.turnos || []) {
+                        turnosPorId.set(String(turno._id), {
+                            encontrado: true,
+                            id: String(turno._id),
+                            idAgenda: String(agenda._id),
+                            tipoTurno: 'turno',
+                            asistencia: turno.asistencia || null
+                        });
+                    }
+                }
+                for (const sobreturno of agenda.sobreturnos || []) {
+                    // Con una sola consulta busca todas las agendas que contienen esos turnos, tanto en los bloques normales como en los sobreturnos.
+                    turnosPorId.set(String(sobreturno._id), {
+                        encontrado: true,
+                        id: String(sobreturno._id),
+                        idAgenda: String(agenda._id),
+                        tipoTurno: 'sobreturno',
+                        asistencia: sobreturno.asistencia || null
+                    });
+                }
+            }
+        }
+
+        // Armamos un mapa idTurno -> info para resolver cada prestacion en O(1), sin volver a consultar. Lo mismo para sobreturnos, con tipoTurno: 'sobreturno'
+        const data = items.map((prestacion: IPrestacionDoc) => {
+            const turnoId = prestacion.solicitud?.turno ? String(prestacion.solicitud.turno) : null;
+            return {
+                ...prestacion.toJSON(),
+                turnoInfo: turnoId ? (turnosPorId.get(turnoId) || { encontrado: false, id: turnoId }) : null
+            };
+        });
+
+        return res.json({ items: data, hasMore });
+    } catch (err) {
+        return next(err);
+    }
+});
+
 router.get('/prestaciones/:id', asyncHandler(async (req: any, res, next) => {
     const prestacion = await Prestacion.findById(req.params.id);
     if (prestacion) {
