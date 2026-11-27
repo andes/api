@@ -225,6 +225,7 @@ router.post('/registro', Auth.validateCaptcha(), async (req: any, res, next) => 
         }
 
         const documentoScan: any = ScanParse.scan(scanText);
+        documentoScan.sexo = documentoScan.sexo || req.body.sexo || '';
         const cuentaExistente = await authController.verificarCuentaExistente(documentoScan.documento, documentoScan.sexo.toLocaleLowerCase(), email);
 
         if (cuentaExistente) {
