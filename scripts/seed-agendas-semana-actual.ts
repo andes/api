@@ -295,6 +295,7 @@ function buildAuditRequest(organizacion: { _id: Types.ObjectId | string; nombre?
 
 async function resolvePrestacion(config: SeederConfig) {
     if (config.prestacionId) {
+        // eslint-disable-next-line @typescript-eslint/no-shadow
         const doc = await tipoPrestacion.findById(config.prestacionId).lean();
         if (!doc) {
             throw new Error(`No existe prestación con id ${config.prestacionId}`);
