@@ -76,7 +76,7 @@ export async function search(data) {
             };
         } else {
             params = {
-                parametros: `nombre=LABAPI_GetProtocolos&parametros=${data.estado}|${data.dni}|${data.fechaNac}|${data.apellido}| ${data.fechaDesde}|${data.fechaHasta}`
+                parametros: `nombre=LABAPI_GetProtocolos&parametros=${data.estado}|${data.dni}|${data.fechaNac}|${data.apellido}| ${data.nombre || ''} |${data.fechaDesde}|${data.fechaHasta}`
             };
         }
 
@@ -134,6 +134,7 @@ export async function searchByDocumento(pacienteId, fechaDesde?, fechaHasta?) {
                 dni: documento,
                 fechaNac: fechaNacimiento,
                 apellido: paciente.apellido,
+                nombre: paciente.nombre,
                 fechaDesde,
                 fechaHasta
             };
