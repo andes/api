@@ -371,6 +371,22 @@ PrestacionSchema.index(
     { name: 'FUERA-AGENDA' }
 );
 
+PrestacionSchema.index(
+    {
+        'estadoActual.createdBy.id': 1,
+        'solicitud.organizacion.id': 1,
+        'ejecucion.fecha': -1,
+        _id: -1
+    },
+    {
+        name: 'RUP-SIN-VALIDAR',
+        partialFilterExpression: {
+            'estadoActual.tipo': 'ejecucion',
+            'solicitud.ambitoOrigen': 'ambulatorio'
+        }
+    }
+);
+
 export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');
 export const PrestacionHistorial = model('prestacion-historial', PrestacionHistorialSchema, 'prestacion-historial');
 
