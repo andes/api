@@ -125,6 +125,25 @@ EventCore.on('mpi:pacientes:findById', async (paciente: IPacienteDoc) => {
         if (paciente.financiador && paciente.financiador[0] === null) {
             paciente.financiador = null;
         }
+
+        // Deduplicar financiadores PUCO que pudieran haberse guardado duplicados en BD
+        // (misma obra social guardada más de una vez por race condition o reintentos)
+        if (paciente.financiador?.length > 1) {
+            const seen = new Set<number>();
+            const sinDuplicados = paciente.financiador.filter(f => {
+                if (!f) { return false; }
+                if (f.origen !== 'PUCO' || !f.codigoPuco) { return true; }
+                if (seen.has(f.codigoPuco)) { return false; }
+                seen.add(f.codigoPuco);
+                return true;
+            });
+            if (sinDuplicados.length !== paciente.financiador.length) {
+                paciente.financiador = sinDuplicados;
+                // persistir la deduplicación directamente
+                await Paciente.updateOne({ _id: paciente.id }, { financiador: paciente.financiador });
+            }
+        }
+
         // Si ya se realizó una actualización en el último mes no se vuelve a consultar
         if (!paciente.financiador?.some(f => f.fechaDeActualizacion && f.origen && f.origen === 'PUCO'
             && moment(f.fechaDeActualizacion).isAfter(moment().subtract(1, 'months')))) {

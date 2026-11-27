@@ -27,14 +27,20 @@ export async function pacientePuco(documento, sexo) {
         const ultimoTrimestre = moment().utc().subtract(3, 'M').startOf('month');
 
         if (!ultimoTrimestre.isAfter(osPuco[0].version)) {
+            // Deduplicar por codigoOS antes de iterar para evitar financiadores repetidos
+            // (puede haber docs duplicados en la colección Puco por race conditions previas)
+            const osPucoUnicos = osPuco.filter((os, index) =>
+                index === osPuco.findIndex(o => o.codigoOS === os.codigoOS)
+            );
+
             // genera un array con todas las obras sociales para una version de padron dada
-            for (let i = 0; i < osPuco.length; i++) {
-                const obraSocial = await ObraSocial.findOne({ codigoPuco: osPuco[i].codigoOS });
+            for (let i = 0; i < osPucoUnicos.length; i++) {
+                const obraSocial = await ObraSocial.findOne({ codigoPuco: osPucoUnicos[i].codigoOS });
                 if (!obraSocial) {
-                    obraSocialLog.error('find', { codigoPuco: osPuco[i].codigoOS }, null);
+                    obraSocialLog.error('find', { codigoPuco: osPucoUnicos[i].codigoOS }, null);
                 }
                 resultOS[i] = {
-                    codigoPuco: osPuco[i].codigoOS,
+                    codigoPuco: osPucoUnicos[i].codigoOS,
                     nombre: '',
                     financiador: ''
                 };
@@ -43,7 +49,7 @@ export async function pacientePuco(documento, sexo) {
                     resultOS[i].nombre = obraSocial.nombre;
                     resultOS[i].financiador = obraSocial.nombre;
                     if (codigoPuco && obraSocial.codigoPuco === parseInt(codigoPuco.key, 10)) {
-                        resultOS[i]['numeroAfiliado'] = osPuco[i].numeroAfiliado;
+                        resultOS[i]['numeroAfiliado'] = osPucoUnicos[i].numeroAfiliado;
                     }
                 }
             }
@@ -87,6 +93,10 @@ export async function getOSPuco(documento, sexo, periodo = null) {
         // obtenemos de sisa
         osPatientPuco = await createOSpuco(documento, sexo);
     }
+    // Deduplicar por codigoOS para evitar registros duplicados en la colección Puco
+    osPatientPuco = osPatientPuco.filter((os, index) =>
+        index === osPatientPuco.findIndex(o => o.codigoOS === os.codigoOS)
+    );
     return osPatientPuco;
 }
 
@@ -118,9 +128,14 @@ export async function createOSpuco(documento, sexo) {
 
 export async function createPuco(data) {
     delete data.coberturaSocial; // no se guarda el campo coberturaSocial en la coleccion de puco
-    const patientPuco: any = new Puco(data);
     try {
-        await patientPuco.save();
+        // Usamos findOneAndUpdate con upsert para evitar duplicados por race conditions
+        // (dos requests simultáneos pueden intentar insertar el mismo {dni, codigoOS, version})
+        const patientPuco: any = await Puco.findOneAndUpdate(
+            { dni: data.dni, codigoOS: data.codigoOS, version: data.version },
+            { $setOnInsert: data },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
         return patientPuco;
     } catch (error) {
         return error;
