@@ -6,6 +6,11 @@ import * as configPrivate from '../../../config.private';
 export class InformeRupHeader extends HTMLComponent {
     template = `
             <!-- Cabezal logos institucionales -->
+            {{#if logoHeader}}
+            <section class="contenedor-header-recetas" style="width:100%; height:1.32cm; overflow:hidden; border-bottom: solid 1px black;">
+                <img src="data:image/png;base64,{{ logoHeader }}" style="width:100%; display:block; margin-top:-0.62cm;">
+            </section>
+            {{else}}
             <section class="contenedor-logos">
                 <span class="contenedor-logo-efector">
                     {{#if logos.organizacion}}
@@ -21,6 +26,7 @@ export class InformeRupHeader extends HTMLComponent {
                     <img class="logo-andes" src="data:image/png;base64,{{ logos.andes  }}">
                 </span>
             </section>
+            {{/if}}
             <section class="contenedor-data-origen">
                 <!-- Datos paciente -->
                 <span class="contenedor-principal-data">
@@ -153,7 +159,7 @@ export class InformeRupHeader extends HTMLComponent {
             {{/unless}}
     `;
 
-    constructor(public prestacion, public paciente, public organizacion, public cama) {
+    constructor(public prestacion, public paciente, public organizacion, public cama, private opciones: { logoHeader?: boolean } = {}) {
         super();
 
         // [TODO] helpers date formats en Handlerbars
@@ -211,7 +217,8 @@ export class InformeRupHeader extends HTMLComponent {
                 organizacion: organizacion ? this.getLogoOrganizacion(organizacion) : ''
             },
             ubicacion: this.ubicacionName(),
-            origenTop
+            origenTop,
+            logoHeader: opciones?.logoHeader ? loadImage('templates/matriculaciones/img/header-matriculaciones.png') : null
         };
 
     }

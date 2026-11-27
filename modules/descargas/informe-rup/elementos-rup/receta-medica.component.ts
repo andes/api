@@ -1,5 +1,4 @@
 import { HTMLComponent } from '../../model/html-component.class';
-import { generateBarcodeSVG } from '../../model/barcode';
 import { Receta } from '../../../recetas/receta-schema';
 
 
@@ -16,11 +15,6 @@ export class RecetaMedicaComponent extends HTMLComponent {
                 </p>
             </td>
             <td style="width:70%; vertical-align:top; padding:0;border:0px none;">
-                <div class="barcode">
-                {{#if esReceta}}
-                    {{{barcodeSVG}}}
-                     {{/if}}
-                </div>
             </td>
         </tr>
         {{#if estadoReceta}}
@@ -100,14 +94,6 @@ export class RecetaMedicaComponent extends HTMLComponent {
                     </td>
                 </tr>
             {{/each}}
-             <tr>
-                <td colspan="5" style="font-weight: bold;font-style: italic;">
-                    {{#if esReceta}}
-                Esta receta fue creada por emisor inscripto y valido en el Registro de Recetarios Electrónicos
-del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
-{{/if}}
-                </td>
-            </tr>
         </tbody>
     </table>
     <br>`;
@@ -116,8 +102,6 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
     }
 
     async process() {
-        // Buscar receta asociada al registro para obtener idReceta
-        let idReceta = this.registro.idReceta;
         let estadoReceta = null;
 
         const tieneReceta = this.prestacion.ejecucion.registros.some(registro =>
@@ -146,19 +130,6 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
                 estadoReceta = null;
             }
         }
-
-        if (!idReceta && this.registro.id) {
-            try {
-                const receta: any = await Receta.findOne({ idRegistro: this.registro.id });
-                if (receta) {
-                    idReceta = receta.idReceta;
-                }
-            } catch (error) {
-                idReceta = null;
-            }
-        }
-
-        const finalIdReceta = idReceta || this.registro.id;
 
         let obraSocial = this.prestacion.paciente?.obraSocial || null;
         if (Array.isArray(obraSocial)) {
@@ -203,10 +174,7 @@ del Ministerio de Salud de la Nación - RL-2025-24026558-APN-SSVEIYES#MS
 
         this.data = {
             registro: registroClone,
-            esReceta: this.depth ? 1 : 0, // Si es 0 no muestra el código de barras
-            idReceta: finalIdReceta,
-            estadoReceta,
-            barcodeSVG: generateBarcodeSVG(finalIdReceta, 'code128')
+            estadoReceta
         };
     }
 }
