@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Crea 5 agendas (lun–vie de la semana calendario actual) a partir de configuración,
  * sin clonar una agenda existente por _id.
@@ -15,13 +16,13 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { Types } from 'mongoose';
+import * as path from 'path';
 import { Auth } from '../auth/auth.class';
 import { Organizacion } from '../core/tm/schemas/organizacion';
 import { tipoPrestacion } from '../core/tm/schemas/tipoPrestacion';
-import { Agenda } from '../modules/turnos/schemas/agenda';
 import * as agendaCtrl from '../modules/turnos/controller/agenda';
+import { Agenda } from '../modules/turnos/schemas/agenda';
 
 interface BloqueConfig {
     horaInicio: string;

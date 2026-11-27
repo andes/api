@@ -33,7 +33,6 @@ class ServicioIntermedioResource extends ResourceBase {
             if (trimmed.length > 0) {
                 data.procedimientosEcl = trimmed;
                 data.procedimientos = await SnomedCtr.getConceptByExpression(trimmed, null, 'inferred');
-                console.log(data.procedimientos);
             } else {
                 delete data.procedimientosEcl;
             }
