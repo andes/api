@@ -2,6 +2,9 @@ import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { model, Schema, SchemaTypes, Types } from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { convertToObjectId, iterate } from '../controllers/rup';
+import { elementosRUPAsSet } from '../controllers/elementos-rup.controller';
+import { registrarEventoEvolucion } from '../evolucion.log';
+import { procesarEvoluciones } from '../utils/evolucion';
 import { PrestacionEstadoSchema } from './prestacion.estado';
 import * as registro from './prestacion.registro';
 import { PrestacionSolicitudHistorialschema } from './prestacion.solicitud.historial';
@@ -219,8 +222,57 @@ PrestacionSchema.pre('save', function (next) {
         });
     }
 
-    next();
+    validarEvoluciones(prestacion)
+        .then(() => next())
+        .catch(err => next(err));
 });
+
+async function validarEvoluciones(prestacion: any) {
+    const registros = prestacion.ejecucion?.registros;
+    if (!registros || !registros.length) {
+        return;
+    }
+
+    const elementosRUPSet = await elementosRUPAsSet();
+    const resolverElemento = (item: any) => {
+        if (item.elementoRUP) {
+            return elementosRUPSet.getByID(item.elementoRUP);
+        }
+        return elementosRUPSet.getByConcept(item.concepto, item.esSolicitud);
+    };
+
+    const { normalizados, invalidos } = procesarEvoluciones(registros, resolverElemento);
+    const prestacionId = String(prestacion.id || prestacion._id || '');
+
+    for (const item of normalizados) {
+        if (typeof item.markModified === 'function') {
+            item.markModified('valor');
+        }
+        registrarEventoEvolucion('info', 'evolucion:normalizada', {
+            prestacionId,
+            registroId: String(item.id || item._id || ''),
+            conceptoId: item.concepto?.conceptId,
+            origen: 'guardado'
+        });
+    }
+
+    if (invalidos.length) {
+        for (const item of invalidos) {
+            registrarEventoEvolucion('error', 'evolucion:formato-invalido', {
+                prestacionId,
+                registroId: String(item.id || item._id || ''),
+                conceptoId: item.concepto?.conceptId,
+                origen: 'guardado'
+            }, new Error('Formato inválido en valor.evolucion'));
+        }
+
+        const error: any = new Error(
+            `El registro ${invalidos[0].id || invalidos[0]._id || ''} tiene un formato inválido en el campo evolución`
+        );
+        error.status = 400;
+        throw error;
+    }
+}
 
 function getInicioPrestacion(prestacion) {
     const estadoActual = prestacion.estados[0];

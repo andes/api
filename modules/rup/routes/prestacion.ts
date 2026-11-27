@@ -618,6 +618,9 @@ router.post('/prestaciones', async (req, res, next) => {
         }
 
     } catch (err) {
+        if (err && err.status === 400) {
+            return next(err);
+        }
         return next('No fue posible crear la prestación');
     }
 });
