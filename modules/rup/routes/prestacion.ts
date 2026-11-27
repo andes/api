@@ -20,6 +20,7 @@ import { registrosProfundidad } from '../controllers/rup';
 import { buscarYCrearSolicitudes } from '../controllers/solicitudes.controller';
 import { IPrestacionDoc } from '../prestaciones.interface';
 import { Prestacion } from '../schemas/prestacion';
+import { procedenciaValida } from '../ambito-origen';
 import { Auth } from './../../../auth/auth.class';
 import { parseDate } from './../../../shared/parse';
 import { Agenda } from '../../turnos/schemas/agenda';
@@ -593,6 +594,11 @@ router.get('/prestaciones', async (req: any, res, next) => {
 router.post('/prestaciones', async (req, res, next) => {
     try {
         const dto = parseDate(JSON.stringify(req.body));
+        // procedencia: de dónde viene el paciente (informativo). ambitoOrigen no se valida acá:
+        // lo define el sistema según el flujo de creación. Ver ADR de ámbito de origen.
+        if (dto.solicitud?.procedencia !== undefined && !procedenciaValida(dto.solicitud.procedencia)) {
+            return next('Procedencia inválida');
+        }
 
         if (dto.inicio === 'top') {
             updateRegistroHistorialSolicitud(dto.solicitud, { op: 'creacion' });
@@ -640,6 +646,16 @@ router.patch('/prestaciones/:id', (req: Request, res, next) => {
                 }
                 break;
             case 'estadoPush':
+                // Procedencia del paciente (informativa). Nunca modifica solicitud.ambitoOrigen.
+                if (req.body.procedencia !== undefined) {
+                    if (data.estadoActual.tipo === 'validada') {
+                        return next('Prestación validada, no se puede modificar.');
+                    }
+                    if (!procedenciaValida(req.body.procedencia)) {
+                        return next('Procedencia inválida');
+                    }
+                    data.solicitud.procedencia = req.body.procedencia;
+                }
                 if (req.body.estado) {
                     // SI LA SOLICITUD FUE ANULADA NO SE PUEDE REALIZAR OTRA OPERACION
                     if (data.estadoActual.tipo === 'anulada') {
