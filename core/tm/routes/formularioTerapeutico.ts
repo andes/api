@@ -19,6 +19,14 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
     } else {
         let query;
         const opciones = {};
+        if (req.query.listado) {
+            try {
+                const medicamentos = await formularioCtrl.listarMedicamentos();
+                return res.json(medicamentos);
+            } catch (error) {
+                return next(error);
+            }
+        }
         if (req.query.padre) {
             const arr = await formularioCtrl.getPadres(req.query.padre, []);
             res.json(arr);
@@ -121,7 +129,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
 
 
 router.post('/formularioTerapeutico', Auth.authenticate(), (req, res, next) => {
-    req.body.descripcion = req.body.concepto.term;
+    req.body.descripcion = req.body.descripcion || req.body.concepto?.term;
     const newFormTera = new formularioTerapeutico(req.body);
     Auth.audit(newFormTera, req);
     newFormTera.save((errSave) => {
@@ -134,8 +142,9 @@ router.post('/formularioTerapeutico', Auth.authenticate(), (req, res, next) => {
 
 
 router.put('/formularioTerapeutico/:id', Auth.authenticate(), (req, res, next) => {
-    const idPadre = mongoose.Types.ObjectId(req.body.idpadre);
-    req.body.idpadre = idPadre;
+    if (req.body.idpadre) {
+        req.body.idpadre = mongoose.Types.ObjectId(req.body.idpadre);
+    }
     formularioTerapeutico.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
