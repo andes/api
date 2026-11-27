@@ -15,9 +15,12 @@ export const insumoSchema = new mongoose.Schema({
         type: String,
         enum: ['activo', 'inactivo']
     },
+    unidadMedida: {
+        type: String,
+        enum: ['ml', 'grs', 'cápsulas', null]
+    },
     requiereEspecificacion: Boolean,
     observaciones: String,
-    unidadMedida: String
 });
 
 
