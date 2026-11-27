@@ -73,7 +73,7 @@ export interface IPrestacionRegistro {
 
 export interface IPrestacionSolicitud {
     fecha: Date;
-    ambitoOrigen: 'ambulatorio' | 'internacion';
+    ambitoOrigen: 'ambulatorio' | 'internacion' | 'guardia';
     tipoPrestacion: ISnomedConcept;
     tipoPrestacionOrigen?: ISnomedConcept;
 

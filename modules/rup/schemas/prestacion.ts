@@ -55,7 +55,7 @@ export const PrestacionSchema = new Schema({
             required: true
         },
 
-        // Ambito de la prestacion: ambulatorio, internacion, emergencia, etc.
+        // Ambito de la prestacion: ambulatorio, internacion o guardia
         ambitoOrigen: {
             type: String,
             required: false,
@@ -373,4 +373,3 @@ PrestacionSchema.index(
 
 export const Prestacion = model('prestacion', PrestacionSchema, 'prestaciones');
 export const PrestacionHistorial = model('prestacion-historial', PrestacionHistorialSchema, 'prestacion-historial');
-

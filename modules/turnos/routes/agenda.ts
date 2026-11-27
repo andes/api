@@ -12,12 +12,14 @@ import { liberarRefTurno } from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { agendaLog } from '../citasLog';
 import * as agendaCtrl from '../controller/agenda';
+import { populateIncluyePrestaciones, populatePrestaciones } from '../controller/agenda-prestaciones';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import * as AgendasEstadisticas from '../controller/estadisticas';
 import { getPlanillaC1, getResumenDiarioMensual } from '../controller/reportesDiariosController';
 import { Agenda } from '../schemas/agenda';
 import { Auth } from './../../../auth/auth.class';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { ServicionIntermedioCtr } from '../../../core/tm/servicio-intermedio.routes';
 
 const router = express.Router();
 
@@ -274,7 +276,30 @@ router.get('/agenda/:id?', async (req, res, next) => {
             query.limit(parseInt(req.query.limit as any || 0, 10));
         }
 
-        if (!req.query.tipoPrestacion && !req.query.teleConsulta) {
+        if (req.query.servicioIntermedio) {
+            const servicioId = String(req.query.servicioIntermedio);
+            if (!mongoose.Types.ObjectId.isValid(servicioId)) {
+                res.status(404).send('Servicio intermedio no encontrado');
+                return;
+            }
+            if (!Auth.check(req, `rup:servicio-intermedio:${servicioId}`)) {
+                return next(403);
+            }
+            const servicios = await ServicionIntermedioCtr.search({ ids: [servicioId] });
+            if (!servicios || !servicios.length) {
+                res.status(404).send('Servicio intermedio no encontrado');
+                return;
+            }
+            const conceptos = await ServicionIntermedioCtr.getConceptosFromIds([servicioId]);
+            const conceptIds = Array.from(new Set(conceptos.map((concepto: any) => concepto.conceptId).filter(Boolean)));
+            if (!conceptIds.length) {
+                res.json([]);
+                return;
+            }
+            query.where('tipoPrestaciones.conceptId').in(conceptIds);
+        }
+
+        if (!req.query.tipoPrestacion && !req.query.teleConsulta && !req.query.servicioIntermedio) {
             const conceptosTurneables: any = await tipoPrestacion.find({ teleConsulta: true });
             const conceptIdArray = conceptosTurneables?.map(ct => ct.conceptId);
             if (conceptIdArray?.length > 0) {
@@ -282,12 +307,15 @@ router.get('/agenda/:id?', async (req, res, next) => {
             }
         }
 
-        query.exec((err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        try {
+            const data: any = await query.exec();
+            const resultado = populateIncluyePrestaciones(req.query.populate)
+                ? await populatePrestaciones(data)
+                : data;
+            res.json(resultado);
+        } catch (err) {
+            return next(err);
+        }
     }
 });
 
@@ -566,6 +594,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         }
                         break;
                     case 'agregarSobreturno':
+                        if (!agendaCtrl.ambitoOrigenSobreturnoValido(req.body.sobreturno)) {
+                            return next({ status: 400, message: 'Ámbito de origen inválido' });
+                        }
                         event = { object: 'turno', accion: 'asignar', data: null };
                         event.data = await agendaCtrl.agregarSobreturno(req, data);
                         break;

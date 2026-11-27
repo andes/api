@@ -374,6 +374,19 @@
                 "color": "#b47670",
                 "icono": "cogs",
                 "orden": 1
+            },
+            {
+                "activo": true,
+                "permisos": [
+                    "tm:mapa-agenda-colores:global:write",
+                    "turnos:mapa-agenda-colores:organizacion:write",
+                    "turnos:mapa-agenda-colores:profesional:write"
+                ],
+                "nombre": "Colores<br>mapa agendas",
+                "linkAcceso": "/tm/mapa-agenda-colores",
+                "color": "#5c8f6b",
+                "icono": "calendar-text",
+                "orden": 2
             }
         ],
         "color": "#9b6762",

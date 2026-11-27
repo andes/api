@@ -8,16 +8,17 @@ import { updateFinanciador, updateObraSocial } from '../../../core-v2/mpi/pacien
 import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { SnomedCtr } from '../../../core/term/controller/snomed.controller';
 import { Constantes } from '../../../modules/constantes/constantes.schema';
+import { handleHttpRequest } from '../../../utils/requestHandler';
 import { toArray } from '../../../utils/utils';
+import { ambitoOrigenValido } from '../../rup/ambito-origen';
 import * as prestacionController from '../../rup/controllers/prestacion';
 import { Prestacion } from '../../rup/schemas/prestacion';
-import { Agenda, HistorialAgenda } from '../../turnos/schemas/agenda';
-import { agendaLog, agendaJob } from '../citasLog';
-import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import { getAccesosVirtuales } from '../../turnos/controller/turnosController';
+import { Agenda, HistorialAgenda } from '../../turnos/schemas/agenda';
+import { agendaJob, agendaLog } from '../citasLog';
+import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import { ECLQueriesCtr } from './../../../core/tm/eclqueries.routes';
-import { handleHttpRequest } from '../../../utils/requestHandler';
 
 export async function getAgendaById(agendaId) {
     return await Agenda.findById(agendaId);
@@ -135,6 +136,8 @@ export async function liberarTurno(req, data, turno) {
             turno.tipoTurno = undefined;
             turno.link = undefined;
             turno.motivoConsulta = undefined;
+            turno.procedimiento = undefined;
+            turno.ambitoOrigen = undefined;
             turno.webexLinks = null;
             turno.updatedAt = new Date();
             turno.updatedBy = req.user.usuario || req.user;
@@ -213,6 +216,7 @@ export function suspenderTurno(req, data, turno) {
     const efector = data.organizacion;
     delete turno.paciente;
     delete turno.tipoPrestacion;
+    // Se conserva procedimiento en el subdocumento suspendido para trazabilidad (qué SNOMED estaba planificado).
     turno.webexLinks = null;
     turno.motivoSuspension = req.body.motivoSuspension;
     turno.avisoSuspension = req.body.avisoSuspension;
@@ -434,6 +438,13 @@ export async function actualizarPaciente(pacienteTurno: any, req: any) {
 }
 
 // Agenda
+export function ambitoOrigenSobreturnoValido(sobreturno): boolean {
+    if (sobreturno && (sobreturno.ambitoOrigen === null || sobreturno.ambitoOrigen === '')) {
+        delete sobreturno.ambitoOrigen;
+    }
+    return !sobreturno || sobreturno.ambitoOrigen === undefined || ambitoOrigenValido(sobreturno.ambitoOrigen);
+}
+
 export async function agregarSobreturno(req, data) {
     const sobreturno = req.body.sobreturno;
     if (sobreturno) {
@@ -1605,6 +1616,8 @@ export function agendaNueva(data, clon, req) {
                 turno.fechaHoraDacion = undefined;
                 turno.link = undefined;
                 turno.motivoConsulta = undefined;
+                turno.procedimiento = undefined;
+                turno.ambitoOrigen = undefined;
                 turno.usuarioDacion = undefined;
                 turno.profesional = undefined;
                 turno.horaAsistencia = undefined;

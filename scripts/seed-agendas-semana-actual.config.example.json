@@ -1,0 +1,26 @@
+{
+  "organizacionId": "REEMPLAZAR_CON_OBJECTID_DE_ORGANIZACION",
+  "conceptId": "168537006",
+  "estado": "publicada",
+  "intercalar": false,
+  "enviarSms": true,
+  "nominalizada": true,
+  "dinamica": false,
+  "multiprofesional": false,
+  "profesionales": [],
+  "bloque": {
+    "horaInicio": "08:00",
+    "horaFin": "12:00",
+    "cantidadTurnos": 10,
+    "duracionTurno": 24,
+    "accesoDirectoDelDia": 0,
+    "accesoDirectoProgramado": 10,
+    "reservadoGestion": 0,
+    "reservadoProfesional": 0,
+    "cupoMobile": 0,
+    "pacienteSimultaneos": true,
+    "cantidadSimultaneos": 5,
+    "citarPorBloque": false,
+    "turnosMobile": false
+  }
+}

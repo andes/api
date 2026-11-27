@@ -9,20 +9,22 @@ import { PacienteCtr } from '../../../core-v2/mpi/paciente/paciente.routes';
 import { Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
-import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import * as prepagasController from '../../obraSocial/controller/prepagas';
+import { ambitoOrigenValido } from '../../rup/ambito-origen';
 import { updateRegistroHistorialSolicitud } from '../../rup/controllers/prestacion';
-import { turnosLog } from '../citasLog';
 import * as webexController from '../../webex/webex.controller';
+import { turnosLog } from '../citasLog';
 import { getHistorial } from '../controller/historialCitasController/historialCitasController';
 import * as turnosController from '../controller/turnosController';
 import { Agenda } from '../schemas/agenda';
-import { Constantes } from '../../constantes/constantes.schema';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
-import { userScheduler } from '../../../config.private';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
+
+function ambitoOrigenTurnoInvalido(ambitoOrigen: any): boolean {
+    return ambitoOrigen !== undefined && ambitoOrigen !== null && !ambitoOrigenValido(ambitoOrigen);
+}
 
 router.get('/turno/:id*?', async (req, res, next) => {
 
@@ -55,6 +57,9 @@ function getCarpeta(nroDocumento, idOrganizacion) {
 }
 
 router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
+    if (ambitoOrigenTurnoInvalido(req.body.ambitoOrigen)) {
+        return next({ status: 400, message: 'Ámbito de origen inválido' });
+    }
     const continues = ValidateDarTurno.checkTurno(req.body);
 
     if (continues.valid) {
@@ -82,6 +87,8 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
             nota: req.body.nota,
             link: req.body.link,
             motivoConsulta: req.body.motivoConsulta,
+            procedimiento: req.body.procedimiento,
+            ambitoOrigen: req.body.ambitoOrigen || undefined,
             paciente: req.body.paciente,
             tipoPrestacion: req.body.tipoPrestacion,
             updatedAt: fecha,
@@ -137,7 +144,8 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
                     tipoTurno: doc2.tipoTurno,
                     nota: doc2.nota,
                     link: doc2.link,
-                    motivoConsulta: doc2.motivoConsulta
+                    motivoConsulta: doc2.motivoConsulta,
+                    procedimiento: turno.procedimiento
                 };
                 turnosLog.info('asignarTurno', datosOp, req);
                 const turnoLog = doc2.bloques[0].turnos[turnos.length - 1];
@@ -172,6 +180,9 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
  */
 
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: any, res, next) => {
+    if (ambitoOrigenTurnoInvalido(req.body.ambitoOrigen)) {
+        return next({ status: 400, message: 'Ámbito de origen inválido' });
+    }
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
 
@@ -298,6 +309,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
         const etiquetaLink: string = bloqueTurno + '.link';
         const etiquetaEmitidoPor: string = bloqueTurno + '.emitidoPor';
         const etiquetaMotivoConsulta: string = bloqueTurno + '.motivoConsulta';
+        const etiquetaProcedimiento: string = bloqueTurno + '.procedimiento';
         const estadoFacturacion: string = bloqueTurno + '.estadoFacturacion';
         const etiquetaReasignado: string = bloqueTurno + '.reasignado';
         const etiquetaNotificar = bloqueTurno + '.notificar';
@@ -315,6 +327,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
         update[etiquetaLink] = req.body.link;
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+        update[etiquetaProcedimiento] = req.body.procedimiento;
+        update[bloqueTurno + '.ambitoOrigen'] = req.body.ambitoOrigen || undefined;
         update[estadoFacturacion] = req.body.estadoFacturacion;
 
         const etiquetaVideoConferencia = bloqueTurno + '.videoConferencia';
@@ -374,6 +388,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req: a
                     link: update[etiquetaLink],
                     emitidoPor: update[etiquetaEmitidoPor], // agregamos el emitidoPor
                     motivoConsulta: update[etiquetaMotivoConsulta],
+                    procedimiento: update[etiquetaProcedimiento],
                     usuarioDacion: update[etiquetaUsuarioDacion],
                     fechaHoraDacion: update[etiquetaFechHoraDacion]
                 };
@@ -455,6 +470,10 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
         const etiquetaMotivoConsulta: string = etiquetaTurno + '.motivoConsulta';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
 
+    }
+    if (req.body.procedimiento) {
+        const etiquetaProcedimiento: string = etiquetaTurno + '.procedimiento';
+        update[etiquetaProcedimiento] = req.body.procedimiento;
     }
     if (req.body.actualizaObraSocial) {
         const etiquetaPaciente: string = etiquetaTurno + '.paciente.obraSocial';

@@ -1,8 +1,9 @@
 import * as mongoose from 'mongoose';
 import * as cie10 from '../../../core/term/schemas/cie10';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
-import { SnomedConcept } from '../../rup/schemas/snomed-concept';
+import { SnomedConcept, SnomedConceptRaw } from '../../rup/schemas/snomed-concept';
 import { PacienteSubSchema } from '../../../core-v2/mpi/paciente/paciente.schema';
+import { AMBITOS_ORIGEN } from '../../rup/ambito-origen';
 
 const turnoSchema = new mongoose.Schema({
     horaInicio: Date,
@@ -64,9 +65,15 @@ const turnoSchema = new mongoose.Schema({
     emitidoPor: String, // Agregamos para identificar desde donde se emitio el turno. Ej: appmobile.
     paciente: PacienteSubSchema,
     motivoConsulta: String,
+    ambitoOrigen: {
+        type: String,
+        enum: [...AMBITOS_ORIGEN, null],
+        required: false
+    },
     tipoPrestacion: {
         type: tipoPrestacionSchema
     },
+    procedimiento: { required: false, type: SnomedConceptRaw },
     idPrestacionPaciente: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
