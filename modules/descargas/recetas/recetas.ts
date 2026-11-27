@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { InformePDF, getAssetsURL } from '../model/informe.class';
 import { Prestacion } from '../../rup/schemas/prestacion';
 import { Organizacion } from '../../../core/tm/schemas/organizacion';
-import { RecetasHeader } from './recetas-header';
+import { InformeRupHeader } from '../informe-rup/informe-header';
 import { InformeRupFooter } from '../informe-rup/informe-footer';
 import { RecetasBody } from './recetas-body';
 import { elementosRUPAsSet, fulfillPrestacion } from '../../rup/controllers/elementos-rup.controller';
@@ -47,7 +47,7 @@ export class InformeRecetas extends InformePDF {
         // Obtener recetas asociadas
         const recetas = await this.getRecetas(prestacion);
 
-        this.header = new RecetasHeader(prestacion, paciente, organizacion, cama);
+        this.header = new InformeRupHeader(prestacion, paciente, organizacion, cama, { logoHeader: true });
         this.body = new RecetasBody(prestacion, paciente, organizacion, recetas, this.registroId ? String(this.registroId) : null);
         this.footer = new InformeRupFooter(prestacion, paciente, organizacion, this.usuario);
 
