@@ -38,7 +38,7 @@ router.post('/turnos_prestaciones/csv', async (req, res, next) => {
                         Documento: (row.paciente) ? row.paciente.documento : '',
                         Paciente: (row.paciente) ? row.paciente.apellido + ', ' + row.paciente.nombre : '',
                         'Tipo de Prestación': (row.prestacion) ? row.prestacion.term : '',
-                        'Equipo de Salud': (row.profesionales.length) ? turnos_prestacionesConstroller.obtenerProfesionales(row.profesionales) : 'Profesional no asignado',
+                        'Equipo de Salud': (row.profesionales?.length) ? turnos_prestacionesConstroller.obtenerProfesionales(row.profesionales) : 'Profesional no asignado',
                         Estado: (row.estado) ? row.estado : '',
                         Financiador: (row.paciente.obraSocial) ? row.paciente.obraSocial.nombre : 'No posee',
                         Ambito: (row.ambito) ? row.ambito : ''
