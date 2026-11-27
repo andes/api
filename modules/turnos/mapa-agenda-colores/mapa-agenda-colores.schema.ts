@@ -60,11 +60,12 @@ export const MapaAgendaColoresSchema = new mongoose.Schema({
  * para que MongoDB trate las claves de forma consistente entre alcances.
  */
 MapaAgendaColoresSchema.pre('save', function (next) {
-    if (this.alcance === 'global') {
-        this.set('organizacion', null);
-        this.set('profesional', null);
-    } else if (this.alcance === 'organizacion') {
-        this.set('profesional', null);
+    const _doc: any = this;
+    if (_doc.alcance === 'global') {
+        _doc.organizacion = null;
+        _doc.profesional = null;
+    } else if (_doc.alcance === 'organizacion') {
+        _doc.profesional = null;
     }
     next();
 });
