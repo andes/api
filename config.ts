@@ -183,6 +183,12 @@ export const modules = {
 export const defaultLimit = 50;
 export const maxLimit = 1000;
 
+// Configuración RUP
+export const rup = {
+    // Tope de firmas de pre-validación (residentes) por informe. Ver docs/rup/0001-doble-firma-informe.md
+    maxFirmasPrevalidacion: 4
+};
+
 // Configuracion MPI
 export const algoritmo = 'Levenshtein';
 
